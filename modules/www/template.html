@@ -1,0 +1,257 @@
+﻿<!--Page:begin-->
+<html lang="fr" charset="utf-8">
+	<head>
+		<title>%(title)s</title>
+		<meta name="viewport" content="" charset="UTF-8"/>
+		<link rel="shortcut icon" type="image/png" href="data:,"/>
+	</head>
+	<body class="%(class_)s" style="%(style)s"> 
+		<!--Stylesheet:begin-->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+		<!--Stylesheet:end-->
+		%(content)s
+		<!--Div:begin-->
+		<div class="container %(class_)s" style="%(style)s" id="%(id)s">%(content)s</div>
+		<!--Div:end-->
+		<!--Command:begin-->
+		<script type="text/javascript">
+		function onClick_%(path)s_%(id)s()
+		{
+			var xhttp = new XMLHttpRequest();
+			xhttp.open("GET","%(path)s/%(id)s",true);
+			xhttp.send();
+		}
+		</script>
+		<button onclick="onClick_%(path)s_%(id)s()" class="btn %(class_)s" id="%(id)s" style="%(style)s">%(text)s</button>
+		<!--Command:end-->
+
+		<!--Form:begin-->
+		<form class="container %(class_)s" style="%(style)s" id="%(id)s" method="%(method)s">
+			%(content)s
+			<!--Select:begin-->
+			<label >%(text)s</label>
+			<select class="custom-select %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(disabled)s>
+				%(content)s
+				<!--Option:begin-->
+				<option %(selected)s name="%(text)s" value="%(value)s" %(disabled)s>%(text)s</option>
+				<!--Option:end-->
+			</select>
+			<br>
+			<br>
+			<!--Select:end-->
+
+			<!--Title1:begin-->
+			<h1 class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</h1>
+			<!--Title1:end-->
+
+			<!--Title2:begin-->
+			<h2 class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</h2>
+			<!--Title2:end-->
+
+			<!--Title3:begin-->
+			<h3 class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</h3>
+			<!--Title3:end-->
+
+			<!--Title4:begin-->
+			<h4 class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</h4>
+			<!--Title4:end-->
+
+			<!--Label:begin-->
+			<div class="form-group %(class_)s">
+				<label class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</label>
+			</div>
+			<!--Label:end-->
+
+			<!--Input:begin-->
+			<div class="form-group">
+				<input class="form-control %(class_)s" style="%(style)s" id="%(id)s" pattern="%(pattern)s" placeholder="%(placeholder)s" type="%(type)s" value="%(value)s" name="%(name)s" %(disabled)s>
+			</div>
+			<!--Input:end-->
+
+			<!--Slider:begin-->
+			<label for="customRange">%(text)s</label>
+			<input type="range" class="custom-range  %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(disabled)s min="%(min)s" max="%(max)s" step="%(step)s" value="%(value)s" %(disabled)s>
+			<!--Slider:end-->
+
+			<!--Edit:begin-->
+			<div class="form-group">
+				<label >%(text)s</label>
+				<input type="%(type)s" class="form-control %(class_)s" style="%(style)s" id="%(id)s" pattern="%(pattern)s" placeholder="%(placeholder)s" type="%(type)s" value="%(value)s" name="%(name)s" %(disabled)s>
+			</div>
+			<!--Edit:end-->
+
+			<!--Switch:begin-->
+			<div class="custom-control custom-switch">
+				<input type="checkbox" class="custom-control-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s>
+				<label class="custom-control-label" for="%(id)s">%(text)s</label>
+			</div>
+			<br>
+			<!--Switch:end-->
+
+			<!--Checkbox:begin-->
+			<div class="form-check">
+				<label class="form-check-label">
+					<input type="checkbox" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s>%(text)s
+				</label>
+			</div>
+			<!--Checkbox:end-->
+
+			<!--Button:begin-->
+			<input class="btn %(class_)s" style="%(style)s" id="%(id)s" type="button" name="%(name)s" %(checked)s %(disabled)s> %(text)s</input>
+			<!--Button:end-->
+
+			<!--Radio:begin-->
+			<div class="form-check">
+				<label class="form-check-label">
+					<input type="radio" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(checked)s %(disabled)s>%(text)s
+				</label>
+			</div>
+			<!--Radio:end-->
+
+			<!--ChooseFile:begin-->
+			<label >%(text)s</label>
+			<div class="custom-file">
+				<input type="file" class="custom-file-input %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(disabled)s>
+				<label class="custom-file-label" for="%(id)s">%(value)s</label>
+			</div>
+			<br>
+			<br>
+			<script>
+				$(".custom-file-input").on("change", function() 
+				{
+					var fileName = $(this).val().split("\\").pop();
+					$(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+				});
+			</script>
+			<!--ChooseFile:end-->
+		</form>
+		<!--Form:end-->
+
+		<!--Br:begin-->
+		<br/>
+		<!--Br:end-->
+
+		<!--Container:begin-->
+		<div class="container %(class_)s" style="%(style)s" id="%(id)s">
+			%(content)s
+		</div>
+		<!--Container:end-->
+
+		<!--Card:begin-->
+		<div class="card %(class_)s" style="%(style)s" id="%(id)s">
+			%(content)s
+		</div>
+		<!--Card:end-->
+
+		<!--Paragraph:begin-->
+		<p class="%(class_)s" style="%(style)s" id="%(id)s">%(content)s%(text)s</p>
+		<!--Paragraph:end-->
+
+		<!--List:begin-->
+		<ul class="list-group %(class_)s" style="%(style)s" id="%(id)s">
+			%(content)s
+			<!--ListItem:begin-->
+			<li class="list-group-item %(class_)s" style="%(style)s" id="%(id)s">%(content)s%(text)s</li>
+			<!--ListItem:end-->
+			<!--ButtonItem:begin-->
+			<button class="btn %(class_)s" style="%(style)s" id="%(id)s">%(content)s%(text)s</button><br>
+			<!--ButtonItem:end-->
+		</ul>
+		<!--List:end-->
+
+		<!--Submit:begin-->
+		<button class="btn btn-primary %(class_)s" style="%(style)s" id="%(id)s" type="submit" value="%(value)s">%(content)s%(text)s</button>
+		<!--Submit:end-->
+
+		<!--Cancel:begin-->
+		<a class="btn btn-primary %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(content)s%(text)s</a>
+		<!--Cancel:end-->
+		
+		<!--Link:begin-->
+		<a class="%(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(content)s%(text)s</a>
+		<!--Link:end-->
+
+		<!--Bar:begin-->
+		<nav class="navbar navbar-expand-sm bg-dark navbar-dark %(class_)s" style="%(style)s" id="%(id)s">
+			<ul class="navbar-nav">
+				%(content)s
+				<!--BarItem:begin-->
+				<li class="nav-item">
+				<a class="nav-link %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(content)s%(text)s</a>
+				</li>
+				<!--BarItem:end-->
+			</ul>
+		</nav>
+		<!--Bar:end-->
+
+		<!--Tab:begin-->
+		<ul class="nav nav-tabs %(class_)s" style="%(style)s" id="%(id)s">
+			%(content)s
+			<!--TabItem:begin-->
+			<li class="nav-item">
+				<a class="nav-link %(active)s %(disabled)s %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(content)s%(text)s</a>
+			</li>
+			<!--TabItem:end-->
+		</ul>
+		<!--Tab:end-->
+
+		<!--Dropdown:begin-->
+		<li class="nav-item dropdown">
+			<a class="nav-link dropdown-toggle %(class_)s" style="%(style)s" id="%(id)s" data-toggle="dropdown">
+			%(text)s
+			</a>
+			<div class="dropdown-menu">
+				%(content)s
+				<!--DropdownItem:begin-->
+				<a class="dropdown-item %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(text)s</a>
+				<!--DropdownItem:end-->
+			</div>
+		</li>
+		<!--Dropdown:end-->
+
+		<!--ComboBox:begin-->
+		<label >%(text)s</label>
+		<input list="%(id)s" class="form-control %(class_)s" style="%(style)s" pattern="%(pattern)s" placeholder="%(placeholder)s" value="%(value)s" name="%(name)s" %(disabled)s>
+		<datalist id="%(id)s">
+			%(content)s
+		</datalist>
+		<br>
+		<!--ComboBox:end-->
+
+		<!--Badge:begin-->
+		<span class="badge %(class_)s" style="%(style)s" id="%(id)s" >%(text)s</span>
+		<!--Badge:end-->
+
+		<!--Image:begin-->
+		<img src="%(src)s" class="%(class_)s" style="%(style)s" id="%(id)s" alt="%(alt)s">
+		<!--Image:end-->
+
+		<!--AlertSuccess:begin-->
+		<div class="alert alert-success alert-dismissible fade show">
+			<button type="button" class="close" data-dismiss="alert">&times;</button>
+			%(content)s%(text)s
+		</div>
+		<!--AlertSuccess:end-->
+		<!--AlertWarning:begin-->
+		<div class="alert alert-warning alert-dismissible fade show">
+			<button type="button" class="close" data-dismiss="alert">&times;</button>
+			%(content)s%(text)s
+		</div>
+		<!--AlertWarning:end-->
+		<!--AlertError:begin-->
+		<div class="alert alert-danger alert-dismissible fade show">
+			<button type="button" class="close" data-dismiss="alert">&times;</button>
+			%(content)s%(text)s
+		</div>
+		<!--AlertError:end-->
+		
+		<!--Tag:begin-->
+		%(content)s
+		<!--Tag:end-->
+
+	</body>
+</html>
+<!--Page:end-->
