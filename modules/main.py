@@ -18,7 +18,8 @@ onBattery   = Battery.isActivated()
 # If the power supply is the mains
 if onBattery == False:
 	from tools import useful
- 
+	isPinWakeUp = False
+
 	# Create asyncio loop
 	loop = uasyncio.get_event_loop()
 
@@ -45,7 +46,7 @@ else:
 	# Check if PIR detection
 	isPinWakeUp = Battery.isPinWakeUp()
 	print("Detection %s"%(isPinWakeUp))
- 
+
 	# Check the battery level and force deepsleep is to low
 	Battery.protect()
 

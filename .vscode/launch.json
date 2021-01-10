@@ -6,8 +6,14 @@
 			"name": "Python : main",
 			"type": "python",
 			"request": "launch",
-			"program": "${workspaceFolder}/sync.py",
-			"cwd": "${workspaceFolder}",
+			"program_": "${workspaceFolder}/sync.py",
+			"cwd_": "${workspaceFolder}",
+		
+			"program_": "${workspaceFolder}/modules/lib/shell/editor.py",
+			"program_": "${workspaceFolder}/modules/lib/shell/shell.py",
+			"program_": "${workspaceFolder}/modules/lib/server/pushover.py",
+			"program": "${workspaceFolder}/modules/main.py",
+			"cwd": "${workspaceFolder}/modules",
 		}
 	]
 }

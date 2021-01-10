@@ -1,0 +1,1665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.tools.useful API documentation</title>
+<meta name="description" content="Miscellaneous utility functions" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.tools.useful</code></h1>
+</header>
+<section id="section-intro">
+<p>Miscellaneous utility functions</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+&#34;&#34;&#34; Miscellaneous utility functions &#34;&#34;&#34;
+import sys
+import os
+import io
+import time
+import select
+import hashlib
+from binascii import hexlify
+
+if sys.implementation.name == &#34;micropython&#34;:
+        def isKeyEnded(key):
+                if len(key) == 0:
+                        return False
+                elif len(key) == 1:
+                        if key == &#34;\x1B&#34;:
+                                return False
+                        else:
+                                return True
+                elif len(key) == 2:
+                        if key[0] == &#34;\x1B&#34; and key[1] == &#34;\x1B&#34;:
+                                return False
+                        elif key[0] == &#34;\x1B&#34;:
+                                if key[1] == &#34;[&#34; or key[1] == &#34;(&#34; or \
+                                        key[1] == &#34;)&#34; or key[1] == &#34;#&#34; or \
+                                        key[1] == &#34;O&#34;:
+                                        return False
+                                else:
+                                        return True
+                else:
+                        if ord(key[-1]) &gt;= ord(&#34;A&#34;) and ord(key[-1]) &lt;= ord(&#34;Z&#34;):
+                                return True
+                        elif ord(key[-1]) &gt;= ord(&#34;a&#34;) and ord(key[-1]) &lt;= ord(&#34;z&#34;):
+                                return True
+                        elif key[-1] == &#34;~&#34;:
+                                return True
+                return False
+
+        _kbhit = False
+        def getch(raw = True):
+                global _kbhit
+                key = &#34;&#34;
+                _kbhit = False
+                while 1:
+                        if len(key) == 0:
+                                delay = 1000000000
+                        else:
+                                delay = 0.01
+                        r,w,e = select.select([sys.stdin],[],[],delay)
+                        if isKeyEnded(key):
+                                if r != []:
+                                        _kbhit = True
+                                break
+                        if r != []:
+                                char = sys.stdin.buffer.read(1)
+                                try:
+                                        key += char.decode(&#34;latin-1&#34;)
+                                except:
+                                        key +=  chr(ord(char))
+                        else:
+                                if len(key) &gt; 0:
+                                        break
+                return key
+
+        def kbhit():
+                global _kbhit
+                return _kbhit
+else:
+        def getch(raw = True):
+                import termios, fcntl
+                import select
+                import os
+                import sys
+                import tty
+                fd = sys.stdin.fileno()
+                
+                oldattr = termios.tcgetattr(fd)
+                oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
+                try:
+                        newattr = oldattr[:]
+                        newattr[3] = newattr[3] &amp; ~termios.ICANON
+                        newattr[3] = newattr[3] &amp; ~termios.ECHO
+                        termios.tcsetattr(fd, termios.TCSANOW, newattr)
+
+                        fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
+
+                        if raw:
+                                tty.setraw(fd)
+                        key = None
+                        inp, outp, err = select.select([sys.stdin], [], [])
+                        key = sys.stdin.read()
+                finally:
+                        # Reset the terminal:
+                        fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
+                        termios.tcsetattr(fd, termios.TCSAFLUSH, oldattr)
+                return key
+
+        def kbhit():
+                import sys
+                import select
+                inp, outp, err = select.select([sys.stdin], [], [], 0.001)
+                if inp != []:
+                        return True
+                return False
+
+try:
+        from utime import ticks_ms
+        def ticks():
+                return ticks_ms()
+except:
+        def ticks():
+                import time
+                return (int)(time.time() * 1000)
+
+def ticksToString():
+        &#34;&#34;&#34; Create a string with tick in seconds &#34;&#34;&#34;
+        tick = ticks()
+        return &#34;%d.%03d s&#34;%(tick/1000, tick%1000)
+
+previousTime = 0
+def log(msg):
+        &#34;&#34;&#34; Log line with a ticks displayed &#34;&#34;&#34;
+        current = ticks()
+        global previousTime
+        if previousTime == 0:
+                previousTime = current
+        print(&#34;%03d.%03d:%s&#34;%((current-previousTime)/1000, (current-previousTime)%1000, msg))
+        previousTime = ticks()
+
+def dateToString(date = None):
+        &#34;&#34;&#34; Get a string with the current date &#34;&#34;&#34;
+        return dateToBytes(date).decode(&#34;utf8&#34;)
+
+def dateToBytes(date = None):
+        &#34;&#34;&#34; Get a bytes with the current date &#34;&#34;&#34;
+        year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
+        return b&#34;%04d/%02d/%02d  %02d:%02d:%02d&#34;%(year,month,day,hour,minute,second)
+
+def dateToFilename(date = None):
+        &#34;&#34;&#34; Get a filename with a date &#34;&#34;&#34;
+        filename = dateToString(date)
+        filename = filename.replace(&#34;  &#34;,&#34;_&#34;)
+        filename = filename.replace(&#34;/&#34;,&#34;-&#34;)
+        filename = filename.replace(&#34;:&#34;,&#34;-&#34;)
+        return filename
+
+def sizeToString(size, largeur=6):
+        &#34;&#34;&#34; Convert a size in a string with k, m, g, t...&#34;&#34;&#34;
+        return sizeToBytes(size, largeur).decode(&#34;utf8&#34;)
+
+def sizeToBytes(size, largeur=6):
+        &#34;&#34;&#34; Convert a size in a bytes with k, m, g, t...&#34;&#34;&#34;
+        if size &gt; 1073741824*1024:
+                return  b&#34;%*.2fT&#34;%(largeur, size / (1073741824.*1024.))
+        elif size &gt; 1073741824:
+                return  b&#34;%*.2fG&#34;%(largeur, size / 1073741824.)
+        elif size &gt; 1048576:
+                return b&#34;%*.2fM&#34;%(largeur, size / 1048576.)
+        elif size &gt; 1024:
+                return b&#34;%*.2fK&#34;%(largeur, size / 1024.)
+        else:
+                return b&#34;%*dB&#34;%(largeur, size)
+
+def meminfo(display=True):
+        &#34;&#34;&#34; Get memory informations &#34;&#34;&#34;
+        import gc
+        try:
+                alloc = gc.mem_alloc()
+                free  = gc.mem_free()
+                result = b&#34;Mem alloc=%s free=%s total=%s&#34;%(sizeToBytes(alloc, 1), sizeToBytes(free, 1), sizeToBytes(alloc+free, 1))
+                if display:
+                        print(tostrings(result))
+                else:
+                        return result
+        except:
+                return b&#34;Mem unavailable&#34;
+
+def flashinfo(display=True):
+        &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
+        try:
+                import esp
+                result = b&#34;Flash user=%s size=%s&#34;%(sizeToBytes(esp.flash_user_start(), 1), sizeToBytes(esp.flash_size(), 1))
+                if display:
+                        print(tostrings(result))
+                else:
+                        return result
+        except:
+                return b&#34;Flash unavailable&#34;
+
+def sysinfo(display=True, text=&#34;&#34;):
+        &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
+        try:
+                import machine
+                result = b&#34;%s%s %dMhz, %s, %s, %s&#34;%(text, sys.platform, machine.freq()//1000000, dateToBytes(), meminfo(False), flashinfo(False))
+                if display:
+                        print(tostrings(result))
+                else:
+                        return result
+        except:
+                return b&#34;Sysinfo not available&#34;
+
+def splitext(p):
+        &#34;&#34;&#34; Split file extension &#34;&#34;&#34;
+        sep=&#39;\\&#39;
+        altsep = &#39;/&#39;
+        extsep = &#39;.&#39;
+        sepIndex = p.rfind(sep)
+        if altsep:
+                altsepIndex = p.rfind(altsep)
+                sepIndex = max(sepIndex, altsepIndex)
+
+        dotIndex = p.rfind(extsep)
+        if dotIndex &gt; sepIndex:
+                filenameIndex = sepIndex + 1
+                while filenameIndex &lt; dotIndex:
+                        if p[filenameIndex:filenameIndex+1] != extsep:
+                                return p[:dotIndex], p[dotIndex:]
+                        filenameIndex += 1
+        return p, p[:0]
+
+def split(p):
+        &#34;&#34;&#34; Split file &#34;&#34;&#34;
+        sep = &#34;/&#34;
+        i = p.rfind(sep) + 1
+        head, tail = p[:i], p[i:]
+        if head and head != sep*len(head):
+                head = head.rstrip(sep)
+        return head, tail
+
+def import_(filename):
+        &#34;&#34;&#34; Import filename &#34;&#34;&#34;
+        path, file = split(filename)
+        moduleName, ext = splitext(file)
+
+        if path not in sys.path:
+                sys.path.append(path)
+
+        try:
+                del sys.modules[moduleName]
+        except:
+                pass
+        try:
+                exec(&#34;import %s&#34;%moduleName)
+        except Exception as err:
+                print(exception(err))
+        except KeyboardInterrupt as err:
+                print(exception(err))
+
+def abspath(cwd, payload):
+        &#34;&#34;&#34; Get the absolute path &#34;&#34;&#34;
+        # Just a few special cases &#34;..&#34;, &#34;.&#34; and &#34;&#34;
+        # If payload start&#39;s with /, set cwd to /
+        # and consider the remainder a relative path
+        if payload.startswith(&#39;/&#39;):
+                cwd = &#34;/&#34;
+        for token in payload.split(&#34;/&#34;):
+                if token == &#39;..&#39;:
+                        if cwd != &#39;/&#39;:
+                                cwd = &#39;/&#39;.join(cwd.split(&#39;/&#39;)[:-1])
+                                if cwd == &#39;&#39;:
+                                        cwd = &#39;/&#39;
+                elif token != &#39;.&#39; and token != &#39;&#39;:
+                        if cwd == &#39;/&#39;:
+                                cwd += token
+                        else:
+                                cwd = cwd + &#39;/&#39; + token
+        return cwd
+
+def abspathbytes(cwd, payload):
+        &#34;&#34;&#34; Get the absolute path into a bytes &#34;&#34;&#34;
+        # Just a few special cases &#34;..&#34;, &#34;.&#34; and &#34;&#34;
+        # If payload start&#39;s with /, set cwd to /
+        # and consider the remainder a relative path
+        if payload.startswith(b&#39;/&#39;):
+                cwd = b&#34;/&#34;
+        for token in payload.split(b&#34;/&#34;):
+                if token == b&#39;..&#39;:
+                        if cwd != b&#39;/&#39;:
+                                cwd = b&#39;/&#39;.join(cwd.split(b&#39;/&#39;)[:-1])
+                                if cwd == b&#39;&#39;:
+                                        cwd = b&#39;/&#39;
+                elif token != b&#39;.&#39; and token != b&#39;&#39;:
+                        if cwd == b&#39;/&#39;:
+                                cwd += token
+                        else:
+                                cwd = cwd + b&#39;/&#39; + token
+        return cwd
+
+def exists(filename):
+        &#34;&#34;&#34; Test if the filename existing &#34;&#34;&#34;
+        try:
+                rstat = os.lstat(filename)
+                return True
+        except:
+                try:
+                        rstat = os.stat(filename)
+                        return True
+                except:
+                        pass
+        return False
+
+previousFileInfo = []
+def fileinfo(path):
+        &#34;&#34;&#34; Get the file informations &#34;&#34;&#34;
+        global previousFileInfo
+        if len(previousFileInfo) == 0:
+                previousFileInfo = [path, os.stat(path)]
+        elif previousFileInfo[0] != path:
+                previousFileInfo = [path, os.stat(path)]
+        return previousFileInfo[1]
+
+def isdir(path):
+        &#34;&#34;&#34; Indicates if the path is a directory &#34;&#34;&#34;
+        try:
+                if fileinfo(path)[0] &amp; 0x4000 == 0x4000:
+                        return True
+        except:
+                pass
+        return False
+
+def isfile(path):
+        &#34;&#34;&#34; Indicates if the path is a file &#34;&#34;&#34;
+        try:
+                if fileinfo(path)[0] &amp; 0x4000 == 0:
+                        return True
+        except:
+                pass
+        return False
+
+def exception(err):
+        &#34;&#34;&#34; Return the content of exception into a string &#34;&#34;&#34;
+        file = io.StringIO()
+        if ismicropython():
+                sys.print_exception(err, file)
+                text = file.getvalue()
+        else:
+                try:
+                        import traceback
+                        file.write(traceback.format_exc())
+                except Exception as err:
+                        print(err)
+                text = file.getvalue()
+                print(text)
+        return text
+
+def htmlException(err):
+        &#34;&#34;&#34; Return the content of exception into an html bytes &#34;&#34;&#34;
+        text = exception(err)
+        text = text.replace(&#34;\n    &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;)
+        text = text.replace(&#34;\n  &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&#34;)
+        text = text.replace(&#34;\n&#34;,&#34;&lt;br&gt;&#34;)
+        return tobytes(text)
+
+def blink(duration=10):
+        &#34;&#34;&#34; Blink led &#34;&#34;&#34;
+        try:
+                import machine
+                from time import sleep_ms
+                pin2 = machine.Pin(2, machine.Pin.OUT)
+                pin2.value(1)
+                sleep_ms(duration)
+                pin2.value(0)
+                sleep_ms(duration)
+        except:
+                print(&#34;Blink&#34;)
+
+def getScreenSize():
+        &#34;&#34;&#34; Get the VT100 screen size &#34;&#34;&#34;
+        sys.stdout.write(&#34;\x1B[999;999f\x1B[6n&#34;)
+        try:
+                sys.stdout.flush()
+        except:
+                pass
+        size = &#34;&#34;
+        size = getch(False)
+        size = size[2:-1].split(&#34;;&#34;)
+        sys.stdout.write(&#34;\x1B[1000D&#34;)
+        return int(size[0]), int(size[1])
+
+def prefix(files):
+        &#34;&#34;&#34; Get the common prefix of all files &#34;&#34;&#34;
+        # Initializes counters
+        counters = []
+        
+        # For all files
+        for file in files:
+                # Split the file name into a piece
+                paths = file.split(&#34;/&#34;)
+                
+                # For each piece
+                for i in range(0,len(paths)):
+                        try:
+                                try:
+                                        # Test if counters exist
+                                        counters[i][paths[i]] += 1
+                                except:
+                                        # Creates a path counters
+                                        counters[i][paths[i]] = 1
+                        except:
+                                # Adds a new level of depth
+                                counters.append({paths[i] : 1})
+        
+        # Constructs the prefix of the list of files
+        try:
+                result = &#34;&#34;
+                amount = list(counters[0].values())[0]
+                for counter in counters:
+                        if len(counter.keys()) == 1 and list(counter.values())[0] == amount:
+                                result += list(counter.keys())[0] + &#34;/&#34;
+                        else:
+                                return result [:-1]
+                                break
+                return result
+        except IndexError:
+                return &#34;&#34;
+
+def getHash(password):
+        &#34;&#34;&#34; Get the hash associated to the password &#34;&#34;&#34;
+        hash = hashlib.sha256()
+        hash.update(password)
+        return hexlify(hash.digest())
+
+def now():
+        &#34;&#34;&#34; Get time now &#34;&#34;&#34;
+        now = time.localtime()
+        return now
+
+def isascii(char):
+        &#34;&#34;&#34; Indicates if the char is ascii &#34;&#34;&#34;
+        if len(char) == 1:
+                if ord(char) &gt;= 0x20 and ord(char) &lt; 0x7F or char == &#34;\t&#34;:
+                        return True
+        return False
+
+def isupper(char):
+        &#34;&#34;&#34; Indicates if the char is upper &#34;&#34;&#34;
+        if len(char) == 1:
+                if ord(char) &gt;= 0x41 and ord(char) &lt;= 0x5A:
+                        return True
+        return False
+
+def islower(char):
+        &#34;&#34;&#34; Indicates if the char is lower &#34;&#34;&#34;
+        if len(char) == 1:
+                if ord(char) &gt;= 0x61 and ord(char) &lt; 0x7A:
+                        return True
+        return False
+
+def isdigit(char):
+        &#34;&#34;&#34; Indicates if the char is a digit &#34;&#34;&#34;
+        if len(char) == 1:
+                if ord(char) &gt;= 0x31 and ord(char) &lt;= 0x39:
+                        return True
+                return False
+
+def isalpha(char):
+        &#34;&#34;&#34; Indicates if the char is alpha &#34;&#34;&#34;
+        return isupper(char) or islower(char) or isdigit(char)
+
+def isspace(char):
+        &#34;&#34;&#34; Indicates if the char is a space, tabulation or new line &#34;&#34;&#34;
+        if char == &#34; &#34; or char == &#34;\t&#34; or char == &#34;\n&#34; or char == &#34;\r&#34;:
+                return True
+        return False
+
+def ispunctuation(char):
+        &#34;&#34;&#34; Indicates if the char is a punctuation &#34;&#34;&#34;
+        if  (ord(char) &gt;= 0x21 and ord(char) &lt;= 0x2F) or \
+                (ord(char) &gt;= 0x3A and ord(char) &lt;= 0x40) or \
+                (ord(char) &gt;= 0x5B and ord(char) &lt;= 0x60) or \
+                (ord(char) &gt;= 0x7B and ord(char) &lt;= 0x7E):
+                return True
+        else:
+                return False
+
+def dump(buff):
+        &#34;&#34;&#34; Dump buffer &#34;&#34;&#34;
+        string = &#34;\x1B[7m &#34;
+        for i in buff:
+                if isascii(i):
+                        string += i
+                else:
+                        string += &#34;\\x%02x&#34;%ord(i)
+        string += &#34; \x1B[m&#34;
+        return string
+
+def makedir(directory, recursive=False):
+        &#34;&#34;&#34; Make directory recursively &#34;&#34;&#34;
+        if recursive == False:
+                os.mkdir(directory)
+        else:
+                directories = [directory]
+                while 1:
+                        parts = split(directory)
+                        if parts[1] == &#34;&#34; or parts[0] == &#34;&#34;:
+                                break
+                        directories.append(parts[0])
+                        directory = parts[0]
+
+                directories.reverse()
+                for d in directories:
+                        if not(exists(d)):
+                                os.mkdir(d)
+
+def tobytes(datas, encoding=&#34;utf8&#34;):
+        &#34;&#34;&#34; Convert data to bytes &#34;&#34;&#34;
+        result = datas
+        if type(datas) == type(&#34;&#34;):
+                result = datas.encode(encoding)
+        elif type(datas) == type([]):
+                result = []
+                for item in datas:
+                        result.append(tobytes(item, encoding))
+        elif type(datas) == type((0,0)):
+                result = []
+                for item in datas:
+                        result.append(tobytes(item, encoding))
+                result = tuple(result)
+        elif type(datas) == type({}):
+                result = {}
+                for key, value in datas.items():
+                        result[tobytes(key,encoding)] = tobytes(value, encoding)
+        return result
+        
+def tostrings(datas, encoding=&#34;utf8&#34;):
+        &#34;&#34;&#34; Convert data to strings &#34;&#34;&#34;
+        result = datas
+        if type(datas) == type(b&#34;&#34;):
+                result = datas.decode(encoding)
+        elif type(datas) == type([]):
+                result = []
+                for item in datas:
+                        result.append(tostrings(item, encoding))
+        elif type(datas) == type((0,0)):
+                result = []
+                for item in datas:
+                        result.append(tostrings(item, encoding))
+                result = tuple(result)
+        elif type(datas) == type({}):
+                result = {}
+                for key, value in datas.items():
+                        result[tostrings(key,encoding)] = tostrings(value, encoding)
+        return result
+
+def ismicropython():
+        &#34;&#34;&#34; Indicates if the python is micropython &#34;&#34;&#34;
+        if sys.implementation.name == &#34;micropython&#34;:
+                return True
+        return False
+
+def iscamera():
+        &#34;&#34;&#34; Indicates if the board is esp32cam &#34;&#34;&#34;
+        try:
+                import camera 
+                return camera.isavailable()
+        except:
+                if ismicropython():
+                        return False
+                else:
+                        return True
+
+def iptoint(ipaddr):
+        &#34;&#34;&#34; Convert ip address into integer &#34;&#34;&#34;
+        spl = ipaddr.split(&#34;.&#34;)
+        if len(spl):
+                return ((int(spl[0])&lt;&lt;24)+ (int(spl[1])&lt;&lt;16) + (int(spl[2])&lt;&lt;8) + int(spl[3]))
+        return 0
+
+def issameinterface(ipaddr, ipinterface, maskinterface):
+        &#34;&#34;&#34; indicates if the ip address is on the selected interface &#34;&#34;&#34;
+        ipaddr = iptoint(ipaddr)
+        ipinterface  = iptoint(ipinterface)
+        maskinterface = iptoint(maskinterface)
+        if ipaddr &amp; maskinterface == ipinterface &amp; maskinterface:
+                return True
+        else:
+                return False
+
+
+def journalize(message):
+        filename = tools.useful.dateToFilename()
+        filename = &#34;jnl_&#34;+filename [8:-6] + &#34;.txt&#34;
+        file = open(filename,&#34;a&#34;)
+        message = &#34;%s: %s&#34;%(tools.useful.dateToString(), message)
+        print(message)
+        file.write(message)
+        file.write(&#34;\n&#34;)
+        file.flush()
+        file.close()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.tools.useful.abspath"><code class="name flex">
+<span>def <span class="ident">abspath</span></span>(<span>cwd, payload)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the absolute path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def abspath(cwd, payload):
+        &#34;&#34;&#34; Get the absolute path &#34;&#34;&#34;
+        # Just a few special cases &#34;..&#34;, &#34;.&#34; and &#34;&#34;
+        # If payload start&#39;s with /, set cwd to /
+        # and consider the remainder a relative path
+        if payload.startswith(&#39;/&#39;):
+                cwd = &#34;/&#34;
+        for token in payload.split(&#34;/&#34;):
+                if token == &#39;..&#39;:
+                        if cwd != &#39;/&#39;:
+                                cwd = &#39;/&#39;.join(cwd.split(&#39;/&#39;)[:-1])
+                                if cwd == &#39;&#39;:
+                                        cwd = &#39;/&#39;
+                elif token != &#39;.&#39; and token != &#39;&#39;:
+                        if cwd == &#39;/&#39;:
+                                cwd += token
+                        else:
+                                cwd = cwd + &#39;/&#39; + token
+        return cwd</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.abspathbytes"><code class="name flex">
+<span>def <span class="ident">abspathbytes</span></span>(<span>cwd, payload)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the absolute path into a bytes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def abspathbytes(cwd, payload):
+        &#34;&#34;&#34; Get the absolute path into a bytes &#34;&#34;&#34;
+        # Just a few special cases &#34;..&#34;, &#34;.&#34; and &#34;&#34;
+        # If payload start&#39;s with /, set cwd to /
+        # and consider the remainder a relative path
+        if payload.startswith(b&#39;/&#39;):
+                cwd = b&#34;/&#34;
+        for token in payload.split(b&#34;/&#34;):
+                if token == b&#39;..&#39;:
+                        if cwd != b&#39;/&#39;:
+                                cwd = b&#39;/&#39;.join(cwd.split(b&#39;/&#39;)[:-1])
+                                if cwd == b&#39;&#39;:
+                                        cwd = b&#39;/&#39;
+                elif token != b&#39;.&#39; and token != b&#39;&#39;:
+                        if cwd == b&#39;/&#39;:
+                                cwd += token
+                        else:
+                                cwd = cwd + b&#39;/&#39; + token
+        return cwd</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.blink"><code class="name flex">
+<span>def <span class="ident">blink</span></span>(<span>duration=10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Blink led</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def blink(duration=10):
+        &#34;&#34;&#34; Blink led &#34;&#34;&#34;
+        try:
+                import machine
+                from time import sleep_ms
+                pin2 = machine.Pin(2, machine.Pin.OUT)
+                pin2.value(1)
+                sleep_ms(duration)
+                pin2.value(0)
+                sleep_ms(duration)
+        except:
+                print(&#34;Blink&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.dateToBytes"><code class="name flex">
+<span>def <span class="ident">dateToBytes</span></span>(<span>date=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a bytes with the current date</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dateToBytes(date = None):
+        &#34;&#34;&#34; Get a bytes with the current date &#34;&#34;&#34;
+        year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
+        return b&#34;%04d/%02d/%02d  %02d:%02d:%02d&#34;%(year,month,day,hour,minute,second)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.dateToFilename"><code class="name flex">
+<span>def <span class="ident">dateToFilename</span></span>(<span>date=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a filename with a date</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dateToFilename(date = None):
+        &#34;&#34;&#34; Get a filename with a date &#34;&#34;&#34;
+        filename = dateToString(date)
+        filename = filename.replace(&#34;  &#34;,&#34;_&#34;)
+        filename = filename.replace(&#34;/&#34;,&#34;-&#34;)
+        filename = filename.replace(&#34;:&#34;,&#34;-&#34;)
+        return filename</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.dateToString"><code class="name flex">
+<span>def <span class="ident">dateToString</span></span>(<span>date=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get a string with the current date</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dateToString(date = None):
+        &#34;&#34;&#34; Get a string with the current date &#34;&#34;&#34;
+        return dateToBytes(date).decode(&#34;utf8&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.dump"><code class="name flex">
+<span>def <span class="ident">dump</span></span>(<span>buff)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Dump buffer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dump(buff):
+        &#34;&#34;&#34; Dump buffer &#34;&#34;&#34;
+        string = &#34;\x1B[7m &#34;
+        for i in buff:
+                if isascii(i):
+                        string += i
+                else:
+                        string += &#34;\\x%02x&#34;%ord(i)
+        string += &#34; \x1B[m&#34;
+        return string</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.exception"><code class="name flex">
+<span>def <span class="ident">exception</span></span>(<span>err)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the content of exception into a string</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exception(err):
+        &#34;&#34;&#34; Return the content of exception into a string &#34;&#34;&#34;
+        file = io.StringIO()
+        if ismicropython():
+                sys.print_exception(err, file)
+                text = file.getvalue()
+        else:
+                try:
+                        import traceback
+                        file.write(traceback.format_exc())
+                except Exception as err:
+                        print(err)
+                text = file.getvalue()
+                print(text)
+        return text</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.exists"><code class="name flex">
+<span>def <span class="ident">exists</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test if the filename existing</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exists(filename):
+        &#34;&#34;&#34; Test if the filename existing &#34;&#34;&#34;
+        try:
+                rstat = os.lstat(filename)
+                return True
+        except:
+                try:
+                        rstat = os.stat(filename)
+                        return True
+                except:
+                        pass
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.fileinfo"><code class="name flex">
+<span>def <span class="ident">fileinfo</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the file informations</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fileinfo(path):
+        &#34;&#34;&#34; Get the file informations &#34;&#34;&#34;
+        global previousFileInfo
+        if len(previousFileInfo) == 0:
+                previousFileInfo = [path, os.stat(path)]
+        elif previousFileInfo[0] != path:
+                previousFileInfo = [path, os.stat(path)]
+        return previousFileInfo[1]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.flashinfo"><code class="name flex">
+<span>def <span class="ident">flashinfo</span></span>(<span>display=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get flash informations</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def flashinfo(display=True):
+        &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
+        try:
+                import esp
+                result = b&#34;Flash user=%s size=%s&#34;%(sizeToBytes(esp.flash_user_start(), 1), sizeToBytes(esp.flash_size(), 1))
+                if display:
+                        print(tostrings(result))
+                else:
+                        return result
+        except:
+                return b&#34;Flash unavailable&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.getHash"><code class="name flex">
+<span>def <span class="ident">getHash</span></span>(<span>password)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the hash associated to the password</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getHash(password):
+        &#34;&#34;&#34; Get the hash associated to the password &#34;&#34;&#34;
+        hash = hashlib.sha256()
+        hash.update(password)
+        return hexlify(hash.digest())</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.getScreenSize"><code class="name flex">
+<span>def <span class="ident">getScreenSize</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the VT100 screen size</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getScreenSize():
+        &#34;&#34;&#34; Get the VT100 screen size &#34;&#34;&#34;
+        sys.stdout.write(&#34;\x1B[999;999f\x1B[6n&#34;)
+        try:
+                sys.stdout.flush()
+        except:
+                pass
+        size = &#34;&#34;
+        size = getch(False)
+        size = size[2:-1].split(&#34;;&#34;)
+        sys.stdout.write(&#34;\x1B[1000D&#34;)
+        return int(size[0]), int(size[1])</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.getch"><code class="name flex">
+<span>def <span class="ident">getch</span></span>(<span>raw=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getch(raw = True):
+        import termios, fcntl
+        import select
+        import os
+        import sys
+        import tty
+        fd = sys.stdin.fileno()
+        
+        oldattr = termios.tcgetattr(fd)
+        oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        try:
+                newattr = oldattr[:]
+                newattr[3] = newattr[3] &amp; ~termios.ICANON
+                newattr[3] = newattr[3] &amp; ~termios.ECHO
+                termios.tcsetattr(fd, termios.TCSANOW, newattr)
+
+                fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
+
+                if raw:
+                        tty.setraw(fd)
+                key = None
+                inp, outp, err = select.select([sys.stdin], [], [])
+                key = sys.stdin.read()
+        finally:
+                # Reset the terminal:
+                fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
+                termios.tcsetattr(fd, termios.TCSAFLUSH, oldattr)
+        return key</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.htmlException"><code class="name flex">
+<span>def <span class="ident">htmlException</span></span>(<span>err)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the content of exception into an html bytes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def htmlException(err):
+        &#34;&#34;&#34; Return the content of exception into an html bytes &#34;&#34;&#34;
+        text = exception(err)
+        text = text.replace(&#34;\n    &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;)
+        text = text.replace(&#34;\n  &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&#34;)
+        text = text.replace(&#34;\n&#34;,&#34;&lt;br&gt;&#34;)
+        return tobytes(text)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.import_"><code class="name flex">
+<span>def <span class="ident">import_</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Import filename</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def import_(filename):
+        &#34;&#34;&#34; Import filename &#34;&#34;&#34;
+        path, file = split(filename)
+        moduleName, ext = splitext(file)
+
+        if path not in sys.path:
+                sys.path.append(path)
+
+        try:
+                del sys.modules[moduleName]
+        except:
+                pass
+        try:
+                exec(&#34;import %s&#34;%moduleName)
+        except Exception as err:
+                print(exception(err))
+        except KeyboardInterrupt as err:
+                print(exception(err))</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.iptoint"><code class="name flex">
+<span>def <span class="ident">iptoint</span></span>(<span>ipaddr)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert ip address into integer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def iptoint(ipaddr):
+        &#34;&#34;&#34; Convert ip address into integer &#34;&#34;&#34;
+        spl = ipaddr.split(&#34;.&#34;)
+        if len(spl):
+                return ((int(spl[0])&lt;&lt;24)+ (int(spl[1])&lt;&lt;16) + (int(spl[2])&lt;&lt;8) + int(spl[3]))
+        return 0</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.isalpha"><code class="name flex">
+<span>def <span class="ident">isalpha</span></span>(<span>char)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the char is alpha</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isalpha(char):
+        &#34;&#34;&#34; Indicates if the char is alpha &#34;&#34;&#34;
+        return isupper(char) or islower(char) or isdigit(char)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.isascii"><code class="name flex">
+<span>def <span class="ident">isascii</span></span>(<span>char)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the char is ascii</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isascii(char):
+        &#34;&#34;&#34; Indicates if the char is ascii &#34;&#34;&#34;
+        if len(char) == 1:
+                if ord(char) &gt;= 0x20 and ord(char) &lt; 0x7F or char == &#34;\t&#34;:
+                        return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.iscamera"><code class="name flex">
+<span>def <span class="ident">iscamera</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the board is esp32cam</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def iscamera():
+        &#34;&#34;&#34; Indicates if the board is esp32cam &#34;&#34;&#34;
+        try:
+                import camera 
+                return camera.isavailable()
+        except:
+                if ismicropython():
+                        return False
+                else:
+                        return True</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.isdigit"><code class="name flex">
+<span>def <span class="ident">isdigit</span></span>(<span>char)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the char is a digit</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isdigit(char):
+        &#34;&#34;&#34; Indicates if the char is a digit &#34;&#34;&#34;
+        if len(char) == 1:
+                if ord(char) &gt;= 0x31 and ord(char) &lt;= 0x39:
+                        return True
+                return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.isdir"><code class="name flex">
+<span>def <span class="ident">isdir</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the path is a directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isdir(path):
+        &#34;&#34;&#34; Indicates if the path is a directory &#34;&#34;&#34;
+        try:
+                if fileinfo(path)[0] &amp; 0x4000 == 0x4000:
+                        return True
+        except:
+                pass
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.isfile"><code class="name flex">
+<span>def <span class="ident">isfile</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the path is a file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isfile(path):
+        &#34;&#34;&#34; Indicates if the path is a file &#34;&#34;&#34;
+        try:
+                if fileinfo(path)[0] &amp; 0x4000 == 0:
+                        return True
+        except:
+                pass
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.islower"><code class="name flex">
+<span>def <span class="ident">islower</span></span>(<span>char)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the char is lower</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def islower(char):
+        &#34;&#34;&#34; Indicates if the char is lower &#34;&#34;&#34;
+        if len(char) == 1:
+                if ord(char) &gt;= 0x61 and ord(char) &lt; 0x7A:
+                        return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.ismicropython"><code class="name flex">
+<span>def <span class="ident">ismicropython</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the python is micropython</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ismicropython():
+        &#34;&#34;&#34; Indicates if the python is micropython &#34;&#34;&#34;
+        if sys.implementation.name == &#34;micropython&#34;:
+                return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.ispunctuation"><code class="name flex">
+<span>def <span class="ident">ispunctuation</span></span>(<span>char)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the char is a punctuation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ispunctuation(char):
+        &#34;&#34;&#34; Indicates if the char is a punctuation &#34;&#34;&#34;
+        if  (ord(char) &gt;= 0x21 and ord(char) &lt;= 0x2F) or \
+                (ord(char) &gt;= 0x3A and ord(char) &lt;= 0x40) or \
+                (ord(char) &gt;= 0x5B and ord(char) &lt;= 0x60) or \
+                (ord(char) &gt;= 0x7B and ord(char) &lt;= 0x7E):
+                return True
+        else:
+                return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.issameinterface"><code class="name flex">
+<span>def <span class="ident">issameinterface</span></span>(<span>ipaddr, ipinterface, maskinterface)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>indicates if the ip address is on the selected interface</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def issameinterface(ipaddr, ipinterface, maskinterface):
+        &#34;&#34;&#34; indicates if the ip address is on the selected interface &#34;&#34;&#34;
+        ipaddr = iptoint(ipaddr)
+        ipinterface  = iptoint(ipinterface)
+        maskinterface = iptoint(maskinterface)
+        if ipaddr &amp; maskinterface == ipinterface &amp; maskinterface:
+                return True
+        else:
+                return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.isspace"><code class="name flex">
+<span>def <span class="ident">isspace</span></span>(<span>char)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the char is a space, tabulation or new line</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isspace(char):
+        &#34;&#34;&#34; Indicates if the char is a space, tabulation or new line &#34;&#34;&#34;
+        if char == &#34; &#34; or char == &#34;\t&#34; or char == &#34;\n&#34; or char == &#34;\r&#34;:
+                return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.isupper"><code class="name flex">
+<span>def <span class="ident">isupper</span></span>(<span>char)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the char is upper</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isupper(char):
+        &#34;&#34;&#34; Indicates if the char is upper &#34;&#34;&#34;
+        if len(char) == 1:
+                if ord(char) &gt;= 0x41 and ord(char) &lt;= 0x5A:
+                        return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.journalize"><code class="name flex">
+<span>def <span class="ident">journalize</span></span>(<span>message)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def journalize(message):
+        filename = tools.useful.dateToFilename()
+        filename = &#34;jnl_&#34;+filename [8:-6] + &#34;.txt&#34;
+        file = open(filename,&#34;a&#34;)
+        message = &#34;%s: %s&#34;%(tools.useful.dateToString(), message)
+        print(message)
+        file.write(message)
+        file.write(&#34;\n&#34;)
+        file.flush()
+        file.close()</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.kbhit"><code class="name flex">
+<span>def <span class="ident">kbhit</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def kbhit():
+        import sys
+        import select
+        inp, outp, err = select.select([sys.stdin], [], [], 0.001)
+        if inp != []:
+                return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.log"><code class="name flex">
+<span>def <span class="ident">log</span></span>(<span>msg)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Log line with a ticks displayed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log(msg):
+        &#34;&#34;&#34; Log line with a ticks displayed &#34;&#34;&#34;
+        current = ticks()
+        global previousTime
+        if previousTime == 0:
+                previousTime = current
+        print(&#34;%03d.%03d:%s&#34;%((current-previousTime)/1000, (current-previousTime)%1000, msg))
+        previousTime = ticks()</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.makedir"><code class="name flex">
+<span>def <span class="ident">makedir</span></span>(<span>directory, recursive=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Make directory recursively</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def makedir(directory, recursive=False):
+        &#34;&#34;&#34; Make directory recursively &#34;&#34;&#34;
+        if recursive == False:
+                os.mkdir(directory)
+        else:
+                directories = [directory]
+                while 1:
+                        parts = split(directory)
+                        if parts[1] == &#34;&#34; or parts[0] == &#34;&#34;:
+                                break
+                        directories.append(parts[0])
+                        directory = parts[0]
+
+                directories.reverse()
+                for d in directories:
+                        if not(exists(d)):
+                                os.mkdir(d)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.meminfo"><code class="name flex">
+<span>def <span class="ident">meminfo</span></span>(<span>display=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get memory informations</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def meminfo(display=True):
+        &#34;&#34;&#34; Get memory informations &#34;&#34;&#34;
+        import gc
+        try:
+                alloc = gc.mem_alloc()
+                free  = gc.mem_free()
+                result = b&#34;Mem alloc=%s free=%s total=%s&#34;%(sizeToBytes(alloc, 1), sizeToBytes(free, 1), sizeToBytes(alloc+free, 1))
+                if display:
+                        print(tostrings(result))
+                else:
+                        return result
+        except:
+                return b&#34;Mem unavailable&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.now"><code class="name flex">
+<span>def <span class="ident">now</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get time now</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def now():
+        &#34;&#34;&#34; Get time now &#34;&#34;&#34;
+        now = time.localtime()
+        return now</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.prefix"><code class="name flex">
+<span>def <span class="ident">prefix</span></span>(<span>files)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the common prefix of all files</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prefix(files):
+        &#34;&#34;&#34; Get the common prefix of all files &#34;&#34;&#34;
+        # Initializes counters
+        counters = []
+        
+        # For all files
+        for file in files:
+                # Split the file name into a piece
+                paths = file.split(&#34;/&#34;)
+                
+                # For each piece
+                for i in range(0,len(paths)):
+                        try:
+                                try:
+                                        # Test if counters exist
+                                        counters[i][paths[i]] += 1
+                                except:
+                                        # Creates a path counters
+                                        counters[i][paths[i]] = 1
+                        except:
+                                # Adds a new level of depth
+                                counters.append({paths[i] : 1})
+        
+        # Constructs the prefix of the list of files
+        try:
+                result = &#34;&#34;
+                amount = list(counters[0].values())[0]
+                for counter in counters:
+                        if len(counter.keys()) == 1 and list(counter.values())[0] == amount:
+                                result += list(counter.keys())[0] + &#34;/&#34;
+                        else:
+                                return result [:-1]
+                                break
+                return result
+        except IndexError:
+                return &#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.sizeToBytes"><code class="name flex">
+<span>def <span class="ident">sizeToBytes</span></span>(<span>size, largeur=6)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert a size in a bytes with k, m, g, t&hellip;</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sizeToBytes(size, largeur=6):
+        &#34;&#34;&#34; Convert a size in a bytes with k, m, g, t...&#34;&#34;&#34;
+        if size &gt; 1073741824*1024:
+                return  b&#34;%*.2fT&#34;%(largeur, size / (1073741824.*1024.))
+        elif size &gt; 1073741824:
+                return  b&#34;%*.2fG&#34;%(largeur, size / 1073741824.)
+        elif size &gt; 1048576:
+                return b&#34;%*.2fM&#34;%(largeur, size / 1048576.)
+        elif size &gt; 1024:
+                return b&#34;%*.2fK&#34;%(largeur, size / 1024.)
+        else:
+                return b&#34;%*dB&#34;%(largeur, size)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.sizeToString"><code class="name flex">
+<span>def <span class="ident">sizeToString</span></span>(<span>size, largeur=6)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert a size in a string with k, m, g, t&hellip;</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sizeToString(size, largeur=6):
+        &#34;&#34;&#34; Convert a size in a string with k, m, g, t...&#34;&#34;&#34;
+        return sizeToBytes(size, largeur).decode(&#34;utf8&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.split"><code class="name flex">
+<span>def <span class="ident">split</span></span>(<span>p)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Split file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def split(p):
+        &#34;&#34;&#34; Split file &#34;&#34;&#34;
+        sep = &#34;/&#34;
+        i = p.rfind(sep) + 1
+        head, tail = p[:i], p[i:]
+        if head and head != sep*len(head):
+                head = head.rstrip(sep)
+        return head, tail</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.splitext"><code class="name flex">
+<span>def <span class="ident">splitext</span></span>(<span>p)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Split file extension</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def splitext(p):
+        &#34;&#34;&#34; Split file extension &#34;&#34;&#34;
+        sep=&#39;\\&#39;
+        altsep = &#39;/&#39;
+        extsep = &#39;.&#39;
+        sepIndex = p.rfind(sep)
+        if altsep:
+                altsepIndex = p.rfind(altsep)
+                sepIndex = max(sepIndex, altsepIndex)
+
+        dotIndex = p.rfind(extsep)
+        if dotIndex &gt; sepIndex:
+                filenameIndex = sepIndex + 1
+                while filenameIndex &lt; dotIndex:
+                        if p[filenameIndex:filenameIndex+1] != extsep:
+                                return p[:dotIndex], p[dotIndex:]
+                        filenameIndex += 1
+        return p, p[:0]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.sysinfo"><code class="name flex">
+<span>def <span class="ident">sysinfo</span></span>(<span>display=True, text='')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get system informations</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sysinfo(display=True, text=&#34;&#34;):
+        &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
+        try:
+                import machine
+                result = b&#34;%s%s %dMhz, %s, %s, %s&#34;%(text, sys.platform, machine.freq()//1000000, dateToBytes(), meminfo(False), flashinfo(False))
+                if display:
+                        print(tostrings(result))
+                else:
+                        return result
+        except:
+                return b&#34;Sysinfo not available&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.ticks"><code class="name flex">
+<span>def <span class="ident">ticks</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ticks():
+        import time
+        return (int)(time.time() * 1000)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.ticksToString"><code class="name flex">
+<span>def <span class="ident">ticksToString</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a string with tick in seconds</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ticksToString():
+        &#34;&#34;&#34; Create a string with tick in seconds &#34;&#34;&#34;
+        tick = ticks()
+        return &#34;%d.%03d s&#34;%(tick/1000, tick%1000)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.tobytes"><code class="name flex">
+<span>def <span class="ident">tobytes</span></span>(<span>datas, encoding='utf8')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert data to bytes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tobytes(datas, encoding=&#34;utf8&#34;):
+        &#34;&#34;&#34; Convert data to bytes &#34;&#34;&#34;
+        result = datas
+        if type(datas) == type(&#34;&#34;):
+                result = datas.encode(encoding)
+        elif type(datas) == type([]):
+                result = []
+                for item in datas:
+                        result.append(tobytes(item, encoding))
+        elif type(datas) == type((0,0)):
+                result = []
+                for item in datas:
+                        result.append(tobytes(item, encoding))
+                result = tuple(result)
+        elif type(datas) == type({}):
+                result = {}
+                for key, value in datas.items():
+                        result[tobytes(key,encoding)] = tobytes(value, encoding)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.tostrings"><code class="name flex">
+<span>def <span class="ident">tostrings</span></span>(<span>datas, encoding='utf8')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert data to strings</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tostrings(datas, encoding=&#34;utf8&#34;):
+        &#34;&#34;&#34; Convert data to strings &#34;&#34;&#34;
+        result = datas
+        if type(datas) == type(b&#34;&#34;):
+                result = datas.decode(encoding)
+        elif type(datas) == type([]):
+                result = []
+                for item in datas:
+                        result.append(tostrings(item, encoding))
+        elif type(datas) == type((0,0)):
+                result = []
+                for item in datas:
+                        result.append(tostrings(item, encoding))
+                result = tuple(result)
+        elif type(datas) == type({}):
+                result = {}
+                for key, value in datas.items():
+                        result[tostrings(key,encoding)] = tostrings(value, encoding)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.tools" href="index.html">lib.tools</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="lib.tools.useful.abspath" href="#lib.tools.useful.abspath">abspath</a></code></li>
+<li><code><a title="lib.tools.useful.abspathbytes" href="#lib.tools.useful.abspathbytes">abspathbytes</a></code></li>
+<li><code><a title="lib.tools.useful.blink" href="#lib.tools.useful.blink">blink</a></code></li>
+<li><code><a title="lib.tools.useful.dateToBytes" href="#lib.tools.useful.dateToBytes">dateToBytes</a></code></li>
+<li><code><a title="lib.tools.useful.dateToFilename" href="#lib.tools.useful.dateToFilename">dateToFilename</a></code></li>
+<li><code><a title="lib.tools.useful.dateToString" href="#lib.tools.useful.dateToString">dateToString</a></code></li>
+<li><code><a title="lib.tools.useful.dump" href="#lib.tools.useful.dump">dump</a></code></li>
+<li><code><a title="lib.tools.useful.exception" href="#lib.tools.useful.exception">exception</a></code></li>
+<li><code><a title="lib.tools.useful.exists" href="#lib.tools.useful.exists">exists</a></code></li>
+<li><code><a title="lib.tools.useful.fileinfo" href="#lib.tools.useful.fileinfo">fileinfo</a></code></li>
+<li><code><a title="lib.tools.useful.flashinfo" href="#lib.tools.useful.flashinfo">flashinfo</a></code></li>
+<li><code><a title="lib.tools.useful.getHash" href="#lib.tools.useful.getHash">getHash</a></code></li>
+<li><code><a title="lib.tools.useful.getScreenSize" href="#lib.tools.useful.getScreenSize">getScreenSize</a></code></li>
+<li><code><a title="lib.tools.useful.getch" href="#lib.tools.useful.getch">getch</a></code></li>
+<li><code><a title="lib.tools.useful.htmlException" href="#lib.tools.useful.htmlException">htmlException</a></code></li>
+<li><code><a title="lib.tools.useful.import_" href="#lib.tools.useful.import_">import_</a></code></li>
+<li><code><a title="lib.tools.useful.iptoint" href="#lib.tools.useful.iptoint">iptoint</a></code></li>
+<li><code><a title="lib.tools.useful.isalpha" href="#lib.tools.useful.isalpha">isalpha</a></code></li>
+<li><code><a title="lib.tools.useful.isascii" href="#lib.tools.useful.isascii">isascii</a></code></li>
+<li><code><a title="lib.tools.useful.iscamera" href="#lib.tools.useful.iscamera">iscamera</a></code></li>
+<li><code><a title="lib.tools.useful.isdigit" href="#lib.tools.useful.isdigit">isdigit</a></code></li>
+<li><code><a title="lib.tools.useful.isdir" href="#lib.tools.useful.isdir">isdir</a></code></li>
+<li><code><a title="lib.tools.useful.isfile" href="#lib.tools.useful.isfile">isfile</a></code></li>
+<li><code><a title="lib.tools.useful.islower" href="#lib.tools.useful.islower">islower</a></code></li>
+<li><code><a title="lib.tools.useful.ismicropython" href="#lib.tools.useful.ismicropython">ismicropython</a></code></li>
+<li><code><a title="lib.tools.useful.ispunctuation" href="#lib.tools.useful.ispunctuation">ispunctuation</a></code></li>
+<li><code><a title="lib.tools.useful.issameinterface" href="#lib.tools.useful.issameinterface">issameinterface</a></code></li>
+<li><code><a title="lib.tools.useful.isspace" href="#lib.tools.useful.isspace">isspace</a></code></li>
+<li><code><a title="lib.tools.useful.isupper" href="#lib.tools.useful.isupper">isupper</a></code></li>
+<li><code><a title="lib.tools.useful.journalize" href="#lib.tools.useful.journalize">journalize</a></code></li>
+<li><code><a title="lib.tools.useful.kbhit" href="#lib.tools.useful.kbhit">kbhit</a></code></li>
+<li><code><a title="lib.tools.useful.log" href="#lib.tools.useful.log">log</a></code></li>
+<li><code><a title="lib.tools.useful.makedir" href="#lib.tools.useful.makedir">makedir</a></code></li>
+<li><code><a title="lib.tools.useful.meminfo" href="#lib.tools.useful.meminfo">meminfo</a></code></li>
+<li><code><a title="lib.tools.useful.now" href="#lib.tools.useful.now">now</a></code></li>
+<li><code><a title="lib.tools.useful.prefix" href="#lib.tools.useful.prefix">prefix</a></code></li>
+<li><code><a title="lib.tools.useful.sizeToBytes" href="#lib.tools.useful.sizeToBytes">sizeToBytes</a></code></li>
+<li><code><a title="lib.tools.useful.sizeToString" href="#lib.tools.useful.sizeToString">sizeToString</a></code></li>
+<li><code><a title="lib.tools.useful.split" href="#lib.tools.useful.split">split</a></code></li>
+<li><code><a title="lib.tools.useful.splitext" href="#lib.tools.useful.splitext">splitext</a></code></li>
+<li><code><a title="lib.tools.useful.sysinfo" href="#lib.tools.useful.sysinfo">sysinfo</a></code></li>
+<li><code><a title="lib.tools.useful.ticks" href="#lib.tools.useful.ticks">ticks</a></code></li>
+<li><code><a title="lib.tools.useful.ticksToString" href="#lib.tools.useful.ticksToString">ticksToString</a></code></li>
+<li><code><a title="lib.tools.useful.tobytes" href="#lib.tools.useful.tobytes">tobytes</a></code></li>
+<li><code><a title="lib.tools.useful.tostrings" href="#lib.tools.useful.tostrings">tostrings</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

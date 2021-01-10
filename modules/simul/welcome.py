@@ -14,27 +14,13 @@ async def welcomePage(request, response, args):
 				[
 					Br(),
 					Tag(b'''
-<p>Features :
-	<ul>
-		<li>Http web server </li>
-		<li>Ftp server </li>
-		<li>Telnet server</li>
-		<li>User, password manager (for all servers)</li>
-		<li>Web configuration</li>
-		<li>Ntp synchronization</li>
-		<li>Wifi manager</li>
-		<li>Html template engine using <a href="https://jquery.com">jquery</a>, <a href="https://www.w3schools.com/bootstrap4">bootstrap 4</a></li>
-		<li><a href="https://pushover.net">Push over</a> notification with image</li>
-		<li>Shell usable on board</li>
-		<li>True VT100 text editor usable on board, allows to execute python scripts during edition</li>
-		<li>Battery management with detection level</li>
-	</ul>
-</p>
-
 <p>
-	On ESP32CAM to use motion detection with image notification, you have to configure :
+	To get notifications on your smartphone, you need to install the app <a href="https://pushover.net">Push over</a>, create an account, 
+	and create an Application/API Token.
+
+	To use motion detection on ESP32CAM you have to configure :
 	<ul>
-		<li><a href="wifi">Activate wifi and configure it</a></li>
+		<li><a href="wifi">Set wifi SSID and password and activate it</a></li>
 		<li><a href="accesspoint">Disable the access point for more security</a></li>
 		<li><a href="server">Choose available server</a></li>
 		<li><a href="changepassword">Enter password and user for more security</a></li>

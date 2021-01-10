@@ -19,11 +19,14 @@ class StationConfig:
 
 	def __repr__(self):
 		""" Display the content of wifi station """
+		# Get network address
+		ipaddress, netmask, gateway, dns = Station.wlan.ifconfig()
+
 		result = "%s:\n"%self.__class__.__name__
-		result +="   Ip address :%s\n"%useful.tostrings(self.ipaddress)
-		result +="   Netmask    :%s\n"%useful.tostrings(self.netmask)
-		result +="   Gateway    :%s\n"%useful.tostrings(self.gateway)
-		result +="   Dns        :%s\n"%useful.tostrings(self.dns)
+		result +="   Ip address :%s\n"%ipaddress
+		result +="   Netmask    :%s\n"%netmask
+		result +="   Gateway    :%s\n"%gateway
+		result +="   Dns        :%s\n"%dns
 		result +="   Ssid       :%s\n"%useful.tostrings(self.ssid)
 		# result +="   Password   :%s\n"%useful.tostrings(self.wifipassword)
 		result +="   Activated  :%s\n"%useful.tostrings(self.activated)
@@ -82,24 +85,29 @@ class Station:
 		if netmask   != None: Station.config.netmask   = useful.tobytes(netmask)
 		if gateway   != None: Station.config.gateway   = useful.tobytes(gateway)
 		if dns       != None: Station.config.dns       = useful.tobytes(dns)
+
 		if Station.config.ipaddress == b"": Station.config.ipaddress = useful.tobytes(Station.wlan.ifconfig()[0])
 		if Station.config.netmask   == b"": Station.config.netmask   = useful.tobytes(Station.wlan.ifconfig()[1])
 		if Station.config.gateway   == b"": Station.config.gateway   = useful.tobytes(Station.wlan.ifconfig()[2])
 		if Station.config.dns       == b"": Station.config.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
+
+		if Station.config.ipaddress == b"0.0.0.0": Station.config.ipaddress = b""
+		if Station.config.netmask   == b"0.0.0.0": Station.config.netmask   = b""
+		if Station.config.gateway   == b"0.0.0.0": Station.config.gateway   = b""
+		if Station.config.dns       == b"0.0.0.0": Station.config.dns       = b""
+
 		try:
-			Station.wlan.ifconfig((
-				useful.tostrings(Station.config.ipaddress),
-				useful.tostrings(Station.config.netmask),
-				useful.tostrings(Station.config.gateway),
-				useful.tostrings(Station.config.dns)))
-			if sys.implementation.name != "micropython":
-				Station.config.ipaddress, Station.config.netmask, Station.config.gateway, Station.config.dns = Station.wlan.ifconfig()
-				Station.config.ipaddress = useful.tobytes(Station.config.ipaddress)
-				Station.config.netmask   = useful.tobytes(Station.config.netmask  )
-				Station.config.gateway   = useful.tobytes(Station.config.gateway  )
-				Station.config.dns       = useful.tobytes(Station.config.dns      )
-		except OSError:
-			print("Cannot configure %s"%Station.__class__.__name__)
+			if Station.config.ipaddress != b"" and \
+				Station.config.netmask   != b"" and \
+				Station.config.gateway   != b"" and \
+				Station.config.dns       != b"":
+				Station.wlan.ifconfig((
+					useful.tostrings(Station.config.ipaddress),
+					useful.tostrings(Station.config.netmask),
+					useful.tostrings(Station.config.gateway),
+					useful.tostrings(Station.config.dns)))
+		except Exception as err:
+			print("Cannot configure wifi station %s"%useful.exception(err))
 
 	@staticmethod
 	def getInfo():

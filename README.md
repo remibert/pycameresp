@@ -116,7 +116,7 @@ You must connect to the SSID **Micropython** access point, the wifi password is 
 Once wifi connected, open your web browser on the ip address (http://192.168.3.1).
 To use motion detection with image notification, you have to configure :
 
-- (http://192.168.3.1/wifi) Activate wifi and configure it
+- (http://192.168.3.1/wifi) Set wifi SSID and password and activate it
 - (http://192.168.3.1/accesspoint) Disable the access point for more security
 - (http://192.168.3.1/server) Choose available server
 - (http://192.168.3.1/changepassword) Enter password and user for more security

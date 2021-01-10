@@ -1,0 +1,2174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.server.httprequest API documentation</title>
+<meta name="description" content="These classes manage http responses and requests.
+The set of request and response are in bytes format.
+I no longer use strings, because they are …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.server.httprequest</code></h1>
+</header>
+<section id="section-intro">
+<p>These classes manage http responses and requests.
+The set of request and response are in bytes format.
+I no longer use strings, because they are between 20 and 30 times slower.
+It may sound a bit more complicated, but it's a lot quick.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET 
+# historically based on :
+# https://github.com/jczic/MicroWebSrv/blob/master/microWebSocket.py
+# but I have modified a lot, there must still be some original functions.
+&#34;&#34;&#34; These classes manage http responses and requests.
+The set of request and response are in bytes format.
+I no longer use strings, because they are between 20 and 30 times slower.
+It may sound a bit more complicated, but it&#39;s a lot quick.
+&#34;&#34;&#34;
+
+MIMES = {\
+        b&#34;.txt&#34;   : b&#34;text/plain&#34;,
+        b&#34;.py&#34;    : b&#34;text/plain&#34;,
+        b&#34;.html&#34;  : b&#34;text/html&#34;,
+        b&#34;.css&#34;   : b&#34;text/css&#34;,
+        b&#34;.htm&#34;   : b&#34;text/html&#34;,
+        b&#34;.csv&#34;   : b&#34;text/csv&#34;,
+        b&#34;.js&#34;    : b&#34;application/javascript&#34;,
+        b&#34;.xml&#34;   : b&#34;application/xml&#34;,
+        b&#34;.xhtml&#34; : b&#34;application/xhtml+xml&#34;,
+        b&#34;.json&#34;  : b&#34;application/json&#34;,
+        b&#34;.zip&#34;   : b&#34;application/zip&#34;,
+        b&#34;.pdf&#34;   : b&#34;application/pdf&#34;,
+        b&#34;.ts&#34;    : b&#34;application/typescript&#34;,
+        b&#34;.woff&#34;  : b&#34;font/woff&#34;,
+        b&#34;.woff2&#34; : b&#34;font/woff2&#34;,
+        b&#34;.ttf&#34;   : b&#34;font/ttf&#34;,
+        b&#34;.otf&#34;   : b&#34;font/otf&#34;,
+        b&#34;.jpg&#34;   : b&#34;image/jpeg&#34;,
+        b&#34;.png&#34;   : b&#34;image/png&#34;,
+        b&#34;.gif&#34;   : b&#34;image/gif&#34;,
+        b&#34;.jpeg&#34;  : b&#34;image/jpeg&#34;,
+        b&#34;.svg&#34;   : b&#34;image/svg+xml&#34;,
+        b&#34;.ico&#34;   : b&#34;image/x-icon&#34; 
+}
+
+import collections
+import server.stream
+from tools import useful
+import hashlib
+import time
+from binascii import hexlify
+from os import stat
+from tools.useful import log
+
+class Http:
+        &#34;&#34;&#34; Http request or reponse &#34;&#34;&#34;
+        def __init__(self, request = True, remoteaddr= b&#34;&#34;, port = 0):
+                &#34;&#34;&#34; Constructor from http request or response &#34;&#34;&#34;
+                self.port       = port
+                self.remoteaddr = remoteaddr
+                self.path       = b&#34;&#34;
+                self.method     = b&#34;POST&#34;
+                self.headers    = collections.OrderedDict()
+                self.params     = collections.OrderedDict()
+                self.cookies    = collections.OrderedDict()
+                self.parts      = []
+                self.status     = 0
+                self.content    = None
+                self.identifier = None
+                self.request    = request
+
+        def quote(self, text):
+                &#34;&#34;&#34; Insert in the string the character not supported in an url &#34;&#34;&#34;
+                result = b&#34;&#34;
+                for char in text:
+                        if (ord(char) &gt;= 0x41 and ord(char) &lt; 0x5A) or (ord(char) &gt;= 0x61 and ord(char) &lt; 0x7A):
+                                result += char
+                        elif char == b&#34; &#34;:
+                                result += b&#34;+&#34;
+                        else:
+                                result += b&#34;%%%02X&#34;%ord(char)
+                return result
+
+        def unquote(self, url):
+                &#34;&#34;&#34; Remove from a string special character in the url &#34;&#34;&#34;
+                url = url.replace(b&#39;+&#39;, b&#39; &#39;)
+                spl = url.split(b&#39;%&#39;)
+                try :
+                        result = spl[0]
+                        for part in range(1, len(spl)) :
+                                try :
+                                        result += bytes([int(spl[part][:2], 16)]) + spl[part][2:]
+                                except :
+                                        result += b&#39;%&#39; + spl[part]
+                        return result
+                except :
+                        return url
+
+        def getExpiration(self, expiration):
+                &#34;&#34;&#34; Get cookie expiration date &#34;&#34;&#34;
+                result = b&#34;; Max-Age=%d&#34;%expiration
+                return result
+
+        def getCookie(self, name):
+                &#34;&#34;&#34; Get cookie value &#34;&#34;&#34;
+                try:
+                        return self.cookies.get(name, None)
+                except:
+                        return None
+
+        def setCookie(self, name, value=None, expiration=None):
+                &#34;&#34;&#34; Set cookie &#34;&#34;&#34;
+                if value == None:
+                        if name in self.cookies:
+                                del self.cookies[name]
+                else:
+                        self.cookies[name] = (value, expiration)
+
+        def getHeader(self, name):
+                &#34;&#34;&#34; Get the http request header &#34;&#34;&#34;
+                try:
+                        return self.headers.get(name, None)
+                except:
+                        return None
+
+        def setHeader(self, name, value):
+                &#34;&#34;&#34; Set the http request header &#34;&#34;&#34;
+                if value == None:
+                        del self.headers[name]
+                else:
+                        self.headers[name] = value
+
+        def setMethod(self, method):
+                &#34;&#34;&#34; Set http request method (POST or GET) &#34;&#34;&#34;
+                self.method = method
+
+        def getPath(self):
+                &#34;&#34;&#34; Get the path of the request or response &#34;&#34;&#34;
+                return self.path
+        
+        def setPath(self, path):
+                &#34;&#34;&#34; Define the past of the request or response &#34;&#34;&#34;
+                self.path = path
+
+        def addPart(self, part):
+                &#34;&#34;&#34; Add part of the request. Used for multipart request &#34;&#34;&#34;
+                self.parts.append(part)
+
+        def getStatus(self):
+                &#34;&#34;&#34; Get the status value &#34;&#34;&#34;
+                return self.status
+
+        def setStatus(self, status):
+                &#34;&#34;&#34; Set the status value &#34;&#34;&#34;
+                self.status = status
+                
+        def setContent(self, content):
+                &#34;&#34;&#34; Set the content of the request or response (can be an instance of html template) &#34;&#34;&#34;
+                if type(content) == type(&#34;&#34;):
+                        self.content = ContentText(content)
+                else:
+                        self.content = content
+        
+        def getContent(self):
+                &#34;&#34;&#34; Get the content of the request or response &#34;&#34;&#34;
+                return self.content
+
+        def getId(self):
+                &#34;&#34;&#34; Get the unique identifier of the request or response. Used for multipart request &#34;&#34;&#34;
+                hash = hashlib.sha256()
+                ids = b&#34;%d&#34;%time.time()
+                hash.update(ids)
+                return hexlify(hash.digest())[32:]
+
+        async def unserialize(self, streamio):
+                &#34;&#34;&#34; Unserialize the request or response in the stream &#34;&#34;&#34;
+                data = await streamio.readline()
+                if data != b&#34;&#34;:
+                        spl = data.split()
+                        self.method = spl[0]
+                        path = spl[1]
+                        proto = spl[2]
+                        if self.request == False:
+                                self.status = path
+                        paths = path.split(b&#34;?&#34;, 1)
+                        if len(paths) &gt; 1:
+                                self.unserializeParams(paths[1])
+                        self.path = self.unquote(paths[0])
+                        await self.unserializeHeaders(streamio)
+
+        def unserializeParams(self, url):
+                &#34;&#34;&#34; Extract parameters from url &#34;&#34;&#34;
+                if url:
+                        pairs = url.split(b&#34;&amp;&#34;)
+                        for pair in pairs:
+                                param = [self.unquote(x) for x in pair.split(b&#34;=&#34;, 1)]
+                                if len(param) == 1:
+                                        param.append(True)
+                                previousValue = self.params.get(param[0])
+                                if previousValue is not None:
+                                        if not isinstance(previousValue, list):
+                                                self.params[param[0]] = [previousValue]
+                                        self.params[param[0]].append(param[1])
+                                else:
+                                        self.params[param[0]] = param[1]
+
+        async def unserializeHeaders(self, streamio):
+                &#34;&#34;&#34; Extract http header &#34;&#34;&#34;
+                while True:
+                        header = await streamio.readline()
+                        if header == b&#34;\r\n&#34;:
+                                if self.method == b&#34;POST&#34;:
+                                        post = await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;)))
+                                        post = post
+                                        self.unserializeParams(post)
+                                break
+                        name, value = header.split(b&#34;:&#34;, 1)
+                        if name == b&#34;Cookie&#34;:
+                                cookies = value.split(b&#34;;&#34;)
+                                for cookie in cookies:
+                                        cookieName,cookieValue=cookie.split(b&#34;=&#34;)
+                                        self.cookies[cookieName.strip()] = cookieValue.strip()
+                        else:
+                                self.headers[name] = value.strip()
+
+        async def serialize(self, streamio):
+                &#34;&#34;&#34; Serialize request or response in the stream &#34;&#34;&#34;
+                if self.request:
+                        result = await self.serializeRequest(streamio)
+                else:
+                        result = await self.serializeResponse(streamio)
+                return result
+        
+        async def serializeRequest(self, streamio):
+                &#34;&#34;&#34; Serialize request with body &#34;&#34;&#34;
+                result = await streamio.write(b&#34;%s %s %s\r\n&#34;%(self.method, self.path, b&#34;HTTP/1.1&#34;))
+                result += await self.serializeBody(streamio)
+                return result
+        
+        async def serializeBody(self, streamio):
+                &#34;&#34;&#34; Serialize body &#34;&#34;&#34;
+                result = 0
+                try:
+                        createIdentifier = False
+                        if len(self.parts) &gt; 0:
+                                createIdentifier = True
+                        # If multipart request detected
+                        if b&#34;multipart&#34; in self.headers[b&#34;Content-Type&#34;] :
+                                createIdentifier = True
+                except:
+                        pass
+
+                # If identifier required (multipart request)
+                if self.identifier == None and createIdentifier:
+                        self.identifier = self.getId()
+
+                # Serialize http header
+                for header, value in self.headers.items():
+                        if self.identifier != None:
+                                if header == b&#34;Content-Type&#34;:
+                                        value += b&#34;; boundary=%s&#34;%self.identifier
+                        result += await streamio.write(b&#34;%s: %s\r\n&#34;%(header, value))
+                
+                # Serialize cookies
+                for cookie, value in self.cookies.items():
+                        if self.request:
+                                setget = b&#34;&#34;
+                        else:
+                                setget = b&#34;Set-&#34;
+                        result += await streamio.write(b&#34;%sCookie: %s=%s%s\r\n&#34;%(setget, cookie, value[0], self.getExpiration(value[1])))
+
+                # If content existing
+                if self.content != None:
+                        try:
+                                # If content is a bytes string
+                                if type(self.content) == type(b&#34;&#34;):
+                                        result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                                        result += await streamio.write(self.content)
+                                else:
+                                        # Serialize object
+                                        result += await self.content.serialize(streamio)
+                        except Exception as err:
+                                # Serialize error detected
+                                result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                                result += await streamio.write(useful.htmlException(err))
+                # If multipart detected
+                elif len(self.parts) &gt; 0:
+                        # If the header is a multipart
+                        if self.headers[b&#34;Content-Type&#34;] == b&#34;multipart/form-data&#34;:
+                                length = 0
+                                # Set the size of identifier
+                                for part in self.parts:
+                                        length += 2
+                                        length += await part.getSize(self.identifier)
+                                length += len(self.identifier)
+                                length += 6
+
+                                # Write multipart identifier
+                                result += await streamio.write(b&#34;Content-Length: %d\r\n\r\n&#34;%(length))
+                                result += await streamio.write(b&#34;--%s&#34;%self.identifier)
+
+                        # Serialize all parts of the multipart
+                        for part in self.parts:
+                                result += await streamio.write(b&#34;\r\n&#34;)
+                                result += await part.serialize(self.identifier, streamio)
+
+                        # Terminate multipart request
+                        if self.headers[b&#34;Content-Type&#34;] != b&#34;multipart/x-mixed-replace&#34;:
+                                result += await streamio.write(b&#34;--&#34;)
+
+                # Terminate serialize request or response
+                result += await streamio.write(b&#34;\r\n&#34;)
+                return result
+
+        async def serializeResponse(self, streamio):
+                &#34;&#34;&#34; Send response to client web browser &#34;&#34;&#34;
+                result = await streamio.write(b&#34;HTTP/1.1 %s NA\r\n&#34;%(self.status))
+                result += await self.serializeBody(streamio)
+                return result
+
+class ContentText:
+        &#34;&#34;&#34; Class that contains a text &#34;&#34;&#34;
+        def __init__(self, text, contentType=None):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.text = text
+                self.contentType = contentType
+                if contentType == None:
+                        self.contentType = b&#34;text/plain&#34;
+        
+        async def serialize(self, streamio):
+                &#34;&#34;&#34; Serialize text content &#34;&#34;&#34;
+                result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.contentType))
+                result += await streamio.write(self.text)
+                return result
+
+class ContentFile:
+        &#34;&#34;&#34; Class that contains a file &#34;&#34;&#34;
+        def __init__(self, filename, contentType=None):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.filename = filename
+                if contentType == None:
+                        global MIMES
+                        ext = useful.splitext(useful.tostrings(filename))[1]
+                        self.contentType = MIMES.get(useful.tobytes(ext),b&#34;text/plain&#34;)
+                else:
+                        self.contentType = contentType
+                
+        async def serialize(self, streamio):
+                &#34;&#34;&#34; Serialize file &#34;&#34;&#34;
+                try:
+                        with open(useful.tostrings(self.filename), &#34;rb&#34;) as f:
+                                result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.contentType))
+                                step = 1440
+                                buf = bytearray(step)
+                                f.seek(0,2)
+                                size = f.tell()
+                                f.seek(0)
+                                while size &gt; 0:
+                                        if size &lt; step:
+                                                buf = bytearray(size)
+                                        length = f.readinto(buf)
+                                        size -= length
+                                        result += await streamio.write(buf)
+                except Exception as err:
+                        result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                        result += await streamio.write(b&#34;File %s not found&#34;%useful.tobytes(self.filename))
+                return result
+
+class ContentBuffer:
+        &#34;&#34;&#34; Class that contains a buffer &#34;&#34;&#34;
+        def __init__(self, filename, buffer, contentType=None):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.filename = filename
+                self.buffer = buffer
+                if contentType == None:
+                        global MIMES
+                        ext = useful.splitext(useful.tostrings(filename))[1]
+                        self.contentType = MIMES.get(useful.tobytes(ext),b&#34;text/plain&#34;)
+                else:
+                        self.contentType = contentType
+                
+        async def serialize(self, streamio):
+                &#34;&#34;&#34; Serialize a buffer &#34;&#34;&#34;
+                try:
+                        b = self.buffer[0]
+                        result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.contentType))
+                        result += await streamio.write(useful.tobytes(self.buffer))
+                except Exception as err:
+                        result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                        result += await streamio.write(b&#34;Nothing&#34;)
+                return result
+
+class PartText:
+        &#34;&#34;&#34; Class that contains a text, used in multipart request or response &#34;&#34;&#34;
+        def __init__(self, name, value):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.name  = name
+                self.value = value
+                
+        async def serialize(self, identifier, streamio):
+                &#34;&#34;&#34; Serialize multipart text part &#34;&#34;&#34;
+                result = await streamio.write(b&#39;Content-Disposition: form-data; name=&#34;%s&#34;\r\n&#39;%(self.name))
+                result += await streamio.write(b&#39;Content-Type: text/plain \r\n&#39;)
+                result += await streamio.write(b&#34;\r\n%s\r\n&#34;%self.value)
+                result += await streamio.write(b&#34;--%s&#34;%identifier)
+                return result
+
+        async def getSize(self, identifier):
+                &#34;&#34;&#34; Get the size of this part &#34;&#34;&#34;
+                result = await self.serialize(identifier, server.stream.Bytesio())
+                return result
+
+class PartFile:
+        &#34;&#34;&#34; Class that contains a file, used in multipart request or response &#34;&#34;&#34;
+        def __init__(self, name, filename, contentType):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.name = name
+                self.filename = filename
+                self.contentType = contentType
+
+        async def serializeHeader(self, identifier, streamio):
+                &#34;&#34;&#34; Serialize multi part header of file &#34;&#34;&#34;
+                result = await streamio.write(b&#39;Content-Disposition: form-data; name=&#34;%s&#34;; filename=&#34;%s&#34;\r\n&#39;%(self.name, self.filename))
+                result += await streamio.write(b&#39;Content-Type: %s\r\n&#39;%self.contentType)
+                return result
+
+        async def serialize(self, identifier, streamio):
+                &#34;&#34;&#34; Serialize multi part file &#34;&#34;&#34;
+                result = await self.serializeHeader(identifier, streamio)
+                result += await streamio.write(b&#34;\r\n%s\r\n&#34;%open(useful.tostrings(self.filename),&#34;rb&#34;).read())
+                result +=  await streamio.write(b&#34;--%s&#34;%identifier)
+                return result
+                
+        async def getSize(self, identifier):
+                &#34;&#34;&#34; Get the size of multi part file &#34;&#34;&#34;
+                headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
+                fileSize = stat(useful.tostrings(self.filename))[6]
+                return headerSize + fileSize + 4 + len(identifier) + 2
+
+class PartBin(PartFile):
+        &#34;&#34;&#34; Class that contains a binary data, used in multipart request or response &#34;&#34;&#34;
+        def __init__(self, name, filename, binary, contentType):
+                PartFile.__init__(self, name, filename, contentType)
+                self.binary = binary
+        
+        async def serialize(self, identifier, streamio):
+                &#34;&#34;&#34; Serialize multi part binary data &#34;&#34;&#34;
+                result = await self.serializeHeader(identifier, streamio)
+                result += await streamio.write(b&#34;\r\n%s\r\n&#34;%self.binary)
+                result +=  await streamio.write(b&#34;--%s&#34;%identifier)
+                return result
+
+        async def getSize(self, identifier):
+                &#34;&#34;&#34; Get the size of multi part binary data &#34;&#34;&#34;
+                headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
+                fileSize = len(self.binary)
+                return headerSize + fileSize + 4 + len(identifier) + 2
+
+class HttpResponse(Http):
+        &#34;&#34;&#34; Http response send to web browser client &#34;&#34;&#34;
+        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port)
+                self.streamio = streamio
+
+        async def send(self, content=None, status=b&#34;200&#34;, headers={}):
+                &#34;&#34;&#34; Send response to client web browser &#34;&#34;&#34;
+                self.setContent(content)
+                self.setStatus(status)
+                if headers != None:
+                        for name, value in headers.items():
+                                self.setHeader(name, value)
+                return await self.serialize(self.streamio)
+
+        async def sendError(self, status, content=None):
+                &#34;&#34;&#34; Send error to the client web browser &#34;&#34;&#34;
+                return await self.send(status=status, content=content)
+
+        async def sendOk(self, content=None):
+                &#34;&#34;&#34; Send ok to the client web browser &#34;&#34;&#34;
+                return await self.sendError(status=b&#34;200&#34;, content=content)
+
+        async def sendFile(self, filename, mimeType=None, headers=None):
+                &#34;&#34;&#34; Send a file to the client web browser &#34;&#34;&#34;
+                return await self.send(content=ContentFile(filename, mimeType), status=b&#34;200&#34;, headers=headers)
+
+        async def sendBuffer(self, filename, buffer, mimeType=None, headers=None):
+                &#34;&#34;&#34; Send a file to the client web browser &#34;&#34;&#34;
+                return await self.send(content=ContentBuffer(filename, buffer, mimeType), status=b&#34;200&#34;, headers=headers)
+
+        async def sendPage(self, page):
+                &#34;&#34;&#34; Send a template page to the client web browser &#34;&#34;&#34;
+                bytesio = server.stream.Bytesio()
+                self.setContent(None)
+                self.setStatus(b&#34;200&#34;)
+                await self.serialize(bytesio)
+                await page.write(bytesio)
+                await self.streamio.write(bytesio.streamio.getvalue())
+
+        async def receive(self, streamio=None):
+                &#34;&#34;&#34; Receive request from client &#34;&#34;&#34;
+                if streamio == None:
+                        streamio = self.streamio
+                await self.unserialize(streamio)
+
+class HttpRequest(Http):
+        &#34;&#34;&#34; Http request received from web browser client &#34;&#34;&#34;
+        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0):
+                &#34;&#34;&#34; Constructor from http request &#34;&#34;&#34;
+                Http.__init__(self, request=True, remoteaddr=remoteaddr, port=port)
+                self.streamio    = streamio
+
+        async def receive(self, streamio=None):
+                &#34;&#34;&#34; Receive request from client &#34;&#34;&#34;
+                if streamio == None:
+                        streamio = self.streamio
+                await self.unserialize(streamio)
+
+        async def send(self, streamio):
+                &#34;&#34;&#34; Send request to server &#34;&#34;&#34;
+                if streamio == None:
+                        raise 1
+                        streamio = self.streamio
+                await self.serialize(streamio)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.server.httprequest.ContentBuffer"><code class="flex name class">
+<span>class <span class="ident">ContentBuffer</span></span>
+<span>(</span><span>filename, buffer, contentType=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class that contains a buffer </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ContentBuffer:
+        &#34;&#34;&#34; Class that contains a buffer &#34;&#34;&#34;
+        def __init__(self, filename, buffer, contentType=None):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.filename = filename
+                self.buffer = buffer
+                if contentType == None:
+                        global MIMES
+                        ext = useful.splitext(useful.tostrings(filename))[1]
+                        self.contentType = MIMES.get(useful.tobytes(ext),b&#34;text/plain&#34;)
+                else:
+                        self.contentType = contentType
+                
+        async def serialize(self, streamio):
+                &#34;&#34;&#34; Serialize a buffer &#34;&#34;&#34;
+                try:
+                        b = self.buffer[0]
+                        result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.contentType))
+                        result += await streamio.write(useful.tobytes(self.buffer))
+                except Exception as err:
+                        result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                        result += await streamio.write(b&#34;Nothing&#34;)
+                return result</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httprequest.ContentBuffer.serialize"><code class="name flex">
+<span>async def <span class="ident">serialize</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize a buffer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serialize(self, streamio):
+        &#34;&#34;&#34; Serialize a buffer &#34;&#34;&#34;
+        try:
+                b = self.buffer[0]
+                result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.contentType))
+                result += await streamio.write(useful.tobytes(self.buffer))
+        except Exception as err:
+                result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                result += await streamio.write(b&#34;Nothing&#34;)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.httprequest.ContentFile"><code class="flex name class">
+<span>class <span class="ident">ContentFile</span></span>
+<span>(</span><span>filename, contentType=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class that contains a file </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ContentFile:
+        &#34;&#34;&#34; Class that contains a file &#34;&#34;&#34;
+        def __init__(self, filename, contentType=None):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.filename = filename
+                if contentType == None:
+                        global MIMES
+                        ext = useful.splitext(useful.tostrings(filename))[1]
+                        self.contentType = MIMES.get(useful.tobytes(ext),b&#34;text/plain&#34;)
+                else:
+                        self.contentType = contentType
+                
+        async def serialize(self, streamio):
+                &#34;&#34;&#34; Serialize file &#34;&#34;&#34;
+                try:
+                        with open(useful.tostrings(self.filename), &#34;rb&#34;) as f:
+                                result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.contentType))
+                                step = 1440
+                                buf = bytearray(step)
+                                f.seek(0,2)
+                                size = f.tell()
+                                f.seek(0)
+                                while size &gt; 0:
+                                        if size &lt; step:
+                                                buf = bytearray(size)
+                                        length = f.readinto(buf)
+                                        size -= length
+                                        result += await streamio.write(buf)
+                except Exception as err:
+                        result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                        result += await streamio.write(b&#34;File %s not found&#34;%useful.tobytes(self.filename))
+                return result</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httprequest.ContentFile.serialize"><code class="name flex">
+<span>async def <span class="ident">serialize</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serialize(self, streamio):
+        &#34;&#34;&#34; Serialize file &#34;&#34;&#34;
+        try:
+                with open(useful.tostrings(self.filename), &#34;rb&#34;) as f:
+                        result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.contentType))
+                        step = 1440
+                        buf = bytearray(step)
+                        f.seek(0,2)
+                        size = f.tell()
+                        f.seek(0)
+                        while size &gt; 0:
+                                if size &lt; step:
+                                        buf = bytearray(size)
+                                length = f.readinto(buf)
+                                size -= length
+                                result += await streamio.write(buf)
+        except Exception as err:
+                result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                result += await streamio.write(b&#34;File %s not found&#34;%useful.tobytes(self.filename))
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.httprequest.ContentText"><code class="flex name class">
+<span>class <span class="ident">ContentText</span></span>
+<span>(</span><span>text, contentType=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class that contains a text </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ContentText:
+        &#34;&#34;&#34; Class that contains a text &#34;&#34;&#34;
+        def __init__(self, text, contentType=None):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.text = text
+                self.contentType = contentType
+                if contentType == None:
+                        self.contentType = b&#34;text/plain&#34;
+        
+        async def serialize(self, streamio):
+                &#34;&#34;&#34; Serialize text content &#34;&#34;&#34;
+                result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.contentType))
+                result += await streamio.write(self.text)
+                return result</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httprequest.ContentText.serialize"><code class="name flex">
+<span>async def <span class="ident">serialize</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize text content</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serialize(self, streamio):
+        &#34;&#34;&#34; Serialize text content &#34;&#34;&#34;
+        result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.contentType))
+        result += await streamio.write(self.text)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.httprequest.Http"><code class="flex name class">
+<span>class <span class="ident">Http</span></span>
+<span>(</span><span>request=True, remoteaddr=b'', port=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Http request or reponse </p>
+<p>Constructor from http request or response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Http:
+        &#34;&#34;&#34; Http request or reponse &#34;&#34;&#34;
+        def __init__(self, request = True, remoteaddr= b&#34;&#34;, port = 0):
+                &#34;&#34;&#34; Constructor from http request or response &#34;&#34;&#34;
+                self.port       = port
+                self.remoteaddr = remoteaddr
+                self.path       = b&#34;&#34;
+                self.method     = b&#34;POST&#34;
+                self.headers    = collections.OrderedDict()
+                self.params     = collections.OrderedDict()
+                self.cookies    = collections.OrderedDict()
+                self.parts      = []
+                self.status     = 0
+                self.content    = None
+                self.identifier = None
+                self.request    = request
+
+        def quote(self, text):
+                &#34;&#34;&#34; Insert in the string the character not supported in an url &#34;&#34;&#34;
+                result = b&#34;&#34;
+                for char in text:
+                        if (ord(char) &gt;= 0x41 and ord(char) &lt; 0x5A) or (ord(char) &gt;= 0x61 and ord(char) &lt; 0x7A):
+                                result += char
+                        elif char == b&#34; &#34;:
+                                result += b&#34;+&#34;
+                        else:
+                                result += b&#34;%%%02X&#34;%ord(char)
+                return result
+
+        def unquote(self, url):
+                &#34;&#34;&#34; Remove from a string special character in the url &#34;&#34;&#34;
+                url = url.replace(b&#39;+&#39;, b&#39; &#39;)
+                spl = url.split(b&#39;%&#39;)
+                try :
+                        result = spl[0]
+                        for part in range(1, len(spl)) :
+                                try :
+                                        result += bytes([int(spl[part][:2], 16)]) + spl[part][2:]
+                                except :
+                                        result += b&#39;%&#39; + spl[part]
+                        return result
+                except :
+                        return url
+
+        def getExpiration(self, expiration):
+                &#34;&#34;&#34; Get cookie expiration date &#34;&#34;&#34;
+                result = b&#34;; Max-Age=%d&#34;%expiration
+                return result
+
+        def getCookie(self, name):
+                &#34;&#34;&#34; Get cookie value &#34;&#34;&#34;
+                try:
+                        return self.cookies.get(name, None)
+                except:
+                        return None
+
+        def setCookie(self, name, value=None, expiration=None):
+                &#34;&#34;&#34; Set cookie &#34;&#34;&#34;
+                if value == None:
+                        if name in self.cookies:
+                                del self.cookies[name]
+                else:
+                        self.cookies[name] = (value, expiration)
+
+        def getHeader(self, name):
+                &#34;&#34;&#34; Get the http request header &#34;&#34;&#34;
+                try:
+                        return self.headers.get(name, None)
+                except:
+                        return None
+
+        def setHeader(self, name, value):
+                &#34;&#34;&#34; Set the http request header &#34;&#34;&#34;
+                if value == None:
+                        del self.headers[name]
+                else:
+                        self.headers[name] = value
+
+        def setMethod(self, method):
+                &#34;&#34;&#34; Set http request method (POST or GET) &#34;&#34;&#34;
+                self.method = method
+
+        def getPath(self):
+                &#34;&#34;&#34; Get the path of the request or response &#34;&#34;&#34;
+                return self.path
+        
+        def setPath(self, path):
+                &#34;&#34;&#34; Define the past of the request or response &#34;&#34;&#34;
+                self.path = path
+
+        def addPart(self, part):
+                &#34;&#34;&#34; Add part of the request. Used for multipart request &#34;&#34;&#34;
+                self.parts.append(part)
+
+        def getStatus(self):
+                &#34;&#34;&#34; Get the status value &#34;&#34;&#34;
+                return self.status
+
+        def setStatus(self, status):
+                &#34;&#34;&#34; Set the status value &#34;&#34;&#34;
+                self.status = status
+                
+        def setContent(self, content):
+                &#34;&#34;&#34; Set the content of the request or response (can be an instance of html template) &#34;&#34;&#34;
+                if type(content) == type(&#34;&#34;):
+                        self.content = ContentText(content)
+                else:
+                        self.content = content
+        
+        def getContent(self):
+                &#34;&#34;&#34; Get the content of the request or response &#34;&#34;&#34;
+                return self.content
+
+        def getId(self):
+                &#34;&#34;&#34; Get the unique identifier of the request or response. Used for multipart request &#34;&#34;&#34;
+                hash = hashlib.sha256()
+                ids = b&#34;%d&#34;%time.time()
+                hash.update(ids)
+                return hexlify(hash.digest())[32:]
+
+        async def unserialize(self, streamio):
+                &#34;&#34;&#34; Unserialize the request or response in the stream &#34;&#34;&#34;
+                data = await streamio.readline()
+                if data != b&#34;&#34;:
+                        spl = data.split()
+                        self.method = spl[0]
+                        path = spl[1]
+                        proto = spl[2]
+                        if self.request == False:
+                                self.status = path
+                        paths = path.split(b&#34;?&#34;, 1)
+                        if len(paths) &gt; 1:
+                                self.unserializeParams(paths[1])
+                        self.path = self.unquote(paths[0])
+                        await self.unserializeHeaders(streamio)
+
+        def unserializeParams(self, url):
+                &#34;&#34;&#34; Extract parameters from url &#34;&#34;&#34;
+                if url:
+                        pairs = url.split(b&#34;&amp;&#34;)
+                        for pair in pairs:
+                                param = [self.unquote(x) for x in pair.split(b&#34;=&#34;, 1)]
+                                if len(param) == 1:
+                                        param.append(True)
+                                previousValue = self.params.get(param[0])
+                                if previousValue is not None:
+                                        if not isinstance(previousValue, list):
+                                                self.params[param[0]] = [previousValue]
+                                        self.params[param[0]].append(param[1])
+                                else:
+                                        self.params[param[0]] = param[1]
+
+        async def unserializeHeaders(self, streamio):
+                &#34;&#34;&#34; Extract http header &#34;&#34;&#34;
+                while True:
+                        header = await streamio.readline()
+                        if header == b&#34;\r\n&#34;:
+                                if self.method == b&#34;POST&#34;:
+                                        post = await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;)))
+                                        post = post
+                                        self.unserializeParams(post)
+                                break
+                        name, value = header.split(b&#34;:&#34;, 1)
+                        if name == b&#34;Cookie&#34;:
+                                cookies = value.split(b&#34;;&#34;)
+                                for cookie in cookies:
+                                        cookieName,cookieValue=cookie.split(b&#34;=&#34;)
+                                        self.cookies[cookieName.strip()] = cookieValue.strip()
+                        else:
+                                self.headers[name] = value.strip()
+
+        async def serialize(self, streamio):
+                &#34;&#34;&#34; Serialize request or response in the stream &#34;&#34;&#34;
+                if self.request:
+                        result = await self.serializeRequest(streamio)
+                else:
+                        result = await self.serializeResponse(streamio)
+                return result
+        
+        async def serializeRequest(self, streamio):
+                &#34;&#34;&#34; Serialize request with body &#34;&#34;&#34;
+                result = await streamio.write(b&#34;%s %s %s\r\n&#34;%(self.method, self.path, b&#34;HTTP/1.1&#34;))
+                result += await self.serializeBody(streamio)
+                return result
+        
+        async def serializeBody(self, streamio):
+                &#34;&#34;&#34; Serialize body &#34;&#34;&#34;
+                result = 0
+                try:
+                        createIdentifier = False
+                        if len(self.parts) &gt; 0:
+                                createIdentifier = True
+                        # If multipart request detected
+                        if b&#34;multipart&#34; in self.headers[b&#34;Content-Type&#34;] :
+                                createIdentifier = True
+                except:
+                        pass
+
+                # If identifier required (multipart request)
+                if self.identifier == None and createIdentifier:
+                        self.identifier = self.getId()
+
+                # Serialize http header
+                for header, value in self.headers.items():
+                        if self.identifier != None:
+                                if header == b&#34;Content-Type&#34;:
+                                        value += b&#34;; boundary=%s&#34;%self.identifier
+                        result += await streamio.write(b&#34;%s: %s\r\n&#34;%(header, value))
+                
+                # Serialize cookies
+                for cookie, value in self.cookies.items():
+                        if self.request:
+                                setget = b&#34;&#34;
+                        else:
+                                setget = b&#34;Set-&#34;
+                        result += await streamio.write(b&#34;%sCookie: %s=%s%s\r\n&#34;%(setget, cookie, value[0], self.getExpiration(value[1])))
+
+                # If content existing
+                if self.content != None:
+                        try:
+                                # If content is a bytes string
+                                if type(self.content) == type(b&#34;&#34;):
+                                        result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                                        result += await streamio.write(self.content)
+                                else:
+                                        # Serialize object
+                                        result += await self.content.serialize(streamio)
+                        except Exception as err:
+                                # Serialize error detected
+                                result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                                result += await streamio.write(useful.htmlException(err))
+                # If multipart detected
+                elif len(self.parts) &gt; 0:
+                        # If the header is a multipart
+                        if self.headers[b&#34;Content-Type&#34;] == b&#34;multipart/form-data&#34;:
+                                length = 0
+                                # Set the size of identifier
+                                for part in self.parts:
+                                        length += 2
+                                        length += await part.getSize(self.identifier)
+                                length += len(self.identifier)
+                                length += 6
+
+                                # Write multipart identifier
+                                result += await streamio.write(b&#34;Content-Length: %d\r\n\r\n&#34;%(length))
+                                result += await streamio.write(b&#34;--%s&#34;%self.identifier)
+
+                        # Serialize all parts of the multipart
+                        for part in self.parts:
+                                result += await streamio.write(b&#34;\r\n&#34;)
+                                result += await part.serialize(self.identifier, streamio)
+
+                        # Terminate multipart request
+                        if self.headers[b&#34;Content-Type&#34;] != b&#34;multipart/x-mixed-replace&#34;:
+                                result += await streamio.write(b&#34;--&#34;)
+
+                # Terminate serialize request or response
+                result += await streamio.write(b&#34;\r\n&#34;)
+                return result
+
+        async def serializeResponse(self, streamio):
+                &#34;&#34;&#34; Send response to client web browser &#34;&#34;&#34;
+                result = await streamio.write(b&#34;HTTP/1.1 %s NA\r\n&#34;%(self.status))
+                result += await self.serializeBody(streamio)
+                return result</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="lib.server.httprequest.HttpRequest" href="#lib.server.httprequest.HttpRequest">HttpRequest</a></li>
+<li><a title="lib.server.httprequest.HttpResponse" href="#lib.server.httprequest.HttpResponse">HttpResponse</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httprequest.Http.addPart"><code class="name flex">
+<span>def <span class="ident">addPart</span></span>(<span>self, part)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add part of the request. Used for multipart request</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def addPart(self, part):
+        &#34;&#34;&#34; Add part of the request. Used for multipart request &#34;&#34;&#34;
+        self.parts.append(part)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.getContent"><code class="name flex">
+<span>def <span class="ident">getContent</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the content of the request or response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getContent(self):
+        &#34;&#34;&#34; Get the content of the request or response &#34;&#34;&#34;
+        return self.content</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.getCookie"><code class="name flex">
+<span>def <span class="ident">getCookie</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get cookie value</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getCookie(self, name):
+        &#34;&#34;&#34; Get cookie value &#34;&#34;&#34;
+        try:
+                return self.cookies.get(name, None)
+        except:
+                return None</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.getExpiration"><code class="name flex">
+<span>def <span class="ident">getExpiration</span></span>(<span>self, expiration)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get cookie expiration date</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getExpiration(self, expiration):
+        &#34;&#34;&#34; Get cookie expiration date &#34;&#34;&#34;
+        result = b&#34;; Max-Age=%d&#34;%expiration
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.getHeader"><code class="name flex">
+<span>def <span class="ident">getHeader</span></span>(<span>self, name)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the http request header</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getHeader(self, name):
+        &#34;&#34;&#34; Get the http request header &#34;&#34;&#34;
+        try:
+                return self.headers.get(name, None)
+        except:
+                return None</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.getId"><code class="name flex">
+<span>def <span class="ident">getId</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the unique identifier of the request or response. Used for multipart request</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getId(self):
+        &#34;&#34;&#34; Get the unique identifier of the request or response. Used for multipart request &#34;&#34;&#34;
+        hash = hashlib.sha256()
+        ids = b&#34;%d&#34;%time.time()
+        hash.update(ids)
+        return hexlify(hash.digest())[32:]</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.getPath"><code class="name flex">
+<span>def <span class="ident">getPath</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the path of the request or response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getPath(self):
+        &#34;&#34;&#34; Get the path of the request or response &#34;&#34;&#34;
+        return self.path</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.getStatus"><code class="name flex">
+<span>def <span class="ident">getStatus</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the status value</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getStatus(self):
+        &#34;&#34;&#34; Get the status value &#34;&#34;&#34;
+        return self.status</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.quote"><code class="name flex">
+<span>def <span class="ident">quote</span></span>(<span>self, text)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Insert in the string the character not supported in an url</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def quote(self, text):
+        &#34;&#34;&#34; Insert in the string the character not supported in an url &#34;&#34;&#34;
+        result = b&#34;&#34;
+        for char in text:
+                if (ord(char) &gt;= 0x41 and ord(char) &lt; 0x5A) or (ord(char) &gt;= 0x61 and ord(char) &lt; 0x7A):
+                        result += char
+                elif char == b&#34; &#34;:
+                        result += b&#34;+&#34;
+                else:
+                        result += b&#34;%%%02X&#34;%ord(char)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.serialize"><code class="name flex">
+<span>async def <span class="ident">serialize</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize request or response in the stream</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serialize(self, streamio):
+        &#34;&#34;&#34; Serialize request or response in the stream &#34;&#34;&#34;
+        if self.request:
+                result = await self.serializeRequest(streamio)
+        else:
+                result = await self.serializeResponse(streamio)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.serializeBody"><code class="name flex">
+<span>async def <span class="ident">serializeBody</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize body</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serializeBody(self, streamio):
+        &#34;&#34;&#34; Serialize body &#34;&#34;&#34;
+        result = 0
+        try:
+                createIdentifier = False
+                if len(self.parts) &gt; 0:
+                        createIdentifier = True
+                # If multipart request detected
+                if b&#34;multipart&#34; in self.headers[b&#34;Content-Type&#34;] :
+                        createIdentifier = True
+        except:
+                pass
+
+        # If identifier required (multipart request)
+        if self.identifier == None and createIdentifier:
+                self.identifier = self.getId()
+
+        # Serialize http header
+        for header, value in self.headers.items():
+                if self.identifier != None:
+                        if header == b&#34;Content-Type&#34;:
+                                value += b&#34;; boundary=%s&#34;%self.identifier
+                result += await streamio.write(b&#34;%s: %s\r\n&#34;%(header, value))
+        
+        # Serialize cookies
+        for cookie, value in self.cookies.items():
+                if self.request:
+                        setget = b&#34;&#34;
+                else:
+                        setget = b&#34;Set-&#34;
+                result += await streamio.write(b&#34;%sCookie: %s=%s%s\r\n&#34;%(setget, cookie, value[0], self.getExpiration(value[1])))
+
+        # If content existing
+        if self.content != None:
+                try:
+                        # If content is a bytes string
+                        if type(self.content) == type(b&#34;&#34;):
+                                result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                                result += await streamio.write(self.content)
+                        else:
+                                # Serialize object
+                                result += await self.content.serialize(streamio)
+                except Exception as err:
+                        # Serialize error detected
+                        result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
+                        result += await streamio.write(useful.htmlException(err))
+        # If multipart detected
+        elif len(self.parts) &gt; 0:
+                # If the header is a multipart
+                if self.headers[b&#34;Content-Type&#34;] == b&#34;multipart/form-data&#34;:
+                        length = 0
+                        # Set the size of identifier
+                        for part in self.parts:
+                                length += 2
+                                length += await part.getSize(self.identifier)
+                        length += len(self.identifier)
+                        length += 6
+
+                        # Write multipart identifier
+                        result += await streamio.write(b&#34;Content-Length: %d\r\n\r\n&#34;%(length))
+                        result += await streamio.write(b&#34;--%s&#34;%self.identifier)
+
+                # Serialize all parts of the multipart
+                for part in self.parts:
+                        result += await streamio.write(b&#34;\r\n&#34;)
+                        result += await part.serialize(self.identifier, streamio)
+
+                # Terminate multipart request
+                if self.headers[b&#34;Content-Type&#34;] != b&#34;multipart/x-mixed-replace&#34;:
+                        result += await streamio.write(b&#34;--&#34;)
+
+        # Terminate serialize request or response
+        result += await streamio.write(b&#34;\r\n&#34;)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.serializeRequest"><code class="name flex">
+<span>async def <span class="ident">serializeRequest</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize request with body</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serializeRequest(self, streamio):
+        &#34;&#34;&#34; Serialize request with body &#34;&#34;&#34;
+        result = await streamio.write(b&#34;%s %s %s\r\n&#34;%(self.method, self.path, b&#34;HTTP/1.1&#34;))
+        result += await self.serializeBody(streamio)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.serializeResponse"><code class="name flex">
+<span>async def <span class="ident">serializeResponse</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send response to client web browser</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serializeResponse(self, streamio):
+        &#34;&#34;&#34; Send response to client web browser &#34;&#34;&#34;
+        result = await streamio.write(b&#34;HTTP/1.1 %s NA\r\n&#34;%(self.status))
+        result += await self.serializeBody(streamio)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.setContent"><code class="name flex">
+<span>def <span class="ident">setContent</span></span>(<span>self, content)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the content of the request or response (can be an instance of html template)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setContent(self, content):
+        &#34;&#34;&#34; Set the content of the request or response (can be an instance of html template) &#34;&#34;&#34;
+        if type(content) == type(&#34;&#34;):
+                self.content = ContentText(content)
+        else:
+                self.content = content</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.setCookie"><code class="name flex">
+<span>def <span class="ident">setCookie</span></span>(<span>self, name, value=None, expiration=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set cookie</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setCookie(self, name, value=None, expiration=None):
+        &#34;&#34;&#34; Set cookie &#34;&#34;&#34;
+        if value == None:
+                if name in self.cookies:
+                        del self.cookies[name]
+        else:
+                self.cookies[name] = (value, expiration)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.setHeader"><code class="name flex">
+<span>def <span class="ident">setHeader</span></span>(<span>self, name, value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the http request header</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setHeader(self, name, value):
+        &#34;&#34;&#34; Set the http request header &#34;&#34;&#34;
+        if value == None:
+                del self.headers[name]
+        else:
+                self.headers[name] = value</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.setMethod"><code class="name flex">
+<span>def <span class="ident">setMethod</span></span>(<span>self, method)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set http request method (POST or GET)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setMethod(self, method):
+        &#34;&#34;&#34; Set http request method (POST or GET) &#34;&#34;&#34;
+        self.method = method</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.setPath"><code class="name flex">
+<span>def <span class="ident">setPath</span></span>(<span>self, path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Define the past of the request or response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setPath(self, path):
+        &#34;&#34;&#34; Define the past of the request or response &#34;&#34;&#34;
+        self.path = path</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.setStatus"><code class="name flex">
+<span>def <span class="ident">setStatus</span></span>(<span>self, status)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the status value</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setStatus(self, status):
+        &#34;&#34;&#34; Set the status value &#34;&#34;&#34;
+        self.status = status</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.unquote"><code class="name flex">
+<span>def <span class="ident">unquote</span></span>(<span>self, url)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove from a string special character in the url</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unquote(self, url):
+        &#34;&#34;&#34; Remove from a string special character in the url &#34;&#34;&#34;
+        url = url.replace(b&#39;+&#39;, b&#39; &#39;)
+        spl = url.split(b&#39;%&#39;)
+        try :
+                result = spl[0]
+                for part in range(1, len(spl)) :
+                        try :
+                                result += bytes([int(spl[part][:2], 16)]) + spl[part][2:]
+                        except :
+                                result += b&#39;%&#39; + spl[part]
+                return result
+        except :
+                return url</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.unserialize"><code class="name flex">
+<span>async def <span class="ident">unserialize</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Unserialize the request or response in the stream</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def unserialize(self, streamio):
+        &#34;&#34;&#34; Unserialize the request or response in the stream &#34;&#34;&#34;
+        data = await streamio.readline()
+        if data != b&#34;&#34;:
+                spl = data.split()
+                self.method = spl[0]
+                path = spl[1]
+                proto = spl[2]
+                if self.request == False:
+                        self.status = path
+                paths = path.split(b&#34;?&#34;, 1)
+                if len(paths) &gt; 1:
+                        self.unserializeParams(paths[1])
+                self.path = self.unquote(paths[0])
+                await self.unserializeHeaders(streamio)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.unserializeHeaders"><code class="name flex">
+<span>async def <span class="ident">unserializeHeaders</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extract http header</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def unserializeHeaders(self, streamio):
+        &#34;&#34;&#34; Extract http header &#34;&#34;&#34;
+        while True:
+                header = await streamio.readline()
+                if header == b&#34;\r\n&#34;:
+                        if self.method == b&#34;POST&#34;:
+                                post = await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;)))
+                                post = post
+                                self.unserializeParams(post)
+                        break
+                name, value = header.split(b&#34;:&#34;, 1)
+                if name == b&#34;Cookie&#34;:
+                        cookies = value.split(b&#34;;&#34;)
+                        for cookie in cookies:
+                                cookieName,cookieValue=cookie.split(b&#34;=&#34;)
+                                self.cookies[cookieName.strip()] = cookieValue.strip()
+                else:
+                        self.headers[name] = value.strip()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.unserializeParams"><code class="name flex">
+<span>def <span class="ident">unserializeParams</span></span>(<span>self, url)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extract parameters from url</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unserializeParams(self, url):
+        &#34;&#34;&#34; Extract parameters from url &#34;&#34;&#34;
+        if url:
+                pairs = url.split(b&#34;&amp;&#34;)
+                for pair in pairs:
+                        param = [self.unquote(x) for x in pair.split(b&#34;=&#34;, 1)]
+                        if len(param) == 1:
+                                param.append(True)
+                        previousValue = self.params.get(param[0])
+                        if previousValue is not None:
+                                if not isinstance(previousValue, list):
+                                        self.params[param[0]] = [previousValue]
+                                self.params[param[0]].append(param[1])
+                        else:
+                                self.params[param[0]] = param[1]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.httprequest.HttpRequest"><code class="flex name class">
+<span>class <span class="ident">HttpRequest</span></span>
+<span>(</span><span>streamio, remoteaddr=b'', port=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Http request received from web browser client </p>
+<p>Constructor from http request</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HttpRequest(Http):
+        &#34;&#34;&#34; Http request received from web browser client &#34;&#34;&#34;
+        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0):
+                &#34;&#34;&#34; Constructor from http request &#34;&#34;&#34;
+                Http.__init__(self, request=True, remoteaddr=remoteaddr, port=port)
+                self.streamio    = streamio
+
+        async def receive(self, streamio=None):
+                &#34;&#34;&#34; Receive request from client &#34;&#34;&#34;
+                if streamio == None:
+                        streamio = self.streamio
+                await self.unserialize(streamio)
+
+        async def send(self, streamio):
+                &#34;&#34;&#34; Send request to server &#34;&#34;&#34;
+                if streamio == None:
+                        raise 1
+                        streamio = self.streamio
+                await self.serialize(streamio)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.server.httprequest.Http" href="#lib.server.httprequest.Http">Http</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httprequest.HttpRequest.receive"><code class="name flex">
+<span>async def <span class="ident">receive</span></span>(<span>self, streamio=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Receive request from client</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def receive(self, streamio=None):
+        &#34;&#34;&#34; Receive request from client &#34;&#34;&#34;
+        if streamio == None:
+                streamio = self.streamio
+        await self.unserialize(streamio)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.HttpRequest.send"><code class="name flex">
+<span>async def <span class="ident">send</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send request to server</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send(self, streamio):
+        &#34;&#34;&#34; Send request to server &#34;&#34;&#34;
+        if streamio == None:
+                raise 1
+                streamio = self.streamio
+        await self.serialize(streamio)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.server.httprequest.Http" href="#lib.server.httprequest.Http">Http</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.server.httprequest.Http.addPart" href="#lib.server.httprequest.Http.addPart">addPart</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getContent" href="#lib.server.httprequest.Http.getContent">getContent</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getCookie" href="#lib.server.httprequest.Http.getCookie">getCookie</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getExpiration" href="#lib.server.httprequest.Http.getExpiration">getExpiration</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getHeader" href="#lib.server.httprequest.Http.getHeader">getHeader</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getId" href="#lib.server.httprequest.Http.getId">getId</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getPath" href="#lib.server.httprequest.Http.getPath">getPath</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getStatus" href="#lib.server.httprequest.Http.getStatus">getStatus</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.quote" href="#lib.server.httprequest.Http.quote">quote</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serialize" href="#lib.server.httprequest.Http.serialize">serialize</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serializeBody" href="#lib.server.httprequest.Http.serializeBody">serializeBody</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serializeRequest" href="#lib.server.httprequest.Http.serializeRequest">serializeRequest</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serializeResponse" href="#lib.server.httprequest.Http.serializeResponse">serializeResponse</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setContent" href="#lib.server.httprequest.Http.setContent">setContent</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setCookie" href="#lib.server.httprequest.Http.setCookie">setCookie</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setHeader" href="#lib.server.httprequest.Http.setHeader">setHeader</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setMethod" href="#lib.server.httprequest.Http.setMethod">setMethod</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setPath" href="#lib.server.httprequest.Http.setPath">setPath</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setStatus" href="#lib.server.httprequest.Http.setStatus">setStatus</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unquote" href="#lib.server.httprequest.Http.unquote">unquote</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unserialize" href="#lib.server.httprequest.Http.unserialize">unserialize</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unserializeHeaders" href="#lib.server.httprequest.Http.unserializeHeaders">unserializeHeaders</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unserializeParams" href="#lib.server.httprequest.Http.unserializeParams">unserializeParams</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.server.httprequest.HttpResponse"><code class="flex name class">
+<span>class <span class="ident">HttpResponse</span></span>
+<span>(</span><span>streamio, remoteaddr=b'', port=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Http response send to web browser client </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HttpResponse(Http):
+        &#34;&#34;&#34; Http response send to web browser client &#34;&#34;&#34;
+        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port)
+                self.streamio = streamio
+
+        async def send(self, content=None, status=b&#34;200&#34;, headers={}):
+                &#34;&#34;&#34; Send response to client web browser &#34;&#34;&#34;
+                self.setContent(content)
+                self.setStatus(status)
+                if headers != None:
+                        for name, value in headers.items():
+                                self.setHeader(name, value)
+                return await self.serialize(self.streamio)
+
+        async def sendError(self, status, content=None):
+                &#34;&#34;&#34; Send error to the client web browser &#34;&#34;&#34;
+                return await self.send(status=status, content=content)
+
+        async def sendOk(self, content=None):
+                &#34;&#34;&#34; Send ok to the client web browser &#34;&#34;&#34;
+                return await self.sendError(status=b&#34;200&#34;, content=content)
+
+        async def sendFile(self, filename, mimeType=None, headers=None):
+                &#34;&#34;&#34; Send a file to the client web browser &#34;&#34;&#34;
+                return await self.send(content=ContentFile(filename, mimeType), status=b&#34;200&#34;, headers=headers)
+
+        async def sendBuffer(self, filename, buffer, mimeType=None, headers=None):
+                &#34;&#34;&#34; Send a file to the client web browser &#34;&#34;&#34;
+                return await self.send(content=ContentBuffer(filename, buffer, mimeType), status=b&#34;200&#34;, headers=headers)
+
+        async def sendPage(self, page):
+                &#34;&#34;&#34; Send a template page to the client web browser &#34;&#34;&#34;
+                bytesio = server.stream.Bytesio()
+                self.setContent(None)
+                self.setStatus(b&#34;200&#34;)
+                await self.serialize(bytesio)
+                await page.write(bytesio)
+                await self.streamio.write(bytesio.streamio.getvalue())
+
+        async def receive(self, streamio=None):
+                &#34;&#34;&#34; Receive request from client &#34;&#34;&#34;
+                if streamio == None:
+                        streamio = self.streamio
+                await self.unserialize(streamio)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.server.httprequest.Http" href="#lib.server.httprequest.Http">Http</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httprequest.HttpResponse.receive"><code class="name flex">
+<span>async def <span class="ident">receive</span></span>(<span>self, streamio=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Receive request from client</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def receive(self, streamio=None):
+        &#34;&#34;&#34; Receive request from client &#34;&#34;&#34;
+        if streamio == None:
+                streamio = self.streamio
+        await self.unserialize(streamio)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.HttpResponse.send"><code class="name flex">
+<span>async def <span class="ident">send</span></span>(<span>self, content=None, status=b'200', headers={})</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send response to client web browser</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def send(self, content=None, status=b&#34;200&#34;, headers={}):
+        &#34;&#34;&#34; Send response to client web browser &#34;&#34;&#34;
+        self.setContent(content)
+        self.setStatus(status)
+        if headers != None:
+                for name, value in headers.items():
+                        self.setHeader(name, value)
+        return await self.serialize(self.streamio)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.HttpResponse.sendBuffer"><code class="name flex">
+<span>async def <span class="ident">sendBuffer</span></span>(<span>self, filename, buffer, mimeType=None, headers=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send a file to the client web browser</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def sendBuffer(self, filename, buffer, mimeType=None, headers=None):
+        &#34;&#34;&#34; Send a file to the client web browser &#34;&#34;&#34;
+        return await self.send(content=ContentBuffer(filename, buffer, mimeType), status=b&#34;200&#34;, headers=headers)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.HttpResponse.sendError"><code class="name flex">
+<span>async def <span class="ident">sendError</span></span>(<span>self, status, content=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send error to the client web browser</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def sendError(self, status, content=None):
+        &#34;&#34;&#34; Send error to the client web browser &#34;&#34;&#34;
+        return await self.send(status=status, content=content)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.HttpResponse.sendFile"><code class="name flex">
+<span>async def <span class="ident">sendFile</span></span>(<span>self, filename, mimeType=None, headers=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send a file to the client web browser</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def sendFile(self, filename, mimeType=None, headers=None):
+        &#34;&#34;&#34; Send a file to the client web browser &#34;&#34;&#34;
+        return await self.send(content=ContentFile(filename, mimeType), status=b&#34;200&#34;, headers=headers)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.HttpResponse.sendOk"><code class="name flex">
+<span>async def <span class="ident">sendOk</span></span>(<span>self, content=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send ok to the client web browser</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def sendOk(self, content=None):
+        &#34;&#34;&#34; Send ok to the client web browser &#34;&#34;&#34;
+        return await self.sendError(status=b&#34;200&#34;, content=content)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.HttpResponse.sendPage"><code class="name flex">
+<span>async def <span class="ident">sendPage</span></span>(<span>self, page)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send a template page to the client web browser</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def sendPage(self, page):
+        &#34;&#34;&#34; Send a template page to the client web browser &#34;&#34;&#34;
+        bytesio = server.stream.Bytesio()
+        self.setContent(None)
+        self.setStatus(b&#34;200&#34;)
+        await self.serialize(bytesio)
+        await page.write(bytesio)
+        await self.streamio.write(bytesio.streamio.getvalue())</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.server.httprequest.Http" href="#lib.server.httprequest.Http">Http</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.server.httprequest.Http.addPart" href="#lib.server.httprequest.Http.addPart">addPart</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getContent" href="#lib.server.httprequest.Http.getContent">getContent</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getCookie" href="#lib.server.httprequest.Http.getCookie">getCookie</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getExpiration" href="#lib.server.httprequest.Http.getExpiration">getExpiration</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getHeader" href="#lib.server.httprequest.Http.getHeader">getHeader</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getId" href="#lib.server.httprequest.Http.getId">getId</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getPath" href="#lib.server.httprequest.Http.getPath">getPath</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getStatus" href="#lib.server.httprequest.Http.getStatus">getStatus</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.quote" href="#lib.server.httprequest.Http.quote">quote</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serialize" href="#lib.server.httprequest.Http.serialize">serialize</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serializeBody" href="#lib.server.httprequest.Http.serializeBody">serializeBody</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serializeRequest" href="#lib.server.httprequest.Http.serializeRequest">serializeRequest</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serializeResponse" href="#lib.server.httprequest.Http.serializeResponse">serializeResponse</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setContent" href="#lib.server.httprequest.Http.setContent">setContent</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setCookie" href="#lib.server.httprequest.Http.setCookie">setCookie</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setHeader" href="#lib.server.httprequest.Http.setHeader">setHeader</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setMethod" href="#lib.server.httprequest.Http.setMethod">setMethod</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setPath" href="#lib.server.httprequest.Http.setPath">setPath</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setStatus" href="#lib.server.httprequest.Http.setStatus">setStatus</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unquote" href="#lib.server.httprequest.Http.unquote">unquote</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unserialize" href="#lib.server.httprequest.Http.unserialize">unserialize</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unserializeHeaders" href="#lib.server.httprequest.Http.unserializeHeaders">unserializeHeaders</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unserializeParams" href="#lib.server.httprequest.Http.unserializeParams">unserializeParams</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.server.httprequest.PartBin"><code class="flex name class">
+<span>class <span class="ident">PartBin</span></span>
+<span>(</span><span>name, filename, binary, contentType)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class that contains a binary data, used in multipart request or response </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PartBin(PartFile):
+        &#34;&#34;&#34; Class that contains a binary data, used in multipart request or response &#34;&#34;&#34;
+        def __init__(self, name, filename, binary, contentType):
+                PartFile.__init__(self, name, filename, contentType)
+                self.binary = binary
+        
+        async def serialize(self, identifier, streamio):
+                &#34;&#34;&#34; Serialize multi part binary data &#34;&#34;&#34;
+                result = await self.serializeHeader(identifier, streamio)
+                result += await streamio.write(b&#34;\r\n%s\r\n&#34;%self.binary)
+                result +=  await streamio.write(b&#34;--%s&#34;%identifier)
+                return result
+
+        async def getSize(self, identifier):
+                &#34;&#34;&#34; Get the size of multi part binary data &#34;&#34;&#34;
+                headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
+                fileSize = len(self.binary)
+                return headerSize + fileSize + 4 + len(identifier) + 2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.server.httprequest.PartFile" href="#lib.server.httprequest.PartFile">PartFile</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httprequest.PartBin.getSize"><code class="name flex">
+<span>async def <span class="ident">getSize</span></span>(<span>self, identifier)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the size of multi part binary data</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def getSize(self, identifier):
+        &#34;&#34;&#34; Get the size of multi part binary data &#34;&#34;&#34;
+        headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
+        fileSize = len(self.binary)
+        return headerSize + fileSize + 4 + len(identifier) + 2</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.PartBin.serialize"><code class="name flex">
+<span>async def <span class="ident">serialize</span></span>(<span>self, identifier, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize multi part binary data</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serialize(self, identifier, streamio):
+        &#34;&#34;&#34; Serialize multi part binary data &#34;&#34;&#34;
+        result = await self.serializeHeader(identifier, streamio)
+        result += await streamio.write(b&#34;\r\n%s\r\n&#34;%self.binary)
+        result +=  await streamio.write(b&#34;--%s&#34;%identifier)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.server.httprequest.PartFile" href="#lib.server.httprequest.PartFile">PartFile</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.server.httprequest.PartFile.serializeHeader" href="#lib.server.httprequest.PartFile.serializeHeader">serializeHeader</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.server.httprequest.PartFile"><code class="flex name class">
+<span>class <span class="ident">PartFile</span></span>
+<span>(</span><span>name, filename, contentType)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class that contains a file, used in multipart request or response </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PartFile:
+        &#34;&#34;&#34; Class that contains a file, used in multipart request or response &#34;&#34;&#34;
+        def __init__(self, name, filename, contentType):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.name = name
+                self.filename = filename
+                self.contentType = contentType
+
+        async def serializeHeader(self, identifier, streamio):
+                &#34;&#34;&#34; Serialize multi part header of file &#34;&#34;&#34;
+                result = await streamio.write(b&#39;Content-Disposition: form-data; name=&#34;%s&#34;; filename=&#34;%s&#34;\r\n&#39;%(self.name, self.filename))
+                result += await streamio.write(b&#39;Content-Type: %s\r\n&#39;%self.contentType)
+                return result
+
+        async def serialize(self, identifier, streamio):
+                &#34;&#34;&#34; Serialize multi part file &#34;&#34;&#34;
+                result = await self.serializeHeader(identifier, streamio)
+                result += await streamio.write(b&#34;\r\n%s\r\n&#34;%open(useful.tostrings(self.filename),&#34;rb&#34;).read())
+                result +=  await streamio.write(b&#34;--%s&#34;%identifier)
+                return result
+                
+        async def getSize(self, identifier):
+                &#34;&#34;&#34; Get the size of multi part file &#34;&#34;&#34;
+                headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
+                fileSize = stat(useful.tostrings(self.filename))[6]
+                return headerSize + fileSize + 4 + len(identifier) + 2</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="lib.server.httprequest.PartBin" href="#lib.server.httprequest.PartBin">PartBin</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httprequest.PartFile.getSize"><code class="name flex">
+<span>async def <span class="ident">getSize</span></span>(<span>self, identifier)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the size of multi part file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def getSize(self, identifier):
+        &#34;&#34;&#34; Get the size of multi part file &#34;&#34;&#34;
+        headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
+        fileSize = stat(useful.tostrings(self.filename))[6]
+        return headerSize + fileSize + 4 + len(identifier) + 2</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.PartFile.serialize"><code class="name flex">
+<span>async def <span class="ident">serialize</span></span>(<span>self, identifier, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize multi part file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serialize(self, identifier, streamio):
+        &#34;&#34;&#34; Serialize multi part file &#34;&#34;&#34;
+        result = await self.serializeHeader(identifier, streamio)
+        result += await streamio.write(b&#34;\r\n%s\r\n&#34;%open(useful.tostrings(self.filename),&#34;rb&#34;).read())
+        result +=  await streamio.write(b&#34;--%s&#34;%identifier)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.PartFile.serializeHeader"><code class="name flex">
+<span>async def <span class="ident">serializeHeader</span></span>(<span>self, identifier, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize multi part header of file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serializeHeader(self, identifier, streamio):
+        &#34;&#34;&#34; Serialize multi part header of file &#34;&#34;&#34;
+        result = await streamio.write(b&#39;Content-Disposition: form-data; name=&#34;%s&#34;; filename=&#34;%s&#34;\r\n&#39;%(self.name, self.filename))
+        result += await streamio.write(b&#39;Content-Type: %s\r\n&#39;%self.contentType)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.httprequest.PartText"><code class="flex name class">
+<span>class <span class="ident">PartText</span></span>
+<span>(</span><span>name, value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class that contains a text, used in multipart request or response </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PartText:
+        &#34;&#34;&#34; Class that contains a text, used in multipart request or response &#34;&#34;&#34;
+        def __init__(self, name, value):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.name  = name
+                self.value = value
+                
+        async def serialize(self, identifier, streamio):
+                &#34;&#34;&#34; Serialize multipart text part &#34;&#34;&#34;
+                result = await streamio.write(b&#39;Content-Disposition: form-data; name=&#34;%s&#34;\r\n&#39;%(self.name))
+                result += await streamio.write(b&#39;Content-Type: text/plain \r\n&#39;)
+                result += await streamio.write(b&#34;\r\n%s\r\n&#34;%self.value)
+                result += await streamio.write(b&#34;--%s&#34;%identifier)
+                return result
+
+        async def getSize(self, identifier):
+                &#34;&#34;&#34; Get the size of this part &#34;&#34;&#34;
+                result = await self.serialize(identifier, server.stream.Bytesio())
+                return result</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httprequest.PartText.getSize"><code class="name flex">
+<span>async def <span class="ident">getSize</span></span>(<span>self, identifier)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the size of this part</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def getSize(self, identifier):
+        &#34;&#34;&#34; Get the size of this part &#34;&#34;&#34;
+        result = await self.serialize(identifier, server.stream.Bytesio())
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.PartText.serialize"><code class="name flex">
+<span>async def <span class="ident">serialize</span></span>(<span>self, identifier, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize multipart text part</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def serialize(self, identifier, streamio):
+        &#34;&#34;&#34; Serialize multipart text part &#34;&#34;&#34;
+        result = await streamio.write(b&#39;Content-Disposition: form-data; name=&#34;%s&#34;\r\n&#39;%(self.name))
+        result += await streamio.write(b&#39;Content-Type: text/plain \r\n&#39;)
+        result += await streamio.write(b&#34;\r\n%s\r\n&#34;%self.value)
+        result += await streamio.write(b&#34;--%s&#34;%identifier)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.server.httprequest.ContentBuffer" href="#lib.server.httprequest.ContentBuffer">ContentBuffer</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.httprequest.ContentBuffer.serialize" href="#lib.server.httprequest.ContentBuffer.serialize">serialize</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.httprequest.ContentFile" href="#lib.server.httprequest.ContentFile">ContentFile</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.httprequest.ContentFile.serialize" href="#lib.server.httprequest.ContentFile.serialize">serialize</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.httprequest.ContentText" href="#lib.server.httprequest.ContentText">ContentText</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.httprequest.ContentText.serialize" href="#lib.server.httprequest.ContentText.serialize">serialize</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.httprequest.Http" href="#lib.server.httprequest.Http">Http</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.server.httprequest.Http.addPart" href="#lib.server.httprequest.Http.addPart">addPart</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getContent" href="#lib.server.httprequest.Http.getContent">getContent</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getCookie" href="#lib.server.httprequest.Http.getCookie">getCookie</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getExpiration" href="#lib.server.httprequest.Http.getExpiration">getExpiration</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getHeader" href="#lib.server.httprequest.Http.getHeader">getHeader</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getId" href="#lib.server.httprequest.Http.getId">getId</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getPath" href="#lib.server.httprequest.Http.getPath">getPath</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getStatus" href="#lib.server.httprequest.Http.getStatus">getStatus</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.quote" href="#lib.server.httprequest.Http.quote">quote</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serialize" href="#lib.server.httprequest.Http.serialize">serialize</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serializeBody" href="#lib.server.httprequest.Http.serializeBody">serializeBody</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serializeRequest" href="#lib.server.httprequest.Http.serializeRequest">serializeRequest</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.serializeResponse" href="#lib.server.httprequest.Http.serializeResponse">serializeResponse</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setContent" href="#lib.server.httprequest.Http.setContent">setContent</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setCookie" href="#lib.server.httprequest.Http.setCookie">setCookie</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setHeader" href="#lib.server.httprequest.Http.setHeader">setHeader</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setMethod" href="#lib.server.httprequest.Http.setMethod">setMethod</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setPath" href="#lib.server.httprequest.Http.setPath">setPath</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.setStatus" href="#lib.server.httprequest.Http.setStatus">setStatus</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unquote" href="#lib.server.httprequest.Http.unquote">unquote</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unserialize" href="#lib.server.httprequest.Http.unserialize">unserialize</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unserializeHeaders" href="#lib.server.httprequest.Http.unserializeHeaders">unserializeHeaders</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.unserializeParams" href="#lib.server.httprequest.Http.unserializeParams">unserializeParams</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.httprequest.HttpRequest" href="#lib.server.httprequest.HttpRequest">HttpRequest</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.httprequest.HttpRequest.receive" href="#lib.server.httprequest.HttpRequest.receive">receive</a></code></li>
+<li><code><a title="lib.server.httprequest.HttpRequest.send" href="#lib.server.httprequest.HttpRequest.send">send</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.httprequest.HttpResponse" href="#lib.server.httprequest.HttpResponse">HttpResponse</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.server.httprequest.HttpResponse.receive" href="#lib.server.httprequest.HttpResponse.receive">receive</a></code></li>
+<li><code><a title="lib.server.httprequest.HttpResponse.send" href="#lib.server.httprequest.HttpResponse.send">send</a></code></li>
+<li><code><a title="lib.server.httprequest.HttpResponse.sendBuffer" href="#lib.server.httprequest.HttpResponse.sendBuffer">sendBuffer</a></code></li>
+<li><code><a title="lib.server.httprequest.HttpResponse.sendError" href="#lib.server.httprequest.HttpResponse.sendError">sendError</a></code></li>
+<li><code><a title="lib.server.httprequest.HttpResponse.sendFile" href="#lib.server.httprequest.HttpResponse.sendFile">sendFile</a></code></li>
+<li><code><a title="lib.server.httprequest.HttpResponse.sendOk" href="#lib.server.httprequest.HttpResponse.sendOk">sendOk</a></code></li>
+<li><code><a title="lib.server.httprequest.HttpResponse.sendPage" href="#lib.server.httprequest.HttpResponse.sendPage">sendPage</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.httprequest.PartBin" href="#lib.server.httprequest.PartBin">PartBin</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.httprequest.PartBin.getSize" href="#lib.server.httprequest.PartBin.getSize">getSize</a></code></li>
+<li><code><a title="lib.server.httprequest.PartBin.serialize" href="#lib.server.httprequest.PartBin.serialize">serialize</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.httprequest.PartFile" href="#lib.server.httprequest.PartFile">PartFile</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.httprequest.PartFile.getSize" href="#lib.server.httprequest.PartFile.getSize">getSize</a></code></li>
+<li><code><a title="lib.server.httprequest.PartFile.serialize" href="#lib.server.httprequest.PartFile.serialize">serialize</a></code></li>
+<li><code><a title="lib.server.httprequest.PartFile.serializeHeader" href="#lib.server.httprequest.PartFile.serializeHeader">serializeHeader</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.httprequest.PartText" href="#lib.server.httprequest.PartText">PartText</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.httprequest.PartText.getSize" href="#lib.server.httprequest.PartText.getSize">getSize</a></code></li>
+<li><code><a title="lib.server.httprequest.PartText.serialize" href="#lib.server.httprequest.PartText.serialize">serialize</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,2427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.htmltemplate.htmlclasses API documentation</title>
+<meta name="description" content="File automatically generated with template.html content" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.htmltemplate.htmlclasses</code></h1>
+</header>
+<section id="section-intro">
+<p>File automatically generated with template.html content</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#39;&#39;&#39; File automatically generated with template.html content &#39;&#39;&#39;
+from htmltemplate.template import Template 
+
+# &lt;link rel=&#34;stylesheet&#34; href=&#34;https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css&#34;&gt;
+# &lt;script src=&#34;https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js&#34;&gt;&lt;/script&gt;
+# &lt;script src=&#34;https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js&#34;&gt;&lt;/script&gt;
+# &lt;script src=&#34;https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js&#34;&gt;&lt;/script&gt;
+begTagStylesheet = b&#39;&#39;&#39;&lt;link rel=&#34;stylesheet&#34; href=&#34;https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css&#34;&gt;&lt;script src=&#34;https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js&#34;&gt;&lt;/script&gt;&lt;script src=&#34;https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js&#34;&gt;&lt;/script&gt;&lt;script src=&#34;https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js&#34;&gt;&lt;/script&gt;&#39;&#39;&#39;
+def Stylesheet(*args, **params):
+        self = Template(*((&#34;Stylesheet&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagStylesheet
+                return begTagStylesheet
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        return self
+
+# &lt;div class=&#34;container %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(content)s&lt;/div&gt;
+begTagDiv = b&#39;&#39;&#39;&lt;div class=&#34;container %s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagDiv = b&#39;&#39;&#39;&lt;/div&gt;&#39;&#39;&#39;
+def Div(*args, **params):
+        self = Template(*((&#34;Div&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagDiv
+                return begTagDiv%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagDiv
+                return endTagDiv
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;script type=&#34;text/javascript&#34;&gt;
+# function onClick_%(path)s_%(id)s()
+# {
+# var xhttp = new XMLHttpRequest();
+# xhttp.open(&#34;GET&#34;,&#34;%(path)s/%(id)s&#34;,true);
+# xhttp.send();
+# }
+# &lt;/script&gt;
+# &lt;button onclick=&#34;onClick_%(path)s_%(id)s()&#34; class=&#34;btn %(class_)s&#34; id=&#34;%(id)s&#34; style=&#34;%(style)s&#34;&gt;%(text)s&lt;/button&gt;
+begTagCommand = b&#39;&#39;&#39;&lt;script type=&#34;text/javascript&#34;&gt;function onClick_%s_%s(){var xhttp = new XMLHttpRequest();xhttp.open(&#34;GET&#34;,&#34;%s/%s&#34;,true);xhttp.send();}&lt;/script&gt;&lt;button onclick=&#34;onClick_%s_%s()&#34; class=&#34;btn %s&#34; id=&#34;%s&#34; style=&#34;%s&#34;&gt;%s&lt;/button&gt;&#39;&#39;&#39;
+def Command(*args, **params):
+        self = Template(*((&#34;Command&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagCommand
+                return begTagCommand%(self.path,self.id,self.path,self.id,self.path,self.id,self.class_,self.id,self.style,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.path         = params.get(&#34;path&#34;, b&#34;&#34;)
+        return self
+
+# &lt;option %(selected)s name=&#34;%(text)s&#34; value=&#34;%(value)s&#34; %(disabled)s&gt;%(text)s&lt;/option&gt;
+begTagOption = b&#39;&#39;&#39;&lt;option %s name=&#34;%s&#34; value=&#34;%s&#34; %s&gt;%s&lt;/option&gt;&#39;&#39;&#39;
+def Option(*args, **params):
+        self = Template(*((&#34;Option&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagOption
+                return begTagOption%(self.selected,self.text,self.value, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.selected     = params.get(&#34;selected&#34;, b&#34;&#34;)
+        return self
+
+# &lt;label &gt;%(text)s&lt;/label&gt;
+# &lt;select class=&#34;custom-select %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; name=&#34;%(name)s&#34; %(disabled)s&gt;
+# %(content)s
+# &lt;/select&gt;
+# &lt;br&gt;
+# &lt;br&gt;
+begTagSelect = b&#39;&#39;&#39;&lt;label &gt;%s&lt;/label&gt;&lt;select class=&#34;custom-select %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; name=&#34;%s&#34; %s&gt;&#39;&#39;&#39;
+endTagSelect = b&#39;&#39;&#39;&lt;/select&gt;&lt;br&gt;&lt;br&gt;&#39;&#39;&#39;
+def Select(*args, **params):
+        self = Template(*((&#34;Select&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagSelect
+                return begTagSelect%(self.text,self.class_,self.style,self.id,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagSelect
+                return endTagSelect
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self
+
+# &lt;h1 class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(text)s&lt;/h1&gt;
+begTagTitle1 = b&#39;&#39;&#39;&lt;h1 class=&#34;%s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;%s&lt;/h1&gt;&#39;&#39;&#39;
+def Title1(*args, **params):
+        self = Template(*((&#34;Title1&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTitle1
+                return begTagTitle1%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;h2 class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(text)s&lt;/h2&gt;
+begTagTitle2 = b&#39;&#39;&#39;&lt;h2 class=&#34;%s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;%s&lt;/h2&gt;&#39;&#39;&#39;
+def Title2(*args, **params):
+        self = Template(*((&#34;Title2&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTitle2
+                return begTagTitle2%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;h3 class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(text)s&lt;/h3&gt;
+begTagTitle3 = b&#39;&#39;&#39;&lt;h3 class=&#34;%s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;%s&lt;/h3&gt;&#39;&#39;&#39;
+def Title3(*args, **params):
+        self = Template(*((&#34;Title3&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTitle3
+                return begTagTitle3%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;h4 class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(text)s&lt;/h4&gt;
+begTagTitle4 = b&#39;&#39;&#39;&lt;h4 class=&#34;%s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;%s&lt;/h4&gt;&#39;&#39;&#39;
+def Title4(*args, **params):
+        self = Template(*((&#34;Title4&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTitle4
+                return begTagTitle4%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;div class=&#34;form-group %(class_)s&#34;&gt;
+# &lt;label class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(text)s&lt;/label&gt;
+# &lt;/div&gt;
+begTagLabel = b&#39;&#39;&#39;&lt;div class=&#34;form-group %s&#34;&gt;&lt;label class=&#34;%s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;%s&lt;/label&gt;&lt;/div&gt;&#39;&#39;&#39;
+def Label(*args, **params):
+        self = Template(*((&#34;Label&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagLabel
+                return begTagLabel%(self.class_,self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;div class=&#34;form-group&#34;&gt;
+# &lt;input class=&#34;form-control %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; pattern=&#34;%(pattern)s&#34; placeholder=&#34;%(placeholder)s&#34; type=&#34;%(type)s&#34; value=&#34;%(value)s&#34; name=&#34;%(name)s&#34; %(disabled)s&gt;
+# &lt;/div&gt;
+begTagInput = b&#39;&#39;&#39;&lt;div class=&#34;form-group&#34;&gt;&lt;input class=&#34;form-control %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; pattern=&#34;%s&#34; placeholder=&#34;%s&#34; type=&#34;%s&#34; value=&#34;%s&#34; name=&#34;%s&#34; %s&gt;&lt;/div&gt;&#39;&#39;&#39;
+def Input(*args, **params):
+        self = Template(*((&#34;Input&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagInput
+                return begTagInput%(self.class_,self.style,self.id,self.pattern,self.placeholder,self.type,self.value,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.placeholder  = params.get(&#34;placeholder&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.pattern      = params.get(&#34;pattern&#34;, b&#34;*&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.type         = params.get(&#34;type&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self
+
+# &lt;label for=&#34;customRange&#34;&gt;%(text)s&lt;/label&gt;
+# &lt;input type=&#34;range&#34; class=&#34;custom-range  %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; name=&#34;%(name)s&#34; %(disabled)s min=&#34;%(min)s&#34; max=&#34;%(max)s&#34; step=&#34;%(step)s&#34; value=&#34;%(value)s&#34; %(disabled)s&gt;
+begTagSlider = b&#39;&#39;&#39;&lt;label for=&#34;customRange&#34;&gt;%s&lt;/label&gt;&lt;input type=&#34;range&#34; class=&#34;custom-range  %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; name=&#34;%s&#34; %s min=&#34;%s&#34; max=&#34;%s&#34; step=&#34;%s&#34; value=&#34;%s&#34; %s&gt;&#39;&#39;&#39;
+def Slider(*args, **params):
+        self = Template(*((&#34;Slider&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagSlider
+                return begTagSlider%(self.text,self.class_,self.style,self.id,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.min,self.max,self.step,self.value, b&#39;disabled&#39; if self.disabled else b&#39;&#39;)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.min          = params.get(&#34;min&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.max          = params.get(&#34;max&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        self.step         = params.get(&#34;step&#34;, b&#34;&#34;)
+        return self
+
+# &lt;div class=&#34;form-group&#34;&gt;
+# &lt;label &gt;%(text)s&lt;/label&gt;
+# &lt;input type=&#34;%(type)s&#34; class=&#34;form-control %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; pattern=&#34;%(pattern)s&#34; placeholder=&#34;%(placeholder)s&#34; type=&#34;%(type)s&#34; value=&#34;%(value)s&#34; name=&#34;%(name)s&#34; %(disabled)s&gt;
+# &lt;/div&gt;
+begTagEdit = b&#39;&#39;&#39;&lt;div class=&#34;form-group&#34;&gt;&lt;label &gt;%s&lt;/label&gt;&lt;input type=&#34;%s&#34; class=&#34;form-control %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; pattern=&#34;%s&#34; placeholder=&#34;%s&#34; type=&#34;%s&#34; value=&#34;%s&#34; name=&#34;%s&#34; %s&gt;&lt;/div&gt;&#39;&#39;&#39;
+def Edit(*args, **params):
+        self = Template(*((&#34;Edit&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagEdit
+                return begTagEdit%(self.text,self.type,self.class_,self.style,self.id,self.pattern,self.placeholder,self.type,self.value,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.placeholder  = params.get(&#34;placeholder&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.pattern      = params.get(&#34;pattern&#34;, b&#34;*&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.type         = params.get(&#34;type&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self
+
+# &lt;div class=&#34;custom-control custom-switch&#34;&gt;
+# &lt;input type=&#34;checkbox&#34; class=&#34;custom-control-input %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; value=&#34;%(value)s&#34; name=&#34;%(name)s&#34; %(checked)s %(disabled)s&gt;
+# &lt;label class=&#34;custom-control-label&#34; for=&#34;%(id)s&#34;&gt;%(text)s&lt;/label&gt;
+# &lt;/div&gt;
+# &lt;br&gt;
+begTagSwitch = b&#39;&#39;&#39;&lt;div class=&#34;custom-control custom-switch&#34;&gt;&lt;input type=&#34;checkbox&#34; class=&#34;custom-control-input %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; value=&#34;%s&#34; name=&#34;%s&#34; %s %s&gt;&lt;label class=&#34;custom-control-label&#34; for=&#34;%s&#34;&gt;%s&lt;/label&gt;&lt;/div&gt;&lt;br&gt;&#39;&#39;&#39;
+def Switch(*args, **params):
+        self = Template(*((&#34;Switch&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagSwitch
+                return begTagSwitch%(self.class_,self.style,self.id,self.value,self.name, b&#39;checked&#39; if self.checked else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.checked      = params.get(&#34;checked&#34;, True)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self
+
+# &lt;div class=&#34;form-check&#34;&gt;
+# &lt;label class=&#34;form-check-label&#34;&gt;
+# &lt;input type=&#34;checkbox&#34; class=&#34;form-check-input %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; value=&#34;%(value)s&#34; name=&#34;%(name)s&#34; %(checked)s %(disabled)s&gt;%(text)s
+# &lt;/label&gt;
+# &lt;/div&gt;
+begTagCheckbox = b&#39;&#39;&#39;&lt;div class=&#34;form-check&#34;&gt;&lt;label class=&#34;form-check-label&#34;&gt;&lt;input type=&#34;checkbox&#34; class=&#34;form-check-input %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; value=&#34;%s&#34; name=&#34;%s&#34; %s %s&gt;%s&lt;/label&gt;&lt;/div&gt;&#39;&#39;&#39;
+def Checkbox(*args, **params):
+        self = Template(*((&#34;Checkbox&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagCheckbox
+                return begTagCheckbox%(self.class_,self.style,self.id,self.value,self.name, b&#39;checked&#39; if self.checked else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.checked      = params.get(&#34;checked&#34;, True)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self
+
+# &lt;input class=&#34;btn %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; type=&#34;button&#34; name=&#34;%(name)s&#34; %(checked)s %(disabled)s&gt; %(text)s&lt;/input&gt;
+begTagButton = b&#39;&#39;&#39;&lt;input class=&#34;btn %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; type=&#34;button&#34; name=&#34;%s&#34; %s %s&gt; %s&lt;/input&gt;&#39;&#39;&#39;
+def Button(*args, **params):
+        self = Template(*((&#34;Button&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagButton
+                return begTagButton%(self.class_,self.style,self.id,self.name, b&#39;checked&#39; if self.checked else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.checked      = params.get(&#34;checked&#34;, True)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self
+
+# &lt;div class=&#34;form-check&#34;&gt;
+# &lt;label class=&#34;form-check-label&#34;&gt;
+# &lt;input type=&#34;radio&#34; class=&#34;form-check-input %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; name=&#34;%(name)s&#34; %(checked)s %(disabled)s&gt;%(text)s
+# &lt;/label&gt;
+# &lt;/div&gt;
+begTagRadio = b&#39;&#39;&#39;&lt;div class=&#34;form-check&#34;&gt;&lt;label class=&#34;form-check-label&#34;&gt;&lt;input type=&#34;radio&#34; class=&#34;form-check-input %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; name=&#34;%s&#34; %s %s&gt;%s&lt;/label&gt;&lt;/div&gt;&#39;&#39;&#39;
+def Radio(*args, **params):
+        self = Template(*((&#34;Radio&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagRadio
+                return begTagRadio%(self.class_,self.style,self.id,self.name, b&#39;checked&#39; if self.checked else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.checked      = params.get(&#34;checked&#34;, True)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self
+
+# &lt;label &gt;%(text)s&lt;/label&gt;
+# &lt;div class=&#34;custom-file&#34;&gt;
+# &lt;input type=&#34;file&#34; class=&#34;custom-file-input %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; name=&#34;%(name)s&#34; %(disabled)s&gt;
+# &lt;label class=&#34;custom-file-label&#34; for=&#34;%(id)s&#34;&gt;%(value)s&lt;/label&gt;
+# &lt;/div&gt;
+# &lt;br&gt;
+# &lt;br&gt;
+# &lt;script&gt;
+# $(&#34;.custom-file-input&#34;).on(&#34;change&#34;, function() 
+# {
+# var fileName = $(this).val().split(&#34;\\&#34;).pop();
+# $(this).siblings(&#34;.custom-file-label&#34;).addClass(&#34;selected&#34;).html(fileName);
+# });
+# &lt;/script&gt;
+begTagChooseFile = b&#39;&#39;&#39;&lt;label &gt;%s&lt;/label&gt;&lt;div class=&#34;custom-file&#34;&gt;&lt;input type=&#34;file&#34; class=&#34;custom-file-input %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; name=&#34;%s&#34; %s&gt;&lt;label class=&#34;custom-file-label&#34; for=&#34;%s&#34;&gt;%s&lt;/label&gt;&lt;/div&gt;&lt;br&gt;&lt;br&gt;&lt;script&gt;$(&#34;.custom-file-input&#34;).on(&#34;change&#34;, function(){var fileName = $(this).val().split(&#34;\\&#34;).pop();$(this).siblings(&#34;.custom-file-label&#34;).addClass(&#34;selected&#34;).html(fileName);});&lt;/script&gt;&#39;&#39;&#39;
+def ChooseFile(*args, **params):
+        self = Template(*((&#34;ChooseFile&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagChooseFile
+                return begTagChooseFile%(self.text,self.class_,self.style,self.id,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.value)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self
+
+# &lt;form class=&#34;container %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; method=&#34;%(method)s&#34;&gt;
+# %(content)s
+# &lt;/form&gt;
+begTagForm = b&#39;&#39;&#39;&lt;form class=&#34;container %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; method=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagForm = b&#39;&#39;&#39;&lt;/form&gt;&#39;&#39;&#39;
+def Form(*args, **params):
+        self = Template(*((&#34;Form&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagForm
+                return begTagForm%(self.class_,self.style,self.id,self.method)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagForm
+                return endTagForm
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.method       = params.get(&#34;method&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;br/&gt;
+begTagBr = b&#39;&#39;&#39;&lt;br/&gt;&#39;&#39;&#39;
+def Br(*args, **params):
+        self = Template(*((&#34;Br&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagBr
+                return begTagBr
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        return self
+
+# &lt;div class=&#34;container %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;
+# %(content)s
+# &lt;/div&gt;
+begTagContainer = b&#39;&#39;&#39;&lt;div class=&#34;container %s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagContainer = b&#39;&#39;&#39;&lt;/div&gt;&#39;&#39;&#39;
+def Container(*args, **params):
+        self = Template(*((&#34;Container&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagContainer
+                return begTagContainer%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagContainer
+                return endTagContainer
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;div class=&#34;card %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;
+# %(content)s
+# &lt;/div&gt;
+begTagCard = b&#39;&#39;&#39;&lt;div class=&#34;card %s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagCard = b&#39;&#39;&#39;&lt;/div&gt;&#39;&#39;&#39;
+def Card(*args, **params):
+        self = Template(*((&#34;Card&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagCard
+                return begTagCard%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagCard
+                return endTagCard
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;p class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(content)s%(text)s&lt;/p&gt;
+begTagParagraph = b&#39;&#39;&#39;&lt;p class=&#34;%s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagParagraph = b&#39;&#39;&#39;%s&lt;/p&gt;&#39;&#39;&#39;
+def Paragraph(*args, **params):
+        self = Template(*((&#34;Paragraph&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagParagraph
+                return begTagParagraph%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagParagraph
+                return endTagParagraph%(self.text)
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;li class=&#34;list-group-item %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(content)s%(text)s&lt;/li&gt;
+begTagListItem = b&#39;&#39;&#39;&lt;li class=&#34;list-group-item %s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagListItem = b&#39;&#39;&#39;%s&lt;/li&gt;&#39;&#39;&#39;
+def ListItem(*args, **params):
+        self = Template(*((&#34;ListItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagListItem
+                return begTagListItem%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagListItem
+                return endTagListItem%(self.text)
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;button class=&#34;btn %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(content)s%(text)s&lt;/button&gt;&lt;br&gt;
+begTagButtonItem = b&#39;&#39;&#39;&lt;button class=&#34;btn %s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagButtonItem = b&#39;&#39;&#39;%s&lt;/button&gt;&lt;br&gt;&#39;&#39;&#39;
+def ButtonItem(*args, **params):
+        self = Template(*((&#34;ButtonItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagButtonItem
+                return begTagButtonItem%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagButtonItem
+                return endTagButtonItem%(self.text)
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;ul class=&#34;list-group %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;
+# %(content)s
+# &lt;/ul&gt;
+begTagList = b&#39;&#39;&#39;&lt;ul class=&#34;list-group %s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagList = b&#39;&#39;&#39;&lt;/ul&gt;&#39;&#39;&#39;
+def List(*args, **params):
+        self = Template(*((&#34;List&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagList
+                return begTagList%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagList
+                return endTagList
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;button class=&#34;btn btn-primary %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; type=&#34;submit&#34; value=&#34;%(value)s&#34;&gt;%(content)s%(text)s&lt;/button&gt;
+begTagSubmit = b&#39;&#39;&#39;&lt;button class=&#34;btn btn-primary %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; type=&#34;submit&#34; value=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagSubmit = b&#39;&#39;&#39;%s&lt;/button&gt;&#39;&#39;&#39;
+def Submit(*args, **params):
+        self = Template(*((&#34;Submit&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagSubmit
+                return begTagSubmit%(self.class_,self.style,self.id,self.value)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagSubmit
+                return endTagSubmit%(self.text)
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;a class=&#34;btn btn-primary %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; href=&#34;%(href)s&#34;&gt;%(content)s%(text)s&lt;/a&gt;
+begTagCancel = b&#39;&#39;&#39;&lt;a class=&#34;btn btn-primary %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; href=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagCancel = b&#39;&#39;&#39;%s&lt;/a&gt;&#39;&#39;&#39;
+def Cancel(*args, **params):
+        self = Template(*((&#34;Cancel&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagCancel
+                return begTagCancel%(self.class_,self.style,self.id,self.href)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagCancel
+                return endTagCancel%(self.text)
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;a class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; href=&#34;%(href)s&#34;&gt;%(content)s%(text)s&lt;/a&gt;
+begTagLink = b&#39;&#39;&#39;&lt;a class=&#34;%s&#34; style=&#34;%s&#34; id=&#34;%s&#34; href=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagLink = b&#39;&#39;&#39;%s&lt;/a&gt;&#39;&#39;&#39;
+def Link(*args, **params):
+        self = Template(*((&#34;Link&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagLink
+                return begTagLink%(self.class_,self.style,self.id,self.href)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagLink
+                return endTagLink%(self.text)
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;li class=&#34;nav-item&#34;&gt;
+# &lt;a class=&#34;nav-link %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; href=&#34;%(href)s&#34;&gt;%(content)s%(text)s&lt;/a&gt;
+# &lt;/li&gt;
+begTagBarItem = b&#39;&#39;&#39;&lt;li class=&#34;nav-item&#34;&gt;&lt;a class=&#34;nav-link %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; href=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagBarItem = b&#39;&#39;&#39;%s&lt;/a&gt;&lt;/li&gt;&#39;&#39;&#39;
+def BarItem(*args, **params):
+        self = Template(*((&#34;BarItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagBarItem
+                return begTagBarItem%(self.class_,self.style,self.id,self.href)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagBarItem
+                return endTagBarItem%(self.text)
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;nav class=&#34;navbar navbar-expand-sm bg-dark navbar-dark %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;
+# &lt;ul class=&#34;navbar-nav&#34;&gt;
+# %(content)s
+# &lt;/ul&gt;
+# &lt;/nav&gt;
+begTagBar = b&#39;&#39;&#39;&lt;nav class=&#34;navbar navbar-expand-sm bg-dark navbar-dark %s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;&lt;ul class=&#34;navbar-nav&#34;&gt;&#39;&#39;&#39;
+endTagBar = b&#39;&#39;&#39;&lt;/ul&gt;&lt;/nav&gt;&#39;&#39;&#39;
+def Bar(*args, **params):
+        self = Template(*((&#34;Bar&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagBar
+                return begTagBar%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagBar
+                return endTagBar
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;li class=&#34;nav-item&#34;&gt;
+# &lt;a class=&#34;nav-link %(active)s %(disabled)s %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; href=&#34;%(href)s&#34;&gt;%(content)s%(text)s&lt;/a&gt;
+# &lt;/li&gt;
+begTagTabItem = b&#39;&#39;&#39;&lt;li class=&#34;nav-item&#34;&gt;&lt;a class=&#34;nav-link %s %s %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; href=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagTabItem = b&#39;&#39;&#39;%s&lt;/a&gt;&lt;/li&gt;&#39;&#39;&#39;
+def TabItem(*args, **params):
+        self = Template(*((&#34;TabItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTabItem
+                return begTagTabItem%( b&#39;active&#39; if self.active else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.class_,self.style,self.id,self.href)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagTabItem
+                return endTagTabItem%(self.text)
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.active       = params.get(&#34;active&#34;, False)
+        return self
+
+# &lt;ul class=&#34;nav nav-tabs %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;
+# %(content)s
+# &lt;/ul&gt;
+begTagTab = b&#39;&#39;&#39;&lt;ul class=&#34;nav nav-tabs %s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagTab = b&#39;&#39;&#39;&lt;/ul&gt;&#39;&#39;&#39;
+def Tab(*args, **params):
+        self = Template(*((&#34;Tab&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTab
+                return begTagTab%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagTab
+                return endTagTab
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;a class=&#34;dropdown-item %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; href=&#34;%(href)s&#34;&gt;%(text)s&lt;/a&gt;
+begTagDropdownItem = b&#39;&#39;&#39;&lt;a class=&#34;dropdown-item %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; href=&#34;%s&#34;&gt;%s&lt;/a&gt;&#39;&#39;&#39;
+def DropdownItem(*args, **params):
+        self = Template(*((&#34;DropdownItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagDropdownItem
+                return begTagDropdownItem%(self.class_,self.style,self.id,self.href,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        return self
+
+# &lt;li class=&#34;nav-item dropdown&#34;&gt;
+# &lt;a class=&#34;nav-link dropdown-toggle %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; data-toggle=&#34;dropdown&#34;&gt;
+# %(text)s
+# &lt;/a&gt;
+# &lt;div class=&#34;dropdown-menu&#34;&gt;
+# %(content)s
+# &lt;/div&gt;
+# &lt;/li&gt;
+begTagDropdown = b&#39;&#39;&#39;&lt;li class=&#34;nav-item dropdown&#34;&gt;&lt;a class=&#34;nav-link dropdown-toggle %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; data-toggle=&#34;dropdown&#34;&gt;%s&lt;/a&gt;&lt;div class=&#34;dropdown-menu&#34;&gt;&#39;&#39;&#39;
+endTagDropdown = b&#39;&#39;&#39;&lt;/div&gt;&lt;/li&gt;&#39;&#39;&#39;
+def Dropdown(*args, **params):
+        self = Template(*((&#34;Dropdown&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagDropdown
+                return begTagDropdown%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagDropdown
+                return endTagDropdown
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;label &gt;%(text)s&lt;/label&gt;
+# &lt;input list=&#34;%(id)s&#34; class=&#34;form-control %(class_)s&#34; style=&#34;%(style)s&#34; pattern=&#34;%(pattern)s&#34; placeholder=&#34;%(placeholder)s&#34; value=&#34;%(value)s&#34; name=&#34;%(name)s&#34; %(disabled)s&gt;
+# &lt;datalist id=&#34;%(id)s&#34;&gt;
+# %(content)s
+# &lt;/datalist&gt;
+# &lt;br&gt;
+begTagComboBox = b&#39;&#39;&#39;&lt;label &gt;%s&lt;/label&gt;&lt;input list=&#34;%s&#34; class=&#34;form-control %s&#34; style=&#34;%s&#34; pattern=&#34;%s&#34; placeholder=&#34;%s&#34; value=&#34;%s&#34; name=&#34;%s&#34; %s&gt;&lt;datalist id=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagComboBox = b&#39;&#39;&#39;&lt;/datalist&gt;&lt;br&gt;&#39;&#39;&#39;
+def ComboBox(*args, **params):
+        self = Template(*((&#34;ComboBox&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagComboBox
+                return begTagComboBox%(self.text,self.id,self.class_,self.style,self.pattern,self.placeholder,self.value,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagComboBox
+                return endTagComboBox
+        self.getEnd       = getEnd
+
+        self.placeholder  = params.get(&#34;placeholder&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.pattern      = params.get(&#34;pattern&#34;, b&#34;*&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self
+
+# &lt;span class=&#34;badge %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; &gt;%(text)s&lt;/span&gt;
+begTagBadge = b&#39;&#39;&#39;&lt;span class=&#34;badge %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; &gt;%s&lt;/span&gt;&#39;&#39;&#39;
+def Badge(*args, **params):
+        self = Template(*((&#34;Badge&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagBadge
+                return begTagBadge%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self
+
+# &lt;img src=&#34;%(src)s&#34; class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; alt=&#34;%(alt)s&#34;&gt;
+begTagImage = b&#39;&#39;&#39;&lt;img src=&#34;%s&#34; class=&#34;%s&#34; style=&#34;%s&#34; id=&#34;%s&#34; alt=&#34;%s&#34;&gt;&#39;&#39;&#39;
+def Image(*args, **params):
+        self = Template(*((&#34;Image&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagImage
+                return begTagImage%(self.src,self.class_,self.style,self.id,self.alt)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.alt          = params.get(&#34;alt&#34;, b&#34;&#34;)
+        self.src          = params.get(&#34;src&#34;, b&#34;&#34;)
+        return self
+
+# &lt;div class=&#34;alert alert-success alert-dismissible fade show&#34;&gt;
+# &lt;button type=&#34;button&#34; class=&#34;close&#34; data-dismiss=&#34;alert&#34;&gt;&amp;times;&lt;/button&gt;
+# %(content)s%(text)s
+# &lt;/div&gt;
+begTagAlertSuccess = b&#39;&#39;&#39;&lt;div class=&#34;alert alert-success alert-dismissible fade show&#34;&gt;&lt;button type=&#34;button&#34; class=&#34;close&#34; data-dismiss=&#34;alert&#34;&gt;&amp;times;&lt;/button&gt;&#39;&#39;&#39;
+endTagAlertSuccess = b&#39;&#39;&#39;%s&lt;/div&gt;&#39;&#39;&#39;
+def AlertSuccess(*args, **params):
+        self = Template(*((&#34;AlertSuccess&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagAlertSuccess
+                return begTagAlertSuccess
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagAlertSuccess
+                return endTagAlertSuccess%(self.text)
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        return self
+
+# &lt;div class=&#34;alert alert-warning alert-dismissible fade show&#34;&gt;
+# &lt;button type=&#34;button&#34; class=&#34;close&#34; data-dismiss=&#34;alert&#34;&gt;&amp;times;&lt;/button&gt;
+# %(content)s%(text)s
+# &lt;/div&gt;
+begTagAlertWarning = b&#39;&#39;&#39;&lt;div class=&#34;alert alert-warning alert-dismissible fade show&#34;&gt;&lt;button type=&#34;button&#34; class=&#34;close&#34; data-dismiss=&#34;alert&#34;&gt;&amp;times;&lt;/button&gt;&#39;&#39;&#39;
+endTagAlertWarning = b&#39;&#39;&#39;%s&lt;/div&gt;&#39;&#39;&#39;
+def AlertWarning(*args, **params):
+        self = Template(*((&#34;AlertWarning&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagAlertWarning
+                return begTagAlertWarning
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagAlertWarning
+                return endTagAlertWarning%(self.text)
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        return self
+
+# &lt;div class=&#34;alert alert-danger alert-dismissible fade show&#34;&gt;
+# &lt;button type=&#34;button&#34; class=&#34;close&#34; data-dismiss=&#34;alert&#34;&gt;&amp;times;&lt;/button&gt;
+# %(content)s%(text)s
+# &lt;/div&gt;
+begTagAlertError = b&#39;&#39;&#39;&lt;div class=&#34;alert alert-danger alert-dismissible fade show&#34;&gt;&lt;button type=&#34;button&#34; class=&#34;close&#34; data-dismiss=&#34;alert&#34;&gt;&amp;times;&lt;/button&gt;&#39;&#39;&#39;
+endTagAlertError = b&#39;&#39;&#39;%s&lt;/div&gt;&#39;&#39;&#39;
+def AlertError(*args, **params):
+        self = Template(*((&#34;AlertError&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagAlertError
+                return begTagAlertError
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagAlertError
+                return endTagAlertError%(self.text)
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        return self
+
+# %(content)s
+def Tag(*args, **params):
+        self = Template(*((&#34;Tag&#34;,) + args), **params)
+
+        def getBegin(self):
+                return b&#39;&#39;
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self
+
+# &lt;html lang=&#34;fr&#34; charset=&#34;utf-8&#34;&gt;
+# &lt;head&gt;
+# &lt;title&gt;%(title)s&lt;/title&gt;
+# &lt;meta name=&#34;viewport&#34; content=&#34;&#34; charset=&#34;UTF-8&#34;/&gt;
+# &lt;link rel=&#34;shortcut icon&#34; type=&#34;image/png&#34; href=&#34;data:,&#34;/&gt;
+# &lt;/head&gt;
+# &lt;body class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34;&gt; 
+# %(content)s
+# &lt;/body&gt;
+# &lt;/html&gt;
+begTagPage = b&#39;&#39;&#39;&lt;html lang=&#34;fr&#34; charset=&#34;utf-8&#34;&gt;&lt;head&gt;&lt;title&gt;%s&lt;/title&gt;&lt;meta name=&#34;viewport&#34; content=&#34;&#34; charset=&#34;UTF-8&#34;/&gt;&lt;link rel=&#34;shortcut icon&#34; type=&#34;image/png&#34; href=&#34;data:,&#34;/&gt;&lt;/head&gt;&lt;body class=&#34;%s&#34; style=&#34;%s&#34;&gt;&#39;&#39;&#39;
+endTagPage = b&#39;&#39;&#39;&lt;/body&gt;&lt;/html&gt;&#39;&#39;&#39;
+def Page(*args, **params):
+        self = Template(*((&#34;Page&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagPage
+                return begTagPage%(self.title,self.class_,self.style)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagPage
+                return endTagPage
+        self.getEnd       = getEnd
+
+        self.title        = params.get(&#34;title&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.htmltemplate.htmlclasses.AlertError"><code class="name flex">
+<span>def <span class="ident">AlertError</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def AlertError(*args, **params):
+        self = Template(*((&#34;AlertError&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagAlertError
+                return begTagAlertError
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagAlertError
+                return endTagAlertError%(self.text)
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.AlertSuccess"><code class="name flex">
+<span>def <span class="ident">AlertSuccess</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def AlertSuccess(*args, **params):
+        self = Template(*((&#34;AlertSuccess&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagAlertSuccess
+                return begTagAlertSuccess
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagAlertSuccess
+                return endTagAlertSuccess%(self.text)
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.AlertWarning"><code class="name flex">
+<span>def <span class="ident">AlertWarning</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def AlertWarning(*args, **params):
+        self = Template(*((&#34;AlertWarning&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagAlertWarning
+                return begTagAlertWarning
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagAlertWarning
+                return endTagAlertWarning%(self.text)
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Badge"><code class="name flex">
+<span>def <span class="ident">Badge</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Badge(*args, **params):
+        self = Template(*((&#34;Badge&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagBadge
+                return begTagBadge%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Bar"><code class="name flex">
+<span>def <span class="ident">Bar</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Bar(*args, **params):
+        self = Template(*((&#34;Bar&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagBar
+                return begTagBar%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagBar
+                return endTagBar
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.BarItem"><code class="name flex">
+<span>def <span class="ident">BarItem</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def BarItem(*args, **params):
+        self = Template(*((&#34;BarItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagBarItem
+                return begTagBarItem%(self.class_,self.style,self.id,self.href)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagBarItem
+                return endTagBarItem%(self.text)
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Br"><code class="name flex">
+<span>def <span class="ident">Br</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Br(*args, **params):
+        self = Template(*((&#34;Br&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagBr
+                return begTagBr
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Button"><code class="name flex">
+<span>def <span class="ident">Button</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Button(*args, **params):
+        self = Template(*((&#34;Button&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagButton
+                return begTagButton%(self.class_,self.style,self.id,self.name, b&#39;checked&#39; if self.checked else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.checked      = params.get(&#34;checked&#34;, True)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.ButtonItem"><code class="name flex">
+<span>def <span class="ident">ButtonItem</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ButtonItem(*args, **params):
+        self = Template(*((&#34;ButtonItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagButtonItem
+                return begTagButtonItem%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagButtonItem
+                return endTagButtonItem%(self.text)
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Cancel"><code class="name flex">
+<span>def <span class="ident">Cancel</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Cancel(*args, **params):
+        self = Template(*((&#34;Cancel&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagCancel
+                return begTagCancel%(self.class_,self.style,self.id,self.href)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagCancel
+                return endTagCancel%(self.text)
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Card"><code class="name flex">
+<span>def <span class="ident">Card</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Card(*args, **params):
+        self = Template(*((&#34;Card&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagCard
+                return begTagCard%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagCard
+                return endTagCard
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Checkbox"><code class="name flex">
+<span>def <span class="ident">Checkbox</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Checkbox(*args, **params):
+        self = Template(*((&#34;Checkbox&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagCheckbox
+                return begTagCheckbox%(self.class_,self.style,self.id,self.value,self.name, b&#39;checked&#39; if self.checked else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.checked      = params.get(&#34;checked&#34;, True)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.ChooseFile"><code class="name flex">
+<span>def <span class="ident">ChooseFile</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ChooseFile(*args, **params):
+        self = Template(*((&#34;ChooseFile&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagChooseFile
+                return begTagChooseFile%(self.text,self.class_,self.style,self.id,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.value)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.ComboBox"><code class="name flex">
+<span>def <span class="ident">ComboBox</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ComboBox(*args, **params):
+        self = Template(*((&#34;ComboBox&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagComboBox
+                return begTagComboBox%(self.text,self.id,self.class_,self.style,self.pattern,self.placeholder,self.value,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagComboBox
+                return endTagComboBox
+        self.getEnd       = getEnd
+
+        self.placeholder  = params.get(&#34;placeholder&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.pattern      = params.get(&#34;pattern&#34;, b&#34;*&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Command"><code class="name flex">
+<span>def <span class="ident">Command</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Command(*args, **params):
+        self = Template(*((&#34;Command&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagCommand
+                return begTagCommand%(self.path,self.id,self.path,self.id,self.path,self.id,self.class_,self.id,self.style,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.path         = params.get(&#34;path&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Container"><code class="name flex">
+<span>def <span class="ident">Container</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Container(*args, **params):
+        self = Template(*((&#34;Container&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagContainer
+                return begTagContainer%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagContainer
+                return endTagContainer
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Div"><code class="name flex">
+<span>def <span class="ident">Div</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Div(*args, **params):
+        self = Template(*((&#34;Div&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagDiv
+                return begTagDiv%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagDiv
+                return endTagDiv
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Dropdown"><code class="name flex">
+<span>def <span class="ident">Dropdown</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Dropdown(*args, **params):
+        self = Template(*((&#34;Dropdown&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagDropdown
+                return begTagDropdown%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagDropdown
+                return endTagDropdown
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.DropdownItem"><code class="name flex">
+<span>def <span class="ident">DropdownItem</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def DropdownItem(*args, **params):
+        self = Template(*((&#34;DropdownItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagDropdownItem
+                return begTagDropdownItem%(self.class_,self.style,self.id,self.href,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Edit"><code class="name flex">
+<span>def <span class="ident">Edit</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Edit(*args, **params):
+        self = Template(*((&#34;Edit&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagEdit
+                return begTagEdit%(self.text,self.type,self.class_,self.style,self.id,self.pattern,self.placeholder,self.type,self.value,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.placeholder  = params.get(&#34;placeholder&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.pattern      = params.get(&#34;pattern&#34;, b&#34;*&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.type         = params.get(&#34;type&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Form"><code class="name flex">
+<span>def <span class="ident">Form</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Form(*args, **params):
+        self = Template(*((&#34;Form&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagForm
+                return begTagForm%(self.class_,self.style,self.id,self.method)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagForm
+                return endTagForm
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.method       = params.get(&#34;method&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Image"><code class="name flex">
+<span>def <span class="ident">Image</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Image(*args, **params):
+        self = Template(*((&#34;Image&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagImage
+                return begTagImage%(self.src,self.class_,self.style,self.id,self.alt)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.alt          = params.get(&#34;alt&#34;, b&#34;&#34;)
+        self.src          = params.get(&#34;src&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Input"><code class="name flex">
+<span>def <span class="ident">Input</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Input(*args, **params):
+        self = Template(*((&#34;Input&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagInput
+                return begTagInput%(self.class_,self.style,self.id,self.pattern,self.placeholder,self.type,self.value,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.placeholder  = params.get(&#34;placeholder&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.pattern      = params.get(&#34;pattern&#34;, b&#34;*&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.type         = params.get(&#34;type&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Label"><code class="name flex">
+<span>def <span class="ident">Label</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Label(*args, **params):
+        self = Template(*((&#34;Label&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagLabel
+                return begTagLabel%(self.class_,self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Link"><code class="name flex">
+<span>def <span class="ident">Link</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Link(*args, **params):
+        self = Template(*((&#34;Link&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagLink
+                return begTagLink%(self.class_,self.style,self.id,self.href)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagLink
+                return endTagLink%(self.text)
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.List"><code class="name flex">
+<span>def <span class="ident">List</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def List(*args, **params):
+        self = Template(*((&#34;List&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagList
+                return begTagList%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagList
+                return endTagList
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.ListItem"><code class="name flex">
+<span>def <span class="ident">ListItem</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ListItem(*args, **params):
+        self = Template(*((&#34;ListItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagListItem
+                return begTagListItem%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagListItem
+                return endTagListItem%(self.text)
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Option"><code class="name flex">
+<span>def <span class="ident">Option</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Option(*args, **params):
+        self = Template(*((&#34;Option&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagOption
+                return begTagOption%(self.selected,self.text,self.value, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.selected     = params.get(&#34;selected&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Page"><code class="name flex">
+<span>def <span class="ident">Page</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Page(*args, **params):
+        self = Template(*((&#34;Page&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagPage
+                return begTagPage%(self.title,self.class_,self.style)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagPage
+                return endTagPage
+        self.getEnd       = getEnd
+
+        self.title        = params.get(&#34;title&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Paragraph"><code class="name flex">
+<span>def <span class="ident">Paragraph</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Paragraph(*args, **params):
+        self = Template(*((&#34;Paragraph&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagParagraph
+                return begTagParagraph%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagParagraph
+                return endTagParagraph%(self.text)
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Radio"><code class="name flex">
+<span>def <span class="ident">Radio</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Radio(*args, **params):
+        self = Template(*((&#34;Radio&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagRadio
+                return begTagRadio%(self.class_,self.style,self.id,self.name, b&#39;checked&#39; if self.checked else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.checked      = params.get(&#34;checked&#34;, True)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Select"><code class="name flex">
+<span>def <span class="ident">Select</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Select(*args, **params):
+        self = Template(*((&#34;Select&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagSelect
+                return begTagSelect%(self.text,self.class_,self.style,self.id,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagSelect
+                return endTagSelect
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Slider"><code class="name flex">
+<span>def <span class="ident">Slider</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Slider(*args, **params):
+        self = Template(*((&#34;Slider&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagSlider
+                return begTagSlider%(self.text,self.class_,self.style,self.id,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.min,self.max,self.step,self.value, b&#39;disabled&#39; if self.disabled else b&#39;&#39;)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.min          = params.get(&#34;min&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.max          = params.get(&#34;max&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        self.step         = params.get(&#34;step&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Stylesheet"><code class="name flex">
+<span>def <span class="ident">Stylesheet</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Stylesheet(*args, **params):
+        self = Template(*((&#34;Stylesheet&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagStylesheet
+                return begTagStylesheet
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Submit"><code class="name flex">
+<span>def <span class="ident">Submit</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Submit(*args, **params):
+        self = Template(*((&#34;Submit&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagSubmit
+                return begTagSubmit%(self.class_,self.style,self.id,self.value)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagSubmit
+                return endTagSubmit%(self.text)
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Switch"><code class="name flex">
+<span>def <span class="ident">Switch</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Switch(*args, **params):
+        self = Template(*((&#34;Switch&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagSwitch
+                return begTagSwitch%(self.class_,self.style,self.id,self.value,self.name, b&#39;checked&#39; if self.checked else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.checked      = params.get(&#34;checked&#34;, True)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.value        = params.get(&#34;value&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Tab"><code class="name flex">
+<span>def <span class="ident">Tab</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Tab(*args, **params):
+        self = Template(*((&#34;Tab&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTab
+                return begTagTab%(self.class_,self.style,self.id)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagTab
+                return endTagTab
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.TabItem"><code class="name flex">
+<span>def <span class="ident">TabItem</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def TabItem(*args, **params):
+        self = Template(*((&#34;TabItem&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTabItem
+                return begTagTabItem%( b&#39;active&#39; if self.active else b&#39;&#39;, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.class_,self.style,self.id,self.href)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                global endTagTabItem
+                return endTagTabItem%(self.text)
+        self.getEnd       = getEnd
+
+        self.href         = params.get(&#34;href&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.active       = params.get(&#34;active&#34;, False)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Tag"><code class="name flex">
+<span>def <span class="ident">Tag</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Tag(*args, **params):
+        self = Template(*((&#34;Tag&#34;,) + args), **params)
+
+        def getBegin(self):
+                return b&#39;&#39;
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Title1"><code class="name flex">
+<span>def <span class="ident">Title1</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Title1(*args, **params):
+        self = Template(*((&#34;Title1&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTitle1
+                return begTagTitle1%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Title2"><code class="name flex">
+<span>def <span class="ident">Title2</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Title2(*args, **params):
+        self = Template(*((&#34;Title2&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTitle2
+                return begTagTitle2%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Title3"><code class="name flex">
+<span>def <span class="ident">Title3</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Title3(*args, **params):
+        self = Template(*((&#34;Title3&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTitle3
+                return begTagTitle3%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Title4"><code class="name flex">
+<span>def <span class="ident">Title4</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Title4(*args, **params):
+        self = Template(*((&#34;Title4&#34;,) + args), **params)
+
+        def getBegin(self):
+                global begTagTitle4
+                return begTagTitle4%(self.class_,self.style,self.id,self.text)
+        self.getBegin     = getBegin
+
+        def getEnd(self):
+                return b&#39;&#39;
+        self.getEnd       = getEnd
+
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        return self</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.htmltemplate" href="index.html">lib.htmltemplate</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="lib.htmltemplate.htmlclasses.AlertError" href="#lib.htmltemplate.htmlclasses.AlertError">AlertError</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.AlertSuccess" href="#lib.htmltemplate.htmlclasses.AlertSuccess">AlertSuccess</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.AlertWarning" href="#lib.htmltemplate.htmlclasses.AlertWarning">AlertWarning</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Badge" href="#lib.htmltemplate.htmlclasses.Badge">Badge</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Bar" href="#lib.htmltemplate.htmlclasses.Bar">Bar</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.BarItem" href="#lib.htmltemplate.htmlclasses.BarItem">BarItem</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Br" href="#lib.htmltemplate.htmlclasses.Br">Br</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Button" href="#lib.htmltemplate.htmlclasses.Button">Button</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.ButtonItem" href="#lib.htmltemplate.htmlclasses.ButtonItem">ButtonItem</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Cancel" href="#lib.htmltemplate.htmlclasses.Cancel">Cancel</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Card" href="#lib.htmltemplate.htmlclasses.Card">Card</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Checkbox" href="#lib.htmltemplate.htmlclasses.Checkbox">Checkbox</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.ChooseFile" href="#lib.htmltemplate.htmlclasses.ChooseFile">ChooseFile</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.ComboBox" href="#lib.htmltemplate.htmlclasses.ComboBox">ComboBox</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Command" href="#lib.htmltemplate.htmlclasses.Command">Command</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Container" href="#lib.htmltemplate.htmlclasses.Container">Container</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Div" href="#lib.htmltemplate.htmlclasses.Div">Div</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Dropdown" href="#lib.htmltemplate.htmlclasses.Dropdown">Dropdown</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.DropdownItem" href="#lib.htmltemplate.htmlclasses.DropdownItem">DropdownItem</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Edit" href="#lib.htmltemplate.htmlclasses.Edit">Edit</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Form" href="#lib.htmltemplate.htmlclasses.Form">Form</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Image" href="#lib.htmltemplate.htmlclasses.Image">Image</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Input" href="#lib.htmltemplate.htmlclasses.Input">Input</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Label" href="#lib.htmltemplate.htmlclasses.Label">Label</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Link" href="#lib.htmltemplate.htmlclasses.Link">Link</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.List" href="#lib.htmltemplate.htmlclasses.List">List</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.ListItem" href="#lib.htmltemplate.htmlclasses.ListItem">ListItem</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Option" href="#lib.htmltemplate.htmlclasses.Option">Option</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Page" href="#lib.htmltemplate.htmlclasses.Page">Page</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Paragraph" href="#lib.htmltemplate.htmlclasses.Paragraph">Paragraph</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Radio" href="#lib.htmltemplate.htmlclasses.Radio">Radio</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Select" href="#lib.htmltemplate.htmlclasses.Select">Select</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Slider" href="#lib.htmltemplate.htmlclasses.Slider">Slider</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Stylesheet" href="#lib.htmltemplate.htmlclasses.Stylesheet">Stylesheet</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Submit" href="#lib.htmltemplate.htmlclasses.Submit">Submit</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Switch" href="#lib.htmltemplate.htmlclasses.Switch">Switch</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Tab" href="#lib.htmltemplate.htmlclasses.Tab">Tab</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.TabItem" href="#lib.htmltemplate.htmlclasses.TabItem">TabItem</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Tag" href="#lib.htmltemplate.htmlclasses.Tag">Tag</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Title1" href="#lib.htmltemplate.htmlclasses.Title1">Title1</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Title2" href="#lib.htmltemplate.htmlclasses.Title2">Title2</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Title3" href="#lib.htmltemplate.htmlclasses.Title3">Title3</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Title4" href="#lib.htmltemplate.htmlclasses.Title4">Title4</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
