@@ -83,10 +83,13 @@ async def index(request, response, args):
 
 @HttpServer.addRoute(b'/reboot')
 async def reboot(request, response, args):
-	print("Reboot")
-	await response.sendOk()
+	try:
+		await response.sendOk()
+	except Exception as err:
+		print(useful.exception(err))
 	try:
 		import machine
+		print("Reboot")
 		machine.reset()
-	except:
-		pass
+	except Exception as err:
+		print(useful.exception(err))

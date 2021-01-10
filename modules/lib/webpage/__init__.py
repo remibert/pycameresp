@@ -5,7 +5,6 @@ from tools.useful import log, iscamera
 from webpage.passwordpage import *
 from webpage.mainpage import *
 from webpage.changepasswordpage import *
-from webpage.commandpage import *
 from webpage.infopage import *
 from webpage.pushoverpage import *
 from webpage.serverpage import *
