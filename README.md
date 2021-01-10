@@ -89,9 +89,9 @@ Smartphone motion notification
 
 ![SmartPhoneNotification.png](images/SmartPhoneNotification.png "Smartphone motion notification")
 
-Shell and text editor
+Shell and text editor (The GIF is compressed a lot, it does not go like this in reality)
 
-![ShellEdit.mp4](images/ShellEdit.mp4 "Shell and text editor")
+![ShellEdit.mp4](images/ShellEdit.gif "Shell and text editor")
 
 # Requirements
 
@@ -101,7 +101,6 @@ Despite everything, the servers, the shell, the text editor can operate on an ES
 it is necessary to generate the firmware embedding the python scripts, in this case less memory is consumed.
 
 For motion capture you absolutely need an ESP32CAM.
-
 
 # Notice for ESP32CAM
 
@@ -223,7 +222,6 @@ All the keyboard shortcuts are at the start of the script editor.py.
 
 **On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.**
 
-
 # Directories
 
 Below are the directory details :
@@ -247,6 +245,8 @@ Below are the directory details :
 On a standard micropython firmware, copy all the files of the modules directory with its tree structure, 
 into the flash memory of the board.
 
+# Library documentation
+[See python module documentation](http://htmlpreview.github.com/?https://github.com/remibert/pycameresp/blob/main/doc/lib/index.html)
 
 # Battery mode for ESP32CAM
 
