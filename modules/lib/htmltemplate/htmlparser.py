@@ -27,7 +27,7 @@ def findall(pattern, text):
 		elif endTag != None:
 			endTag += s
 			if var != "":
-				if var in ["disabled","checked","active"]:
+				if var in ["disabled","checked","active","selected"]:
 					endFormat += " b'%s' if self.%s else b'',"%(var, var)
 				else:
 					endFormat += "self.%s,"%var
@@ -35,7 +35,7 @@ def findall(pattern, text):
 		else:
 			beginTag += s
 			if var != "":
-				if var in ["disabled","checked","active"]:
+				if var in ["disabled","checked","active","selected"]:
 					beginFormat += " b'%s' if self.%s else b'',"%(var, var)
 				else:
 					beginFormat += "self.%s,"%var

@@ -78,6 +78,7 @@ def deinit():
 
 def capture():
 	global _opened
+	global _current
 	if _opened:
 		if _current == 0:
 			data = open("Test2.jpg","rb").read()

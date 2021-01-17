@@ -10,6 +10,38 @@ import machine
 import camera
 import time
 from tools import useful
+from tools import jsonconfig
+
+class CameraConfig:
+	streamingBase = [0]
+	""" Class that collects the camera rendering configuration """
+	def __init__(self):
+		""" Constructor """
+		self.framesize  = b"640x480"
+		self.pixformat  = b"JPEG"
+		self.quality    = 10
+		self.brightness = 0
+		self.contrast   = 0
+		self.saturation = 0
+		self.hmirror    = False
+		self.vflip      = False
+		self.streamingBase[0] = self.streamingBase[0] + 1
+		self.streamingId = self.streamingBase[0]
+
+	def save(self, file = None):
+		""" Save configuration """
+		result = jsonconfig.save(self, file)
+		return result
+
+	def update(self, params):
+		""" Update configuration """
+		result = jsonconfig.update(self, params)
+		return result
+
+	def load(self, file = None):
+		""" Load configuration """
+		result = jsonconfig.load(self, file)
+		return result
 
 class Camera:
 	""" Singleton class to manage the camera """
@@ -202,3 +234,15 @@ class Camera:
 			return camera.vflip(val)
 		return None
 
+	@staticmethod
+	def configure(config):
+		""" Configure the camera """
+		if Camera.opened:
+			Camera.pixformat (config.pixformat)
+			Camera.framesize (config.framesize)
+			Camera.quality   (config.quality)
+			Camera.brightness(config.brightness)
+			Camera.contrast  (config.contrast)
+			Camera.saturation(config.saturation)
+			Camera.hmirror   (config.hmirror)
+			Camera.vflip     (config.vflip)

@@ -1,11 +1,12 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+import sys
 try:
 	import uasyncio
 except:
-	import sys
 	sys.path.append("lib")
 	sys.path.append("simul")
+sys.path.append("sample")
 import uasyncio
 import machine
 from tools.battery import Battery
@@ -27,12 +28,18 @@ if onBattery == False:
 	def pageLoader():
 		# The html pages only loaded when the connection of http server is done
 		# This reduces memory consumption if the server is not used
-		from webpage import mainpage
+		import webpage
 		from server.httpserver import HttpServer
 
 		try:
 			# Welcome page (can be suppressed)
 			from welcome import welcomePage
+		except ImportError as err:
+			pass
+
+		try:
+			# Sample page (can be suppressed)
+			import sample
 		except ImportError as err:
 			pass
 

@@ -27,8 +27,13 @@ def save(self, file = None):
 		return False
 
 def update(self, params):
-	""" Update object with params """
+	""" Update object with html request params """
 	global self_config
+	if b"name" in params and b"value" in params and len(params) == 2:
+		setmany = False
+		params = {params[b"name"]:params[b"value"]}
+	else:
+		setmany = True
 	self_config = self
 	for name in self.__dict__.keys():
 		# Case of web input is missing when bool is false
@@ -50,7 +55,8 @@ def update(self, params):
 					elif params[name] == b"0" or params[name].lower() == b"false":
 						params[name] = False
 			else:
-				params[name] = False
+				if setmany:
+					params[name] = False
 		# Case of web input is integer but string with number received
 		elif type(self.__dict__[name]) == type(0) or type(self.__dict__[name]) == type(0.):
 			name = useful.tobytes(name)
@@ -59,7 +65,7 @@ def update(self, params):
 					params[name] = int(params[name])
 				except:
 					params[name] = 0
-
+	result = True
 	for name, value in params.items():
 		execval = name
 		try:
@@ -67,7 +73,9 @@ def update(self, params):
 			exec(execval)
 		except Exception as err:
 			print("Error on %s (%s)"%(execval, err))
+			result = False
 	del self_config
+	return result
 
 def load(self, file = None):
 	""" Load object with the file specified """

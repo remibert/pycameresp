@@ -61,7 +61,7 @@ async def index(request, response, args):
 							Edit(text=b"Flash user",       value=flashUser, disabled=True),
 							Edit(text=b"Flash size",       value=flashSize, disabled=True),
 							Tag(b'''
-<button onclick="confirmReboot()" class="btn btn-primary ">Reboot</button>
+<button onclick="confirmReboot()" class="btn btn-outline-primary ">Reboot</button>
 <script>
 	function confirmReboot()
 	{

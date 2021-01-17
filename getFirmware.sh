@@ -1,5 +1,10 @@
 # ! bash
-export ROOT=`pwd`/firmware
+if [ -n "$PYCAMERESP_FIRMWARE" ]; then
+	export ROOT=$PYCAMERESP_FIRMWARE
+else
+	export ROOT=`pwd`/firmware
+fi
+
 export ESPIDF=$ROOT/esp-idf
 
 mkdir $ROOT

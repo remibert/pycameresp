@@ -7,7 +7,12 @@ else
 fi
 # GENERIC
 # GENERIC_SPIRAM
-export ROOT=`pwd`/firmware
+if [ -n "$PYCAMERESP_FIRMWARE" ]; then
+	export ROOT=$PYCAMERESP_FIRMWARE
+else
+	export ROOT=`pwd`/firmware
+fi
+
 export ESPIDF=$ROOT/esp-idf
 #~ export IDF_PATH=$ROOT/esp-idf
 

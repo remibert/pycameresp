@@ -1,9 +1,8 @@
 from useful import *
-def gitChangedRecently(component, files):
+def gitChangedRecently(root, component, files):
 	from os import chdir, getcwd
 	from os.path import join
-	currentDir = getcwd()
-	chdir(getcwd() + "/" +component)
+	chdir(root + "/" +component)
 	lines = execute('git status -s')
 	for line in lines[1:]:
 		if line[:3] == " M ":
@@ -17,7 +16,7 @@ def gitChangedRecently(component, files):
 		if ".DS_Store" not in filename:
 			files.append(join(component,filename))
 	
-	chdir(currentDir)
+	chdir(root)
 
 def zipFiles(zipFilename, directory, files, display=True):
 	from zipfile import ZipFile, ZIP_DEFLATED 
@@ -41,11 +40,15 @@ def zipFiles(zipFilename, directory, files, display=True):
 		print("Zip %s empty"%zipFilename)
 
 if __name__ == "__main__":
+	from sys import argv
+	if len(argv) > 1:
+		root = argv[1]
+	else:
+		root = "firmware"
 	files = []
-	gitChangedRecently("firmware/micropython",files)
-	gitChangedRecently("firmware/esp-idf",files)
-	gitChangedRecently("firmware/esp-idf/components/esp32-camera",files)
+	gitChangedRecently(root, "micropython",files)
+	gitChangedRecently(root, "esp-idf",files)
+	gitChangedRecently(root, "esp-idf/components/esp32-camera",files)
 	from time import localtime, time, strftime
-	filename = strftime("firmware/BackupGit__%Y.%m.%d__%H-%M-%S.zip",localtime(time()))
-
+	filename = strftime(root + "/BackupGit__%Y.%m.%d__%H-%M-%S.zip",localtime(time()))
 	zipFiles(filename,".",files,True)

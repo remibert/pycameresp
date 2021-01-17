@@ -21,32 +21,23 @@ async def welcomePage(request, response, args):
 	To use motion detection on ESP32CAM you have to configure :
 	<ul>
 		<li><a href="wifi">Set wifi SSID and password and activate it</a></li>
-		<li><a href="accesspoint">Disable the access point for more security</a></li>
-		<li><a href="server">Choose available server</a></li>
+		<li><a href="accesspoint">Change or disable the access point for more security</a></li>
+		<li><a href="server">Choose available servers</a></li>
 		<li><a href="changepassword">Enter password and user for more security</a></li>
-		<li><a href="pushover">Create push over token and user to receive motion detection image</a></li>
+		<li><a href="pushover">Create pushover token and user to receive motion detection image</a></li>
 		<li><a href="motion">Activate and configure motion detection</a></li>
 		<li><a href="camera">See the rendering of the camera to adjust its position</a></li>
 		<li><a href="battery">Configure the battery mode<a></li>
 		<li><a href="/">See all information about the board</a></li>
 	</ul>
-	Don't forget to activate what you want to work.
 </p>
 <p>
 	<b>Be careful, the battery mode activations produces deep sleeps, and all the servers are no longer accessible. Only activate it if you know what you are doing.</b>
 </p>
 <p>This page can be easily removed by deleting the <b>welcome.py</b> file</p>
-<p>Below is an example of a button that reacts with the python script</p>
 '''),
 					Br(),
-					Command(text=b"Click me",  path=b"onbutton", id=b"clicked" , class_=b"btn-info"),
 				])
 			], title=args["title"], active=args["index"], request=request, response=response)
 	await response.sendPage(page)
-
-# Called when the button pressed
-@HttpServer.addRoute(b'/onbutton/clicked')
-async def buttonPressed(request, response, args):
-	print("Button clicked")
-	await response.sendOk()
 

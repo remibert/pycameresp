@@ -1,6 +1,10 @@
 # ! bash
-export ROOT=`pwd`/firmware
+if [ -n "$PYCAMERESP_FIRMWARE" ]; then
+	export ROOT=$PYCAMERESP_FIRMWARE
+else
+	export ROOT=`pwd`/firmware
+fi
 
-python3 backupGitModif.py
-cp -f -r -v -p patch/c/micropython/* $ROOT/micropython/
-cp -f -r -v -p patch/c/esp-idf/*     $ROOT/esp-idf/
+python3 scripts/backupGitModif.py    "$ROOT"
+cp -f -r -v -p patch/c/micropython/* "$ROOT/micropython/"
+cp -f -r -v -p patch/c/esp-idf/*     "$ROOT/esp-idf/"
