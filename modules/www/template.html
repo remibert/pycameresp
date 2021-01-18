@@ -141,7 +141,7 @@
 		<!--Container:end-->
 
 		<!--Card:begin-->
-		<div class="card %(class_)s" style="%(style)s" id="%(id)s">
+		<div class="card shadow %(class_)s" style="%(style)s" id="%(id)s">
 			%(content)s
 		</div>
 		<!--Card:end-->
@@ -163,11 +163,11 @@
 		<!--List:end-->
 
 		<!--Submit:begin-->
-		<button class="btn btn-primary %(class_)s" style="%(style)s" id="%(id)s" type="submit" value="%(value)s">%(content)s%(text)s</button>
+		<button class="btn btn-outline-primary %(class_)s" style="%(style)s" id="%(id)s" type="submit" value="%(value)s">%(content)s%(text)s</button>
 		<!--Submit:end-->
 
 		<!--Cancel:begin-->
-		<a class="btn btn-primary %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(content)s%(text)s</a>
+		<a class="btn btn-outline-primary %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(content)s%(text)s</a>
 		<!--Cancel:end-->
 		
 		<!--Link:begin-->
@@ -251,6 +251,69 @@
 		<!--Tag:begin-->
 		%(content)s
 		<!--Tag:end-->
+
+		<!--ButtonCmd:begin-->
+		<button class="btn btn-outline-primary %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(checked)s %(disabled)s onclick="oncommand_%(id)s()" >%(text)s</button>
+		<script type="text/javascript">
+			function oncommand_%(id)s() 
+			{
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("GET","%(path)s?name="+document.getElementById("%(id)s").name,true);
+				xhttp.send();
+			}
+		</script>
+		<!--ButtonCmd:end-->
+
+		<!--SliderCmd:begin-->
+		<label >%(text)s</label>
+		<div style="display: flex">
+			<input type="range" class="custom-range %(class_)s" style="%(style)s" id="slider_%(id)s" name="%(name)s" min="%(min)s" max="%(max)s" step="%(step)s" value="%(value)s" %(disabled)s oninput="onchange_%(id)s()" onmouseup="oncommand_%(id)s()" />
+			<span id="value_%(id)s"/>
+		</div>
+		<script type="text/javascript">
+			function onchange_%(id)s() 
+			{
+				document.getElementById("value_%(id)s").innerHTML = "&nbsp;" + document.getElementById("slider_%(id)s").value;
+			}
+			onchange_%(id)s();
+			function oncommand_%(id)s() 
+			{
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("GET","%(path)s?name="+document.getElementById("slider_%(id)s").name+"&value="+document.getElementById("slider_%(id)s").value,true);
+				xhttp.send();
+			}
+		</script>
+		<!--SliderCmd:end-->
+		
+		<!--ComboCmd:begin-->
+		<label >%(text)s</label>
+		<select class="btn btn-outline-primary custom-select %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(disabled)s oninput="oncommand_%(id)s()">
+			%(content)s
+		</select>
+		<script type="text/javascript">
+			function oncommand_%(id)s() 
+			{
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("GET","%(path)s?name="+document.getElementById("%(id)s").name+"&value="+document.getElementById("%(id)s").value,true);
+				xhttp.send();
+			}
+		</script>
+		<!--ComboCmd:end-->
+
+		<!--SwitchCmd:begin-->
+		<div class="custom-control custom-switch">
+			<input type="checkbox" class="custom-control-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s oninput="oncommand_%(id)s()">
+			<label class="custom-control-label" for="%(id)s">%(text)s</label>
+		</div>
+		<script type="text/javascript">
+			function oncommand_%(id)s() 
+			{
+				var xhttp = new XMLHttpRequest();
+				xhttp.open("GET","%(path)s?name="+document.getElementById("%(id)s").name+"&value="+document.getElementById("%(id)s").checked,true);
+				xhttp.send();
+			}
+		</script>
+		<!--SwitchCmd:end-->
 
 	</body>
 </html>

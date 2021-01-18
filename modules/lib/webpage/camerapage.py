@@ -9,15 +9,15 @@ from tools import useful
 from video import CameraConfig, Camera
 import uasyncio
 
-streaming = False
+cameraStreaming = False
 cameraConfig = CameraConfig()
 
 @HttpServer.addRoute(b'/camera', title=b"Camera", index=1000)
 async def cameraPage(request, response, args):
 	""" Camera streaming page """
 	framesizes = []
-	global streaming
-	streaming = False
+	global cameraStreaming
+	cameraStreaming = False
 	for size in [b"1600x1200",b"1280x1024",b"1024x768",b"800x600",b"640x480",b"400x296",b"320x240",b"240x176",b"160x120"  ]:
 		framesizes.append(Option(value=size, text=size, selected= True if cameraConfig.framesize == size else False))
 	page = mainPage(
@@ -25,7 +25,7 @@ async def cameraPage(request, response, args):
 			[Br(),
 				Container(Tag(b"""
 <p>
-	<button id="toggle-stream" class="btn btn-outline-primary" onclick="onStartVideoClick()">Start streaming</button>
+	<button id="button-stream" class="btn btn-outline-primary" onclick="onStartVideoClick()">Start streaming</button>
 	<figure>
 		<div id="container-stream" class="display: none;">
 			<img id="video-stream" src="">
@@ -35,7 +35,7 @@ async def cameraPage(request, response, args):
 	<script>
 		function onStartVideoClick()
 		{
-			if (document.getElementById('toggle-stream').innerHTML == 'Start streaming')
+			if (document.getElementById('button-stream').innerHTML == 'Start streaming')
 			{
 				startStreaming();
 			}
@@ -44,38 +44,27 @@ async def cameraPage(request, response, args):
 				stopStreaming();
 			}
 		}
-		window.onload = () => {
-			// run in onload
-			setTimeout(() => {
+		window.onload = () =>
+		{
+			setTimeout(() => 
+			{
 				stopStreaming();
-			}, 100)
+			}, 300)
 		}
 		function startStreaming()
 		{
-			const button    = document.getElementById('toggle-stream');
-			const video     = document.getElementById('video-stream');
-			const container = document.getElementById('container-stream');
-
 			window.stop();
 			var streamUrl = document.location.origin + ':81';
-			video.src = `${streamUrl}/camera/start`;
-			button.innerHTML = 'Stop streaming';
-			container.style.display = "block";
+			document.getElementById('video-stream').src = `${streamUrl}/camera/start`;
+			document.getElementById('container-stream').style.display = "block";
+			document.getElementById('button-stream').innerHTML = 'Stop streaming';
 		}
 		function stopStreaming()
 		{
-			const button    = document.getElementById('toggle-stream');
-			const video      = document.getElementById('video-stream');
-			const container = document.getElementById('container-stream');
-
 			var xhttp = new XMLHttpRequest();
 			xhttp.open("GET","camera/stop",true);
 			xhttp.send();
-   
-			var streamUrl = document.location.origin + ':81';
-			video.src = `${streamUrl}/camera/stop`;
-			button.innerHTML = 'Start streaming'
-			container.style.display = "none";
+			document.getElementById('button-stream').innerHTML = 'Start streaming';
 		}
 	</script>
 </p>""")),
@@ -90,7 +79,6 @@ async def cameraPage(request, response, args):
 					SwitchCmd(           text=b"V-Flip"    , path=b"camera/configure", name=b"vflip"     , checked=cameraConfig.vflip),
 				])))
 			], title=args["title"], active=args["index"], request=request, response=response)
-	print("Camera page---")
 	await response.sendPage(page)
 
 @HttpServer.addRoute(b'/camera/configure')
@@ -105,18 +93,17 @@ async def cameraConfigure(request, response, args):
 @HttpServer.addRoute('/camera/stop')
 async def cameraStopStreaming(request, response, args):
 	""" Stop video streaming """
-	global streaming
-	streaming = False
-	print("Stop streaming......")
+	global cameraStreaming
+	cameraStreaming = False
 	await response.sendOk()
 
 @HttpServer.addRoute('/camera/start')
 async def cameraStartStreaming(request, response, args):
 	""" Start video streaming """
-	global streaming, cameraConfig
-	print("Start streaming %d"%request.port)
-	if streaming:
-		streaming = False
+	global cameraStreaming, cameraConfig
+	
+	if cameraStreaming:
+		cameraStreaming = False
 		await uasyncio.sleep(0.2)
 	
 	if request.port == 80:
@@ -148,20 +135,20 @@ async def cameraStartStreaming(request, response, args):
 		length = len(image)
 		await writer.write(frame%(b"", length, length))
 		await writer.write(image)
-		streaming = True
-		count = 0
-		while streaming:
+		cameraStreaming = True
+		# count = 0
+		while cameraStreaming:
 			image = Camera.capture()
 			length = len(image)
 			await writer.write(frame%(identifier, length, length))
 			await writer.write(image)
 			if micropython == False:
 				await uasyncio.sleep(0.1)
-			print("%d"%count)
-			count += 1
+			# print("%d"%count)
+			# count += 1
 	except Exception as err:
 		print("Stop streaming")
 		print(useful.exception(err))
-	streaming = False
+	cameraStreaming = False
 	Camera.unreserve()
 	await writer.close()
