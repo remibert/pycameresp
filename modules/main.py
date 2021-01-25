@@ -70,4 +70,15 @@ if useful.iscamera():
 	motion.start(loop, onBattery, isPinWakeUp)
 
 # Run asyncio for ever
-loop.run_forever()
+while True:
+	try:
+		loop.run_forever()
+	except KeyboardInterrupt:
+		print("Server interrupted")
+	import sys
+	try:
+		del sys.modules["shell"]
+	except:
+		pass
+	import shell
+	print ("Restart server")
