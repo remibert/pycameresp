@@ -56,13 +56,31 @@ class Station:
 	@staticmethod
 	def connect(ssid=None, password=None):
 		""" Connect to wifi hotspot """
+		result = False
 		if ssid     != None: Station.config.ssid     = ssid
 		if password != None: Station.config.wifipassword = password
 		if not Station.wlan.isconnected():
 			Station.wlan.active(True)
 			Station.wlan.connect(useful.tobytes(Station.config.ssid), useful.tobytes(Station.config.wifipassword))
+			from time import sleep
+			count = 0
 			while not Station.wlan.isconnected():
-				pass
+				sleep(0.5)
+				
+				if count % 6 == 0:
+					print ("Try wifi connection")
+				count += 1
+				if count > 120:
+					break
+				
+			
+			if Station.wlan.isconnected() == False:
+				Station.wlan.active(False)
+			else:
+				result = True
+		else:
+			result = True
+		return result
 
 	@staticmethod
 	def disconnect(self):
@@ -144,8 +162,10 @@ class Station:
 					Station.networks  = []
 					print("Start wifi")
 					Station.configure()
-					Station.connect()
-					print(repr(Station.config))
+					if Station.connect():
+						print(repr(Station.config))
+					else:
+						print("Wifi connection failed")
 					result = True
 				else:
 					print("Wifi disabled")

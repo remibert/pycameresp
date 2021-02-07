@@ -12,9 +12,12 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
 		<!--Stylesheet:end-->
+		<!--StylesheetDefault:begin-->
+		<link rel="stylesheet" href="stylesheet.css">
+		<!--StylesheetDefault:end-->
 		%(content)s
 		<!--Div:begin-->
-		<div class="container %(class_)s" style="%(style)s" id="%(id)s">%(content)s</div>
+		<div class="%(class_)s" style="%(style)s" id="%(id)s">%(content)s</div>
 		<!--Div:end-->
 		<!--Command:begin-->
 		<script type="text/javascript">
@@ -174,25 +177,12 @@
 		<a class="%(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(content)s%(text)s</a>
 		<!--Link:end-->
 
-		<!--Bar:begin-->
-		<nav class="navbar navbar-expand-sm bg-dark navbar-dark %(class_)s" style="%(style)s" id="%(id)s">
-			<ul class="navbar-nav">
-				%(content)s
-				<!--BarItem:begin-->
-				<li class="nav-item">
-				<a class="nav-link %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(content)s%(text)s</a>
-				</li>
-				<!--BarItem:end-->
-			</ul>
-		</nav>
-		<!--Bar:end-->
-
 		<!--Tab:begin-->
-		<ul class="nav nav-tabs %(class_)s" style="%(style)s" id="%(id)s">
+		<ul class="nav nav-pills nav-stacked flex-column %(class_)s" style="%(style)s" id="%(id)s">
 			%(content)s
 			<!--TabItem:begin-->
 			<li class="nav-item">
-				<a class="nav-link %(active)s %(disabled)s %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(content)s%(text)s</a>
+				<a class="nav-link btn-outline-primary %(active)s %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s" %(disabled)s>%(content)s%(text)s</a>
 			</li>
 			<!--TabItem:end-->
 		</ul>
@@ -220,10 +210,6 @@
 		</datalist>
 		<br>
 		<!--ComboBox:end-->
-
-		<!--Badge:begin-->
-		<span class="badge %(class_)s" style="%(style)s" id="%(id)s" >%(text)s</span>
-		<!--Badge:end-->
 
 		<!--Image:begin-->
 		<img src="%(src)s" class="%(class_)s" style="%(style)s" id="%(id)s" alt="%(alt)s">
@@ -266,7 +252,7 @@
 
 		<!--SliderCmd:begin-->
 		<label >%(text)s</label>
-		<div style="display: flex">
+		<div style="display: flex;">
 			<input type="range" class="custom-range %(class_)s" style="%(style)s" id="slider_%(id)s" name="%(name)s" min="%(min)s" max="%(max)s" step="%(step)s" value="%(value)s" %(disabled)s oninput="onchange_%(id)s()" onmouseup="oncommand_%(id)s()" />
 			<span id="value_%(id)s"/>
 		</div>

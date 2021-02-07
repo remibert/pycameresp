@@ -15,7 +15,7 @@ try:
 except:
 	pass
 
-@HttpServer.addRoute(b'/', title=b"Info", index=10)
+@HttpServer.addRoute(b'/', title=b"Information", index=10)
 async def index(request, response, args):
 	""" Function define the web page to display all informations of the board """
 	try:
