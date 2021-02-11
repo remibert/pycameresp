@@ -46,3 +46,21 @@ class Pin:
 	
 	def value(self, val=0):
 		return val
+
+class Timer:
+	ONE_SHOT = 0
+	PERIODIC = 1
+	def __init__(self, ident):
+		self.timer = None
+		
+	def init(self, mode=0, period=- 1, callback=None):
+		import threading
+		if self.timer:
+			self.timer.cancel()
+		
+		self.timer = threading.Timer(period/1000., callback)
+		self.timer.start()
+	
+	def deinit(self):
+		if self.timer:
+			self.timer.cancel()

@@ -76,6 +76,9 @@ endif
 endif
 
 ESPCOMP = $(ESPIDF)/components
+# REMI BERTHOLET START
+HOMEKITCOMP = $(ESPIDF)/../esp-homekit
+# REMI BERTHOLET END
 ESPTOOL ?= $(ESPCOMP)/esptool_py/esptool/esptool.py
 ESPCOMP_KCONFIGS = $(shell find $(ESPCOMP) -name Kconfig)
 ESPCOMP_KCONFIGS_PROJBUILD = $(shell find $(ESPCOMP) -name Kconfig.projbuild)
@@ -181,6 +184,7 @@ INC_ESPCOMP += -I$(ESPCOMP)/esp32-camera/driver/private_include
 INC_ESPCOMP += -I$(ESPCOMP)/esp32-camera/conversions/include
 INC_ESPCOMP += -I$(ESPCOMP)/esp32-camera/conversions/private_include
 INC_ESPCOMP += -I$(ESPCOMP)/esp32-camera/sensors/private_include
+INC_ESPCOMP += -I$(HOMEKITCOMP)/include
 # REMI BERTHOLET END
 ifeq ($(ESPIDF_CURHASH),$(ESPIDF_SUPHASH_V4))
 INC_ESPCOMP += -I$(ESPCOMP)/esp_common/include
@@ -796,6 +800,13 @@ APP_LD_ARGS += $(ESPCOMP)/esp32/libhal.a
 APP_LD_ARGS += -L$(ESPCOMP)/bt/lib -lbtdm_app
 APP_LD_ARGS += -L$(ESPCOMP)/esp32/lib -lcore -lmesh -lnet80211 -lphy -lrtc -lpp -lwpa -lsmartconfig -lcoexist -lwps -lwpa2
 endif
+# REMI BERTHOLET START
+APP_LD_ARGS += $(HOMEKITCOMP)/lib/libhomekit.a
+APP_LD_ARGS += $(HOMEKITCOMP)/lib/libwolfssl.a
+APP_LD_ARGS += $(HOMEKITCOMP)/lib/libjson.a
+APP_LD_ARGS += $(HOMEKITCOMP)/lib/libesp_http_server.a
+APP_LD_ARGS += $(HOMEKITCOMP)/lib/libhttp-parser.a
+# REMI BERTHOLET END
 APP_LD_ARGS += $(OBJ)
 APP_LD_ARGS += $(LIB)
 APP_LD_ARGS += --end-group

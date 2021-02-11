@@ -25,7 +25,7 @@ async def cameraPage(request, response, args):
 			[Br(),
 				Container(Tag(b"""
 <p>
-	<button id="button-stream" class="btn btn-outline-primary" onclick="onStartVideoClick()">Start streaming</button>
+	<button id="button-stream" class="btn btn-outline-primary" onclick="onStartVideoClick()">Show</button>
 	<figure>
 		<div id="container-stream" class="display: none;">
 			<img id="video-stream" src="">
@@ -35,7 +35,7 @@ async def cameraPage(request, response, args):
 	<script>
 		function onStartVideoClick()
 		{
-			if (document.getElementById('button-stream').innerHTML == 'Start streaming')
+			if (document.getElementById('button-stream').innerHTML == 'Show')
 			{
 				startStreaming();
 			}
@@ -50,6 +50,7 @@ async def cameraPage(request, response, args):
 			{
 				stopStreaming();
 			}, 300)
+			
 		}
 		function startStreaming()
 		{
@@ -57,14 +58,18 @@ async def cameraPage(request, response, args):
 			var streamUrl = document.location.origin + ':81';
 			document.getElementById('video-stream').src = `${streamUrl}/camera/start`;
 			document.getElementById('container-stream').style.display = "block";
-			document.getElementById('button-stream').innerHTML = 'Stop streaming';
+			document.getElementById('button-stream').innerHTML = 'Hide';
+			setTimeout(() => 
+			{
+				stopStreaming();
+			}, 60000)
 		}
 		function stopStreaming()
 		{
 			var xhttp = new XMLHttpRequest();
 			xhttp.open("GET","camera/stop",true);
 			xhttp.send();
-			document.getElementById('button-stream').innerHTML = 'Start streaming';
+			document.getElementById('button-stream').innerHTML = 'Show';
 		}
 	</script>
 </p>""")),
@@ -86,8 +91,9 @@ async def cameraConfigure(request, response, args):
 	""" Real time camera configuration """
 	print(useful.tostrings(b"%s=%s"%(request.params[b"name"],request.params[b"value"])))
 	cameraConfig.update(request.params)
-	Camera.configure(cameraConfig)
-	print("configure")
+	if Camera.isReserved():
+		startInactivityTimer()
+		Camera.configure(cameraConfig)
 	await response.sendOk()
 
 @HttpServer.addRoute('/camera/stop')
@@ -95,7 +101,29 @@ async def cameraStopStreaming(request, response, args):
 	""" Stop video streaming """
 	global cameraStreaming
 	cameraStreaming = False
+	stopInactivityTimer()
 	await response.sendOk()
+	
+	
+def inactivityTimeoutStreaming(param=None):
+	""" Suspend video streaming after delay """
+	global cameraStreaming
+	cameraStreaming = False
+
+inactivityTimer = None
+def startInactivityTimer():
+	""" Start inactivity timer for stop streaming video after delay """
+	global inactivityTimer
+	stopInactivityTimer()
+	inactivityTimer = machine.Timer(0)
+	inactivityTimer.init(period=60000, mode=machine.Timer.ONE_SHOT, callback=inactivityTimeoutStreaming)
+
+def stopInactivityTimer():
+	""" Stop inactivity timer """
+	global inactivityTimer
+	if inactivityTimer:
+		inactivityTimer.deinit()
+		inactivityTimer = None
 
 @HttpServer.addRoute('/camera/start')
 async def cameraStartStreaming(request, response, args):
@@ -109,13 +137,15 @@ async def cameraStartStreaming(request, response, args):
 	if request.port == 80:
 		print("Streaming ignored")
 		return 
+
 	try:
-		
+		print("Start streaming")
+
+		startInactivityTimer()
 		Camera.open()
 		Camera.reserve()
 		Camera.configure(cameraConfig)
 
-		print("Start streaming")
 		response.setStatus(b"200")
 		response.setHeader(b"Content-Type"               ,b"multipart/x-mixed-replace")
 		response.setHeader(b"Transfer-Encoding"          ,b"chunked")
@@ -147,8 +177,9 @@ async def cameraStartStreaming(request, response, args):
 			# print("%d"%count)
 			# count += 1
 	except Exception as err:
-		print("Stop streaming")
 		print(useful.exception(err))
+	finally:
+		print("Stop streaming")
 	cameraStreaming = False
 	Camera.unreserve()
 	await writer.close()

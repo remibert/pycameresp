@@ -8,6 +8,8 @@
 #include "py/obj.h"
 #include "py/runtime.h"
 #include "py/binary.h"
+#include <homekit/homekit.h>
+#include <homekit/characteristics.h>
 
 #define TAG "camera"
 
@@ -73,6 +75,7 @@ STATIC mp_obj_t camera_init(){
 		ESP_LOGE(TAG, "Camera init failed");
 		return mp_const_false;
 	}
+	homekit_server_init(0);
 
 	return mp_const_true;
 }

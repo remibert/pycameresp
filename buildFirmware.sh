@@ -14,7 +14,7 @@ else
 fi
 
 export ESPIDF=$ROOT/esp-idf
-#~ export IDF_PATH=$ROOT/esp-idf
+export IDF_PATH=$ROOT/esp-idf
 
 echo "********************"
 echo "Init env micropython"
