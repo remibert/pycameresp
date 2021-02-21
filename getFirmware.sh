@@ -71,11 +71,10 @@ echo "************"
 echo "Get Home kit"
 echo "************"
 cd $ROOT
-git clone https://github.com/maximkulkin/esp-homekit.git
-git clone https://github.com/maximkulkin/esp-homekit-demo.git
-cd esp-homekit-demo
+cd $ESPIDF/components
+git clone https://github.com/espressif/esp-homekit-sdk.git
+cd esp-homekit-sdk
 git submodule update --init --recursive
-
 
 cd $ROOT
 pip3 install pyparsing==2.3.1

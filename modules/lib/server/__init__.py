@@ -72,7 +72,7 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False):
 		if config.http and withoutServer == False:
 			# Load and start http server
 			import server.httpserver
-			server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=80)
+			server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=8080)
 
 			# If camera present
 			if useful.iscamera():

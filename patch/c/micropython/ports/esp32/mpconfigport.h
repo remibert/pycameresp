@@ -193,20 +193,22 @@ extern const struct _mp_obj_module_t mp_module_network;
 extern const struct _mp_obj_module_t mp_module_onewire;
 //# REMI BERTHOLET START
 extern const struct _mp_obj_module_t mp_module_camera;
+extern const struct _mp_obj_module_t mp_module_homekit;
 //# REMI BERTHOLET END
 
 //# REMI BERTHOLET START
 #define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_esp), (mp_obj_t)&esp_module }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_esp32), (mp_obj_t)&esp32_module }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_utime), (mp_obj_t)&utime_module }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_uos), (mp_obj_t)&uos_module }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket), (mp_obj_t)&mp_module_usocket }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_machine), (mp_obj_t)&mp_module_machine }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_network), (mp_obj_t)&mp_module_network }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_esp),      (mp_obj_t)&esp_module }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_esp32),    (mp_obj_t)&esp32_module }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_utime),    (mp_obj_t)&utime_module }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_uos),      (mp_obj_t)&uos_module }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_usocket),  (mp_obj_t)&mp_module_usocket }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_machine),  (mp_obj_t)&mp_module_machine }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_network),  (mp_obj_t)&mp_module_network }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR__onewire), (mp_obj_t)&mp_module_onewire }, \
     { MP_OBJ_NEW_QSTR(MP_QSTR_uhashlib), (mp_obj_t)&mp_module_uhashlib }, \
-    { MP_OBJ_NEW_QSTR(MP_QSTR_camera), (mp_obj_t)&mp_module_camera }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_camera),   (mp_obj_t)&mp_module_camera }, \
+    { MP_OBJ_NEW_QSTR(MP_QSTR_homekit_), (mp_obj_t)&mp_module_homekit }, \
 
 //# REMI BERTHOLET END
 

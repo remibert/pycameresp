@@ -77,8 +77,9 @@ endif
 
 ESPCOMP = $(ESPIDF)/components
 # REMI BERTHOLET START
-HOMEKITCOMP = $(ESPIDF)/../esp-homekit
+HOMEKITCOMP = $(ESPIDF)/../lib
 # REMI BERTHOLET END
+
 ESPTOOL ?= $(ESPCOMP)/esptool_py/esptool/esptool.py
 ESPCOMP_KCONFIGS = $(shell find $(ESPCOMP) -name Kconfig)
 ESPCOMP_KCONFIGS_PROJBUILD = $(shell find $(ESPCOMP) -name Kconfig.projbuild)
@@ -184,7 +185,19 @@ INC_ESPCOMP += -I$(ESPCOMP)/esp32-camera/driver/private_include
 INC_ESPCOMP += -I$(ESPCOMP)/esp32-camera/conversions/include
 INC_ESPCOMP += -I$(ESPCOMP)/esp32-camera/conversions/private_include
 INC_ESPCOMP += -I$(ESPCOMP)/esp32-camera/sensors/private_include
-INC_ESPCOMP += -I$(HOMEKITCOMP)/include
+
+
+INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/components/homekit/esp_hap_apple_profiles/include
+INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/components/homekit/esp_hap_core/include
+INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/components/homekit/esp_hap_extras/include
+INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/components/homekit/esp_hap_platform/include
+INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/components/button/button/include
+INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/examples/common/app_hap_setup_payload
+#~ INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/components/homekit/hkdf-sha/include
+#~ INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/components/homekit/json_generator/include
+#~ INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/components/homekit/json_parser/include
+#~ INC_ESPCOMP += -I$(ESPCOMP)/esp-homekit-sdk/components/homekit/mu_srp/include
+
 # REMI BERTHOLET END
 ifeq ($(ESPIDF_CURHASH),$(ESPIDF_SUPHASH_V4))
 INC_ESPCOMP += -I$(ESPCOMP)/esp_common/include
@@ -328,6 +341,24 @@ endif
 # List of MicroPython source and object files
 
 SRC_C = \
+	modhomekit.c \
+	modhomekit_charact.c \
+	modhomekit_server.c \
+	modhomekit_accessory.c \
+	$(ESPCOMP)/esp32-camera/driver/camera.c \
+	$(ESPCOMP)/esp32-camera/driver/sccb.c \
+	$(ESPCOMP)/esp32-camera/driver/sensor.c \
+	$(ESPCOMP)/esp32-camera/driver/xclk.c \
+	$(ESPCOMP)/esp32-camera/sensors/ov7670.c \
+	$(ESPCOMP)/esp32-camera/sensors/ov2640.c \
+	$(ESPCOMP)/esp32-camera/sensors/ov3660.c \
+	$(ESPCOMP)/esp32-camera/sensors/ov5640.c \
+	$(ESPCOMP)/esp32-camera/sensors/ov7725.c \
+	$(ESPCOMP)/esp32-camera/sensors/nt99141.c \
+	$(ESPCOMP)/esp32-camera/conversions/yuv.c \
+	$(ESPCOMP)/esp32-camera/conversions/to_bmp.c \
+	$(ESPCOMP)/esp32-camera/conversions/esp_jpg_decode.c \
+	modcamera.c \
 	main.c \
 	uart.c \
 	gccollect.c \
@@ -361,20 +392,6 @@ SRC_C = \
 	mpthreadport.c \
 	machine_rtc.c \
 	machine_sdcard.c \
-	$(ESPCOMP)/esp32-camera/driver/camera.c \
-	$(ESPCOMP)/esp32-camera/driver/sccb.c \
-	$(ESPCOMP)/esp32-camera/driver/sensor.c \
-	$(ESPCOMP)/esp32-camera/driver/xclk.c \
-	$(ESPCOMP)/esp32-camera/sensors/ov7670.c \
-	$(ESPCOMP)/esp32-camera/sensors/ov2640.c \
-	$(ESPCOMP)/esp32-camera/sensors/ov3660.c \
-	$(ESPCOMP)/esp32-camera/sensors/ov5640.c \
-	$(ESPCOMP)/esp32-camera/sensors/ov7725.c \
-	$(ESPCOMP)/esp32-camera/sensors/nt99141.c \
-	$(ESPCOMP)/esp32-camera/conversions/yuv.c \
-	$(ESPCOMP)/esp32-camera/conversions/to_bmp.c \
-	$(ESPCOMP)/esp32-camera/conversions/esp_jpg_decode.c \
-	modcamera.c \
 	$(wildcard $(BOARD_DIR)/*.c) \
 	$(SRC_MOD)
 
@@ -791,6 +808,26 @@ APP_LD_ARGS += --start-group
 APP_LD_ARGS += -L$(dir $(LIBGCC_FILE_NAME)) -lgcc
 APP_LD_ARGS += -L$(dir $(LIBSTDCXX_FILE_NAME)) -lstdc++
 APP_LD_ARGS += $(LIBC_LIBM)
+# REMI BERTHOLET START
+APP_LD_ARGS += $(HOMEKITCOMP)/libesp_hap_apple_profiles.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libesp_hap_core.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libesp_hap_extras.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libesp_hap_platform.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libesp_https_ota.a
+APP_LD_ARGS += $(HOMEKITCOMP)/liblibsodium.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libesp_http_client.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libtcp_transport.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libnghttp.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libesp_http_server.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libesp-tls.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libjson_generator.a
+#~ APP_LD_ARGS += $(HOMEKITCOMP)/libbutton.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libmu_srp.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libjson_parser.a
+APP_LD_ARGS += $(HOMEKITCOMP)/libhkdf-sha.a
+#~ APP_LD_ARGS += $(HOMEKITCOMP)/libapp_hap_setup_payload.a
+#~ APP_LD_ARGS += $(HOMEKITCOMP)/libqrcode.a
+# REMI BERTHOLET END
 ifeq ($(ESPIDF_CURHASH),$(ESPIDF_SUPHASH_V4))
 APP_LD_ARGS += -L$(ESPCOMP)/xtensa/esp32 -lhal
 APP_LD_ARGS += -L$(ESPCOMP)/bt/controller/lib -lbtdm_app
@@ -800,13 +837,6 @@ APP_LD_ARGS += $(ESPCOMP)/esp32/libhal.a
 APP_LD_ARGS += -L$(ESPCOMP)/bt/lib -lbtdm_app
 APP_LD_ARGS += -L$(ESPCOMP)/esp32/lib -lcore -lmesh -lnet80211 -lphy -lrtc -lpp -lwpa -lsmartconfig -lcoexist -lwps -lwpa2
 endif
-# REMI BERTHOLET START
-APP_LD_ARGS += $(HOMEKITCOMP)/lib/libhomekit.a
-APP_LD_ARGS += $(HOMEKITCOMP)/lib/libwolfssl.a
-APP_LD_ARGS += $(HOMEKITCOMP)/lib/libjson.a
-APP_LD_ARGS += $(HOMEKITCOMP)/lib/libesp_http_server.a
-APP_LD_ARGS += $(HOMEKITCOMP)/lib/libhttp-parser.a
-# REMI BERTHOLET END
 APP_LD_ARGS += $(OBJ)
 APP_LD_ARGS += $(LIB)
 APP_LD_ARGS += --end-group
