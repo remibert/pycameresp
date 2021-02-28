@@ -2,6 +2,8 @@
 Copyright (c) 2021 Remi BERTHOLET */
 #include "modhomekit.h"
 
+#define TAG "Homekit"
+
 const char *__locale_ctype_ptr (void)
 {
 	return "";
@@ -53,7 +55,7 @@ STATIC mp_obj_t homekit_stop()
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(homekit_stop_obj, homekit_stop);
 
-STATIC mp_obj_t homekit_set_setup_id(const mp_obj_t setup_id_in)
+STATIC mp_obj_t homekit_setSetupId(const mp_obj_t setup_id_in)
 {
 	GET_STR_DATA_LEN(setup_id_in, setup_id, setup_id_len);
 	if (setup_id_len == 4)
@@ -66,10 +68,10 @@ STATIC mp_obj_t homekit_set_setup_id(const mp_obj_t setup_id_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(homekit_set_setup_id_obj, homekit_set_setup_id);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(homekit_setSetupId_obj, homekit_setSetupId);
 
 
-STATIC mp_obj_t homekit_set_setup_code(const mp_obj_t setup_code_in)
+STATIC mp_obj_t homekit_setSetupCode(const mp_obj_t setup_code_in)
 {
 	GET_STR_DATA_LEN(setup_code_in, setup_code, setup_code_len);
 	if (setup_code_len == 10 && setup_code[3] == '-' && setup_code[6] == '-')
@@ -82,10 +84,10 @@ STATIC mp_obj_t homekit_set_setup_code(const mp_obj_t setup_code_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(homekit_set_setup_code_obj, homekit_set_setup_code);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(homekit_setSetupCode_obj, homekit_setSetupCode);
 
 
-STATIC mp_obj_t homekit_add_accessory(const mp_obj_t accessory_in)
+STATIC mp_obj_t homekit_addAccessory(const mp_obj_t accessory_in)
 {
 	hap_acc_t * accessory = Accessory_get_ptr(accessory_in);
 
@@ -99,7 +101,7 @@ STATIC mp_obj_t homekit_add_accessory(const mp_obj_t accessory_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(homekit_add_accessory_obj, homekit_add_accessory);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(homekit_addAccessory_obj, homekit_addAccessory);
 
 
 STATIC mp_obj_t homekit_deinit()
@@ -107,11 +109,21 @@ STATIC mp_obj_t homekit_deinit()
 	int res = hap_deinit();
 	if (res != HAP_SUCCESS)
 	{
-		mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("Stop failed err=%d"), res);
+		mp_raise_msg_varg(&mp_type_RuntimeError, MP_ERROR_TEXT("Deinit failed err=%d"), res);
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(homekit_deinit_obj, homekit_deinit);
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(homekit_deinit_obj, homekit_deinit);
+
+STATIC mp_obj_t homekit_eraseAll()
+{
+	hap_stop();
+	hap_deinit();
+	hap_keystore_erase_all_data();
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(homekit_eraseAll_obj, homekit_eraseAll);
+
 
 
 STATIC const mp_rom_map_elem_t homekit_module_globals_table[] = 
@@ -119,11 +131,12 @@ STATIC const mp_rom_map_elem_t homekit_module_globals_table[] =
 	{ MP_ROM_QSTR(MP_QSTR___name__           ), MP_ROM_QSTR(MP_QSTR_homekit) },
 	{ MP_ROM_QSTR(MP_QSTR_init               ), MP_ROM_PTR(&homekit_init_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deinit             ), MP_ROM_PTR(&homekit_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_eraseAll           ), MP_ROM_PTR(&homekit_eraseAll_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_start              ), MP_ROM_PTR(&homekit_start_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_stop               ), MP_ROM_PTR(&homekit_stop_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_set_setup_id       ), MP_ROM_PTR(&homekit_set_setup_id_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_set_setup_code     ), MP_ROM_PTR(&homekit_set_setup_code_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_add_accessory      ), MP_ROM_PTR(&homekit_add_accessory_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_setSetupId         ), MP_ROM_PTR(&homekit_setSetupId_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_setSetupCode       ), MP_ROM_PTR(&homekit_setSetupCode_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_addAccessory       ), MP_ROM_PTR(&homekit_addAccessory_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_Charact            ), MP_ROM_PTR(&Charact_type) },
 	{ MP_ROM_QSTR(MP_QSTR_Server             ), MP_ROM_PTR(&Server_type) },
 	{ MP_ROM_QSTR(MP_QSTR_Accessory          ), MP_ROM_PTR(&Accessory_type) },

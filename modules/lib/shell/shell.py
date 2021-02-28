@@ -519,7 +519,7 @@ def getCommand(commandName):
 			if type(item) == type((0,)):
 				commandFlags.append(item)
 	except  Exception as err:
-		raise Exception("Command not found")
+		raise Exception("Command not found '%s'"%commandName)
 	return commandName, commandFunction, commandParams, commandFlags
 
 def execCommand(args):
@@ -560,7 +560,7 @@ def execCommand(args):
 								paramsCount += 1
 	except Exception as err:
 		# print(useful.exception(err))
-		print("%s '%s'"%(err, commandName))
+		print(err)
 		return
 	try:
 		if commandName.strip() != "":

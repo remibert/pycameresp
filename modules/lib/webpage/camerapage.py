@@ -55,7 +55,7 @@ async def cameraPage(request, response, args):
 		function startStreaming()
 		{
 			window.stop();
-			var streamUrl = document.location.origin + ':81';
+			var streamUrl = document.location.protocol + "//" + document.location.hostname + ':8081';
 			document.getElementById('video-stream').src = `${streamUrl}/camera/start`;
 			document.getElementById('container-stream').style.display = "block";
 			document.getElementById('button-stream').innerHTML = 'Hide';
@@ -134,7 +134,7 @@ async def cameraStartStreaming(request, response, args):
 		cameraStreaming = False
 		await uasyncio.sleep(0.2)
 	
-	if request.port == 80:
+	if request.port == 80 or request.port == 8080:
 		print("Streaming ignored")
 		return 
 

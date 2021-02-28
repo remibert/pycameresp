@@ -4,20 +4,22 @@ Copyright (c) 2021 Remi BERTHOLET */
 
 #define TAG "Homekit"
 
+
+static mp_obj_t   identifyCallback = mp_const_none;
+
 // Objet classe python
 typedef struct 
 {
 	mp_obj_base_t base;
 	hap_acc_t *   accessory;
-	mp_obj_t      identify_callback;
 	char          name         [32];
 	char          manufacturer [32];
 	char          model        [32];
-	char          serial_number[16];
-	char          fw_rev       [16];
-	char          hw_rev       [16];
-	char          product_vers [16];
-	uint8_t       product_data[8];
+	char          serialNumber[16];
+	char          firmwareRevision       [16];
+	char          hardwareRevision       [16];
+	char          productVersion [16];
+	uint8_t       productData[8];
 } Accessory_t;
 
 const mp_obj_type_t Accessory_type;
@@ -38,24 +40,13 @@ hap_acc_t * Accessory_get_ptr(mp_obj_t self_in)
 
 static int Accessory_identify(hap_acc_t *ha)
 {
-	// hap_status_t result = HAP_SUCCESS;
-	// if (charact)
-	// {
-	// 	mp_obj_t self_in = hap_char_get_priv(charact);
-	// 	if (self_in)
-	// 	{
-	// 		Charact_t *self = self_in;
-	// 		if (self->charact)
-	// 		{
-	// 			if (mp_obj_is_callable(self->write_callback))
-	// 			{
-	// 				mp_obj_t res = mp_call_function_1_protected(self->write_callback, self);
-	// 				result = mp_obj_get_int(res);
-	// 			}
-	// 		}
-	// 	}
-	// }
 	ESP_LOGE(TAG, "Accessory_identify");
+	if (identifyCallback != mp_const_none)
+	{
+		mp_sched_schedule(identifyCallback, mp_const_none);
+		mp_hal_wake_main_task_from_isr();
+	}
+
 	return HAP_SUCCESS;
 }
 
@@ -82,23 +73,23 @@ STATIC mp_obj_t Accessory_make_new(const mp_obj_type_t *type, size_t n_args, siz
 		ARG_name,
 		ARG_manufacturer,
 		ARG_model,
-		ARG_serial_number,
-		ARG_fw_rev,
-		ARG_hw_rev,
-		ARG_product_vers,
+		ARG_serialNumber,
+		ARG_firmwareRevision,
+		ARG_hardwareRevision,
+		ARG_productVersion,
 	};
 
 	// Constructor parameters
 	static const mp_arg_t allowed_args[] = 
 	{
-		{ MP_QSTR_cid,          MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = HAP_CID_OTHER} },
-		{ MP_QSTR_name,         MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Esp)} },
-		{ MP_QSTR_manufacturer, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Espressif)} },
-		{ MP_QSTR_model,        MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Esp32)} },
-		{ MP_QSTR_serial_number,MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__000000000000)} },
-		{ MP_QSTR_fw_rev,       MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
-		{ MP_QSTR_hw_rev,       MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
-		{ MP_QSTR_product_vers, MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
+		{ MP_QSTR_cid,               MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = HAP_CID_OTHER} },
+		{ MP_QSTR_name,              MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Esp)} },
+		{ MP_QSTR_manufacturer,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Espressif)} },
+		{ MP_QSTR_model,             MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Esp32)} },
+		{ MP_QSTR_serialNumber,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__000000000000)} },
+		{ MP_QSTR_firmwareRevision,  MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
+		{ MP_QSTR_hardwareRevision,  MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
+		{ MP_QSTR_productVersion,    MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
 	};
 	
 	// Parsing parameters
@@ -116,20 +107,20 @@ STATIC mp_obj_t Accessory_make_new(const mp_obj_type_t *type, size_t n_args, siz
 		ACCESSORY_SET(name)
 		ACCESSORY_SET(manufacturer)
 		ACCESSORY_SET(model)
-		ACCESSORY_SET(serial_number)
-		ACCESSORY_SET(fw_rev)
-		ACCESSORY_SET(hw_rev)
-		ACCESSORY_SET(product_vers)
+		ACCESSORY_SET(serialNumber)
+		ACCESSORY_SET(firmwareRevision)
+		ACCESSORY_SET(hardwareRevision)
+		ACCESSORY_SET(productVersion)
 
 		hap_acc_cfg_t cfg = 
 		{
 			.name             = self->name,
 			.manufacturer     = self->manufacturer,
 			.model            = self->model,
-			.serial_num       = self->serial_number,
-			.fw_rev           = self->fw_rev,
-			.hw_rev           = self->hw_rev,
-			.pv               = self->product_vers,
+			.serial_num       = self->serialNumber,
+			.fw_rev           = self->firmwareRevision,
+			.hw_rev           = self->hardwareRevision,
+			.pv               = self->productVersion,
 			.identify_routine = Accessory_identify,
 			.cid              = args[ARG_cid].u_int,
 		};
@@ -145,7 +136,6 @@ STATIC mp_obj_t Accessory_make_new(const mp_obj_type_t *type, size_t n_args, siz
 STATIC mp_obj_t Accessory_deinit(mp_obj_t self_in)
 {
 	Accessory_t *self = self_in;
-	//~ ESP_LOGE(TAG, "Accessory_deinit");
 	if (self->accessory)
 	{
 		hap_acc_delete(self->accessory);
@@ -156,11 +146,11 @@ STATIC mp_obj_t Accessory_deinit(mp_obj_t self_in)
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(Accessory_deinit_obj, Accessory_deinit);
 
 
-// add_server method
-STATIC mp_obj_t Accessory_add_server(mp_obj_t self_in, mp_obj_t server_in)
+// addServer method
+STATIC mp_obj_t Accessory_addServer(mp_obj_t self_in, mp_obj_t server_in)
 {
 	Accessory_t *self = self_in;
-	// ESP_LOGE(TAG, "Accessory_add_server");
+	// ESP_LOGE(TAG, "Accessory_addServer");
 	if (self->accessory)
 	{
 		hap_serv_t * server = Server_get_ptr(server_in);
@@ -175,43 +165,43 @@ STATIC mp_obj_t Accessory_add_server(mp_obj_t self_in, mp_obj_t server_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_add_server_obj, Accessory_add_server);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_addServer_obj, Accessory_addServer);
 
 
 // set_identify callback method
-STATIC mp_obj_t Accessory_set_identify_callback(mp_obj_t self_in, mp_obj_t identify_callback_in)
+STATIC mp_obj_t Accessory_setIdentifyCallback(mp_obj_t self_in, mp_obj_t identify_callback_in)
 {
 	Accessory_t *self = self_in;
 
 	if (self->accessory)
 	{
-		if (identify_callback_in != mp_const_none && !mp_obj_is_callable(identify_callback_in)) 
+		if (identify_callback_in == mp_const_none || mp_obj_is_callable(identify_callback_in)) 
 		{
-			mp_raise_ValueError(MP_ERROR_TEXT("invalid identify_callback"));
+			identifyCallback = identify_callback_in;
 		}
 		else
 		{
-			self->identify_callback = identify_callback_in;
+			mp_raise_ValueError(MP_ERROR_TEXT("invalid identify_callback"));
 		}
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_set_identify_callback_obj, Accessory_set_identify_callback);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_setIdentifyCallback_obj, Accessory_setIdentifyCallback);
 
 
 
 // set_identify callback method
-STATIC mp_obj_t Accessory_set_product_data(mp_obj_t self_in, mp_obj_t product_data_in)
+STATIC mp_obj_t Accessory_setProductData(mp_obj_t self_in, mp_obj_t product_data_in)
 {
 	Accessory_t *self = self_in;
 
 	if (self->accessory)
 	{
 		GET_STR_DATA_LEN(product_data_in , product_data, product_data_len);
-		memcpy(self->product_data, product_data, MIN(product_data_len, sizeof(self->product_data)));
+		memcpy(self->productData, product_data, MIN(product_data_len, sizeof(self->productData)));
 		if (product_data_len == 8)
 		{
-			hap_acc_add_product_data(self->accessory, self->product_data, sizeof(self->product_data));
+			hap_acc_add_product_data(self->accessory, self->productData, sizeof(self->productData));
 		}
 		else
 		{
@@ -220,7 +210,7 @@ STATIC mp_obj_t Accessory_set_product_data(mp_obj_t self_in, mp_obj_t product_da
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_set_product_data_obj, Accessory_set_product_data);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_setProductData_obj, Accessory_setProductData);
 
 
 // print method
@@ -234,11 +224,11 @@ STATIC void Accessory_print(const mp_print_t *print, mp_obj_t self_in, mp_print_
 STATIC const mp_rom_map_elem_t Accessory_locals_dict_table[] = 
 {
 	// Delete method
-	{ MP_ROM_QSTR(MP_QSTR___del__),                MP_ROM_PTR(&Accessory_deinit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_deinit),                 MP_ROM_PTR(&Accessory_deinit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_add_server),             MP_ROM_PTR(&Accessory_add_server_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_set_identify_callback),  MP_ROM_PTR(&Accessory_set_identify_callback_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_set_product_data),       MP_ROM_PTR(&Accessory_set_product_data_obj) },
+	{ MP_ROM_QSTR(MP_QSTR___del__),              MP_ROM_PTR(&Accessory_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_deinit),               MP_ROM_PTR(&Accessory_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_addServer),            MP_ROM_PTR(&Accessory_addServer_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_setIdentifyCallback),  MP_ROM_PTR(&Accessory_setIdentifyCallback_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_setProductData),       MP_ROM_PTR(&Accessory_setProductData_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Accessory_locals_dict, Accessory_locals_dict_table);
 

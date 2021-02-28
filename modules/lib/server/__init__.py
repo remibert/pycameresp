@@ -77,7 +77,7 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False):
 			# If camera present
 			if useful.iscamera():
 				# Load and start streaming http server
-				server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=81)
+				server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=8081)
 	
 	# Display system informations
 	useful.sysinfo()

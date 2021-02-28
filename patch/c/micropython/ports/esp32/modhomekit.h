@@ -18,7 +18,7 @@ hap_char_t * Charact_get_ptr(mp_obj_t self_in);
 hap_status_t Charact_read_call(hap_char_t *charact);
 
 // Call callback on write characteristic
-hap_status_t Charact_write_call(hap_char_t *charact);
+hap_status_t Charact_write_call(hap_char_t *charact, hap_val_t * value);
 
 // Get the pointer of server
 hap_serv_t * Server_get_ptr(mp_obj_t self_in);
@@ -30,5 +30,5 @@ const mp_obj_type_t Charact_type;
 const mp_obj_type_t Server_type;
 const mp_obj_type_t Accessory_type;
 const mp_obj_type_t Homekit_type;
-
+void hap_keystore_erase_all_data();
 #endif

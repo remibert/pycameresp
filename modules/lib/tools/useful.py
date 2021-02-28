@@ -241,7 +241,13 @@ def import_(filename):
 	except:
 		pass
 	try:
-		exec("import %s"%moduleName)
+		module = exec("import %s"%moduleName)
+		
+		for fct in dir(sys.modules[moduleName]):
+			if fct == "main":
+				print("Start main function")
+				sys.modules[moduleName].main()
+				break
 	except Exception as err:
 		print(exception(err))
 	except KeyboardInterrupt as err:
