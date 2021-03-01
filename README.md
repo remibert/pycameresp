@@ -13,11 +13,11 @@ Of course, in this case the code specific to the camera or to the ESP32 is simul
 Below is the list of features supported by the software
 
 - Servers :
-	- HTTP web server
+	- HTTP web server (on port 8080)
 	- FTP server
 	- Telnet server
 	- Login, password can be defined for servers
-	- Homekit server
+	- Homekit server (on port 80)
 
 - Clients :
 	- NTP synchronization
@@ -115,17 +115,17 @@ To flash a firmware on the ESP32CAM, see the excellent video :
 Once the firmware flashed, the ESP32CAM automatically starts a wifi access point.
 You must connect to the SSID **Micropython** access point, the wifi password is **Micropython** .
 
-Once wifi connected, open your web browser on the ip address (http://192.168.3.1).
+Once wifi connected, open your web browser on the ip address (http://192.168.3.1:8080).
 To use motion detection with image notification, you have to configure :
 
-- (http://192.168.3.1/wifi) Set wifi SSID and password and activate it
-- (http://192.168.3.1/accesspoint) Disable the access point for more security
-- (http://192.168.3.1/server) Choose available server
-- (http://192.168.3.1/changepassword) Enter password and user for more security
-- (http://192.168.3.1/pushover) Create push over token and user to receive motion detection image
-- (http://192.168.3.1/motion) Activate and configure motion detection
-- (http://192.168.3.1/camera) See the camera streaming to adjust its position
-- (http://192.168.3.1/battery) Configure the battery mode
+- (http://192.168.3.1/wifi:8080) Set wifi SSID and password and activate it
+- (http://192.168.3.1/accesspoint:8080) Disable the access point for more security
+- (http://192.168.3.1/server:8080) Choose available server
+- (http://192.168.3.1/changepassword:8080) Enter password and user for more security
+- (http://192.168.3.1/pushover:8080) Create push over token and user to receive motion detection image
+- (http://192.168.3.1/motion:8080) Activate and configure motion detection
+- (http://192.168.3.1/camera:8080) See the camera streaming to adjust its position
+- (http://192.168.3.1/battery:8080) Configure the battery mode
 
 To get notifications on your smartphone, you need to install the app [Push over](https://pushover.net), create an account, 
 and create an Application/API Token.
