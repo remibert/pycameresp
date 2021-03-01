@@ -270,7 +270,13 @@ def import_(filename):
         except:
                 pass
         try:
-                exec(&#34;import %s&#34;%moduleName)
+                module = exec(&#34;import %s&#34;%moduleName)
+                
+                for fct in dir(sys.modules[moduleName]):
+                        if fct == &#34;main&#34;:
+                                print(&#34;Start main function&#34;)
+                                sys.modules[moduleName].main()
+                                break
         except Exception as err:
                 print(exception(err))
         except KeyboardInterrupt as err:
@@ -985,7 +991,13 @@ def journalize(message):
         except:
                 pass
         try:
-                exec(&#34;import %s&#34;%moduleName)
+                module = exec(&#34;import %s&#34;%moduleName)
+                
+                for fct in dir(sys.modules[moduleName]):
+                        if fct == &#34;main&#34;:
+                                print(&#34;Start main function&#34;)
+                                sys.modules[moduleName].main()
+                                break
         except Exception as err:
                 print(exception(err))
         except KeyboardInterrupt as err:

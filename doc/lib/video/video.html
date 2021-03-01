@@ -45,6 +45,38 @@ import machine
 import camera
 import time
 from tools import useful
+from tools import jsonconfig
+
+class CameraConfig:
+        streamingBase = [0]
+        &#34;&#34;&#34; Class that collects the camera rendering configuration &#34;&#34;&#34;
+        def __init__(self):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.framesize  = b&#34;640x480&#34;
+                self.pixformat  = b&#34;JPEG&#34;
+                self.quality    = 10
+                self.brightness = 0
+                self.contrast   = 0
+                self.saturation = 0
+                self.hmirror    = False
+                self.vflip      = False
+                self.streamingBase[0] = self.streamingBase[0] + 1
+                self.streamingId = self.streamingBase[0]
+
+        def save(self, file = None):
+                &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
+                result = jsonconfig.save(self, file)
+                return result
+
+        def update(self, params):
+                &#34;&#34;&#34; Update configuration &#34;&#34;&#34;
+                result = jsonconfig.update(self, params)
+                return result
+
+        def load(self, file = None):
+                &#34;&#34;&#34; Load configuration &#34;&#34;&#34;
+                result = jsonconfig.load(self, file)
+                return result
 
 class Camera:
         &#34;&#34;&#34; Singleton class to manage the camera &#34;&#34;&#34;
@@ -235,7 +267,20 @@ class Camera:
                 if Camera.opened:
                         # print(&#34;Vflip %d&#34;%val)
                         return camera.vflip(val)
-                return None</code></pre>
+                return None
+
+        @staticmethod
+        def configure(config):
+                &#34;&#34;&#34; Configure the camera &#34;&#34;&#34;
+                if Camera.opened:
+                        Camera.pixformat (config.pixformat)
+                        Camera.framesize (config.framesize)
+                        Camera.quality   (config.quality)
+                        Camera.brightness(config.brightness)
+                        Camera.contrast  (config.contrast)
+                        Camera.saturation(config.saturation)
+                        Camera.hmirror   (config.hmirror)
+                        Camera.vflip     (config.vflip)</code></pre>
 </details>
 </section>
 <section>
@@ -445,7 +490,20 @@ class Camera:
                 if Camera.opened:
                         # print(&#34;Vflip %d&#34;%val)
                         return camera.vflip(val)
-                return None</code></pre>
+                return None
+
+        @staticmethod
+        def configure(config):
+                &#34;&#34;&#34; Configure the camera &#34;&#34;&#34;
+                if Camera.opened:
+                        Camera.pixformat (config.pixformat)
+                        Camera.framesize (config.framesize)
+                        Camera.quality   (config.quality)
+                        Camera.brightness(config.brightness)
+                        Camera.contrast  (config.contrast)
+                        Camera.saturation(config.saturation)
+                        Camera.hmirror   (config.hmirror)
+                        Camera.vflip     (config.vflip)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -523,6 +581,29 @@ def close():
         if Camera.opened == True:
                 camera.deinit()
                 Camera.opened = False</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Camera.configure"><code class="name flex">
+<span>def <span class="ident">configure</span></span>(<span>config)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Configure the camera</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def configure(config):
+        &#34;&#34;&#34; Configure the camera &#34;&#34;&#34;
+        if Camera.opened:
+                Camera.pixformat (config.pixformat)
+                Camera.framesize (config.framesize)
+                Camera.quality   (config.quality)
+                Camera.brightness(config.brightness)
+                Camera.contrast  (config.contrast)
+                Camera.saturation(config.saturation)
+                Camera.hmirror   (config.hmirror)
+                Camera.vflip     (config.vflip)</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.contrast"><code class="name flex">
@@ -820,6 +901,102 @@ def vflip(val=None):
 </dd>
 </dl>
 </dd>
+<dt id="lib.video.video.CameraConfig"><code class="flex name class">
+<span>class <span class="ident">CameraConfig</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CameraConfig:
+        streamingBase = [0]
+        &#34;&#34;&#34; Class that collects the camera rendering configuration &#34;&#34;&#34;
+        def __init__(self):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.framesize  = b&#34;640x480&#34;
+                self.pixformat  = b&#34;JPEG&#34;
+                self.quality    = 10
+                self.brightness = 0
+                self.contrast   = 0
+                self.saturation = 0
+                self.hmirror    = False
+                self.vflip      = False
+                self.streamingBase[0] = self.streamingBase[0] + 1
+                self.streamingId = self.streamingBase[0]
+
+        def save(self, file = None):
+                &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
+                result = jsonconfig.save(self, file)
+                return result
+
+        def update(self, params):
+                &#34;&#34;&#34; Update configuration &#34;&#34;&#34;
+                result = jsonconfig.update(self, params)
+                return result
+
+        def load(self, file = None):
+                &#34;&#34;&#34; Load configuration &#34;&#34;&#34;
+                result = jsonconfig.load(self, file)
+                return result</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.video.video.CameraConfig.streamingBase"><code class="name">var <span class="ident">streamingBase</span></code></dt>
+<dd>
+<div class="desc"><p>Class that collects the camera rendering configuration</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.video.video.CameraConfig.load"><code class="name flex">
+<span>def <span class="ident">load</span></span>(<span>self, file=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load configuration</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load(self, file = None):
+        &#34;&#34;&#34; Load configuration &#34;&#34;&#34;
+        result = jsonconfig.load(self, file)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.CameraConfig.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>self, file=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save configuration</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save(self, file = None):
+        &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
+        result = jsonconfig.save(self, file)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.CameraConfig.update"><code class="name flex">
+<span>def <span class="ident">update</span></span>(<span>self, params)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update configuration</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update(self, params):
+        &#34;&#34;&#34; Update configuration &#34;&#34;&#34;
+        result = jsonconfig.update(self, params)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -842,6 +1019,7 @@ def vflip(val=None):
 <li><code><a title="lib.video.video.Camera.brightness" href="#lib.video.video.Camera.brightness">brightness</a></code></li>
 <li><code><a title="lib.video.video.Camera.capture" href="#lib.video.video.Camera.capture">capture</a></code></li>
 <li><code><a title="lib.video.video.Camera.close" href="#lib.video.video.Camera.close">close</a></code></li>
+<li><code><a title="lib.video.video.Camera.configure" href="#lib.video.video.Camera.configure">configure</a></code></li>
 <li><code><a title="lib.video.video.Camera.contrast" href="#lib.video.video.Camera.contrast">contrast</a></code></li>
 <li><code><a title="lib.video.video.Camera.framesize" href="#lib.video.video.Camera.framesize">framesize</a></code></li>
 <li><code><a title="lib.video.video.Camera.hmirror" href="#lib.video.video.Camera.hmirror">hmirror</a></code></li>
@@ -858,6 +1036,15 @@ def vflip(val=None):
 <li><code><a title="lib.video.video.Camera.sharpness" href="#lib.video.video.Camera.sharpness">sharpness</a></code></li>
 <li><code><a title="lib.video.video.Camera.unreserve" href="#lib.video.video.Camera.unreserve">unreserve</a></code></li>
 <li><code><a title="lib.video.video.Camera.vflip" href="#lib.video.video.Camera.vflip">vflip</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.video.video.CameraConfig" href="#lib.video.video.CameraConfig">CameraConfig</a></code></h4>
+<ul class="">
+<li><code><a title="lib.video.video.CameraConfig.load" href="#lib.video.video.CameraConfig.load">load</a></code></li>
+<li><code><a title="lib.video.video.CameraConfig.save" href="#lib.video.video.CameraConfig.save">save</a></code></li>
+<li><code><a title="lib.video.video.CameraConfig.streamingBase" href="#lib.video.video.CameraConfig.streamingBase">streamingBase</a></code></li>
+<li><code><a title="lib.video.video.CameraConfig.update" href="#lib.video.video.CameraConfig.update">update</a></code></li>
 </ul>
 </li>
 </ul>

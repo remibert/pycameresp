@@ -48,11 +48,14 @@ class StationConfig:
 
         def __repr__(self):
                 &#34;&#34;&#34; Display the content of wifi station &#34;&#34;&#34;
+                # Get network address
+                ipaddress, netmask, gateway, dns = Station.wlan.ifconfig()
+
                 result = &#34;%s:\n&#34;%self.__class__.__name__
-                result +=&#34;   Ip address :%s\n&#34;%useful.tostrings(self.ipaddress)
-                result +=&#34;   Netmask    :%s\n&#34;%useful.tostrings(self.netmask)
-                result +=&#34;   Gateway    :%s\n&#34;%useful.tostrings(self.gateway)
-                result +=&#34;   Dns        :%s\n&#34;%useful.tostrings(self.dns)
+                result +=&#34;   Ip address :%s\n&#34;%ipaddress
+                result +=&#34;   Netmask    :%s\n&#34;%netmask
+                result +=&#34;   Gateway    :%s\n&#34;%gateway
+                result +=&#34;   Dns        :%s\n&#34;%dns
                 result +=&#34;   Ssid       :%s\n&#34;%useful.tostrings(self.ssid)
                 # result +=&#34;   Password   :%s\n&#34;%useful.tostrings(self.wifipassword)
                 result +=&#34;   Activated  :%s\n&#34;%useful.tostrings(self.activated)
@@ -82,13 +85,31 @@ class Station:
         @staticmethod
         def connect(ssid=None, password=None):
                 &#34;&#34;&#34; Connect to wifi hotspot &#34;&#34;&#34;
+                result = False
                 if ssid     != None: Station.config.ssid     = ssid
                 if password != None: Station.config.wifipassword = password
                 if not Station.wlan.isconnected():
                         Station.wlan.active(True)
                         Station.wlan.connect(useful.tobytes(Station.config.ssid), useful.tobytes(Station.config.wifipassword))
+                        from time import sleep
+                        count = 0
                         while not Station.wlan.isconnected():
-                                pass
+                                sleep(0.5)
+                                
+                                if count % 6 == 0:
+                                        print (&#34;Try wifi connection&#34;)
+                                count += 1
+                                if count &gt; 120:
+                                        break
+                                
+                        
+                        if Station.wlan.isconnected() == False:
+                                Station.wlan.active(False)
+                        else:
+                                result = True
+                else:
+                        result = True
+                return result
 
         @staticmethod
         def disconnect(self):
@@ -111,24 +132,29 @@ class Station:
                 if netmask   != None: Station.config.netmask   = useful.tobytes(netmask)
                 if gateway   != None: Station.config.gateway   = useful.tobytes(gateway)
                 if dns       != None: Station.config.dns       = useful.tobytes(dns)
+
                 if Station.config.ipaddress == b&#34;&#34;: Station.config.ipaddress = useful.tobytes(Station.wlan.ifconfig()[0])
                 if Station.config.netmask   == b&#34;&#34;: Station.config.netmask   = useful.tobytes(Station.wlan.ifconfig()[1])
                 if Station.config.gateway   == b&#34;&#34;: Station.config.gateway   = useful.tobytes(Station.wlan.ifconfig()[2])
                 if Station.config.dns       == b&#34;&#34;: Station.config.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
+
+                if Station.config.ipaddress == b&#34;0.0.0.0&#34;: Station.config.ipaddress = b&#34;&#34;
+                if Station.config.netmask   == b&#34;0.0.0.0&#34;: Station.config.netmask   = b&#34;&#34;
+                if Station.config.gateway   == b&#34;0.0.0.0&#34;: Station.config.gateway   = b&#34;&#34;
+                if Station.config.dns       == b&#34;0.0.0.0&#34;: Station.config.dns       = b&#34;&#34;
+
                 try:
-                        Station.wlan.ifconfig((
-                                useful.tostrings(Station.config.ipaddress),
-                                useful.tostrings(Station.config.netmask),
-                                useful.tostrings(Station.config.gateway),
-                                useful.tostrings(Station.config.dns)))
-                        if sys.implementation.name != &#34;micropython&#34;:
-                                Station.config.ipaddress, Station.config.netmask, Station.config.gateway, Station.config.dns = Station.wlan.ifconfig()
-                                Station.config.ipaddress = useful.tobytes(Station.config.ipaddress)
-                                Station.config.netmask   = useful.tobytes(Station.config.netmask  )
-                                Station.config.gateway   = useful.tobytes(Station.config.gateway  )
-                                Station.config.dns       = useful.tobytes(Station.config.dns      )
-                except OSError:
-                        print(&#34;Cannot configure %s&#34;%Station.__class__.__name__)
+                        if Station.config.ipaddress != b&#34;&#34; and \
+                                Station.config.netmask   != b&#34;&#34; and \
+                                Station.config.gateway   != b&#34;&#34; and \
+                                Station.config.dns       != b&#34;&#34;:
+                                Station.wlan.ifconfig((
+                                        useful.tostrings(Station.config.ipaddress),
+                                        useful.tostrings(Station.config.netmask),
+                                        useful.tostrings(Station.config.gateway),
+                                        useful.tostrings(Station.config.dns)))
+                except Exception as err:
+                        print(&#34;Cannot configure wifi station %s&#34;%useful.exception(err))
 
         @staticmethod
         def getInfo():
@@ -165,8 +191,10 @@ class Station:
                                         Station.networks  = []
                                         print(&#34;Start wifi&#34;)
                                         Station.configure()
-                                        Station.connect()
-                                        print(repr(Station.config))
+                                        if Station.connect():
+                                                print(repr(Station.config))
+                                        else:
+                                                print(&#34;Wifi connection failed&#34;)
                                         result = True
                                 else:
                                         print(&#34;Wifi disabled&#34;)
@@ -220,13 +248,31 @@ class Station:
         @staticmethod
         def connect(ssid=None, password=None):
                 &#34;&#34;&#34; Connect to wifi hotspot &#34;&#34;&#34;
+                result = False
                 if ssid     != None: Station.config.ssid     = ssid
                 if password != None: Station.config.wifipassword = password
                 if not Station.wlan.isconnected():
                         Station.wlan.active(True)
                         Station.wlan.connect(useful.tobytes(Station.config.ssid), useful.tobytes(Station.config.wifipassword))
+                        from time import sleep
+                        count = 0
                         while not Station.wlan.isconnected():
-                                pass
+                                sleep(0.5)
+                                
+                                if count % 6 == 0:
+                                        print (&#34;Try wifi connection&#34;)
+                                count += 1
+                                if count &gt; 120:
+                                        break
+                                
+                        
+                        if Station.wlan.isconnected() == False:
+                                Station.wlan.active(False)
+                        else:
+                                result = True
+                else:
+                        result = True
+                return result
 
         @staticmethod
         def disconnect(self):
@@ -249,24 +295,29 @@ class Station:
                 if netmask   != None: Station.config.netmask   = useful.tobytes(netmask)
                 if gateway   != None: Station.config.gateway   = useful.tobytes(gateway)
                 if dns       != None: Station.config.dns       = useful.tobytes(dns)
+
                 if Station.config.ipaddress == b&#34;&#34;: Station.config.ipaddress = useful.tobytes(Station.wlan.ifconfig()[0])
                 if Station.config.netmask   == b&#34;&#34;: Station.config.netmask   = useful.tobytes(Station.wlan.ifconfig()[1])
                 if Station.config.gateway   == b&#34;&#34;: Station.config.gateway   = useful.tobytes(Station.wlan.ifconfig()[2])
                 if Station.config.dns       == b&#34;&#34;: Station.config.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
+
+                if Station.config.ipaddress == b&#34;0.0.0.0&#34;: Station.config.ipaddress = b&#34;&#34;
+                if Station.config.netmask   == b&#34;0.0.0.0&#34;: Station.config.netmask   = b&#34;&#34;
+                if Station.config.gateway   == b&#34;0.0.0.0&#34;: Station.config.gateway   = b&#34;&#34;
+                if Station.config.dns       == b&#34;0.0.0.0&#34;: Station.config.dns       = b&#34;&#34;
+
                 try:
-                        Station.wlan.ifconfig((
-                                useful.tostrings(Station.config.ipaddress),
-                                useful.tostrings(Station.config.netmask),
-                                useful.tostrings(Station.config.gateway),
-                                useful.tostrings(Station.config.dns)))
-                        if sys.implementation.name != &#34;micropython&#34;:
-                                Station.config.ipaddress, Station.config.netmask, Station.config.gateway, Station.config.dns = Station.wlan.ifconfig()
-                                Station.config.ipaddress = useful.tobytes(Station.config.ipaddress)
-                                Station.config.netmask   = useful.tobytes(Station.config.netmask  )
-                                Station.config.gateway   = useful.tobytes(Station.config.gateway  )
-                                Station.config.dns       = useful.tobytes(Station.config.dns      )
-                except OSError:
-                        print(&#34;Cannot configure %s&#34;%Station.__class__.__name__)
+                        if Station.config.ipaddress != b&#34;&#34; and \
+                                Station.config.netmask   != b&#34;&#34; and \
+                                Station.config.gateway   != b&#34;&#34; and \
+                                Station.config.dns       != b&#34;&#34;:
+                                Station.wlan.ifconfig((
+                                        useful.tostrings(Station.config.ipaddress),
+                                        useful.tostrings(Station.config.netmask),
+                                        useful.tostrings(Station.config.gateway),
+                                        useful.tostrings(Station.config.dns)))
+                except Exception as err:
+                        print(&#34;Cannot configure wifi station %s&#34;%useful.exception(err))
 
         @staticmethod
         def getInfo():
@@ -303,8 +354,10 @@ class Station:
                                         Station.networks  = []
                                         print(&#34;Start wifi&#34;)
                                         Station.configure()
-                                        Station.connect()
-                                        print(repr(Station.config))
+                                        if Station.connect():
+                                                print(repr(Station.config))
+                                        else:
+                                                print(&#34;Wifi connection failed&#34;)
                                         result = True
                                 else:
                                         print(&#34;Wifi disabled&#34;)
@@ -363,24 +416,29 @@ def configure(ipaddress = None, netmask = None, gateway = None, dns = None):
         if netmask   != None: Station.config.netmask   = useful.tobytes(netmask)
         if gateway   != None: Station.config.gateway   = useful.tobytes(gateway)
         if dns       != None: Station.config.dns       = useful.tobytes(dns)
+
         if Station.config.ipaddress == b&#34;&#34;: Station.config.ipaddress = useful.tobytes(Station.wlan.ifconfig()[0])
         if Station.config.netmask   == b&#34;&#34;: Station.config.netmask   = useful.tobytes(Station.wlan.ifconfig()[1])
         if Station.config.gateway   == b&#34;&#34;: Station.config.gateway   = useful.tobytes(Station.wlan.ifconfig()[2])
         if Station.config.dns       == b&#34;&#34;: Station.config.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
+
+        if Station.config.ipaddress == b&#34;0.0.0.0&#34;: Station.config.ipaddress = b&#34;&#34;
+        if Station.config.netmask   == b&#34;0.0.0.0&#34;: Station.config.netmask   = b&#34;&#34;
+        if Station.config.gateway   == b&#34;0.0.0.0&#34;: Station.config.gateway   = b&#34;&#34;
+        if Station.config.dns       == b&#34;0.0.0.0&#34;: Station.config.dns       = b&#34;&#34;
+
         try:
-                Station.wlan.ifconfig((
-                        useful.tostrings(Station.config.ipaddress),
-                        useful.tostrings(Station.config.netmask),
-                        useful.tostrings(Station.config.gateway),
-                        useful.tostrings(Station.config.dns)))
-                if sys.implementation.name != &#34;micropython&#34;:
-                        Station.config.ipaddress, Station.config.netmask, Station.config.gateway, Station.config.dns = Station.wlan.ifconfig()
-                        Station.config.ipaddress = useful.tobytes(Station.config.ipaddress)
-                        Station.config.netmask   = useful.tobytes(Station.config.netmask  )
-                        Station.config.gateway   = useful.tobytes(Station.config.gateway  )
-                        Station.config.dns       = useful.tobytes(Station.config.dns      )
-        except OSError:
-                print(&#34;Cannot configure %s&#34;%Station.__class__.__name__)</code></pre>
+                if Station.config.ipaddress != b&#34;&#34; and \
+                        Station.config.netmask   != b&#34;&#34; and \
+                        Station.config.gateway   != b&#34;&#34; and \
+                        Station.config.dns       != b&#34;&#34;:
+                        Station.wlan.ifconfig((
+                                useful.tostrings(Station.config.ipaddress),
+                                useful.tostrings(Station.config.netmask),
+                                useful.tostrings(Station.config.gateway),
+                                useful.tostrings(Station.config.dns)))
+        except Exception as err:
+                print(&#34;Cannot configure wifi station %s&#34;%useful.exception(err))</code></pre>
 </details>
 </dd>
 <dt id="lib.wifi.station.Station.connect"><code class="name flex">
@@ -395,13 +453,31 @@ def configure(ipaddress = None, netmask = None, gateway = None, dns = None):
 <pre><code class="python">@staticmethod
 def connect(ssid=None, password=None):
         &#34;&#34;&#34; Connect to wifi hotspot &#34;&#34;&#34;
+        result = False
         if ssid     != None: Station.config.ssid     = ssid
         if password != None: Station.config.wifipassword = password
         if not Station.wlan.isconnected():
                 Station.wlan.active(True)
                 Station.wlan.connect(useful.tobytes(Station.config.ssid), useful.tobytes(Station.config.wifipassword))
+                from time import sleep
+                count = 0
                 while not Station.wlan.isconnected():
-                        pass</code></pre>
+                        sleep(0.5)
+                        
+                        if count % 6 == 0:
+                                print (&#34;Try wifi connection&#34;)
+                        count += 1
+                        if count &gt; 120:
+                                break
+                        
+                
+                if Station.wlan.isconnected() == False:
+                        Station.wlan.active(False)
+                else:
+                        result = True
+        else:
+                result = True
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.wifi.station.Station.disconnect"><code class="name flex">
@@ -530,8 +606,10 @@ def start(force):
                                 Station.networks  = []
                                 print(&#34;Start wifi&#34;)
                                 Station.configure()
-                                Station.connect()
-                                print(repr(Station.config))
+                                if Station.connect():
+                                        print(repr(Station.config))
+                                else:
+                                        print(&#34;Wifi connection failed&#34;)
                                 result = True
                         else:
                                 print(&#34;Wifi disabled&#34;)
@@ -586,11 +664,14 @@ def stop():
 
         def __repr__(self):
                 &#34;&#34;&#34; Display the content of wifi station &#34;&#34;&#34;
+                # Get network address
+                ipaddress, netmask, gateway, dns = Station.wlan.ifconfig()
+
                 result = &#34;%s:\n&#34;%self.__class__.__name__
-                result +=&#34;   Ip address :%s\n&#34;%useful.tostrings(self.ipaddress)
-                result +=&#34;   Netmask    :%s\n&#34;%useful.tostrings(self.netmask)
-                result +=&#34;   Gateway    :%s\n&#34;%useful.tostrings(self.gateway)
-                result +=&#34;   Dns        :%s\n&#34;%useful.tostrings(self.dns)
+                result +=&#34;   Ip address :%s\n&#34;%ipaddress
+                result +=&#34;   Netmask    :%s\n&#34;%netmask
+                result +=&#34;   Gateway    :%s\n&#34;%gateway
+                result +=&#34;   Dns        :%s\n&#34;%dns
                 result +=&#34;   Ssid       :%s\n&#34;%useful.tostrings(self.ssid)
                 # result +=&#34;   Password   :%s\n&#34;%useful.tostrings(self.wifipassword)
                 result +=&#34;   Activated  :%s\n&#34;%useful.tostrings(self.activated)

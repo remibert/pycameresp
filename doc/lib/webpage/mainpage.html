@@ -32,39 +32,47 @@
 &#34;&#34;&#34; Function define the main web page with menu, it check also the login password &#34;&#34;&#34;
 from htmltemplate import *
 from webpage.passwordpage import PasswordPage
-from tools.useful import log
 from server.httpserver import HttpServer
-from wifi.accesspoint import AccessPoint
 from wifi.station import Station
 
+styleNav = b&#34;&#34;&#34;  height: 100%;
+  width: 150px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  overflow-x: hidden;
+  background-color: #EFEFEF;
+  padding-left:5px;
+  padding-right:5px;
+&#34;&#34;&#34;
+styleContent = b&#34;&#34;&#34; 
+  margin-left: 150px;
+&#34;&#34;&#34;
 def mainPage(title=&#34;&#34;, active=0, content=None, request=None, response=None):
         &#34;&#34;&#34; Function define the main web page with menu, it check also the login password &#34;&#34;&#34;
         # On wifi station, the external style cheet is added
         if Station.isIpOnInterface(request.remoteaddr):
+                # stylesheet = StylesheetDefault()
                 stylesheet = Stylesheet()
         else:
-                stylesheet = None
+                stylesheet = StylesheetDefault()
 
         # Create main page if logged
         page = PasswordPage.login(request, response, 15*60)
- 
+
         if page == None:
                 menus = HttpServer.getMenus()
                 tabs = []
                 for menu in menus:
                         index, href, title_ = menu
-                        tabs.append(TabItem(text=title_, href=href, active=(active==index)))
-
-                page = Page(\
-                                [
-                                        stylesheet,
-                                        Title2(text=title),
-                                        Tab(tabs),
-                                        content,
-                                ],
-                                title=title, stylesheet=stylesheet)
+                        tabs.append(TabItem(text=title_ , href=href, active=(active==index)))
+                page = Page([stylesheet, \
+                                        Div(Tab(tabs), style=styleNav),\
+                                        Div(content,   style=styleContent)\
+                                        ], title=title)
         else:
-                page = Page(page, title=b&#34;Login&#34;, stylesheet=stylesheet)
+                page = Page(page + [stylesheet], title=b&#34;Login&#34;)
         return page</code></pre>
 </details>
 </section>
@@ -88,30 +96,26 @@ def mainPage(title=&#34;&#34;, active=0, content=None, request=None, response=No
         &#34;&#34;&#34; Function define the main web page with menu, it check also the login password &#34;&#34;&#34;
         # On wifi station, the external style cheet is added
         if Station.isIpOnInterface(request.remoteaddr):
+                # stylesheet = StylesheetDefault()
                 stylesheet = Stylesheet()
         else:
-                stylesheet = None
+                stylesheet = StylesheetDefault()
 
         # Create main page if logged
         page = PasswordPage.login(request, response, 15*60)
- 
+
         if page == None:
                 menus = HttpServer.getMenus()
                 tabs = []
                 for menu in menus:
                         index, href, title_ = menu
-                        tabs.append(TabItem(text=title_, href=href, active=(active==index)))
-
-                page = Page(\
-                                [
-                                        stylesheet,
-                                        Title2(text=title),
-                                        Tab(tabs),
-                                        content,
-                                ],
-                                title=title, stylesheet=stylesheet)
+                        tabs.append(TabItem(text=title_ , href=href, active=(active==index)))
+                page = Page([stylesheet, \
+                                        Div(Tab(tabs), style=styleNav),\
+                                        Div(content,   style=styleContent)\
+                                        ], title=title)
         else:
-                page = Page(page, title=b&#34;Login&#34;, stylesheet=stylesheet)
+                page = Page(page + [stylesheet], title=b&#34;Login&#34;)
         return page</code></pre>
 </details>
 </dd>

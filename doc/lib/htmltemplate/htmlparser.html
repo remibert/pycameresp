@@ -60,7 +60,7 @@ def findall(pattern, text):
                 elif endTag != None:
                         endTag += s
                         if var != &#34;&#34;:
-                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;]:
+                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;]:
                                         endFormat += &#34; b&#39;%s&#39; if self.%s else b&#39;&#39;,&#34;%(var, var)
                                 else:
                                         endFormat += &#34;self.%s,&#34;%var
@@ -68,7 +68,7 @@ def findall(pattern, text):
                 else:
                         beginTag += s
                         if var != &#34;&#34;:
-                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;]:
+                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;]:
                                         beginFormat += &#34; b&#39;%s&#39; if self.%s else b&#39;&#39;,&#34;%(var, var)
                                 else:
                                         beginFormat += &#34;self.%s,&#34;%var
@@ -204,7 +204,7 @@ def parse(force=False):
                 elif endTag != None:
                         endTag += s
                         if var != &#34;&#34;:
-                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;]:
+                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;]:
                                         endFormat += &#34; b&#39;%s&#39; if self.%s else b&#39;&#39;,&#34;%(var, var)
                                 else:
                                         endFormat += &#34;self.%s,&#34;%var
@@ -212,7 +212,7 @@ def parse(force=False):
                 else:
                         beginTag += s
                         if var != &#34;&#34;:
-                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;]:
+                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;]:
                                         beginFormat += &#34; b&#39;%s&#39; if self.%s else b&#39;&#39;,&#34;%(var, var)
                                 else:
                                         beginFormat += &#34;self.%s,&#34;%var

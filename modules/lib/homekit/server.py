@@ -2,6 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 from homekit.charact   import *
 class Server:
+	""" Create homekit server """
 	UUID_ACCESSORY_INFORMATION        = "3E"
 	UUID_PROTOCOL_INFORMATION         = "A2"
 	UUID_FAN                          = "40"
@@ -42,16 +43,18 @@ class Server:
 	UUID_TELEVISION                   = "D8"
 	UUID_INPUT_SOURCE                 = "D9"
 	def __init__(self, name, serverUuid):
+		""" Constructor homekit server """
 		import homekit_
 		self.server = homekit_.Server(serverUuid)
 		self.name = Charact(Charact.UUID_NAME, Charact.PERM_READ, Charact.TYPE_STRING, name)
 		self.addCharact(self.name)
 
 	def __del__(self):
-		#~ print(dir(self.server))
+		""" Destructor homekit server """
 		self.server.deinit()
 
 	def addCharact(self, charact):
+		""" Add characteristic to this homekit server """
 		self.server.addCharact(charact.charact)
 
 
@@ -61,13 +64,6 @@ class ServerProtocolInformation(Server):
 		
 		self.version = charactStringCreate (Charact.UUID_VERSION, Charact.PERM_READ, version)
 		self.addCharact(self.version)
-
-
-
-
-
-
-
 
 class ServerAirQualitySensor(Server):
 	def __init__(self, name, airQuality):

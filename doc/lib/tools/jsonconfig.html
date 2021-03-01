@@ -60,8 +60,13 @@ def save(self, file = None):
                 return False
 
 def update(self, params):
-        &#34;&#34;&#34; Update object with params &#34;&#34;&#34;
+        &#34;&#34;&#34; Update object with html request params &#34;&#34;&#34;
         global self_config
+        if b&#34;name&#34; in params and b&#34;value&#34; in params and len(params) == 2:
+                setmany = False
+                params = {params[b&#34;name&#34;]:params[b&#34;value&#34;]}
+        else:
+                setmany = True
         self_config = self
         for name in self.__dict__.keys():
                 # Case of web input is missing when bool is false
@@ -83,7 +88,8 @@ def update(self, params):
                                         elif params[name] == b&#34;0&#34; or params[name].lower() == b&#34;false&#34;:
                                                 params[name] = False
                         else:
-                                params[name] = False
+                                if setmany:
+                                        params[name] = False
                 # Case of web input is integer but string with number received
                 elif type(self.__dict__[name]) == type(0) or type(self.__dict__[name]) == type(0.):
                         name = useful.tobytes(name)
@@ -92,7 +98,7 @@ def update(self, params):
                                         params[name] = int(params[name])
                                 except:
                                         params[name] = 0
-
+        result = True
         for name, value in params.items():
                 execval = name
                 try:
@@ -100,7 +106,9 @@ def update(self, params):
                         exec(execval)
                 except Exception as err:
                         print(&#34;Error on %s (%s)&#34;%(execval, err))
+                        result = False
         del self_config
+        return result
 
 def load(self, file = None):
         &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
@@ -188,14 +196,19 @@ def load(self, file = None):
 <span>def <span class="ident">update</span></span>(<span>self, params)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Update object with params</p></div>
+<div class="desc"><p>Update object with html request params</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def update(self, params):
-        &#34;&#34;&#34; Update object with params &#34;&#34;&#34;
+        &#34;&#34;&#34; Update object with html request params &#34;&#34;&#34;
         global self_config
+        if b&#34;name&#34; in params and b&#34;value&#34; in params and len(params) == 2:
+                setmany = False
+                params = {params[b&#34;name&#34;]:params[b&#34;value&#34;]}
+        else:
+                setmany = True
         self_config = self
         for name in self.__dict__.keys():
                 # Case of web input is missing when bool is false
@@ -217,7 +230,8 @@ def load(self, file = None):
                                         elif params[name] == b&#34;0&#34; or params[name].lower() == b&#34;false&#34;:
                                                 params[name] = False
                         else:
-                                params[name] = False
+                                if setmany:
+                                        params[name] = False
                 # Case of web input is integer but string with number received
                 elif type(self.__dict__[name]) == type(0) or type(self.__dict__[name]) == type(0.):
                         name = useful.tobytes(name)
@@ -226,7 +240,7 @@ def load(self, file = None):
                                         params[name] = int(params[name])
                                 except:
                                         params[name] = 0
-
+        result = True
         for name, value in params.items():
                 execval = name
                 try:
@@ -234,7 +248,9 @@ def load(self, file = None):
                         exec(execval)
                 except Exception as err:
                         print(&#34;Error on %s (%s)&#34;%(execval, err))
-        del self_config</code></pre>
+                        result = False
+        del self_config
+        return result</code></pre>
 </details>
 </dd>
 </dl>

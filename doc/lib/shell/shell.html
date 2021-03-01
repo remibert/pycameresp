@@ -598,7 +598,7 @@ def getCommand(commandName):
                         if type(item) == type((0,)):
                                 commandFlags.append(item)
         except  Exception as err:
-                raise Exception(&#34;Command not found&#34;)
+                raise Exception(&#34;Command not found &#39;%s&#39;&#34;%commandName)
         return commandName, commandFunction, commandParams, commandFlags
 
 def execCommand(args):
@@ -639,7 +639,7 @@ def execCommand(args):
                                                                 paramsCount += 1
         except Exception as err:
                 # print(useful.exception(err))
-                print(&#34;%s &#39;%s&#39;&#34;%(err, commandName))
+                print(err)
                 return
         try:
                 if commandName.strip() != &#34;&#34;:
@@ -914,7 +914,7 @@ if __name__ == &#34;__main__&#34;:
                                                                 paramsCount += 1
         except Exception as err:
                 # print(useful.exception(err))
-                print(&#34;%s &#39;%s&#39;&#34;%(err, commandName))
+                print(err)
                 return
         try:
                 if commandName.strip() != &#34;&#34;:
@@ -998,7 +998,7 @@ if __name__ == &#34;__main__&#34;:
                         if type(item) == type((0,)):
                                 commandFlags.append(item)
         except  Exception as err:
-                raise Exception(&#34;Command not found&#34;)
+                raise Exception(&#34;Command not found &#39;%s&#39;&#34;%commandName)
         return commandName, commandFunction, commandParams, commandFlags</code></pre>
 </details>
 </dd>

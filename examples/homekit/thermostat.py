@@ -37,13 +37,13 @@ class Thermostat(Accessory):
 		self.tempDispUnits.setConstraint(0, 1, 1)
 		self.server.addCharact(self.tempDispUnits)
 
-		self.coolingThreshold = charactFloatCreate (Charact.UUID_COOLING_THRESHOLD_TEMPERATURE, Charact.PERM_RWE, kwargs.get("coolingThreshold",20.))
+		self.coolingThreshold = charactFloatCreate (Charact.UUID_COOLING_THRESHOLD_TEMPERATURE, Charact.PERM_RWE, kwargs.get("coolingThreshold",26.))
 		self.coolingThreshold.setConstraint(10.0, 38.0, 0.1)
 		self.coolingThreshold.setUnit(Charact.UNIT_CELSIUS)
 		self.coolingThreshold.setWriteCallback(self.writeCoolingThreshold)
 		self.server.addCharact(self.coolingThreshold)
 
-		self.heatingThreshold = charactFloatCreate (Charact.UUID_HEATING_THRESHOLD_TEMPERATURE, Charact.PERM_RWE, kwargs.get("heatingThreshold",22.))
+		self.heatingThreshold = charactFloatCreate (Charact.UUID_HEATING_THRESHOLD_TEMPERATURE, Charact.PERM_RWE, kwargs.get("heatingThreshold",18.))
 		self.heatingThreshold.setConstraint(10.0, 38.0, 0.1)
 		self.heatingThreshold.setUnit(Charact.UNIT_CELSIUS)
 		self.heatingThreshold.setWriteCallback(self.writeHeatingThreshold)

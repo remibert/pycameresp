@@ -35,439 +35,150 @@ from htmltemplate import *
 from webpage import *
 from server.httprequest import *
 from tools import useful
-from video import Camera
+from video import CameraConfig, Camera
+import uasyncio
 
-content = b&#39;&#39;&#39;
-        &lt;style&gt;
-                section.main {
-                        display: flex
-                }
+cameraStreaming = False
+cameraConfig = CameraConfig()
 
-                #menu,section.main {
-                        flex-direction: column
-                }
-
-                #menu {
-                        display: none;
-                        flex-wrap: nowrap;
-                        min-width: 340px;
-                        padding: 8px;
-                        border-radius: 4px;
-                        margin-top: -10px;
-                        margin-right: 10px;
-                }
-
-                #content {
-                        display: flex;
-                        flex-wrap: wrap;
-                        align-items: stretch
-                }
-
-                figure {
-                        padding: 0px;
-                        margin: 0;
-                        -webkit-margin-before: 0;
-                        margin-block-start: 0;
-                        -webkit-margin-after: 0;
-                        margin-block-end: 0;
-                        -webkit-margin-start: 0;
-                        margin-inline-start: 0;
-                        -webkit-margin-end: 0;
-                        margin-inline-end: 0
-                }
-
-                figure img {
-                        display: block;
-                        width: 100%;
-                        height: auto;
-                        border-radius: 4px;
-                        margin-top: 8px;
-                }
-
-                @media (min-width: 800px) and (orientation:landscape) {
-                        #content {
-                                display:flex;
-                                flex-wrap: nowrap;
-                                align-items: stretch
-                        }
-
-                        figure img {
-                                display: block;
-                                max-width: 100%;
-                                max-height: calc(100vh - 40px);
-                                width: auto;
-                                height: auto
-                        }
-
-                        figure {
-                                padding: 0 0 0 0px;
-                                margin: 0;
-                                -webkit-margin-before: 0;
-                                margin-block-start: 0;
-                                -webkit-margin-after: 0;
-                                margin-block-end: 0;
-                                -webkit-margin-start: 0;
-                                margin-inline-start: 0;
-                                -webkit-margin-end: 0;
-                                margin-inline-end: 0
-                        }
-                }
-
-                section#buttons {
-                        display: flex;
-                        flex-wrap: nowrap;
-                        justify-content: space-between
-                }
-
-                #nav-toggle {
-                        cursor: pointer;
-                        display: block
-                }
-
-                #nav-toggle-cb {
-                        outline: 0;
-                        opacity: 0;
-                        width: 0;
-                        height: 0
-                }
-
-                #nav-toggle-cb:checked+#menu {
-                        display: flex
-                }
-
-                .input-group {
-                        display: flex;
-                        flex-wrap: nowrap;
-                        line-height: 22px;
-                        margin: 5px 0
-                }
-
-                .input-group&gt;label {
-                        display: inline-block;
-                        padding-right: 10px;
-                        min-width: 47%
-                }
-
-                .range-max,.range-min {
-                        display: inline-block;
-                        padding: 0 5px
-                }
-
-                .image-container {
-                        position: relative;
-                        min-width: 160px
-                }
-
-                .hidden {
-                        display: none
-                }
-        &lt;/style&gt;
-        &lt;section class=&#34;main&#34;&gt;
-                &lt;div id=&#34;content&#34;&gt;
-                        &lt;div id=&#34;sidebar&#34;&gt;
-                                &lt;input type=&#34;checkbox&#34; id=&#34;nav-toggle-cb&#34; checked=&#34;checked&#34;&gt;
-                                &lt;nav id=&#34;menu&#34;&gt;
-                                        &lt;div class=&#34;input-group&#34; id=&#34;framesize-group&#34;&gt;
-                                                &lt;label for=&#34;framesize&#34;&gt;Resolution&lt;/label&gt;
-                                                &lt;select id=&#34;framesize&#34; class=&#34;form-control default-action&#34;&gt;
-                                                        &lt;option value=&#34;UXGA&#34;&gt;UXGA(1600x1200)&lt;/option&gt;
-                                                        &lt;option value=&#34;SXGA&#34;&gt;SXGA(1280x1024)&lt;/option&gt;
-                                                        &lt;option value=&#34;XGA&#34;&gt;XGA(1024x768)&lt;/option&gt;
-                                                        &lt;option value=&#34;SVGA&#34; selected=&#34;selected&#34;&gt;SVGA(800x600)&lt;/option&gt;
-                                                        &lt;option value=&#34;VGA&#34;&gt;VGA(640x480)&lt;/option&gt;
-                                                        &lt;option value=&#34;CIF&#34;&gt;CIF(400x296)&lt;/option&gt;
-                                                        &lt;option value=&#34;QVGA&#34;&gt;QVGA(320x240)&lt;/option&gt;
-                                                        &lt;option value=&#34;HQVGA&#34;&gt;HQVGA(240x176)&lt;/option&gt;
-                                                        &lt;option value=&#34;QQVGA&#34;&gt;QQVGA(160x120)&lt;/option&gt;
-                                                &lt;/select&gt;
-                                        &lt;/div&gt;
-                                        &lt;div class=&#34;input-group&#34; id=&#34;quality-group&#34;&gt;
-                                                &lt;label for=&#34;quality&#34;&gt;Quality&lt;/label&gt;
-                                                &lt;div class=&#34;range-min&#34;&gt;10&lt;/div&gt;
-                                                &lt;input type=&#34;range&#34; id=&#34;quality&#34; min=&#34;10&#34; max=&#34;63&#34; value=&#34;10&#34; class=&#34;custom-range default-action&#34;&gt;
-                                                &lt;div class=&#34;range-max&#34;&gt;63&lt;/div&gt;
-                                        &lt;/div&gt;
-                                        &lt;div class=&#34;input-group&#34; id=&#34;brightness-group&#34;&gt;
-                                                &lt;label for=&#34;brightness&#34;&gt;Brightness&lt;/label&gt;
-                                                &lt;div class=&#34;range-min&#34;&gt;-2&lt;/div&gt;
-                                                &lt;input type=&#34;range&#34; id=&#34;brightness&#34; min=&#34;-2&#34; max=&#34;2&#34; value=&#34;0&#34; class=&#34;custom-range default-action&#34;&gt;
-                                                &lt;div class=&#34;range-max&#34;&gt;2&lt;/div&gt;
-                                        &lt;/div&gt;
-                                        &lt;div class=&#34;input-group&#34; id=&#34;contrast-group&#34;&gt;
-                                                &lt;label for=&#34;contrast&#34;&gt;Contrast&lt;/label&gt;
-                                                &lt;div class=&#34;range-min&#34;&gt;-2&lt;/div&gt;
-                                                &lt;input type=&#34;range&#34; id=&#34;contrast&#34; min=&#34;-2&#34; max=&#34;2&#34; value=&#34;0&#34; class=&#34;custom-range default-action&#34;&gt;
-                                                &lt;div class=&#34;range-max&#34;&gt;2&lt;/div&gt;
-                                        &lt;/div&gt;
-                                        &lt;div class=&#34;input-group&#34; id=&#34;saturation-group&#34;&gt;
-                                                &lt;label for=&#34;saturation&#34;&gt;Saturation&lt;/label&gt;
-                                                &lt;div class=&#34;range-min&#34;&gt;-2&lt;/div&gt;
-                                                &lt;input type=&#34;range&#34; id=&#34;saturation&#34; min=&#34;-2&#34; max=&#34;2&#34; value=&#34;0&#34; class=&#34;custom-range default-action&#34;&gt;
-                                                &lt;div class=&#34;range-max&#34;&gt;2&lt;/div&gt;
-                                        &lt;/div&gt;
-                                        &lt;div class=&#34;input-group&#34; id=&#34;hmirror-group&#34;&gt;
-                                                &lt;label for=&#34;hmirror&#34;&gt;H-Mirror&lt;/label&gt;
-                                                &lt;div class=&#34;custom-control custom-switch&#34;&gt;
-                                                        &lt;input id=&#34;hmirror&#34; type=&#34;checkbox&#34; class=&#34;custom-control-input default-action&#34;&gt;
-                                                        &lt;label class=&#34;custom-control-label&#34; for=&#34;hmirror&#34;&gt;&lt;/label&gt;
-                                                &lt;/div&gt;
-                                        &lt;/div&gt;
-                                        &lt;div class=&#34;input-group&#34; id=&#34;vflip-group&#34;&gt;
-                                                &lt;label for=&#34;vflip&#34;&gt;V-Flip&lt;/label&gt;
-                                                &lt;div class=&#34;custom-control custom-switch&#34;&gt;
-                                                        &lt;input id=&#34;vflip&#34; type=&#34;checkbox&#34; class=&#34;custom-control-input default-action&#34;&gt;
-                                                        &lt;label class=&#34;custom-control-label&#34; for=&#34;vflip&#34;&gt;&lt;/label&gt;
-                                                &lt;/div&gt;
-                                        &lt;/div&gt;
-                                        &lt;section id=&#34;buttons&#34;&gt;
-                                                &lt;button id=&#34;toggle-stream&#34; class=&#34;btn btn-primary&#34;&gt;Start&lt;/button&gt;
-                                        &lt;/section&gt;
-                                &lt;/nav&gt;
-                        &lt;/div&gt;
-                        &lt;figure&gt;
-                                &lt;div id=&#34;stream-container&#34; class=&#34;image-container hidden&#34;&gt;
-                                        
-                                        &lt;img id=&#34;stream&#34; src=&#34;&#34;&gt;
-                                &lt;/div&gt;
-                        &lt;/figure&gt;
+@HttpServer.addRoute(b&#39;/camera&#39;, title=b&#34;Camera&#34;, index=1000)
+async def cameraPage(request, response, args):
+        &#34;&#34;&#34; Camera streaming page &#34;&#34;&#34;
+        framesizes = []
+        global cameraStreaming
+        cameraStreaming = False
+        for size in [b&#34;1600x1200&#34;,b&#34;1280x1024&#34;,b&#34;1024x768&#34;,b&#34;800x600&#34;,b&#34;640x480&#34;,b&#34;400x296&#34;,b&#34;320x240&#34;,b&#34;240x176&#34;,b&#34;160x120&#34;  ]:
+                framesizes.append(Option(value=size, text=size, selected= True if cameraConfig.framesize == size else False))
+        page = mainPage(
+                content=\
+                        [Br(),
+                                Container(Tag(b&#34;&#34;&#34;
+&lt;p&gt;
+        &lt;button id=&#34;button-stream&#34; class=&#34;btn btn-outline-primary&#34; onclick=&#34;onStartVideoClick()&#34;&gt;Show&lt;/button&gt;
+        &lt;figure&gt;
+                &lt;div id=&#34;container-stream&#34; class=&#34;display: none;&#34;&gt;
+                        &lt;img id=&#34;video-stream&#34; src=&#34;&#34;&gt;
                 &lt;/div&gt;
-        &lt;/section&gt;
+        &lt;/figure&gt;
 
         &lt;script&gt;
-        document.addEventListener(&#39;DOMContentLoaded&#39;, function (event) 
-        {
-                var baseHost = document.location.origin
-                var streamUrl = baseHost + &#39;:81&#39;
-
-                const hide = el =&gt; 
+                function onStartVideoClick()
                 {
-                        el.classList.add(&#39;hidden&#39;)
-                }
-                
-                const show = el =&gt; 
-                {
-                        el.classList.remove(&#39;hidden&#39;)
-                }
-
-                const disable = el =&gt; 
-                {
-                        el.classList.add(&#39;disabled&#39;)
-                        el.disabled = true
-                }
-
-                const enable = el =&gt; 
-                {
-                        el.classList.remove(&#39;disabled&#39;)
-                        el.disabled = false
-                }
-
-                const updateValue = (el, value, updateRemote) =&gt; 
-                {
-                        updateRemote = updateRemote == null ? true : updateRemote
-                        let initialValue
-                        if (el.type === &#39;checkbox&#39;)
+                        if (document.getElementById(&#39;button-stream&#39;).innerHTML == &#39;Show&#39;)
                         {
-                                initialValue = el.checked
-                                value = !!value
-                                el.checked = value
+                                startStreaming();
                         }
                         else
                         {
-                                initialValue = el.value
-                                el.value = value
-                        }
-
-                        if (updateRemote &amp;&amp; initialValue !== value) 
-                        {
-                                updateConfig(el);
+                                stopStreaming();
                         }
                 }
-
-                function updateConfig (el)
+                window.onload = () =&gt;
                 {
-                        let value
-                        switch (el.type)
+                        setTimeout(() =&gt; 
                         {
-                        case &#39;checkbox&#39;:
-                                value = el.checked ? 1 : 0
-                                break
-                        case &#39;range&#39;:
-                        case &#39;select-one&#39;:
-                                value = el.value
-                                break
-                        case &#39;button&#39;:
-                        case &#39;submit&#39;:
-                                value = &#39;1&#39;
-                                break
-                        default:
-                                return
-                        }
-
-                        const query = `${baseHost}/control?var=${el.id}&amp;val=${value}`
-
-                        fetch(query).then(response =&gt; 
-                        {
-                                console.log(`request to ${query} finished, status: ${response.status}`)
-                        })
+                                stopStreaming();
+                        }, 300)
+                        
                 }
-
-                // read initial values
-                fetch(`${baseHost}/status`).then(function (response) 
-                {
-                        return response.json()
-                }).then(function (state) 
-                {
-                        document.querySelectorAll(&#39;.default-action&#39;).forEach(el =&gt; 
-                        {
-                                updateValue(el, state[el.id], false)
-                        })
-                })
-
-                const view = document.getElementById(&#39;stream&#39;)
-                const viewContainer = document.getElementById(&#39;stream-container&#39;)
-                const streamButton = document.getElementById(&#39;toggle-stream&#39;)
-                
-                const stopStream = () =&gt; 
+                function startStreaming()
                 {
                         window.stop();
-                        streamButton.innerHTML = &#39;Start&#39;
-                }
-
-                const startStream = () =&gt; 
-                {
-                        view.src = `${streamUrl}/stream`
-                        show(viewContainer)
-                        streamButton.innerHTML = &#39;Stop&#39;
-                }
-
-                streamButton.onclick = () =&gt; 
-                {
-                        const streamEnabled = streamButton.innerHTML === &#39;Stop&#39;
-                        if (streamEnabled)
+                        var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:8081&#39;;
+                        document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start`;
+                        document.getElementById(&#39;container-stream&#39;).style.display = &#34;block&#34;;
+                        document.getElementById(&#39;button-stream&#39;).innerHTML = &#39;Hide&#39;;
+                        setTimeout(() =&gt; 
                         {
-                                stopStream()
-                        }
-                        else
-                        {
-                                startStream()
-                        }
+                                stopStreaming();
+                        }, 60000)
                 }
-
-                // Attach default on change action
-                document.querySelectorAll(&#39;.default-action&#39;).forEach(el =&gt; 
+                function stopStreaming()
                 {
-                        el.onchange = () =&gt; updateConfig(el)
-                })
-
-                framesize.onchange = () =&gt; 
-                {
-                        updateConfig(framesize)
-                        if (framesize.value &gt; 5) 
-                        {
-                                updateValue(detect, false)
-                                updateValue(recognize, false)
-                        }
+                        var xhttp = new XMLHttpRequest();
+                        xhttp.open(&#34;GET&#34;,&#34;camera/stop&#34;,true);
+                        xhttp.send();
+                        document.getElementById(&#39;button-stream&#39;).innerHTML = &#39;Show&#39;;
                 }
-        })
-
         &lt;/script&gt;
-&#39;&#39;&#39;
-
-@HttpServer.addRoute(b&#39;/camera&#39;, title=b&#34;Camera&#34;, index=18, available=useful.iscamera())
-async def camera(request, response, args):
-        &#34;&#34;&#34; Camera page &#34;&#34;&#34;
-        page = mainPage(
-                content=[Tag(content)], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
-        global cameraControl
-        cameraControl = CameraControl()
+&lt;/p&gt;&#34;&#34;&#34;)),
+                                Container(Card(Form(\
+                                [
+                                        ComboCmd(framesizes, text=b&#34;Resolution&#34;, path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
+                                        SliderCmd(           text=b&#34;Quality&#34;   , path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%cameraConfig.quality),
+                                        SliderCmd(           text=b&#34;Brightness&#34;, path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; , step=b&#34;1&#34;, value=b&#34;%d&#34;%cameraConfig.brightness),
+                                        SliderCmd(           text=b&#34;Contrast&#34;  , path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; , step=b&#34;1&#34;, value=b&#34;%d&#34;%cameraConfig.contrast),
+                                        SliderCmd(           text=b&#34;Saturation&#34;, path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; , step=b&#34;1&#34;, value=b&#34;%d&#34;%cameraConfig.saturation),
+                                        SwitchCmd(           text=b&#34;H-Mirror&#34;  , path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=cameraConfig.hmirror),
+                                        SwitchCmd(           text=b&#34;V-Flip&#34;    , path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=cameraConfig.vflip),
+                                ])))
+                        ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
         await response.sendPage(page)
 
-class CameraControl:
-        &#34;&#34;&#34; Class that collects the camera rendering configuration &#34;&#34;&#34;
-        def __init__(self):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.quality    = 10
-                self.pixformat  = b&#34;JPEG&#34;
-                self.brightness = 0
-                self.contrast   = 0
-                self.saturation = 0
-                self.hmirror    = 0
-                self.vflip      = 0
-                self.framesize  = b&#34;SVGA&#34;
-
-        def configure(self):
-                &#34;&#34;&#34; Configure the camera &#34;&#34;&#34;
-                Camera.pixformat (self.pixformat)
-                Camera.framesize (self.framesize)
-                Camera.quality   (self.quality)
-                Camera.brightness(self.brightness)
-                Camera.contrast  (self.contrast)
-                Camera.saturation(self.saturation)
-                Camera.hmirror   (self.hmirror)
-                Camera.vflip     (self.vflip)
-
-        def change(self, param, value):
-                &#34;&#34;&#34; Change the camera parameter &#34;&#34;&#34;
-                if   param == b&#34;framesize&#34;:
-                        self.framesize  = value
-                        if Camera.isReserved():
-                                Camera.framesize (self.framesize)
-                elif param == b&#34;quality&#34;:
-                        self.quality    = int(value)
-                        if Camera.isReserved():
-                                Camera.quality   (self.quality)
-                elif param == b&#34;brightness&#34;:
-                        self.brightness = int(value)
-                        if Camera.isReserved():
-                                Camera.brightness(self.brightness)
-                elif param == b&#34;contrast&#34;:
-                        self.contrast   = int(value)
-                        if Camera.isReserved():
-                                Camera.contrast  (self.contrast)
-                elif param == b&#34;saturation&#34;:
-                        self.saturation = int(value)
-                        if Camera.isReserved():
-                                Camera.saturation(self.saturation)
-                elif param == b&#34;hmirror&#34;:
-                        self.hmirror    = int(value)
-                        if Camera.isReserved():
-                                Camera.hmirror   (self.hmirror)
-                elif param == b&#34;vflip&#34;:
-                        self.vflip      = int(value)
-                        if Camera.isReserved():
-                                Camera.vflip     (self.vflip)
-
-cameraControl = CameraControl()
-
-@HttpServer.addRoute(&#39;/status&#39;)
-async def status(request, response, args):
-        &#34;&#34;&#34; Status of camera &#34;&#34;&#34;
+@HttpServer.addRoute(b&#39;/camera/configure&#39;)
+async def cameraConfigure(request, response, args):
+        &#34;&#34;&#34; Real time camera configuration &#34;&#34;&#34;
+        print(useful.tostrings(b&#34;%s=%s&#34;%(request.params[b&#34;name&#34;],request.params[b&#34;value&#34;])))
+        cameraConfig.update(request.params)
+        if Camera.isReserved():
+                startInactivityTimer()
+                Camera.configure(cameraConfig)
         await response.sendOk()
 
-@HttpServer.addRoute(&#39;/control&#39;)
-async def control(request, response, args):
-        &#34;&#34;&#34; Control of camera rendering &#34;&#34;&#34;
-        param = request.params[b&#34;var&#34;]
-        value = request.params[b&#34;val&#34;]
-        cameraControl.change(param, value)
+@HttpServer.addRoute(&#39;/camera/stop&#39;)
+async def cameraStopStreaming(request, response, args):
+        &#34;&#34;&#34; Stop video streaming &#34;&#34;&#34;
+        global cameraStreaming
+        cameraStreaming = False
+        stopInactivityTimer()
         await response.sendOk()
+        
+        
+def inactivityTimeoutStreaming(param=None):
+        &#34;&#34;&#34; Suspend video streaming after delay &#34;&#34;&#34;
+        global cameraStreaming
+        cameraStreaming = False
 
-@HttpServer.addRoute(&#39;/stream&#39;)
-async def stream(request, response, args):
-        &#34;&#34;&#34; Video streaming &#34;&#34;&#34;
-        if request.port == 80:
+inactivityTimer = None
+def startInactivityTimer():
+        &#34;&#34;&#34; Start inactivity timer for stop streaming video after delay &#34;&#34;&#34;
+        global inactivityTimer
+        stopInactivityTimer()
+        inactivityTimer = machine.Timer(0)
+        inactivityTimer.init(period=60000, mode=machine.Timer.ONE_SHOT, callback=inactivityTimeoutStreaming)
+
+def stopInactivityTimer():
+        &#34;&#34;&#34; Stop inactivity timer &#34;&#34;&#34;
+        global inactivityTimer
+        if inactivityTimer:
+                inactivityTimer.deinit()
+                inactivityTimer = None
+
+@HttpServer.addRoute(&#39;/camera/start&#39;)
+async def cameraStartStreaming(request, response, args):
+        &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
+        global cameraStreaming, cameraConfig
+        
+        if cameraStreaming:
+                cameraStreaming = False
+                await uasyncio.sleep(0.2)
+        
+        if request.port == 80 or request.port == 8080:
                 print(&#34;Streaming ignored&#34;)
                 return 
+
         try:
+                print(&#34;Start streaming&#34;)
+
+                startInactivityTimer()
                 Camera.open()
                 Camera.reserve()
-                cameraControl.configure()
+                Camera.configure(cameraConfig)
 
-                print(&#34;Start streaming&#34;)
                 response.setStatus(b&#34;200&#34;)
-                response.setHeader(b&#34;Content-Type&#34;,b&#34;multipart/x-mixed-replace&#34;)
-                response.setHeader(b&#34;Transfer-Encoding&#34;,b&#34;chunked&#34;)
-                response.setHeader(b&#34;Access-Control-Allow-Origin&#34;,&#34;*&#34;)
+                response.setHeader(b&#34;Content-Type&#34;               ,b&#34;multipart/x-mixed-replace&#34;)
+                response.setHeader(b&#34;Transfer-Encoding&#34;          ,b&#34;chunked&#34;)
+                response.setHeader(b&#34;Access-Control-Allow-Origin&#34;,b&#34;*&#34;)
 
                 await response.serialize(response.streamio)
                 writer = response.streamio
@@ -475,33 +186,32 @@ async def stream(request, response, args):
                 frame = b&#39;%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n&#39;
 
                 if useful.ismicropython():
-                        image = Camera.capture()
-                        length = len(image)
-                        await writer.write(frame%(b&#34;&#34;, length, length))
-                        await writer.write(image)
-
-                        while True:
-                                image = Camera.capture()
-                                length = len(image)
-                                await writer.write(frame%(identifier, length, length))
-                                await writer.write(image)
+                        micropython = True
                 else:
+                        micropython = False
+
+                image = Camera.capture()
+                length = len(image)
+                await writer.write(frame%(b&#34;&#34;, length, length))
+                await writer.write(image)
+                cameraStreaming = True
+                # count = 0
+                while cameraStreaming:
                         image = Camera.capture()
                         length = len(image)
-                        await writer.write(frame%(b&#34;&#34;, length, length))
+                        await writer.write(frame%(identifier, length, length))
                         await writer.write(image)
-   
-                        while True:
-                                image = Camera.capture()
-                                length = len(image)
-                                await writer.write(frame%(identifier, length, length))
-                                await writer.write(image)
-                                await asyncio.sleep(0.1)
-
+                        if micropython == False:
+                                await uasyncio.sleep(0.1)
+                        # print(&#34;%d&#34;%count)
+                        # count += 1
         except Exception as err:
+                print(useful.exception(err))
+        finally:
                 print(&#34;Stop streaming&#34;)
-                # print(useful.exception(err))
-        Camera.unreserve()</code></pre>
+        cameraStreaming = False
+        Camera.unreserve()
+        await writer.close()</code></pre>
 </details>
 </section>
 <section>
@@ -511,83 +221,144 @@ async def stream(request, response, args):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.webpage.camerapage.camera"><code class="name flex">
-<span>async def <span class="ident">camera</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.camerapage.cameraConfigure"><code class="name flex">
+<span>async def <span class="ident">cameraConfigure</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Camera page</p></div>
+<div class="desc"><p>Real time camera configuration</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/camera&#39;, title=b&#34;Camera&#34;, index=18, available=useful.iscamera())
-async def camera(request, response, args):
-        &#34;&#34;&#34; Camera page &#34;&#34;&#34;
+<pre><code class="python">@HttpServer.addRoute(b&#39;/camera/configure&#39;)
+async def cameraConfigure(request, response, args):
+        &#34;&#34;&#34; Real time camera configuration &#34;&#34;&#34;
+        print(useful.tostrings(b&#34;%s=%s&#34;%(request.params[b&#34;name&#34;],request.params[b&#34;value&#34;])))
+        cameraConfig.update(request.params)
+        if Camera.isReserved():
+                startInactivityTimer()
+                Camera.configure(cameraConfig)
+        await response.sendOk()</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.camerapage.cameraPage"><code class="name flex">
+<span>async def <span class="ident">cameraPage</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Camera streaming page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.addRoute(b&#39;/camera&#39;, title=b&#34;Camera&#34;, index=1000)
+async def cameraPage(request, response, args):
+        &#34;&#34;&#34; Camera streaming page &#34;&#34;&#34;
+        framesizes = []
+        global cameraStreaming
+        cameraStreaming = False
+        for size in [b&#34;1600x1200&#34;,b&#34;1280x1024&#34;,b&#34;1024x768&#34;,b&#34;800x600&#34;,b&#34;640x480&#34;,b&#34;400x296&#34;,b&#34;320x240&#34;,b&#34;240x176&#34;,b&#34;160x120&#34;  ]:
+                framesizes.append(Option(value=size, text=size, selected= True if cameraConfig.framesize == size else False))
         page = mainPage(
-                content=[Tag(content)], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
-        global cameraControl
-        cameraControl = CameraControl()
+                content=\
+                        [Br(),
+                                Container(Tag(b&#34;&#34;&#34;
+&lt;p&gt;
+        &lt;button id=&#34;button-stream&#34; class=&#34;btn btn-outline-primary&#34; onclick=&#34;onStartVideoClick()&#34;&gt;Show&lt;/button&gt;
+        &lt;figure&gt;
+                &lt;div id=&#34;container-stream&#34; class=&#34;display: none;&#34;&gt;
+                        &lt;img id=&#34;video-stream&#34; src=&#34;&#34;&gt;
+                &lt;/div&gt;
+        &lt;/figure&gt;
+
+        &lt;script&gt;
+                function onStartVideoClick()
+                {
+                        if (document.getElementById(&#39;button-stream&#39;).innerHTML == &#39;Show&#39;)
+                        {
+                                startStreaming();
+                        }
+                        else
+                        {
+                                stopStreaming();
+                        }
+                }
+                window.onload = () =&gt;
+                {
+                        setTimeout(() =&gt; 
+                        {
+                                stopStreaming();
+                        }, 300)
+                        
+                }
+                function startStreaming()
+                {
+                        window.stop();
+                        var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:8081&#39;;
+                        document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start`;
+                        document.getElementById(&#39;container-stream&#39;).style.display = &#34;block&#34;;
+                        document.getElementById(&#39;button-stream&#39;).innerHTML = &#39;Hide&#39;;
+                        setTimeout(() =&gt; 
+                        {
+                                stopStreaming();
+                        }, 60000)
+                }
+                function stopStreaming()
+                {
+                        var xhttp = new XMLHttpRequest();
+                        xhttp.open(&#34;GET&#34;,&#34;camera/stop&#34;,true);
+                        xhttp.send();
+                        document.getElementById(&#39;button-stream&#39;).innerHTML = &#39;Show&#39;;
+                }
+        &lt;/script&gt;
+&lt;/p&gt;&#34;&#34;&#34;)),
+                                Container(Card(Form(\
+                                [
+                                        ComboCmd(framesizes, text=b&#34;Resolution&#34;, path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
+                                        SliderCmd(           text=b&#34;Quality&#34;   , path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%cameraConfig.quality),
+                                        SliderCmd(           text=b&#34;Brightness&#34;, path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; , step=b&#34;1&#34;, value=b&#34;%d&#34;%cameraConfig.brightness),
+                                        SliderCmd(           text=b&#34;Contrast&#34;  , path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; , step=b&#34;1&#34;, value=b&#34;%d&#34;%cameraConfig.contrast),
+                                        SliderCmd(           text=b&#34;Saturation&#34;, path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; , step=b&#34;1&#34;, value=b&#34;%d&#34;%cameraConfig.saturation),
+                                        SwitchCmd(           text=b&#34;H-Mirror&#34;  , path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=cameraConfig.hmirror),
+                                        SwitchCmd(           text=b&#34;V-Flip&#34;    , path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=cameraConfig.vflip),
+                                ])))
+                        ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
         await response.sendPage(page)</code></pre>
 </details>
 </dd>
-<dt id="lib.webpage.camerapage.control"><code class="name flex">
-<span>async def <span class="ident">control</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.camerapage.cameraStartStreaming"><code class="name flex">
+<span>async def <span class="ident">cameraStartStreaming</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Control of camera rendering</p></div>
+<div class="desc"><p>Start video streaming</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(&#39;/control&#39;)
-async def control(request, response, args):
-        &#34;&#34;&#34; Control of camera rendering &#34;&#34;&#34;
-        param = request.params[b&#34;var&#34;]
-        value = request.params[b&#34;val&#34;]
-        cameraControl.change(param, value)
-        await response.sendOk()</code></pre>
-</details>
-</dd>
-<dt id="lib.webpage.camerapage.status"><code class="name flex">
-<span>async def <span class="ident">status</span></span>(<span>request, response, args)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Status of camera</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@HttpServer.addRoute(&#39;/status&#39;)
-async def status(request, response, args):
-        &#34;&#34;&#34; Status of camera &#34;&#34;&#34;
-        await response.sendOk()</code></pre>
-</details>
-</dd>
-<dt id="lib.webpage.camerapage.stream"><code class="name flex">
-<span>async def <span class="ident">stream</span></span>(<span>request, response, args)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Video streaming</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@HttpServer.addRoute(&#39;/stream&#39;)
-async def stream(request, response, args):
-        &#34;&#34;&#34; Video streaming &#34;&#34;&#34;
-        if request.port == 80:
+<pre><code class="python">@HttpServer.addRoute(&#39;/camera/start&#39;)
+async def cameraStartStreaming(request, response, args):
+        &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
+        global cameraStreaming, cameraConfig
+        
+        if cameraStreaming:
+                cameraStreaming = False
+                await uasyncio.sleep(0.2)
+        
+        if request.port == 80 or request.port == 8080:
                 print(&#34;Streaming ignored&#34;)
                 return 
+
         try:
+                print(&#34;Start streaming&#34;)
+
+                startInactivityTimer()
                 Camera.open()
                 Camera.reserve()
-                cameraControl.configure()
+                Camera.configure(cameraConfig)
 
-                print(&#34;Start streaming&#34;)
                 response.setStatus(b&#34;200&#34;)
-                response.setHeader(b&#34;Content-Type&#34;,b&#34;multipart/x-mixed-replace&#34;)
-                response.setHeader(b&#34;Transfer-Encoding&#34;,b&#34;chunked&#34;)
-                response.setHeader(b&#34;Access-Control-Allow-Origin&#34;,&#34;*&#34;)
+                response.setHeader(b&#34;Content-Type&#34;               ,b&#34;multipart/x-mixed-replace&#34;)
+                response.setHeader(b&#34;Transfer-Encoding&#34;          ,b&#34;chunked&#34;)
+                response.setHeader(b&#34;Access-Control-Allow-Origin&#34;,b&#34;*&#34;)
 
                 await response.serialize(response.streamio)
                 writer = response.streamio
@@ -595,172 +366,104 @@ async def stream(request, response, args):
                 frame = b&#39;%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n&#39;
 
                 if useful.ismicropython():
-                        image = Camera.capture()
-                        length = len(image)
-                        await writer.write(frame%(b&#34;&#34;, length, length))
-                        await writer.write(image)
-
-                        while True:
-                                image = Camera.capture()
-                                length = len(image)
-                                await writer.write(frame%(identifier, length, length))
-                                await writer.write(image)
+                        micropython = True
                 else:
+                        micropython = False
+
+                image = Camera.capture()
+                length = len(image)
+                await writer.write(frame%(b&#34;&#34;, length, length))
+                await writer.write(image)
+                cameraStreaming = True
+                # count = 0
+                while cameraStreaming:
                         image = Camera.capture()
                         length = len(image)
-                        await writer.write(frame%(b&#34;&#34;, length, length))
+                        await writer.write(frame%(identifier, length, length))
                         await writer.write(image)
-   
-                        while True:
-                                image = Camera.capture()
-                                length = len(image)
-                                await writer.write(frame%(identifier, length, length))
-                                await writer.write(image)
-                                await asyncio.sleep(0.1)
-
+                        if micropython == False:
+                                await uasyncio.sleep(0.1)
+                        # print(&#34;%d&#34;%count)
+                        # count += 1
         except Exception as err:
+                print(useful.exception(err))
+        finally:
                 print(&#34;Stop streaming&#34;)
-                # print(useful.exception(err))
-        Camera.unreserve()</code></pre>
+        cameraStreaming = False
+        Camera.unreserve()
+        await writer.close()</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.camerapage.cameraStopStreaming"><code class="name flex">
+<span>async def <span class="ident">cameraStopStreaming</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stop video streaming</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.addRoute(&#39;/camera/stop&#39;)
+async def cameraStopStreaming(request, response, args):
+        &#34;&#34;&#34; Stop video streaming &#34;&#34;&#34;
+        global cameraStreaming
+        cameraStreaming = False
+        stopInactivityTimer()
+        await response.sendOk()</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.camerapage.inactivityTimeoutStreaming"><code class="name flex">
+<span>def <span class="ident">inactivityTimeoutStreaming</span></span>(<span>param=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Suspend video streaming after delay</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def inactivityTimeoutStreaming(param=None):
+        &#34;&#34;&#34; Suspend video streaming after delay &#34;&#34;&#34;
+        global cameraStreaming
+        cameraStreaming = False</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.camerapage.startInactivityTimer"><code class="name flex">
+<span>def <span class="ident">startInactivityTimer</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start inactivity timer for stop streaming video after delay</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def startInactivityTimer():
+        &#34;&#34;&#34; Start inactivity timer for stop streaming video after delay &#34;&#34;&#34;
+        global inactivityTimer
+        stopInactivityTimer()
+        inactivityTimer = machine.Timer(0)
+        inactivityTimer.init(period=60000, mode=machine.Timer.ONE_SHOT, callback=inactivityTimeoutStreaming)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.camerapage.stopInactivityTimer"><code class="name flex">
+<span>def <span class="ident">stopInactivityTimer</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stop inactivity timer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stopInactivityTimer():
+        &#34;&#34;&#34; Stop inactivity timer &#34;&#34;&#34;
+        global inactivityTimer
+        if inactivityTimer:
+                inactivityTimer.deinit()
+                inactivityTimer = None</code></pre>
 </details>
 </dd>
 </dl>
 </section>
 <section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="lib.webpage.camerapage.CameraControl"><code class="flex name class">
-<span>class <span class="ident">CameraControl</span></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Class that collects the camera rendering configuration </p>
-<p>Constructor</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class CameraControl:
-        &#34;&#34;&#34; Class that collects the camera rendering configuration &#34;&#34;&#34;
-        def __init__(self):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.quality    = 10
-                self.pixformat  = b&#34;JPEG&#34;
-                self.brightness = 0
-                self.contrast   = 0
-                self.saturation = 0
-                self.hmirror    = 0
-                self.vflip      = 0
-                self.framesize  = b&#34;SVGA&#34;
-
-        def configure(self):
-                &#34;&#34;&#34; Configure the camera &#34;&#34;&#34;
-                Camera.pixformat (self.pixformat)
-                Camera.framesize (self.framesize)
-                Camera.quality   (self.quality)
-                Camera.brightness(self.brightness)
-                Camera.contrast  (self.contrast)
-                Camera.saturation(self.saturation)
-                Camera.hmirror   (self.hmirror)
-                Camera.vflip     (self.vflip)
-
-        def change(self, param, value):
-                &#34;&#34;&#34; Change the camera parameter &#34;&#34;&#34;
-                if   param == b&#34;framesize&#34;:
-                        self.framesize  = value
-                        if Camera.isReserved():
-                                Camera.framesize (self.framesize)
-                elif param == b&#34;quality&#34;:
-                        self.quality    = int(value)
-                        if Camera.isReserved():
-                                Camera.quality   (self.quality)
-                elif param == b&#34;brightness&#34;:
-                        self.brightness = int(value)
-                        if Camera.isReserved():
-                                Camera.brightness(self.brightness)
-                elif param == b&#34;contrast&#34;:
-                        self.contrast   = int(value)
-                        if Camera.isReserved():
-                                Camera.contrast  (self.contrast)
-                elif param == b&#34;saturation&#34;:
-                        self.saturation = int(value)
-                        if Camera.isReserved():
-                                Camera.saturation(self.saturation)
-                elif param == b&#34;hmirror&#34;:
-                        self.hmirror    = int(value)
-                        if Camera.isReserved():
-                                Camera.hmirror   (self.hmirror)
-                elif param == b&#34;vflip&#34;:
-                        self.vflip      = int(value)
-                        if Camera.isReserved():
-                                Camera.vflip     (self.vflip)</code></pre>
-</details>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.webpage.camerapage.CameraControl.change"><code class="name flex">
-<span>def <span class="ident">change</span></span>(<span>self, param, value)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Change the camera parameter</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def change(self, param, value):
-        &#34;&#34;&#34; Change the camera parameter &#34;&#34;&#34;
-        if   param == b&#34;framesize&#34;:
-                self.framesize  = value
-                if Camera.isReserved():
-                        Camera.framesize (self.framesize)
-        elif param == b&#34;quality&#34;:
-                self.quality    = int(value)
-                if Camera.isReserved():
-                        Camera.quality   (self.quality)
-        elif param == b&#34;brightness&#34;:
-                self.brightness = int(value)
-                if Camera.isReserved():
-                        Camera.brightness(self.brightness)
-        elif param == b&#34;contrast&#34;:
-                self.contrast   = int(value)
-                if Camera.isReserved():
-                        Camera.contrast  (self.contrast)
-        elif param == b&#34;saturation&#34;:
-                self.saturation = int(value)
-                if Camera.isReserved():
-                        Camera.saturation(self.saturation)
-        elif param == b&#34;hmirror&#34;:
-                self.hmirror    = int(value)
-                if Camera.isReserved():
-                        Camera.hmirror   (self.hmirror)
-        elif param == b&#34;vflip&#34;:
-                self.vflip      = int(value)
-                if Camera.isReserved():
-                        Camera.vflip     (self.vflip)</code></pre>
-</details>
-</dd>
-<dt id="lib.webpage.camerapage.CameraControl.configure"><code class="name flex">
-<span>def <span class="ident">configure</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Configure the camera</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def configure(self):
-        &#34;&#34;&#34; Configure the camera &#34;&#34;&#34;
-        Camera.pixformat (self.pixformat)
-        Camera.framesize (self.framesize)
-        Camera.quality   (self.quality)
-        Camera.brightness(self.brightness)
-        Camera.contrast  (self.contrast)
-        Camera.saturation(self.saturation)
-        Camera.hmirror   (self.hmirror)
-        Camera.vflip     (self.vflip)</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -776,21 +479,13 @@ async def stream(request, response, args):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.webpage.camerapage.camera" href="#lib.webpage.camerapage.camera">camera</a></code></li>
-<li><code><a title="lib.webpage.camerapage.control" href="#lib.webpage.camerapage.control">control</a></code></li>
-<li><code><a title="lib.webpage.camerapage.status" href="#lib.webpage.camerapage.status">status</a></code></li>
-<li><code><a title="lib.webpage.camerapage.stream" href="#lib.webpage.camerapage.stream">stream</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="lib.webpage.camerapage.CameraControl" href="#lib.webpage.camerapage.CameraControl">CameraControl</a></code></h4>
-<ul class="">
-<li><code><a title="lib.webpage.camerapage.CameraControl.change" href="#lib.webpage.camerapage.CameraControl.change">change</a></code></li>
-<li><code><a title="lib.webpage.camerapage.CameraControl.configure" href="#lib.webpage.camerapage.CameraControl.configure">configure</a></code></li>
-</ul>
-</li>
+<li><code><a title="lib.webpage.camerapage.cameraConfigure" href="#lib.webpage.camerapage.cameraConfigure">cameraConfigure</a></code></li>
+<li><code><a title="lib.webpage.camerapage.cameraPage" href="#lib.webpage.camerapage.cameraPage">cameraPage</a></code></li>
+<li><code><a title="lib.webpage.camerapage.cameraStartStreaming" href="#lib.webpage.camerapage.cameraStartStreaming">cameraStartStreaming</a></code></li>
+<li><code><a title="lib.webpage.camerapage.cameraStopStreaming" href="#lib.webpage.camerapage.cameraStopStreaming">cameraStopStreaming</a></code></li>
+<li><code><a title="lib.webpage.camerapage.inactivityTimeoutStreaming" href="#lib.webpage.camerapage.inactivityTimeoutStreaming">inactivityTimeoutStreaming</a></code></li>
+<li><code><a title="lib.webpage.camerapage.startInactivityTimer" href="#lib.webpage.camerapage.startInactivityTimer">startInactivityTimer</a></code></li>
+<li><code><a title="lib.webpage.camerapage.stopInactivityTimer" href="#lib.webpage.camerapage.stopInactivityTimer">stopInactivityTimer</a></code></li>
 </ul>
 </li>
 </ul>

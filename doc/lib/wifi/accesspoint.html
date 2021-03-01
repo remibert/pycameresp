@@ -49,11 +49,14 @@ class AccessPointConfig:
 
         def __repr__(self):
                 &#34;&#34;&#34; Display accesspoint informations &#34;&#34;&#34;
+                # Get network address
+                ipaddress, netmask, gateway, dns = AccessPoint.wlan.ifconfig()
+
                 result = &#34;%s:\n&#34;%useful.tostrings(self.__class__.__name__)
-                result +=&#34;   Ip address :%s\n&#34;%useful.tostrings(self.ipaddress)
-                result +=&#34;   Netmask    :%s\n&#34;%useful.tostrings(self.netmask)
-                result +=&#34;   Gateway    :%s\n&#34;%useful.tostrings(self.gateway)
-                result +=&#34;   Dns        :%s\n&#34;%useful.tostrings(self.dns)
+                result +=&#34;   Ip address :%s\n&#34;%ipaddress
+                result +=&#34;   Netmask    :%s\n&#34;%netmask
+                result +=&#34;   Gateway    :%s\n&#34;%gateway
+                result +=&#34;   Dns        :%s\n&#34;%dns
                 result +=&#34;   Ssid       :%s\n&#34;%useful.tostrings(self.ssid)
                 result +=&#34;   Password   :%s\n&#34;%useful.tostrings(self.wifipassword)
                 result +=&#34;   Authmode   :%s\n&#34;%useful.tostrings(self.authmode)
@@ -125,19 +128,29 @@ class AccessPoint:
                 if netmask   != None: AccessPoint.config.netmask   = useful.tobytes(netmask)
                 if gateway   != None: AccessPoint.config.gateway   = useful.tobytes(gateway)
                 if dns       != None: AccessPoint.config.dns       = useful.tobytes(dns)
-  
+
                 if AccessPoint.config.ipaddress == b&#34;&#34;: AccessPoint.config.ipaddress = useful.tobytes(AccessPoint.wlan.ifconfig()[0])
                 if AccessPoint.config.netmask   == b&#34;&#34;: AccessPoint.config.netmask   = useful.tobytes(AccessPoint.wlan.ifconfig()[1])
                 if AccessPoint.config.gateway   == b&#34;&#34;: AccessPoint.config.gateway   = useful.tobytes(AccessPoint.wlan.ifconfig()[2])
                 if AccessPoint.config.dns       == b&#34;&#34;: AccessPoint.config.dns       = useful.tobytes(AccessPoint.wlan.ifconfig()[3])
+
+                if AccessPoint.config.ipaddress == b&#34;0.0.0.0&#34;: AccessPoint.config.ipaddress = b&#34;&#34;
+                if AccessPoint.config.netmask   == b&#34;0.0.0.0&#34;: AccessPoint.config.netmask   = b&#34;&#34;
+                if AccessPoint.config.gateway   == b&#34;0.0.0.0&#34;: AccessPoint.config.gateway   = b&#34;&#34;
+                if AccessPoint.config.dns       == b&#34;0.0.0.0&#34;: AccessPoint.config.dns       = b&#34;&#34;
+
                 try:
-                        AccessPoint.wlan.ifconfig((\
-                                useful.tostrings(AccessPoint.config.ipaddress),
-                                useful.tostrings(AccessPoint.config.netmask),
-                                useful.tostrings(AccessPoint.config.gateway),
-                                useful.tostrings(AccessPoint.config.dns)))
-                except OSError:
-                        print(&#34;Cannot configure %s&#34;%AccessPoint.__class__.__name__)
+                        if AccessPoint.config.ipaddress != b&#34;&#34; and \
+                                AccessPoint.config.netmask   != b&#34;&#34; and \
+                                AccessPoint.config.gateway   != b&#34;&#34; and \
+                                AccessPoint.config.dns       != b&#34;&#34;:
+                                AccessPoint.wlan.ifconfig((
+                                        useful.tostrings(AccessPoint.config.ipaddress),
+                                        useful.tostrings(AccessPoint.config.netmask),
+                                        useful.tostrings(AccessPoint.config.gateway),
+                                        useful.tostrings(AccessPoint.config.dns)))
+                except Exception as err:
+                        print(&#34;Cannot configure wifi AccessPoint %s&#34;%useful.exception(err))
 
         @staticmethod
         def start(force):
@@ -251,19 +264,29 @@ class AccessPoint:
                 if netmask   != None: AccessPoint.config.netmask   = useful.tobytes(netmask)
                 if gateway   != None: AccessPoint.config.gateway   = useful.tobytes(gateway)
                 if dns       != None: AccessPoint.config.dns       = useful.tobytes(dns)
-  
+
                 if AccessPoint.config.ipaddress == b&#34;&#34;: AccessPoint.config.ipaddress = useful.tobytes(AccessPoint.wlan.ifconfig()[0])
                 if AccessPoint.config.netmask   == b&#34;&#34;: AccessPoint.config.netmask   = useful.tobytes(AccessPoint.wlan.ifconfig()[1])
                 if AccessPoint.config.gateway   == b&#34;&#34;: AccessPoint.config.gateway   = useful.tobytes(AccessPoint.wlan.ifconfig()[2])
                 if AccessPoint.config.dns       == b&#34;&#34;: AccessPoint.config.dns       = useful.tobytes(AccessPoint.wlan.ifconfig()[3])
+
+                if AccessPoint.config.ipaddress == b&#34;0.0.0.0&#34;: AccessPoint.config.ipaddress = b&#34;&#34;
+                if AccessPoint.config.netmask   == b&#34;0.0.0.0&#34;: AccessPoint.config.netmask   = b&#34;&#34;
+                if AccessPoint.config.gateway   == b&#34;0.0.0.0&#34;: AccessPoint.config.gateway   = b&#34;&#34;
+                if AccessPoint.config.dns       == b&#34;0.0.0.0&#34;: AccessPoint.config.dns       = b&#34;&#34;
+
                 try:
-                        AccessPoint.wlan.ifconfig((\
-                                useful.tostrings(AccessPoint.config.ipaddress),
-                                useful.tostrings(AccessPoint.config.netmask),
-                                useful.tostrings(AccessPoint.config.gateway),
-                                useful.tostrings(AccessPoint.config.dns)))
-                except OSError:
-                        print(&#34;Cannot configure %s&#34;%AccessPoint.__class__.__name__)
+                        if AccessPoint.config.ipaddress != b&#34;&#34; and \
+                                AccessPoint.config.netmask   != b&#34;&#34; and \
+                                AccessPoint.config.gateway   != b&#34;&#34; and \
+                                AccessPoint.config.dns       != b&#34;&#34;:
+                                AccessPoint.wlan.ifconfig((
+                                        useful.tostrings(AccessPoint.config.ipaddress),
+                                        useful.tostrings(AccessPoint.config.netmask),
+                                        useful.tostrings(AccessPoint.config.gateway),
+                                        useful.tostrings(AccessPoint.config.dns)))
+                except Exception as err:
+                        print(&#34;Cannot configure wifi AccessPoint %s&#34;%useful.exception(err))
 
         @staticmethod
         def start(force):
@@ -357,14 +380,24 @@ def configure(ipaddress = None, netmask = None, gateway = None, dns = None):
         if AccessPoint.config.netmask   == b&#34;&#34;: AccessPoint.config.netmask   = useful.tobytes(AccessPoint.wlan.ifconfig()[1])
         if AccessPoint.config.gateway   == b&#34;&#34;: AccessPoint.config.gateway   = useful.tobytes(AccessPoint.wlan.ifconfig()[2])
         if AccessPoint.config.dns       == b&#34;&#34;: AccessPoint.config.dns       = useful.tobytes(AccessPoint.wlan.ifconfig()[3])
+
+        if AccessPoint.config.ipaddress == b&#34;0.0.0.0&#34;: AccessPoint.config.ipaddress = b&#34;&#34;
+        if AccessPoint.config.netmask   == b&#34;0.0.0.0&#34;: AccessPoint.config.netmask   = b&#34;&#34;
+        if AccessPoint.config.gateway   == b&#34;0.0.0.0&#34;: AccessPoint.config.gateway   = b&#34;&#34;
+        if AccessPoint.config.dns       == b&#34;0.0.0.0&#34;: AccessPoint.config.dns       = b&#34;&#34;
+
         try:
-                AccessPoint.wlan.ifconfig((\
-                        useful.tostrings(AccessPoint.config.ipaddress),
-                        useful.tostrings(AccessPoint.config.netmask),
-                        useful.tostrings(AccessPoint.config.gateway),
-                        useful.tostrings(AccessPoint.config.dns)))
-        except OSError:
-                print(&#34;Cannot configure %s&#34;%AccessPoint.__class__.__name__)</code></pre>
+                if AccessPoint.config.ipaddress != b&#34;&#34; and \
+                        AccessPoint.config.netmask   != b&#34;&#34; and \
+                        AccessPoint.config.gateway   != b&#34;&#34; and \
+                        AccessPoint.config.dns       != b&#34;&#34;:
+                        AccessPoint.wlan.ifconfig((
+                                useful.tostrings(AccessPoint.config.ipaddress),
+                                useful.tostrings(AccessPoint.config.netmask),
+                                useful.tostrings(AccessPoint.config.gateway),
+                                useful.tostrings(AccessPoint.config.dns)))
+        except Exception as err:
+                print(&#34;Cannot configure wifi AccessPoint %s&#34;%useful.exception(err))</code></pre>
 </details>
 </dd>
 <dt id="lib.wifi.accesspoint.AccessPoint.getInfo"><code class="name flex">
@@ -530,11 +563,14 @@ def stop():
 
         def __repr__(self):
                 &#34;&#34;&#34; Display accesspoint informations &#34;&#34;&#34;
+                # Get network address
+                ipaddress, netmask, gateway, dns = AccessPoint.wlan.ifconfig()
+
                 result = &#34;%s:\n&#34;%useful.tostrings(self.__class__.__name__)
-                result +=&#34;   Ip address :%s\n&#34;%useful.tostrings(self.ipaddress)
-                result +=&#34;   Netmask    :%s\n&#34;%useful.tostrings(self.netmask)
-                result +=&#34;   Gateway    :%s\n&#34;%useful.tostrings(self.gateway)
-                result +=&#34;   Dns        :%s\n&#34;%useful.tostrings(self.dns)
+                result +=&#34;   Ip address :%s\n&#34;%ipaddress
+                result +=&#34;   Netmask    :%s\n&#34;%netmask
+                result +=&#34;   Gateway    :%s\n&#34;%gateway
+                result +=&#34;   Dns        :%s\n&#34;%dns
                 result +=&#34;   Ssid       :%s\n&#34;%useful.tostrings(self.ssid)
                 result +=&#34;   Password   :%s\n&#34;%useful.tostrings(self.wifipassword)
                 result +=&#34;   Authmode   :%s\n&#34;%useful.tostrings(self.authmode)

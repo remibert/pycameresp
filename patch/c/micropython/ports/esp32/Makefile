@@ -334,7 +334,7 @@ LDFLAGS += -T esp32.rom.newlib-data.ld
 else
 LDFLAGS += -T esp32.rom.spiram_incompatible_fns.ld
 endif
-LIBC_LIBM = $(ESPCOMP)/newlib/lib/libc.a $(ESPCOMP)/newlib/lib/libm.a
+LIBC_LIBM = $(ESPCOMP)/newlib/lib/libc.a $(ESPCOMP)/newlib/lib/libm.a $(ESPCOMP)/newlib/lib/libc-psram-workaround.a
 endif
 
 ################################################################################

@@ -17,6 +17,7 @@ Below is the list of features supported by the software
 	- FTP server
 	- Telnet server
 	- Login, password can be defined for servers
+	- Homekit server
 
 - Clients :
 	- NTP synchronization
@@ -101,6 +102,8 @@ Despite everything, the servers, the shell, the text editor can operate on an ES
 it is necessary to generate the firmware embedding the python scripts, in this case less memory is consumed.
 
 For motion capture you absolutely need an ESP32CAM.
+
+For homekit an ESP32 with SPIRAM is required, I tried with GENERIC but it reset before the end of pairing device, it have not enough space in ram.
 
 # Notice for ESP32CAM
 
@@ -247,6 +250,10 @@ into the flash memory of the board.
 
 # Library documentation
 [See python module documentation](http://htmlpreview.github.com/?https://github.com/remibert/pycameresp/blob/main/doc/lib/index.html)
+
+# Homekit
+
+This part is still in development, there is however some working homekit, see in the examples directory.
 
 # Battery mode for ESP32CAM
 

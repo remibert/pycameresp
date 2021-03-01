@@ -44,7 +44,7 @@ try:
 except:
         pass
 
-@HttpServer.addRoute(b&#39;/&#39;, title=b&#34;Info&#34;, index=10)
+@HttpServer.addRoute(b&#39;/&#39;, title=b&#34;Information&#34;, index=10)
 async def index(request, response, args):
         &#34;&#34;&#34; Function define the web page to display all informations of the board &#34;&#34;&#34;
         try:
@@ -90,7 +90,7 @@ async def index(request, response, args):
                                                         Edit(text=b&#34;Flash user&#34;,       value=flashUser, disabled=True),
                                                         Edit(text=b&#34;Flash size&#34;,       value=flashSize, disabled=True),
                                                         Tag(b&#39;&#39;&#39;
-&lt;button onclick=&#34;confirmReboot()&#34; class=&#34;btn btn-primary &#34;&gt;Reboot&lt;/button&gt;
+&lt;button onclick=&#34;confirmReboot()&#34; class=&#34;btn btn-outline-primary &#34;&gt;Reboot&lt;/button&gt;
 &lt;script&gt;
         function confirmReboot()
         {
@@ -112,13 +112,16 @@ async def index(request, response, args):
 
 @HttpServer.addRoute(b&#39;/reboot&#39;)
 async def reboot(request, response, args):
-        print(&#34;Reboot&#34;)
-        await response.sendOk()
+        try:
+                await response.sendOk()
+        except Exception as err:
+                print(useful.exception(err))
         try:
                 import machine
+                print(&#34;Reboot&#34;)
                 machine.reset()
-        except:
-                pass</code></pre>
+        except Exception as err:
+                print(useful.exception(err))</code></pre>
 </details>
 </section>
 <section>
@@ -137,7 +140,7 @@ async def reboot(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/&#39;, title=b&#34;Info&#34;, index=10)
+<pre><code class="python">@HttpServer.addRoute(b&#39;/&#39;, title=b&#34;Information&#34;, index=10)
 async def index(request, response, args):
         &#34;&#34;&#34; Function define the web page to display all informations of the board &#34;&#34;&#34;
         try:
@@ -183,7 +186,7 @@ async def index(request, response, args):
                                                         Edit(text=b&#34;Flash user&#34;,       value=flashUser, disabled=True),
                                                         Edit(text=b&#34;Flash size&#34;,       value=flashSize, disabled=True),
                                                         Tag(b&#39;&#39;&#39;
-&lt;button onclick=&#34;confirmReboot()&#34; class=&#34;btn btn-primary &#34;&gt;Reboot&lt;/button&gt;
+&lt;button onclick=&#34;confirmReboot()&#34; class=&#34;btn btn-outline-primary &#34;&gt;Reboot&lt;/button&gt;
 &lt;script&gt;
         function confirmReboot()
         {
@@ -214,13 +217,16 @@ async def index(request, response, args):
 </summary>
 <pre><code class="python">@HttpServer.addRoute(b&#39;/reboot&#39;)
 async def reboot(request, response, args):
-        print(&#34;Reboot&#34;)
-        await response.sendOk()
+        try:
+                await response.sendOk()
+        except Exception as err:
+                print(useful.exception(err))
         try:
                 import machine
+                print(&#34;Reboot&#34;)
                 machine.reset()
-        except:
-                pass</code></pre>
+        except Exception as err:
+                print(useful.exception(err))</code></pre>
 </details>
 </dd>
 </dl>
