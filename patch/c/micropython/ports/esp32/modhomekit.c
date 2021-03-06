@@ -4,11 +4,6 @@ Copyright (c) 2021 Remi BERTHOLET */
 
 #define TAG "Homekit"
 
-const char *__locale_ctype_ptr (void)
-{
-	return "";
-}
-
 STATIC mp_obj_t homekit_init()
 {
 	int res;

@@ -48,8 +48,8 @@ if __name__ == "__main__":
 	files = []
 	gitChangedRecently(root, "micropython",files)
 	gitChangedRecently(root, "esp-idf",files)
-	gitChangedRecently(root, "esp-idf/components/esp32-camera",files)
-	gitChangedRecently(root, "esp-idf/components/esp-homekit-sdk",files)
+	gitChangedRecently(root, "esp32-camera",files)
+	gitChangedRecently(root, "esp-homekit-sdk",files)
 	from time import localtime, time, strftime
 	filename = strftime(root + "/BackupGit__%Y.%m.%d__%H-%M-%S.zip",localtime(time()))
 	zipFiles(filename,".",files,True)

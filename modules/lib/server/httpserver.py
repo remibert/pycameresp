@@ -19,11 +19,12 @@ class HttpServer:
 	menus = []
 	wwwDir = None
 
-	def __init__(self, port=80, loader=None, preload=False):
+	def __init__(self, port=80, loader=None, preload=False, name=""):
 		""" Constructor """
 		self.server = None
 		self.loader = loader
 		self.port = port
+		self.name = name
 		if preload:
 			self.preload()
 		else:
@@ -45,7 +46,7 @@ class HttpServer:
 		if self.server == None:
 			print("Http start server")
 			from server.httpservercore import HttpServerCore
-			self.server = HttpServerCore(self.port)
+			self.server = HttpServerCore(self.port, self.name)
 			loaded = True
 
 		if loaded:
@@ -122,13 +123,13 @@ class HttpServer:
 		except Exception as err:
 			print(useful.exception(err))
 
-def start(loop=None, port=80, loader=None, preload=False):
+def start(loop=None, port=80, loader=None, preload=False, name=""):
 	""" Start http server.
 	loop : asyncio loop object
 	port : tcp/ip port of the server
 	preload : True = preload the server at the start, False = load the server at the first connection """
 	import uasyncio
-	server = HttpServer(port=port, loader=loader, preload=preload)
+	server = HttpServer(port=port, loader=loader, preload=preload, name=name)
 
 	if loop == None:
 		loop = uasyncio.get_event_loop()

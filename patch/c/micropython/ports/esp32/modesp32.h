@@ -27,6 +27,7 @@
 #define RTC_IS_VALID_EXT_PIN(pin_id) ((1ll << (pin_id)) & RTC_VALID_EXT_PINS)
 #define NVS_NAMESPACE "micropython"
 
+extern const mp_obj_type_t esp32_nvs_type;
 extern const mp_obj_type_t esp32_partition_type;
 extern const mp_obj_type_t esp32_rmt_type;
 extern const mp_obj_type_t esp32_ulp_type;

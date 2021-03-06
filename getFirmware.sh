@@ -23,58 +23,82 @@ echo "***************"
 echo "Get Micropython"
 echo "***************"
 git clone https://github.com/micropython/micropython.git
-
-echo "********************"
-echo "Checkout micropython"
-echo "********************"
 cd $ROOT/micropython
-git checkout f7aafc0628f2008d015b32b0c0253a13f748d436
+git checkout 680ce45323248df288ee8ebd055a4caacb3e46f3
 
 echo "*************************"
 echo "Get micropython submodule"
 echo "*************************"
 cd ports/esp32
 git submodule update --init --recursive
+cd $ROOT
+ln -s $ROOT/micropython/ports/esp32 esp32
 
 echo "*************"
 echo "Get espressif"
 echo "*************"
 cd $ROOT
 git clone https://github.com/espressif/esp-idf.git
-
-echo "**************************"
-echo "Checkout version espressif"
-echo "**************************"
 cd $ESPIDF
-# Version 4.0.1
-git checkout 4c81978a3e2220674a432a588292a4c860eef27b
+# Version v4.3-beta1 (bug)
+#~ git checkout 52f1f68dc7f647def4bd3ff14bf145f87fe99995
+# Version v4.2 (OK)
+git checkout c40f2590bf759ff60ef122afa79b4ec04e7633d2
+# Version v4.4-dev (bug)
+#~ git checkout c8315e01107c10898947a817d5cf763cdd3f5a4f
 
 echo "***********************"
 echo "Get submodule espressif"
 echo "***********************"
+cd $ESPIDF
 git submodule update --init --recursive
 ./install.sh
 
 echo "****************"
 echo "Get esp32 camera"
 echo "****************"
-cd $ESPIDF/components
+cd $ROOT
 git clone https://github.com/espressif/esp32-camera.git esp32-camera
-
-echo "*********************"
-echo "Checkout esp32 camera"
-echo "*********************"
 cd esp32-camera
 git checkout 010709376a131c12c14bb074b6c5be82d2241338
+cd $ESPIDF/components
+ln -s $ROOT/esp32-camera esp32-camera
 
 echo "************"
 echo "Get Home kit"
 echo "************"
 cd $ROOT
-cd $ESPIDF/components
 git clone https://github.com/espressif/esp-homekit-sdk.git
 cd esp-homekit-sdk
+git checkout 389189abd7c1965d70eb3ddc7a19a8f0313f1fc8
 git submodule update --init --recursive
 
+cd $ESPIDF/components
+ln -s $ROOT/esp-homekit-sdk/components/homekit/esp_hap_apple_profiles esp_hap_apple_profiles
+ln -s $ROOT/esp-homekit-sdk/components/homekit/esp_hap_core           esp_hap_core
+ln -s $ROOT/esp-homekit-sdk/components/homekit/esp_hap_extras         esp_hap_extras
+ln -s $ROOT/esp-homekit-sdk/components/homekit/esp_hap_platform       esp_hap_platform
+ln -s $ROOT/esp-homekit-sdk/components/homekit/hkdf-sha               hkdf-sha
+ln -s $ROOT/esp-homekit-sdk/components/homekit/json_generator         json_generator
+ln -s $ROOT/esp-homekit-sdk/components/homekit/json_parser            json_parser
+ln -s $ROOT/esp-homekit-sdk/components/homekit/mu_srp                 mu_srp
+
+echo "*************"
+echo "Get pyparsing"
+echo "*************"
 cd $ROOT
 pip3 install pyparsing==2.3.1
+
+echo "***************"
+echo "Init virtualenv"
+echo "***************"
+cd $ROOT
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+	pip3 install --upgrade pip
+	pip3 install -r $ESPIDF/requirements.txt
+	pip3 install virtualenv
+else
+	pip install --upgrade pip
+	pip install -r $ESPIDF/requirements.txt
+	pip install virtualenv
+fi

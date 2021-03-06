@@ -43,18 +43,9 @@ echo "**************"
 cd $ROOT/micropython/ports/esp32
 source $ESPIDF/export.sh
 
-echo "*************"
-echo "Build homekit"
-echo "*************"
-cd $ESPIDF/components/esp-homekit-sdk/examples/fan
-make
-mkdir -p $ROOT/lib
-find . -name "*.a" -exec cp {} $ROOT/lib \;
-
 echo "***************"
 echo "Build mpy-cross"
 echo "***************"
-pip3 install pyparsing==2.3.1
 cd $ROOT/micropython/mpy-cross
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 	make mpy-cross V=1

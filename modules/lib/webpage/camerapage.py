@@ -11,7 +11,7 @@ import uasyncio
 
 cameraStreaming = False
 cameraConfig = CameraConfig()
-
+INACTIVITY=600000
 @HttpServer.addRoute(b'/camera', title=b"Camera", index=1000)
 async def cameraPage(request, response, args):
 	""" Camera streaming page """
@@ -55,14 +55,14 @@ async def cameraPage(request, response, args):
 		function startStreaming()
 		{
 			window.stop();
-			var streamUrl = document.location.protocol + "//" + document.location.hostname + ':8081';
+			var streamUrl = document.location.protocol + "//" + document.location.hostname + ':%d';
 			document.getElementById('video-stream').src = `${streamUrl}/camera/start`;
 			document.getElementById('container-stream').style.display = "block";
 			document.getElementById('button-stream').innerHTML = 'Hide';
 			setTimeout(() => 
 			{
 				stopStreaming();
-			}, 60000)
+			}, %d)
 		}
 		function stopStreaming()
 		{
@@ -72,7 +72,7 @@ async def cameraPage(request, response, args):
 			document.getElementById('button-stream').innerHTML = 'Show';
 		}
 	</script>
-</p>""")),
+</p>"""%(request.port+1,INACTIVITY))),
 				Container(Card(Form(\
 				[
 					ComboCmd(framesizes, text=b"Resolution", path=b"camera/configure", name=b"framesize"),
@@ -103,8 +103,7 @@ async def cameraStopStreaming(request, response, args):
 	cameraStreaming = False
 	stopInactivityTimer()
 	await response.sendOk()
-	
-	
+
 def inactivityTimeoutStreaming(param=None):
 	""" Suspend video streaming after delay """
 	global cameraStreaming
@@ -116,7 +115,7 @@ def startInactivityTimer():
 	global inactivityTimer
 	stopInactivityTimer()
 	inactivityTimer = machine.Timer(0)
-	inactivityTimer.init(period=60000, mode=machine.Timer.ONE_SHOT, callback=inactivityTimeoutStreaming)
+	inactivityTimer.init(period=INACTIVITY, mode=machine.Timer.ONE_SHOT, callback=inactivityTimeoutStreaming)
 
 def stopInactivityTimer():
 	""" Stop inactivity timer """
@@ -134,7 +133,7 @@ async def cameraStartStreaming(request, response, args):
 		cameraStreaming = False
 		await uasyncio.sleep(0.2)
 	
-	if request.port == 80 or request.port == 8080:
+	if request.name != "StreamingServer":
 		print("Streaming ignored")
 		return 
 

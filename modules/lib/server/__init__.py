@@ -34,7 +34,7 @@ class ServerConfig:
 		result = jsonconfig.load(self, file)
 		return result
 
-def start(loop=None, pageLoader=None, preload=False, withoutServer=False):
+def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
 	""" Start all servers
 	loop : asyncio loop
 	pageLoader : callback to load html page
@@ -72,12 +72,12 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False):
 		if config.http and withoutServer == False:
 			# Load and start http server
 			import server.httpserver
-			server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=8080)
+			server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort, name="httpServer")
 
 			# If camera present
 			if useful.iscamera():
 				# Load and start streaming http server
-				server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=8081)
+				server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort +1, name="StreamingServer")
 	
 	# Display system informations
 	useful.sysinfo()

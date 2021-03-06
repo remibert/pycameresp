@@ -46,9 +46,10 @@ from tools.useful import log
 
 class Http:
 	""" Http request or reponse """
-	def __init__(self, request = True, remoteaddr= b"", port = 0):
+	def __init__(self, request = True, remoteaddr= b"", port = 0, name=""):
 		""" Constructor from http request or response """
 		self.port       = port
+		self.name       = name
 		self.remoteaddr = remoteaddr
 		self.path       = b""
 		self.method     = b"POST"
@@ -450,9 +451,9 @@ class PartBin(PartFile):
 
 class HttpResponse(Http):
 	""" Http response send to web browser client """
-	def __init__(self, streamio, remoteaddr= b"", port = 0):
+	def __init__(self, streamio, remoteaddr= b"", port = 0, name = ""):
 		""" Constructor """
-		Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port)
+		Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port, name=name)
 		self.streamio = streamio
 
 	async def send(self, content=None, status=b"200", headers={}):
@@ -497,9 +498,9 @@ class HttpResponse(Http):
 
 class HttpRequest(Http):
 	""" Http request received from web browser client """
-	def __init__(self, streamio, remoteaddr= b"", port = 0):
+	def __init__(self, streamio, remoteaddr= b"", port = 0, name=""):
 		""" Constructor from http request """
-		Http.__init__(self, request=True, remoteaddr=remoteaddr, port=port)
+		Http.__init__(self, request=True, remoteaddr=remoteaddr, port=port, name=name)
 		self.streamio    = streamio
 
 	async def receive(self, streamio=None):

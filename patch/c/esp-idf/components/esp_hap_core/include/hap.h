@@ -1584,6 +1584,10 @@ void hap_char_set_priv(hap_char_t *hc, void *priv);
  * @return Pointer to the private data (can be NULL)
  */
 void *hap_char_get_priv(hap_char_t *hc);
+
+#if CONFIG_HAP_HTTP_SERVER_PORT == 80
+	#error "Homekit server on port 80"
+#endif
 /** BERTHOLET END */
 #ifdef __cplusplus
 }

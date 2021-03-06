@@ -9,6 +9,7 @@ Copyright (c) 2021 Remi BERTHOLET */
 #include "py/runtime.h"
 #include "py/objstr.h"
 #include "mphalport.h"
+#include "string.h"
 
 
 // Get the pointer of characteristic

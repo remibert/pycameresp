@@ -47,7 +47,7 @@ if onBattery == False:
 
 	# Start all server (Http, Ftp, Telnet) and start wifi manager
 	# If you set the last parameter to True it preloads the pages of the http server at startup
-	server.start(loop, pageLoader, False)
+	server.start(loop=loop, pageLoader=pageLoader, preload=False, httpPort=80)
 	isPinWakeUp = False
 else:
 	# Check if PIR detection

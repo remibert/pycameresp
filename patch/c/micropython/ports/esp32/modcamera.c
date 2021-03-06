@@ -1,5 +1,5 @@
 // Code adapted from https://github.com/espressif/esp32-camera
-
+#include "string.h"
 #include "esp_camera.h"
 #include "esp_log.h"
 #include "esp_jpg_decode.h"
@@ -571,6 +571,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_pixformat_obj, 0, 1, camera_pi
 	}\
 	STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_##method##_obj, 0, 1, camera_##method);
 
+#pragma GCC diagnostic ignored "-Wtype-limits"
 //             type,        get             set           , min, max
 CAMERA_SETTING(uint16_t   , aec_value     , aec_value     ,  0, 1200)
 CAMERA_SETTING(framesize_t, framesize     , framesize     ,  FRAMESIZE_96X96, FRAMESIZE_QSXGA)
@@ -599,7 +600,7 @@ CAMERA_SETTING(uint8_t    , vflip         , vflip         ,  0, 255 )
 CAMERA_SETTING(uint8_t    , dcw           , dcw           ,  0, 255 )
 CAMERA_SETTING(uint8_t    , colorbar      , colorbar      ,  0, 255 )
 
-
+#pragma GCC diagnostic pop
 
 STATIC mp_obj_t camera_isavailable(){
 #ifdef CONFIG_ESP32CAM

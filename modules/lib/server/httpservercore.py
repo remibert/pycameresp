@@ -14,16 +14,17 @@ from server.stream import Stream
 class HttpServerCore:
 	""" Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
 	if the server not used, it not consum memory """
-	def __init__(self, port):
+	def __init__(self, port, name):
 		""" Constructor """
 		self.port = port
+		self.name = name
 
 	async def onConnection(self, reader, writer):
 		""" Asynchronous connection call back """
 		remoteaddr = writer.get_extra_info('peername')[0]
 		stream    = Stream(reader, writer)
-		request   = HttpRequest (stream, remoteaddr=remoteaddr, port=self.port)
-		response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port)
+		request   = HttpRequest (stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
+		response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
 		try:
 			await request.receive()
 			function, args = HttpServer.searchRoute(request)

@@ -191,7 +191,10 @@ class Camera:
 		""" Change the brightness """
 		if Camera.opened:
 			# print("Brightness %d"%val)
-			return camera.brightness(val)
+			if camera.brightness() != val:
+				return camera.brightness(val)
+			else:
+				return val
 		return None
 
 	@staticmethod
@@ -199,7 +202,10 @@ class Camera:
 		""" Change the contrast """
 		if Camera.opened:
 			# print("Contrast %d"%val)
-			return camera.contrast(val)
+			if camera.contrast() != val:
+				return camera.contrast(val)
+			else:
+				return val
 		return None
 
 	@staticmethod
@@ -207,7 +213,10 @@ class Camera:
 		""" Change the saturation """
 		if Camera.opened:
 			# print("Saturation %d"%val)
-			return camera.saturation(val)
+			if camera.saturation() != val:
+				return camera.saturation(val)
+			else:
+				return val
 		return None
 
 	@staticmethod
