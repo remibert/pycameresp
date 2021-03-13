@@ -6,6 +6,7 @@
 """ Ftp server implementation core class """
 import sys
 import os
+import uos
 import socket
 import gc
 import time
@@ -81,53 +82,71 @@ class FtpServerCore:
 		""" Destroy ftp instance """
 		self.close()
 
-	def sendFileList(self, path, stream, full):
-		""" Send the list of file """
-		now = useful.now()
-		try:
-			description = b""
-			counter = 0
-			for filename in sorted(os.listdir(useful.tostrings(path)), key = str.lower):
-				description += self.getFileDescription(path, useful.tobytes(filename), full, now)
-				counter += 1
-				if counter == 10:
-					counter = 0
-					stream.write(description)
-					description = b""
-			if description != b"":
-				stream.write(description)
-
-		except Exception as err:
-			self.log(useful.exception(err))
-			pattern = path.split(b"/")[-1]
-			path = path[:-(len(pattern) + 1)]
-			if path == b"": path = b"/"
-			for filename in sorted(os.listdir(useful.tostrings(path)), key = str.lower):
-				if fnmatch(useful.tostrings(filename), useful.tostrings(pattern)) == True:
-					stream.write(self.getFileDescription(path, useful.tobytes(filename), full, now))
-	
-	def getFileDescription(self, path, filename, full, now):
+	def getFileDescription(self, filename, typ, size, date, now, full):
 		""" Build list of file description """
 		if full:
-			try:
-				stat = os.stat(useful.tostrings(useful.abspathbytes(path,filename)))
-			except:
-				stat = (0,0,0,0,0,0,0,0,0)
-			file_permissions = b"drwxr-xr-x" if (stat[0] & 0o170000 == 0o040000) else b"-rw-r--r--"
-			file_size = stat[6]
+			file_permissions = b"drwxr-xr-x" if (typ & 0xF000 == 0x4000) else b"-rw-r--r--"
 
-			d = time.localtime(stat[8])
+			d = time.localtime(date)
 			year,month,day,hour,minute,second,weekday,yearday = d[:8]
 			
 			if year != now[0] and month != now[1]:
 				file_date = b"%s %2d  %4d"%(MONTHS[month-1], day, year)
 			else:
 				file_date = b"%s %2d %02d:%02d"%(MONTHS[month-1], day, hour, minute) 
-			description = b"%s    1 owner group %10d %s %s\r\n"%(file_permissions, file_size, file_date, filename)
+			description = b"%s    1 owner group %10d %s %s\r\n"%(file_permissions, size, file_date, useful.tobytes(filename))
 		else:
-			description = filename + b"\r\n"
+			description = useful.tobytes(filename) + b"\r\n"
 		return description
 
+	def sendFileListWithPattern(self, path, stream, full, now, pattern=None):
+		""" Send the list of file with pattern """
+		description = b""
+		quantity = 0
+		counter = 0
+		for fileinfo in uos.ilistdir(useful.tostrings(path)):
+			filename = fileinfo[0]
+			typ = fileinfo[1]
+			if len(fileinfo) > 3:
+				size = fileinfo[3]
+			else:
+				size = 0
+			if pattern == None:
+				accepted = True
+			else:
+				accepted = fnmatch(useful.tostrings(filename), useful.tostrings(pattern))
+			if accepted:
+				if quantity > 100:
+					date = 0
+				else:
+					try:
+						sta = useful.fileinfo(useful.tostrings(useful.abspathbytes(path,useful.tobytes(filename))))
+					except:
+						sta = (0,0,0,0,0,0,0,0,0)
+					date = sta[8]
+
+				description += self.getFileDescription(filename, typ, size, date, now, full)
+				counter += 1
+				if counter == 20:
+					counter = 0
+					stream.write(description)
+					description = b""
+			quantity += 1
+		if description != b"":
+			stream.write(description)
+
+	def sendFileList(self, path, stream, full):
+		""" Send the list of file """
+		now = useful.now()
+		try:
+			self.sendFileListWithPattern(path, stream, full, now)
+		except Exception as err:
+			self.log(useful.exception(err))
+			pattern = path.split(b"/")[-1]
+			path = path[:-(len(pattern) + 1)]
+			if path == b"": path = b"/"
+			self.sendFileListWithPattern(path, stream, full, now, pattern)
+	
 	async def sendOk(self):
 		""" Send ok to ftp client """
 		await self.sendResponse(250,b"OK")
@@ -217,7 +236,7 @@ class FtpServerCore:
 
 	async def SIZE(self):
 		""" Ftp command SIZE """
-		size = os.stat(useful.tostrings(self.root + self.path))[6]
+		size = useful.filesize(useful.tostrings(self.root + self.path))
 		await self.sendResponse(213, b"%d"%(size))
 
 	async def PASV(self):

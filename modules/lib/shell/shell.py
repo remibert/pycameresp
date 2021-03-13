@@ -32,6 +32,7 @@ The commands are :
 import sys
 sys.path.append("lib")
 import os
+import uos
 
 try:
 	from tools import useful
@@ -43,24 +44,16 @@ try:
 except:
 	from fnmatch import fnmatch
 
-def stat(filename):
-	""" Get information of file """
-	try:
-		rstat = os.lstat(filename)
-	except:
-		rstat = os.stat(filename)
-	return rstat[:7] + tuple(tim + 0 for tim in rstat[7:])
-
 def cd(directory = "/"):
 	""" Change directory """
 	try:
-		os.chdir(directory)
+		uos.chdir(directory)
 	except:
 		print("No such file or directory '%s'"%directory)
 
 def pwd():
 	""" Display the current directory """
-	print("%s"%os.getcwd())
+	print("%s"%uos.getcwd())
 
 def mkdir(directory, recursive=False, quiet=False):
 	""" Make directory """
@@ -75,7 +68,7 @@ def removedir(directory, force=False, quiet=False, simulate=False):
 	""" Remove directory """
 	try:
 		if (useful.ismicropython() or force) and simulate == False:
-			os.rmdir(directory)
+			uos.rmdir(directory)
 		if quiet == False:
 			print("rmdir '%s'"%(directory))
 	except:
@@ -102,7 +95,7 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 def mv(source, destination):
 	""" Move or rename file """
 	try:
-		os.rename(source,destination)
+		uos.rename(source,destination)
 	except:
 		print("Cannot mv '%s'->'%s'"%(source,destination))
 
@@ -144,7 +137,7 @@ def cp(source, destination, recursive=False, quiet=False):
 		else:
 			path, pattern = useful.split(source)
 				
-		directories, filenames = scandir(path, pattern, recursive)
+		directories, filenames = useful.scandir(path, pattern, recursive)
 
 		for src in filenames:
 			dst = destination + "/" + src[len(path):]
@@ -154,7 +147,7 @@ def rmfile(filename, quiet=False, force=False, simulate=False):
 	""" Remove file """
 	try:
 		if (useful.ismicropython() or force) and simulate == False:
-			os.remove(filename)
+			uos.remove(filename)
 		if quiet == False:
 			print("rm '%s'"%(filename))
 	except:
@@ -183,7 +176,7 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
 		if path == None:
 			print("Cannot rm '%s'"%file)
 		else:
-			dirs, filenames = scandir(path, pattern, recursive)
+			dirs, filenames = useful.scandir(path, pattern, recursive)
 			directories += dirs
 					
 			for filename in filenames:
@@ -246,52 +239,18 @@ def ls(file="", recursive=False, long=False):
 	""" List command """
 	if useful.isfile(file):
 		LsDisplayer("", False, long).show(file)
-	elif useful.isdir(file):
-		scandir(file, "*", recursive, LsDisplayer(file, True, long))
 	elif file == "":
-		scandir(".", "*", recursive, LsDisplayer(".", True, long))
+		useful.scandir(uos.getcwd(), "*", recursive, LsDisplayer(uos.getcwd(), True, long))
+	elif useful.isdir(file):
+		useful.scandir(file, "*", recursive, LsDisplayer(file, True, long))
 	else:
 		path, pattern = useful.split(file)
-		scandir(path, pattern, recursive, LsDisplayer(path, False, long))
-
-def scandir(path, pattern, recursive, displayer=None):
-	""" Scan recursively a directory """
-	filenames   = []
-	directories = []
-	if path == "":
-		path = "."
-	try:
-		if path != None and pattern != None:
-			for file in os.listdir(path):
-				if path != "":
-					filename = path + "/" + file
-				else:
-					filename = file
-				filename = filename.replace("//","/")
-				filename = filename.replace("//","/")
-				if useful.isdir(filename):
-					if displayer:
-						displayer.show(filename)
-					else:
-						directories.append(filename)
-					if recursive:
-						dirs,fils = scandir(filename, pattern, recursive, displayer)
-						filenames += fils
-						directories += dirs
-				else:
-					if fnmatch(file, pattern):
-						if displayer:
-							displayer.show(filename)
-						else:
-							filenames.append(filename)
-	except Exception as error:
-		print(useful.exception(error))
-	return directories, filenames
+		useful.scandir(path, pattern, recursive, LsDisplayer(path, False, long))
 
 def find(file):
 	""" Find a file in directories """
 	path, pattern = useful.split(file)
-	directories, filenames = scandir(path, pattern, True)
+	directories, filenames = useful.scandir(path, pattern, True)
 	for filename in filenames:
 		print(filename)
 
@@ -347,7 +306,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 		filenames = [file]
 	else:
 		path, pattern = useful.split(file)
-		directories, filenames = scandir(path, pattern, recursive)
+		directories, filenames = useful.scandir(path, pattern, recursive)
 
 	height, width = useful.getScreenSize()
 	count = 1
@@ -422,6 +381,14 @@ def cat(file):
 		f.close()
 	except:
 		print("Cannot cat '%s'"%(file))
+
+def df(mountpoint = "/"):
+	""" Display free disk space """
+	status = uos.statvfs(mountpoint)
+	freeSize  = status[0]*status[3]
+	totalSize = status[1]*status[2]
+	print("Filesystem     Free   Capacity   Used")
+	print("%-10s %-10s %-10s %-3.2f%%"%(mountpoint, useful.sizeToString(freeSize,8),useful.sizeToString(totalSize,), totalSize/freeSize))
 
 def gc():
 	""" Garbage collector command """
@@ -585,6 +552,7 @@ def shell():
 			break
 		parseCommandLine(commandLine)
 
+
 shellCommands = \
 {
 	"cd"       :[cd       ,"directory"],
@@ -612,6 +580,7 @@ shellCommands = \
 	"reboot"   :[reboot   ],
 	"help"     :[help     ],
 	"man"      :[man      ,"command"],
+	"df"       :[df       ,"mountpoint"]
 }
 
 if __name__ == "__main__":

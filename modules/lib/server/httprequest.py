@@ -41,7 +41,6 @@ from tools import useful
 import hashlib
 import time
 from binascii import hexlify
-from os import stat
 from tools.useful import log
 
 class Http:
@@ -427,7 +426,7 @@ class PartFile:
 	async def getSize(self, identifier):
 		""" Get the size of multi part file """
 		headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
-		fileSize = stat(useful.tostrings(self.filename))[6]
+		fileSize = useful.filesize((useful.tostrings(self.filename)))
 		return headerSize + fileSize + 4 + len(identifier) + 2
 
 class PartBin(PartFile):

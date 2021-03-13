@@ -38,7 +38,7 @@ class MotionConfig:
 
 		# Threshold of minimum image to detect motion
 		self.thresholdMotion=3
-  
+
 		# Awake time on battery (seconds)
 		self.awakeTime = 15
 
@@ -57,45 +57,6 @@ class MotionConfig:
 		result = jsonconfig.load(self, file)
 		return result
 
-class SdCard:
-	""" Class to mount the sd card """
-	def __init__(self, mountpoint="/sd"):
-		self.opened = False
-		self.mountpoint = mountpoint
-		self.open()
-		
-	def __del__(self):
-		self.close()
-
-	def open(self):
-		""" Open and mount sd card """
-		if self.opened == False:
-			try:
-				uos.mount(machine.SDCard(), self.mountpoint)
-				print("Mount %s"%self.mountpoint)
-				self.opened = True
-			except Exception as error:
-				# print(exception(error))
-				print("Cannot mount %s"%self.mountpoint)
-		return self.opened
-
-	def close(self):
-		""" Close and unmount sd card """
-		if self.opened == True:
-			print("Umount %s"%self.mountpoint)
-			uos.umount(self.mountpoint)
-	
-	def save(self, filename, data):
-		""" Save file on sd card """
-		if self.open():
-			filename = "%s/%s"%(self.mountpoint,filename)
-			try:
-				file = open(filename,"wb")
-				file.write(data)
-				file.close()
-			except Exception as error:
-				# print(exception(error))
-				print("Cannot save %s"%filename)
 
 class ImageMotion:
 	""" Class managing a motion detection image """
@@ -117,6 +78,7 @@ class ImageMotion:
 		self.notified = False
 		self.motionId = None
 		self.date     = useful.dateToFilename()
+		self.path     = useful.dateToFilename()[:-3]
 		self.motionDetected = False
 		self.config = config
 	
@@ -139,10 +101,11 @@ class ImageMotion:
 		""" Get the storage filename """
 		return "%s (id=%d) (diff=%d).jpg"%(self.date, self.index, (self.diffRgb[0]+self.diffRgb[1]+self.diffRgb[2])//3)
 
-	def save(self, sdcard):
+	def save(self):
 		""" Save the image on sd card """
-		if sdcard != None:
-			sdcard.save(self.getFilename(), self.image)
+		if useful.SdCard.isMounted():
+			useful.makedir(useful.SdCard.getMountpoint() + "/" + self.path, True)
+			useful.SdCard.save(self.path + "/" + self.getFilename(), self.image)
 
 	def compareComposite(self, current, previous):
 		""" Compare two composite motion images to get differences """
@@ -186,9 +149,8 @@ class ImageMotion:
 
 class Motion:
 	""" Class to manage the motion capture """
-	def __init__(self, sdcard = None, config= None, onBattery=False, pirDetection=False):
+	def __init__(self, config= None, onBattery=False, pirDetection=False):
 		self.images = []
-		self.sdcard = sdcard
 		self.index  = 0
 		self.config = config
 		self.onBattery = onBattery
@@ -227,7 +189,7 @@ class Motion:
 				print("Intrusion %s"%image.getFilename()[:-3])
 
 				# Save image to sdcard
-				image.save(self.sdcard)
+				image.save()
 
 		while 1:
 			if retry == 0:
@@ -333,6 +295,58 @@ async def sleep_ms(duration):
 	""" Multiplatform sleep_ms """
 	await uasyncio.sleep_ms(duration)
 
+def getOlderDirectories(mountpoint, quantity=1):
+	older = []
+	# Parse all directories in sdcard
+	for fileinfo in uos.ilistdir(useful.SdCard.getMountpoint()):
+		filename = fileinfo[0]
+		typ = fileinfo[1]
+		# If directory found
+		if typ & 0xF000 == 0x4000:
+			# If motion directory recognized
+			if  (filename[4] == "-" and filename[7] == "-" and len(filename) == 10) or \
+				(filename[4] == "-" and filename[7] == "-" and filename[10] == "_" and filename[13] == "-" and len(filename) == 16):
+				# Add directory to the list
+				older.append(filename)
+				if len(older) > (quantity + 10):
+					older.sort()
+					older = older[:quantity]
+	older.sort()
+	older = older[:quantity]
+	return older
+
+def removeFiles(directory, simulate=False):
+	""" Remove all files in the directory """
+	import shell
+	notEmpty = False
+	# Parse all directories in sdcard
+	for fileinfo in uos.ilistdir(directory):
+		filename = fileinfo[0]
+		typ      = fileinfo[1]
+		# If file found
+		if typ & 0xF000 != 0x4000:
+			shell.rmfile(directory + "/" + filename, simulate=simulate)
+		else:
+			removeFiles(directory + "/" + filename)
+			notEmpty = True
+	
+	if notEmpty:
+		shell.rm(directory, recursive=True, simulate=simulate)
+	else:
+		shell.rmdir(directory, recursive=True, simulate=simulate)
+
+async def removeOlder():
+	""" Remove older files to make space """
+	while 1:
+		await sleep_ms(10000)
+		if useful.SdCard.isMounted():
+			# If not enough space available on sdcard
+			if useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5:
+				print("Remove files from sdcard")
+				olders = getOlderDirectories(useful.SdCard.getMountpoint())
+				for directory in olders:
+					removeFiles(useful.SdCard.getMountpoint()+ "/"+ directory)
+
 async def detectMotion(onBattery, pirDetection):
 	""" Asynchronous motion detection main routine """
 	from server   import asyncNotify, PushOverConfig
@@ -349,7 +363,7 @@ async def detectMotion(onBattery, pirDetection):
 		motionConfig.save()
 
 	motion = None
-	reloadConfig = 0
+	pollingCounter = 0
 	previousReserved = None
 	pollingFrequency = 200
 	batteryLevel = -2
@@ -368,11 +382,9 @@ async def detectMotion(onBattery, pirDetection):
 			# If motion not initialized
 			if motion == None:
 				# The sdcard not available on battery
-				if onBattery == True:
-					sdcard = None
-				else:
-					sdcard = SdCard()
-				motion = Motion(sdcard, motionConfig, onBattery, pirDetection)
+				if onBattery != True:
+					useful.SdCard.mount()
+				motion = Motion(motionConfig, onBattery, pirDetection)
 				motion.open()
 
 			# If camera available to detect motion
@@ -433,10 +445,10 @@ async def detectMotion(onBattery, pirDetection):
 		else:
 			# Motion capture disabled
 			await sleep_ms(500)
-		reloadConfig += 1
+		pollingCounter += 1
 
 		# Reload configuration each 3 s
-		if reloadConfig % 5 == 0:
+		if pollingCounter % 5 == 0:
 			motionConfig.load()
 		
 		# If the battery mode activated
@@ -456,4 +468,5 @@ def start(loop=None, onBattery=True, pirDetection=False):
 	""" Start the asynchronous motion detection """
 	if useful.iscamera():
 		loop.create_task(detectMotion(onBattery, pirDetection))
-	pass
+		loop.create_task(removeOlder())
+

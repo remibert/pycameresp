@@ -297,7 +297,7 @@ if __name__ == "__main__":
 
 	filters     = Filters(\
 		includes=["*"], 
-		excludes=["ESP32","*.json",".DS_Store",".*","sync.*","*.txt","*/__pycache__/*","*/simul/*","*.pyc", "*.jpg"])
+		excludes=["ESP32","*.json",".DS_Store",".*","sync.*","*.txt","*/sd/*","*/__pycache__/*","*/simul/*","*.pyc", "*.jpg"])
 
 	path = "/"
 	destination = Destination(\

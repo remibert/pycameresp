@@ -7,6 +7,15 @@ import io
 import time
 import select
 import hashlib
+try:
+	from tools import fnmatch
+except:
+	from fnmatch import fnmatch
+
+try:
+	import uos
+except:
+	pass
 from binascii import hexlify
 
 if sys.implementation.name == "micropython":
@@ -334,6 +343,15 @@ def isfile(path):
 		pass
 	return False
 
+def filesize(path):
+	""" Get the file size """
+	info = fileinfo(path)
+	return info[6]
+
+def filetime(path):
+	""" Get the file modified time """
+	return fileinfo(path)[8]
+
 def exception(err):
 	""" Return the content of exception into a string """
 	file = io.StringIO()
@@ -594,3 +612,101 @@ def journalize(message):
 	file.write("\n")
 	file.flush()
 	file.close()
+
+def scandir(path, pattern, recursive, displayer=None):
+	""" Scan recursively a directory """
+	filenames   = []
+	directories = []
+	if path == "":
+		path = "."
+	try:
+		if path != None and pattern != None:
+			for file in os.listdir(path):
+				if path != "":
+					filename = path + "/" + file
+				else:
+					filename = file
+				filename = filename.replace("//","/")
+				filename = filename.replace("//","/")
+				if isdir(filename):
+					if displayer:
+						displayer.show(filename)
+					else:
+						directories.append(filename)
+					if recursive:
+						dirs,fils = scandir(filename, pattern, recursive, displayer)
+						filenames += fils
+						directories += dirs
+				else:
+					if fnmatch.fnmatch(file, pattern):
+						if displayer:
+							displayer.show(filename)
+						else:
+							filenames.append(filename)
+	except Exception as error:
+		print(exception(error))
+	return directories, filenames
+
+class SdCard:
+	opened = [False]
+	mountpoint = [""]
+
+	@staticmethod
+	def getMaxSize():
+		""" Return the maximal size of sdcard """
+		if SdCard.isMounted():
+			status = uos.statvfs(SdCard.getMountpoint())
+			return status[1]*status[2]
+		else:
+			return 0
+
+	@staticmethod
+	def getFreeSize():
+		""" Return the free size of sdcard """
+		if SdCard.isMounted():
+			status = uos.statvfs(SdCard.getMountpoint())
+			return status[0]*status[3]
+		else:
+			return 0
+
+	@staticmethod
+	def isMounted():
+		return SdCard.opened[0]
+
+	@staticmethod
+	def getMountpoint():
+		return SdCard.mountpoint[0]
+
+	@staticmethod
+	def mount(mountpoint = "/sd"):
+		result = False
+		if SdCard.isMounted() == False and mountpoint != "/" and mountpoint != "":
+			# If the sdcard not already mounted
+			if uos.statvfs("/") == uos.statvfs(mountpoint):
+				try:
+					import machine
+					uos.mount(machine.SDCard(), mountpoint)
+					SdCard.mountpoint[0] = mountpoint
+					SdCard.opened[0]= True
+					result = True
+				except Exception as err:
+					print("Cannot mount %s"%mountpoint)
+		elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
+			result = True
+		return result
+
+	@staticmethod
+	def save(filename, data):
+		""" Save file on sd card """
+		result = False
+		if SdCard.isMounted():
+			filename = "%s/%s"%(SdCard.getMountpoint(),filename)
+			try:
+				file = open(filename,"wb")
+				file.write(data)
+				file.close()
+				result = True
+			except Exception as error:
+				# print(exception(error))
+				print("Cannot save %s"%filename)
+		return result

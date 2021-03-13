@@ -74,11 +74,10 @@ while True:
 	try:
 		loop.run_forever()
 	except KeyboardInterrupt:
-		print("Server interrupted")
-	import sys
-	try:
-		del sys.modules["shell"]
-	except:
-		pass
+		print("Server stopped")
 	import shell
-	print ("Restart server")
+	shell.shell()
+	import sys
+	if "shell" in sys.modules:
+		del sys.modules["shell"]
+	print ("Server restarted")
