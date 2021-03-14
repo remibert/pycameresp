@@ -119,10 +119,13 @@ class FtpServerCore:
 				if quantity > 100:
 					date = 0
 				else:
+					sta = (0,0,0,0,0,0,0,0,0)
 					try:
-						sta = useful.fileinfo(useful.tostrings(useful.abspathbytes(path,useful.tobytes(filename))))
+						# If it is a file
+						if not (typ & 0xF000 == 0x4000):
+							sta = useful.fileinfo(useful.tostrings(useful.abspathbytes(path,useful.tobytes(filename))))
 					except:
-						sta = (0,0,0,0,0,0,0,0,0)
+						pass
 					date = sta[8]
 
 				description += self.getFileDescription(filename, typ, size, date, now, full)
