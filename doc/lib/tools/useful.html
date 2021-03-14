@@ -36,6 +36,15 @@ import io
 import time
 import select
 import hashlib
+try:
+        from tools import fnmatch
+except:
+        from fnmatch import fnmatch
+
+try:
+        import uos
+except:
+        pass
 from binascii import hexlify
 
 if sys.implementation.name == &#34;micropython&#34;:
@@ -363,6 +372,15 @@ def isfile(path):
                 pass
         return False
 
+def filesize(path):
+        &#34;&#34;&#34; Get the file size &#34;&#34;&#34;
+        info = fileinfo(path)
+        return info[6]
+
+def filetime(path):
+        &#34;&#34;&#34; Get the file modified time &#34;&#34;&#34;
+        return fileinfo(path)[8]
+
 def exception(err):
         &#34;&#34;&#34; Return the content of exception into a string &#34;&#34;&#34;
         file = io.StringIO()
@@ -622,7 +640,105 @@ def journalize(message):
         file.write(message)
         file.write(&#34;\n&#34;)
         file.flush()
-        file.close()</code></pre>
+        file.close()
+
+def scandir(path, pattern, recursive, displayer=None):
+        &#34;&#34;&#34; Scan recursively a directory &#34;&#34;&#34;
+        filenames   = []
+        directories = []
+        if path == &#34;&#34;:
+                path = &#34;.&#34;
+        try:
+                if path != None and pattern != None:
+                        for file in os.listdir(path):
+                                if path != &#34;&#34;:
+                                        filename = path + &#34;/&#34; + file
+                                else:
+                                        filename = file
+                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                                if isdir(filename):
+                                        if displayer:
+                                                displayer.show(filename)
+                                        else:
+                                                directories.append(filename)
+                                        if recursive:
+                                                dirs,fils = scandir(filename, pattern, recursive, displayer)
+                                                filenames += fils
+                                                directories += dirs
+                                else:
+                                        if fnmatch.fnmatch(file, pattern):
+                                                if displayer:
+                                                        displayer.show(filename)
+                                                else:
+                                                        filenames.append(filename)
+        except Exception as error:
+                print(exception(error))
+        return directories, filenames
+
+class SdCard:
+        opened = [False]
+        mountpoint = [&#34;&#34;]
+
+        @staticmethod
+        def getMaxSize():
+                &#34;&#34;&#34; Return the maximal size of sdcard &#34;&#34;&#34;
+                if SdCard.isMounted():
+                        status = uos.statvfs(SdCard.getMountpoint())
+                        return status[1]*status[2]
+                else:
+                        return 0
+
+        @staticmethod
+        def getFreeSize():
+                &#34;&#34;&#34; Return the free size of sdcard &#34;&#34;&#34;
+                if SdCard.isMounted():
+                        status = uos.statvfs(SdCard.getMountpoint())
+                        return status[0]*status[3]
+                else:
+                        return 0
+
+        @staticmethod
+        def isMounted():
+                return SdCard.opened[0]
+
+        @staticmethod
+        def getMountpoint():
+                return SdCard.mountpoint[0]
+
+        @staticmethod
+        def mount(mountpoint = &#34;/sd&#34;):
+                result = False
+                if SdCard.isMounted() == False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
+                        # If the sdcard not already mounted
+                        if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
+                                try:
+                                        import machine
+                                        uos.mount(machine.SDCard(), mountpoint)
+                                        SdCard.mountpoint[0] = mountpoint
+                                        SdCard.opened[0]= True
+                                        result = True
+                                except Exception as err:
+                                        print(&#34;Cannot mount %s&#34;%mountpoint)
+                elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
+                        result = True
+                return result
+
+        @staticmethod
+        def save(filename, data):
+                &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
+                result = False
+                if SdCard.isMounted():
+                        filename = &#34;%s/%s&#34;%(SdCard.getMountpoint(),filename)
+                        try:
+                                file = open(filename,&#34;wb&#34;)
+                                file.write(data)
+                                file.close()
+                                result = True
+                        except Exception as error:
+                                # print(exception(error))
+                                print(&#34;Cannot save %s&#34;%filename)
+                return result</code></pre>
 </details>
 </section>
 <section>
@@ -849,6 +965,35 @@ def journalize(message):
         elif previousFileInfo[0] != path:
                 previousFileInfo = [path, os.stat(path)]
         return previousFileInfo[1]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.filesize"><code class="name flex">
+<span>def <span class="ident">filesize</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the file size</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filesize(path):
+        &#34;&#34;&#34; Get the file size &#34;&#34;&#34;
+        info = fileinfo(path)
+        return info[6]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.filetime"><code class="name flex">
+<span>def <span class="ident">filetime</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the file modified time</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filetime(path):
+        &#34;&#34;&#34; Get the file modified time &#34;&#34;&#34;
+        return fileinfo(path)[8]</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.flashinfo"><code class="name flex">
@@ -1406,6 +1551,50 @@ def journalize(message):
                 return &#34;&#34;</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.useful.scandir"><code class="name flex">
+<span>def <span class="ident">scandir</span></span>(<span>path, pattern, recursive, displayer=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Scan recursively a directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def scandir(path, pattern, recursive, displayer=None):
+        &#34;&#34;&#34; Scan recursively a directory &#34;&#34;&#34;
+        filenames   = []
+        directories = []
+        if path == &#34;&#34;:
+                path = &#34;.&#34;
+        try:
+                if path != None and pattern != None:
+                        for file in os.listdir(path):
+                                if path != &#34;&#34;:
+                                        filename = path + &#34;/&#34; + file
+                                else:
+                                        filename = file
+                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                                if isdir(filename):
+                                        if displayer:
+                                                displayer.show(filename)
+                                        else:
+                                                directories.append(filename)
+                                        if recursive:
+                                                dirs,fils = scandir(filename, pattern, recursive, displayer)
+                                                filenames += fils
+                                                directories += dirs
+                                else:
+                                        if fnmatch.fnmatch(file, pattern):
+                                                if displayer:
+                                                        displayer.show(filename)
+                                                else:
+                                                        filenames.append(filename)
+        except Exception as error:
+                print(exception(error))
+        return directories, filenames</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.useful.sizeToBytes"><code class="name flex">
 <span>def <span class="ident">sizeToBytes</span></span>(<span>size, largeur=6)</span>
 </code></dt>
@@ -1605,6 +1794,217 @@ def journalize(message):
 </dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.tools.useful.SdCard"><code class="flex name class">
+<span>class <span class="ident">SdCard</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SdCard:
+        opened = [False]
+        mountpoint = [&#34;&#34;]
+
+        @staticmethod
+        def getMaxSize():
+                &#34;&#34;&#34; Return the maximal size of sdcard &#34;&#34;&#34;
+                if SdCard.isMounted():
+                        status = uos.statvfs(SdCard.getMountpoint())
+                        return status[1]*status[2]
+                else:
+                        return 0
+
+        @staticmethod
+        def getFreeSize():
+                &#34;&#34;&#34; Return the free size of sdcard &#34;&#34;&#34;
+                if SdCard.isMounted():
+                        status = uos.statvfs(SdCard.getMountpoint())
+                        return status[0]*status[3]
+                else:
+                        return 0
+
+        @staticmethod
+        def isMounted():
+                return SdCard.opened[0]
+
+        @staticmethod
+        def getMountpoint():
+                return SdCard.mountpoint[0]
+
+        @staticmethod
+        def mount(mountpoint = &#34;/sd&#34;):
+                result = False
+                if SdCard.isMounted() == False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
+                        # If the sdcard not already mounted
+                        if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
+                                try:
+                                        import machine
+                                        uos.mount(machine.SDCard(), mountpoint)
+                                        SdCard.mountpoint[0] = mountpoint
+                                        SdCard.opened[0]= True
+                                        result = True
+                                except Exception as err:
+                                        print(&#34;Cannot mount %s&#34;%mountpoint)
+                elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
+                        result = True
+                return result
+
+        @staticmethod
+        def save(filename, data):
+                &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
+                result = False
+                if SdCard.isMounted():
+                        filename = &#34;%s/%s&#34;%(SdCard.getMountpoint(),filename)
+                        try:
+                                file = open(filename,&#34;wb&#34;)
+                                file.write(data)
+                                file.close()
+                                result = True
+                        except Exception as error:
+                                # print(exception(error))
+                                print(&#34;Cannot save %s&#34;%filename)
+                return result</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.tools.useful.SdCard.mountpoint"><code class="name">var <span class="ident">mountpoint</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.tools.useful.SdCard.opened"><code class="name">var <span class="ident">opened</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.tools.useful.SdCard.getFreeSize"><code class="name flex">
+<span>def <span class="ident">getFreeSize</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the free size of sdcard</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def getFreeSize():
+        &#34;&#34;&#34; Return the free size of sdcard &#34;&#34;&#34;
+        if SdCard.isMounted():
+                status = uos.statvfs(SdCard.getMountpoint())
+                return status[0]*status[3]
+        else:
+                return 0</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.SdCard.getMaxSize"><code class="name flex">
+<span>def <span class="ident">getMaxSize</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the maximal size of sdcard</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def getMaxSize():
+        &#34;&#34;&#34; Return the maximal size of sdcard &#34;&#34;&#34;
+        if SdCard.isMounted():
+                status = uos.statvfs(SdCard.getMountpoint())
+                return status[1]*status[2]
+        else:
+                return 0</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.SdCard.getMountpoint"><code class="name flex">
+<span>def <span class="ident">getMountpoint</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def getMountpoint():
+        return SdCard.mountpoint[0]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.SdCard.isMounted"><code class="name flex">
+<span>def <span class="ident">isMounted</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def isMounted():
+        return SdCard.opened[0]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.SdCard.mount"><code class="name flex">
+<span>def <span class="ident">mount</span></span>(<span>mountpoint='/sd')</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def mount(mountpoint = &#34;/sd&#34;):
+        result = False
+        if SdCard.isMounted() == False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
+                # If the sdcard not already mounted
+                if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
+                        try:
+                                import machine
+                                uos.mount(machine.SDCard(), mountpoint)
+                                SdCard.mountpoint[0] = mountpoint
+                                SdCard.opened[0]= True
+                                result = True
+                        except Exception as err:
+                                print(&#34;Cannot mount %s&#34;%mountpoint)
+        elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
+                result = True
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.SdCard.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>filename, data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save file on sd card</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def save(filename, data):
+        &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
+        result = False
+        if SdCard.isMounted():
+                filename = &#34;%s/%s&#34;%(SdCard.getMountpoint(),filename)
+                try:
+                        file = open(filename,&#34;wb&#34;)
+                        file.write(data)
+                        file.close()
+                        result = True
+                except Exception as error:
+                        # print(exception(error))
+                        print(&#34;Cannot save %s&#34;%filename)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -1630,6 +2030,8 @@ def journalize(message):
 <li><code><a title="lib.tools.useful.exception" href="#lib.tools.useful.exception">exception</a></code></li>
 <li><code><a title="lib.tools.useful.exists" href="#lib.tools.useful.exists">exists</a></code></li>
 <li><code><a title="lib.tools.useful.fileinfo" href="#lib.tools.useful.fileinfo">fileinfo</a></code></li>
+<li><code><a title="lib.tools.useful.filesize" href="#lib.tools.useful.filesize">filesize</a></code></li>
+<li><code><a title="lib.tools.useful.filetime" href="#lib.tools.useful.filetime">filetime</a></code></li>
 <li><code><a title="lib.tools.useful.flashinfo" href="#lib.tools.useful.flashinfo">flashinfo</a></code></li>
 <li><code><a title="lib.tools.useful.getHash" href="#lib.tools.useful.getHash">getHash</a></code></li>
 <li><code><a title="lib.tools.useful.getScreenSize" href="#lib.tools.useful.getScreenSize">getScreenSize</a></code></li>
@@ -1656,6 +2058,7 @@ def journalize(message):
 <li><code><a title="lib.tools.useful.meminfo" href="#lib.tools.useful.meminfo">meminfo</a></code></li>
 <li><code><a title="lib.tools.useful.now" href="#lib.tools.useful.now">now</a></code></li>
 <li><code><a title="lib.tools.useful.prefix" href="#lib.tools.useful.prefix">prefix</a></code></li>
+<li><code><a title="lib.tools.useful.scandir" href="#lib.tools.useful.scandir">scandir</a></code></li>
 <li><code><a title="lib.tools.useful.sizeToBytes" href="#lib.tools.useful.sizeToBytes">sizeToBytes</a></code></li>
 <li><code><a title="lib.tools.useful.sizeToString" href="#lib.tools.useful.sizeToString">sizeToString</a></code></li>
 <li><code><a title="lib.tools.useful.split" href="#lib.tools.useful.split">split</a></code></li>
@@ -1665,6 +2068,23 @@ def journalize(message):
 <li><code><a title="lib.tools.useful.ticksToString" href="#lib.tools.useful.ticksToString">ticksToString</a></code></li>
 <li><code><a title="lib.tools.useful.tobytes" href="#lib.tools.useful.tobytes">tobytes</a></code></li>
 <li><code><a title="lib.tools.useful.tostrings" href="#lib.tools.useful.tostrings">tostrings</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.tools.useful.SdCard" href="#lib.tools.useful.SdCard">SdCard</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.tools.useful.SdCard.getFreeSize" href="#lib.tools.useful.SdCard.getFreeSize">getFreeSize</a></code></li>
+<li><code><a title="lib.tools.useful.SdCard.getMaxSize" href="#lib.tools.useful.SdCard.getMaxSize">getMaxSize</a></code></li>
+<li><code><a title="lib.tools.useful.SdCard.getMountpoint" href="#lib.tools.useful.SdCard.getMountpoint">getMountpoint</a></code></li>
+<li><code><a title="lib.tools.useful.SdCard.isMounted" href="#lib.tools.useful.SdCard.isMounted">isMounted</a></code></li>
+<li><code><a title="lib.tools.useful.SdCard.mount" href="#lib.tools.useful.SdCard.mount">mount</a></code></li>
+<li><code><a title="lib.tools.useful.SdCard.mountpoint" href="#lib.tools.useful.SdCard.mountpoint">mountpoint</a></code></li>
+<li><code><a title="lib.tools.useful.SdCard.opened" href="#lib.tools.useful.SdCard.opened">opened</a></code></li>
+<li><code><a title="lib.tools.useful.SdCard.save" href="#lib.tools.useful.SdCard.save">save</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

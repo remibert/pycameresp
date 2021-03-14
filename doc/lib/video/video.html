@@ -226,7 +226,10 @@ class Camera:
                 &#34;&#34;&#34; Change the brightness &#34;&#34;&#34;
                 if Camera.opened:
                         # print(&#34;Brightness %d&#34;%val)
-                        return camera.brightness(val)
+                        if camera.brightness() != val:
+                                return camera.brightness(val)
+                        else:
+                                return val
                 return None
 
         @staticmethod
@@ -234,7 +237,10 @@ class Camera:
                 &#34;&#34;&#34; Change the contrast &#34;&#34;&#34;
                 if Camera.opened:
                         # print(&#34;Contrast %d&#34;%val)
-                        return camera.contrast(val)
+                        if camera.contrast() != val:
+                                return camera.contrast(val)
+                        else:
+                                return val
                 return None
 
         @staticmethod
@@ -242,7 +248,10 @@ class Camera:
                 &#34;&#34;&#34; Change the saturation &#34;&#34;&#34;
                 if Camera.opened:
                         # print(&#34;Saturation %d&#34;%val)
-                        return camera.saturation(val)
+                        if camera.saturation() != val:
+                                return camera.saturation(val)
+                        else:
+                                return val
                 return None
 
         @staticmethod
@@ -449,7 +458,10 @@ class Camera:
                 &#34;&#34;&#34; Change the brightness &#34;&#34;&#34;
                 if Camera.opened:
                         # print(&#34;Brightness %d&#34;%val)
-                        return camera.brightness(val)
+                        if camera.brightness() != val:
+                                return camera.brightness(val)
+                        else:
+                                return val
                 return None
 
         @staticmethod
@@ -457,7 +469,10 @@ class Camera:
                 &#34;&#34;&#34; Change the contrast &#34;&#34;&#34;
                 if Camera.opened:
                         # print(&#34;Contrast %d&#34;%val)
-                        return camera.contrast(val)
+                        if camera.contrast() != val:
+                                return camera.contrast(val)
+                        else:
+                                return val
                 return None
 
         @staticmethod
@@ -465,7 +480,10 @@ class Camera:
                 &#34;&#34;&#34; Change the saturation &#34;&#34;&#34;
                 if Camera.opened:
                         # print(&#34;Saturation %d&#34;%val)
-                        return camera.saturation(val)
+                        if camera.saturation() != val:
+                                return camera.saturation(val)
+                        else:
+                                return val
                 return None
 
         @staticmethod
@@ -532,7 +550,10 @@ def brightness(val=None):
         &#34;&#34;&#34; Change the brightness &#34;&#34;&#34;
         if Camera.opened:
                 # print(&#34;Brightness %d&#34;%val)
-                return camera.brightness(val)
+                if camera.brightness() != val:
+                        return camera.brightness(val)
+                else:
+                        return val
         return None</code></pre>
 </details>
 </dd>
@@ -620,7 +641,10 @@ def contrast(val=None):
         &#34;&#34;&#34; Change the contrast &#34;&#34;&#34;
         if Camera.opened:
                 # print(&#34;Contrast %d&#34;%val)
-                return camera.contrast(val)
+                if camera.contrast() != val:
+                        return camera.contrast(val)
+                else:
+                        return val
         return None</code></pre>
 </details>
 </dd>
@@ -841,7 +865,10 @@ def saturation(val=None):
         &#34;&#34;&#34; Change the saturation &#34;&#34;&#34;
         if Camera.opened:
                 # print(&#34;Saturation %d&#34;%val)
-                return camera.saturation(val)
+                if camera.saturation() != val:
+                        return camera.saturation(val)
+                else:
+                        return val
         return None</code></pre>
 </details>
 </dd>

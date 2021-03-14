@@ -67,7 +67,7 @@ class ServerConfig:
                 result = jsonconfig.load(self, file)
                 return result
 
-def start(loop=None, pageLoader=None, preload=False, withoutServer=False):
+def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
         &#34;&#34;&#34; Start all servers
         loop : asyncio loop
         pageLoader : callback to load html page
@@ -105,12 +105,12 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False):
                 if config.http and withoutServer == False:
                         # Load and start http server
                         import server.httpserver
-                        server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=8080)
+                        server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort, name=&#34;httpServer&#34;)
 
                         # If camera present
                         if useful.iscamera():
                                 # Load and start streaming http server
-                                server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=8081)
+                                server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort +1, name=&#34;StreamingServer&#34;)
         
         # Display system informations
         useful.sysinfo()</code></pre>
@@ -179,7 +179,7 @@ an user and password, on your site</p></div>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="lib.server.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>loop=None, pageLoader=None, preload=False, withoutServer=False)</span>
+<span>def <span class="ident">start</span></span>(<span>loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Start all servers
@@ -191,7 +191,7 @@ False the load of page is done a the first http connection (Takes time on first 
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start(loop=None, pageLoader=None, preload=False, withoutServer=False):
+<pre><code class="python">def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
         &#34;&#34;&#34; Start all servers
         loop : asyncio loop
         pageLoader : callback to load html page
@@ -229,12 +229,12 @@ False the load of page is done a the first http connection (Takes time on first 
                 if config.http and withoutServer == False:
                         # Load and start http server
                         import server.httpserver
-                        server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=8080)
+                        server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort, name=&#34;httpServer&#34;)
 
                         # If camera present
                         if useful.iscamera():
                                 # Load and start streaming http server
-                                server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=8081)
+                                server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort +1, name=&#34;StreamingServer&#34;)
         
         # Display system informations
         useful.sysinfo()</code></pre>

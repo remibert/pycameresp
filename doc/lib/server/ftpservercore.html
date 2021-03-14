@@ -35,6 +35,7 @@
 &#34;&#34;&#34; Ftp server implementation core class &#34;&#34;&#34;
 import sys
 import os
+import uos
 import socket
 import gc
 import time
@@ -110,53 +111,74 @@ class FtpServerCore:
                 &#34;&#34;&#34; Destroy ftp instance &#34;&#34;&#34;
                 self.close()
 
-        def sendFileList(self, path, stream, full):
-                &#34;&#34;&#34; Send the list of file &#34;&#34;&#34;
-                now = useful.now()
-                try:
-                        description = b&#34;&#34;
-                        counter = 0
-                        for filename in sorted(os.listdir(useful.tostrings(path)), key = str.lower):
-                                description += self.getFileDescription(path, useful.tobytes(filename), full, now)
-                                counter += 1
-                                if counter == 10:
-                                        counter = 0
-                                        stream.write(description)
-                                        description = b&#34;&#34;
-                        if description != b&#34;&#34;:
-                                stream.write(description)
-
-                except Exception as err:
-                        self.log(useful.exception(err))
-                        pattern = path.split(b&#34;/&#34;)[-1]
-                        path = path[:-(len(pattern) + 1)]
-                        if path == b&#34;&#34;: path = b&#34;/&#34;
-                        for filename in sorted(os.listdir(useful.tostrings(path)), key = str.lower):
-                                if fnmatch(useful.tostrings(filename), useful.tostrings(pattern)) == True:
-                                        stream.write(self.getFileDescription(path, useful.tobytes(filename), full, now))
-        
-        def getFileDescription(self, path, filename, full, now):
+        def getFileDescription(self, filename, typ, size, date, now, full):
                 &#34;&#34;&#34; Build list of file description &#34;&#34;&#34;
                 if full:
-                        try:
-                                stat = os.stat(useful.tostrings(useful.abspathbytes(path,filename)))
-                        except:
-                                stat = (0,0,0,0,0,0,0,0,0)
-                        file_permissions = b&#34;drwxr-xr-x&#34; if (stat[0] &amp; 0o170000 == 0o040000) else b&#34;-rw-r--r--&#34;
-                        file_size = stat[6]
+                        file_permissions = b&#34;drwxr-xr-x&#34; if (typ &amp; 0xF000 == 0x4000) else b&#34;-rw-r--r--&#34;
 
-                        d = time.localtime(stat[8])
+                        d = time.localtime(date)
                         year,month,day,hour,minute,second,weekday,yearday = d[:8]
                         
                         if year != now[0] and month != now[1]:
                                 file_date = b&#34;%s %2d  %4d&#34;%(MONTHS[month-1], day, year)
                         else:
                                 file_date = b&#34;%s %2d %02d:%02d&#34;%(MONTHS[month-1], day, hour, minute) 
-                        description = b&#34;%s    1 owner group %10d %s %s\r\n&#34;%(file_permissions, file_size, file_date, filename)
+                        description = b&#34;%s    1 owner group %10d %s %s\r\n&#34;%(file_permissions, size, file_date, useful.tobytes(filename))
                 else:
-                        description = filename + b&#34;\r\n&#34;
+                        description = useful.tobytes(filename) + b&#34;\r\n&#34;
                 return description
 
+        def sendFileListWithPattern(self, path, stream, full, now, pattern=None):
+                &#34;&#34;&#34; Send the list of file with pattern &#34;&#34;&#34;
+                description = b&#34;&#34;
+                quantity = 0
+                counter = 0
+                for fileinfo in uos.ilistdir(useful.tostrings(path)):
+                        filename = fileinfo[0]
+                        typ = fileinfo[1]
+                        if len(fileinfo) &gt; 3:
+                                size = fileinfo[3]
+                        else:
+                                size = 0
+                        if pattern == None:
+                                accepted = True
+                        else:
+                                accepted = fnmatch(useful.tostrings(filename), useful.tostrings(pattern))
+                        if accepted:
+                                if quantity &gt; 100:
+                                        date = 0
+                                else:
+                                        sta = (0,0,0,0,0,0,0,0,0)
+                                        try:
+                                                # If it is a file
+                                                if not (typ &amp; 0xF000 == 0x4000):
+                                                        sta = useful.fileinfo(useful.tostrings(useful.abspathbytes(path,useful.tobytes(filename))))
+                                        except:
+                                                pass
+                                        date = sta[8]
+
+                                description += self.getFileDescription(filename, typ, size, date, now, full)
+                                counter += 1
+                                if counter == 20:
+                                        counter = 0
+                                        stream.write(description)
+                                        description = b&#34;&#34;
+                        quantity += 1
+                if description != b&#34;&#34;:
+                        stream.write(description)
+
+        def sendFileList(self, path, stream, full):
+                &#34;&#34;&#34; Send the list of file &#34;&#34;&#34;
+                now = useful.now()
+                try:
+                        self.sendFileListWithPattern(path, stream, full, now)
+                except Exception as err:
+                        self.log(useful.exception(err))
+                        pattern = path.split(b&#34;/&#34;)[-1]
+                        path = path[:-(len(pattern) + 1)]
+                        if path == b&#34;&#34;: path = b&#34;/&#34;
+                        self.sendFileListWithPattern(path, stream, full, now, pattern)
+        
         async def sendOk(self):
                 &#34;&#34;&#34; Send ok to ftp client &#34;&#34;&#34;
                 await self.sendResponse(250,b&#34;OK&#34;)
@@ -246,7 +268,7 @@ class FtpServerCore:
 
         async def SIZE(self):
                 &#34;&#34;&#34; Ftp command SIZE &#34;&#34;&#34;
-                size = os.stat(useful.tostrings(self.root + self.path))[6]
+                size = useful.filesize(useful.tostrings(self.root + self.path))
                 await self.sendResponse(213, b&#34;%d&#34;%(size))
 
         async def PASV(self):
@@ -549,53 +571,74 @@ class FtpServerCore:
                 &#34;&#34;&#34; Destroy ftp instance &#34;&#34;&#34;
                 self.close()
 
-        def sendFileList(self, path, stream, full):
-                &#34;&#34;&#34; Send the list of file &#34;&#34;&#34;
-                now = useful.now()
-                try:
-                        description = b&#34;&#34;
-                        counter = 0
-                        for filename in sorted(os.listdir(useful.tostrings(path)), key = str.lower):
-                                description += self.getFileDescription(path, useful.tobytes(filename), full, now)
-                                counter += 1
-                                if counter == 10:
-                                        counter = 0
-                                        stream.write(description)
-                                        description = b&#34;&#34;
-                        if description != b&#34;&#34;:
-                                stream.write(description)
-
-                except Exception as err:
-                        self.log(useful.exception(err))
-                        pattern = path.split(b&#34;/&#34;)[-1]
-                        path = path[:-(len(pattern) + 1)]
-                        if path == b&#34;&#34;: path = b&#34;/&#34;
-                        for filename in sorted(os.listdir(useful.tostrings(path)), key = str.lower):
-                                if fnmatch(useful.tostrings(filename), useful.tostrings(pattern)) == True:
-                                        stream.write(self.getFileDescription(path, useful.tobytes(filename), full, now))
-        
-        def getFileDescription(self, path, filename, full, now):
+        def getFileDescription(self, filename, typ, size, date, now, full):
                 &#34;&#34;&#34; Build list of file description &#34;&#34;&#34;
                 if full:
-                        try:
-                                stat = os.stat(useful.tostrings(useful.abspathbytes(path,filename)))
-                        except:
-                                stat = (0,0,0,0,0,0,0,0,0)
-                        file_permissions = b&#34;drwxr-xr-x&#34; if (stat[0] &amp; 0o170000 == 0o040000) else b&#34;-rw-r--r--&#34;
-                        file_size = stat[6]
+                        file_permissions = b&#34;drwxr-xr-x&#34; if (typ &amp; 0xF000 == 0x4000) else b&#34;-rw-r--r--&#34;
 
-                        d = time.localtime(stat[8])
+                        d = time.localtime(date)
                         year,month,day,hour,minute,second,weekday,yearday = d[:8]
                         
                         if year != now[0] and month != now[1]:
                                 file_date = b&#34;%s %2d  %4d&#34;%(MONTHS[month-1], day, year)
                         else:
                                 file_date = b&#34;%s %2d %02d:%02d&#34;%(MONTHS[month-1], day, hour, minute) 
-                        description = b&#34;%s    1 owner group %10d %s %s\r\n&#34;%(file_permissions, file_size, file_date, filename)
+                        description = b&#34;%s    1 owner group %10d %s %s\r\n&#34;%(file_permissions, size, file_date, useful.tobytes(filename))
                 else:
-                        description = filename + b&#34;\r\n&#34;
+                        description = useful.tobytes(filename) + b&#34;\r\n&#34;
                 return description
 
+        def sendFileListWithPattern(self, path, stream, full, now, pattern=None):
+                &#34;&#34;&#34; Send the list of file with pattern &#34;&#34;&#34;
+                description = b&#34;&#34;
+                quantity = 0
+                counter = 0
+                for fileinfo in uos.ilistdir(useful.tostrings(path)):
+                        filename = fileinfo[0]
+                        typ = fileinfo[1]
+                        if len(fileinfo) &gt; 3:
+                                size = fileinfo[3]
+                        else:
+                                size = 0
+                        if pattern == None:
+                                accepted = True
+                        else:
+                                accepted = fnmatch(useful.tostrings(filename), useful.tostrings(pattern))
+                        if accepted:
+                                if quantity &gt; 100:
+                                        date = 0
+                                else:
+                                        sta = (0,0,0,0,0,0,0,0,0)
+                                        try:
+                                                # If it is a file
+                                                if not (typ &amp; 0xF000 == 0x4000):
+                                                        sta = useful.fileinfo(useful.tostrings(useful.abspathbytes(path,useful.tobytes(filename))))
+                                        except:
+                                                pass
+                                        date = sta[8]
+
+                                description += self.getFileDescription(filename, typ, size, date, now, full)
+                                counter += 1
+                                if counter == 20:
+                                        counter = 0
+                                        stream.write(description)
+                                        description = b&#34;&#34;
+                        quantity += 1
+                if description != b&#34;&#34;:
+                        stream.write(description)
+
+        def sendFileList(self, path, stream, full):
+                &#34;&#34;&#34; Send the list of file &#34;&#34;&#34;
+                now = useful.now()
+                try:
+                        self.sendFileListWithPattern(path, stream, full, now)
+                except Exception as err:
+                        self.log(useful.exception(err))
+                        pattern = path.split(b&#34;/&#34;)[-1]
+                        path = path[:-(len(pattern) + 1)]
+                        if path == b&#34;&#34;: path = b&#34;/&#34;
+                        self.sendFileListWithPattern(path, stream, full, now, pattern)
+        
         async def sendOk(self):
                 &#34;&#34;&#34; Send ok to ftp client &#34;&#34;&#34;
                 await self.sendResponse(250,b&#34;OK&#34;)
@@ -685,7 +728,7 @@ class FtpServerCore:
 
         async def SIZE(self):
                 &#34;&#34;&#34; Ftp command SIZE &#34;&#34;&#34;
-                size = os.stat(useful.tostrings(self.root + self.path))[6]
+                size = useful.filesize(useful.tostrings(self.root + self.path))
                 await self.sendResponse(213, b&#34;%d&#34;%(size))
 
         async def PASV(self):
@@ -1229,7 +1272,7 @@ class FtpServerCore:
 </summary>
 <pre><code class="python">async def SIZE(self):
         &#34;&#34;&#34; Ftp command SIZE &#34;&#34;&#34;
-        size = os.stat(useful.tostrings(self.root + self.path))[6]
+        size = useful.filesize(useful.tostrings(self.root + self.path))
         await self.sendResponse(213, b&#34;%d&#34;%(size))</code></pre>
 </details>
 </dd>
@@ -1426,7 +1469,7 @@ class FtpServerCore:
 </details>
 </dd>
 <dt id="lib.server.ftpservercore.FtpServerCore.getFileDescription"><code class="name flex">
-<span>def <span class="ident">getFileDescription</span></span>(<span>self, path, filename, full, now)</span>
+<span>def <span class="ident">getFileDescription</span></span>(<span>self, filename, typ, size, date, now, full)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Build list of file description</p></div>
@@ -1434,26 +1477,21 @@ class FtpServerCore:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getFileDescription(self, path, filename, full, now):
+<pre><code class="python">def getFileDescription(self, filename, typ, size, date, now, full):
         &#34;&#34;&#34; Build list of file description &#34;&#34;&#34;
         if full:
-                try:
-                        stat = os.stat(useful.tostrings(useful.abspathbytes(path,filename)))
-                except:
-                        stat = (0,0,0,0,0,0,0,0,0)
-                file_permissions = b&#34;drwxr-xr-x&#34; if (stat[0] &amp; 0o170000 == 0o040000) else b&#34;-rw-r--r--&#34;
-                file_size = stat[6]
+                file_permissions = b&#34;drwxr-xr-x&#34; if (typ &amp; 0xF000 == 0x4000) else b&#34;-rw-r--r--&#34;
 
-                d = time.localtime(stat[8])
+                d = time.localtime(date)
                 year,month,day,hour,minute,second,weekday,yearday = d[:8]
                 
                 if year != now[0] and month != now[1]:
                         file_date = b&#34;%s %2d  %4d&#34;%(MONTHS[month-1], day, year)
                 else:
                         file_date = b&#34;%s %2d %02d:%02d&#34;%(MONTHS[month-1], day, hour, minute) 
-                description = b&#34;%s    1 owner group %10d %s %s\r\n&#34;%(file_permissions, file_size, file_date, filename)
+                description = b&#34;%s    1 owner group %10d %s %s\r\n&#34;%(file_permissions, size, file_date, useful.tobytes(filename))
         else:
-                description = filename + b&#34;\r\n&#34;
+                description = useful.tobytes(filename) + b&#34;\r\n&#34;
         return description</code></pre>
 </details>
 </dd>
@@ -1603,26 +1641,62 @@ class FtpServerCore:
         &#34;&#34;&#34; Send the list of file &#34;&#34;&#34;
         now = useful.now()
         try:
-                description = b&#34;&#34;
-                counter = 0
-                for filename in sorted(os.listdir(useful.tostrings(path)), key = str.lower):
-                        description += self.getFileDescription(path, useful.tobytes(filename), full, now)
-                        counter += 1
-                        if counter == 10:
-                                counter = 0
-                                stream.write(description)
-                                description = b&#34;&#34;
-                if description != b&#34;&#34;:
-                        stream.write(description)
-
+                self.sendFileListWithPattern(path, stream, full, now)
         except Exception as err:
                 self.log(useful.exception(err))
                 pattern = path.split(b&#34;/&#34;)[-1]
                 path = path[:-(len(pattern) + 1)]
                 if path == b&#34;&#34;: path = b&#34;/&#34;
-                for filename in sorted(os.listdir(useful.tostrings(path)), key = str.lower):
-                        if fnmatch(useful.tostrings(filename), useful.tostrings(pattern)) == True:
-                                stream.write(self.getFileDescription(path, useful.tobytes(filename), full, now))</code></pre>
+                self.sendFileListWithPattern(path, stream, full, now, pattern)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ftpservercore.FtpServerCore.sendFileListWithPattern"><code class="name flex">
+<span>def <span class="ident">sendFileListWithPattern</span></span>(<span>self, path, stream, full, now, pattern=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send the list of file with pattern</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sendFileListWithPattern(self, path, stream, full, now, pattern=None):
+        &#34;&#34;&#34; Send the list of file with pattern &#34;&#34;&#34;
+        description = b&#34;&#34;
+        quantity = 0
+        counter = 0
+        for fileinfo in uos.ilistdir(useful.tostrings(path)):
+                filename = fileinfo[0]
+                typ = fileinfo[1]
+                if len(fileinfo) &gt; 3:
+                        size = fileinfo[3]
+                else:
+                        size = 0
+                if pattern == None:
+                        accepted = True
+                else:
+                        accepted = fnmatch(useful.tostrings(filename), useful.tostrings(pattern))
+                if accepted:
+                        if quantity &gt; 100:
+                                date = 0
+                        else:
+                                sta = (0,0,0,0,0,0,0,0,0)
+                                try:
+                                        # If it is a file
+                                        if not (typ &amp; 0xF000 == 0x4000):
+                                                sta = useful.fileinfo(useful.tostrings(useful.abspathbytes(path,useful.tobytes(filename))))
+                                except:
+                                        pass
+                                date = sta[8]
+
+                        description += self.getFileDescription(filename, typ, size, date, now, full)
+                        counter += 1
+                        if counter == 20:
+                                counter = 0
+                                stream.write(description)
+                                description = b&#34;&#34;
+                quantity += 1
+        if description != b&#34;&#34;:
+                stream.write(description)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.ftpservercore.FtpServerCore.sendOk"><code class="name flex">
@@ -1737,7 +1811,7 @@ class FtpServerCore:
 <ul>
 <li>
 <h4><code><a title="lib.server.ftpservercore.FtpServerCore" href="#lib.server.ftpservercore.FtpServerCore">FtpServerCore</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="lib.server.ftpservercore.FtpServerCore.CDUP" href="#lib.server.ftpservercore.FtpServerCore.CDUP">CDUP</a></code></li>
 <li><code><a title="lib.server.ftpservercore.FtpServerCore.CWD" href="#lib.server.ftpservercore.FtpServerCore.CWD">CWD</a></code></li>
 <li><code><a title="lib.server.ftpservercore.FtpServerCore.DELE" href="#lib.server.ftpservercore.FtpServerCore.DELE">DELE</a></code></li>
@@ -1776,6 +1850,7 @@ class FtpServerCore:
 <li><code><a title="lib.server.ftpservercore.FtpServerCore.receiveCommand" href="#lib.server.ftpservercore.FtpServerCore.receiveCommand">receiveCommand</a></code></li>
 <li><code><a title="lib.server.ftpservercore.FtpServerCore.sendError" href="#lib.server.ftpservercore.FtpServerCore.sendError">sendError</a></code></li>
 <li><code><a title="lib.server.ftpservercore.FtpServerCore.sendFileList" href="#lib.server.ftpservercore.FtpServerCore.sendFileList">sendFileList</a></code></li>
+<li><code><a title="lib.server.ftpservercore.FtpServerCore.sendFileListWithPattern" href="#lib.server.ftpservercore.FtpServerCore.sendFileListWithPattern">sendFileListWithPattern</a></code></li>
 <li><code><a title="lib.server.ftpservercore.FtpServerCore.sendOk" href="#lib.server.ftpservercore.FtpServerCore.sendOk">sendOk</a></code></li>
 <li><code><a title="lib.server.ftpservercore.FtpServerCore.sendResponse" href="#lib.server.ftpservercore.FtpServerCore.sendResponse">sendResponse</a></code></li>
 <li><code><a title="lib.server.ftpservercore.FtpServerCore.treatCommand" href="#lib.server.ftpservercore.FtpServerCore.treatCommand">treatCommand</a></code></li>

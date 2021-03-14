@@ -40,7 +40,7 @@ import uasyncio
 
 cameraStreaming = False
 cameraConfig = CameraConfig()
-
+INACTIVITY=600000
 @HttpServer.addRoute(b&#39;/camera&#39;, title=b&#34;Camera&#34;, index=1000)
 async def cameraPage(request, response, args):
         &#34;&#34;&#34; Camera streaming page &#34;&#34;&#34;
@@ -84,14 +84,14 @@ async def cameraPage(request, response, args):
                 function startStreaming()
                 {
                         window.stop();
-                        var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:8081&#39;;
+                        var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
                         document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start`;
                         document.getElementById(&#39;container-stream&#39;).style.display = &#34;block&#34;;
                         document.getElementById(&#39;button-stream&#39;).innerHTML = &#39;Hide&#39;;
                         setTimeout(() =&gt; 
                         {
                                 stopStreaming();
-                        }, 60000)
+                        }, %d)
                 }
                 function stopStreaming()
                 {
@@ -101,7 +101,7 @@ async def cameraPage(request, response, args):
                         document.getElementById(&#39;button-stream&#39;).innerHTML = &#39;Show&#39;;
                 }
         &lt;/script&gt;
-&lt;/p&gt;&#34;&#34;&#34;)),
+&lt;/p&gt;&#34;&#34;&#34;%(request.port+1,INACTIVITY))),
                                 Container(Card(Form(\
                                 [
                                         ComboCmd(framesizes, text=b&#34;Resolution&#34;, path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
@@ -132,8 +132,7 @@ async def cameraStopStreaming(request, response, args):
         cameraStreaming = False
         stopInactivityTimer()
         await response.sendOk()
-        
-        
+
 def inactivityTimeoutStreaming(param=None):
         &#34;&#34;&#34; Suspend video streaming after delay &#34;&#34;&#34;
         global cameraStreaming
@@ -145,7 +144,7 @@ def startInactivityTimer():
         global inactivityTimer
         stopInactivityTimer()
         inactivityTimer = machine.Timer(0)
-        inactivityTimer.init(period=60000, mode=machine.Timer.ONE_SHOT, callback=inactivityTimeoutStreaming)
+        inactivityTimer.init(period=INACTIVITY, mode=machine.Timer.ONE_SHOT, callback=inactivityTimeoutStreaming)
 
 def stopInactivityTimer():
         &#34;&#34;&#34; Stop inactivity timer &#34;&#34;&#34;
@@ -163,7 +162,7 @@ async def cameraStartStreaming(request, response, args):
                 cameraStreaming = False
                 await uasyncio.sleep(0.2)
         
-        if request.port == 80 or request.port == 8080:
+        if request.name != &#34;StreamingServer&#34;:
                 print(&#34;Streaming ignored&#34;)
                 return 
 
@@ -293,14 +292,14 @@ async def cameraPage(request, response, args):
                 function startStreaming()
                 {
                         window.stop();
-                        var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:8081&#39;;
+                        var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
                         document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start`;
                         document.getElementById(&#39;container-stream&#39;).style.display = &#34;block&#34;;
                         document.getElementById(&#39;button-stream&#39;).innerHTML = &#39;Hide&#39;;
                         setTimeout(() =&gt; 
                         {
                                 stopStreaming();
-                        }, 60000)
+                        }, %d)
                 }
                 function stopStreaming()
                 {
@@ -310,7 +309,7 @@ async def cameraPage(request, response, args):
                         document.getElementById(&#39;button-stream&#39;).innerHTML = &#39;Show&#39;;
                 }
         &lt;/script&gt;
-&lt;/p&gt;&#34;&#34;&#34;)),
+&lt;/p&gt;&#34;&#34;&#34;%(request.port+1,INACTIVITY))),
                                 Container(Card(Form(\
                                 [
                                         ComboCmd(framesizes, text=b&#34;Resolution&#34;, path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
@@ -343,7 +342,7 @@ async def cameraStartStreaming(request, response, args):
                 cameraStreaming = False
                 await uasyncio.sleep(0.2)
         
-        if request.port == 80 or request.port == 8080:
+        if request.name != &#34;StreamingServer&#34;:
                 print(&#34;Streaming ignored&#34;)
                 return 
 
@@ -441,7 +440,7 @@ async def cameraStopStreaming(request, response, args):
         global inactivityTimer
         stopInactivityTimer()
         inactivityTimer = machine.Timer(0)
-        inactivityTimer.init(period=60000, mode=machine.Timer.ONE_SHOT, callback=inactivityTimeoutStreaming)</code></pre>
+        inactivityTimer.init(period=INACTIVITY, mode=machine.Timer.ONE_SHOT, callback=inactivityTimeoutStreaming)</code></pre>
 </details>
 </dd>
 <dt id="lib.webpage.camerapage.stopInactivityTimer"><code class="name flex">

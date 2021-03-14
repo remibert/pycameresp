@@ -13,11 +13,11 @@ Of course, in this case the code specific to the camera or to the ESP32 is simul
 Below is the list of features supported by the software
 
 - Servers :
-	- HTTP web server (on port 8080)
+	- HTTP web server
 	- FTP server
 	- Telnet server
 	- Login, password can be defined for servers
-	- Homekit server (on port 80)
+	- Homekit server
 
 - Clients :
 	- NTP synchronization
@@ -54,45 +54,19 @@ However, during camera streaming, motion detection is suspended to have enough f
 
 # Screenshots
 
-Board information web page
+Web interface
 
-![WebInfo.png](images/WebInfo.png "Board information web page")
+![WebInterface.gif](images/WebInterface.gif "Board information web page")
 
-Wifi configuration web page
-
-![WebWifi.png](images/WebWifi.png "Wifi configuration web page")
-
-Access point configuration web page
-
-![WebAccessPoint.png](images/WebAccessPoint.png "Access point configuration web page")
-
-Servers configuration web page
-
-![WebServer.png](images/WebServer.png "Servers configuration web page")
-
-Login password configuration web page
-
-![WebPassword.png](images/WebPassword.png "Login password configuration web page")
-
-Pushover configuration web page
-
-![WebPushOver.png](images/WebPushOver.png "Pushover configuration web page")
-
-Motion configuration web page
-
-![WebMotion.png](images/WebMotion.png "Motion configuration web page")
-
-Camera streaming web page
-
-![WebCamera.png](images/WebCamera.png "Camera streaming web page")
-
-Smartphone motion notification
+Smartphone motion detection notification (with pushover application)
 
 ![SmartPhoneNotification.png](images/SmartPhoneNotification.png "Smartphone motion notification")
 
-Shell and text editor (The GIF is compressed a lot, it does not go like this in reality)
+Shell and text editor executed directly on esp32
 
-![ShellEdit.mp4](images/ShellEdit.gif "Shell and text editor")
+![ShellEdit.gif](images/ShellEdit.gif "Shell and text editor")
+
+You can edit python script, run it directly from the text editor. Connection via telnet or directly with "screen" command on tty.
 
 # Requirements
 
@@ -103,7 +77,7 @@ it is necessary to generate the firmware embedding the python scripts, in this c
 
 For motion capture you absolutely need an ESP32CAM.
 
-For homekit an ESP32 with SPIRAM is required, I tried with GENERIC but it reset before the end of pairing device, it have not enough space in ram.
+Homekit cannot work with the camera on ESP32CAM, problem of insufficient memory to store the stack. Homekit seems to work on Esp32 generic.
 
 # Notice for ESP32CAM
 
@@ -115,17 +89,17 @@ To flash a firmware on the ESP32CAM, see the excellent video :
 Once the firmware flashed, the ESP32CAM automatically starts a wifi access point.
 You must connect to the SSID **Micropython** access point, the wifi password is **Micropython** .
 
-Once wifi connected, open your web browser on the ip address (http://192.168.3.1:8080).
+Once wifi connected, open your web browser on the ip address (http://192.168.3.1).
 To use motion detection with image notification, you have to configure :
 
-- (http://192.168.3.1/wifi:8080) Set wifi SSID and password and activate it
-- (http://192.168.3.1/accesspoint:8080) Disable the access point for more security
-- (http://192.168.3.1/server:8080) Choose available server
-- (http://192.168.3.1/changepassword:8080) Enter password and user for more security
-- (http://192.168.3.1/pushover:8080) Create push over token and user to receive motion detection image
-- (http://192.168.3.1/motion:8080) Activate and configure motion detection
-- (http://192.168.3.1/camera:8080) See the camera streaming to adjust its position
-- (http://192.168.3.1/battery:8080) Configure the battery mode
+- (http://192.168.3.1/wifi) Set wifi SSID and password and activate it
+- (http://192.168.3.1/accesspoint) Disable the access point for more security
+- (http://192.168.3.1/server) Choose available server
+- (http://192.168.3.1/changepassword) Enter password and user for more security
+- (http://192.168.3.1/pushover) Create push over token and user to receive motion detection image
+- (http://192.168.3.1/motion) Activate and configure motion detection
+- (http://192.168.3.1/camera) See the camera streaming to adjust its position
+- (http://192.168.3.1/battery) Configure the battery mode
 
 To get notifications on your smartphone, you need to install the app [Push over](https://pushover.net), create an account, 
 and create an Application/API Token.
@@ -155,19 +129,11 @@ If you don't want to embed the python scripts in the firmware, just don't run th
 
 The software embeds a shell directly executable on the board. 
 
-To use the shell, you have to stop the servers, for that you just have to log in telnet on it, and to do a Control-C.
-
-Then on the micropython prompt enter :
-```
->>> import shell
-```
-
-The prompt of shell is 
+The prompt of shell is : 
 ```
 =>
 ```
-
-The commands available are :
+and then you can enter the folling commands :
 
 commands  | help
 ----------|------
@@ -178,6 +144,7 @@ mkdir     | create directory
 mv        | rename file or directory
 rmdir     | remove directory
 cp        | copy file or directory with content
+df        | display disk free space
 rm        | remove file
 ls        | list file
 date      | display current date
@@ -197,9 +164,33 @@ reboot    | reboot the board
 help      | display the help of all commands
 man       | display the help of specific command
 
-# VT100 text editor
+To use the shell, you have to stop the servers, for that you just have to log in telnet on it, do a Control-C, and you see :
+```
+Server stopped
+/=>
+```
 
-This editor works directly in the board. 
+To restart server enter exit command :
+```
+/=> exit
+Server restarted
+```
+
+If you done twice Control-C, you get the python prompt, to return to the shell do this :
+```
+>>> import shell
+>>> shell.shell()
+```
+
+To edit a script, just enter
+```
+=> edit myscript.py
+```
+Press escape to exit from text editor, F5 execute the script currently being edited (execution looks for a main function and executes it).
+
+# Text editor
+
+This editor works directly in the board. The text editor uses VT100 sequence escapes, on your computer, you must have a shell that supports these sequence escapes.
 This allows you to make quick and easy changes directly on the board, without having to use synchronization tools. 
 This editor allows script execution, and displays errors and execution time.
 
@@ -236,6 +227,7 @@ Below are the directory details :
 - **modules/www** : html page used to create the source file of the html templates.
 - **modules/simul** : python scripts to simulate on linux or osx, it allows debugging on vscode.
 - **modules/lib/shell** : shell and editor python sources
+- **modules/lib/homekit** : homekit python class to interface with homekit firmware
 - **modules/lib/htmltemplate** : html templates python sources
 - **modules/lib/webpage** : web pages python sources
 - **modules/lib/video** : camera python sources
@@ -253,7 +245,8 @@ into the flash memory of the board.
 
 # Homekit
 
-This part is still in development, there is however some working homekit, see in the examples directory.
+This part requires the modified python firmware for esp32. See the python examples in directory examples/homekit. 
+If after testing, you can no longer see your homekit accessory, then it may be necessary to do a Homekit.eraseAll(), this destroys the current homekit accessory. With great regret, I did not get the camera to work at the same time as the homekit, it seems that there are difficulties to cohabit, due to not enough space of memory, to allocate process.
 
 # Battery mode for ESP32CAM
 

@@ -111,6 +111,7 @@ The commands are :
 import sys
 sys.path.append(&#34;lib&#34;)
 import os
+import uos
 
 try:
         from tools import useful
@@ -122,24 +123,16 @@ try:
 except:
         from fnmatch import fnmatch
 
-def stat(filename):
-        &#34;&#34;&#34; Get information of file &#34;&#34;&#34;
-        try:
-                rstat = os.lstat(filename)
-        except:
-                rstat = os.stat(filename)
-        return rstat[:7] + tuple(tim + 0 for tim in rstat[7:])
-
 def cd(directory = &#34;/&#34;):
         &#34;&#34;&#34; Change directory &#34;&#34;&#34;
         try:
-                os.chdir(directory)
+                uos.chdir(directory)
         except:
                 print(&#34;No such file or directory &#39;%s&#39;&#34;%directory)
 
 def pwd():
         &#34;&#34;&#34; Display the current directory &#34;&#34;&#34;
-        print(&#34;%s&#34;%os.getcwd())
+        print(&#34;%s&#34;%uos.getcwd())
 
 def mkdir(directory, recursive=False, quiet=False):
         &#34;&#34;&#34; Make directory &#34;&#34;&#34;
@@ -154,7 +147,7 @@ def removedir(directory, force=False, quiet=False, simulate=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         try:
                 if (useful.ismicropython() or force) and simulate == False:
-                        os.rmdir(directory)
+                        uos.rmdir(directory)
                 if quiet == False:
                         print(&#34;rmdir &#39;%s&#39;&#34;%(directory))
         except:
@@ -181,7 +174,7 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 def mv(source, destination):
         &#34;&#34;&#34; Move or rename file &#34;&#34;&#34;
         try:
-                os.rename(source,destination)
+                uos.rename(source,destination)
         except:
                 print(&#34;Cannot mv &#39;%s&#39;-&gt;&#39;%s&#39;&#34;%(source,destination))
 
@@ -223,7 +216,7 @@ def cp(source, destination, recursive=False, quiet=False):
                 else:
                         path, pattern = useful.split(source)
                                 
-                directories, filenames = scandir(path, pattern, recursive)
+                directories, filenames = useful.scandir(path, pattern, recursive)
 
                 for src in filenames:
                         dst = destination + &#34;/&#34; + src[len(path):]
@@ -233,7 +226,7 @@ def rmfile(filename, quiet=False, force=False, simulate=False):
         &#34;&#34;&#34; Remove file &#34;&#34;&#34;
         try:
                 if (useful.ismicropython() or force) and simulate == False:
-                        os.remove(filename)
+                        uos.remove(filename)
                 if quiet == False:
                         print(&#34;rm &#39;%s&#39;&#34;%(filename))
         except:
@@ -262,7 +255,7 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
                 if path == None:
                         print(&#34;Cannot rm &#39;%s&#39;&#34;%file)
                 else:
-                        dirs, filenames = scandir(path, pattern, recursive)
+                        dirs, filenames = useful.scandir(path, pattern, recursive)
                         directories += dirs
                                         
                         for filename in filenames:
@@ -325,52 +318,18 @@ def ls(file=&#34;&#34;, recursive=False, long=False):
         &#34;&#34;&#34; List command &#34;&#34;&#34;
         if useful.isfile(file):
                 LsDisplayer(&#34;&#34;, False, long).show(file)
-        elif useful.isdir(file):
-                scandir(file, &#34;*&#34;, recursive, LsDisplayer(file, True, long))
         elif file == &#34;&#34;:
-                scandir(&#34;.&#34;, &#34;*&#34;, recursive, LsDisplayer(&#34;.&#34;, True, long))
+                useful.scandir(uos.getcwd(), &#34;*&#34;, recursive, LsDisplayer(uos.getcwd(), True, long))
+        elif useful.isdir(file):
+                useful.scandir(file, &#34;*&#34;, recursive, LsDisplayer(file, True, long))
         else:
                 path, pattern = useful.split(file)
-                scandir(path, pattern, recursive, LsDisplayer(path, False, long))
-
-def scandir(path, pattern, recursive, displayer=None):
-        &#34;&#34;&#34; Scan recursively a directory &#34;&#34;&#34;
-        filenames   = []
-        directories = []
-        if path == &#34;&#34;:
-                path = &#34;.&#34;
-        try:
-                if path != None and pattern != None:
-                        for file in os.listdir(path):
-                                if path != &#34;&#34;:
-                                        filename = path + &#34;/&#34; + file
-                                else:
-                                        filename = file
-                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
-                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
-                                if useful.isdir(filename):
-                                        if displayer:
-                                                displayer.show(filename)
-                                        else:
-                                                directories.append(filename)
-                                        if recursive:
-                                                dirs,fils = scandir(filename, pattern, recursive, displayer)
-                                                filenames += fils
-                                                directories += dirs
-                                else:
-                                        if fnmatch(file, pattern):
-                                                if displayer:
-                                                        displayer.show(filename)
-                                                else:
-                                                        filenames.append(filename)
-        except Exception as error:
-                print(useful.exception(error))
-        return directories, filenames
+                useful.scandir(path, pattern, recursive, LsDisplayer(path, False, long))
 
 def find(file):
         &#34;&#34;&#34; Find a file in directories &#34;&#34;&#34;
         path, pattern = useful.split(file)
-        directories, filenames = scandir(path, pattern, True)
+        directories, filenames = useful.scandir(path, pattern, True)
         for filename in filenames:
                 print(filename)
 
@@ -426,7 +385,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
                 filenames = [file]
         else:
                 path, pattern = useful.split(file)
-                directories, filenames = scandir(path, pattern, recursive)
+                directories, filenames = useful.scandir(path, pattern, recursive)
 
         height, width = useful.getScreenSize()
         count = 1
@@ -501,6 +460,14 @@ def cat(file):
                 f.close()
         except:
                 print(&#34;Cannot cat &#39;%s&#39;&#34;%(file))
+
+def df(mountpoint = &#34;/&#34;):
+        &#34;&#34;&#34; Display free disk space &#34;&#34;&#34;
+        status = uos.statvfs(mountpoint)
+        freeSize  = status[0]*status[3]
+        totalSize = status[1]*status[2]
+        print(&#34;Filesystem     Free   Capacity   Used&#34;)
+        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, useful.sizeToString(freeSize,8),useful.sizeToString(totalSize,), totalSize/freeSize))
 
 def gc():
         &#34;&#34;&#34; Garbage collector command &#34;&#34;&#34;
@@ -664,6 +631,7 @@ def shell():
                         break
                 parseCommandLine(commandLine)
 
+
 shellCommands = \
 {
         &#34;cd&#34;       :[cd       ,&#34;directory&#34;],
@@ -691,6 +659,7 @@ shellCommands = \
         &#34;reboot&#34;   :[reboot   ],
         &#34;help&#34;     :[help     ],
         &#34;man&#34;      :[man      ,&#34;command&#34;],
+        &#34;df&#34;       :[df       ,&#34;mountpoint&#34;]
 }
 
 if __name__ == &#34;__main__&#34;:
@@ -744,7 +713,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def cd(directory = &#34;/&#34;):
         &#34;&#34;&#34; Change directory &#34;&#34;&#34;
         try:
-                os.chdir(directory)
+                uos.chdir(directory)
         except:
                 print(&#34;No such file or directory &#39;%s&#39;&#34;%directory)</code></pre>
 </details>
@@ -806,7 +775,7 @@ if __name__ == &#34;__main__&#34;:
                 else:
                         path, pattern = useful.split(source)
                                 
-                directories, filenames = scandir(path, pattern, recursive)
+                directories, filenames = useful.scandir(path, pattern, recursive)
 
                 for src in filenames:
                         dst = destination + &#34;/&#34; + src[len(path):]
@@ -844,6 +813,24 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Deep sleep command &#34;&#34;&#34;
         import machine 
         machine.deepsleep()</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.df"><code class="name flex">
+<span>def <span class="ident">df</span></span>(<span>mountpoint='/')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Display free disk space</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def df(mountpoint = &#34;/&#34;):
+        &#34;&#34;&#34; Display free disk space &#34;&#34;&#34;
+        status = uos.statvfs(mountpoint)
+        freeSize  = status[0]*status[3]
+        totalSize = status[1]*status[2]
+        print(&#34;Filesystem     Free   Capacity   Used&#34;)
+        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, useful.sizeToString(freeSize,8),useful.sizeToString(totalSize,), totalSize/freeSize))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.edit"><code class="name flex">
@@ -955,7 +942,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def find(file):
         &#34;&#34;&#34; Find a file in directories &#34;&#34;&#34;
         path, pattern = useful.split(file)
-        directories, filenames = scandir(path, pattern, True)
+        directories, filenames = useful.scandir(path, pattern, True)
         for filename in filenames:
                 print(filename)</code></pre>
 </details>
@@ -1049,7 +1036,7 @@ if __name__ == &#34;__main__&#34;:
                 filenames = [file]
         else:
                 path, pattern = useful.split(file)
-                directories, filenames = scandir(path, pattern, recursive)
+                directories, filenames = useful.scandir(path, pattern, recursive)
 
         height, width = useful.getScreenSize()
         count = 1
@@ -1096,13 +1083,13 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; List command &#34;&#34;&#34;
         if useful.isfile(file):
                 LsDisplayer(&#34;&#34;, False, long).show(file)
-        elif useful.isdir(file):
-                scandir(file, &#34;*&#34;, recursive, LsDisplayer(file, True, long))
         elif file == &#34;&#34;:
-                scandir(&#34;.&#34;, &#34;*&#34;, recursive, LsDisplayer(&#34;.&#34;, True, long))
+                useful.scandir(uos.getcwd(), &#34;*&#34;, recursive, LsDisplayer(uos.getcwd(), True, long))
+        elif useful.isdir(file):
+                useful.scandir(file, &#34;*&#34;, recursive, LsDisplayer(file, True, long))
         else:
                 path, pattern = useful.split(file)
-                scandir(path, pattern, recursive, LsDisplayer(path, False, long))</code></pre>
+                useful.scandir(path, pattern, recursive, LsDisplayer(path, False, long))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.man"><code class="name flex">
@@ -1195,7 +1182,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def mv(source, destination):
         &#34;&#34;&#34; Move or rename file &#34;&#34;&#34;
         try:
-                os.rename(source,destination)
+                uos.rename(source,destination)
         except:
                 print(&#34;Cannot mv &#39;%s&#39;-&gt;&#39;%s&#39;&#34;%(source,destination))</code></pre>
 </details>
@@ -1284,7 +1271,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def pwd():
         &#34;&#34;&#34; Display the current directory &#34;&#34;&#34;
-        print(&#34;%s&#34;%os.getcwd())</code></pre>
+        print(&#34;%s&#34;%uos.getcwd())</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.reboot"><code class="name flex">
@@ -1315,7 +1302,7 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         try:
                 if (useful.ismicropython() or force) and simulate == False:
-                        os.rmdir(directory)
+                        uos.rmdir(directory)
                 if quiet == False:
                         print(&#34;rmdir &#39;%s&#39;&#34;%(directory))
         except:
@@ -1354,7 +1341,7 @@ if __name__ == &#34;__main__&#34;:
                 if path == None:
                         print(&#34;Cannot rm &#39;%s&#39;&#34;%file)
                 else:
-                        dirs, filenames = scandir(path, pattern, recursive)
+                        dirs, filenames = useful.scandir(path, pattern, recursive)
                         directories += dirs
                                         
                         for filename in filenames:
@@ -1409,55 +1396,11 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Remove file &#34;&#34;&#34;
         try:
                 if (useful.ismicropython() or force) and simulate == False:
-                        os.remove(filename)
+                        uos.remove(filename)
                 if quiet == False:
                         print(&#34;rm &#39;%s&#39;&#34;%(filename))
         except:
                 print(&#34;rm &#39;%s&#39; not removed&#34;%(filename))</code></pre>
-</details>
-</dd>
-<dt id="lib.shell.shell.scandir"><code class="name flex">
-<span>def <span class="ident">scandir</span></span>(<span>path, pattern, recursive, displayer=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Scan recursively a directory</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def scandir(path, pattern, recursive, displayer=None):
-        &#34;&#34;&#34; Scan recursively a directory &#34;&#34;&#34;
-        filenames   = []
-        directories = []
-        if path == &#34;&#34;:
-                path = &#34;.&#34;
-        try:
-                if path != None and pattern != None:
-                        for file in os.listdir(path):
-                                if path != &#34;&#34;:
-                                        filename = path + &#34;/&#34; + file
-                                else:
-                                        filename = file
-                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
-                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
-                                if useful.isdir(filename):
-                                        if displayer:
-                                                displayer.show(filename)
-                                        else:
-                                                directories.append(filename)
-                                        if recursive:
-                                                dirs,fils = scandir(filename, pattern, recursive, displayer)
-                                                filenames += fils
-                                                directories += dirs
-                                else:
-                                        if fnmatch(file, pattern):
-                                                if displayer:
-                                                        displayer.show(filename)
-                                                else:
-                                                        filenames.append(filename)
-        except Exception as error:
-                print(useful.exception(error))
-        return directories, filenames</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.shell"><code class="name flex">
@@ -1480,24 +1423,6 @@ if __name__ == &#34;__main__&#34;:
                         print(&#34;&#34;)
                         break
                 parseCommandLine(commandLine)</code></pre>
-</details>
-</dd>
-<dt id="lib.shell.shell.stat"><code class="name flex">
-<span>def <span class="ident">stat</span></span>(<span>filename)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get information of file</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def stat(filename):
-        &#34;&#34;&#34; Get information of file &#34;&#34;&#34;
-        try:
-                rstat = os.lstat(filename)
-        except:
-                rstat = os.stat(filename)
-        return rstat[:7] + tuple(tim + 0 for tim in rstat[7:])</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.umountsd"><code class="name flex">
@@ -1653,6 +1578,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.cp" href="#lib.shell.shell.cp">cp</a></code></li>
 <li><code><a title="lib.shell.shell.date" href="#lib.shell.shell.date">date</a></code></li>
 <li><code><a title="lib.shell.shell.deepsleep" href="#lib.shell.shell.deepsleep">deepsleep</a></code></li>
+<li><code><a title="lib.shell.shell.df" href="#lib.shell.shell.df">df</a></code></li>
 <li><code><a title="lib.shell.shell.edit" href="#lib.shell.shell.edit">edit</a></code></li>
 <li><code><a title="lib.shell.shell.execCommand" href="#lib.shell.shell.execCommand">execCommand</a></code></li>
 <li><code><a title="lib.shell.shell.exit" href="#lib.shell.shell.exit">exit</a></code></li>
@@ -1675,9 +1601,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.rm" href="#lib.shell.shell.rm">rm</a></code></li>
 <li><code><a title="lib.shell.shell.rmdir" href="#lib.shell.shell.rmdir">rmdir</a></code></li>
 <li><code><a title="lib.shell.shell.rmfile" href="#lib.shell.shell.rmfile">rmfile</a></code></li>
-<li><code><a title="lib.shell.shell.scandir" href="#lib.shell.shell.scandir">scandir</a></code></li>
 <li><code><a title="lib.shell.shell.shell" href="#lib.shell.shell.shell">shell</a></code></li>
-<li><code><a title="lib.shell.shell.stat" href="#lib.shell.shell.stat">stat</a></code></li>
 <li><code><a title="lib.shell.shell.umountsd" href="#lib.shell.shell.umountsd">umountsd</a></code></li>
 </ul>
 </li>

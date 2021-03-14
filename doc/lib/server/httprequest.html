@@ -75,14 +75,14 @@ from tools import useful
 import hashlib
 import time
 from binascii import hexlify
-from os import stat
 from tools.useful import log
 
 class Http:
         &#34;&#34;&#34; Http request or reponse &#34;&#34;&#34;
-        def __init__(self, request = True, remoteaddr= b&#34;&#34;, port = 0):
+        def __init__(self, request = True, remoteaddr= b&#34;&#34;, port = 0, name=&#34;&#34;):
                 &#34;&#34;&#34; Constructor from http request or response &#34;&#34;&#34;
                 self.port       = port
+                self.name       = name
                 self.remoteaddr = remoteaddr
                 self.path       = b&#34;&#34;
                 self.method     = b&#34;POST&#34;
@@ -460,7 +460,7 @@ class PartFile:
         async def getSize(self, identifier):
                 &#34;&#34;&#34; Get the size of multi part file &#34;&#34;&#34;
                 headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
-                fileSize = stat(useful.tostrings(self.filename))[6]
+                fileSize = useful.filesize((useful.tostrings(self.filename)))
                 return headerSize + fileSize + 4 + len(identifier) + 2
 
 class PartBin(PartFile):
@@ -484,9 +484,9 @@ class PartBin(PartFile):
 
 class HttpResponse(Http):
         &#34;&#34;&#34; Http response send to web browser client &#34;&#34;&#34;
-        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0):
+        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0, name = &#34;&#34;):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port)
+                Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port, name=name)
                 self.streamio = streamio
 
         async def send(self, content=None, status=b&#34;200&#34;, headers={}):
@@ -531,9 +531,9 @@ class HttpResponse(Http):
 
 class HttpRequest(Http):
         &#34;&#34;&#34; Http request received from web browser client &#34;&#34;&#34;
-        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0):
+        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0, name=&#34;&#34;):
                 &#34;&#34;&#34; Constructor from http request &#34;&#34;&#34;
-                Http.__init__(self, request=True, remoteaddr=remoteaddr, port=port)
+                Http.__init__(self, request=True, remoteaddr=remoteaddr, port=port, name=name)
                 self.streamio    = streamio
 
         async def receive(self, streamio=None):
@@ -746,7 +746,7 @@ class HttpRequest(Http):
 </dd>
 <dt id="lib.server.httprequest.Http"><code class="flex name class">
 <span>class <span class="ident">Http</span></span>
-<span>(</span><span>request=True, remoteaddr=b'', port=0)</span>
+<span>(</span><span>request=True, remoteaddr=b'', port=0, name='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Http request or reponse </p>
@@ -757,9 +757,10 @@ class HttpRequest(Http):
 </summary>
 <pre><code class="python">class Http:
         &#34;&#34;&#34; Http request or reponse &#34;&#34;&#34;
-        def __init__(self, request = True, remoteaddr= b&#34;&#34;, port = 0):
+        def __init__(self, request = True, remoteaddr= b&#34;&#34;, port = 0, name=&#34;&#34;):
                 &#34;&#34;&#34; Constructor from http request or response &#34;&#34;&#34;
                 self.port       = port
+                self.name       = name
                 self.remoteaddr = remoteaddr
                 self.path       = b&#34;&#34;
                 self.method     = b&#34;POST&#34;
@@ -1511,7 +1512,7 @@ class HttpRequest(Http):
 </dd>
 <dt id="lib.server.httprequest.HttpRequest"><code class="flex name class">
 <span>class <span class="ident">HttpRequest</span></span>
-<span>(</span><span>streamio, remoteaddr=b'', port=0)</span>
+<span>(</span><span>streamio, remoteaddr=b'', port=0, name='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Http request received from web browser client </p>
@@ -1522,9 +1523,9 @@ class HttpRequest(Http):
 </summary>
 <pre><code class="python">class HttpRequest(Http):
         &#34;&#34;&#34; Http request received from web browser client &#34;&#34;&#34;
-        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0):
+        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0, name=&#34;&#34;):
                 &#34;&#34;&#34; Constructor from http request &#34;&#34;&#34;
-                Http.__init__(self, request=True, remoteaddr=remoteaddr, port=port)
+                Http.__init__(self, request=True, remoteaddr=remoteaddr, port=port, name=name)
                 self.streamio    = streamio
 
         async def receive(self, streamio=None):
@@ -1613,7 +1614,7 @@ class HttpRequest(Http):
 </dd>
 <dt id="lib.server.httprequest.HttpResponse"><code class="flex name class">
 <span>class <span class="ident">HttpResponse</span></span>
-<span>(</span><span>streamio, remoteaddr=b'', port=0)</span>
+<span>(</span><span>streamio, remoteaddr=b'', port=0, name='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Http response send to web browser client </p>
@@ -1624,9 +1625,9 @@ class HttpRequest(Http):
 </summary>
 <pre><code class="python">class HttpResponse(Http):
         &#34;&#34;&#34; Http response send to web browser client &#34;&#34;&#34;
-        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0):
+        def __init__(self, streamio, remoteaddr= b&#34;&#34;, port = 0, name = &#34;&#34;):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port)
+                Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port, name=name)
                 self.streamio = streamio
 
         async def send(self, content=None, status=b&#34;200&#34;, headers={}):
@@ -1931,7 +1932,7 @@ class HttpRequest(Http):
         async def getSize(self, identifier):
                 &#34;&#34;&#34; Get the size of multi part file &#34;&#34;&#34;
                 headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
-                fileSize = stat(useful.tostrings(self.filename))[6]
+                fileSize = useful.filesize((useful.tostrings(self.filename)))
                 return headerSize + fileSize + 4 + len(identifier) + 2</code></pre>
 </details>
 <h3>Subclasses</h3>
@@ -1952,7 +1953,7 @@ class HttpRequest(Http):
 <pre><code class="python">async def getSize(self, identifier):
         &#34;&#34;&#34; Get the size of multi part file &#34;&#34;&#34;
         headerSize = await self.serializeHeader(identifier, server.stream.Bytesio())
-        fileSize = stat(useful.tostrings(self.filename))[6]
+        fileSize = useful.filesize((useful.tostrings(self.filename)))
         return headerSize + fileSize + 4 + len(identifier) + 2</code></pre>
 </details>
 </dd>

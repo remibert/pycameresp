@@ -67,7 +67,7 @@ class MotionConfig:
 
                 # Threshold of minimum image to detect motion
                 self.thresholdMotion=3
-  
+
                 # Awake time on battery (seconds)
                 self.awakeTime = 15
 
@@ -86,45 +86,6 @@ class MotionConfig:
                 result = jsonconfig.load(self, file)
                 return result
 
-class SdCard:
-        &#34;&#34;&#34; Class to mount the sd card &#34;&#34;&#34;
-        def __init__(self, mountpoint=&#34;/sd&#34;):
-                self.opened = False
-                self.mountpoint = mountpoint
-                self.open()
-                
-        def __del__(self):
-                self.close()
-
-        def open(self):
-                &#34;&#34;&#34; Open and mount sd card &#34;&#34;&#34;
-                if self.opened == False:
-                        try:
-                                uos.mount(machine.SDCard(), self.mountpoint)
-                                print(&#34;Mount %s&#34;%self.mountpoint)
-                                self.opened = True
-                        except Exception as error:
-                                # print(exception(error))
-                                print(&#34;Cannot mount %s&#34;%self.mountpoint)
-                return self.opened
-
-        def close(self):
-                &#34;&#34;&#34; Close and unmount sd card &#34;&#34;&#34;
-                if self.opened == True:
-                        print(&#34;Umount %s&#34;%self.mountpoint)
-                        uos.umount(self.mountpoint)
-        
-        def save(self, filename, data):
-                &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
-                if self.open():
-                        filename = &#34;%s/%s&#34;%(self.mountpoint,filename)
-                        try:
-                                file = open(filename,&#34;wb&#34;)
-                                file.write(data)
-                                file.close()
-                        except Exception as error:
-                                # print(exception(error))
-                                print(&#34;Cannot save %s&#34;%filename)
 
 class ImageMotion:
         &#34;&#34;&#34; Class managing a motion detection image &#34;&#34;&#34;
@@ -146,6 +107,7 @@ class ImageMotion:
                 self.notified = False
                 self.motionId = None
                 self.date     = useful.dateToFilename()
+                self.path     = useful.dateToFilename()[:-3]
                 self.motionDetected = False
                 self.config = config
         
@@ -168,10 +130,11 @@ class ImageMotion:
                 &#34;&#34;&#34; Get the storage filename &#34;&#34;&#34;
                 return &#34;%s (id=%d) (diff=%d).jpg&#34;%(self.date, self.index, (self.diffRgb[0]+self.diffRgb[1]+self.diffRgb[2])//3)
 
-        def save(self, sdcard):
+        def save(self):
                 &#34;&#34;&#34; Save the image on sd card &#34;&#34;&#34;
-                if sdcard != None:
-                        sdcard.save(self.getFilename(), self.image)
+                if useful.SdCard.isMounted():
+                        useful.makedir(useful.SdCard.getMountpoint() + &#34;/&#34; + self.path, True)
+                        useful.SdCard.save(self.path + &#34;/&#34; + self.getFilename(), self.image)
 
         def compareComposite(self, current, previous):
                 &#34;&#34;&#34; Compare two composite motion images to get differences &#34;&#34;&#34;
@@ -215,9 +178,8 @@ class ImageMotion:
 
 class Motion:
         &#34;&#34;&#34; Class to manage the motion capture &#34;&#34;&#34;
-        def __init__(self, sdcard = None, config= None, onBattery=False, pirDetection=False):
+        def __init__(self, config= None, onBattery=False, pirDetection=False):
                 self.images = []
-                self.sdcard = sdcard
                 self.index  = 0
                 self.config = config
                 self.onBattery = onBattery
@@ -256,7 +218,7 @@ class Motion:
                                 print(&#34;Intrusion %s&#34;%image.getFilename()[:-3])
 
                                 # Save image to sdcard
-                                image.save(self.sdcard)
+                                image.save()
 
                 while 1:
                         if retry == 0:
@@ -362,6 +324,58 @@ async def sleep_ms(duration):
         &#34;&#34;&#34; Multiplatform sleep_ms &#34;&#34;&#34;
         await uasyncio.sleep_ms(duration)
 
+def getOlderDirectories(mountpoint, quantity=1):
+        older = []
+        # Parse all directories in sdcard
+        for fileinfo in uos.ilistdir(useful.SdCard.getMountpoint()):
+                filename = fileinfo[0]
+                typ = fileinfo[1]
+                # If directory found
+                if typ &amp; 0xF000 == 0x4000:
+                        # If motion directory recognized
+                        if  (filename[4] == &#34;-&#34; and filename[7] == &#34;-&#34; and len(filename) == 10) or \
+                                (filename[4] == &#34;-&#34; and filename[7] == &#34;-&#34; and filename[10] == &#34;_&#34; and filename[13] == &#34;-&#34; and len(filename) == 16):
+                                # Add directory to the list
+                                older.append(filename)
+                                if len(older) &gt; (quantity + 10):
+                                        older.sort()
+                                        older = older[:quantity]
+        older.sort()
+        older = older[:quantity]
+        return older
+
+def removeFiles(directory, simulate=False):
+        &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
+        import shell
+        notEmpty = False
+        # Parse all directories in sdcard
+        for fileinfo in uos.ilistdir(directory):
+                filename = fileinfo[0]
+                typ      = fileinfo[1]
+                # If file found
+                if typ &amp; 0xF000 != 0x4000:
+                        shell.rmfile(directory + &#34;/&#34; + filename, simulate=simulate)
+                else:
+                        removeFiles(directory + &#34;/&#34; + filename)
+                        notEmpty = True
+        
+        if notEmpty:
+                shell.rm(directory, recursive=True, simulate=simulate)
+        else:
+                shell.rmdir(directory, recursive=True, simulate=simulate)
+
+async def removeOlder():
+        &#34;&#34;&#34; Remove older files to make space &#34;&#34;&#34;
+        while 1:
+                await sleep_ms(10000)
+                if useful.SdCard.isMounted():
+                        # If not enough space available on sdcard
+                        if useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() &lt;= 5:
+                                print(&#34;Remove files from sdcard&#34;)
+                                olders = getOlderDirectories(useful.SdCard.getMountpoint())
+                                for directory in olders:
+                                        removeFiles(useful.SdCard.getMountpoint()+ &#34;/&#34;+ directory)
+
 async def detectMotion(onBattery, pirDetection):
         &#34;&#34;&#34; Asynchronous motion detection main routine &#34;&#34;&#34;
         from server   import asyncNotify, PushOverConfig
@@ -378,7 +392,7 @@ async def detectMotion(onBattery, pirDetection):
                 motionConfig.save()
 
         motion = None
-        reloadConfig = 0
+        pollingCounter = 0
         previousReserved = None
         pollingFrequency = 200
         batteryLevel = -2
@@ -397,11 +411,9 @@ async def detectMotion(onBattery, pirDetection):
                         # If motion not initialized
                         if motion == None:
                                 # The sdcard not available on battery
-                                if onBattery == True:
-                                        sdcard = None
-                                else:
-                                        sdcard = SdCard()
-                                motion = Motion(sdcard, motionConfig, onBattery, pirDetection)
+                                if onBattery != True:
+                                        useful.SdCard.mount()
+                                motion = Motion(motionConfig, onBattery, pirDetection)
                                 motion.open()
 
                         # If camera available to detect motion
@@ -462,10 +474,10 @@ async def detectMotion(onBattery, pirDetection):
                 else:
                         # Motion capture disabled
                         await sleep_ms(500)
-                reloadConfig += 1
+                pollingCounter += 1
 
                 # Reload configuration each 3 s
-                if reloadConfig % 5 == 0:
+                if pollingCounter % 5 == 0:
                         motionConfig.load()
                 
                 # If the battery mode activated
@@ -485,7 +497,7 @@ def start(loop=None, onBattery=True, pirDetection=False):
         &#34;&#34;&#34; Start the asynchronous motion detection &#34;&#34;&#34;
         if useful.iscamera():
                 loop.create_task(detectMotion(onBattery, pirDetection))
-        pass</code></pre>
+                loop.create_task(removeOlder())</code></pre>
 </details>
 </section>
 <section>
@@ -520,7 +532,7 @@ def start(loop=None, onBattery=True, pirDetection=False):
                 motionConfig.save()
 
         motion = None
-        reloadConfig = 0
+        pollingCounter = 0
         previousReserved = None
         pollingFrequency = 200
         batteryLevel = -2
@@ -539,11 +551,9 @@ def start(loop=None, onBattery=True, pirDetection=False):
                         # If motion not initialized
                         if motion == None:
                                 # The sdcard not available on battery
-                                if onBattery == True:
-                                        sdcard = None
-                                else:
-                                        sdcard = SdCard()
-                                motion = Motion(sdcard, motionConfig, onBattery, pirDetection)
+                                if onBattery != True:
+                                        useful.SdCard.mount()
+                                motion = Motion(motionConfig, onBattery, pirDetection)
                                 motion.open()
 
                         # If camera available to detect motion
@@ -604,10 +614,10 @@ def start(loop=None, onBattery=True, pirDetection=False):
                 else:
                         # Motion capture disabled
                         await sleep_ms(500)
-                reloadConfig += 1
+                pollingCounter += 1
 
                 # Reload configuration each 3 s
-                if reloadConfig % 5 == 0:
+                if pollingCounter % 5 == 0:
                         motionConfig.load()
                 
                 # If the battery mode activated
@@ -622,6 +632,88 @@ def start(loop=None, onBattery=True, pirDetection=False):
                                         print(&#34;# DEEP SLEEP TO WAIT PIR DETECTION #&#34;)
                                         print(&#34;####################################&#34;)
                                         machine.deepsleep(10000)</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.motion.getOlderDirectories"><code class="name flex">
+<span>def <span class="ident">getOlderDirectories</span></span>(<span>mountpoint, quantity=1)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getOlderDirectories(mountpoint, quantity=1):
+        older = []
+        # Parse all directories in sdcard
+        for fileinfo in uos.ilistdir(useful.SdCard.getMountpoint()):
+                filename = fileinfo[0]
+                typ = fileinfo[1]
+                # If directory found
+                if typ &amp; 0xF000 == 0x4000:
+                        # If motion directory recognized
+                        if  (filename[4] == &#34;-&#34; and filename[7] == &#34;-&#34; and len(filename) == 10) or \
+                                (filename[4] == &#34;-&#34; and filename[7] == &#34;-&#34; and filename[10] == &#34;_&#34; and filename[13] == &#34;-&#34; and len(filename) == 16):
+                                # Add directory to the list
+                                older.append(filename)
+                                if len(older) &gt; (quantity + 10):
+                                        older.sort()
+                                        older = older[:quantity]
+        older.sort()
+        older = older[:quantity]
+        return older</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.motion.removeFiles"><code class="name flex">
+<span>def <span class="ident">removeFiles</span></span>(<span>directory, simulate=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove all files in the directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def removeFiles(directory, simulate=False):
+        &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
+        import shell
+        notEmpty = False
+        # Parse all directories in sdcard
+        for fileinfo in uos.ilistdir(directory):
+                filename = fileinfo[0]
+                typ      = fileinfo[1]
+                # If file found
+                if typ &amp; 0xF000 != 0x4000:
+                        shell.rmfile(directory + &#34;/&#34; + filename, simulate=simulate)
+                else:
+                        removeFiles(directory + &#34;/&#34; + filename)
+                        notEmpty = True
+        
+        if notEmpty:
+                shell.rm(directory, recursive=True, simulate=simulate)
+        else:
+                shell.rmdir(directory, recursive=True, simulate=simulate)</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.motion.removeOlder"><code class="name flex">
+<span>async def <span class="ident">removeOlder</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove older files to make space</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def removeOlder():
+        &#34;&#34;&#34; Remove older files to make space &#34;&#34;&#34;
+        while 1:
+                await sleep_ms(10000)
+                if useful.SdCard.isMounted():
+                        # If not enough space available on sdcard
+                        if useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() &lt;= 5:
+                                print(&#34;Remove files from sdcard&#34;)
+                                olders = getOlderDirectories(useful.SdCard.getMountpoint())
+                                for directory in olders:
+                                        removeFiles(useful.SdCard.getMountpoint()+ &#34;/&#34;+ directory)</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.sleep_ms"><code class="name flex">
@@ -651,7 +743,7 @@ def start(loop=None, onBattery=True, pirDetection=False):
         &#34;&#34;&#34; Start the asynchronous motion detection &#34;&#34;&#34;
         if useful.iscamera():
                 loop.create_task(detectMotion(onBattery, pirDetection))
-        pass</code></pre>
+                loop.create_task(removeOlder())</code></pre>
 </details>
 </dd>
 </dl>
@@ -689,6 +781,7 @@ def start(loop=None, onBattery=True, pirDetection=False):
                 self.notified = False
                 self.motionId = None
                 self.date     = useful.dateToFilename()
+                self.path     = useful.dateToFilename()[:-3]
                 self.motionDetected = False
                 self.config = config
         
@@ -711,10 +804,11 @@ def start(loop=None, onBattery=True, pirDetection=False):
                 &#34;&#34;&#34; Get the storage filename &#34;&#34;&#34;
                 return &#34;%s (id=%d) (diff=%d).jpg&#34;%(self.date, self.index, (self.diffRgb[0]+self.diffRgb[1]+self.diffRgb[2])//3)
 
-        def save(self, sdcard):
+        def save(self):
                 &#34;&#34;&#34; Save the image on sd card &#34;&#34;&#34;
-                if sdcard != None:
-                        sdcard.save(self.getFilename(), self.image)
+                if useful.SdCard.isMounted():
+                        useful.makedir(useful.SdCard.getMountpoint() + &#34;/&#34; + self.path, True)
+                        useful.SdCard.save(self.path + &#34;/&#34; + self.getFilename(), self.image)
 
         def compareComposite(self, current, previous):
                 &#34;&#34;&#34; Compare two composite motion images to get differences &#34;&#34;&#34;
@@ -894,7 +988,7 @@ def start(loop=None, onBattery=True, pirDetection=False):
 </details>
 </dd>
 <dt id="lib.motion.motion.ImageMotion.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, sdcard)</span>
+<span>def <span class="ident">save</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Save the image on sd card</p></div>
@@ -902,10 +996,11 @@ def start(loop=None, onBattery=True, pirDetection=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def save(self, sdcard):
+<pre><code class="python">def save(self):
         &#34;&#34;&#34; Save the image on sd card &#34;&#34;&#34;
-        if sdcard != None:
-                sdcard.save(self.getFilename(), self.image)</code></pre>
+        if useful.SdCard.isMounted():
+                useful.makedir(useful.SdCard.getMountpoint() + &#34;/&#34; + self.path, True)
+                useful.SdCard.save(self.path + &#34;/&#34; + self.getFilename(), self.image)</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.ImageMotion.setMotionDetected"><code class="name flex">
@@ -947,7 +1042,7 @@ def start(loop=None, onBattery=True, pirDetection=False):
 </dd>
 <dt id="lib.motion.motion.Motion"><code class="flex name class">
 <span>class <span class="ident">Motion</span></span>
-<span>(</span><span>sdcard=None, config=None, onBattery=False, pirDetection=False)</span>
+<span>(</span><span>config=None, onBattery=False, pirDetection=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class to manage the motion capture</p></div>
@@ -957,9 +1052,8 @@ def start(loop=None, onBattery=True, pirDetection=False):
 </summary>
 <pre><code class="python">class Motion:
         &#34;&#34;&#34; Class to manage the motion capture &#34;&#34;&#34;
-        def __init__(self, sdcard = None, config= None, onBattery=False, pirDetection=False):
+        def __init__(self, config= None, onBattery=False, pirDetection=False):
                 self.images = []
-                self.sdcard = sdcard
                 self.index  = 0
                 self.config = config
                 self.onBattery = onBattery
@@ -998,7 +1092,7 @@ def start(loop=None, onBattery=True, pirDetection=False):
                                 print(&#34;Intrusion %s&#34;%image.getFilename()[:-3])
 
                                 # Save image to sdcard
-                                image.save(self.sdcard)
+                                image.save()
 
                 while 1:
                         if retry == 0:
@@ -1125,7 +1219,7 @@ def start(loop=None, onBattery=True, pirDetection=False):
                         print(&#34;Intrusion %s&#34;%image.getFilename()[:-3])
 
                         # Save image to sdcard
-                        image.save(self.sdcard)
+                        image.save()
 
         while 1:
                 if retry == 0:
@@ -1332,7 +1426,7 @@ def start(loop=None, onBattery=True, pirDetection=False):
 
                 # Threshold of minimum image to detect motion
                 self.thresholdMotion=3
-  
+
                 # Awake time on battery (seconds)
                 self.awakeTime = 15
 
@@ -1400,120 +1494,6 @@ def start(loop=None, onBattery=True, pirDetection=False):
 </dd>
 </dl>
 </dd>
-<dt id="lib.motion.motion.SdCard"><code class="flex name class">
-<span>class <span class="ident">SdCard</span></span>
-<span>(</span><span>mountpoint='/sd')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Class to mount the sd card</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class SdCard:
-        &#34;&#34;&#34; Class to mount the sd card &#34;&#34;&#34;
-        def __init__(self, mountpoint=&#34;/sd&#34;):
-                self.opened = False
-                self.mountpoint = mountpoint
-                self.open()
-                
-        def __del__(self):
-                self.close()
-
-        def open(self):
-                &#34;&#34;&#34; Open and mount sd card &#34;&#34;&#34;
-                if self.opened == False:
-                        try:
-                                uos.mount(machine.SDCard(), self.mountpoint)
-                                print(&#34;Mount %s&#34;%self.mountpoint)
-                                self.opened = True
-                        except Exception as error:
-                                # print(exception(error))
-                                print(&#34;Cannot mount %s&#34;%self.mountpoint)
-                return self.opened
-
-        def close(self):
-                &#34;&#34;&#34; Close and unmount sd card &#34;&#34;&#34;
-                if self.opened == True:
-                        print(&#34;Umount %s&#34;%self.mountpoint)
-                        uos.umount(self.mountpoint)
-        
-        def save(self, filename, data):
-                &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
-                if self.open():
-                        filename = &#34;%s/%s&#34;%(self.mountpoint,filename)
-                        try:
-                                file = open(filename,&#34;wb&#34;)
-                                file.write(data)
-                                file.close()
-                        except Exception as error:
-                                # print(exception(error))
-                                print(&#34;Cannot save %s&#34;%filename)</code></pre>
-</details>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.motion.motion.SdCard.close"><code class="name flex">
-<span>def <span class="ident">close</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Close and unmount sd card</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def close(self):
-        &#34;&#34;&#34; Close and unmount sd card &#34;&#34;&#34;
-        if self.opened == True:
-                print(&#34;Umount %s&#34;%self.mountpoint)
-                uos.umount(self.mountpoint)</code></pre>
-</details>
-</dd>
-<dt id="lib.motion.motion.SdCard.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Open and mount sd card</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def open(self):
-        &#34;&#34;&#34; Open and mount sd card &#34;&#34;&#34;
-        if self.opened == False:
-                try:
-                        uos.mount(machine.SDCard(), self.mountpoint)
-                        print(&#34;Mount %s&#34;%self.mountpoint)
-                        self.opened = True
-                except Exception as error:
-                        # print(exception(error))
-                        print(&#34;Cannot mount %s&#34;%self.mountpoint)
-        return self.opened</code></pre>
-</details>
-</dd>
-<dt id="lib.motion.motion.SdCard.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, filename, data)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Save file on sd card</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def save(self, filename, data):
-        &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
-        if self.open():
-                filename = &#34;%s/%s&#34;%(self.mountpoint,filename)
-                try:
-                        file = open(filename,&#34;wb&#34;)
-                        file.write(data)
-                        file.close()
-                except Exception as error:
-                        # print(exception(error))
-                        print(&#34;Cannot save %s&#34;%filename)</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
 </dl>
 </section>
 </article>
@@ -1529,8 +1509,11 @@ def start(loop=None, onBattery=True, pirDetection=False):
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="lib.motion.motion.detectMotion" href="#lib.motion.motion.detectMotion">detectMotion</a></code></li>
+<li><code><a title="lib.motion.motion.getOlderDirectories" href="#lib.motion.motion.getOlderDirectories">getOlderDirectories</a></code></li>
+<li><code><a title="lib.motion.motion.removeFiles" href="#lib.motion.motion.removeFiles">removeFiles</a></code></li>
+<li><code><a title="lib.motion.motion.removeOlder" href="#lib.motion.motion.removeOlder">removeOlder</a></code></li>
 <li><code><a title="lib.motion.motion.sleep_ms" href="#lib.motion.motion.sleep_ms">sleep_ms</a></code></li>
 <li><code><a title="lib.motion.motion.start" href="#lib.motion.motion.start">start</a></code></li>
 </ul>
@@ -1572,14 +1555,6 @@ def start(loop=None, onBattery=True, pirDetection=False):
 <li><code><a title="lib.motion.motion.MotionConfig.load" href="#lib.motion.motion.MotionConfig.load">load</a></code></li>
 <li><code><a title="lib.motion.motion.MotionConfig.save" href="#lib.motion.motion.MotionConfig.save">save</a></code></li>
 <li><code><a title="lib.motion.motion.MotionConfig.update" href="#lib.motion.motion.MotionConfig.update">update</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="lib.motion.motion.SdCard" href="#lib.motion.motion.SdCard">SdCard</a></code></h4>
-<ul class="">
-<li><code><a title="lib.motion.motion.SdCard.close" href="#lib.motion.motion.SdCard.close">close</a></code></li>
-<li><code><a title="lib.motion.motion.SdCard.open" href="#lib.motion.motion.SdCard.open">open</a></code></li>
-<li><code><a title="lib.motion.motion.SdCard.save" href="#lib.motion.motion.SdCard.save">save</a></code></li>
 </ul>
 </li>
 </ul>
