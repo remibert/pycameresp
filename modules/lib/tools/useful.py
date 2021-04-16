@@ -101,6 +101,7 @@ else:
 		import os
 		import sys
 		import tty
+		import time
 		fd = sys.stdin.fileno()
 		oldattr = termios.tcgetattr(fd)
 		oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
@@ -116,7 +117,6 @@ else:
 				tty.setraw(fd)
 			key = None
 			inp, outp, err = select.select([sys.stdin], [], [], duration)
-			print(inp)
 			result = callback(inp)
 		finally:
 			# Reset the terminal:
@@ -849,9 +849,12 @@ async def asyncShell():
 			# If key pressed
 			if kbhit(0):
 				import shell
+				import uos
+				currentDir = uos.getcwd()
 				print("\n"+"<"*20+"   ENTER SHELL   " +">"*20)
 				# Start shell
 				shell.shell()
 				print("\n"+"<"*20+"   EXIT  SHELL   " +">"*20)
+				uos.chdir(currentDir)
 			else:
 				await uasyncio.sleep(1)

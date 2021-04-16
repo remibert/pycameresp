@@ -194,7 +194,7 @@ class View:
 			self.line = self.text.getCursorLine()
 			if self.line < 0:
 				self.line = 0
-			if delta <= 10:
+			if delta <= 1:
 				self.scrollDown()
 				self.isRefreshLine = True
 			else:
@@ -202,7 +202,7 @@ class View:
 		elif self.text.getCursorLine() > self.line + self.height:
 			delta =  self.text.getCursorLine() - self.line - self.height
 			self.line = self.text.getCursorLine()-self.height
-			if delta <= 10:
+			if delta <= 1:
 				self.scrollUp()
 				self.isRefreshLine = True
 			else:

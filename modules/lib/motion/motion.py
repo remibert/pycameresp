@@ -50,7 +50,7 @@ class MotionConfig:
 		self.thresholdMotion=3
 
 		# Number of images before camera stabilization
-		self.stabilizationCamera=6
+		self.stabilizationCamera=8
 
 	def save(self, file = None):
 		""" Save configuration """
@@ -287,7 +287,7 @@ class Motion:
 			# Check if it is a glitch
 			for diff in differences.values():
 				if len(diff) <= 1:
-					print("%s Glitch (S=%d,L=%d)    "%(useful.dateToString()[12:], self.images[0].getDiffSaturation(), self.images[0].getDiffLight()))
+					#print("%s Glitch (S=%d,L=%d)    "%(useful.dateToString()[12:], self.images[0].getDiffSaturation(), self.images[0].getDiffLight()))
 					# Glitch ignored
 					detected = False
 					break
@@ -423,6 +423,7 @@ async def detectMotion(onBattery, pirDetection):
 					useful.SdCard.mount()
 				motion = Motion(motionConfig, onBattery, pirDetection)
 				motion.open()
+				await sleep_ms(3000)
 
 			# If camera available to detect motion
 			if video.Camera.isReserved() == False:

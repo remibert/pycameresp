@@ -7,7 +7,7 @@ from tools import useful
 
 def start(loop=None, onBattery=True, pirDetection=False):
 	""" Start the asynchronous motion detection and presence detection """
+	loop.create_task(detectPresence())
 	if useful.iscamera():
 		loop.create_task(detectMotion(onBattery, pirDetection))
 		loop.create_task(removeOlder())
-	loop.create_task(detectPresence())
