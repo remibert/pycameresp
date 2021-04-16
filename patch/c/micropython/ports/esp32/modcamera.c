@@ -3,13 +3,59 @@
 #include "esp_camera.h"
 #include "esp_log.h"
 #include "esp_jpg_decode.h"
+#include "esp_system.h"
+#include "esp_spi_flash.h"
 
 #include "py/nlr.h"
 #include "py/obj.h"
 #include "py/runtime.h"
 #include "py/binary.h"
+#include "py/objstr.h"
 
 #define TAG "camera"
+
+#define _ ESP_LOGE(TAG, "%s:%d:%s",__FILE__,__LINE__,__FUNCTION__);
+
+
+#define CAMERA_SETTING(type, field, method, min, max) \
+	STATIC mp_obj_t camera_##method(size_t n_args, const mp_obj_t *args)\
+	{\
+		if (n_args == 0) \
+		{\
+			sensor_t *s = esp_camera_sensor_get();\
+			if (s)\
+			{\
+				return mp_obj_new_int((int)s->status.field);\
+			}\
+			else\
+			{\
+				mp_raise_ValueError(MP_ERROR_TEXT("Camera sensor get " #method " not possible : driver not opened"));\
+			}\
+		}\
+		else\
+		{\
+			type value = (type)mp_obj_get_int(args[0]);\
+			if (value >= min && value <= max)\
+			{\
+				sensor_t *s = esp_camera_sensor_get();\
+				if (s)\
+				{\
+					s->set_ ## method(s,(type)value);\
+				}\
+				else\
+				{\
+					mp_raise_ValueError(MP_ERROR_TEXT("Camera sensor set " #method " not possible : driver not opened"));\
+				}\
+			}\
+			else\
+			{\
+				mp_raise_ValueError(MP_ERROR_TEXT("Camera sensor set " #method " : value out of limits [" #min "-" #max "]"));\
+			}\
+		}\
+		return mp_const_none;\
+	}\
+	STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_##method##_obj, 0, 1, camera_##method);
+
 
 //WROVER-KIT PIN Map
 #define CAM_PIN_PWDN    32 //power down is not used
@@ -32,7 +78,8 @@
 
 #define min(a,b) ((a)<(b) ?(a):(b))
 #define max(a,b) ((a)>(b) ?(a):(b))
-static camera_config_t camera_config = {
+static camera_config_t camera_config = 
+{
 	.pin_pwdn  = CAM_PIN_PWDN,
 	.pin_reset = CAM_PIN_RESET,
 	.pin_xclk = CAM_PIN_XCLK,
@@ -63,9 +110,141 @@ static camera_config_t camera_config = {
 	.fb_count = 1 //if more than one, i2s runs in continuous mode. Use only with JPEG
 };
 
-#include "esp_system.h"
-#include "esp_spi_flash.h"
+typedef struct 
+{
+	mp_obj_base_t base;
 
+	uint8_t       *imageData;
+	uint16_t       imageLength;
+	uint16_t       height;
+	uint16_t       width;
+	const uint8_t *input;
+
+	uint16_t       max;
+
+	uint16_t       square_x;
+	uint16_t       square_y;
+
+	uint16_t       *reds;
+	uint16_t       *greens;
+	uint16_t       *blues;
+
+	uint16_t       *hues;
+	uint16_t       *saturations;
+	uint16_t       *lights;
+
+	u_int32_t  meanLight;
+	u_int32_t  meanSaturation;
+
+	uint16_t maxLight;
+	uint16_t minLight;
+	uint16_t maxSaturation;
+	uint16_t minSaturation;
+
+	int errorLight;
+	int errorSaturation;
+	int errorHue;
+} Motion_t;
+const mp_obj_type_t Motion_type;
+
+// Create motion objet with an image
+static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength);
+
+
+#pragma GCC diagnostic ignored "-Wtype-limits"
+//             type,        get             set           , min, max
+CAMERA_SETTING(uint16_t   , aec_value     , aec_value     ,  0, 1200)
+CAMERA_SETTING(framesize_t, framesize     , framesize     ,  FRAMESIZE_96X96, FRAMESIZE_QSXGA)
+CAMERA_SETTING(uint8_t    , quality       , quality       ,  0, 63  )
+CAMERA_SETTING(uint8_t    , special_effect, special_effect,  0, 6   )
+CAMERA_SETTING(uint8_t    , wb_mode       , wb_mode       ,  0, 4   )
+CAMERA_SETTING(uint8_t    , agc_gain      , agc_gain      ,  0, 30  )
+CAMERA_SETTING(uint8_t    , gainceiling   , gainceiling   ,  0, 6   )
+CAMERA_SETTING(int8_t     , brightness    , brightness    , -2, 2   )
+CAMERA_SETTING(int8_t     , contrast      , contrast      , -2, 2   )
+CAMERA_SETTING(int8_t     , saturation    , saturation    , -2, 2   )
+CAMERA_SETTING(int8_t     , sharpness     , sharpness     , -2, 2   )
+CAMERA_SETTING(int8_t     , ae_level      , ae_level      , -2, 2   )
+CAMERA_SETTING(uint8_t    , denoise       , denoise       ,  0, 255 )
+CAMERA_SETTING(uint8_t    , awb           , whitebal      ,  0, 255 )
+CAMERA_SETTING(uint8_t    , awb_gain      , awb_gain      ,  0, 255 )
+CAMERA_SETTING(uint8_t    , aec           , exposure_ctrl ,  0, 255 )
+CAMERA_SETTING(uint8_t    , aec2          , aec2          ,  0, 255 )
+CAMERA_SETTING(uint8_t    , agc           , gain_ctrl     ,  0, 255 )
+CAMERA_SETTING(uint8_t    , bpc           , bpc           ,  0, 255 )
+CAMERA_SETTING(uint8_t    , wpc           , wpc           ,  0, 255 )
+CAMERA_SETTING(uint8_t    , raw_gma       , raw_gma       ,  0, 255 )
+CAMERA_SETTING(uint8_t    , lenc          , lenc          ,  0, 255 )
+CAMERA_SETTING(uint8_t    , hmirror       , hmirror       ,  0, 255 )
+CAMERA_SETTING(uint8_t    , vflip         , vflip         ,  0, 255 )
+CAMERA_SETTING(uint8_t    , dcw           , dcw           ,  0, 255 )
+CAMERA_SETTING(uint8_t    , colorbar      , colorbar      ,  0, 255 )
+
+#pragma GCC diagnostic pop
+
+static void *_malloc(size_t size)
+{
+	return heap_caps_calloc(1, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+}
+
+static void _free(void ** ptr)
+{
+	if (ptr)
+	{
+		if (*ptr)
+		{
+			free(*ptr);
+			*ptr = 0;
+		}
+	}
+}
+
+STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
+{
+	if (n_args == 0) 
+	{
+		sensor_t *s = esp_camera_sensor_get();
+		if (s)
+		{
+			return mp_obj_new_int((int)s->pixformat);
+		}
+		else
+		{
+			mp_raise_ValueError(MP_ERROR_TEXT("Camera get pixformat not possible : driver not opened"));
+		}
+	}
+	else
+	{
+		pixformat_t value = (pixformat_t)mp_obj_get_int(args[0]);
+		if (value >= PIXFORMAT_RGB565 && value <= PIXFORMAT_RGB555)
+		{
+			sensor_t *s = esp_camera_sensor_get();
+			if (s)
+			{
+				s->set_pixformat(s,(pixformat_t)value);
+			}
+			else
+			{
+				mp_raise_ValueError(MP_ERROR_TEXT("Camera set pixformat not possible : driver not opened"));
+			}
+		}
+		else
+		{
+			mp_raise_ValueError(MP_ERROR_TEXT("Camera set pixformat : value out of limits [PIXFORMAT_RGB565-PIXFORMAT_RGB555]"));
+		}
+	}
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_pixformat_obj, 0, 1, camera_pixformat);
+
+STATIC mp_obj_t camera_isavailable(){
+#ifdef CONFIG_ESP32CAM
+	return mp_const_true;
+#else
+	return mp_const_false;
+#endif
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_isavailable_obj, camera_isavailable);
 
 STATIC mp_obj_t camera_init(){
 	esp_err_t err = esp_camera_init(&camera_config);
@@ -78,7 +257,6 @@ STATIC mp_obj_t camera_init(){
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_init_obj, camera_init);
 
-
 STATIC mp_obj_t camera_deinit(){
 	esp_err_t err = esp_camera_deinit();
 	if (err != ESP_OK) {
@@ -90,53 +268,31 @@ STATIC mp_obj_t camera_deinit(){
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_deinit_obj, camera_deinit);
 
+STATIC mp_obj_t camera_capture()
+{
+	camera_fb_t * fb;
 
-STATIC mp_obj_t camera_capture(){
-	//acquire a frame
-	camera_fb_t * fb = esp_camera_fb_get();
-	if (!fb) {
+	// Acquire a frame
+	fb = esp_camera_fb_get();
+	if (!fb) 
+	{
 		ESP_LOGE(TAG, "Camera capture Failed");
 		return mp_const_false;
 	}
 
 	mp_obj_t image = mp_obj_new_bytes(fb->buf, fb->len);
 
-	//return the frame buffer back to the driver for reuse
+	// Return the frame buffer back to the driver for reuse
 	esp_camera_fb_return(fb);
 	return image;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_capture_obj, camera_capture);
 
-#define SQUARE_DETECTION 8
-typedef struct 
-{
-	uint16_t       height;
-	uint16_t       width;
-	const uint8_t *input;
-	uint16_t       max;
-	uint16_t       access;
-	uint16_t       *reds;
-	uint16_t       *greens;
-	uint16_t       *blues;
-
-	uint16_t       *hues;
-	uint16_t       *saturations;
-	uint16_t       *lights;
-
-	uint8_t        *motion;
-} camera_motion_detect_t;
-
-
-static void *_malloc(size_t size)
-{
-	return heap_caps_calloc(1, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-}
-
 /** Conversion from HSL to RGB color
 @param hue hue value (0-359)
 @param saturation saturation value (0-100)
 @param light light value (0-100) */
-void camera_hsl_to_rgb(uint32_t hue, uint32_t saturation, uint32_t light, uint32_t *red, uint32_t *green, uint32_t *blue)
+void hsl_to_rgb(uint32_t hue, uint32_t saturation, uint32_t light, uint32_t *red, uint32_t *green, uint32_t *blue)
 {
 	int v;
 	int m, sv, fract, vsf, mid1, mid2, sextant;
@@ -200,15 +356,12 @@ void camera_hsl_to_rgb(uint32_t hue, uint32_t saturation, uint32_t light, uint32
 	}
 }
 
-
-
-
 /** Conversion from RGB to HSL color space. 
 @param color color to convert
 @param hue hue value returned (0-359)
 @param saturation saturation value returned (0-100)
 @param light light value returned (0-100) */
-void camera_rgb_to_hsl(uint32_t red, uint32_t green, uint32_t blue, uint32_t *hue, uint32_t *saturation, uint32_t *light)
+void rgb_to_hsl(uint32_t red, uint32_t green, uint32_t blue, uint32_t *hue, uint32_t *saturation, uint32_t *light)
 {
 	uint32_t v, m, vm;
 	uint32_t hue2, saturation2, light2;
@@ -260,11 +413,30 @@ void camera_rgb_to_hsl(uint32_t red, uint32_t green, uint32_t blue, uint32_t *hu
 	}
 }
 
+// Get motion information
+STATIC mp_obj_t camera_motion_detect()
+{
+	mp_obj_t res;
+	camera_fb_t * fb;
+
+	fb = esp_camera_fb_get();
+	if (!fb) 
+	{
+		ESP_LOGE(TAG, "Camera capture Failed");
+		return mp_const_false;
+	}
+
+	res = Motion_new(fb->buf, fb->len);
+
+	esp_camera_fb_return(fb);
+	return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_motion_detect_obj, camera_motion_detect);
 
 // input buffer
-static uint32_t camera_jpg_read(void * arg, size_t index, uint8_t *buf, size_t len)
+static uint32_t Motion_jpgRead(void * arg, size_t index, uint8_t *buf, size_t len)
 {
-	camera_motion_detect_t * motion = (camera_motion_detect_t *)arg;
+	Motion_t * motion = (Motion_t *)arg;
 	if(buf) 
 	{
 		memcpy(buf, motion->input + index, len);
@@ -273,9 +445,9 @@ static uint32_t camera_jpg_read(void * arg, size_t index, uint8_t *buf, size_t l
 }
 
 //output buffer and image width
-static bool camera_get_motion_matrix(void * arg, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
+static bool Motion_parseImage(void * arg, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
 {
-	camera_motion_detect_t * motion = (camera_motion_detect_t *)arg;
+	Motion_t * motion = (Motion_t *)arg;
 	
 	// First access
 	if(!data)
@@ -285,8 +457,27 @@ static bool camera_get_motion_matrix(void * arg, uint16_t x, uint16_t y, uint16_
 			// Get the size of image
 			motion->width  = w;
 			motion->height = h;
-			motion->max    = ((w/SQUARE_DETECTION) + (w % SQUARE_DETECTION == 0 ? 0 : 1)) * ((h/SQUARE_DETECTION) + (h % SQUARE_DETECTION == 0 ? 0 : 1));
-			//~ ESP_LOGE(TAG, "motion %dx%d",w,h);
+
+			if (((w/8) % 8) == 0)
+			{
+				motion->square_x = 8;
+			}
+			else
+			{
+				motion->square_x = 5;
+			}
+
+			if (((h/8) % 8) == 0)
+			{
+				motion->square_y = 8;
+			}
+			else
+			{
+				motion->square_y = 5;
+			}
+
+			motion->max    = (w/motion->square_x) * (h/motion->square_y);
+			//ESP_LOGE(TAG, "motion %dx%d %dx%d %d",w,h, motion->square_x, motion->square_y, motion->max);
 			motion->reds        = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 			motion->greens      = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 			motion->blues       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
@@ -306,7 +497,8 @@ static bool camera_get_motion_matrix(void * arg, uint16_t x, uint16_t y, uint16_
 		uint16_t *blues;
 		uint16_t Y, X;
 		
-		//~ ESP_LOGE(TAG, "motion x=%d y=%d w=%d h=%d %dx%d (%d) %02X%02X%02X %02X%02X%02X",x,y,w,h, motion->width, motion->height, motion->access++,data[0],data[1],data[2],data[3],data[4],data[5]);
+		uint16_t       square_x = motion->square_x;
+		uint16_t       square_y = motion->square_y;
 
 		// Compute the motion in the square detection
 		for (Y = y; Y < (y + h); Y ++)
@@ -317,7 +509,7 @@ static bool camera_get_motion_matrix(void * arg, uint16_t x, uint16_t y, uint16_
 			
 			for (X = x; X < (x + w); X ++) 
 			{
-				uint16_t posX = ((Y/SQUARE_DETECTION)*(motion->width/SQUARE_DETECTION)) + X / SQUARE_DETECTION;
+				uint16_t posX = ((Y/square_y)*(motion->width/square_x)) + X / square_x;
 				reds  [posX] += data[(X-x)*3+2]; // Red
 				greens[posX] += data[(X-x)*3+1]; // Green
 				blues [posX] += data[(X-x)*3];   // Blue
@@ -327,126 +519,172 @@ static bool camera_get_motion_matrix(void * arg, uint16_t x, uint16_t y, uint16_
 		}
 	}
 	
-	/*
-import camera
-camera.init()
-camera.framesize(camera.FRAMESIZE_QQVGA)
-camera.pixformat(camera.PIXFORMAT_JPEG)
-
-
-import camera
-camera.init()
-camera.framesize(camera.FRAMESIZE_UXGA)
-camera.pixformat(camera.PIXFORMAT_JPEG)
-
-import machine
-import uos
-uos.mount(machine.SDCard(), "/sd")
-i = 1
-def snap():
-
-global i
-image, reds, greens, blues = camera.motion()
-file = open("/sd/%d_img.jpg"%i,"wb")
-file.write(image)
-file.close()
-file = open("/sd/%d_reds.bin"%i,"wb")
-file.write(reds)
-file.close()
-file = open("/sd/%d_greens.bin"%i,"wb")
-file.write(greens)
-file.close()
-file = open("/sd/%d_blues.bin"%i,"wb")
-file.write(blues)
-file.close()
-i += 1
-
-
-for j in range(20): print(i);snap()
-
-
-uos.umount("/sd")
-
-	*/
 	return true;
 }
 
-
-STATIC mp_obj_t camera_motion_detection()
+// Create motion objet with an image
+static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 {
-	// Acquire a frame
-	camera_fb_t * fb = esp_camera_fb_get();
-	if (!fb) 
+	// Alloc class instance
+	Motion_t *motion = m_new_obj_with_finaliser(Motion_t);
+	if (motion)
 	{
-		ESP_LOGE(TAG, "Camera capture Failed");
-		return mp_const_false;
+		memset(motion, 0, sizeof(Motion_t));
+		motion->base.type = &Motion_type;
+		motion->input = imageData;
+		
+		// Compute motion detection
+		esp_err_t ret = esp_jpg_decode(imageLength, JPG_SCALE_8X, Motion_jpgRead, Motion_parseImage, (void*)motion);
+
+		if (ret == ESP_OK)
+		{
+			int i;
+			uint8_t * pBluesRes     = (uint8_t*)motion->blues;
+			uint8_t * pRedRes       = (uint8_t*)motion->reds;
+			uint8_t * pGreenRes     = (uint8_t*)motion->greens;
+			uint16_t * pHues        = motion->hues;
+			uint16_t * pSaturations = motion->saturations;
+			uint16_t * pLights      = motion->lights;
+			uint32_t red;
+			uint32_t green;
+			uint32_t blue;
+			uint32_t hue;
+			uint32_t saturation;
+			uint32_t light;
+			uint32_t meanSaturation = 0;
+			uint32_t meanLight= 0;
+			uint16_t square = motion->square_x * motion->square_y;
+
+			motion->imageData = _malloc(imageLength);
+			if (motion->imageData)
+			{
+				motion->imageLength = imageLength;
+				memcpy(motion->imageData, imageData, imageLength);
+			}
+			
+			//ESP_LOGE(TAG, "Motion_create %d %d",motion->width,motion->height);
+			for (i = 0; i < motion->max; i++)
+			{
+				// Calculate the average on the detection square
+				motion->blues [i] = motion->blues [i]/square;
+				motion->reds  [i] = motion->reds  [i]/square;
+				motion->greens[i] = motion->greens[i]/square;
+				
+				blue  = (uint8_t)motion->blues  [i];
+				red   = (uint8_t)motion->reds   [i];
+				green = (uint8_t)motion->greens [i];
+				
+				// Reduces the size of data to be returned
+				*pBluesRes = blue;
+				*pRedRes   = red;
+				*pGreenRes = green;
+				
+				rgb_to_hsl(red, green, blue, &hue, &saturation, &light);
+
+				*pHues        = (uint16_t)hue;
+				*pSaturations = (uint16_t)saturation;
+				*pLights      = (uint16_t)light;
+
+				if (saturation > motion->maxSaturation) motion->maxSaturation = saturation;
+				if (saturation < motion->minSaturation) motion->minSaturation = saturation;
+				if (light      > motion->maxLight)      motion->maxLight      = light;
+				if (light      < motion->minLight)      motion->minLight      = light;
+
+				meanSaturation += saturation;
+				meanLight      += light;
+				
+				pBluesRes++;
+				pRedRes++;
+				pGreenRes++;
+				pHues++;
+				pSaturations++;
+				pLights++;
+			}
+
+			motion->meanLight = meanLight/motion->max;
+			motion->meanSaturation = meanSaturation/motion->max;
+		}
+		else
+		{
+			mp_raise_ValueError(MP_ERROR_TEXT("Camera esp_jpg_decode failed"));\
+		}
 	}
-	mp_obj_t image = mp_obj_new_bytes(fb->buf, fb->len);
+	return motion;
+}
 
-	//return the frame buffer back to the driver for reuse
-	esp_camera_fb_return(fb);
+// Constructor method
+STATIC mp_obj_t Motion_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args)
+{
+	mp_obj_t  result = mp_const_none;
+	enum 
+	{ 
+		ARG_image,
+	};
+	// Constructor parameters
+	static const mp_arg_t allowed_args[] = 
+	{
+		{ MP_QSTR_image,  MP_ARG_REQUIRED | MP_ARG_OBJ },
+	};
 	
-	// Add image in returned list
+	// Parsing parameters
+	mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+	mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+
+	// Check image
+	if (args[ARG_image].u_obj  == mp_const_none || ! mp_obj_is_str_or_bytes(args[ARG_image].u_obj))
+	{
+		mp_raise_TypeError(MP_ERROR_TEXT("Bad image"));
+	}
+	else
+	{
+		GET_STR_DATA_LEN(args[ARG_image].u_obj, imageData, imageLength);
+
+		Motion_t * self = Motion_new(imageData, imageLength);
+		if (self)
+		{
+			result = self;
+		}
+	}
+	return result;
+}
+
+// Delete method
+STATIC mp_obj_t Motion_deinit(mp_obj_t self_in)
+{
+	Motion_t *motion = self_in;
+	if (motion)
+	{
+		_free((void**)&motion->blues);
+		_free((void**)&motion->reds);
+		_free((void**)&motion->greens);
+		_free((void**)&motion->hues);
+		_free((void**)&motion->saturations);
+		_free((void**)&motion->lights);
+		_free((void**)&motion->imageData);
+	}
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_deinit_obj, Motion_deinit);
+
+// extract method
+STATIC mp_obj_t Motion_extract(mp_obj_t self_in)
+{
+	Motion_t *motion = self_in;
 	mp_obj_t res = mp_obj_new_list(0, NULL);
-	mp_obj_list_append(res, image);
-
-	camera_motion_detect_t motionDetector;
-	memset(&motionDetector, 0, sizeof(motionDetector));
-	motionDetector.input = fb->buf;
-	
-	// Compute motion detection
-	esp_err_t ret = esp_jpg_decode(fb->len, JPG_SCALE_8X, camera_jpg_read, camera_get_motion_matrix, (void*)&motionDetector);
-
-	if (ret == ESP_OK)
+	if (motion)
 	{
 		int i;
-		uint8_t * pBluesRes     = (uint8_t*)motionDetector.blues;
-		uint8_t * pRedRes       = (uint8_t*)motionDetector.reds;
-		uint8_t * pGreenRes     = (uint8_t*)motionDetector.greens;
-		uint16_t * pHues        = motionDetector.hues;
-		uint16_t * pSaturations = motionDetector.saturations;
-		uint16_t * pLights      = motionDetector.lights;
-		uint32_t red;
-		uint32_t green;
-		uint32_t blue;
-		uint32_t hue;
-		uint32_t saturation;
-		uint32_t light;
-		
-		for (i = 0; i < motionDetector.max; i++)
-		{
-			// Calculate the average on the detection square
-			motionDetector.blues [i] = motionDetector.blues [i]/SQUARE_DETECTION/SQUARE_DETECTION;
-			motionDetector.reds  [i] = motionDetector.reds  [i]/SQUARE_DETECTION/SQUARE_DETECTION;
-			motionDetector.greens[i] = motionDetector.greens[i]/SQUARE_DETECTION/SQUARE_DETECTION;
-			
-			blue  = (uint8_t)motionDetector.blues  [i];
-			red   = (uint8_t)motionDetector.reds   [i];
-			green = (uint8_t)motionDetector.greens [i];
-			
-			// Reduces the size of data to be returned
-			*pBluesRes = blue;
-			*pRedRes   = red;
-			*pGreenRes = green;
-			
-			camera_rgb_to_hsl(red, green, blue, &hue, &saturation, &light);
+		uint16_t * pHues        = motion->hues;
+		uint16_t * pSaturations = motion->saturations;
+		uint16_t * pLights      = motion->lights;
 
-			*pHues        = (uint16_t)hue;
-			*pSaturations = (uint16_t)saturation;
-			*pLights      = (uint16_t)light;
-			
-			pBluesRes++;
-			pRedRes++;
-			pGreenRes++;
-			pHues++;
-			pSaturations++;
-			pLights++;
-		}
-		
+		// Add image buffer
+		mp_obj_list_append(res,mp_obj_new_bytes(motion->imageData, motion->imageLength));
+
 		// Create binary string with motion result
-		mp_obj_t objReds   = mp_obj_new_bytes((uint8_t *) motionDetector.reds  , motionDetector.max);
-		mp_obj_t objGreens = mp_obj_new_bytes((uint8_t *) motionDetector.greens, motionDetector.max);
-		mp_obj_t objBlues  = mp_obj_new_bytes((uint8_t *) motionDetector.blues , motionDetector.max);
+		mp_obj_t objReds   = mp_obj_new_bytes((uint8_t *) motion->reds  , motion->max);
+		mp_obj_t objGreens = mp_obj_new_bytes((uint8_t *) motion->greens, motion->max);
+		mp_obj_t objBlues  = mp_obj_new_bytes((uint8_t *) motion->blues , motion->max);
 		
 		// Add the motion result in the list returned
 		mp_obj_list_append(res, objReds  );
@@ -454,14 +692,14 @@ STATIC mp_obj_t camera_motion_detection()
 		mp_obj_list_append(res, objBlues );
 		
 		// Build list of hue, saturation, light
-		pHues        = motionDetector.hues;
-		pSaturations = motionDetector.saturations;
-		pLights      = motionDetector.lights;
+		pHues        = motion->hues;
+		pSaturations = motion->saturations;
+		pLights      = motion->lights;
 		
 		mp_obj_t objHues        = mp_obj_new_list(0, NULL);
 		mp_obj_t objSaturations = mp_obj_new_list(0, NULL);
 		mp_obj_t objLights      = mp_obj_new_list(0, NULL);
-		for (i = 0; i < motionDetector.max; i++)
+		for (i = 0; i < motion->max; i++)
 		{
 			mp_obj_list_append(objHues       , mp_obj_new_int(*pHues));
 			mp_obj_list_append(objSaturations, mp_obj_new_int(*pSaturations));
@@ -475,150 +713,187 @@ STATIC mp_obj_t camera_motion_detection()
 		mp_obj_list_append(res, objHues);
 		mp_obj_list_append(res, objSaturations);
 		mp_obj_list_append(res, objLights);
-	}
-	else
-	{
-		mp_raise_ValueError(MP_ERROR_TEXT("Camera esp_jpg_decode failed"));\
+
+		mp_obj_list_append(res, mp_obj_new_int(motion->meanLight));
+		mp_obj_list_append(res, mp_obj_new_int(motion->meanSaturation));
 	}
 
-	free(motionDetector.blues);
-	free(motionDetector.reds);
-	free(motionDetector.greens);
-
-	free(motionDetector.hues);
-	free(motionDetector.saturations);
-	free(motionDetector.lights);
-	
 	return res;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_motion_detection_obj, camera_motion_detection);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_extract_obj, Motion_extract);
 
-
-STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
+// getImage method
+STATIC mp_obj_t Motion_getImage(mp_obj_t self_in)
 {
-	if (n_args == 0) 
+	Motion_t *motion = self_in;
+	mp_obj_t res = mp_const_none;
+	if (motion)
 	{
-		sensor_t *s = esp_camera_sensor_get();
-		if (s)
-		{
-			return mp_obj_new_int((int)s->pixformat);
-		}
-		else
-		{
-			mp_raise_ValueError(MP_ERROR_TEXT("Camera get pixformat not possible : driver not opened"));
-		}
+		res = mp_obj_new_bytes(motion->imageData, motion->imageLength);
+	}
+	return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getImage_obj, Motion_getImage);
+
+// setErrorSaturation method (used for compare)
+STATIC mp_obj_t Motion_setErrorSaturation(mp_obj_t self_in, mp_obj_t saturation_in)
+{
+	Motion_t *self = self_in;
+	self->errorSaturation = mp_obj_get_int(saturation_in);
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_setErrorSaturation_obj, Motion_setErrorSaturation);
+
+// setErrorLight method (used for compare)
+STATIC mp_obj_t Motion_setErrorLight(mp_obj_t self_in, mp_obj_t light_in)
+{
+	Motion_t *self = self_in;
+	self->errorLight = mp_obj_get_int(light_in);
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_setErrorLight_obj, Motion_setErrorLight);
+
+// setErrorHue method (used for compare)
+STATIC mp_obj_t Motion_setErrorHue(mp_obj_t self_in, mp_obj_t hue_in)
+{
+	Motion_t *self = self_in;
+	self->errorHue = mp_obj_get_int(hue_in);
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_setErrorHue_obj, Motion_setErrorHue);
+
+// compare method
+STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
+{
+	Motion_t *self = self_in;
+	Motion_t *other = other_in;
+
+	if (other->base.type != &Motion_type)
+	{
+		mp_raise_TypeError(MP_ERROR_TEXT("Not motion object"));
+	}
+	else if (self->max != other->max)
+	{
+		mp_raise_TypeError(MP_ERROR_TEXT("Motions not same format"));
 	}
 	else
 	{
-		pixformat_t value = (pixformat_t)mp_obj_get_int(args[0]);
-		if (value >= PIXFORMAT_RGB565 && value <= PIXFORMAT_RGB555)
+		int diffHue = 0;
+		int diffSaturation = 0;
+		int diffLight = 0;
+
+		// If enough light compare saturation
+		if (self->meanLight >= 15 && other->meanLight >= 15)
 		{
-			sensor_t *s = esp_camera_sensor_get();
-			if (s)
+			int i;
+			int errSaturation        = self->errorSaturation;
+			int correctionSaturation = (int)self->meanSaturation - (int)other->meanSaturation;
+
+			for (i = 0; i < self->max; i++)
 			{
-				s->set_pixformat(s,(pixformat_t)value);
-			}
-			else
-			{
-				mp_raise_ValueError(MP_ERROR_TEXT("Camera set pixformat not possible : driver not opened"));
+				if (abs((int)self->saturations[i] - (int)other->saturations[i] - correctionSaturation) > errSaturation)
+				{
+					diffSaturation ++;
+				}
 			}
 		}
-		else
+
+		// if enough light compare hue
+		if (self->meanLight >= 20 && other->meanLight > 20)
 		{
-			mp_raise_ValueError(MP_ERROR_TEXT("Camera set pixformat : value out of limits [PIXFORMAT_RGB565-PIXFORMAT_RGB555]"));
+			int i;
+			int errHue        = self->errorHue;
+			for (i = 0; i < self->max; i++)
+			{
+				int diff = self->hues[i] - other->hues[i];
+				if (abs(diff) > errHue && abs(diff) < 360-errHue)
+				{
+					diffHue++;
+				}
+			}
 		}
+
+		// Compare light
+		{
+			int i;
+			int errLight             = self->errorLight;
+			int correctionLight      = (int)self->meanLight      - (int)other->meanLight;
+			for (i = 0; i < self->max; i++)
+			{
+				if (abs((int)self->lights[i] - (int)other->lights[i] - correctionLight) > errLight)
+				{
+					diffLight ++;
+				}
+			}
+		}
+
+		mp_obj_t res = mp_obj_new_list(0, NULL);
+		mp_obj_list_append(res, mp_obj_new_int(diffHue));
+		mp_obj_list_append(res, mp_obj_new_int(diffSaturation));
+		mp_obj_list_append(res, mp_obj_new_int(diffLight));
+		mp_obj_list_append(res, mp_obj_new_int(self->max));
+		return res;
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_pixformat_obj, 0, 1, camera_pixformat);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_compare_obj, Motion_compare);
 
-#define CAMERA_SETTING(type, field, method, min, max) \
-	STATIC mp_obj_t camera_##method(size_t n_args, const mp_obj_t *args)\
-	{\
-		if (n_args == 0) \
-		{\
-			sensor_t *s = esp_camera_sensor_get();\
-			if (s)\
-			{\
-				return mp_obj_new_int((int)s->status.field);\
-			}\
-			else\
-			{\
-				mp_raise_ValueError(MP_ERROR_TEXT("Camera sensor get " #method " not possible : driver not opened"));\
-			}\
-		}\
-		else\
-		{\
-			type value = (type)mp_obj_get_int(args[0]);\
-			if (value >= min && value <= max)\
-			{\
-				sensor_t *s = esp_camera_sensor_get();\
-				if (s)\
-				{\
-					s->set_ ## method(s,(type)value);\
-				}\
-				else\
-				{\
-					mp_raise_ValueError(MP_ERROR_TEXT("Camera sensor set " #method " not possible : driver not opened"));\
-				}\
-			}\
-			else\
-			{\
-				mp_raise_ValueError(MP_ERROR_TEXT("Camera sensor set " #method " : value out of limits [" #min "-" #max "]"));\
-			}\
-		}\
-		return mp_const_none;\
-	}\
-	STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_##method##_obj, 0, 1, camera_##method);
+// get feature method (mean, min and max for light and saturation)
+STATIC mp_obj_t Motion_getFeature(mp_obj_t self_in)
+{
+	Motion_t *self = self_in;
+	mp_obj_t res = mp_obj_new_list(0, NULL);
+	mp_obj_list_append(res, mp_obj_new_int(self->meanLight));
+	mp_obj_list_append(res, mp_obj_new_int(self->minLight));
+	mp_obj_list_append(res, mp_obj_new_int(self->maxLight));
 
-#pragma GCC diagnostic ignored "-Wtype-limits"
-//             type,        get             set           , min, max
-CAMERA_SETTING(uint16_t   , aec_value     , aec_value     ,  0, 1200)
-CAMERA_SETTING(framesize_t, framesize     , framesize     ,  FRAMESIZE_96X96, FRAMESIZE_QSXGA)
-CAMERA_SETTING(uint8_t    , quality       , quality       ,  0, 63  )
-CAMERA_SETTING(uint8_t    , special_effect, special_effect,  0, 6   )
-CAMERA_SETTING(uint8_t    , wb_mode       , wb_mode       ,  0, 4   )
-CAMERA_SETTING(uint8_t    , agc_gain      , agc_gain      ,  0, 30  )
-CAMERA_SETTING(uint8_t    , gainceiling   , gainceiling   ,  0, 6   )
-CAMERA_SETTING(int8_t     , brightness    , brightness    , -2, 2   )
-CAMERA_SETTING(int8_t     , contrast      , contrast      , -2, 2   )
-CAMERA_SETTING(int8_t     , saturation    , saturation    , -2, 2   )
-CAMERA_SETTING(int8_t     , sharpness     , sharpness     , -2, 2   )
-CAMERA_SETTING(int8_t     , ae_level      , ae_level      , -2, 2   )
-CAMERA_SETTING(uint8_t    , denoise       , denoise       ,  0, 255 )
-CAMERA_SETTING(uint8_t    , awb           , whitebal      ,  0, 255 )
-CAMERA_SETTING(uint8_t    , awb_gain      , awb_gain      ,  0, 255 )
-CAMERA_SETTING(uint8_t    , aec           , exposure_ctrl ,  0, 255 )
-CAMERA_SETTING(uint8_t    , aec2          , aec2          ,  0, 255 )
-CAMERA_SETTING(uint8_t    , agc           , gain_ctrl     ,  0, 255 )
-CAMERA_SETTING(uint8_t    , bpc           , bpc           ,  0, 255 )
-CAMERA_SETTING(uint8_t    , wpc           , wpc           ,  0, 255 )
-CAMERA_SETTING(uint8_t    , raw_gma       , raw_gma       ,  0, 255 )
-CAMERA_SETTING(uint8_t    , lenc          , lenc          ,  0, 255 )
-CAMERA_SETTING(uint8_t    , hmirror       , hmirror       ,  0, 255 )
-CAMERA_SETTING(uint8_t    , vflip         , vflip         ,  0, 255 )
-CAMERA_SETTING(uint8_t    , dcw           , dcw           ,  0, 255 )
-CAMERA_SETTING(uint8_t    , colorbar      , colorbar      ,  0, 255 )
+	mp_obj_list_append(res, mp_obj_new_int(self->meanSaturation));
+	mp_obj_list_append(res, mp_obj_new_int(self->minSaturation));
+	mp_obj_list_append(res, mp_obj_new_int(self->maxSaturation));
 
-#pragma GCC diagnostic pop
-
-STATIC mp_obj_t camera_isavailable(){
-#ifdef CONFIG_ESP32CAM
-	return mp_const_true;
-#else
-	return mp_const_false;
-#endif
+	mp_obj_list_append(res, mp_obj_new_int(self->max));
+	return res;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_isavailable_obj, camera_isavailable);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getFeature_obj, Motion_getFeature);
 
+// print method
+STATIC void Motion_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) 
+{
+	ESP_LOGE(TAG, "Motion_print");
+}
 
+// Methods
+STATIC const mp_rom_map_elem_t Motion_locals_dict_table[] = 
+{
+	// Delete method
+	{ MP_ROM_QSTR(MP_QSTR___del__),            MP_ROM_PTR(&Motion_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_deinit),             MP_ROM_PTR(&Motion_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_extract),            MP_ROM_PTR(&Motion_extract_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_compare),            MP_ROM_PTR(&Motion_compare_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_setErrorHue),        MP_ROM_PTR(&Motion_setErrorHue_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_setErrorSaturation), MP_ROM_PTR(&Motion_setErrorSaturation_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_setErrorLight),      MP_ROM_PTR(&Motion_setErrorLight_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_getFeature),         MP_ROM_PTR(&Motion_getFeature_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_getImage),           MP_ROM_PTR(&Motion_getImage_obj) },
+};
+STATIC MP_DEFINE_CONST_DICT(Motion_locals_dict, Motion_locals_dict_table);
+
+// Class definition
+const mp_obj_type_t Motion_type = 
+{
+	{ &mp_type_type },
+	.name        = MP_QSTR_Motion,
+	.print       = Motion_print,
+	.make_new    = Motion_make_new,
+	.locals_dict = (mp_obj_t)&Motion_locals_dict,
+};
 
 STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR___name__           ), MP_ROM_QSTR(MP_QSTR_camera) },
 	{ MP_ROM_QSTR(MP_QSTR_init               ), MP_ROM_PTR(&camera_init_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deinit             ), MP_ROM_PTR(&camera_deinit_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_capture            ), MP_ROM_PTR(&camera_capture_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_motion             ), MP_ROM_PTR(&camera_motion_detection_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_motion             ), MP_ROM_PTR(&camera_motion_detect_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_isavailable        ), MP_ROM_PTR(&camera_isavailable_obj) },
 
 	{ MP_ROM_QSTR(MP_QSTR_pixformat          ), MP_ROM_PTR(&camera_pixformat_obj) },
@@ -680,11 +955,12 @@ STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RAW      ), MP_ROM_INT(PIXFORMAT_RAW      )}, // RAW
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RGB444   ), MP_ROM_INT(PIXFORMAT_RGB444   )}, // 3BP2P/RGB444
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RGB555   ), MP_ROM_INT(PIXFORMAT_RGB555   )}, // 3BP2P/RGB555
+	{ MP_ROM_QSTR(MP_QSTR_Motion             ), MP_ROM_PTR(&Motion_type) },
 };
-
 STATIC MP_DEFINE_CONST_DICT(camera_module_globals, camera_module_globals_table);
 
-const mp_obj_module_t mp_module_camera = {
+const mp_obj_module_t mp_module_camera = 
+{
 	.base = { &mp_type_module },
 	.globals = (mp_obj_dict_t*)&camera_module_globals,
 };
