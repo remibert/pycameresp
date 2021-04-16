@@ -49,7 +49,7 @@ async def pushover(request, response, args):
                 del request.params[b&#34;modify&#34;]
                 config.update(request.params)
                 config.save()
-                await asyncNotify(token=config.token, user=config.user, message = b&#34;Pushover config modified&#34;)
+                await asyncNotify(token=config.token, user=config.user, message = b&#34;Pushover notification %s&#34;%(b&#34;enabled&#34; if config.activated else b&#34;disabled&#34;))
 
         if disabled:
                 submit = Submit(text=b&#34;Modify&#34;)
@@ -64,6 +64,8 @@ async def pushover(request, response, args):
                                                 Form([\
                                                         Br(),
                                                         Title3(text=b&#34;Notification configuration&#34;),
+                                                        Br(),
+                                                        Switch(text=b&#34;Activated&#34;, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
                                                         Edit(text=b&#34;User&#34;,  name=b&#34;user&#34;,  placeholder=b&#34;Enter pushover user&#34;,  type=b&#34;password&#34;, value=config.user,  disabled=disabled),
                                                         Edit(text=b&#34;Token&#34;, name=b&#34;token&#34;, placeholder=b&#34;Enter pushover token&#34;, type=b&#34;password&#34;, value=config.token, disabled=disabled),
                                                         Input (text=b&#34;modify&#34; , name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),
@@ -108,7 +110,7 @@ async def pushover(request, response, args):
                 del request.params[b&#34;modify&#34;]
                 config.update(request.params)
                 config.save()
-                await asyncNotify(token=config.token, user=config.user, message = b&#34;Pushover config modified&#34;)
+                await asyncNotify(token=config.token, user=config.user, message = b&#34;Pushover notification %s&#34;%(b&#34;enabled&#34; if config.activated else b&#34;disabled&#34;))
 
         if disabled:
                 submit = Submit(text=b&#34;Modify&#34;)
@@ -123,6 +125,8 @@ async def pushover(request, response, args):
                                                 Form([\
                                                         Br(),
                                                         Title3(text=b&#34;Notification configuration&#34;),
+                                                        Br(),
+                                                        Switch(text=b&#34;Activated&#34;, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
                                                         Edit(text=b&#34;User&#34;,  name=b&#34;user&#34;,  placeholder=b&#34;Enter pushover user&#34;,  type=b&#34;password&#34;, value=config.user,  disabled=disabled),
                                                         Edit(text=b&#34;Token&#34;, name=b&#34;token&#34;, placeholder=b&#34;Enter pushover token&#34;, type=b&#34;password&#34;, value=config.token, disabled=disabled),
                                                         Input (text=b&#34;modify&#34; , name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),

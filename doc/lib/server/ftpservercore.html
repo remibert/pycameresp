@@ -417,6 +417,7 @@ class FtpServerCore:
         async def RNTO(self):
                 &#34;&#34;&#34; Ftp command RNTO &#34;&#34;&#34;
                 if self.fromname is not None:
+                        self.log(b&#34;Ftp rename &#39;%s&#39; to &#39;%s&#39;&#34;%(useful.tostrings(self.root + self.fromname), useful.tostrings(self.root + self.path)))
                         os.rename(useful.tostrings(self.root + self.fromname), useful.tostrings(self.root + self.path))
                         await self.sendOk()
                 else:
@@ -877,6 +878,7 @@ class FtpServerCore:
         async def RNTO(self):
                 &#34;&#34;&#34; Ftp command RNTO &#34;&#34;&#34;
                 if self.fromname is not None:
+                        self.log(b&#34;Ftp rename &#39;%s&#39; to &#39;%s&#39;&#34;%(useful.tostrings(self.root + self.fromname), useful.tostrings(self.root + self.path)))
                         os.rename(useful.tostrings(self.root + self.fromname), useful.tostrings(self.root + self.path))
                         await self.sendOk()
                 else:
@@ -1254,6 +1256,7 @@ class FtpServerCore:
 <pre><code class="python">async def RNTO(self):
         &#34;&#34;&#34; Ftp command RNTO &#34;&#34;&#34;
         if self.fromname is not None:
+                self.log(b&#34;Ftp rename &#39;%s&#39; to &#39;%s&#39;&#34;%(useful.tostrings(self.root + self.fromname), useful.tostrings(self.root + self.path)))
                 os.rename(useful.tostrings(self.root + self.fromname), useful.tostrings(self.root + self.path))
                 await self.sendOk()
         else:

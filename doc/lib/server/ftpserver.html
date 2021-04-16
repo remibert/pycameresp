@@ -47,6 +47,7 @@ If you have enough memory (SPIRAM or other), just start the server with the prel
 import uasyncio
 import sys
 from tools import useful
+from server import waitResume
 
 class Ftp:
         &#34;&#34;&#34; Ftp main class &#34;&#34;&#34;
@@ -68,6 +69,7 @@ class Ftp:
         
         async def onConnection(self, reader, writer):
                 &#34;&#34;&#34; Asynchronous connection detected &#34;&#34;&#34;
+                await waitResume()
                 try:
                         # Preload ftp core class
                         self.preload()
@@ -199,6 +201,7 @@ preload : True = preload the server at the start, False = load the server at the
         
         async def onConnection(self, reader, writer):
                 &#34;&#34;&#34; Asynchronous connection detected &#34;&#34;&#34;
+                await waitResume()
                 try:
                         # Preload ftp core class
                         self.preload()
@@ -228,6 +231,7 @@ preload : True = preload the server at the start, False = load the server at the
 </summary>
 <pre><code class="python">async def onConnection(self, reader, writer):
         &#34;&#34;&#34; Asynchronous connection detected &#34;&#34;&#34;
+        await waitResume()
         try:
                 # Preload ftp core class
                 self.preload()

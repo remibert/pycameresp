@@ -48,7 +48,7 @@ class PasswordPage:
 	def getDialog(content, submit ,alert = None):
 		""" Common dialog of login password page """
 		if alert != None: alert = AlertError(text=alert), Br()
-		return [Br(),Container([alert,Card([Form([Br(),content,Submit(text=submit)], method=b"post")])])]
+		return [Br(), Container([alert,Card([Form([Br(),Title3(text=b"User password definition"),Br(),content,Submit(text=submit)], method=b"post")])])]
 
 	@staticmethod
 	def login(request, response, duration):

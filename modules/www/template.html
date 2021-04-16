@@ -19,17 +19,6 @@
 		<!--Div:begin-->
 		<div class="%(class_)s" style="%(style)s" id="%(id)s">%(content)s</div>
 		<!--Div:end-->
-		<!--Command:begin-->
-		<script type="text/javascript">
-		function onClick_%(path)s_%(id)s()
-		{
-			var xhttp = new XMLHttpRequest();
-			xhttp.open("GET","%(path)s/%(id)s",true);
-			xhttp.send();
-		}
-		</script>
-		<button onclick="onClick_%(path)s_%(id)s()" class="btn %(class_)s" id="%(id)s" style="%(style)s">%(text)s</button>
-		<!--Command:end-->
 
 		<!--Form:begin-->
 		<form class="container %(class_)s" style="%(style)s" id="%(id)s" method="%(method)s">
@@ -63,9 +52,7 @@
 			<!--Title4:end-->
 
 			<!--Label:begin-->
-			<div class="form-group %(class_)s">
-				<label class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</label>
-			</div>
+			<label class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</label>
 			<!--Label:end-->
 
 			<!--Input:begin-->
@@ -75,8 +62,19 @@
 			<!--Input:end-->
 
 			<!--Slider:begin-->
+			
 			<label for="customRange">%(text)s</label>
-			<input type="range" class="custom-range  %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(disabled)s min="%(min)s" max="%(max)s" step="%(step)s" value="%(value)s" %(disabled)s>
+			<div style="display: flex;">
+				<input type="range" class="custom-range %(class_)s" style="%(style)s" id="slider_%(id)s" name="%(name)s" min="%(min)s" max="%(max)s" step="%(step)s" value="%(value)s" %(disabled)s oninput="onchange_%(id)s()" />
+				<span id="value_%(id)s"/>
+			</div>
+			<script type="text/javascript">
+				function onchange_%(id)s() 
+				{
+					document.getElementById("value_%(id)s").innerHTML = "&nbsp;" + document.getElementById("slider_%(id)s").value;
+				}
+				onchange_%(id)s();
+			</script>
 			<!--Slider:end-->
 
 			<!--Edit:begin-->
@@ -103,7 +101,7 @@
 			<!--Checkbox:end-->
 
 			<!--Button:begin-->
-			<input class="btn %(class_)s" style="%(style)s" id="%(id)s" type="button" name="%(name)s" %(checked)s %(disabled)s> %(text)s</input>
+			<input class="btn %(class_)s" style="%(style)s" id="%(id)s" type="button" name="%(name)s" %(disabled)s> %(text)s</input>
 			<!--Button:end-->
 
 			<!--Radio:begin-->
@@ -113,23 +111,40 @@
 				</label>
 			</div>
 			<!--Radio:end-->
-
+			
 			<!--ChooseFile:begin-->
-			<label >%(text)s</label>
-			<div class="custom-file">
-				<input type="file" class="custom-file-input %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(disabled)s>
-				<label class="custom-file-label" for="%(id)s">%(value)s</label>
-			</div>
-			<br>
-			<br>
-			<script>
-				$(".custom-file-input").on("change", function() 
-				{
-					var fileName = $(this).val().split("\\").pop();
-					$(this).siblings(".custom-file-label").addClass("selected").html(fileName);
-				});
-			</script>
+			<input type="file"  style="display: none;" 
+				id="%(id)s" 
+				onchange="document.getElementById('label_%(id)s').value=document.getElementById('%(id)s').value.split(/[\\\/]/).pop();" 
+				accept="%(accept)s" name="%(name)s" %(disabled)s />
+			<input type="button" id="label_%(id)s" value="%(text)s" onclick="document.getElementById('%(id)s').click()" class="btn btn-outline-primary " %(disabled)s />
 			<!--ChooseFile:end-->
+			
+
+			<!--ImportFile:begin-->
+			<input type="file" style="display:none" id="%(id)s" onchange="importFile_%(id)s()" name="%(name)s" accept="%(accept)s" %(disabled)s />
+			<input type="button" id="label_%(id)s" value="%(text)s" onclick="document.getElementById('%(id)s').click()" class="btn btn-outline-primary " %(disabled)s />
+			<script>
+				function importFile_%(id)s()
+				{
+					
+					let data = document.getElementById('%(id)s').files[0];
+					let entry = document.getElementById('%(id)s').files[0];
+					fetch('%(path)s/' + encodeURIComponent(entry.name), {method:'PUT',body:data});
+					if ("%(alert)s" != "")
+					{
+						alert('%(alert)s');
+					}
+					document.getElementById('%(id)s').value = "";
+					location.reload();
+				}
+			</script>
+			<!--ImportFile:end-->
+			
+			<!--ExportFile:begin-->
+			<a href="%(path)s" download="%(filename)s" class="btn btn-outline-primary " name="%(name)s" %(disabled)s>%(text)s</a>
+			<!--ExportFile:end-->
+
 		</form>
 		<!--Form:end-->
 
@@ -239,13 +254,24 @@
 		<!--Tag:end-->
 
 		<!--ButtonCmd:begin-->
-		<button class="btn btn-outline-primary %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(checked)s %(disabled)s onclick="oncommand_%(id)s()" >%(text)s</button>
+		<button type="button" class="btn btn-outline-primary %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(disabled)s onclick="oncommand_%(id)s()" >%(text)s</button>
 		<script type="text/javascript">
 			function oncommand_%(id)s() 
 			{
-				var xhttp = new XMLHttpRequest();
-				xhttp.open("GET","%(path)s?name="+document.getElementById("%(id)s").name,true);
-				xhttp.send();
+				var confirmMessage = "%(confirm)s";
+				var execute = true;
+				
+				if (confirmMessage != "")
+				{
+					execute = confirm(confirmMessage);
+				}
+				
+				if (execute)
+				{
+					var xhttp = new XMLHttpRequest();
+					xhttp.open("GET","%(path)s?name="+document.getElementById("%(id)s").name,true);
+					xhttp.send();
+				}
 			}
 		</script>
 		<!--ButtonCmd:end-->

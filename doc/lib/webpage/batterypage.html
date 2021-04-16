@@ -58,10 +58,10 @@ async def battery(request, response, args):
                 value = b&#39;save&#39;
 
         page = mainPage(
-                content=[Br(),Container([\
+                content=[Br(), Container([\
                                         Card([\
                                                 Form([\
-                                                        Br(),
+                                                        Br(), Title3(text=b&#34;Battery management&#34;), Br(),
                                                         Switch(text=b&#34;Activated&#34;,              name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
                                                         Edit(text=b&#34;Battery level GPIO&#34;,       name=b&#34;levelGpio&#34;,            placeholder=b&#34;GPIO connect to battery level&#34;,                   pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.levelGpio,    disabled=disabled),
                                                         Edit(text=b&#34;Battery 100% GPIO value&#34;,  name=b&#34;fullBattery&#34;,          placeholder=b&#34;GPIO ADC value for battery full (4.2V)&#34;,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.fullBattery,  disabled=disabled),
@@ -116,10 +116,10 @@ async def battery(request, response, args):
                 value = b&#39;save&#39;
 
         page = mainPage(
-                content=[Br(),Container([\
+                content=[Br(), Container([\
                                         Card([\
                                                 Form([\
-                                                        Br(),
+                                                        Br(), Title3(text=b&#34;Battery management&#34;), Br(),
                                                         Switch(text=b&#34;Activated&#34;,              name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
                                                         Edit(text=b&#34;Battery level GPIO&#34;,       name=b&#34;levelGpio&#34;,            placeholder=b&#34;GPIO connect to battery level&#34;,                   pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.levelGpio,    disabled=disabled),
                                                         Edit(text=b&#34;Battery 100% GPIO value&#34;,  name=b&#34;fullBattery&#34;,          placeholder=b&#34;GPIO ADC value for battery full (4.2V)&#34;,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.fullBattery,  disabled=disabled),

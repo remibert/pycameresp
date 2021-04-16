@@ -25,7 +25,7 @@ async def cameraPage(request, response, args):
 			[Br(),
 				Container(Tag(b"""
 <p>
-	<button id="button-stream" class="btn btn-outline-primary" onclick="onStartVideoClick()">Show</button>
+	<button id="button-stream" class="btn btn-outline-primary" onclick="onStartVideoClick()" type="button">Show</button>
 	<figure>
 		<div id="container-stream" class="display: none;">
 			<img id="video-stream" src="">

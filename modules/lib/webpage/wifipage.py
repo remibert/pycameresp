@@ -40,6 +40,8 @@ def configureWifi(title=b"",config=None,accessPoint=False,disabled=False,active=
 					Card([\
 						Form([\
 							Br(),
+							Title3(text=b"Access point configuration" if accessPoint else b"Wifi configuration"),
+							Br(),
 							Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
 							ssid,
 							Edit(text=b"Password",    name=b"wifipassword",type=b"password", placeholder=b"Enter password",      value=config.wifipassword, disabled=disabled),

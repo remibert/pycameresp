@@ -49,11 +49,14 @@ def configureServerPage(config=None,disabled=False,title=b&#34;&#34;, active=0,r
                         Card([\
                                 Form([\
                                         Br(),
+                                        Title3(text=b&#34;Servers configuration&#34;),
+                                        Br(),
                                         Switch(text=b&#34;Ftp&#34;   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),
                                         Switch(text=b&#34;Http&#34;  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),
                                         Switch(text=b&#34;Telnet&#34;, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),
                                         Switch(text=b&#34;Ntp&#34;   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),
-                                        Edit  (text=b&#34;UTC +&#34; , name=b&#34;offsettime&#34;,       pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=b&#34;Offset time to add to UTC&#34;,        value=b&#34;%d&#34;%config.offsettime,       disabled=disabled),
+                                        Edit  (text=b&#34;UTC offset&#34; , name=b&#34;offsettime&#34;,       pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=b&#34;Offset time to add to UTC&#34;,        value=b&#34;%d&#34;%config.offsettime,       disabled=disabled),
+                                        Switch(text=b&#34;Daylight saving time&#34;   , name=b&#34;dst&#34;   , checked=config.dst,    disabled=disabled),
                                         Input (text=b&#34;modify&#34;, name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),
                                         submit,])])])
                         ], title=title, active=active, request=request, response=response)
@@ -106,11 +109,14 @@ async def server(request, response, args):
                         Card([\
                                 Form([\
                                         Br(),
+                                        Title3(text=b&#34;Servers configuration&#34;),
+                                        Br(),
                                         Switch(text=b&#34;Ftp&#34;   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),
                                         Switch(text=b&#34;Http&#34;  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),
                                         Switch(text=b&#34;Telnet&#34;, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),
                                         Switch(text=b&#34;Ntp&#34;   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),
-                                        Edit  (text=b&#34;UTC +&#34; , name=b&#34;offsettime&#34;,       pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=b&#34;Offset time to add to UTC&#34;,        value=b&#34;%d&#34;%config.offsettime,       disabled=disabled),
+                                        Edit  (text=b&#34;UTC offset&#34; , name=b&#34;offsettime&#34;,       pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=b&#34;Offset time to add to UTC&#34;,        value=b&#34;%d&#34;%config.offsettime,       disabled=disabled),
+                                        Switch(text=b&#34;Daylight saving time&#34;   , name=b&#34;dst&#34;   , checked=config.dst,    disabled=disabled),
                                         Input (text=b&#34;modify&#34;, name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),
                                         submit,])])])
                         ], title=title, active=active, request=request, response=response)

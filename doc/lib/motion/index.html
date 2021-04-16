@@ -30,7 +30,16 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Class to manage motion detection with ESP32CAM &#34;&#34;&#34;
-from motion.motion import *</code></pre>
+from motion.motion import *
+from motion.presence import *
+from tools import useful
+
+def start(loop=None, onBattery=True, pirDetection=False):
+        &#34;&#34;&#34; Start the asynchronous motion detection and presence detection &#34;&#34;&#34;
+        if useful.iscamera():
+                loop.create_task(detectMotion(onBattery, pirDetection))
+                loop.create_task(removeOlder())
+        loop.create_task(detectPresence())</code></pre>
 </details>
 </section>
 <section>
@@ -40,11 +49,35 @@ from motion.motion import *</code></pre>
 <dd>
 <div class="desc"><p>Motion detection only work with ESP32CAM (Requires specially modified ESP32CAM firmware to handle motion detection.)</p></div>
 </dd>
+<dt><code class="name"><a title="lib.motion.presence" href="presence.html">lib.motion.presence</a></code></dt>
+<dd>
+<div class="desc"><p>Presence detection (determine if an occupant is present in the house)</p></div>
+</dd>
 </dl>
 </section>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.motion.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>loop=None, onBattery=True, pirDetection=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start the asynchronous motion detection and presence detection</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(loop=None, onBattery=True, pirDetection=False):
+        &#34;&#34;&#34; Start the asynchronous motion detection and presence detection &#34;&#34;&#34;
+        if useful.iscamera():
+                loop.create_task(detectMotion(onBattery, pirDetection))
+                loop.create_task(removeOlder())
+        loop.create_task(detectPresence())</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -63,6 +96,12 @@ from motion.motion import *</code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="lib.motion.motion" href="motion.html">lib.motion.motion</a></code></li>
+<li><code><a title="lib.motion.presence" href="presence.html">lib.motion.presence</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.motion.start" href="#lib.motion.start">start</a></code></li>
 </ul>
 </li>
 </ul>

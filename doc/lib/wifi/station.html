@@ -101,8 +101,7 @@ class Station:
                                 count += 1
                                 if count &gt; 120:
                                         break
-                                
-                        
+
                         if Station.wlan.isconnected() == False:
                                 Station.wlan.active(False)
                         else:
@@ -264,8 +263,7 @@ class Station:
                                 count += 1
                                 if count &gt; 120:
                                         break
-                                
-                        
+
                         if Station.wlan.isconnected() == False:
                                 Station.wlan.active(False)
                         else:
@@ -469,8 +467,7 @@ def connect(ssid=None, password=None):
                         count += 1
                         if count &gt; 120:
                                 break
-                        
-                
+
                 if Station.wlan.isconnected() == False:
                         Station.wlan.active(False)
                 else:

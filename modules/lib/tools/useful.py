@@ -10,15 +10,20 @@ import hashlib
 try:
 	from tools import fnmatch
 except:
-	from fnmatch import fnmatch
-
+	import fnmatch
 try:
 	import uos
 except:
 	pass
 from binascii import hexlify
 
-if sys.implementation.name == "micropython":
+def ismicropython():
+	""" Indicates if the python is micropython """
+	if sys.implementation.name == "micropython":
+		return True
+	return False
+
+if ismicropython():
 	def isKeyEnded(key):
 		if len(key) == 0:
 			return False
@@ -46,44 +51,57 @@ if sys.implementation.name == "micropython":
 				return True
 		return False
 
-	_kbhit = False
 	def getch(raw = True):
-		global _kbhit
 		key = ""
-		_kbhit = False
 		while 1:
 			if len(key) == 0:
 				delay = 1000000000
 			else:
 				delay = 0.01
-			r,w,e = select.select([sys.stdin],[],[],delay)
+			keyPressed = kbhit(delay)
 			if isKeyEnded(key):
-				if r != []:
-					_kbhit = True
 				break
-			if r != []:
+			if keyPressed:
 				char = sys.stdin.buffer.read(1)
 				try:
 					key += char.decode("latin-1")
 				except:
-					key +=  chr(ord(char))
+					key += chr(ord(char))
 			else:
 				if len(key) > 0:
 					break
 		return key
 
-	def kbhit():
-		global _kbhit
-		return _kbhit
+	def kbhit(duration=0.01):
+		r,w,e = select.select([sys.stdin],[],[],duration)
+		if r != []:
+			return True
+		return False
+		
 else:
 	def getch(raw = True):
+		return readKeyboard(10000000, raw, getChar)
+
+	def kbhit(duration=0.001):
+		return readKeyboard(duration, True, testChar)
+
+	def getChar(stdins):
+		if stdins != []:
+			return stdins[0].read()
+		return None
+
+	def testChar(stdins):
+		if stdins != []:
+			return True
+		return False
+
+	def readKeyboard(duration=0.001, raw=True, callback=None):
 		import termios, fcntl
 		import select
 		import os
 		import sys
 		import tty
 		fd = sys.stdin.fileno()
-		
 		oldattr = termios.tcgetattr(fd)
 		oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
 		try:
@@ -97,21 +115,15 @@ else:
 			if raw:
 				tty.setraw(fd)
 			key = None
-			inp, outp, err = select.select([sys.stdin], [], [])
-			key = sys.stdin.read()
+			inp, outp, err = select.select([sys.stdin], [], [], duration)
+			print(inp)
+			result = callback(inp)
 		finally:
 			# Reset the terminal:
 			fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
 			termios.tcsetattr(fd, termios.TCSAFLUSH, oldattr)
-		return key
+		return result
 
-	def kbhit():
-		import sys
-		import select
-		inp, outp, err = select.select([sys.stdin], [], [], 0.001)
-		if inp != []:
-			return True
-		return False
 
 try:
 	from utime import ticks_ms
@@ -149,7 +161,7 @@ def dateToBytes(date = None):
 def dateToFilename(date = None):
 	""" Get a filename with a date """
 	filename = dateToString(date)
-	filename = filename.replace("  ","_")
+	filename = filename.replace("  "," ")
 	filename = filename.replace("/","-")
 	filename = filename.replace(":","-")
 	return filename
@@ -567,12 +579,6 @@ def tostrings(datas, encoding="utf8"):
 			result[tostrings(key,encoding)] = tostrings(value, encoding)
 	return result
 
-def ismicropython():
-	""" Indicates if the python is micropython """
-	if sys.implementation.name == "micropython":
-		return True
-	return False
-
 def iscamera():
 	""" Indicates if the board is esp32cam """
 	try:
@@ -600,18 +606,6 @@ def issameinterface(ipaddr, ipinterface, maskinterface):
 		return True
 	else:
 		return False
-
-
-def journalize(message):
-	filename = tools.useful.dateToFilename()
-	filename = "jnl_"+filename [8:-6] + ".txt"
-	file = open(filename,"a")
-	message = "%s: %s"%(tools.useful.dateToString(), message)
-	print(message)
-	file.write(message)
-	file.write("\n")
-	file.flush()
-	file.close()
 
 def scandir(path, pattern, recursive, displayer=None):
 	""" Scan recursively a directory """
@@ -681,16 +675,16 @@ class SdCard:
 	def mount(mountpoint = "/sd"):
 		result = False
 		if SdCard.isMounted() == False and mountpoint != "/" and mountpoint != "":
-			# If the sdcard not already mounted
-			if uos.statvfs("/") == uos.statvfs(mountpoint):
-				try:
+			try:
+				# If the sdcard not already mounted
+				if uos.statvfs("/") == uos.statvfs(mountpoint):
 					import machine
 					uos.mount(machine.SDCard(), mountpoint)
 					SdCard.mountpoint[0] = mountpoint
 					SdCard.opened[0]= True
 					result = True
-				except Exception as err:
-					print("Cannot mount %s"%mountpoint)
+			except Exception as err:
+				print("Cannot mount %s"%mountpoint)
 		elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
 			result = True
 		return result
@@ -710,3 +704,154 @@ class SdCard:
 				# print(exception(error))
 				print("Cannot save %s"%filename)
 		return result
+
+def remove(filename):
+	""" Remove file existing """
+	try:    uos.remove(filename)
+	except: pass 
+
+HEADER_FILE=b"## PYCAMERESP ##\r\n"
+def exportFiles(exportFilename, path="./config",pattern="*.json", recursive=False):
+	""" Exports many file into only one file """
+	result = True
+
+	print("Export %s"%exportFilename)
+	remove(exportFilename)
+
+	# Scan directory with pattern
+	dirs, files = scandir(path=path, pattern=pattern, recursive=recursive)
+	
+	try:
+		# Open out file
+		out = open(exportFilename,"wb")
+ 
+		# Write type of file
+		out.write(HEADER_FILE)
+
+		# For all files found
+		for filename in files:
+			# All files except .tmp and sdcard
+			if filename[-4:] != ".tmp" and filename[:4] != "/sd/" and filename[5:] != "./sd/":
+				# Write file header
+				size = filesize(filename)
+				out.write(b"# %d:%s\r\n"%(size, tobytes(filename)))
+
+				print("  Export '%s' size=%d"%(filename, size))
+				try:
+					# Write file
+					content = open(filename,"rb")
+					while size > 0:
+						data = content.read(2048)
+						out.write(data)
+						size -= len(data)
+
+					# Write end of file
+					out.write(b"\r\n\r\n")
+				except Exception as error:
+					print(exception(error))
+					result = False
+					break
+				finally:
+					content.close()
+	except Exception as error:
+		print(exception(error))
+		result = False
+	finally:
+		print("Export %s"%("success" if result else "failed"))
+		out.close()
+	return result
+
+def importFiles(importFilename, simulated=False):
+	""" Import files and write all files """
+	result = True
+	print("Import %s"%importFilename)
+	try:
+		readSize = filesize(importFilename)
+		imported = open(importFilename,"rb")
+		if not ismicropython():
+			simulated = True
+
+		# Read the type of file
+		if imported.read(len(HEADER_FILE)) != HEADER_FILE:
+			result = False
+		else:
+			while imported.tell() < readSize:
+				# Read the start of file
+				comment = imported.read(2)
+				if comment != b"# ":
+					result = False
+					break
+
+				# Read the file size
+				size = b""
+				while True:
+					char = imported.read(1)
+					if char == b":":
+						break
+					elif not char in b"0123456789":
+						result = False
+						break
+					size += char
+				if result == False:
+					break
+				size = eval(size)
+
+				# Read filename
+				filename = b""
+				while True:
+					char = imported.read(1)
+					if char == b"\r":
+						break
+					filename += char
+				filename = tostrings(filename)
+				char = imported.read(1)
+				if char != b"\n":
+					result = False
+					break
+
+				# Read the file
+				print("  Import '%s' size=%d"%(filename, size))
+				
+				try:
+					if simulated == False:
+						content = open(filename,"wb")
+					while size > 0:
+						data = imported.read(size if size < 2048 else 2048)
+						if simulated == False:
+							content.write(data)
+						size -= len(data)
+				except Exception as error:
+					print(exception(error))
+					result = False
+				finally:
+					if simulated == False:
+						content.close()
+				
+				# Read the end of file
+				if imported.read(4) != b"\r\n\r\n":
+					result = False
+					break
+	except Exception as error:
+		print(exception(error))
+		result = False
+	finally:
+		print("Import %s"%("success" if result else "failed"))
+		imported.close()
+	remove(importFilename)
+	return result
+
+async def asyncShell():
+	""" Asynchronous shell """
+	import uasyncio
+
+	if ismicropython():
+		while 1:
+			# If key pressed
+			if kbhit(0):
+				import shell
+				print("\n"+"<"*20+"   ENTER SHELL   " +">"*20)
+				# Start shell
+				shell.shell()
+				print("\n"+"<"*20+"   EXIT  SHELL   " +">"*20)
+			else:
+				await uasyncio.sleep(1)

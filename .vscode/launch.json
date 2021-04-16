@@ -9,10 +9,11 @@
 			"program_": "${workspaceFolder}/sync.py",
 			"cwd_": "${workspaceFolder}",
 		
+			"program": "${workspaceFolder}/modules/main.py",
 			"program_": "${workspaceFolder}/modules/lib/shell/editor.py",
 			"program_": "${workspaceFolder}/modules/lib/shell/shell.py",
 			"program_": "${workspaceFolder}/modules/lib/server/pushover.py",
-			"program": "${workspaceFolder}/modules/main.py",
+			"program_": "${workspaceFolder}/modules/wanIp.py",
 			"cwd": "${workspaceFolder}/modules",
 		}
 	]

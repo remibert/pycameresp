@@ -69,6 +69,8 @@ def configureWifi(title=b&#34;&#34;,config=None,accessPoint=False,disabled=False
                                         Card([\
                                                 Form([\
                                                         Br(),
+                                                        Title3(text=b&#34;Access point configuration&#34; if accessPoint else b&#34;Wifi configuration&#34;),
+                                                        Br(),
                                                         Switch(text=b&#34;Activated&#34;, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
                                                         ssid,
                                                         Edit(text=b&#34;Password&#34;,    name=b&#34;wifipassword&#34;,type=b&#34;password&#34;, placeholder=b&#34;Enter password&#34;,      value=config.wifipassword, disabled=disabled),
@@ -206,6 +208,8 @@ async def accessPoint(request, response, args):
                 content=[Br(),Container([\
                                         Card([\
                                                 Form([\
+                                                        Br(),
+                                                        Title3(text=b&#34;Access point configuration&#34; if accessPoint else b&#34;Wifi configuration&#34;),
                                                         Br(),
                                                         Switch(text=b&#34;Activated&#34;, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
                                                         ssid,

@@ -40,8 +40,14 @@ from server import *
 from server.sessions import *
 from server.user import *
 from server.pushover import *
+from server.wanip import *
+from server.ping import *
+from server.dnsclient import *
+from server.timesetting import *
 from tools import jsonconfig
 from tools import useful
+import uasyncio
+
 
 class ServerConfig:
         &#34;&#34;&#34; Servers configuration &#34;&#34;&#34;
@@ -51,6 +57,7 @@ class ServerConfig:
                 self.http = True
                 self.telnet = True
                 self.offsettime = 1
+                self.dst = True
 
         def save(self, file = None):
                 &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
@@ -86,8 +93,7 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
                 # If ntp synchronisation activated
                 if config.ntp:
                         # Load and start ntp synchronisation
-                        import server.timesetting
-                        server.timesetting.setdate(config.offsettime)
+                        loop.create_task(periodic())
 
                 # If telnet activated
                 if config.telnet and withoutServer == False:
@@ -113,12 +119,42 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
                                 server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort +1, name=&#34;StreamingServer&#34;)
         
         # Display system informations
-        useful.sysinfo()</code></pre>
+        useful.sysinfo()
+
+
+async def periodic():
+        &#34;&#34;&#34; Periodic traitment update time, get wanip &#34;&#34;&#34;
+        while True:
+                config = server.ServerConfig()
+                config.load()
+                if config.ntp:
+                        setdate(config.offsettime, dst=config.dst, display=True)
+                await uasyncio.sleep(3600)
+
+
+_suspended = [False]
+def suspend():
+        &#34;&#34;&#34; Suspend the asyncio task of servers &#34;&#34;&#34;
+        _suspended[0] = True
+
+def resume():
+        &#34;&#34;&#34; Resume the asyncio task of servers &#34;&#34;&#34;
+        _suspended[0] = False
+
+async def waitResume():
+        &#34;&#34;&#34; Wait the resume of task servers &#34;&#34;&#34;
+        if _suspended[0]:
+                while _suspended[0]:
+                        await uasyncio.sleep(1)</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="lib.server.dnsclient" href="dnsclient.html">lib.server.dnsclient</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="lib.server.ftpserver" href="ftpserver.html">lib.server.ftpserver</a></code></dt>
 <dd>
 <div class="desc"><p>Ftp server main class.
@@ -144,6 +180,10 @@ The core of the server is in the other …</p></div>
 <dt><code class="name"><a title="lib.server.httpservercore" href="httpservercore.html">lib.server.httpservercore</a></code></dt>
 <dd>
 <div class="desc"><p>Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then if the server not used, it not consum memory</p></div>
+</dd>
+<dt><code class="name"><a title="lib.server.ping" href="ping.html">lib.server.ping</a></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="lib.server.pushover" href="pushover.html">lib.server.pushover</a></code></dt>
 <dd>
@@ -171,6 +211,10 @@ an user and password, on your site</p></div>
 <dd>
 <div class="desc"><p>Class used to manage a username and a password</p></div>
 </dd>
+<dt><code class="name"><a title="lib.server.wanip" href="wanip.html">lib.server.wanip</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 </section>
 <section>
@@ -178,6 +222,39 @@ an user and password, on your site</p></div>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="lib.server.periodic"><code class="name flex">
+<span>async def <span class="ident">periodic</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Periodic traitment update time, get wanip</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def periodic():
+        &#34;&#34;&#34; Periodic traitment update time, get wanip &#34;&#34;&#34;
+        while True:
+                config = server.ServerConfig()
+                config.load()
+                if config.ntp:
+                        setdate(config.offsettime, dst=config.dst, display=True)
+                await uasyncio.sleep(3600)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.resume"><code class="name flex">
+<span>def <span class="ident">resume</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Resume the asyncio task of servers</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def resume():
+        &#34;&#34;&#34; Resume the asyncio task of servers &#34;&#34;&#34;
+        _suspended[0] = False</code></pre>
+</details>
+</dd>
 <dt id="lib.server.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80)</span>
 </code></dt>
@@ -210,8 +287,7 @@ False the load of page is done a the first http connection (Takes time on first 
                 # If ntp synchronisation activated
                 if config.ntp:
                         # Load and start ntp synchronisation
-                        import server.timesetting
-                        server.timesetting.setdate(config.offsettime)
+                        loop.create_task(periodic())
 
                 # If telnet activated
                 if config.telnet and withoutServer == False:
@@ -240,6 +316,36 @@ False the load of page is done a the first http connection (Takes time on first 
         useful.sysinfo()</code></pre>
 </details>
 </dd>
+<dt id="lib.server.suspend"><code class="name flex">
+<span>def <span class="ident">suspend</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Suspend the asyncio task of servers</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def suspend():
+        &#34;&#34;&#34; Suspend the asyncio task of servers &#34;&#34;&#34;
+        _suspended[0] = True</code></pre>
+</details>
+</dd>
+<dt id="lib.server.waitResume"><code class="name flex">
+<span>async def <span class="ident">waitResume</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Wait the resume of task servers</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def waitResume():
+        &#34;&#34;&#34; Wait the resume of task servers &#34;&#34;&#34;
+        if _suspended[0]:
+                while _suspended[0]:
+                        await uasyncio.sleep(1)</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -262,6 +368,7 @@ False the load of page is done a the first http connection (Takes time on first 
                 self.http = True
                 self.telnet = True
                 self.offsettime = 1
+                self.dst = True
 
         def save(self, file = None):
                 &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
@@ -343,22 +450,29 @@ False the load of page is done a the first http connection (Takes time on first 
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="lib.server.dnsclient" href="dnsclient.html">lib.server.dnsclient</a></code></li>
 <li><code><a title="lib.server.ftpserver" href="ftpserver.html">lib.server.ftpserver</a></code></li>
 <li><code><a title="lib.server.ftpservercore" href="ftpservercore.html">lib.server.ftpservercore</a></code></li>
 <li><code><a title="lib.server.httprequest" href="httprequest.html">lib.server.httprequest</a></code></li>
 <li><code><a title="lib.server.httpserver" href="httpserver.html">lib.server.httpserver</a></code></li>
 <li><code><a title="lib.server.httpservercore" href="httpservercore.html">lib.server.httpservercore</a></code></li>
+<li><code><a title="lib.server.ping" href="ping.html">lib.server.ping</a></code></li>
 <li><code><a title="lib.server.pushover" href="pushover.html">lib.server.pushover</a></code></li>
 <li><code><a title="lib.server.sessions" href="sessions.html">lib.server.sessions</a></code></li>
 <li><code><a title="lib.server.stream" href="stream.html">lib.server.stream</a></code></li>
 <li><code><a title="lib.server.telnet" href="telnet.html">lib.server.telnet</a></code></li>
 <li><code><a title="lib.server.timesetting" href="timesetting.html">lib.server.timesetting</a></code></li>
 <li><code><a title="lib.server.user" href="user.html">lib.server.user</a></code></li>
+<li><code><a title="lib.server.wanip" href="wanip.html">lib.server.wanip</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="lib.server.periodic" href="#lib.server.periodic">periodic</a></code></li>
+<li><code><a title="lib.server.resume" href="#lib.server.resume">resume</a></code></li>
 <li><code><a title="lib.server.start" href="#lib.server.start">start</a></code></li>
+<li><code><a title="lib.server.suspend" href="#lib.server.suspend">suspend</a></code></li>
+<li><code><a title="lib.server.waitResume" href="#lib.server.waitResume">waitResume</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

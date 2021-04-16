@@ -81,6 +81,7 @@ else:
 				self.buffer += data
 
 			data = self.buffer[:length]
+			l = len(data)
 			self.buffer = self.buffer[length:]
 			return data
 

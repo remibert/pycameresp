@@ -12,4 +12,6 @@ from webpage.wifipage import *
 if iscamera():
 	from webpage.motionpage import *
 	from webpage.camerapage import *
+from webpage.presencepage import *
 from webpage.batterypage import *
+from webpage.systempage import *

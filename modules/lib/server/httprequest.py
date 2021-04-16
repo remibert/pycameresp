@@ -58,8 +58,13 @@ class Http:
 		self.parts      = []
 		self.status     = 0
 		self.content    = None
+		self.contentFile = None
 		self.identifier = None
 		self.request    = request
+
+	def __del__(self):
+		if self.contentFile != None:
+			useful.remove(self.contentFile)
 
 	def quote(self, text):
 		""" Insert in the string the character not supported in an url """
@@ -196,15 +201,41 @@ class Http:
 				else:
 					self.params[param[0]] = param[1]
 
+	async def readContent(self, streamio):
+		length = int(self.headers.get(b"Content-Length","0"))
+		# If data small write in memory
+		if length < 4096:
+			self.content = b""
+			while len(self.content) < length:
+				self.content += await streamio.read(int(self.headers.get(b"Content-Length","0")))
+		# Data too big write in file
+		else:
+			self.contentFile = "%d.tmp"%id(self)
+			content = open(self.contentFile, "wb")
+			while content.tell() < length:
+				content.write(await streamio.read(int(self.headers.get(b"Content-Length","0"))))
+			content.close()
+
+	def getContentFilename(self):
+		""" Copy the content into file """
+		if self.content != None:
+			self.contentFile = "%d.tmp"%id(self)
+			content = open(self.contentFile, "wb")
+			content.write(self.content)
+			content.close()
+			self.content = None
+		return self.contentFile
+
 	async def unserializeHeaders(self, streamio):
 		""" Extract http header """
 		while True:
 			header = await streamio.readline()
 			if header == b"\r\n":
 				if self.method == b"POST":
-					post = await streamio.read(int(self.headers.get(b"Content-Length","0")))
-					post = post
-					self.unserializeParams(post)
+					await self.readContent(streamio)
+					self.unserializeParams(self.content)
+				elif self.request == False or self.method == b"PUT":
+					await self.readContent(streamio)
 				break
 			name, value = header.split(b":", 1)
 			if name == b"Cookie":
@@ -261,6 +292,7 @@ class Http:
 				setget = b"Set-"
 			result += await streamio.write(b"%sCookie: %s=%s%s\r\n"%(setget, cookie, value[0], self.getExpiration(value[1])))
 
+		noEnd = False
 		# If content existing
 		if self.content != None:
 			try:
@@ -271,6 +303,7 @@ class Http:
 				else:
 					# Serialize object
 					result += await self.content.serialize(streamio)
+					noEnd = True
 			except Exception as err:
 				# Serialize error detected
 				result += await streamio.write(b'Content-Type: text/plain\r\n\r\n')
@@ -300,8 +333,9 @@ class Http:
 			if self.headers[b"Content-Type"] != b"multipart/x-mixed-replace":
 				result += await streamio.write(b"--")
 
-		# Terminate serialize request or response
-		result += await streamio.write(b"\r\n")
+		if noEnd == False:
+			# Terminate serialize request or response
+			result += await streamio.write(b"\r\n")
 		return result
 
 	async def serializeResponse(self, streamio):

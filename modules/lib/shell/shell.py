@@ -13,12 +13,14 @@ The commands are :
 - rm      : remove file
 - ls      : list file
 - date    : get the system date
+- df      : display free disk space
 - find    : find a file
 - run     : run a script
 - edit    : edit a text file
 - exit    : exit of shell
 - gc      : garbage collection
 - grep    : grep text in many files
+- ping    : ping host
 - mount   : mount sd card
 - umount  : umount sd card
 - meminfo : memory informations
@@ -33,6 +35,7 @@ import sys
 sys.path.append("lib")
 import os
 import uos
+import server
 
 try:
 	from tools import useful
@@ -315,6 +318,10 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 		if count == None:
 			break
 
+def ping(host):
+	""" Ping host """
+	server.ping(host, count=4, timeout=1)
+
 def mountsd(mountpoint="/sd"):
 	""" Mount command """
 	import uos
@@ -334,11 +341,15 @@ def umountsd(mountpoint="/sd"):
 	except:
 		print("Cannot umount sd from '%s'"%mountpoint)
 
-def date(update=False, dst=+1):
+def date(update=False, offsetUTC=+1, noDst=False):
 	""" Get or set date """
 	from server.timesetting import setdate
 	if update:
-		setdate(dst)
+		if noDst:
+			dst = False
+		else:
+			dst = True
+		setdate(offsetUTC, dst)
 	print(useful.dateToString())
 	del sys.modules["server.timesetting"]
 
@@ -543,6 +554,7 @@ def execCommand(args):
 def shell():
 	""" Start the shell """
 	global shell_exited
+	server.suspend()
 	shell_exited = False
 	while shell_exited == False:
 		try:
@@ -551,6 +563,8 @@ def shell():
 			print("")
 			break
 		parseCommandLine(commandLine)
+	server.resume()
+
 
 
 shellCommands = \
@@ -564,7 +578,7 @@ shellCommands = \
 	"cp"       :[cp       ,"source","destination", ("-r","recursive",True),("-q","quiet",True)],
 	"rm"       :[rm       ,"file",                 ("-r","recursive",True),("-f","force",True),("-s","simulate",True)],
 	"ls"       :[ls       ,"file",                 ("-r","recursive",True),("-l","long",True)],
-	"date"     :[date     ,"dst" ,                 ("-u","update",True)],
+	"date"     :[date     ,"offsetUTC" ,           ("-u","update",True),   ("-n","noDst",True)],
 	"find"     :[find     ,"file"],
 	"run"      :[useful.import_  ,"filename"],
 	"edit"     :[edit     ,"file"],
@@ -577,10 +591,11 @@ shellCommands = \
 	"flashinfo":[useful.flashinfo],
 	"sysinfo"  :[useful.sysinfo  ],
 	"deepsleep":[deepsleep],
+	"ping"     :[ping      ,"host"],
 	"reboot"   :[reboot   ],
 	"help"     :[help     ],
 	"man"      :[man      ,"command"],
-	"df"       :[df       ,"mountpoint"]
+	"df"       :[df       ,"mountpoint"],
 }
 
 if __name__ == "__main__":

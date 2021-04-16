@@ -21,20 +21,18 @@ def ntptime():
 	NTP_DELTA = 3155673600
 	return val - NTP_DELTA
 
-def setdate(dst=+1, display=False):
+def setdate(offsetTime=+1, dst=True, display=False):
 	""" Set the date """
 	try:
 		import time
 		year,month,day,hour,minute,second,weekday,yearday = time.localtime(ntptime())[:8]
-		HHMarch    = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
-		HHNovember = time.mktime((year,10,( 7-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of November change to EST
+		startDST = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
+		endDST   = time.mktime((year,10,( 7-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of November change to EST
 		now = time.mktime((year,month,day,hour,minute,second,weekday,yearday))
-		if now < HHMarch : # we are before last sunday of march
-			newtime = time.localtime(now+(dst*3600)) # EST: UTC+dst*H
-		elif now < HHNovember : # we are before last sunday of october
-			newtime = time.localtime(now+(dst*3600)+3600) # DST: UTC+dst*H + 1
-		else: # we are after last sunday of october
-			newtime = time.localtime(now+(dst*3600)) # EST: UTC+dst*H
+		if dst and now > startDST and now < endDST : # we are before last sunday of october
+			newtime = time.localtime(now+(offsetTime*3600)+3600) # DST: UTC+dst*H + 1
+		else:
+			newtime = time.localtime(now+(offsetTime*3600)) # EST: UTC+dst*H
 
 		year,month,day,hour,minute,second,weekday,yearday = newtime
 		import machine
@@ -44,3 +42,5 @@ def setdate(dst=+1, display=False):
 			print("Date updated : %s"%(useful.dateToString()))
 	except Exception as exc:
 		print("Cannot set time '%s'"%exc)
+
+

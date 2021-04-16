@@ -43,6 +43,44 @@ class CameraConfig:
 		result = jsonconfig.load(self, file)
 		return result
 
+class Motion:
+	""" Class motion detection returned by the detect function """
+	def __init__(self, motion):
+		""" Constructor with motion object """
+		self.motion = motion
+
+	def deinit (self):
+		""" Destructor """
+		self.motion.deinit()
+
+	def extract(self):
+		""" Extract the full content of motion """
+		return self.motion.extract()
+
+	def compare(self, other):
+		""" Compare image to detect motion """
+		return self.motion.compare(other.motion)
+
+	def setErrorHue(self, hue):
+		""" Define the error tolered in the compare method on hue """
+		self.motion.setErrorHue(hue)
+
+	def setErrorLight(self, light):
+		""" Define the error tolered in the compare method on light """
+		self.motion.setErrorLight(light)
+
+	def setErrorSaturation(self,saturation):
+		""" Define the error tolered in the compare method on  saturation """
+		self.motion.setErrorSaturation(saturation)
+
+	def getImage(self):
+		""" Return the jpeg buffer of motion """
+		return self.motion.getImage()
+
+	def getFeature(self):
+		""" Return (mean, min, max light, mean, min, max, saturation, total count) """
+		return self.getFeature()
+
 class Camera:
 	""" Singleton class to manage the camera """
 	reserved = [False]
@@ -140,6 +178,11 @@ class Camera:
 					retry += 1
 					time.sleep(0.5)
 		return result
+
+	@staticmethod
+	def compare(image1, image2):
+		""" Compare motion images """
+		return camera.compare(image1, image2)
 
 	@staticmethod
 	def framesize(resolution):

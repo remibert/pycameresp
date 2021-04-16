@@ -194,7 +194,7 @@ class View:
 			self.line = self.text.getCursorLine()
 			if self.line < 0:
 				self.line = 0
-			if delta == 1:
+			if delta <= 10:
 				self.scrollDown()
 				self.isRefreshLine = True
 			else:
@@ -202,7 +202,7 @@ class View:
 		elif self.text.getCursorLine() > self.line + self.height:
 			delta =  self.text.getCursorLine() - self.line - self.height
 			self.line = self.text.getCursorLine()-self.height
-			if delta == 1:
+			if delta <= 10:
 				self.scrollUp()
 				self.isRefreshLine = True
 			else:
@@ -636,18 +636,21 @@ class Text:
 		if moveLine + self.cursorLine < 0:
 			# Set the cursor to the first line
 			self.cursorLine = 0
-			self.setCursorColumn()
+			self.cursorColumn = 0
 			self.changeColumn(0)
 		# If the cursor is after the last line
 		elif moveLine + self.cursorLine >= len(self.lines):
 			self.cursorLine = len(self.lines) -1
-			self.setCursorColumn()
+			self.cursorColumn = len(self.lines[self.cursorLine])
 			self.changeColumn(0)
 		# else the cursor is in the lines of text
 		else:
 			previousLine = self.cursorLine
 			self.cursorLine += moveLine
-			lenLine = len(self.lines[self.cursorLine])-1
+			if len(self.lines) - 1 == self.cursorLine:
+				lenLine = len(self.lines[self.cursorLine])
+			else:
+				lenLine = len(self.lines[self.cursorLine])-1
 
 			self.setCursorColumn()
 			# If the new cursor position is outside the last line of text
@@ -1345,14 +1348,19 @@ class Text:
 
 	def getCursorChar(self):
 		""" Get the char on the cursor """
-		return self.lines[self.cursorLine][self.cursorColumn]
+		try:
+			return self.lines[self.cursorLine][self.cursorColumn]
+		except:
+			return None
 
 	def moveWord(self, direction):
 		""" Move the cursor to the word """
 		state = 0
 		while self.changeColumn(direction):
 			currentChar = self.getCursorChar()
-			if useful.ispunctuation(currentChar):
+			if currentChar == None:
+				break
+			elif useful.ispunctuation(currentChar):
 				if state == 0:
 					state = 2
 				elif state == 1:
@@ -1618,6 +1626,7 @@ class Editor:
 		self.save()
 		loop = True
 		while loop:
+			self.edit.view.resetScrollRegion()
 			self.edit.view.cls()
 			self.edit.view.flush()
 			startTime = useful.ticks()

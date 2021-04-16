@@ -29,10 +29,10 @@ async def battery(request, response, args):
 		value = b'save'
 
 	page = mainPage(
-		content=[Br(),Container([\
+		content=[Br(), Container([\
 					Card([\
 						Form([\
-							Br(),
+							Br(), Title3(text=b"Battery management"), Br(),
 							Switch(text=b"Activated",              name=b"activated", checked=config.activated, disabled=disabled),
 							Edit(text=b"Battery level GPIO",       name=b"levelGpio",            placeholder=b"GPIO connect to battery level",                   pattern=b"[0-9]*[0-9]", value=b"%d"%config.levelGpio,    disabled=disabled),
 							Edit(text=b"Battery 100% GPIO value",  name=b"fullBattery",          placeholder=b"GPIO ADC value for battery full (4.2V)",          pattern=b"[0-9]*[0-9]", value=b"%d"%config.fullBattery,  disabled=disabled),

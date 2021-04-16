@@ -72,8 +72,7 @@ class Station:
 				count += 1
 				if count > 120:
 					break
-				
-			
+
 			if Station.wlan.isconnected() == False:
 				Station.wlan.active(False)
 			else:

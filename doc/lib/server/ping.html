@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.server.ping API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.server.ping</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+# Freely inspired by :
+#    uping  (MicroPing) for MicroPython
+#    copyright (c) 2018 Shawwwn &lt;shawwwn1@gmail.com&gt;
+#    License: MIT
+   
+#    Internet Checksum Algorithm
+#    Author: Olav Morken
+#    https://github.com/olavmrk/python-ping/blob/master/ping.py
+#    @data: bytes
+
+try:
+        import utime
+        import uselect
+        import uctypes
+        import usocket
+        import ustruct
+        import urandom
+        import usocket
+        import uasyncio
+except:
+        import time   as utime
+        import select as uselect
+        import ctypes as uctypes
+        import socket as usocket
+        import struct as ustruct
+        import random as urandom
+        import asyncio as uasyncio
+
+def ticks_us():
+        &#34;&#34;&#34; Get tick in microseconds &#34;&#34;&#34;
+        try:
+                return utime.ticks_us()
+        except:
+                return utime.time_ns()//1000
+
+class Packet:
+        &#34;&#34;&#34; Create ICMP packet for ping &#34;&#34;&#34;
+        ECHO_REQUEST = 8
+        ECHO_REPLY   = 0
+        def __init__(self, type, code, sequence, size = 64):
+                &#34;&#34;&#34; Constructor of ICMP packet for ping &#34;&#34;&#34;
+                self.format = b&#34;&gt;BBHHHQ&#34;
+                self.type       = type #B
+                self.code       = code #B
+                self.checksum   = 0 #H
+                self.identifier = urandom.randint(0, 65535) #H
+                self.sequence   = sequence   #H
+                self.timestamp  = ticks_us() #Q
+                self.size       = size
+
+        def computeChecksum(self, data):
+                &#34;&#34;&#34; Compute the checksum of packet &#34;&#34;&#34;
+                if len(data) &amp; 0x1: # Odd number of bytes
+                        data += b&#39;\0&#39;
+                checksum = 0
+                for pos in range(0, len(data), 2):
+                        b1 = data[pos]
+                        b2 = data[pos + 1]
+                        checksum += (b1 &lt;&lt; 8) + b2
+                while checksum &gt;= 0x10000:
+                        checksum = (checksum &amp; 0xffff) + (checksum &gt;&gt; 16)
+                checksum = ~checksum &amp; 0xffff
+                return checksum
+
+        def serialize(self):
+                &#34;&#34;&#34; Serialize packet and compute the checksum &#34;&#34;&#34;
+                self.checksum = 0
+                self.checksum = self.computeChecksum(self.__getBuffer())
+                return self.__getBuffer()
+        
+        def unserialize(self, resp):
+                &#34;&#34;&#34; Unserialize packet &#34;&#34;&#34;
+                data = resp[20:]
+                data = data[0:ustruct.calcsize(self.format)]
+                self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = ustruct.unpack(self.format, data)
+                self.ttl = ustruct.unpack(&#34;!B&#34;,resp[8:9])[0]
+        
+        def __getBuffer(self):
+                &#34;&#34;&#34; Create the serialized buffer of data &#34;&#34;&#34;
+                data = ustruct.pack(self.format, self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
+                padding = b&#34;.&#34;*(self.size-len(data))
+                return data + padding
+                
+        def isEqual(self, request):
+                &#34;&#34;&#34; Check if the request is equal to this response &#34;&#34;&#34;
+                if self.identifier == request.identifier and self.sequence == request.sequence:
+                        return True
+                return False
+        
+        def getTimeElapsed(self):
+                &#34;&#34;&#34; Get the time elapsed &#34;&#34;&#34;
+                return ticks_us() - self.timestamp
+        
+        def __repr__(self):
+                &#34;&#34;&#34; Display the content of data &#34;&#34;&#34;
+                return &#34;type       : %d\n&#34;\
+                        &#34;code       : %d\n&#34;\
+                        &#34;checksum   : 0x%04X\n&#34;\
+                        &#34;identifier : %d\n&#34;\
+                        &#34;sequence   : %d\n&#34;\
+                        &#34;timestamp  : %d&#34;%(self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
+
+def getAddressIp(hostname):
+        &#34;&#34;&#34; Return the address ip of the hostname &#34;&#34;&#34;
+        try:
+                return usocket.getaddrinfo(hostname, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+        except:
+                return None
+
+async def select(rlist, wlist, xlist, timeout=0):
+        &#34;&#34;&#34; Asynchronous select &#34;&#34;&#34;
+        while 1:
+                r, w, x = uselect.select(rlist, wlist, xlist, 0)
+                if r:
+                        return r,w,x
+                else:
+                        if timeout &lt;= 0:
+                                return [],[],[]
+                        else:
+                                timeout -= 0.1
+                                await uasyncio.sleep(0.1)
+
+class Ping:
+        &#34;&#34;&#34; Class used to ping host &#34;&#34;&#34;
+        def __init__(self):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.sock = None
+        
+        def open(self, host):
+                &#34;&#34;&#34; Open connection to host &#34;&#34;&#34;
+                self.host = host
+                self.packetsTransmitted = 0
+                self.packetsReceived = 0
+                try:
+                        result = True
+                        self.close()
+                        self.sock = usocket.socket(usocket.AF_INET, usocket.SOCK_RAW, 1)
+                        self.sock.setblocking(0)
+                        self.addr = usocket.getaddrinfo(self.host, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+                        self.sock.connect((self.addr, 1))
+                        if self.quiet == False: print(&#34;PING %s (%s)&#34;%(self.host, self.addr))
+                except:
+                        if self.quiet == False : print(&#34;Ping open socket failed&#34;)
+                        self.close()
+                        result = False
+                return result
+        
+        def send(self, seq):
+                &#34;&#34;&#34; Send ICMP packet &#34;&#34;&#34;
+                result = True
+                self.request = Packet(Packet.ECHO_REQUEST, 0, seq)
+                try:
+                        self.sock.send(self.request.serialize())
+                        self.packetsTransmitted += 1
+                except:
+                        if self.quiet == False: print(&#34;Cannot send request to &#39;%s&#39;&#34;%self.host)
+                        result = False
+                return result
+        
+        def receive(self, seq, sock):
+                &#34;&#34;&#34; Receive and decode ICMP packet &#34;&#34;&#34;
+                result = False
+                if sock:
+                        resp = self.sock.recv(4096)
+                        self.response = Packet(Packet.ECHO_REPLY, 0, seq)
+                        
+                        self.response.unserialize(resp)
+                        if self.response.isEqual(self.request):
+                                if self.quiet == False: print(&#34;%u bytes from %s: icmp_seq=%u, ttl=%u, time=%.2f ms&#34; % (len(resp)-20, self.addr, self.response.sequence, self.response.ttl, self.response.getTimeElapsed()/1000))
+                                self.packetsReceived += 1
+                                result = True
+                else:
+                        if self.quiet == False: print(&#34;Request timeout for icmp_seq %d&#34;%seq)
+                return result
+
+        def ping(self, host, count=4, timeout=1, quiet=False):
+                &#34;&#34;&#34; Do synchronous ping &#34;&#34;&#34;
+                result = True
+                self.quiet = quiet
+                if self.open(host):
+                        for seq in range(count):
+                                if self.send(seq) == False:
+                                        result = False
+                                        break
+                                else:
+                                        socks, _, _ = uselect.select([self.sock], [], [], timeout)
+                                        if self.receive(seq, socks):
+                                                utime.sleep(timeout)
+                        self.showResult()
+                else:
+                        result = None
+                self.close()
+                return self.packetsTransmitted, self.packetsReceived, result
+
+        async def asyncPing(self, host, count=4, timeout=1, quiet=False):
+                &#34;&#34;&#34; Do an asynchronous ping &#34;&#34;&#34;
+                result = True
+                self.quiet = quiet
+                if self.open(host):
+                        for seq in range(count):
+                                if self.send(seq) == False:
+                                        result = False
+                                        break
+                                else:
+                                        socks, _, _ = await select([self.sock], [], [], timeout)
+                                        if self.receive(seq, socks):
+                                                await uasyncio.sleep(timeout)
+                        self.showResult()
+                else:
+                        result = None
+                self.close()
+                return self.packetsTransmitted, self.packetsReceived, result
+        
+        def showResult(self):
+                &#34;&#34;&#34; Show the ping result &#34;&#34;&#34;
+                if self.quiet == False: print(&#34;%u packets transmitted, %u packets received&#34; % (self.packetsTransmitted, self.packetsReceived))
+
+        def close(self):
+                &#34;&#34;&#34; Close socket to server &#34;&#34;&#34;
+                if self.sock:
+                        self.sock.close()
+                        self.sock = None
+
+async def asyncPing(host, count=4, timeout=1, quiet=False):
+        &#34;&#34;&#34; Asynchronous ping of host &#34;&#34;&#34;
+        ping_ = Ping()
+        return await ping_.asyncPing(host, count, timeout, quiet)
+
+def ping(host, count=4, timeout=1, quiet=False):
+        &#34;&#34;&#34; Ping of host &#34;&#34;&#34;
+        ping_ = Ping()
+        return ping_.ping(host, count, timeout, quiet)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.server.ping.asyncPing"><code class="name flex">
+<span>async def <span class="ident">asyncPing</span></span>(<span>host, count=4, timeout=1, quiet=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Asynchronous ping of host</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def asyncPing(host, count=4, timeout=1, quiet=False):
+        &#34;&#34;&#34; Asynchronous ping of host &#34;&#34;&#34;
+        ping_ = Ping()
+        return await ping_.asyncPing(host, count, timeout, quiet)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.getAddressIp"><code class="name flex">
+<span>def <span class="ident">getAddressIp</span></span>(<span>hostname)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the address ip of the hostname</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getAddressIp(hostname):
+        &#34;&#34;&#34; Return the address ip of the hostname &#34;&#34;&#34;
+        try:
+                return usocket.getaddrinfo(hostname, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+        except:
+                return None</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.ping"><code class="name flex">
+<span>def <span class="ident">ping</span></span>(<span>host, count=4, timeout=1, quiet=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Ping of host</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ping(host, count=4, timeout=1, quiet=False):
+        &#34;&#34;&#34; Ping of host &#34;&#34;&#34;
+        ping_ = Ping()
+        return ping_.ping(host, count, timeout, quiet)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.select"><code class="name flex">
+<span>async def <span class="ident">select</span></span>(<span>rlist, wlist, xlist, timeout=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Asynchronous select</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def select(rlist, wlist, xlist, timeout=0):
+        &#34;&#34;&#34; Asynchronous select &#34;&#34;&#34;
+        while 1:
+                r, w, x = uselect.select(rlist, wlist, xlist, 0)
+                if r:
+                        return r,w,x
+                else:
+                        if timeout &lt;= 0:
+                                return [],[],[]
+                        else:
+                                timeout -= 0.1
+                                await uasyncio.sleep(0.1)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.ticks_us"><code class="name flex">
+<span>def <span class="ident">ticks_us</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get tick in microseconds</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ticks_us():
+        &#34;&#34;&#34; Get tick in microseconds &#34;&#34;&#34;
+        try:
+                return utime.ticks_us()
+        except:
+                return utime.time_ns()//1000</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.server.ping.Packet"><code class="flex name class">
+<span>class <span class="ident">Packet</span></span>
+<span>(</span><span>type, code, sequence, size=64)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create ICMP packet for ping </p>
+<p>Constructor of ICMP packet for ping</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Packet:
+        &#34;&#34;&#34; Create ICMP packet for ping &#34;&#34;&#34;
+        ECHO_REQUEST = 8
+        ECHO_REPLY   = 0
+        def __init__(self, type, code, sequence, size = 64):
+                &#34;&#34;&#34; Constructor of ICMP packet for ping &#34;&#34;&#34;
+                self.format = b&#34;&gt;BBHHHQ&#34;
+                self.type       = type #B
+                self.code       = code #B
+                self.checksum   = 0 #H
+                self.identifier = urandom.randint(0, 65535) #H
+                self.sequence   = sequence   #H
+                self.timestamp  = ticks_us() #Q
+                self.size       = size
+
+        def computeChecksum(self, data):
+                &#34;&#34;&#34; Compute the checksum of packet &#34;&#34;&#34;
+                if len(data) &amp; 0x1: # Odd number of bytes
+                        data += b&#39;\0&#39;
+                checksum = 0
+                for pos in range(0, len(data), 2):
+                        b1 = data[pos]
+                        b2 = data[pos + 1]
+                        checksum += (b1 &lt;&lt; 8) + b2
+                while checksum &gt;= 0x10000:
+                        checksum = (checksum &amp; 0xffff) + (checksum &gt;&gt; 16)
+                checksum = ~checksum &amp; 0xffff
+                return checksum
+
+        def serialize(self):
+                &#34;&#34;&#34; Serialize packet and compute the checksum &#34;&#34;&#34;
+                self.checksum = 0
+                self.checksum = self.computeChecksum(self.__getBuffer())
+                return self.__getBuffer()
+        
+        def unserialize(self, resp):
+                &#34;&#34;&#34; Unserialize packet &#34;&#34;&#34;
+                data = resp[20:]
+                data = data[0:ustruct.calcsize(self.format)]
+                self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = ustruct.unpack(self.format, data)
+                self.ttl = ustruct.unpack(&#34;!B&#34;,resp[8:9])[0]
+        
+        def __getBuffer(self):
+                &#34;&#34;&#34; Create the serialized buffer of data &#34;&#34;&#34;
+                data = ustruct.pack(self.format, self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
+                padding = b&#34;.&#34;*(self.size-len(data))
+                return data + padding
+                
+        def isEqual(self, request):
+                &#34;&#34;&#34; Check if the request is equal to this response &#34;&#34;&#34;
+                if self.identifier == request.identifier and self.sequence == request.sequence:
+                        return True
+                return False
+        
+        def getTimeElapsed(self):
+                &#34;&#34;&#34; Get the time elapsed &#34;&#34;&#34;
+                return ticks_us() - self.timestamp
+        
+        def __repr__(self):
+                &#34;&#34;&#34; Display the content of data &#34;&#34;&#34;
+                return &#34;type       : %d\n&#34;\
+                        &#34;code       : %d\n&#34;\
+                        &#34;checksum   : 0x%04X\n&#34;\
+                        &#34;identifier : %d\n&#34;\
+                        &#34;sequence   : %d\n&#34;\
+                        &#34;timestamp  : %d&#34;%(self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.ping.Packet.ECHO_REPLY"><code class="name">var <span class="ident">ECHO_REPLY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.ping.Packet.ECHO_REQUEST"><code class="name">var <span class="ident">ECHO_REQUEST</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.ping.Packet.computeChecksum"><code class="name flex">
+<span>def <span class="ident">computeChecksum</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the checksum of packet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def computeChecksum(self, data):
+        &#34;&#34;&#34; Compute the checksum of packet &#34;&#34;&#34;
+        if len(data) &amp; 0x1: # Odd number of bytes
+                data += b&#39;\0&#39;
+        checksum = 0
+        for pos in range(0, len(data), 2):
+                b1 = data[pos]
+                b2 = data[pos + 1]
+                checksum += (b1 &lt;&lt; 8) + b2
+        while checksum &gt;= 0x10000:
+                checksum = (checksum &amp; 0xffff) + (checksum &gt;&gt; 16)
+        checksum = ~checksum &amp; 0xffff
+        return checksum</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Packet.getTimeElapsed"><code class="name flex">
+<span>def <span class="ident">getTimeElapsed</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the time elapsed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getTimeElapsed(self):
+        &#34;&#34;&#34; Get the time elapsed &#34;&#34;&#34;
+        return ticks_us() - self.timestamp</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Packet.isEqual"><code class="name flex">
+<span>def <span class="ident">isEqual</span></span>(<span>self, request)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if the request is equal to this response</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isEqual(self, request):
+        &#34;&#34;&#34; Check if the request is equal to this response &#34;&#34;&#34;
+        if self.identifier == request.identifier and self.sequence == request.sequence:
+                return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Packet.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Serialize packet and compute the checksum</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def serialize(self):
+        &#34;&#34;&#34; Serialize packet and compute the checksum &#34;&#34;&#34;
+        self.checksum = 0
+        self.checksum = self.computeChecksum(self.__getBuffer())
+        return self.__getBuffer()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Packet.unserialize"><code class="name flex">
+<span>def <span class="ident">unserialize</span></span>(<span>self, resp)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Unserialize packet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def unserialize(self, resp):
+        &#34;&#34;&#34; Unserialize packet &#34;&#34;&#34;
+        data = resp[20:]
+        data = data[0:ustruct.calcsize(self.format)]
+        self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = ustruct.unpack(self.format, data)
+        self.ttl = ustruct.unpack(&#34;!B&#34;,resp[8:9])[0]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.ping.Ping"><code class="flex name class">
+<span>class <span class="ident">Ping</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class used to ping host </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Ping:
+        &#34;&#34;&#34; Class used to ping host &#34;&#34;&#34;
+        def __init__(self):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.sock = None
+        
+        def open(self, host):
+                &#34;&#34;&#34; Open connection to host &#34;&#34;&#34;
+                self.host = host
+                self.packetsTransmitted = 0
+                self.packetsReceived = 0
+                try:
+                        result = True
+                        self.close()
+                        self.sock = usocket.socket(usocket.AF_INET, usocket.SOCK_RAW, 1)
+                        self.sock.setblocking(0)
+                        self.addr = usocket.getaddrinfo(self.host, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+                        self.sock.connect((self.addr, 1))
+                        if self.quiet == False: print(&#34;PING %s (%s)&#34;%(self.host, self.addr))
+                except:
+                        if self.quiet == False : print(&#34;Ping open socket failed&#34;)
+                        self.close()
+                        result = False
+                return result
+        
+        def send(self, seq):
+                &#34;&#34;&#34; Send ICMP packet &#34;&#34;&#34;
+                result = True
+                self.request = Packet(Packet.ECHO_REQUEST, 0, seq)
+                try:
+                        self.sock.send(self.request.serialize())
+                        self.packetsTransmitted += 1
+                except:
+                        if self.quiet == False: print(&#34;Cannot send request to &#39;%s&#39;&#34;%self.host)
+                        result = False
+                return result
+        
+        def receive(self, seq, sock):
+                &#34;&#34;&#34; Receive and decode ICMP packet &#34;&#34;&#34;
+                result = False
+                if sock:
+                        resp = self.sock.recv(4096)
+                        self.response = Packet(Packet.ECHO_REPLY, 0, seq)
+                        
+                        self.response.unserialize(resp)
+                        if self.response.isEqual(self.request):
+                                if self.quiet == False: print(&#34;%u bytes from %s: icmp_seq=%u, ttl=%u, time=%.2f ms&#34; % (len(resp)-20, self.addr, self.response.sequence, self.response.ttl, self.response.getTimeElapsed()/1000))
+                                self.packetsReceived += 1
+                                result = True
+                else:
+                        if self.quiet == False: print(&#34;Request timeout for icmp_seq %d&#34;%seq)
+                return result
+
+        def ping(self, host, count=4, timeout=1, quiet=False):
+                &#34;&#34;&#34; Do synchronous ping &#34;&#34;&#34;
+                result = True
+                self.quiet = quiet
+                if self.open(host):
+                        for seq in range(count):
+                                if self.send(seq) == False:
+                                        result = False
+                                        break
+                                else:
+                                        socks, _, _ = uselect.select([self.sock], [], [], timeout)
+                                        if self.receive(seq, socks):
+                                                utime.sleep(timeout)
+                        self.showResult()
+                else:
+                        result = None
+                self.close()
+                return self.packetsTransmitted, self.packetsReceived, result
+
+        async def asyncPing(self, host, count=4, timeout=1, quiet=False):
+                &#34;&#34;&#34; Do an asynchronous ping &#34;&#34;&#34;
+                result = True
+                self.quiet = quiet
+                if self.open(host):
+                        for seq in range(count):
+                                if self.send(seq) == False:
+                                        result = False
+                                        break
+                                else:
+                                        socks, _, _ = await select([self.sock], [], [], timeout)
+                                        if self.receive(seq, socks):
+                                                await uasyncio.sleep(timeout)
+                        self.showResult()
+                else:
+                        result = None
+                self.close()
+                return self.packetsTransmitted, self.packetsReceived, result
+        
+        def showResult(self):
+                &#34;&#34;&#34; Show the ping result &#34;&#34;&#34;
+                if self.quiet == False: print(&#34;%u packets transmitted, %u packets received&#34; % (self.packetsTransmitted, self.packetsReceived))
+
+        def close(self):
+                &#34;&#34;&#34; Close socket to server &#34;&#34;&#34;
+                if self.sock:
+                        self.sock.close()
+                        self.sock = None</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.ping.Ping.asyncPing"><code class="name flex">
+<span>async def <span class="ident">asyncPing</span></span>(<span>self, host, count=4, timeout=1, quiet=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Do an asynchronous ping</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def asyncPing(self, host, count=4, timeout=1, quiet=False):
+        &#34;&#34;&#34; Do an asynchronous ping &#34;&#34;&#34;
+        result = True
+        self.quiet = quiet
+        if self.open(host):
+                for seq in range(count):
+                        if self.send(seq) == False:
+                                result = False
+                                break
+                        else:
+                                socks, _, _ = await select([self.sock], [], [], timeout)
+                                if self.receive(seq, socks):
+                                        await uasyncio.sleep(timeout)
+                self.showResult()
+        else:
+                result = None
+        self.close()
+        return self.packetsTransmitted, self.packetsReceived, result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Ping.close"><code class="name flex">
+<span>def <span class="ident">close</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Close socket to server</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close(self):
+        &#34;&#34;&#34; Close socket to server &#34;&#34;&#34;
+        if self.sock:
+                self.sock.close()
+                self.sock = None</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Ping.open"><code class="name flex">
+<span>def <span class="ident">open</span></span>(<span>self, host)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Open connection to host</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open(self, host):
+        &#34;&#34;&#34; Open connection to host &#34;&#34;&#34;
+        self.host = host
+        self.packetsTransmitted = 0
+        self.packetsReceived = 0
+        try:
+                result = True
+                self.close()
+                self.sock = usocket.socket(usocket.AF_INET, usocket.SOCK_RAW, 1)
+                self.sock.setblocking(0)
+                self.addr = usocket.getaddrinfo(self.host, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+                self.sock.connect((self.addr, 1))
+                if self.quiet == False: print(&#34;PING %s (%s)&#34;%(self.host, self.addr))
+        except:
+                if self.quiet == False : print(&#34;Ping open socket failed&#34;)
+                self.close()
+                result = False
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Ping.ping"><code class="name flex">
+<span>def <span class="ident">ping</span></span>(<span>self, host, count=4, timeout=1, quiet=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Do synchronous ping</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ping(self, host, count=4, timeout=1, quiet=False):
+        &#34;&#34;&#34; Do synchronous ping &#34;&#34;&#34;
+        result = True
+        self.quiet = quiet
+        if self.open(host):
+                for seq in range(count):
+                        if self.send(seq) == False:
+                                result = False
+                                break
+                        else:
+                                socks, _, _ = uselect.select([self.sock], [], [], timeout)
+                                if self.receive(seq, socks):
+                                        utime.sleep(timeout)
+                self.showResult()
+        else:
+                result = None
+        self.close()
+        return self.packetsTransmitted, self.packetsReceived, result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Ping.receive"><code class="name flex">
+<span>def <span class="ident">receive</span></span>(<span>self, seq, sock)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Receive and decode ICMP packet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def receive(self, seq, sock):
+        &#34;&#34;&#34; Receive and decode ICMP packet &#34;&#34;&#34;
+        result = False
+        if sock:
+                resp = self.sock.recv(4096)
+                self.response = Packet(Packet.ECHO_REPLY, 0, seq)
+                
+                self.response.unserialize(resp)
+                if self.response.isEqual(self.request):
+                        if self.quiet == False: print(&#34;%u bytes from %s: icmp_seq=%u, ttl=%u, time=%.2f ms&#34; % (len(resp)-20, self.addr, self.response.sequence, self.response.ttl, self.response.getTimeElapsed()/1000))
+                        self.packetsReceived += 1
+                        result = True
+        else:
+                if self.quiet == False: print(&#34;Request timeout for icmp_seq %d&#34;%seq)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Ping.send"><code class="name flex">
+<span>def <span class="ident">send</span></span>(<span>self, seq)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send ICMP packet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send(self, seq):
+        &#34;&#34;&#34; Send ICMP packet &#34;&#34;&#34;
+        result = True
+        self.request = Packet(Packet.ECHO_REQUEST, 0, seq)
+        try:
+                self.sock.send(self.request.serialize())
+                self.packetsTransmitted += 1
+        except:
+                if self.quiet == False: print(&#34;Cannot send request to &#39;%s&#39;&#34;%self.host)
+                result = False
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ping.Ping.showResult"><code class="name flex">
+<span>def <span class="ident">showResult</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Show the ping result</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def showResult(self):
+        &#34;&#34;&#34; Show the ping result &#34;&#34;&#34;
+        if self.quiet == False: print(&#34;%u packets transmitted, %u packets received&#34; % (self.packetsTransmitted, self.packetsReceived))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.server.ping.asyncPing" href="#lib.server.ping.asyncPing">asyncPing</a></code></li>
+<li><code><a title="lib.server.ping.getAddressIp" href="#lib.server.ping.getAddressIp">getAddressIp</a></code></li>
+<li><code><a title="lib.server.ping.ping" href="#lib.server.ping.ping">ping</a></code></li>
+<li><code><a title="lib.server.ping.select" href="#lib.server.ping.select">select</a></code></li>
+<li><code><a title="lib.server.ping.ticks_us" href="#lib.server.ping.ticks_us">ticks_us</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.server.ping.Packet" href="#lib.server.ping.Packet">Packet</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.server.ping.Packet.ECHO_REPLY" href="#lib.server.ping.Packet.ECHO_REPLY">ECHO_REPLY</a></code></li>
+<li><code><a title="lib.server.ping.Packet.ECHO_REQUEST" href="#lib.server.ping.Packet.ECHO_REQUEST">ECHO_REQUEST</a></code></li>
+<li><code><a title="lib.server.ping.Packet.computeChecksum" href="#lib.server.ping.Packet.computeChecksum">computeChecksum</a></code></li>
+<li><code><a title="lib.server.ping.Packet.getTimeElapsed" href="#lib.server.ping.Packet.getTimeElapsed">getTimeElapsed</a></code></li>
+<li><code><a title="lib.server.ping.Packet.isEqual" href="#lib.server.ping.Packet.isEqual">isEqual</a></code></li>
+<li><code><a title="lib.server.ping.Packet.serialize" href="#lib.server.ping.Packet.serialize">serialize</a></code></li>
+<li><code><a title="lib.server.ping.Packet.unserialize" href="#lib.server.ping.Packet.unserialize">unserialize</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.ping.Ping" href="#lib.server.ping.Ping">Ping</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.server.ping.Ping.asyncPing" href="#lib.server.ping.Ping.asyncPing">asyncPing</a></code></li>
+<li><code><a title="lib.server.ping.Ping.close" href="#lib.server.ping.Ping.close">close</a></code></li>
+<li><code><a title="lib.server.ping.Ping.open" href="#lib.server.ping.Ping.open">open</a></code></li>
+<li><code><a title="lib.server.ping.Ping.ping" href="#lib.server.ping.Ping.ping">ping</a></code></li>
+<li><code><a title="lib.server.ping.Ping.receive" href="#lib.server.ping.Ping.receive">receive</a></code></li>
+<li><code><a title="lib.server.ping.Ping.send" href="#lib.server.ping.Ping.send">send</a></code></li>
+<li><code><a title="lib.server.ping.Ping.showResult" href="#lib.server.ping.Ping.showResult">showResult</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

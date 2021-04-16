@@ -81,6 +81,8 @@ async def index(request, response, args):
                                         Card([\
                                                 Form([\
                                                         Br(),
+                                                        Title3(text=b&#34;Device informations&#34;),
+                                                        Br(),
                                                         Edit(text=b&#34;Date&#34;,             value=date,      disabled=True),
                                                         Edit(text=b&#34;Platform&#34;,         value=platform,  disabled=True),
                                                         Edit(text=b&#34;Frequency&#34;,        value=frequency, disabled=True),
@@ -89,39 +91,12 @@ async def index(request, response, args):
                                                         Edit(text=b&#34;Memory total&#34;,     value=memTotal,  disabled=True),
                                                         Edit(text=b&#34;Flash user&#34;,       value=flashUser, disabled=True),
                                                         Edit(text=b&#34;Flash size&#34;,       value=flashSize, disabled=True),
-                                                        Tag(b&#39;&#39;&#39;
-&lt;button onclick=&#34;confirmReboot()&#34; class=&#34;btn btn-outline-primary &#34;&gt;Reboot&lt;/button&gt;
-&lt;script&gt;
-        function confirmReboot()
-        {
-                if (confirm(&#34;Confirm reboot&#34;))
-                {
-                        var xhttp = new XMLHttpRequest();
-                        xhttp.open(&#34;GET&#34;,&#34;reboot&#34;,true);
-                        xhttp.send();
-                }
-        }
-&lt;/script&gt;&#39;&#39;&#39;)
                                                 ])
                                         ])
                                 ])
                         ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
 
-        await response.sendPage(page)
-
-
-@HttpServer.addRoute(b&#39;/reboot&#39;)
-async def reboot(request, response, args):
-        try:
-                await response.sendOk()
-        except Exception as err:
-                print(useful.exception(err))
-        try:
-                import machine
-                print(&#34;Reboot&#34;)
-                machine.reset()
-        except Exception as err:
-                print(useful.exception(err))</code></pre>
+        await response.sendPage(page)</code></pre>
 </details>
 </section>
 <section>
@@ -177,6 +152,8 @@ async def index(request, response, args):
                                         Card([\
                                                 Form([\
                                                         Br(),
+                                                        Title3(text=b&#34;Device informations&#34;),
+                                                        Br(),
                                                         Edit(text=b&#34;Date&#34;,             value=date,      disabled=True),
                                                         Edit(text=b&#34;Platform&#34;,         value=platform,  disabled=True),
                                                         Edit(text=b&#34;Frequency&#34;,        value=frequency, disabled=True),
@@ -185,48 +162,12 @@ async def index(request, response, args):
                                                         Edit(text=b&#34;Memory total&#34;,     value=memTotal,  disabled=True),
                                                         Edit(text=b&#34;Flash user&#34;,       value=flashUser, disabled=True),
                                                         Edit(text=b&#34;Flash size&#34;,       value=flashSize, disabled=True),
-                                                        Tag(b&#39;&#39;&#39;
-&lt;button onclick=&#34;confirmReboot()&#34; class=&#34;btn btn-outline-primary &#34;&gt;Reboot&lt;/button&gt;
-&lt;script&gt;
-        function confirmReboot()
-        {
-                if (confirm(&#34;Confirm reboot&#34;))
-                {
-                        var xhttp = new XMLHttpRequest();
-                        xhttp.open(&#34;GET&#34;,&#34;reboot&#34;,true);
-                        xhttp.send();
-                }
-        }
-&lt;/script&gt;&#39;&#39;&#39;)
                                                 ])
                                         ])
                                 ])
                         ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
 
         await response.sendPage(page)</code></pre>
-</details>
-</dd>
-<dt id="lib.webpage.infopage.reboot"><code class="name flex">
-<span>async def <span class="ident">reboot</span></span>(<span>request, response, args)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/reboot&#39;)
-async def reboot(request, response, args):
-        try:
-                await response.sendOk()
-        except Exception as err:
-                print(useful.exception(err))
-        try:
-                import machine
-                print(&#34;Reboot&#34;)
-                machine.reset()
-        except Exception as err:
-                print(useful.exception(err))</code></pre>
 </details>
 </dd>
 </dl>
@@ -248,7 +189,6 @@ async def reboot(request, response, args):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="lib.webpage.infopage.index" href="#lib.webpage.infopage.index">index</a></code></li>
-<li><code><a title="lib.webpage.infopage.reboot" href="#lib.webpage.infopage.reboot">reboot</a></code></li>
 </ul>
 </li>
 </ul>

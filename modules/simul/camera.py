@@ -89,140 +89,184 @@ def capture():
 		return data
 	return None
 
+class Motion:
+	""" Class motion detection returned by the detect function """
+	def __init__(self, motion):
+		pass
+
+	def deinit (self):
+		pass
+
+	def compare(self, other):
+		return (0,0)
+
+	def setError(self, light, saturation):
+		pass
+
+	def getImage(self):
+		return b""
+
 def motion():
-	return (b"hello",(0,0),(0,0),(0,0),(0,0),(0,0),(0,0))
+	return Motion(None)
 
 def pixformat(val=None):
+	global _pixformat
 	if val != None:
 		_pixformat = val
 	return _pixformat
 
-def aec_value     (val=None): 
+def aec_value     (val=None):
+	global _aec_value
 	if val != None:
 		_aec_value = val
 	return _aec_value
 
-def framesize     (val=None): 
+def framesize     (val=None):
+	global _framesize
 	if val != None:
 		_framesize = val
 	return _framesize
 
-def quality       (val=None): 
+def quality       (val=None):
+	global _quality
 	if val != None:
 		_quality = val
 	return _quality
 
 def special_effect(val=None): 
+	global _special_effect
 	if val != None:
 		_special_effect = val
 	return _special_effect
 
-def wb_mode       (val=None): 
+def wb_mode       (val=None):
+	global _wb_mode
 	if val != None:
 		_wb_mode = val
 	return _wb_mode
 
-def agc_gain      (val=None): 
+def agc_gain      (val=None):
+	global _agc_gain
 	if val != None:
 		_agc_gain = val
 	return _agc_gain
 
-def gainceiling   (val=None): 
+def gainceiling   (val=None):
+	global _gainceiling
 	if val != None:
 		_gainceiling = val
 	return _gainceiling
 
-def brightness    (val=None): 
+def brightness    (val=None):
+	global _brightness
 	if val != None:
 		_brightness = val
 	return _brightness
 
 def contrast      (val=None): 
+	global _contrast
 	if val != None:
 		_contrast  = val
 	return _contrast 
 
-def saturation    (val=None): 
+def saturation    (val=None):
+	global _saturation
 	if val != None:
 		_saturation = val
 	return _saturation
 
-def sharpness     (val=None): 
+def sharpness     (val=None):
+	global _sharpness
 	if val != None:
 		_sharpness = val
 	return _sharpness
 
-def ae_level      (val=None): 
+def ae_level      (val=None):
+	global _ae_level
 	if val != None:
-		_sharpness = val
-	return _sharpness
+		_ae_level = val
+	return _ae_level
 
-def denoise       (val=None): 
+def denoise       (val=None):
+	global _denoise
 	if val != None:
 		_denoise = val
 	return _denoise
 
-def whitebal      (val=None): 
+def whitebal      (val=None):
+	global _whitebal
 	if val != None:
 		_whitebal = val
 	return _whitebal
 
-def awb_gain      (val=None): 
+def awb_gain      (val=None):
+	global _awb_gain
 	if val != None:
 		_awb_gain = val
 	return _awb_gain
 
-def exposure_ctrl (val=None): 
+def exposure_ctrl (val=None):
+	global _exposure_ctrl
 	if val != None:
 		_exposure_ctrl = val
 	return _exposure_ctrl
 
-def aec2          (val=None): 
+def aec2          (val=None):
+	global _aec2
 	if val != None:
 		_aec2 = val
 	return _aec2
 
-def gain_ctrl     (val=None): 
+def gain_ctrl     (val=None):
+	global _gain_ctrl
 	if val != None:
 		_gain_ctrl = val
 	return _gain_ctrl
 
-def bpc           (val=None): 
+def bpc           (val=None):
+	global _bpc
 	if val != None:
 		_bpc = val
 	return _bpc
 
-def wpc           (val=None): 
+def wpc           (val=None):
+	global _wpc
 	if val != None:
 		_wpc = val
 	return _wpc
 
-def raw_gma       (val=None): 
+def raw_gma       (val=None):
+	global _raw_gma
 	if val != None:
 		_raw_gma = val
 	return _raw_gma
 
-def lenc          (val=None): 
+def lenc          (val=None):
+	global _lenc
 	if val != None:
 		_lenc = val
 	return _lenc
 
-def hmirror       (val=None): 
+def hmirror       (val=None):
+	global _hmirror
 	if val != None:
 		_hmirror = val
 	return _hmirror
 
-def vflip         (val=None): 
+def vflip         (val=None):
+	global _vflip
 	if val != None:
 		_vflip = val
 	return _vflip
 
-def dcw           (val=None): 
+def dcw           (val=None):
+	global _dcw
 	if val != None:
 		_dcw = val
 	return _dcw
 
-def colorbar      (val=None): 
+def colorbar      (val=None):
+	global _colorbar
 	if val != None:
 		_colorbar = val
 	return _colorbar

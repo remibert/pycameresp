@@ -388,6 +388,7 @@ class FtpServerCore:
 	async def RNTO(self):
 		""" Ftp command RNTO """
 		if self.fromname is not None:
+			self.log(b"Ftp rename '%s' to '%s'"%(useful.tostrings(self.root + self.fromname), useful.tostrings(self.root + self.path)))
 			os.rename(useful.tostrings(self.root + self.fromname), useful.tostrings(self.root + self.path))
 			await self.sendOk()
 		else:

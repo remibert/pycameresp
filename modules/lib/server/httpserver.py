@@ -11,6 +11,7 @@ If you have enough memory (SPIRAM or other), just start the server with the prel
 
 from tools.useful import log
 from tools import useful
+from server import waitResume
 import re
 
 class HttpServer:
@@ -94,13 +95,21 @@ class HttpServer:
 	def searchRoute(request):
 		""" Search route according to the request """
 		function, args = None, None
-		found = HttpServer.routes.get(request.path,None)
-		if found == None:
-			staticRe = re.compile("^/("+useful.tostrings(HttpServer.wwwDir)+"/.+|.+)")
-			if staticRe.match(useful.tostrings(request.path)):
-				function, args = HttpServer.staticPages, {}
+		
+		if request.method == b"PUT":
+			dir, file = useful.split(useful.tostrings(request.path))
+			found = HttpServer.routes.get(useful.tobytes(dir),None)
+			if found:
+				function, args = found
+			return function, args
 		else:
-			function, args = found
+			found = HttpServer.routes.get(request.path,None)
+			if found == None:
+				staticRe = re.compile("^/("+useful.tostrings(HttpServer.wwwDir)+"/.+|.+)")
+				if staticRe.match(useful.tostrings(request.path)):
+					function, args = HttpServer.staticPages, {}
+			else:
+				function, args = found
 		return function, args
 
 	@staticmethod
@@ -114,6 +123,7 @@ class HttpServer:
 
 	async def onConnection(self, reader, writer):
 		""" Http server connection detected """
+		await waitResume()
 		try:
 			# Preload the server
 			self.preload()

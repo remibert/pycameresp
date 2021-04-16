@@ -47,6 +47,8 @@ The commands are :
 : list file
 - date
 : get the system date
+- df
+: display free disk space
 - find
 : find a file
 - run
@@ -59,6 +61,8 @@ The commands are :
 : garbage collection
 - grep
 : grep text in many files
+- ping
+: ping host
 - mount
 : mount sd card
 - umount
@@ -92,12 +96,14 @@ The commands are :
 - rm      : remove file
 - ls      : list file
 - date    : get the system date
+- df      : display free disk space
 - find    : find a file
 - run     : run a script
 - edit    : edit a text file
 - exit    : exit of shell
 - gc      : garbage collection
 - grep    : grep text in many files
+- ping    : ping host
 - mount   : mount sd card
 - umount  : umount sd card
 - meminfo : memory informations
@@ -112,6 +118,7 @@ import sys
 sys.path.append(&#34;lib&#34;)
 import os
 import uos
+import server
 
 try:
         from tools import useful
@@ -394,6 +401,10 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
                 if count == None:
                         break
 
+def ping(host):
+        &#34;&#34;&#34; Ping host &#34;&#34;&#34;
+        server.ping(host, count=4, timeout=1)
+
 def mountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Mount command &#34;&#34;&#34;
         import uos
@@ -413,11 +424,15 @@ def umountsd(mountpoint=&#34;/sd&#34;):
         except:
                 print(&#34;Cannot umount sd from &#39;%s&#39;&#34;%mountpoint)
 
-def date(update=False, dst=+1):
+def date(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
         from server.timesetting import setdate
         if update:
-                setdate(dst)
+                if noDst:
+                        dst = False
+                else:
+                        dst = True
+                setdate(offsetUTC, dst)
         print(useful.dateToString())
         del sys.modules[&#34;server.timesetting&#34;]
 
@@ -622,6 +637,7 @@ def execCommand(args):
 def shell():
         &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
         global shell_exited
+        server.suspend()
         shell_exited = False
         while shell_exited == False:
                 try:
@@ -630,6 +646,8 @@ def shell():
                         print(&#34;&#34;)
                         break
                 parseCommandLine(commandLine)
+        server.resume()
+
 
 
 shellCommands = \
@@ -643,7 +661,7 @@ shellCommands = \
         &#34;cp&#34;       :[cp       ,&#34;source&#34;,&#34;destination&#34;, (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-q&#34;,&#34;quiet&#34;,True)],
         &#34;rm&#34;       :[rm       ,&#34;file&#34;,                 (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-f&#34;,&#34;force&#34;,True),(&#34;-s&#34;,&#34;simulate&#34;,True)],
         &#34;ls&#34;       :[ls       ,&#34;file&#34;,                 (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-l&#34;,&#34;long&#34;,True)],
-        &#34;date&#34;     :[date     ,&#34;dst&#34; ,                 (&#34;-u&#34;,&#34;update&#34;,True)],
+        &#34;date&#34;     :[date     ,&#34;offsetUTC&#34; ,           (&#34;-u&#34;,&#34;update&#34;,True),   (&#34;-n&#34;,&#34;noDst&#34;,True)],
         &#34;find&#34;     :[find     ,&#34;file&#34;],
         &#34;run&#34;      :[useful.import_  ,&#34;filename&#34;],
         &#34;edit&#34;     :[edit     ,&#34;file&#34;],
@@ -656,10 +674,11 @@ shellCommands = \
         &#34;flashinfo&#34;:[useful.flashinfo],
         &#34;sysinfo&#34;  :[useful.sysinfo  ],
         &#34;deepsleep&#34;:[deepsleep],
+        &#34;ping&#34;     :[ping      ,&#34;host&#34;],
         &#34;reboot&#34;   :[reboot   ],
         &#34;help&#34;     :[help     ],
         &#34;man&#34;      :[man      ,&#34;command&#34;],
-        &#34;df&#34;       :[df       ,&#34;mountpoint&#34;]
+        &#34;df&#34;       :[df       ,&#34;mountpoint&#34;],
 }
 
 if __name__ == &#34;__main__&#34;:
@@ -783,7 +802,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.shell.date"><code class="name flex">
-<span>def <span class="ident">date</span></span>(<span>update=False, dst=1)</span>
+<span>def <span class="ident">date</span></span>(<span>update=False, offsetUTC=1, noDst=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get or set date</p></div>
@@ -791,11 +810,15 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def date(update=False, dst=+1):
+<pre><code class="python">def date(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
         from server.timesetting import setdate
         if update:
-                setdate(dst)
+                if noDst:
+                        dst = False
+                else:
+                        dst = True
+                setdate(offsetUTC, dst)
         print(useful.dateToString())
         del sys.modules[&#34;server.timesetting&#34;]</code></pre>
 </details>
@@ -1236,6 +1259,20 @@ if __name__ == &#34;__main__&#34;:
                 execCommand(command)</code></pre>
 </details>
 </dd>
+<dt id="lib.shell.shell.ping"><code class="name flex">
+<span>def <span class="ident">ping</span></span>(<span>host)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Ping host</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ping(host):
+        &#34;&#34;&#34; Ping host &#34;&#34;&#34;
+        server.ping(host, count=4, timeout=1)</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.shell.printPart"><code class="name flex">
 <span>def <span class="ident">printPart</span></span>(<span>message, width, height, count)</span>
 </code></dt>
@@ -1415,6 +1452,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def shell():
         &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
         global shell_exited
+        server.suspend()
         shell_exited = False
         while shell_exited == False:
                 try:
@@ -1422,7 +1460,8 @@ if __name__ == &#34;__main__&#34;:
                 except EOFError:
                         print(&#34;&#34;)
                         break
-                parseCommandLine(commandLine)</code></pre>
+                parseCommandLine(commandLine)
+        server.resume()</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.umountsd"><code class="name flex">
@@ -1594,6 +1633,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.mountsd" href="#lib.shell.shell.mountsd">mountsd</a></code></li>
 <li><code><a title="lib.shell.shell.mv" href="#lib.shell.shell.mv">mv</a></code></li>
 <li><code><a title="lib.shell.shell.parseCommandLine" href="#lib.shell.shell.parseCommandLine">parseCommandLine</a></code></li>
+<li><code><a title="lib.shell.shell.ping" href="#lib.shell.shell.ping">ping</a></code></li>
 <li><code><a title="lib.shell.shell.printPart" href="#lib.shell.shell.printPart">printPart</a></code></li>
 <li><code><a title="lib.shell.shell.pwd" href="#lib.shell.shell.pwd">pwd</a></code></li>
 <li><code><a title="lib.shell.shell.reboot" href="#lib.shell.shell.reboot">reboot</a></code></li>

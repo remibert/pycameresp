@@ -12,6 +12,7 @@ If you have enough memory (SPIRAM or other), just start the server with the prel
 import uasyncio
 import sys
 from tools import useful
+from server import waitResume
 
 class Ftp:
 	""" Ftp main class """
@@ -33,6 +34,7 @@ class Ftp:
 	
 	async def onConnection(self, reader, writer):
 		""" Asynchronous connection detected """
+		await waitResume()
 		try:
 			# Preload ftp core class
 			self.preload()

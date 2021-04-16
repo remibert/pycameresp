@@ -7,8 +7,14 @@ from server import *
 from server.sessions import *
 from server.user import *
 from server.pushover import *
+from server.wanip import *
+from server.ping import *
+from server.dnsclient import *
+from server.timesetting import *
 from tools import jsonconfig
 from tools import useful
+import uasyncio
+
 
 class ServerConfig:
 	""" Servers configuration """
@@ -18,6 +24,7 @@ class ServerConfig:
 		self.http = True
 		self.telnet = True
 		self.offsettime = 1
+		self.dst = True
 
 	def save(self, file = None):
 		""" Save configuration """
@@ -53,8 +60,7 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
 		# If ntp synchronisation activated
 		if config.ntp:
 			# Load and start ntp synchronisation
-			import server.timesetting
-			server.timesetting.setdate(config.offsettime)
+			loop.create_task(periodic())
 
 		# If telnet activated
 		if config.telnet and withoutServer == False:
@@ -81,3 +87,29 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
 	
 	# Display system informations
 	useful.sysinfo()
+
+
+async def periodic():
+	""" Periodic traitment update time, get wanip """
+	while True:
+		config = server.ServerConfig()
+		config.load()
+		if config.ntp:
+			setdate(config.offsettime, dst=config.dst, display=True)
+		await uasyncio.sleep(3600)
+
+
+_suspended = [False]
+def suspend():
+	""" Suspend the asyncio task of servers """
+	_suspended[0] = True
+
+def resume():
+	""" Resume the asyncio task of servers """
+	_suspended[0] = False
+
+async def waitResume():
+	""" Wait the resume of task servers """
+	if _suspended[0]:
+		while _suspended[0]:
+			await uasyncio.sleep(1)

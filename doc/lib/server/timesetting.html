@@ -50,20 +50,18 @@ def ntptime():
         NTP_DELTA = 3155673600
         return val - NTP_DELTA
 
-def setdate(dst=+1, display=False):
+def setdate(offsetTime=+1, dst=True, display=False):
         &#34;&#34;&#34; Set the date &#34;&#34;&#34;
         try:
                 import time
                 year,month,day,hour,minute,second,weekday,yearday = time.localtime(ntptime())[:8]
-                HHMarch    = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
-                HHNovember = time.mktime((year,10,( 7-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of November change to EST
+                startDST = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
+                endDST   = time.mktime((year,10,( 7-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of November change to EST
                 now = time.mktime((year,month,day,hour,minute,second,weekday,yearday))
-                if now &lt; HHMarch : # we are before last sunday of march
-                        newtime = time.localtime(now+(dst*3600)) # EST: UTC+dst*H
-                elif now &lt; HHNovember : # we are before last sunday of october
-                        newtime = time.localtime(now+(dst*3600)+3600) # DST: UTC+dst*H + 1
-                else: # we are after last sunday of october
-                        newtime = time.localtime(now+(dst*3600)) # EST: UTC+dst*H
+                if dst and now &gt; startDST and now &lt; endDST : # we are before last sunday of october
+                        newtime = time.localtime(now+(offsetTime*3600)+3600) # DST: UTC+dst*H + 1
+                else:
+                        newtime = time.localtime(now+(offsetTime*3600)) # EST: UTC+dst*H
 
                 year,month,day,hour,minute,second,weekday,yearday = newtime
                 import machine
@@ -112,7 +110,7 @@ def setdate(dst=+1, display=False):
 </details>
 </dd>
 <dt id="lib.server.timesetting.setdate"><code class="name flex">
-<span>def <span class="ident">setdate</span></span>(<span>dst=1, display=False)</span>
+<span>def <span class="ident">setdate</span></span>(<span>offsetTime=1, dst=True, display=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set the date</p></div>
@@ -120,20 +118,18 @@ def setdate(dst=+1, display=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setdate(dst=+1, display=False):
+<pre><code class="python">def setdate(offsetTime=+1, dst=True, display=False):
         &#34;&#34;&#34; Set the date &#34;&#34;&#34;
         try:
                 import time
                 year,month,day,hour,minute,second,weekday,yearday = time.localtime(ntptime())[:8]
-                HHMarch    = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
-                HHNovember = time.mktime((year,10,( 7-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of November change to EST
+                startDST = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
+                endDST   = time.mktime((year,10,( 7-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of November change to EST
                 now = time.mktime((year,month,day,hour,minute,second,weekday,yearday))
-                if now &lt; HHMarch : # we are before last sunday of march
-                        newtime = time.localtime(now+(dst*3600)) # EST: UTC+dst*H
-                elif now &lt; HHNovember : # we are before last sunday of october
-                        newtime = time.localtime(now+(dst*3600)+3600) # DST: UTC+dst*H + 1
-                else: # we are after last sunday of october
-                        newtime = time.localtime(now+(dst*3600)) # EST: UTC+dst*H
+                if dst and now &gt; startDST and now &lt; endDST : # we are before last sunday of october
+                        newtime = time.localtime(now+(offsetTime*3600)+3600) # DST: UTC+dst*H + 1
+                else:
+                        newtime = time.localtime(now+(offsetTime*3600)) # EST: UTC+dst*H
 
                 year,month,day,hour,minute,second,weekday,yearday = newtime
                 import machine

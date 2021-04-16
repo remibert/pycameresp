@@ -46,6 +46,7 @@ If you have enough memory (SPIRAM or other), just start the server with the prel
 
 from tools.useful import log
 from tools import useful
+from server import waitResume
 import re
 
 class HttpServer:
@@ -129,13 +130,21 @@ class HttpServer:
         def searchRoute(request):
                 &#34;&#34;&#34; Search route according to the request &#34;&#34;&#34;
                 function, args = None, None
-                found = HttpServer.routes.get(request.path,None)
-                if found == None:
-                        staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.wwwDir)+&#34;/.+|.+)&#34;)
-                        if staticRe.match(useful.tostrings(request.path)):
-                                function, args = HttpServer.staticPages, {}
+                
+                if request.method == b&#34;PUT&#34;:
+                        dir, file = useful.split(useful.tostrings(request.path))
+                        found = HttpServer.routes.get(useful.tobytes(dir),None)
+                        if found:
+                                function, args = found
+                        return function, args
                 else:
-                        function, args = found
+                        found = HttpServer.routes.get(request.path,None)
+                        if found == None:
+                                staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.wwwDir)+&#34;/.+|.+)&#34;)
+                                if staticRe.match(useful.tostrings(request.path)):
+                                        function, args = HttpServer.staticPages, {}
+                        else:
+                                function, args = found
                 return function, args
 
         @staticmethod
@@ -149,6 +158,7 @@ class HttpServer:
 
         async def onConnection(self, reader, writer):
                 &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
+                await waitResume()
                 try:
                         # Preload the server
                         self.preload()
@@ -316,13 +326,21 @@ preload : True = preload the server at the start, False = load the server at the
         def searchRoute(request):
                 &#34;&#34;&#34; Search route according to the request &#34;&#34;&#34;
                 function, args = None, None
-                found = HttpServer.routes.get(request.path,None)
-                if found == None:
-                        staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.wwwDir)+&#34;/.+|.+)&#34;)
-                        if staticRe.match(useful.tostrings(request.path)):
-                                function, args = HttpServer.staticPages, {}
+                
+                if request.method == b&#34;PUT&#34;:
+                        dir, file = useful.split(useful.tostrings(request.path))
+                        found = HttpServer.routes.get(useful.tobytes(dir),None)
+                        if found:
+                                function, args = found
+                        return function, args
                 else:
-                        function, args = found
+                        found = HttpServer.routes.get(request.path,None)
+                        if found == None:
+                                staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.wwwDir)+&#34;/.+|.+)&#34;)
+                                if staticRe.match(useful.tostrings(request.path)):
+                                        function, args = HttpServer.staticPages, {}
+                        else:
+                                function, args = found
                 return function, args
 
         @staticmethod
@@ -336,6 +354,7 @@ preload : True = preload the server at the start, False = load the server at the
 
         async def onConnection(self, reader, writer):
                 &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
+                await waitResume()
                 try:
                         # Preload the server
                         self.preload()
@@ -444,13 +463,21 @@ def removeRoute(url=None):
 def searchRoute(request):
         &#34;&#34;&#34; Search route according to the request &#34;&#34;&#34;
         function, args = None, None
-        found = HttpServer.routes.get(request.path,None)
-        if found == None:
-                staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.wwwDir)+&#34;/.+|.+)&#34;)
-                if staticRe.match(useful.tostrings(request.path)):
-                        function, args = HttpServer.staticPages, {}
+        
+        if request.method == b&#34;PUT&#34;:
+                dir, file = useful.split(useful.tostrings(request.path))
+                found = HttpServer.routes.get(useful.tobytes(dir),None)
+                if found:
+                        function, args = found
+                return function, args
         else:
-                function, args = found
+                found = HttpServer.routes.get(request.path,None)
+                if found == None:
+                        staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.wwwDir)+&#34;/.+|.+)&#34;)
+                        if staticRe.match(useful.tostrings(request.path)):
+                                function, args = HttpServer.staticPages, {}
+                else:
+                        function, args = found
         return function, args</code></pre>
 </details>
 </dd>
@@ -487,6 +514,7 @@ async def staticPages(request, response, args):
 </summary>
 <pre><code class="python">async def onConnection(self, reader, writer):
         &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
+        await waitResume()
         try:
                 # Preload the server
                 self.preload()

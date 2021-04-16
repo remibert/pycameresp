@@ -92,8 +92,13 @@ class Http:
                 self.parts      = []
                 self.status     = 0
                 self.content    = None
+                self.contentFile = None
                 self.identifier = None
                 self.request    = request
+
+        def __del__(self):
+                if self.contentFile != None:
+                        useful.remove(self.contentFile)
 
         def quote(self, text):
                 &#34;&#34;&#34; Insert in the string the character not supported in an url &#34;&#34;&#34;
@@ -230,15 +235,41 @@ class Http:
                                 else:
                                         self.params[param[0]] = param[1]
 
+        async def readContent(self, streamio):
+                length = int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;))
+                # If data small write in memory
+                if length &lt; 4096:
+                        self.content = b&#34;&#34;
+                        while len(self.content) &lt; length:
+                                self.content += await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;)))
+                # Data too big write in file
+                else:
+                        self.contentFile = &#34;%d.tmp&#34;%id(self)
+                        content = open(self.contentFile, &#34;wb&#34;)
+                        while content.tell() &lt; length:
+                                content.write(await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;))))
+                        content.close()
+
+        def getContentFilename(self):
+                &#34;&#34;&#34; Copy the content into file &#34;&#34;&#34;
+                if self.content != None:
+                        self.contentFile = &#34;%d.tmp&#34;%id(self)
+                        content = open(self.contentFile, &#34;wb&#34;)
+                        content.write(self.content)
+                        content.close()
+                        self.content = None
+                return self.contentFile
+
         async def unserializeHeaders(self, streamio):
                 &#34;&#34;&#34; Extract http header &#34;&#34;&#34;
                 while True:
                         header = await streamio.readline()
                         if header == b&#34;\r\n&#34;:
                                 if self.method == b&#34;POST&#34;:
-                                        post = await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;)))
-                                        post = post
-                                        self.unserializeParams(post)
+                                        await self.readContent(streamio)
+                                        self.unserializeParams(self.content)
+                                elif self.request == False or self.method == b&#34;PUT&#34;:
+                                        await self.readContent(streamio)
                                 break
                         name, value = header.split(b&#34;:&#34;, 1)
                         if name == b&#34;Cookie&#34;:
@@ -295,6 +326,7 @@ class Http:
                                 setget = b&#34;Set-&#34;
                         result += await streamio.write(b&#34;%sCookie: %s=%s%s\r\n&#34;%(setget, cookie, value[0], self.getExpiration(value[1])))
 
+                noEnd = False
                 # If content existing
                 if self.content != None:
                         try:
@@ -305,6 +337,7 @@ class Http:
                                 else:
                                         # Serialize object
                                         result += await self.content.serialize(streamio)
+                                        noEnd = True
                         except Exception as err:
                                 # Serialize error detected
                                 result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
@@ -334,8 +367,9 @@ class Http:
                         if self.headers[b&#34;Content-Type&#34;] != b&#34;multipart/x-mixed-replace&#34;:
                                 result += await streamio.write(b&#34;--&#34;)
 
-                # Terminate serialize request or response
-                result += await streamio.write(b&#34;\r\n&#34;)
+                if noEnd == False:
+                        # Terminate serialize request or response
+                        result += await streamio.write(b&#34;\r\n&#34;)
                 return result
 
         async def serializeResponse(self, streamio):
@@ -770,8 +804,13 @@ class HttpRequest(Http):
                 self.parts      = []
                 self.status     = 0
                 self.content    = None
+                self.contentFile = None
                 self.identifier = None
                 self.request    = request
+
+        def __del__(self):
+                if self.contentFile != None:
+                        useful.remove(self.contentFile)
 
         def quote(self, text):
                 &#34;&#34;&#34; Insert in the string the character not supported in an url &#34;&#34;&#34;
@@ -908,15 +947,41 @@ class HttpRequest(Http):
                                 else:
                                         self.params[param[0]] = param[1]
 
+        async def readContent(self, streamio):
+                length = int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;))
+                # If data small write in memory
+                if length &lt; 4096:
+                        self.content = b&#34;&#34;
+                        while len(self.content) &lt; length:
+                                self.content += await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;)))
+                # Data too big write in file
+                else:
+                        self.contentFile = &#34;%d.tmp&#34;%id(self)
+                        content = open(self.contentFile, &#34;wb&#34;)
+                        while content.tell() &lt; length:
+                                content.write(await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;))))
+                        content.close()
+
+        def getContentFilename(self):
+                &#34;&#34;&#34; Copy the content into file &#34;&#34;&#34;
+                if self.content != None:
+                        self.contentFile = &#34;%d.tmp&#34;%id(self)
+                        content = open(self.contentFile, &#34;wb&#34;)
+                        content.write(self.content)
+                        content.close()
+                        self.content = None
+                return self.contentFile
+
         async def unserializeHeaders(self, streamio):
                 &#34;&#34;&#34; Extract http header &#34;&#34;&#34;
                 while True:
                         header = await streamio.readline()
                         if header == b&#34;\r\n&#34;:
                                 if self.method == b&#34;POST&#34;:
-                                        post = await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;)))
-                                        post = post
-                                        self.unserializeParams(post)
+                                        await self.readContent(streamio)
+                                        self.unserializeParams(self.content)
+                                elif self.request == False or self.method == b&#34;PUT&#34;:
+                                        await self.readContent(streamio)
                                 break
                         name, value = header.split(b&#34;:&#34;, 1)
                         if name == b&#34;Cookie&#34;:
@@ -973,6 +1038,7 @@ class HttpRequest(Http):
                                 setget = b&#34;Set-&#34;
                         result += await streamio.write(b&#34;%sCookie: %s=%s%s\r\n&#34;%(setget, cookie, value[0], self.getExpiration(value[1])))
 
+                noEnd = False
                 # If content existing
                 if self.content != None:
                         try:
@@ -983,6 +1049,7 @@ class HttpRequest(Http):
                                 else:
                                         # Serialize object
                                         result += await self.content.serialize(streamio)
+                                        noEnd = True
                         except Exception as err:
                                 # Serialize error detected
                                 result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
@@ -1012,8 +1079,9 @@ class HttpRequest(Http):
                         if self.headers[b&#34;Content-Type&#34;] != b&#34;multipart/x-mixed-replace&#34;:
                                 result += await streamio.write(b&#34;--&#34;)
 
-                # Terminate serialize request or response
-                result += await streamio.write(b&#34;\r\n&#34;)
+                if noEnd == False:
+                        # Terminate serialize request or response
+                        result += await streamio.write(b&#34;\r\n&#34;)
                 return result
 
         async def serializeResponse(self, streamio):
@@ -1055,6 +1123,26 @@ class HttpRequest(Http):
 <pre><code class="python">def getContent(self):
         &#34;&#34;&#34; Get the content of the request or response &#34;&#34;&#34;
         return self.content</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httprequest.Http.getContentFilename"><code class="name flex">
+<span>def <span class="ident">getContentFilename</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Copy the content into file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getContentFilename(self):
+        &#34;&#34;&#34; Copy the content into file &#34;&#34;&#34;
+        if self.content != None:
+                self.contentFile = &#34;%d.tmp&#34;%id(self)
+                content = open(self.contentFile, &#34;wb&#34;)
+                content.write(self.content)
+                content.close()
+                self.content = None
+        return self.contentFile</code></pre>
 </details>
 </dd>
 <dt id="lib.server.httprequest.Http.getCookie"><code class="name flex">
@@ -1173,6 +1261,31 @@ class HttpRequest(Http):
         return result</code></pre>
 </details>
 </dd>
+<dt id="lib.server.httprequest.Http.readContent"><code class="name flex">
+<span>async def <span class="ident">readContent</span></span>(<span>self, streamio)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def readContent(self, streamio):
+        length = int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;))
+        # If data small write in memory
+        if length &lt; 4096:
+                self.content = b&#34;&#34;
+                while len(self.content) &lt; length:
+                        self.content += await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;)))
+        # Data too big write in file
+        else:
+                self.contentFile = &#34;%d.tmp&#34;%id(self)
+                content = open(self.contentFile, &#34;wb&#34;)
+                while content.tell() &lt; length:
+                        content.write(await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;))))
+                content.close()</code></pre>
+</details>
+</dd>
 <dt id="lib.server.httprequest.Http.serialize"><code class="name flex">
 <span>async def <span class="ident">serialize</span></span>(<span>self, streamio)</span>
 </code></dt>
@@ -1232,6 +1345,7 @@ class HttpRequest(Http):
                         setget = b&#34;Set-&#34;
                 result += await streamio.write(b&#34;%sCookie: %s=%s%s\r\n&#34;%(setget, cookie, value[0], self.getExpiration(value[1])))
 
+        noEnd = False
         # If content existing
         if self.content != None:
                 try:
@@ -1242,6 +1356,7 @@ class HttpRequest(Http):
                         else:
                                 # Serialize object
                                 result += await self.content.serialize(streamio)
+                                noEnd = True
                 except Exception as err:
                         # Serialize error detected
                         result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
@@ -1271,8 +1386,9 @@ class HttpRequest(Http):
                 if self.headers[b&#34;Content-Type&#34;] != b&#34;multipart/x-mixed-replace&#34;:
                         result += await streamio.write(b&#34;--&#34;)
 
-        # Terminate serialize request or response
-        result += await streamio.write(b&#34;\r\n&#34;)
+        if noEnd == False:
+                # Terminate serialize request or response
+                result += await streamio.write(b&#34;\r\n&#34;)
         return result</code></pre>
 </details>
 </dd>
@@ -1468,9 +1584,10 @@ class HttpRequest(Http):
                 header = await streamio.readline()
                 if header == b&#34;\r\n&#34;:
                         if self.method == b&#34;POST&#34;:
-                                post = await streamio.read(int(self.headers.get(b&#34;Content-Length&#34;,&#34;0&#34;)))
-                                post = post
-                                self.unserializeParams(post)
+                                await self.readContent(streamio)
+                                self.unserializeParams(self.content)
+                        elif self.request == False or self.method == b&#34;PUT&#34;:
+                                await self.readContent(streamio)
                         break
                 name, value = header.split(b&#34;:&#34;, 1)
                 if name == b&#34;Cookie&#34;:
@@ -1587,6 +1704,7 @@ class HttpRequest(Http):
 <ul class="hlist">
 <li><code><a title="lib.server.httprequest.Http.addPart" href="#lib.server.httprequest.Http.addPart">addPart</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getContent" href="#lib.server.httprequest.Http.getContent">getContent</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getContentFilename" href="#lib.server.httprequest.Http.getContentFilename">getContentFilename</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getCookie" href="#lib.server.httprequest.Http.getCookie">getCookie</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getExpiration" href="#lib.server.httprequest.Http.getExpiration">getExpiration</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getHeader" href="#lib.server.httprequest.Http.getHeader">getHeader</a></code></li>
@@ -1793,6 +1911,7 @@ class HttpRequest(Http):
 <ul class="hlist">
 <li><code><a title="lib.server.httprequest.Http.addPart" href="#lib.server.httprequest.Http.addPart">addPart</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getContent" href="#lib.server.httprequest.Http.getContent">getContent</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getContentFilename" href="#lib.server.httprequest.Http.getContentFilename">getContentFilename</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getCookie" href="#lib.server.httprequest.Http.getCookie">getCookie</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getExpiration" href="#lib.server.httprequest.Http.getExpiration">getExpiration</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getHeader" href="#lib.server.httprequest.Http.getHeader">getHeader</a></code></li>
@@ -2099,6 +2218,7 @@ class HttpRequest(Http):
 <ul class="two-column">
 <li><code><a title="lib.server.httprequest.Http.addPart" href="#lib.server.httprequest.Http.addPart">addPart</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getContent" href="#lib.server.httprequest.Http.getContent">getContent</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.getContentFilename" href="#lib.server.httprequest.Http.getContentFilename">getContentFilename</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getCookie" href="#lib.server.httprequest.Http.getCookie">getCookie</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getExpiration" href="#lib.server.httprequest.Http.getExpiration">getExpiration</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getHeader" href="#lib.server.httprequest.Http.getHeader">getHeader</a></code></li>
@@ -2106,6 +2226,7 @@ class HttpRequest(Http):
 <li><code><a title="lib.server.httprequest.Http.getPath" href="#lib.server.httprequest.Http.getPath">getPath</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.getStatus" href="#lib.server.httprequest.Http.getStatus">getStatus</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.quote" href="#lib.server.httprequest.Http.quote">quote</a></code></li>
+<li><code><a title="lib.server.httprequest.Http.readContent" href="#lib.server.httprequest.Http.readContent">readContent</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.serialize" href="#lib.server.httprequest.Http.serialize">serialize</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.serializeBody" href="#lib.server.httprequest.Http.serializeBody">serializeBody</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.serializeRequest" href="#lib.server.httprequest.Http.serializeRequest">serializeRequest</a></code></li>

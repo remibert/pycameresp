@@ -78,6 +78,44 @@ class CameraConfig:
                 result = jsonconfig.load(self, file)
                 return result
 
+class Motion:
+        &#34;&#34;&#34; Class motion detection returned by the detect function &#34;&#34;&#34;
+        def __init__(self, motion):
+                &#34;&#34;&#34; Constructor with motion object &#34;&#34;&#34;
+                self.motion = motion
+
+        def deinit (self):
+                &#34;&#34;&#34; Destructor &#34;&#34;&#34;
+                self.motion.deinit()
+
+        def extract(self):
+                &#34;&#34;&#34; Extract the full content of motion &#34;&#34;&#34;
+                return self.motion.extract()
+
+        def compare(self, other):
+                &#34;&#34;&#34; Compare image to detect motion &#34;&#34;&#34;
+                return self.motion.compare(other.motion)
+
+        def setErrorHue(self, hue):
+                &#34;&#34;&#34; Define the error tolered in the compare method on hue &#34;&#34;&#34;
+                self.motion.setErrorHue(hue)
+
+        def setErrorLight(self, light):
+                &#34;&#34;&#34; Define the error tolered in the compare method on light &#34;&#34;&#34;
+                self.motion.setErrorLight(light)
+
+        def setErrorSaturation(self,saturation):
+                &#34;&#34;&#34; Define the error tolered in the compare method on  saturation &#34;&#34;&#34;
+                self.motion.setErrorSaturation(saturation)
+
+        def getImage(self):
+                &#34;&#34;&#34; Return the jpeg buffer of motion &#34;&#34;&#34;
+                return self.motion.getImage()
+
+        def getFeature(self):
+                &#34;&#34;&#34; Return (mean, min, max light, mean, min, max, saturation, total count) &#34;&#34;&#34;
+                return self.getFeature()
+
 class Camera:
         &#34;&#34;&#34; Singleton class to manage the camera &#34;&#34;&#34;
         reserved = [False]
@@ -175,6 +213,11 @@ class Camera:
                                         retry += 1
                                         time.sleep(0.5)
                 return result
+
+        @staticmethod
+        def compare(image1, image2):
+                &#34;&#34;&#34; Compare motion images &#34;&#34;&#34;
+                return camera.compare(image1, image2)
 
         @staticmethod
         def framesize(resolution):
@@ -409,6 +452,11 @@ class Camera:
                 return result
 
         @staticmethod
+        def compare(image1, image2):
+                &#34;&#34;&#34; Compare motion images &#34;&#34;&#34;
+                return camera.compare(image1, image2)
+
+        @staticmethod
         def framesize(resolution):
                 &#34;&#34;&#34; Configure the frame size &#34;&#34;&#34;
                 val = None
@@ -602,6 +650,21 @@ def close():
         if Camera.opened == True:
                 camera.deinit()
                 Camera.opened = False</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Camera.compare"><code class="name flex">
+<span>def <span class="ident">compare</span></span>(<span>image1, image2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compare motion images</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def compare(image1, image2):
+        &#34;&#34;&#34; Compare motion images &#34;&#34;&#34;
+        return camera.compare(image1, image2)</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.configure"><code class="name flex">
@@ -1024,6 +1087,172 @@ def vflip(val=None):
 </dd>
 </dl>
 </dd>
+<dt id="lib.video.video.Motion"><code class="flex name class">
+<span>class <span class="ident">Motion</span></span>
+<span>(</span><span>motion)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class motion detection returned by the detect function </p>
+<p>Constructor with motion object</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Motion:
+        &#34;&#34;&#34; Class motion detection returned by the detect function &#34;&#34;&#34;
+        def __init__(self, motion):
+                &#34;&#34;&#34; Constructor with motion object &#34;&#34;&#34;
+                self.motion = motion
+
+        def deinit (self):
+                &#34;&#34;&#34; Destructor &#34;&#34;&#34;
+                self.motion.deinit()
+
+        def extract(self):
+                &#34;&#34;&#34; Extract the full content of motion &#34;&#34;&#34;
+                return self.motion.extract()
+
+        def compare(self, other):
+                &#34;&#34;&#34; Compare image to detect motion &#34;&#34;&#34;
+                return self.motion.compare(other.motion)
+
+        def setErrorHue(self, hue):
+                &#34;&#34;&#34; Define the error tolered in the compare method on hue &#34;&#34;&#34;
+                self.motion.setErrorHue(hue)
+
+        def setErrorLight(self, light):
+                &#34;&#34;&#34; Define the error tolered in the compare method on light &#34;&#34;&#34;
+                self.motion.setErrorLight(light)
+
+        def setErrorSaturation(self,saturation):
+                &#34;&#34;&#34; Define the error tolered in the compare method on  saturation &#34;&#34;&#34;
+                self.motion.setErrorSaturation(saturation)
+
+        def getImage(self):
+                &#34;&#34;&#34; Return the jpeg buffer of motion &#34;&#34;&#34;
+                return self.motion.getImage()
+
+        def getFeature(self):
+                &#34;&#34;&#34; Return (mean, min, max light, mean, min, max, saturation, total count) &#34;&#34;&#34;
+                return self.getFeature()</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.video.video.Motion.compare"><code class="name flex">
+<span>def <span class="ident">compare</span></span>(<span>self, other)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compare image to detect motion</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compare(self, other):
+        &#34;&#34;&#34; Compare image to detect motion &#34;&#34;&#34;
+        return self.motion.compare(other.motion)</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Motion.deinit"><code class="name flex">
+<span>def <span class="ident">deinit</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Destructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def deinit (self):
+        &#34;&#34;&#34; Destructor &#34;&#34;&#34;
+        self.motion.deinit()</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Motion.extract"><code class="name flex">
+<span>def <span class="ident">extract</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extract the full content of motion</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract(self):
+        &#34;&#34;&#34; Extract the full content of motion &#34;&#34;&#34;
+        return self.motion.extract()</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Motion.getFeature"><code class="name flex">
+<span>def <span class="ident">getFeature</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return (mean, min, max light, mean, min, max, saturation, total count)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getFeature(self):
+        &#34;&#34;&#34; Return (mean, min, max light, mean, min, max, saturation, total count) &#34;&#34;&#34;
+        return self.getFeature()</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Motion.getImage"><code class="name flex">
+<span>def <span class="ident">getImage</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the jpeg buffer of motion</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getImage(self):
+        &#34;&#34;&#34; Return the jpeg buffer of motion &#34;&#34;&#34;
+        return self.motion.getImage()</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Motion.setErrorHue"><code class="name flex">
+<span>def <span class="ident">setErrorHue</span></span>(<span>self, hue)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Define the error tolered in the compare method on hue</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setErrorHue(self, hue):
+        &#34;&#34;&#34; Define the error tolered in the compare method on hue &#34;&#34;&#34;
+        self.motion.setErrorHue(hue)</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Motion.setErrorLight"><code class="name flex">
+<span>def <span class="ident">setErrorLight</span></span>(<span>self, light)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Define the error tolered in the compare method on light</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setErrorLight(self, light):
+        &#34;&#34;&#34; Define the error tolered in the compare method on light &#34;&#34;&#34;
+        self.motion.setErrorLight(light)</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Motion.setErrorSaturation"><code class="name flex">
+<span>def <span class="ident">setErrorSaturation</span></span>(<span>self, saturation)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Define the error tolered in the compare method on
+saturation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setErrorSaturation(self,saturation):
+        &#34;&#34;&#34; Define the error tolered in the compare method on  saturation &#34;&#34;&#34;
+        self.motion.setErrorSaturation(saturation)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -1046,6 +1275,7 @@ def vflip(val=None):
 <li><code><a title="lib.video.video.Camera.brightness" href="#lib.video.video.Camera.brightness">brightness</a></code></li>
 <li><code><a title="lib.video.video.Camera.capture" href="#lib.video.video.Camera.capture">capture</a></code></li>
 <li><code><a title="lib.video.video.Camera.close" href="#lib.video.video.Camera.close">close</a></code></li>
+<li><code><a title="lib.video.video.Camera.compare" href="#lib.video.video.Camera.compare">compare</a></code></li>
 <li><code><a title="lib.video.video.Camera.configure" href="#lib.video.video.Camera.configure">configure</a></code></li>
 <li><code><a title="lib.video.video.Camera.contrast" href="#lib.video.video.Camera.contrast">contrast</a></code></li>
 <li><code><a title="lib.video.video.Camera.framesize" href="#lib.video.video.Camera.framesize">framesize</a></code></li>
@@ -1072,6 +1302,19 @@ def vflip(val=None):
 <li><code><a title="lib.video.video.CameraConfig.save" href="#lib.video.video.CameraConfig.save">save</a></code></li>
 <li><code><a title="lib.video.video.CameraConfig.streamingBase" href="#lib.video.video.CameraConfig.streamingBase">streamingBase</a></code></li>
 <li><code><a title="lib.video.video.CameraConfig.update" href="#lib.video.video.CameraConfig.update">update</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.video.video.Motion" href="#lib.video.video.Motion">Motion</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.video.video.Motion.compare" href="#lib.video.video.Motion.compare">compare</a></code></li>
+<li><code><a title="lib.video.video.Motion.deinit" href="#lib.video.video.Motion.deinit">deinit</a></code></li>
+<li><code><a title="lib.video.video.Motion.extract" href="#lib.video.video.Motion.extract">extract</a></code></li>
+<li><code><a title="lib.video.video.Motion.getFeature" href="#lib.video.video.Motion.getFeature">getFeature</a></code></li>
+<li><code><a title="lib.video.video.Motion.getImage" href="#lib.video.video.Motion.getImage">getImage</a></code></li>
+<li><code><a title="lib.video.video.Motion.setErrorHue" href="#lib.video.video.Motion.setErrorHue">setErrorHue</a></code></li>
+<li><code><a title="lib.video.video.Motion.setErrorLight" href="#lib.video.video.Motion.setErrorLight">setErrorLight</a></code></li>
+<li><code><a title="lib.video.video.Motion.setErrorSaturation" href="#lib.video.video.Motion.setErrorSaturation">setErrorSaturation</a></code></li>
 </ul>
 </li>
 </ul>

@@ -15,8 +15,9 @@ class PushOverConfig:
 	""" Configuration of the pushover """
 	def __init__(self):
 		""" Constructor """
-		self.token = ""
-		self.user = ""
+		self.activated = False
+		self.token = b""
+		self.user = b""
 
 	def save(self, file = None):
 		""" Save the configuration """
@@ -112,6 +113,14 @@ def notify(user, token, message, image=None):
 	""" Notification function """
 	loop = uasyncio.get_event_loop()
 	loop.run_until_complete(asyncNotify(user=user, token=token, message=message, image=image))
+
+async def notifyMessage(message, image = None, forced=False):
+	""" Notify message """
+	config = PushOverConfig()
+	config.load()
+	print("%s"%useful.tostrings(message))
+	if config.activated or forced:
+		await asyncNotify(config.user, config.token, message, image)
 
 if __name__ == "__main__":
 	config = pushoverconfig.PushOverConfig()

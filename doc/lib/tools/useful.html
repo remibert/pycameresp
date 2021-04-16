@@ -39,15 +39,20 @@ import hashlib
 try:
         from tools import fnmatch
 except:
-        from fnmatch import fnmatch
-
+        import fnmatch
 try:
         import uos
 except:
         pass
 from binascii import hexlify
 
-if sys.implementation.name == &#34;micropython&#34;:
+def ismicropython():
+        &#34;&#34;&#34; Indicates if the python is micropython &#34;&#34;&#34;
+        if sys.implementation.name == &#34;micropython&#34;:
+                return True
+        return False
+
+if ismicropython():
         def isKeyEnded(key):
                 if len(key) == 0:
                         return False
@@ -75,44 +80,57 @@ if sys.implementation.name == &#34;micropython&#34;:
                                 return True
                 return False
 
-        _kbhit = False
         def getch(raw = True):
-                global _kbhit
                 key = &#34;&#34;
-                _kbhit = False
                 while 1:
                         if len(key) == 0:
                                 delay = 1000000000
                         else:
                                 delay = 0.01
-                        r,w,e = select.select([sys.stdin],[],[],delay)
+                        keyPressed = kbhit(delay)
                         if isKeyEnded(key):
-                                if r != []:
-                                        _kbhit = True
                                 break
-                        if r != []:
+                        if keyPressed:
                                 char = sys.stdin.buffer.read(1)
                                 try:
                                         key += char.decode(&#34;latin-1&#34;)
                                 except:
-                                        key +=  chr(ord(char))
+                                        key += chr(ord(char))
                         else:
                                 if len(key) &gt; 0:
                                         break
                 return key
 
-        def kbhit():
-                global _kbhit
-                return _kbhit
+        def kbhit(duration=0.01):
+                r,w,e = select.select([sys.stdin],[],[],duration)
+                if r != []:
+                        return True
+                return False
+                
 else:
         def getch(raw = True):
+                return readKeyboard(10000000, raw, getChar)
+
+        def kbhit(duration=0.001):
+                return readKeyboard(duration, True, testChar)
+
+        def getChar(stdins):
+                if stdins != []:
+                        return stdins[0].read()
+                return None
+
+        def testChar(stdins):
+                if stdins != []:
+                        return True
+                return False
+
+        def readKeyboard(duration=0.001, raw=True, callback=None):
                 import termios, fcntl
                 import select
                 import os
                 import sys
                 import tty
                 fd = sys.stdin.fileno()
-                
                 oldattr = termios.tcgetattr(fd)
                 oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
                 try:
@@ -126,21 +144,15 @@ else:
                         if raw:
                                 tty.setraw(fd)
                         key = None
-                        inp, outp, err = select.select([sys.stdin], [], [])
-                        key = sys.stdin.read()
+                        inp, outp, err = select.select([sys.stdin], [], [], duration)
+                        print(inp)
+                        result = callback(inp)
                 finally:
                         # Reset the terminal:
                         fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
                         termios.tcsetattr(fd, termios.TCSAFLUSH, oldattr)
-                return key
+                return result
 
-        def kbhit():
-                import sys
-                import select
-                inp, outp, err = select.select([sys.stdin], [], [], 0.001)
-                if inp != []:
-                        return True
-                return False
 
 try:
         from utime import ticks_ms
@@ -178,7 +190,7 @@ def dateToBytes(date = None):
 def dateToFilename(date = None):
         &#34;&#34;&#34; Get a filename with a date &#34;&#34;&#34;
         filename = dateToString(date)
-        filename = filename.replace(&#34;  &#34;,&#34;_&#34;)
+        filename = filename.replace(&#34;  &#34;,&#34; &#34;)
         filename = filename.replace(&#34;/&#34;,&#34;-&#34;)
         filename = filename.replace(&#34;:&#34;,&#34;-&#34;)
         return filename
@@ -596,12 +608,6 @@ def tostrings(datas, encoding=&#34;utf8&#34;):
                         result[tostrings(key,encoding)] = tostrings(value, encoding)
         return result
 
-def ismicropython():
-        &#34;&#34;&#34; Indicates if the python is micropython &#34;&#34;&#34;
-        if sys.implementation.name == &#34;micropython&#34;:
-                return True
-        return False
-
 def iscamera():
         &#34;&#34;&#34; Indicates if the board is esp32cam &#34;&#34;&#34;
         try:
@@ -629,18 +635,6 @@ def issameinterface(ipaddr, ipinterface, maskinterface):
                 return True
         else:
                 return False
-
-
-def journalize(message):
-        filename = tools.useful.dateToFilename()
-        filename = &#34;jnl_&#34;+filename [8:-6] + &#34;.txt&#34;
-        file = open(filename,&#34;a&#34;)
-        message = &#34;%s: %s&#34;%(tools.useful.dateToString(), message)
-        print(message)
-        file.write(message)
-        file.write(&#34;\n&#34;)
-        file.flush()
-        file.close()
 
 def scandir(path, pattern, recursive, displayer=None):
         &#34;&#34;&#34; Scan recursively a directory &#34;&#34;&#34;
@@ -710,16 +704,16 @@ class SdCard:
         def mount(mountpoint = &#34;/sd&#34;):
                 result = False
                 if SdCard.isMounted() == False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
-                        # If the sdcard not already mounted
-                        if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
-                                try:
+                        try:
+                                # If the sdcard not already mounted
+                                if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
                                         import machine
                                         uos.mount(machine.SDCard(), mountpoint)
                                         SdCard.mountpoint[0] = mountpoint
                                         SdCard.opened[0]= True
                                         result = True
-                                except Exception as err:
-                                        print(&#34;Cannot mount %s&#34;%mountpoint)
+                        except Exception as err:
+                                print(&#34;Cannot mount %s&#34;%mountpoint)
                 elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
                         result = True
                 return result
@@ -738,7 +732,158 @@ class SdCard:
                         except Exception as error:
                                 # print(exception(error))
                                 print(&#34;Cannot save %s&#34;%filename)
-                return result</code></pre>
+                return result
+
+def remove(filename):
+        &#34;&#34;&#34; Remove file existing &#34;&#34;&#34;
+        try:    uos.remove(filename)
+        except: pass 
+
+HEADER_FILE=b&#34;## PYCAMERESP ##\r\n&#34;
+def exportFiles(exportFilename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
+        &#34;&#34;&#34; Exports many file into only one file &#34;&#34;&#34;
+        result = True
+
+        print(&#34;Export %s&#34;%exportFilename)
+        remove(exportFilename)
+
+        # Scan directory with pattern
+        dirs, files = scandir(path=path, pattern=pattern, recursive=recursive)
+        
+        try:
+                # Open out file
+                out = open(exportFilename,&#34;wb&#34;)
+ 
+                # Write type of file
+                out.write(HEADER_FILE)
+
+                # For all files found
+                for filename in files:
+                        # All files except .tmp and sdcard
+                        if filename[-4:] != &#34;.tmp&#34; and filename[:4] != &#34;/sd/&#34; and filename[5:] != &#34;./sd/&#34;:
+                                # Write file header
+                                size = filesize(filename)
+                                out.write(b&#34;# %d:%s\r\n&#34;%(size, tobytes(filename)))
+
+                                print(&#34;  Export &#39;%s&#39; size=%d&#34;%(filename, size))
+                                try:
+                                        # Write file
+                                        content = open(filename,&#34;rb&#34;)
+                                        while size &gt; 0:
+                                                data = content.read(2048)
+                                                out.write(data)
+                                                size -= len(data)
+
+                                        # Write end of file
+                                        out.write(b&#34;\r\n\r\n&#34;)
+                                except Exception as error:
+                                        print(exception(error))
+                                        result = False
+                                        break
+                                finally:
+                                        content.close()
+        except Exception as error:
+                print(exception(error))
+                result = False
+        finally:
+                print(&#34;Export %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                out.close()
+        return result
+
+def importFiles(importFilename, simulated=False):
+        &#34;&#34;&#34; Import files and write all files &#34;&#34;&#34;
+        result = True
+        print(&#34;Import %s&#34;%importFilename)
+        try:
+                readSize = filesize(importFilename)
+                imported = open(importFilename,&#34;rb&#34;)
+                if not ismicropython():
+                        simulated = True
+
+                # Read the type of file
+                if imported.read(len(HEADER_FILE)) != HEADER_FILE:
+                        result = False
+                else:
+                        while imported.tell() &lt; readSize:
+                                # Read the start of file
+                                comment = imported.read(2)
+                                if comment != b&#34;# &#34;:
+                                        result = False
+                                        break
+
+                                # Read the file size
+                                size = b&#34;&#34;
+                                while True:
+                                        char = imported.read(1)
+                                        if char == b&#34;:&#34;:
+                                                break
+                                        elif not char in b&#34;0123456789&#34;:
+                                                result = False
+                                                break
+                                        size += char
+                                if result == False:
+                                        break
+                                size = eval(size)
+
+                                # Read filename
+                                filename = b&#34;&#34;
+                                while True:
+                                        char = imported.read(1)
+                                        if char == b&#34;\r&#34;:
+                                                break
+                                        filename += char
+                                filename = tostrings(filename)
+                                char = imported.read(1)
+                                if char != b&#34;\n&#34;:
+                                        result = False
+                                        break
+
+                                # Read the file
+                                print(&#34;  Import &#39;%s&#39; size=%d&#34;%(filename, size))
+                                
+                                try:
+                                        if simulated == False:
+                                                content = open(filename,&#34;wb&#34;)
+                                        while size &gt; 0:
+                                                data = imported.read(size if size &lt; 2048 else 2048)
+                                                if simulated == False:
+                                                        content.write(data)
+                                                size -= len(data)
+                                except Exception as error:
+                                        print(exception(error))
+                                        result = False
+                                finally:
+                                        if simulated == False:
+                                                content.close()
+                                
+                                # Read the end of file
+                                if imported.read(4) != b&#34;\r\n\r\n&#34;:
+                                        result = False
+                                        break
+        except Exception as error:
+                print(exception(error))
+                result = False
+        finally:
+                print(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                imported.close()
+        remove(importFilename)
+        return result
+
+async def asyncShell():
+        &#34;&#34;&#34; Asynchronous shell &#34;&#34;&#34;
+        import uasyncio
+
+        if ismicropython():
+                while 1:
+                        # If key pressed
+                        if kbhit(0):
+                                import shell
+                                print(&#34;\n&#34;+&#34;&lt;&#34;*20+&#34;   ENTER SHELL   &#34; +&#34;&gt;&#34;*20)
+                                # Start shell
+                                shell.shell()
+                                print(&#34;\n&#34;+&#34;&lt;&#34;*20+&#34;   EXIT  SHELL   &#34; +&#34;&gt;&#34;*20)
+                        else:
+                                await uasyncio.sleep(1)</code></pre>
 </details>
 </section>
 <section>
@@ -808,6 +953,32 @@ class SdCard:
         return cwd</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.useful.asyncShell"><code class="name flex">
+<span>async def <span class="ident">asyncShell</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Asynchronous shell</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def asyncShell():
+        &#34;&#34;&#34; Asynchronous shell &#34;&#34;&#34;
+        import uasyncio
+
+        if ismicropython():
+                while 1:
+                        # If key pressed
+                        if kbhit(0):
+                                import shell
+                                print(&#34;\n&#34;+&#34;&lt;&#34;*20+&#34;   ENTER SHELL   &#34; +&#34;&gt;&#34;*20)
+                                # Start shell
+                                shell.shell()
+                                print(&#34;\n&#34;+&#34;&lt;&#34;*20+&#34;   EXIT  SHELL   &#34; +&#34;&gt;&#34;*20)
+                        else:
+                                await uasyncio.sleep(1)</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.useful.blink"><code class="name flex">
 <span>def <span class="ident">blink</span></span>(<span>duration=10)</span>
 </code></dt>
@@ -858,7 +1029,7 @@ class SdCard:
 <pre><code class="python">def dateToFilename(date = None):
         &#34;&#34;&#34; Get a filename with a date &#34;&#34;&#34;
         filename = dateToString(date)
-        filename = filename.replace(&#34;  &#34;,&#34;_&#34;)
+        filename = filename.replace(&#34;  &#34;,&#34; &#34;)
         filename = filename.replace(&#34;/&#34;,&#34;-&#34;)
         filename = filename.replace(&#34;:&#34;,&#34;-&#34;)
         return filename</code></pre>
@@ -948,6 +1119,66 @@ class SdCard:
         return False</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.useful.exportFiles"><code class="name flex">
+<span>def <span class="ident">exportFiles</span></span>(<span>exportFilename, path='./config', pattern='*.json', recursive=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Exports many file into only one file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exportFiles(exportFilename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
+        &#34;&#34;&#34; Exports many file into only one file &#34;&#34;&#34;
+        result = True
+
+        print(&#34;Export %s&#34;%exportFilename)
+        remove(exportFilename)
+
+        # Scan directory with pattern
+        dirs, files = scandir(path=path, pattern=pattern, recursive=recursive)
+        
+        try:
+                # Open out file
+                out = open(exportFilename,&#34;wb&#34;)
+ 
+                # Write type of file
+                out.write(HEADER_FILE)
+
+                # For all files found
+                for filename in files:
+                        # All files except .tmp and sdcard
+                        if filename[-4:] != &#34;.tmp&#34; and filename[:4] != &#34;/sd/&#34; and filename[5:] != &#34;./sd/&#34;:
+                                # Write file header
+                                size = filesize(filename)
+                                out.write(b&#34;# %d:%s\r\n&#34;%(size, tobytes(filename)))
+
+                                print(&#34;  Export &#39;%s&#39; size=%d&#34;%(filename, size))
+                                try:
+                                        # Write file
+                                        content = open(filename,&#34;rb&#34;)
+                                        while size &gt; 0:
+                                                data = content.read(2048)
+                                                out.write(data)
+                                                size -= len(data)
+
+                                        # Write end of file
+                                        out.write(b&#34;\r\n\r\n&#34;)
+                                except Exception as error:
+                                        print(exception(error))
+                                        result = False
+                                        break
+                                finally:
+                                        content.close()
+        except Exception as error:
+                print(exception(error))
+                result = False
+        finally:
+                print(&#34;Export %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                out.close()
+        return result</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.useful.fileinfo"><code class="name flex">
 <span>def <span class="ident">fileinfo</span></span>(<span>path)</span>
 </code></dt>
@@ -1018,6 +1249,21 @@ class SdCard:
                 return b&#34;Flash unavailable&#34;</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.useful.getChar"><code class="name flex">
+<span>def <span class="ident">getChar</span></span>(<span>stdins)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def getChar(stdins):
+        if stdins != []:
+                return stdins[0].read()
+        return None</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.useful.getHash"><code class="name flex">
 <span>def <span class="ident">getHash</span></span>(<span>password)</span>
 </code></dt>
@@ -1067,33 +1313,7 @@ class SdCard:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def getch(raw = True):
-        import termios, fcntl
-        import select
-        import os
-        import sys
-        import tty
-        fd = sys.stdin.fileno()
-        
-        oldattr = termios.tcgetattr(fd)
-        oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
-        try:
-                newattr = oldattr[:]
-                newattr[3] = newattr[3] &amp; ~termios.ICANON
-                newattr[3] = newattr[3] &amp; ~termios.ECHO
-                termios.tcsetattr(fd, termios.TCSANOW, newattr)
-
-                fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
-
-                if raw:
-                        tty.setraw(fd)
-                key = None
-                inp, outp, err = select.select([sys.stdin], [], [])
-                key = sys.stdin.read()
-        finally:
-                # Reset the terminal:
-                fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
-                termios.tcsetattr(fd, termios.TCSAFLUSH, oldattr)
-        return key</code></pre>
+        return readKeyboard(10000000, raw, getChar)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.htmlException"><code class="name flex">
@@ -1112,6 +1332,95 @@ class SdCard:
         text = text.replace(&#34;\n  &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&#34;)
         text = text.replace(&#34;\n&#34;,&#34;&lt;br&gt;&#34;)
         return tobytes(text)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.importFiles"><code class="name flex">
+<span>def <span class="ident">importFiles</span></span>(<span>importFilename, simulated=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Import files and write all files</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def importFiles(importFilename, simulated=False):
+        &#34;&#34;&#34; Import files and write all files &#34;&#34;&#34;
+        result = True
+        print(&#34;Import %s&#34;%importFilename)
+        try:
+                readSize = filesize(importFilename)
+                imported = open(importFilename,&#34;rb&#34;)
+                if not ismicropython():
+                        simulated = True
+
+                # Read the type of file
+                if imported.read(len(HEADER_FILE)) != HEADER_FILE:
+                        result = False
+                else:
+                        while imported.tell() &lt; readSize:
+                                # Read the start of file
+                                comment = imported.read(2)
+                                if comment != b&#34;# &#34;:
+                                        result = False
+                                        break
+
+                                # Read the file size
+                                size = b&#34;&#34;
+                                while True:
+                                        char = imported.read(1)
+                                        if char == b&#34;:&#34;:
+                                                break
+                                        elif not char in b&#34;0123456789&#34;:
+                                                result = False
+                                                break
+                                        size += char
+                                if result == False:
+                                        break
+                                size = eval(size)
+
+                                # Read filename
+                                filename = b&#34;&#34;
+                                while True:
+                                        char = imported.read(1)
+                                        if char == b&#34;\r&#34;:
+                                                break
+                                        filename += char
+                                filename = tostrings(filename)
+                                char = imported.read(1)
+                                if char != b&#34;\n&#34;:
+                                        result = False
+                                        break
+
+                                # Read the file
+                                print(&#34;  Import &#39;%s&#39; size=%d&#34;%(filename, size))
+                                
+                                try:
+                                        if simulated == False:
+                                                content = open(filename,&#34;wb&#34;)
+                                        while size &gt; 0:
+                                                data = imported.read(size if size &lt; 2048 else 2048)
+                                                if simulated == False:
+                                                        content.write(data)
+                                                size -= len(data)
+                                except Exception as error:
+                                        print(exception(error))
+                                        result = False
+                                finally:
+                                        if simulated == False:
+                                                content.close()
+                                
+                                # Read the end of file
+                                if imported.read(4) != b&#34;\r\n\r\n&#34;:
+                                        result = False
+                                        break
+        except Exception as error:
+                print(exception(error))
+                result = False
+        finally:
+                print(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                imported.close()
+        remove(importFilename)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.import_"><code class="name flex">
@@ -1379,29 +1688,8 @@ class SdCard:
         return False</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.journalize"><code class="name flex">
-<span>def <span class="ident">journalize</span></span>(<span>message)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def journalize(message):
-        filename = tools.useful.dateToFilename()
-        filename = &#34;jnl_&#34;+filename [8:-6] + &#34;.txt&#34;
-        file = open(filename,&#34;a&#34;)
-        message = &#34;%s: %s&#34;%(tools.useful.dateToString(), message)
-        print(message)
-        file.write(message)
-        file.write(&#34;\n&#34;)
-        file.flush()
-        file.close()</code></pre>
-</details>
-</dd>
 <dt id="lib.tools.useful.kbhit"><code class="name flex">
-<span>def <span class="ident">kbhit</span></span>(<span>)</span>
+<span>def <span class="ident">kbhit</span></span>(<span>duration=0.001)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1409,13 +1697,8 @@ class SdCard:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def kbhit():
-        import sys
-        import select
-        inp, outp, err = select.select([sys.stdin], [], [], 0.001)
-        if inp != []:
-                return True
-        return False</code></pre>
+<pre><code class="python">def kbhit(duration=0.001):
+        return readKeyboard(duration, True, testChar)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.log"><code class="name flex">
@@ -1549,6 +1832,60 @@ class SdCard:
                 return result
         except IndexError:
                 return &#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.readKeyboard"><code class="name flex">
+<span>def <span class="ident">readKeyboard</span></span>(<span>duration=0.001, raw=True, callback=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def readKeyboard(duration=0.001, raw=True, callback=None):
+        import termios, fcntl
+        import select
+        import os
+        import sys
+        import tty
+        fd = sys.stdin.fileno()
+        oldattr = termios.tcgetattr(fd)
+        oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        try:
+                newattr = oldattr[:]
+                newattr[3] = newattr[3] &amp; ~termios.ICANON
+                newattr[3] = newattr[3] &amp; ~termios.ECHO
+                termios.tcsetattr(fd, termios.TCSANOW, newattr)
+
+                fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
+
+                if raw:
+                        tty.setraw(fd)
+                key = None
+                inp, outp, err = select.select([sys.stdin], [], [], duration)
+                print(inp)
+                result = callback(inp)
+        finally:
+                # Reset the terminal:
+                fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
+                termios.tcsetattr(fd, termios.TCSAFLUSH, oldattr)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.useful.remove"><code class="name flex">
+<span>def <span class="ident">remove</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove file existing</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove(filename):
+        &#34;&#34;&#34; Remove file existing &#34;&#34;&#34;
+        try:    uos.remove(filename)
+        except: pass </code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.scandir"><code class="name flex">
@@ -1702,6 +2039,21 @@ class SdCard:
                 return b&#34;Sysinfo not available&#34;</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.useful.testChar"><code class="name flex">
+<span>def <span class="ident">testChar</span></span>(<span>stdins)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def testChar(stdins):
+        if stdins != []:
+                return True
+        return False</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.useful.ticks"><code class="name flex">
 <span>def <span class="ident">ticks</span></span>(<span>)</span>
 </code></dt>
@@ -1839,16 +2191,16 @@ class SdCard:
         def mount(mountpoint = &#34;/sd&#34;):
                 result = False
                 if SdCard.isMounted() == False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
-                        # If the sdcard not already mounted
-                        if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
-                                try:
+                        try:
+                                # If the sdcard not already mounted
+                                if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
                                         import machine
                                         uos.mount(machine.SDCard(), mountpoint)
                                         SdCard.mountpoint[0] = mountpoint
                                         SdCard.opened[0]= True
                                         result = True
-                                except Exception as err:
-                                        print(&#34;Cannot mount %s&#34;%mountpoint)
+                        except Exception as err:
+                                print(&#34;Cannot mount %s&#34;%mountpoint)
                 elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
                         result = True
                 return result
@@ -1961,16 +2313,16 @@ def isMounted():
 def mount(mountpoint = &#34;/sd&#34;):
         result = False
         if SdCard.isMounted() == False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
-                # If the sdcard not already mounted
-                if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
-                        try:
+                try:
+                        # If the sdcard not already mounted
+                        if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
                                 import machine
                                 uos.mount(machine.SDCard(), mountpoint)
                                 SdCard.mountpoint[0] = mountpoint
                                 SdCard.opened[0]= True
                                 result = True
-                        except Exception as err:
-                                print(&#34;Cannot mount %s&#34;%mountpoint)
+                except Exception as err:
+                        print(&#34;Cannot mount %s&#34;%mountpoint)
         elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
                 result = True
         return result</code></pre>
@@ -2022,6 +2374,7 @@ def save(filename, data):
 <ul class="two-column">
 <li><code><a title="lib.tools.useful.abspath" href="#lib.tools.useful.abspath">abspath</a></code></li>
 <li><code><a title="lib.tools.useful.abspathbytes" href="#lib.tools.useful.abspathbytes">abspathbytes</a></code></li>
+<li><code><a title="lib.tools.useful.asyncShell" href="#lib.tools.useful.asyncShell">asyncShell</a></code></li>
 <li><code><a title="lib.tools.useful.blink" href="#lib.tools.useful.blink">blink</a></code></li>
 <li><code><a title="lib.tools.useful.dateToBytes" href="#lib.tools.useful.dateToBytes">dateToBytes</a></code></li>
 <li><code><a title="lib.tools.useful.dateToFilename" href="#lib.tools.useful.dateToFilename">dateToFilename</a></code></li>
@@ -2029,14 +2382,17 @@ def save(filename, data):
 <li><code><a title="lib.tools.useful.dump" href="#lib.tools.useful.dump">dump</a></code></li>
 <li><code><a title="lib.tools.useful.exception" href="#lib.tools.useful.exception">exception</a></code></li>
 <li><code><a title="lib.tools.useful.exists" href="#lib.tools.useful.exists">exists</a></code></li>
+<li><code><a title="lib.tools.useful.exportFiles" href="#lib.tools.useful.exportFiles">exportFiles</a></code></li>
 <li><code><a title="lib.tools.useful.fileinfo" href="#lib.tools.useful.fileinfo">fileinfo</a></code></li>
 <li><code><a title="lib.tools.useful.filesize" href="#lib.tools.useful.filesize">filesize</a></code></li>
 <li><code><a title="lib.tools.useful.filetime" href="#lib.tools.useful.filetime">filetime</a></code></li>
 <li><code><a title="lib.tools.useful.flashinfo" href="#lib.tools.useful.flashinfo">flashinfo</a></code></li>
+<li><code><a title="lib.tools.useful.getChar" href="#lib.tools.useful.getChar">getChar</a></code></li>
 <li><code><a title="lib.tools.useful.getHash" href="#lib.tools.useful.getHash">getHash</a></code></li>
 <li><code><a title="lib.tools.useful.getScreenSize" href="#lib.tools.useful.getScreenSize">getScreenSize</a></code></li>
 <li><code><a title="lib.tools.useful.getch" href="#lib.tools.useful.getch">getch</a></code></li>
 <li><code><a title="lib.tools.useful.htmlException" href="#lib.tools.useful.htmlException">htmlException</a></code></li>
+<li><code><a title="lib.tools.useful.importFiles" href="#lib.tools.useful.importFiles">importFiles</a></code></li>
 <li><code><a title="lib.tools.useful.import_" href="#lib.tools.useful.import_">import_</a></code></li>
 <li><code><a title="lib.tools.useful.iptoint" href="#lib.tools.useful.iptoint">iptoint</a></code></li>
 <li><code><a title="lib.tools.useful.isalpha" href="#lib.tools.useful.isalpha">isalpha</a></code></li>
@@ -2051,19 +2407,21 @@ def save(filename, data):
 <li><code><a title="lib.tools.useful.issameinterface" href="#lib.tools.useful.issameinterface">issameinterface</a></code></li>
 <li><code><a title="lib.tools.useful.isspace" href="#lib.tools.useful.isspace">isspace</a></code></li>
 <li><code><a title="lib.tools.useful.isupper" href="#lib.tools.useful.isupper">isupper</a></code></li>
-<li><code><a title="lib.tools.useful.journalize" href="#lib.tools.useful.journalize">journalize</a></code></li>
 <li><code><a title="lib.tools.useful.kbhit" href="#lib.tools.useful.kbhit">kbhit</a></code></li>
 <li><code><a title="lib.tools.useful.log" href="#lib.tools.useful.log">log</a></code></li>
 <li><code><a title="lib.tools.useful.makedir" href="#lib.tools.useful.makedir">makedir</a></code></li>
 <li><code><a title="lib.tools.useful.meminfo" href="#lib.tools.useful.meminfo">meminfo</a></code></li>
 <li><code><a title="lib.tools.useful.now" href="#lib.tools.useful.now">now</a></code></li>
 <li><code><a title="lib.tools.useful.prefix" href="#lib.tools.useful.prefix">prefix</a></code></li>
+<li><code><a title="lib.tools.useful.readKeyboard" href="#lib.tools.useful.readKeyboard">readKeyboard</a></code></li>
+<li><code><a title="lib.tools.useful.remove" href="#lib.tools.useful.remove">remove</a></code></li>
 <li><code><a title="lib.tools.useful.scandir" href="#lib.tools.useful.scandir">scandir</a></code></li>
 <li><code><a title="lib.tools.useful.sizeToBytes" href="#lib.tools.useful.sizeToBytes">sizeToBytes</a></code></li>
 <li><code><a title="lib.tools.useful.sizeToString" href="#lib.tools.useful.sizeToString">sizeToString</a></code></li>
 <li><code><a title="lib.tools.useful.split" href="#lib.tools.useful.split">split</a></code></li>
 <li><code><a title="lib.tools.useful.splitext" href="#lib.tools.useful.splitext">splitext</a></code></li>
 <li><code><a title="lib.tools.useful.sysinfo" href="#lib.tools.useful.sysinfo">sysinfo</a></code></li>
+<li><code><a title="lib.tools.useful.testChar" href="#lib.tools.useful.testChar">testChar</a></code></li>
 <li><code><a title="lib.tools.useful.ticks" href="#lib.tools.useful.ticks">ticks</a></code></li>
 <li><code><a title="lib.tools.useful.ticksToString" href="#lib.tools.useful.ticksToString">ticksToString</a></code></li>
 <li><code><a title="lib.tools.useful.tobytes" href="#lib.tools.useful.tobytes">tobytes</a></code></li>
