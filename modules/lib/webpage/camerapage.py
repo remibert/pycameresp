@@ -46,11 +46,8 @@ async def cameraPage(request, response, args):
 		}
 		window.onload = () =>
 		{
-			setTimeout(() => 
-			{
-				stopStreaming();
-			}, 300)
-			
+			setTimeout(() => { startStreaming();}, 1);
+			//setTimeout(() => { stopStreaming();}, 300);
 		}
 		function startStreaming()
 		{
@@ -59,10 +56,7 @@ async def cameraPage(request, response, args):
 			document.getElementById('video-stream').src = `${streamUrl}/camera/start`;
 			document.getElementById('container-stream').style.display = "block";
 			document.getElementById('button-stream').innerHTML = 'Hide';
-			setTimeout(() => 
-			{
-				stopStreaming();
-			}, %d)
+			setTimeout(() => { stopStreaming(); }, %d);
 		}
 		function stopStreaming()
 		{

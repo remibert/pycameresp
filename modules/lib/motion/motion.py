@@ -25,17 +25,8 @@ class MotionConfig:
 		# Suspend the motion detection when presence detected
 		self.suspendOnPresence = True
 
-		# Minimum hue change difference threshold to detect movement
-		self.hueDetection=15
-
-		# Minimum saturation change difference threshold to detect movement
-		self.saturationDetection=15
- 
-		# Minimum light change difference threshold to detect movement
-		self.lightDetection=6
-
 		# Minimum difference contigous threshold to detect movement
-		self.contigousDetection = 20
+		self.contigousDetection = 10
 
 		# Awake time on battery (seconds)
 		self.awakeTime = 120
@@ -117,7 +108,7 @@ class ImageMotion:
 
 	def getFilename(self):
 		""" Get the storage filename """
-		return "%s id=%d D=%d H=%d S=%d L=%d.jpg"%(self.date, self.index, self.diffContigous, self.diffHue, self.diffSaturation, self.diffLight)
+		return "%s Id=%d D=%d.jpg"%(self.date[2:], self.index, self.diffContigous)
 
 	def save(self):
 		""" Save the image on sd card """
@@ -212,7 +203,7 @@ class Motion:
 			# If motion detected on image, on battery the first five images are sent
 			if image.getMotionDetected() or (self.onBattery and self.pirDetection and image.index <= 3):
 				# Notification of motion
-				result = ("Intrusion %s"%image.getFilename(), image)
+				result = ("Motion %s"%image.getFilename(), image)
 
 				# Save image to sdcard
 				image.save()
@@ -252,9 +243,6 @@ class Motion:
 		# If image seem not equal to previous
 		if contigous > self.config.contigousDetection:
 			return True
-		# if  hue        > self.config.hueDetection        or \
-		# 	saturation > self.config.saturationDetection or \
-		# 	light      > self.config.lightDetection:
 		return False
 
 	def compare(self):
