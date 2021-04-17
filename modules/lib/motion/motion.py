@@ -25,21 +25,30 @@ class MotionConfig:
 		# Suspend the motion detection when presence detected
 		self.suspendOnPresence = True
 
-		# Minimum threshold detection for saturation
-		self.saturationDetection=10
-  
-		# Minimum threshold detection for light
-		self.lightDetection=10
+		# Minimum hue change difference threshold to detect movement
+		self.hueDetection=15
+
+		# Minimum saturation change difference threshold to detect movement
+		self.saturationDetection=15
+ 
+		# Minimum light change difference threshold to detect movement
+		self.lightDetection=6
+
+		# Minimum difference contigous threshold to detect movement
+		self.contigousDetection = 20
 
 		# Awake time on battery (seconds)
 		self.awakeTime = 120
 
-		# Error range ignore light modification
+		# Error range ignore hue modification (5%)
+		self.hueErrorRange=18 
+
+		# Error range ignore saturation modification (10%)
+		self.saturationErrorRange=10
+
+		# Error range ignore light modification (5%)
 		self.lightErrorRange=5
 
-		# Error range ignore saturation modification
-		self.saturationErrorRange=5
-  
 		# Max images in motion historic
 		self.maxMotionImages=10
 
@@ -79,6 +88,7 @@ class ImageMotion:
 		self.diffSaturation = 0
 		self.diffLight = 0
 		self.diffHue  = 0
+		self.diffContigous = 0
 		self.notified = False
 		self.motionId = None
 		self.date     = useful.dateToFilename()
@@ -107,7 +117,7 @@ class ImageMotion:
 
 	def getFilename(self):
 		""" Get the storage filename """
-		return "%s id=%d S=%d L=%d.jpg"%(self.date, self.index, self.diffSaturation, self.diffLight)
+		return "%s id=%d D=%d H=%d S=%d L=%d.jpg"%(self.date, self.index, self.diffContigous, self.diffHue, self.diffSaturation, self.diffLight)
 
 	def save(self):
 		""" Save the image on sd card """
@@ -119,10 +129,11 @@ class ImageMotion:
 		""" Compare two motion images to get differences """
 		self.motion.setErrorLight(self.config.lightErrorRange)
 		self.motion.setErrorSaturation(self.config.saturationErrorRange)
+		self.motion.setErrorHue(self.config.hueErrorRange)
 		res = self.motion.compare(previous.motion)
 		if set:
-			self.diffHue, self.diffSaturation, self.diffLight  = res[0],res[1],res[2]
-		return (res[0],res[1],res[2])
+			self.diffHue, self.diffSaturation, self.diffLight, self.diffContigous  = res[0],res[1],res[2],res[3]
+		return (res[0],res[1],res[2],res[3])
 
 	def getMotionDetected(self):
 		""" Get the motion detection status """
@@ -148,6 +159,10 @@ class ImageMotion:
 		""" Get the light difference """
 		return self.diffLight
 
+	def getDiffContigous(self):
+		""" Get the difference contigous """
+		return self.diffContigous
+
 	def getFeature(self):
 		""" Return mean, min, max light, mean, min, max, saturation, total count """
 		return self.motion.getFeature()
@@ -168,7 +183,7 @@ class Motion:
 
 	def open(self):
 		""" Open camera """
-		print("Open camera")
+		#print("Open camera")
 		video.Camera.open()
 		self.resume()
 
@@ -231,6 +246,17 @@ class Motion:
 			stabilized = True
 		return stabilized
 
+	def isDetected(self, comparison):
+		""" Indicates if motion detected """
+		hue, saturation, light, contigous = comparison[0], comparison[1], comparison[2], comparison[3]
+		# If image seem not equal to previous
+		if contigous > self.config.contigousDetection:
+			return True
+		# if  hue        > self.config.hueDetection        or \
+		# 	saturation > self.config.saturationDetection or \
+		# 	light      > self.config.lightDetection:
+		return False
+
 	def compare(self):
 		""" Compare all images captured and search differences """
 		differences = {}
@@ -239,16 +265,16 @@ class Motion:
 			
 			# Compute the motion identifier
 			for previous in self.images[1:]:
-				hue, saturation, light = current.compare(previous, True)
+				comparison = current.compare(previous, True)
 
 				# If camera not stabilized
 				if self.isStabilized() == False:
 					# Reject the differences
 					current.resetDifferences()
 					break
+
 				# If image seem equal to previous
-				if saturation <= self.config.saturationDetection and \
-				   light      <= self.config.lightDetection:
+				if not self.isDetected(comparison):
 					# Reuse the motion identifier
 					current.setMotionId(previous.motionId)
 					break
@@ -261,7 +287,8 @@ class Motion:
 			for image in self.images:
 				differences.setdefault(image.getMotionId(), []).append(image.getMotionId())
 				if image.getMotionId() != None:
-					diffs += " %d:%d,%d"%(image.getMotionId(), image.getDiffSaturation(), image.getDiffLight())
+					# diffs += " %d:%d,%d,%d,%d"%(image.getMotionId(), image.getDiffHue(), image.getDiffSaturation(), image.getDiffLight(), image.getDiffContigous())
+					diffs += " %d:%d"%(image.getMotionId(), image.getDiffContigous())
 			sys.stdout.write("\r%s %s    "%(useful.dateToString()[12:], diffs))
 		return differences
 
@@ -298,12 +325,13 @@ class Motion:
 		if detected:
 			# Mark all motion images
 			for image in self.images:
+				diffHue        = image.getDiffHue()
 				diffSaturation = image.getDiffSaturation()
 				diffLight      = image.getDiffLight()
+				diffContigous  = image.getDiffContigous()
 				
-				# If image seem equal to previous
-				if  diffSaturation > self.config.saturationDetection and \
-				    diffLight      > self.config.lightDetection:
+				# If image seem not equal to previous
+				if self.isDetected((diffHue, diffSaturation, diffLight, diffContigous)):
 					image.setMotionDetected()
 		return detected, changePolling
 

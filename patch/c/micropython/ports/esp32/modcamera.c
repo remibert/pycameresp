@@ -133,6 +133,8 @@ typedef struct
 	uint16_t       *saturations;
 	uint16_t       *lights;
 
+	uint16_t       *diffs;
+
 	u_int32_t  meanLight;
 	u_int32_t  meanSaturation;
 
@@ -484,6 +486,7 @@ static bool Motion_parseImage(void * arg, uint16_t x, uint16_t y, uint16_t w, ui
 			motion->hues        = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 			motion->saturations = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 			motion->lights      = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
+			motion->diffs       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 		}
 		else
 		{
@@ -660,6 +663,7 @@ STATIC mp_obj_t Motion_deinit(mp_obj_t self_in)
 		_free((void**)&motion->hues);
 		_free((void**)&motion->saturations);
 		_free((void**)&motion->lights);
+		_free((void**)&motion->diffs);
 		_free((void**)&motion->imageData);
 	}
 	return mp_const_none;
@@ -778,52 +782,156 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 	}
 	else
 	{
-		int diffHue = 0;
+		int diffHue        = 0;
 		int diffSaturation = 0;
-		int diffLight = 0;
+		int diffLight      = 0;
+		int diffContigous  = 0;
 
-		// If enough light compare saturation
-		if (self->meanLight >= 15 && other->meanLight >= 15)
+#define MIN_LIGHT 20
+#define MIN_SATURATION 20
+		
+		bool enoughLight = true;
+		bool enoughSaturation = true;
+		int i;
+		int errSaturation        = self->errorSaturation;
+		int errLight             = self->errorLight;
+		int errHue               = self->errorHue;
+		int correctionSaturation = (int)self->meanSaturation - (int)other->meanSaturation;
+		int correctionLight      = (int)self->meanLight      - (int)other->meanLight;
+		uint16_t hue1,hue2,saturation1,saturation2,light1,light2;
+		int width  = self->width /self->square_x;
+		int height = self->height/self->square_y;
+		int x;
+		int y;
+		uint16_t diff;
+
+		for (y = 0; y < height; y++)
 		{
-			int i;
-			int errSaturation        = self->errorSaturation;
-			int correctionSaturation = (int)self->meanSaturation - (int)other->meanSaturation;
-
-			for (i = 0; i < self->max; i++)
+			for (x = 0; x < width; x++)
 			{
-				if (abs((int)self->saturations[i] - (int)other->saturations[i] - correctionSaturation) > errSaturation)
+				i = y * width + x;
+				
+				hue1        = self->hues[i];        hue2        = other->hues[i];
+				saturation1 = self->saturations[i]; saturation2 = other->saturations[i];
+				light1      = self->lights[i];      light2      = other->lights[i];
+				
+				// If two image has not enough light
+				if (light1 < MIN_LIGHT && light2 < MIN_LIGHT)
 				{
-					diffSaturation ++;
+					enoughLight = false;
 				}
-			}
-		}
-
-		// if enough light compare hue
-		if (self->meanLight >= 20 && other->meanLight > 20)
-		{
-			int i;
-			int errHue        = self->errorHue;
-			for (i = 0; i < self->max; i++)
-			{
-				int diff = self->hues[i] - other->hues[i];
-				if (abs(diff) > errHue && abs(diff) < 360-errHue)
+				// If one of two image has not enough light
+				else if (light1 < MIN_LIGHT || light2 < MIN_LIGHT)
 				{
-					diffHue++;
+					// If the difference of light between two image is not too big
+					if (abs(light1 - light2) < errLight)
+					{
+						enoughLight = false;
+					}
+					else
+					{
+						enoughLight = true;
+					}
 				}
-			}
-		}
-
-		// Compare light
-		{
-			int i;
-			int errLight             = self->errorLight;
-			int correctionLight      = (int)self->meanLight      - (int)other->meanLight;
-			for (i = 0; i < self->max; i++)
-			{
-				if (abs((int)self->lights[i] - (int)other->lights[i] - correctionLight) > errLight)
+				else
 				{
+					enoughLight = true;
+				}
+				
+				// If two image has not enough saturation
+				if (saturation1 < MIN_SATURATION && saturation2 < MIN_SATURATION)
+				{
+					enoughSaturation = false;
+				}
+				// If one of two image has not enough saturation
+				else if (saturation1 < MIN_SATURATION || saturation2 < MIN_SATURATION)
+				{
+					// If the difference of saturation between two image is not too big
+					if (abs(saturation1 - saturation2) < errSaturation)
+					{
+						enoughSaturation = false;
+					}
+					else
+					{
+						enoughSaturation = true;
+					}
+				}
+				else
+				{
+					enoughSaturation = true;
+				}
+
+				diff = 0;
+				// Compare light
+				if (abs(light1 - light2) > (errLight + abs(correctionLight)))
+				{
+					diff = 0x01;
 					diffLight ++;
 				}
+				
+				// If enough light
+				if (enoughLight)
+				{
+					// Compare saturation
+					if (abs(saturation1 - saturation2) > (errSaturation + abs(correctionSaturation)))
+					{
+						diff |= 0x02;
+						diffSaturation ++;
+					}
+				}
+				
+				// If enough light and saturation
+				if (enoughLight && enoughSaturation)
+				{
+					// Compare hue
+					if (abs(hue1 - hue2) > errHue && abs(hue1 - hue2) < 360-errHue)
+					{
+						diff |= 0x04;
+						diffHue++;
+					}
+				}
+
+				// Save the diff
+				self->diffs[i] = diff;
+
+				// If difference detected
+				if (diff)
+				{
+					if (y > 1)
+					{
+						if (x > 1)
+						{
+							// If previous column have also a difference
+							if (self->diffs[y * width + x-1] != 0)
+							{
+								// Set the contigous of the previous column
+								self->diffs[y * width + x-1] |= 0x80;
+								
+								// Set the contigous of the current column
+								self->diffs[i] |= 0x80;
+							}
+							// If previous line have also a difference
+							if (self->diffs[(y -1) * width + x] != 0)
+							{
+								// Set the contigous of the previous line
+								self->diffs[(y -1) * width + x] |= 0x80;
+
+								// Set the contigous of the current line
+								self->diffs[i] |= 0x80;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Compute the difference contigous
+		diffContigous = 0;
+		for (i = 0; i < self->max; i++)
+		{
+			if (self->diffs[i] & 0x80) 
+			{
+				diffContigous++;
 			}
 		}
 
@@ -831,6 +939,7 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 		mp_obj_list_append(res, mp_obj_new_int(diffHue));
 		mp_obj_list_append(res, mp_obj_new_int(diffSaturation));
 		mp_obj_list_append(res, mp_obj_new_int(diffLight));
+		mp_obj_list_append(res, mp_obj_new_int(diffContigous));
 		mp_obj_list_append(res, mp_obj_new_int(self->max));
 		return res;
 	}
