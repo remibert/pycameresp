@@ -35,12 +35,14 @@ if onBattery == False:
 			# Welcome page (can be suppressed)
 			from welcome import welcomePage
 		except ImportError as err:
+			#print(useful.exception(err))
 			pass
 
 		try:
 			# Sample page (can be suppressed)
 			import sample
 		except ImportError as err:
+			#print(useful.exception(err))
 			pass
 
 	import server

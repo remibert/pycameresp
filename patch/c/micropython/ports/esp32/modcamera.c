@@ -1,6 +1,5 @@
 // Code adapted from https://github.com/espressif/esp32-camera
 #include "string.h"
-#include "esp_camera.h"
 #include "esp_log.h"
 #include "esp_jpg_decode.h"
 #include "esp_system.h"
@@ -12,10 +11,18 @@
 #include "py/binary.h"
 #include "py/objstr.h"
 
+#ifdef CONFIG_ESP32CAM
+#include "esp_camera.h"
+#endif
 #define TAG "camera"
 
 #define _ ESP_LOGE(TAG, "%s:%d:%s",__FILE__,__LINE__,__FUNCTION__);
 
+#define min(a,b) ((a)<(b) ?(a):(b))
+#define max(a,b) ((a)>(b) ?(a):(b))
+
+
+#ifdef CONFIG_ESP32CAM
 
 #define CAMERA_SETTING(type, field, method, min, max) \
 	STATIC mp_obj_t camera_##method(size_t n_args, const mp_obj_t *args)\
@@ -56,7 +63,6 @@
 	}\
 	STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_##method##_obj, 0, 1, camera_##method);
 
-
 //WROVER-KIT PIN Map
 #define CAM_PIN_PWDN    32 //power down is not used
 #define CAM_PIN_RESET   -1 //software reset will be performed
@@ -76,8 +82,6 @@
 #define CAM_PIN_HREF    23
 #define CAM_PIN_PCLK    22
 
-#define min(a,b) ((a)<(b) ?(a):(b))
-#define max(a,b) ((a)>(b) ?(a):(b))
 static camera_config_t camera_config = 
 {
 	.pin_pwdn  = CAM_PIN_PWDN,
@@ -109,6 +113,7 @@ static camera_config_t camera_config =
 	.jpeg_quality = 12, //0-63 lower number means higher quality
 	.fb_count = 1 //if more than one, i2s runs in continuous mode. Use only with JPEG
 };
+#endif
 
 typedef struct 
 {
@@ -154,6 +159,7 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength);
 
 
 #pragma GCC diagnostic ignored "-Wtype-limits"
+#ifdef CONFIG_ESP32CAM
 //             type,        get             set           , min, max
 CAMERA_SETTING(uint16_t   , aec_value     , aec_value     ,  0, 1200)
 CAMERA_SETTING(framesize_t, framesize     , framesize     ,  FRAMESIZE_96X96, FRAMESIZE_QSXGA)
@@ -181,7 +187,7 @@ CAMERA_SETTING(uint8_t    , hmirror       , hmirror       ,  0, 255 )
 CAMERA_SETTING(uint8_t    , vflip         , vflip         ,  0, 255 )
 CAMERA_SETTING(uint8_t    , dcw           , dcw           ,  0, 255 )
 CAMERA_SETTING(uint8_t    , colorbar      , colorbar      ,  0, 255 )
-
+#endif
 #pragma GCC diagnostic pop
 
 static void *_malloc(size_t size)
@@ -201,6 +207,7 @@ static void _free(void ** ptr)
 	}
 }
 
+#ifdef CONFIG_ESP32CAM
 STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
 {
 	if (n_args == 0) 
@@ -238,6 +245,7 @@ STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
 	return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_pixformat_obj, 0, 1, camera_pixformat);
+#endif
 
 STATIC mp_obj_t camera_isavailable(){
 #ifdef CONFIG_ESP32CAM
@@ -248,9 +256,12 @@ STATIC mp_obj_t camera_isavailable(){
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_isavailable_obj, camera_isavailable);
 
-STATIC mp_obj_t camera_init(){
+#ifdef CONFIG_ESP32CAM
+STATIC mp_obj_t camera_init()
+{
 	esp_err_t err = esp_camera_init(&camera_config);
-	if (err != ESP_OK) {
+	if (err != ESP_OK) 
+	{
 		ESP_LOGE(TAG, "Camera init failed");
 		return mp_const_false;
 	}
@@ -259,13 +270,14 @@ STATIC mp_obj_t camera_init(){
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_init_obj, camera_init);
 
-STATIC mp_obj_t camera_deinit(){
+STATIC mp_obj_t camera_deinit()
+{
 	esp_err_t err = esp_camera_deinit();
-	if (err != ESP_OK) {
+	if (err != ESP_OK) 
+	{
 		ESP_LOGE(TAG, "Camera deinit failed");
 		return mp_const_false;
 	}
-
 	return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_deinit_obj, camera_deinit);
@@ -289,6 +301,29 @@ STATIC mp_obj_t camera_capture()
 	return image;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_capture_obj, camera_capture);
+
+
+// Get motion information
+STATIC mp_obj_t camera_motion_detect()
+{
+	mp_obj_t res;
+	camera_fb_t * fb;
+
+	fb = esp_camera_fb_get();
+	if (!fb) 
+	{
+		ESP_LOGE(TAG, "Camera capture Failed");
+		return mp_const_false;
+	}
+
+	res = Motion_new(fb->buf, fb->len);
+
+	esp_camera_fb_return(fb);
+	return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_motion_detect_obj, camera_motion_detect);
+
+#endif
 
 /** Conversion from HSL to RGB color
 @param hue hue value (0-359)
@@ -415,26 +450,6 @@ void rgb_to_hsl(uint32_t red, uint32_t green, uint32_t blue, uint32_t *hue, uint
 	}
 }
 
-// Get motion information
-STATIC mp_obj_t camera_motion_detect()
-{
-	mp_obj_t res;
-	camera_fb_t * fb;
-
-	fb = esp_camera_fb_get();
-	if (!fb) 
-	{
-		ESP_LOGE(TAG, "Camera capture Failed");
-		return mp_const_false;
-	}
-
-	res = Motion_new(fb->buf, fb->len);
-
-	esp_camera_fb_return(fb);
-	return res;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_motion_detect_obj, camera_motion_detect);
-
 // input buffer
 static uint32_t Motion_jpgRead(void * arg, size_t index, uint8_t *buf, size_t len)
 {
@@ -542,9 +557,9 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 		if (ret == ESP_OK)
 		{
 			int i;
-			uint8_t * pBluesRes     = (uint8_t*)motion->blues;
-			uint8_t * pRedRes       = (uint8_t*)motion->reds;
-			uint8_t * pGreenRes     = (uint8_t*)motion->greens;
+			uint8_t  * pBluesRes    = (uint8_t*)motion->blues;
+			uint8_t  * pRedRes      = (uint8_t*)motion->reds;
+			uint8_t  * pGreenRes    = (uint8_t*)motion->greens;
 			uint16_t * pHues        = motion->hues;
 			uint16_t * pSaturations = motion->saturations;
 			uint16_t * pLights      = motion->lights;
@@ -599,12 +614,13 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 				pBluesRes++;
 				pRedRes++;
 				pGreenRes++;
+
 				pHues++;
 				pSaturations++;
 				pLights++;
 			}
 
-			motion->meanLight = meanLight/motion->max;
+			motion->meanLight      = meanLight/motion->max;
 			motion->meanSaturation = meanSaturation/motion->max;
 		}
 		else
@@ -681,45 +697,50 @@ STATIC mp_obj_t Motion_extract(mp_obj_t self_in)
 		uint16_t * pHues        = motion->hues;
 		uint16_t * pSaturations = motion->saturations;
 		uint16_t * pLights      = motion->lights;
+		uint16_t * pDiffs       = motion->diffs;
 
-		// Add image buffer
-		mp_obj_list_append(res,mp_obj_new_bytes(motion->imageData, motion->imageLength));
-
-		// Create binary string with motion result
-		mp_obj_t objReds   = mp_obj_new_bytes((uint8_t *) motion->reds  , motion->max);
-		mp_obj_t objGreens = mp_obj_new_bytes((uint8_t *) motion->greens, motion->max);
-		mp_obj_t objBlues  = mp_obj_new_bytes((uint8_t *) motion->blues , motion->max);
-		
-		// Add the motion result in the list returned
-		mp_obj_list_append(res, objReds  );
-		mp_obj_list_append(res, objGreens);
-		mp_obj_list_append(res, objBlues );
-		
 		// Build list of hue, saturation, light
 		pHues        = motion->hues;
 		pSaturations = motion->saturations;
 		pLights      = motion->lights;
+		pDiffs       = motion->diffs;
 		
 		mp_obj_t objHues        = mp_obj_new_list(0, NULL);
 		mp_obj_t objSaturations = mp_obj_new_list(0, NULL);
 		mp_obj_t objLights      = mp_obj_new_list(0, NULL);
+		mp_obj_t objDiffs       = mp_obj_new_list(0, NULL);
 		for (i = 0; i < motion->max; i++)
 		{
 			mp_obj_list_append(objHues       , mp_obj_new_int(*pHues));
 			mp_obj_list_append(objSaturations, mp_obj_new_int(*pSaturations));
 			mp_obj_list_append(objLights     , mp_obj_new_int(*pLights));
+			mp_obj_list_append(objDiffs      , mp_obj_new_int(*pDiffs));
 			pHues++;
 			pSaturations++;
 			pLights++;
+			pDiffs++;
 		}
+		
+		// Create binary string with motion result
+		mp_obj_t objReds   = mp_obj_new_bytes((uint8_t *) motion->reds  , motion->max);
+		mp_obj_t objGreens = mp_obj_new_bytes((uint8_t *) motion->greens, motion->max);
+		mp_obj_t objBlues  = mp_obj_new_bytes((uint8_t *) motion->blues , motion->max);
+		
+		// Add image buffer
+		mp_obj_list_append(res,mp_obj_new_bytes(motion->imageData, motion->imageLength));
+
+		// Add the motion result in the list returned
+		mp_obj_list_append(res, objReds  );
+		mp_obj_list_append(res, objGreens);
+		mp_obj_list_append(res, objBlues );
 		
 		// Add list of hues, saturations, lights
 		mp_obj_list_append(res, objHues);
 		mp_obj_list_append(res, objSaturations);
 		mp_obj_list_append(res, objLights);
 
-		mp_obj_list_append(res, mp_obj_new_int(motion->meanLight));
-		mp_obj_list_append(res, mp_obj_new_int(motion->meanSaturation));
+		// Add list with differences
+		mp_obj_list_append(res, objDiffs);
 	}
 
 	return res;
@@ -901,23 +922,47 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 					{
 						if (x > 1)
 						{
+							uint16_t * prev; 
+							uint16_t * current;
+
+							// Square above
+							prev    = &(self->diffs[(y * width) + x-1]);
+							current = &(self->diffs[(y * width) + x]);
+
 							// If previous column have also a difference
-							if (self->diffs[y * width + x-1] != 0)
+							if (*prev != 0)
 							{
 								// Set the contigous of the previous column
-								self->diffs[y * width + x-1] |= 0x80;
+								*prev |= 0x80;
 								
 								// Set the contigous of the current column
-								self->diffs[i] |= 0x80;
+								*current |= 0x80;
 							}
+
+							// Square left
+							prev = &(self->diffs[((y-1) * width) + x]);
+
 							// If previous line have also a difference
-							if (self->diffs[(y -1) * width + x] != 0)
+							if (*prev)
 							{
 								// Set the contigous of the previous line
-								self->diffs[(y -1) * width + x] |= 0x80;
+								*prev |= 0x80;
 
 								// Set the contigous of the current line
-								self->diffs[i] |= 0x80;
+								*current |= 0x80;
+							}
+
+							// Square above diagonal
+							prev = &(self->diffs[((y -1) * width) + x -1]);
+
+							// If previous line have in diagonal also a difference
+							if (*prev)
+							{
+								// Set the contigous of the previous line in diagonal
+								*prev |= 0x80;
+
+								// Set the contigous of the current line
+								*current |= 0x80;
 							}
 						}
 					}
@@ -999,12 +1044,12 @@ const mp_obj_type_t Motion_type =
 
 STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR___name__           ), MP_ROM_QSTR(MP_QSTR_camera) },
+	{ MP_ROM_QSTR(MP_QSTR_isavailable        ), MP_ROM_PTR(&camera_isavailable_obj) },
+#ifdef CONFIG_ESP32CAM
 	{ MP_ROM_QSTR(MP_QSTR_init               ), MP_ROM_PTR(&camera_init_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deinit             ), MP_ROM_PTR(&camera_deinit_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_capture            ), MP_ROM_PTR(&camera_capture_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_motion             ), MP_ROM_PTR(&camera_motion_detect_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_isavailable        ), MP_ROM_PTR(&camera_isavailable_obj) },
-
 	{ MP_ROM_QSTR(MP_QSTR_pixformat          ), MP_ROM_PTR(&camera_pixformat_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_aec_value          ), MP_ROM_PTR(&camera_aec_value_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_framesize          ), MP_ROM_PTR(&camera_framesize_obj) },
@@ -1064,6 +1109,7 @@ STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RAW      ), MP_ROM_INT(PIXFORMAT_RAW      )}, // RAW
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RGB444   ), MP_ROM_INT(PIXFORMAT_RGB444   )}, // 3BP2P/RGB444
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RGB555   ), MP_ROM_INT(PIXFORMAT_RGB555   )}, // 3BP2P/RGB555
+#endif
 	{ MP_ROM_QSTR(MP_QSTR_Motion             ), MP_ROM_PTR(&Motion_type) },
 };
 STATIC MP_DEFINE_CONST_DICT(camera_module_globals, camera_module_globals_table);

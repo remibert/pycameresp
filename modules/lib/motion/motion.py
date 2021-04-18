@@ -394,7 +394,7 @@ async def detectMotion(onBattery, pirDetection):
 	motion = None
 	pollingCounter = 0
 	previousReserved = None
-	pollingFrequency = 200
+	pollingFrequency = 100
 	batteryLevel = -2
 	if onBattery:
 		if pirDetection == True:
