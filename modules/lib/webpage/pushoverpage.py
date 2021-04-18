@@ -29,23 +29,12 @@ async def pushover(request, response, args):
 		submit = Submit(text=b"Save")
 		value = b'save'
 
-	page = mainPage(
-		content=[Br(),Container([\
-					Card([\
-						Form([\
-							Br(),
-							Title3(text=b"Notification configuration"),
-							Br(),
-							Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
-							Edit(text=b"User",  name=b"user",  placeholder=b"Enter pushover user",  type=b"password", value=config.user,  disabled=disabled),
-							Edit(text=b"Token", name=b"token", placeholder=b"Enter pushover token", type=b"password", value=config.token, disabled=disabled),
-							Input (text=b"modify" , name=b"modify", type=b"hidden", value=value),
-							submit,
-						]),
-					])
-					,Br()
-					,Link(href=b"https://pushover.net", text=b"See pushover website"),
-				])
-			], title=args["title"], active=args["index"], request=request, response=response)
+	page = mainFrame(request, response, args,b"Notification configuration",
+		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
+		Edit(text=b"User",  name=b"user",  placeholder=b"Enter pushover user",  type=b"password", value=config.user,  disabled=disabled),
+		Edit(text=b"Token", name=b"token", placeholder=b"Enter pushover token", type=b"password", value=config.token, disabled=disabled),
+		Input (text=b"modify" , name=b"modify", type=b"hidden", value=value),
+		submit,
+		Br(), Br(), Link(href=b"https://pushover.net", text=b"See pushover website"))
 
 	await response.sendPage(page)

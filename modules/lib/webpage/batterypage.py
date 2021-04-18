@@ -28,21 +28,13 @@ async def battery(request, response, args):
 		submit = AlertWarning(text=b"On battery servers and motion detection disabled"), Submit(text=b"Save")
 		value = b'save'
 
-	page = mainPage(
-		content=[Br(), Container([\
-					Card([\
-						Form([\
-							Br(), Title3(text=b"Battery management"), Br(),
-							Switch(text=b"Activated",              name=b"activated", checked=config.activated, disabled=disabled),
-							Edit(text=b"Battery level GPIO",       name=b"levelGpio",            placeholder=b"GPIO connect to battery level",                   pattern=b"[0-9]*[0-9]", value=b"%d"%config.levelGpio,    disabled=disabled),
-							Edit(text=b"Battery 100% GPIO value",  name=b"fullBattery",          placeholder=b"GPIO ADC value for battery full (4.2V)",          pattern=b"[0-9]*[0-9]", value=b"%d"%config.fullBattery,  disabled=disabled),
-							Edit(text=b"Battery 0% GPIO value",    name=b"emptyBattery",         placeholder=b"GPIO ADC value for battery empty (3.6V)",         pattern=b"[0-9]*[0-9]", value=b"%d"%config.emptyBattery, disabled=disabled),
-							Edit(text=b"Wakeup GPIO",              name=b"wakeUpGpio",           placeholder=b"GPIO connected to passive infrared sensor (PIR)", pattern=b"[0-9]*[0-9]", value=b"%d"%config.wakeUpGpio,   disabled=disabled),
-							Input (text=b"modify" ,                name=b"modify", type=b"hidden", value=value),
-							submit,
-						]),
-					])
-				])
-			], title=args["title"], active=args["index"], request=request, response=response)
+	page = mainFrame(request, response, args, b"Battery management", 
+		Switch(text=b"Activated",              name=b"activated", checked=config.activated, disabled=disabled),
+		Edit(text=b"Battery level GPIO",       name=b"levelGpio",            placeholder=b"GPIO connect to battery level",                   pattern=b"[0-9]*[0-9]", value=b"%d"%config.levelGpio,    disabled=disabled),
+		Edit(text=b"Battery 100% GPIO value",  name=b"fullBattery",          placeholder=b"GPIO ADC value for battery full (4.2V)",          pattern=b"[0-9]*[0-9]", value=b"%d"%config.fullBattery,  disabled=disabled),
+		Edit(text=b"Battery 0% GPIO value",    name=b"emptyBattery",         placeholder=b"GPIO ADC value for battery empty (3.6V)",         pattern=b"[0-9]*[0-9]", value=b"%d"%config.emptyBattery, disabled=disabled),
+		Edit(text=b"Wakeup GPIO",              name=b"wakeUpGpio",           placeholder=b"GPIO connected to passive infrared sensor (PIR)", pattern=b"[0-9]*[0-9]", value=b"%d"%config.wakeUpGpio,   disabled=disabled),
+		Input (text=b"modify" ,                name=b"modify", type=b"hidden", value=value),
+		submit)
 
 	await response.sendPage(page)

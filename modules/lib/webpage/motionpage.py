@@ -27,23 +27,12 @@ async def motion(request, response, args):
 		submit = Submit(text=b"Save")
 		value = b'save'
 
-	page = mainPage(
-		content=[Br(),Container([\
-					Card([\
-						Form([\
-							Br(),
-							Title3(text=b"Motion detection configuration"),
-							Br(),
-							Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
-							Slider(text=b"Detect motion when the differences on two successive images is greater than or equal to",          name=b"contigousDetection",        min=b"1",  max=b"100", step=b"1",  value=b"%d"%config.contigousDetection,         disabled=disabled),
-							Tag(b'<small style="color:grey">The notification contains the detection difference in field "D=" </small>'),Br(),Br(),
-							Edit(text=b"Awake duration on battery",                                name=b"awakeTime",            placeholder=b"Time in seconds it stays awake when on battery power", pattern=b"[0-9]*[0-9]", value=b"%d"%config.awakeTime, disabled=disabled),
-							Switch(text=b"Suspend when occupant presence detected",                name=b"suspendOnPresence", checked=config.suspendOnPresence, disabled=disabled),
-							Input (text=b"modify" , name=b"modify", type=b"hidden", value=value),
-							submit,
-						]),
-					])
-				])
-			], title=args["title"], active=args["index"], request=request, response=response)
-
+	page = mainFrame(request, response, args,b"Motion detection configuration",
+		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
+		Slider(text=b"Detect motion when the differences on two successive images is greater or equal to",          name=b"contigousDetection",        min=b"1",  max=b"100", step=b"1",  value=b"%d"%config.contigousDetection,         disabled=disabled),
+		Tag(b'<small style="color:grey">The notification contains the detection difference in field "D=" </small>'),Br(),Br(),
+		Edit(text=b"Awake duration on battery",                                name=b"awakeTime",            placeholder=b"Time in seconds it stays awake when on battery power", pattern=b"[0-9]*[0-9]", value=b"%d"%config.awakeTime, disabled=disabled),
+		Switch(text=b"Suspend when occupant presence detected",                name=b"suspendOnPresence", checked=config.suspendOnPresence, disabled=disabled),
+		Input (text=b"modify" , name=b"modify", type=b"hidden", value=value),
+		submit)
 	await response.sendPage(page)

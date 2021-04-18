@@ -20,10 +20,8 @@ async def cameraPage(request, response, args):
 	cameraStreaming = False
 	for size in [b"1600x1200",b"1280x1024",b"1024x768",b"800x600",b"640x480",b"400x296",b"320x240",b"240x176",b"160x120"  ]:
 		framesizes.append(Option(value=size, text=size, selected= True if cameraConfig.framesize == size else False))
-	page = mainPage(
-		content=\
-			[Br(),
-				Container(Tag(b"""
+	page = mainFrame(request, response, args, b"Camera",
+		Tag(b"""
 <p>
 	<button id="button-stream" class="btn btn-outline-primary" onclick="onStartVideoClick()" type="button">Show</button>
 	<figure>
@@ -66,18 +64,14 @@ async def cameraPage(request, response, args):
 			document.getElementById('button-stream').innerHTML = 'Show';
 		}
 	</script>
-</p>"""%(request.port+1,INACTIVITY))),
-				Container(Card(Form(\
-				[
-					ComboCmd(framesizes, text=b"Resolution", path=b"camera/configure", name=b"framesize"),
-					SliderCmd(           text=b"Quality"   , path=b"camera/configure", name=b"quality",    min=b"10", max=b"63", step=b"1", value=b"%d"%cameraConfig.quality),
-					SliderCmd(           text=b"Brightness", path=b"camera/configure", name=b"brightness", min=b"-2", max=b"2" , step=b"1", value=b"%d"%cameraConfig.brightness),
-					SliderCmd(           text=b"Contrast"  , path=b"camera/configure", name=b"contrast"  , min=b"-2", max=b"2" , step=b"1", value=b"%d"%cameraConfig.contrast),
-					SliderCmd(           text=b"Saturation", path=b"camera/configure", name=b"saturation", min=b"-2", max=b"2" , step=b"1", value=b"%d"%cameraConfig.saturation),
-					SwitchCmd(           text=b"H-Mirror"  , path=b"camera/configure", name=b"hmirror"   , checked=cameraConfig.hmirror),
-					SwitchCmd(           text=b"V-Flip"    , path=b"camera/configure", name=b"vflip"     , checked=cameraConfig.vflip),
-				])))
-			], title=args["title"], active=args["index"], request=request, response=response)
+</p>"""%(request.port+1,INACTIVITY)),
+				ComboCmd(framesizes, text=b"Resolution", path=b"camera/configure", name=b"framesize"),
+				SliderCmd(           text=b"Quality"   , path=b"camera/configure", name=b"quality",    min=b"10", max=b"63", step=b"1", value=b"%d"%cameraConfig.quality),
+				SliderCmd(           text=b"Brightness", path=b"camera/configure", name=b"brightness", min=b"-2", max=b"2" , step=b"1", value=b"%d"%cameraConfig.brightness),
+				SliderCmd(           text=b"Contrast"  , path=b"camera/configure", name=b"contrast"  , min=b"-2", max=b"2" , step=b"1", value=b"%d"%cameraConfig.contrast),
+				SliderCmd(           text=b"Saturation", path=b"camera/configure", name=b"saturation", min=b"-2", max=b"2" , step=b"1", value=b"%d"%cameraConfig.saturation),
+				SwitchCmd(           text=b"H-Mirror"  , path=b"camera/configure", name=b"hmirror"   , checked=cameraConfig.hmirror),
+				SwitchCmd(           text=b"V-Flip"    , path=b"camera/configure", name=b"vflip"     , checked=cameraConfig.vflip))
 	await response.sendPage(page)
 
 @HttpServer.addRoute(b'/camera/configure')

@@ -9,10 +9,6 @@ from tools.useful import log
 import sys
 import gc
 
-def mainFrame(request, response, args, titleFrame, *content):
-	internal = [Br(),Container([Card([Form([Br(),Title3(text=titleFrame),Br(),content,])])])]
-	return mainPage(content=internal, title = args["title"], active=args["index"], request=request, response=response)
-
 @HttpServer.addRoute(b'/system', title=b"System", index=20)
 async def systemPage(request, response, args):
 	""" Function define the web page to manage system of the board """
@@ -26,8 +22,7 @@ async def systemPage(request, response, args):
 		ExportFile(text=b"Export", path=b"/system/exportFileSystem", filename=b"FileSystem.cfs"),
 
 		Br(), Br(),Label(text=b"Reboot device"),Br(),
-		ButtonCmd(text=b"Reboot",path=b"/system/reboot",confirm=b"Confirm reboot", name=b"reboot"),
-	)
+		ButtonCmd(text=b"Reboot",path=b"/system/reboot",confirm=b"Confirm reboot", name=b"reboot"))
 	await response.sendPage(page)
 
 @HttpServer.addRoute(b'/system/importConfig')

@@ -57,20 +57,10 @@ async def presence(request, response, args):
 								value=useful.tobytes(config.smartphones[i]),  disabled=disabled))
 		i += 1
 
-	page = mainPage(
-		content=[Br(),Container([\
-					Card([\
-						Form([\
-							Br(),
-							Title3(text=b"Presence detection configuration"),
-							Br(),
-							Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
-							editSmartphones,
-							Input (text=b"modify" , name=b"modify", type=b"hidden", value=value),
-							submit,
-						]),
-					])
-				])
-			], title=args["title"], active=args["index"], request=request, response=response)
+	page = mainFrame(request, response, args,b"Presence detection configuration",
+		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
+		editSmartphones,
+		Input (text=b"modify" , name=b"modify", type=b"hidden", value=value),
+		submit)
 
 	await response.sendPage(page)

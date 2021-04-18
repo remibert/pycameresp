@@ -47,24 +47,14 @@ async def index(request, response, args):
 
 	date = useful.dateToBytes()
 
-	page = mainPage(
-		content=[Br(),Container([\
-					Card([\
-						Form([\
-							Br(),
-							Title3(text=b"Device informations"),
-							Br(),
-							Edit(text=b"Date",             value=date,      disabled=True),
-							Edit(text=b"Platform",         value=platform,  disabled=True),
-							Edit(text=b"Frequency",        value=frequency, disabled=True),
-							Edit(text=b"Memory free",      value=memFree,   disabled=True),
-							Edit(text=b"Memory allocated", value=memAlloc,  disabled=True),
-							Edit(text=b"Memory total",     value=memTotal,  disabled=True),
-							Edit(text=b"Flash user",       value=flashUser, disabled=True),
-							Edit(text=b"Flash size",       value=flashSize, disabled=True),
-						])
-					])
-				])
-			], title=args["title"], active=args["index"], request=request, response=response)
+	page = mainFrame(request, response, args, b"Device informations",
+		Edit(text=b"Date",             value=date,      disabled=True),
+		Edit(text=b"Platform",         value=platform,  disabled=True),
+		Edit(text=b"Frequency",        value=frequency, disabled=True),
+		Edit(text=b"Memory free",      value=memFree,   disabled=True),
+		Edit(text=b"Memory allocated", value=memAlloc,  disabled=True),
+		Edit(text=b"Memory total",     value=memTotal,  disabled=True),
+		Edit(text=b"Flash user",       value=flashUser, disabled=True),
+		Edit(text=b"Flash size",       value=flashSize, disabled=True))
 
 	await response.sendPage(page)

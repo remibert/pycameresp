@@ -46,10 +46,12 @@ Below is the list of features supported by the software
 - Micropython ESP32CAM firmware specifities :
 	- Full camera support by micropython
 	- Motion detection
+	- Presence detection
 	- Web motion configuration
+	- Web presence configuration
 	- Web camera streaming
 
-Ftp, Http, Motion detection works simultaneously, it uses asyncio mechanisms. 
+Ftp, Http, Motion detection works simultaneously, it uses asyncio mechanisms.
 However, during camera streaming, motion detection is suspended to have enough frames per second.
 
 # Screenshots
@@ -164,19 +166,19 @@ reboot    | reboot the board
 help      | display the help of all commands
 man       | display the help of specific command
 
-To use the shell, you have to stop the servers, for that you just have to log in telnet on it, do a Control-C, and you see :
+To use the shell, you have to stop the servers, for that you just have to log in telnet on it, press any key, and you see :
 ```
-Server stopped
+<<<<<<<<<<<<<<<<<<<<   ENTER SHELL   >>>>>>>>>>>>>>>>>>>>
 /=>
 ```
 
-To restart server enter exit command :
+To exit shell and restart server enter exit command :
 ```
 /=> exit
-Server restarted
+<<<<<<<<<<<<<<<<<<<<   EXIT  SHELL   >>>>>>>>>>>>>>>>>>>>
 ```
 
-If you done twice Control-C, you get the python prompt, to return to the shell do this :
+If you done Ctrl-C, you get the python prompt, to return to the shell do this :
 ```
 >>> import shell
 >>> shell.shell()

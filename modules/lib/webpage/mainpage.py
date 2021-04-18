@@ -20,8 +20,13 @@ styleNav = b"""  height: 100%;
 styleContent = b""" 
   margin-left: 150px;
 """
-def mainPage(title="", active=0, content=None, request=None, response=None):
+#def mainPage(title="", active=0, content=None, request=None, response=None):
+def mainPage(request, response, args, content=None):
 	""" Function define the main web page with menu, it check also the login password """
+
+	title  = args["title"]
+	active = args["index"]
+
 	# On wifi station, the external style cheet is added
 	if Station.isIpOnInterface(request.remoteaddr):
 		# stylesheet = StylesheetDefault()
@@ -45,3 +50,8 @@ def mainPage(title="", active=0, content=None, request=None, response=None):
 	else:
 		page = Page(page + [stylesheet], title=b"Login")
 	return page
+
+def mainFrame(request, response, args, titleFrame, *content):
+	""" Function define the main frame into the main page with menu, it check also the login password """
+	internal = [Br(),Container([Card([Form([Br(),Title3(text=titleFrame),Br(),content,])])])]
+	return mainPage(request, response, args, content=internal)

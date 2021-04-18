@@ -7,7 +7,7 @@ from webpage import *
 from tools.useful import *
 import wifi
 
-def configureWifi(title=b"",config=None,accessPoint=False,disabled=False,active=0,request=None,response=None):
+def configureWifi(request, response, args, config=None,accessPoint=False,disabled=False):
 	""" Content of wifi page """
 	if accessPoint:
 		authmodes = []
@@ -35,27 +35,17 @@ def configureWifi(title=b"",config=None,accessPoint=False,disabled=False,active=
 	else:
 		submit = Submit(text=b"Save")
 		value = b'save'
-	page = mainPage(
-		content=[Br(),Container([\
-					Card([\
-						Form([\
-							Br(),
-							Title3(text=b"Access point configuration" if accessPoint else b"Wifi configuration"),
-							Br(),
-							Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
-							ssid,
-							Edit(text=b"Password",    name=b"wifipassword",type=b"password", placeholder=b"Enter password",      value=config.wifipassword, disabled=disabled),
-							authentication,
-							Edit(text=b"Ip address",  name=b"ipaddress", pattern=patternIp, placeholder=b"Enter ip address or leave blank", value=config.ipaddress, disabled=disabled),
-							Edit(text=b"Netmask",     name=b"netmask",   pattern=patternIp, placeholder=b"Enter netmask or leave blank",    value=config.netmask,   disabled=disabled),
-							Edit(text=b"Gateway",     name=b"gateway",   pattern=patternIp, placeholder=b"Enter gateway or leave blank",    value=config.gateway,   disabled=disabled),
-							Edit(text=b"DNS",         name=b"dns",       pattern=patternIp, placeholder=b"Enter DNS or leave blank",        value=config.dns,       disabled=disabled),
-							Input(text=b"modify",     name=b"modify",    type=b"hidden", value=value),
-							submit,
-						])
-					])
-				])
-			], title=title, active=active, request=request, response=response)
+	page = mainFrame(request, response, args, b"Access point configuration" if accessPoint else b"Wifi configuration",
+		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
+		ssid,
+		Edit(text=b"Password",    name=b"wifipassword",type=b"password", placeholder=b"Enter password",      value=config.wifipassword, disabled=disabled),
+		authentication,
+		Edit(text=b"Ip address",  name=b"ipaddress", pattern=patternIp, placeholder=b"Enter ip address or leave blank", value=config.ipaddress, disabled=disabled),
+		Edit(text=b"Netmask",     name=b"netmask",   pattern=patternIp, placeholder=b"Enter netmask or leave blank",    value=config.netmask,   disabled=disabled),
+		Edit(text=b"Gateway",     name=b"gateway",   pattern=patternIp, placeholder=b"Enter gateway or leave blank",    value=config.gateway,   disabled=disabled),
+		Edit(text=b"DNS",         name=b"dns",       pattern=patternIp, placeholder=b"Enter DNS or leave blank",        value=config.dns,       disabled=disabled),
+		Input(text=b"modify",     name=b"modify",    type=b"hidden", value=value),
+		submit)
 	return page
 
 @HttpServer.addRoute(b'/wifi', title=b"Wifi", index=11)
@@ -77,7 +67,7 @@ async def wifiConfig(request, response, args):
 	elif action == b"modify":
 		disabled = False
 
-	page = configureWifi(title=args["title"], config=config, accessPoint=False, disabled=disabled, active=args["index"], request=request, response=response)
+	page = configureWifi(request, response, args, config=config, accessPoint=False, disabled=disabled)
 	await response.sendPage(page)
 
 @HttpServer.addRoute(b'/accesspoint', title=b"Access point", index=12)
@@ -97,6 +87,6 @@ async def accessPoint(request, response, args):
 		if wifi.AccessPoint.isActive():
 			wifi.AccessPointconfig = config
 
-	page = configureWifi(title=args["title"], config=config, accessPoint=True, disabled=disabled, active=args["index"], request=request, response=response)
+	page = configureWifi(request, response, args, config=config, accessPoint=True, disabled=disabled)
 	await response.sendPage(page)
 

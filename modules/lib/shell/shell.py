@@ -202,6 +202,15 @@ class LsDisplayer:
 		self.path = path
 		self.showdir = showdir
 
+	def purgePath(self, path):
+		""" Purge the path for the display """
+		if path != "/":
+			path = path.replace(self.path,"")
+		if len(path) >= 2 and path[:2] == "./":
+			path = path[2:]
+		path = path.lstrip("/")
+		return path
+
 	def show(self, path):
 		""" Show the information of a file or directory """
 		fileinfo = useful.fileinfo(path)
@@ -211,13 +220,10 @@ class LsDisplayer:
 		# If directory
 		if fileinfo[0] & 0x4000 == 0x4000:
 			if self.showdir:
-				if path != "/":
-					path = path.replace(self.path,"")
-				path = path.lstrip("./")
 				if self.long:
-					message = "%s %s [%s]"%(useful.dateToString(date)," "*7,path)
+					message = "%s %s [%s]"%(useful.dateToString(date)," "*7,self.purgePath(path))
 				else:
-					message = "[%s]"%path
+					message = "[%s]"%self.purgePath(path)
 				dir = True
 				self.count = printPart(message, self.width, self.height, self.count)
 		else:
@@ -225,17 +231,9 @@ class LsDisplayer:
 				fileinfo = useful.fileinfo(path)
 				date = fileinfo[8]
 				size = fileinfo[6]
-				if path.find(self.path) == 0:
-					path = path[len(self.path):]
-				path = path.lstrip("./")
-				path = path.lstrip("/")
-				message = "%s %s %s"%(useful.dateToString(date),useful.sizeToString(size),path)
+				message = "%s %s %s"%(useful.dateToString(date),useful.sizeToString(size),self.purgePath(path))
 			else:
-				if path.find(self.path) == 0:
-					path = path[len(self.path):]
-				path = path.lstrip("./")
-				path = path.lstrip("/")
-				message = path
+				message = self.purgePath(path)
 			self.count = printPart(message, self.width, self.height, self.count)
 
 def ls(file="", recursive=False, long=False):
@@ -259,7 +257,7 @@ def find(file):
 
 def printPart(message, width, height, count):
 	""" Print a part of text """
-	if count >= height:
+	if count != None and count >= height:
 		print(message,end="")
 		key = useful.getch()
 		count = 1
