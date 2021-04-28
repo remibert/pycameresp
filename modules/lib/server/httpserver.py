@@ -17,6 +17,7 @@ import re
 class HttpServer:
 	""" Http main class """
 	routes = {}
+	wildroutes = {}
 	menus = []
 	wwwDir = None
 
@@ -58,7 +59,10 @@ class HttpServer:
 		""" Add a route to select an html page.
 		For the server to know the pages, it must imperatively use this decorator """
 		def addRoute(function):
-			HttpServer.routes[useful.tobytes(url)] = (function, kwargs)
+			if useful.tobytes(url[-1]) == ord(b"*"):
+				HttpServer.wildroutes[useful.tobytes(url[:-1])] = (function, kwargs)
+			else:
+				HttpServer.routes[useful.tobytes(url)] = (function, kwargs)
 			if kwargs.get("available", True):
 				if "index" in kwargs and "title" in kwargs:
 					HttpServer.menus.append([int(kwargs["index"]), useful.tobytes(url), kwargs["title"]])
@@ -105,9 +109,15 @@ class HttpServer:
 		else:
 			found = HttpServer.routes.get(request.path,None)
 			if found == None:
-				staticRe = re.compile("^/("+useful.tostrings(HttpServer.wwwDir)+"/.+|.+)")
-				if staticRe.match(useful.tostrings(request.path)):
-					function, args = HttpServer.staticPages, {}
+				path = useful.split(useful.tostrings(request.path))[0] + "/"
+    
+				found = HttpServer.wildroutes.get(useful.tobytes(path),None)
+				if found == None:
+					staticRe = re.compile("^/("+useful.tostrings(HttpServer.wwwDir)+"/.+|.+)")
+					if staticRe.match(useful.tostrings(request.path)):
+						function, args = HttpServer.staticPages, {}
+				else:
+					function, args = found
 			else:
 				function, args = found
 		return function, args
@@ -115,7 +125,14 @@ class HttpServer:
 	@staticmethod
 	async def staticPages(request, response, args):
 		""" Treat the case of static pages """
-		path = useful.tobytes(HttpServer.wwwDir) + request.path
+		sd = useful.SdCard.getMountpoint()
+		sd = "/sd"
+		if request.path[:len(sd)] == useful.tobytes(sd):
+			path = request.path[1:]
+		else:
+			path = useful.tobytes(HttpServer.wwwDir) + request.path
+			path = path.replace(b"//",b"/")
+		
 		if b".." in path:
 			await response.sendError(status=b"403",content=b"Forbidden")
 		else:

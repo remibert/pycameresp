@@ -24,8 +24,14 @@ styleContent = b"""
 def mainPage(request, response, args, content=None):
 	""" Function define the main web page with menu, it check also the login password """
 
-	title  = args["title"]
-	active = args["index"]
+	try:
+		title  = args["title"]
+	except:
+		title = b""
+	try:
+		active = args["index"]
+	except:
+		active = 0
 
 	# On wifi station, the external style cheet is added
 	if Station.isIpOnInterface(request.remoteaddr):

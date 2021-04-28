@@ -77,10 +77,6 @@ class Motion:
 		""" Return the jpeg buffer of motion """
 		return self.motion.getImage()
 
-	def getFeature(self):
-		""" Return (mean, min, max light, mean, min, max, saturation, total count) """
-		return self.getFeature()
-
 class Camera:
 	""" Singleton class to manage the camera """
 	reserved = [False]

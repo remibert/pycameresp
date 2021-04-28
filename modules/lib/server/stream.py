@@ -144,3 +144,31 @@ class Bytesio:
 	async def close(self):
 		""" Close the stream """
 		self.streamio.close()
+
+
+class Bufferedio:
+	""" Class used to buffered stream write """
+	def __init__(self, streamio, part=1440*20):
+		""" Constructor """
+		self.buffered = BytesIO()
+		self.part = part
+		self.streamio = streamio
+	
+	async def read(self):
+		""" Read data from the stream """
+		return self.streamio.read()
+
+	async def write(self, data):
+		""" Write data in the stream """
+		result = self.buffered.write(data)
+		if self.buffered.tell() > self.part:
+			await self.streamio.write(self.buffered.getvalue())
+			self.buffered = BytesIO()
+		return result
+
+	async def close(self):
+		""" Close the stream """
+		if self.buffered.tell() > 0:
+			await self.streamio.write(self.buffered.getvalue())
+		self.buffered.close()
+ 

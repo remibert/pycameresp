@@ -675,16 +675,21 @@ class SdCard:
 	def mount(mountpoint = "/sd"):
 		result = False
 		if SdCard.isMounted() == False and mountpoint != "/" and mountpoint != "":
-			try:
-				# If the sdcard not already mounted
-				if uos.statvfs("/") == uos.statvfs(mountpoint):
-					import machine
-					uos.mount(machine.SDCard(), mountpoint)
-					SdCard.mountpoint[0] = mountpoint
-					SdCard.opened[0]= True
-					result = True
-			except Exception as err:
-				print("Cannot mount %s"%mountpoint)
+			if ismicropython():
+				try:
+					# If the sdcard not already mounted
+					if uos.statvfs("/") == uos.statvfs(mountpoint):
+						import machine
+						uos.mount(machine.SDCard(), mountpoint)
+						SdCard.mountpoint[0] = mountpoint
+						SdCard.opened[0]= True
+						result = True
+				except Exception as err:
+					print("Cannot mount %s"%mountpoint)
+			else:
+				SdCard.mountpoint[0] = mountpoint[1:]
+				SdCard.opened[0] = True
+				result = True
 		elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
 			result = True
 		return result

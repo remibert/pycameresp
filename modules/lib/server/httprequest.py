@@ -246,23 +246,23 @@ class Http:
 			else:
 				self.headers[name] = value.strip()
 
-	async def serialize(self, streamio):
+	async def serialize(self, streamio, page=None):
 		""" Serialize request or response in the stream """
+		io = server.stream.Bufferedio(streamio)
+		result = await self.serializeHeader(io)
+		result += await self.serializeBody(io)
+		if page:
+			await page.write(io)
+		await io.close()
+		return result
+
+	async def serializeHeader(self, streamio):
+		""" Serialize the header of http request or response """
 		if self.request:
-			result = await self.serializeRequest(streamio)
+			result = await streamio.write(b"%s %s %s\r\n"%(self.method, self.path, b"HTTP/1.1"))
 		else:
-			result = await self.serializeResponse(streamio)
-		return result
-	
-	async def serializeRequest(self, streamio):
-		""" Serialize request with body """
-		result = await streamio.write(b"%s %s %s\r\n"%(self.method, self.path, b"HTTP/1.1"))
-		result += await self.serializeBody(streamio)
-		return result
-	
-	async def serializeBody(self, streamio):
-		""" Serialize body """
-		result = 0
+			result = await streamio.write(b"HTTP/1.1 %s NA\r\n"%(self.status))
+
 		try:
 			createIdentifier = False
 			if len(self.parts) > 0:
@@ -291,7 +291,11 @@ class Http:
 			else:
 				setget = b"Set-"
 			result += await streamio.write(b"%sCookie: %s=%s%s\r\n"%(setget, cookie, value[0], self.getExpiration(value[1])))
-
+		return result
+	
+	async def serializeBody(self, streamio):
+		""" Serialize body """
+		result = 0
 		noEnd = False
 		# If content existing
 		if self.content != None:
@@ -338,12 +342,6 @@ class Http:
 			result += await streamio.write(b"\r\n")
 		return result
 
-	async def serializeResponse(self, streamio):
-		""" Send response to client web browser """
-		result = await streamio.write(b"HTTP/1.1 %s NA\r\n"%(self.status))
-		result += await self.serializeBody(streamio)
-		return result
-
 class ContentText:
 	""" Class that contains a text """
 	def __init__(self, text, contentType=None):
@@ -376,7 +374,7 @@ class ContentFile:
 		try:
 			with open(useful.tostrings(self.filename), "rb") as f:
 				result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.contentType))
-				step = 1440
+				step = 1440*10
 				buf = bytearray(step)
 				f.seek(0,2)
 				size = f.tell()
@@ -516,12 +514,9 @@ class HttpResponse(Http):
 
 	async def sendPage(self, page):
 		""" Send a template page to the client web browser """
-		bytesio = server.stream.Bytesio()
 		self.setContent(None)
 		self.setStatus(b"200")
-		await self.serialize(bytesio)
-		await page.write(bytesio)
-		await self.streamio.write(bytesio.streamio.getvalue())
+		await self.serialize(self.streamio, page)
 
 	async def receive(self, streamio=None):
 		""" Receive request from client """

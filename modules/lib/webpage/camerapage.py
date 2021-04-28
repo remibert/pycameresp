@@ -44,8 +44,7 @@ async def cameraPage(request, response, args):
 		}
 		window.onload = () =>
 		{
-			setTimeout(() => { startStreaming();}, 1);
-			//setTimeout(() => { stopStreaming();}, 300);
+			setTimeout(() => { startStreaming();}, 100);
 		}
 		function startStreaming()
 		{

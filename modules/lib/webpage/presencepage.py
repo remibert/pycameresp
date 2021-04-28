@@ -9,7 +9,7 @@ from motion import PresenceConfig
 import wifi
 from tools import useful
 
-@HttpServer.addRoute(b'/presence', title=b"Presence", index=18, available=useful.iscamera())
+@HttpServer.addRoute(b'/presence', title=b"Presence", index=19, available=useful.iscamera())
 async def presence(request, response, args):
 	""" Presence configuration page """
 	config = PresenceConfig()

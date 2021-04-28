@@ -3,6 +3,7 @@
 """ Class to manage motion detection with ESP32CAM """
 from motion.motion import *
 from motion.presence import *
+from motion.historic import *
 from tools import useful
 
 def start(loop=None, onBattery=True, pirDetection=False):
@@ -10,4 +11,4 @@ def start(loop=None, onBattery=True, pirDetection=False):
 	loop.create_task(detectPresence())
 	if useful.iscamera():
 		loop.create_task(detectMotion(onBattery, pirDetection))
-		loop.create_task(removeOlder())
+		loop.create_task(Historic.periodicTask())

@@ -53,9 +53,9 @@ def Div(*args, **params):
 	self.getEnd       = getEnd
 
 	self.content      = params.get("content", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
 	return self
 
 # <option %(selected)s name="%(text)s" value="%(value)s" %(disabled)s>%(text)s</option>
@@ -72,10 +72,10 @@ def Option(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.text         = params.get("text", b"")
 	self.selected     = params.get("selected", b"")
-	self.value        = params.get("value", b"")
 	self.disabled     = params.get("disabled", False)
+	self.value        = params.get("value", b"")
+	self.text         = params.get("text", b"")
 	return self
 
 # <label >%(text)s</label>
@@ -99,13 +99,13 @@ def Select(*args, **params):
 		return endTagSelect
 	self.getEnd       = getEnd
 
-	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
-	self.class_       = params.get("class_", b"")
 	self.content      = params.get("content", b"")
-	self.text         = params.get("text", b"")
+	self.name         = params.get("name", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <h1 class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</h1>
@@ -122,10 +122,10 @@ def Title1(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.text         = params.get("text", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
+	self.text         = params.get("text", b"")
 	return self
 
 # <h2 class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</h2>
@@ -142,10 +142,10 @@ def Title2(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.text         = params.get("text", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
+	self.text         = params.get("text", b"")
 	return self
 
 # <h3 class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</h3>
@@ -162,10 +162,10 @@ def Title3(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.text         = params.get("text", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
+	self.text         = params.get("text", b"")
 	return self
 
 # <h4 class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</h4>
@@ -182,10 +182,10 @@ def Title4(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.text         = params.get("text", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
+	self.text         = params.get("text", b"")
 	return self
 
 # <label class="%(class_)s" style="%(style)s" id="%(id)s">%(text)s</label>
@@ -202,10 +202,10 @@ def Label(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.text         = params.get("text", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
+	self.text         = params.get("text", b"")
 	return self
 
 # <div class="form-group">
@@ -224,15 +224,15 @@ def Input(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.type         = params.get("type", b"")
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
+	self.type         = params.get("type", b"")
 	self.class_       = params.get("class_", b"")
-	self.pattern      = params.get("pattern", b"*")
-	self.placeholder  = params.get("placeholder", b"")
-	self.style        = params.get("style", b"")
 	self.value        = params.get("value", b"")
+	self.style        = params.get("style", b"")
+	self.pattern      = params.get("pattern", b"*")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
+	self.placeholder  = params.get("placeholder", b"")
 	return self
 
 # <label for="customRange">%(text)s</label>
@@ -260,16 +260,16 @@ def Slider(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.max          = params.get("max", b"")
-	self.step         = params.get("step", b"")
 	self.name         = params.get("name", b"%d"%id(self))
-	self.min          = params.get("min", b"")
 	self.class_       = params.get("class_", b"")
-	self.disabled     = params.get("disabled", False)
-	self.text         = params.get("text", b"")
-	self.style        = params.get("style", b"")
+	self.max          = params.get("max", b"")
 	self.value        = params.get("value", b"")
+	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
+	self.min          = params.get("min", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
+	self.step         = params.get("step", b"")
 	return self
 
 # <div class="form-group">
@@ -289,16 +289,16 @@ def Edit(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.type         = params.get("type", b"")
-	self.placeholder  = params.get("placeholder", b"")
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
+	self.type         = params.get("type", b"")
 	self.class_       = params.get("class_", b"")
-	self.pattern      = params.get("pattern", b"*")
-	self.text         = params.get("text", b"")
-	self.style        = params.get("style", b"")
 	self.value        = params.get("value", b"")
+	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
+	self.pattern      = params.get("pattern", b"*")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
+	self.placeholder  = params.get("placeholder", b"")
 	return self
 
 # <div class="custom-control custom-switch">
@@ -320,13 +320,13 @@ def Switch(*args, **params):
 	self.getEnd       = getEnd
 
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
 	self.class_       = params.get("class_", b"")
-	self.checked      = params.get("checked", True)
-	self.text         = params.get("text", b"")
-	self.style        = params.get("style", b"")
 	self.value        = params.get("value", b"")
+	self.checked      = params.get("checked", True)
+	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <div class="form-check">
@@ -348,13 +348,13 @@ def Checkbox(*args, **params):
 	self.getEnd       = getEnd
 
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
 	self.class_       = params.get("class_", b"")
-	self.checked      = params.get("checked", True)
-	self.text         = params.get("text", b"")
-	self.style        = params.get("style", b"")
 	self.value        = params.get("value", b"")
+	self.checked      = params.get("checked", True)
+	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <input class="btn %(class_)s" style="%(style)s" id="%(id)s" type="button" name="%(name)s" %(disabled)s> %(text)s</input>
@@ -372,11 +372,11 @@ def Button(*args, **params):
 	self.getEnd       = getEnd
 
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
 	self.class_       = params.get("class_", b"")
-	self.text         = params.get("text", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <div class="form-check">
@@ -398,12 +398,12 @@ def Radio(*args, **params):
 	self.getEnd       = getEnd
 
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
-	self.class_       = params.get("class_", b"")
 	self.checked      = params.get("checked", True)
-	self.text         = params.get("text", b"")
+	self.class_       = params.get("class_", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <input type="file"  style="display: none;" 
@@ -424,11 +424,11 @@ def ChooseFile(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.accept       = params.get("accept", b"")
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
+	self.accept       = params.get("accept", b"")
 	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <input type="file" style="display:none" id="%(id)s" onchange="importFile_%(id)s()" name="%(name)s" accept="%(accept)s" %(disabled)s />
@@ -460,13 +460,13 @@ def ImportFile(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.accept       = params.get("accept", b"")
-	self.path         = params.get("path", b"")
-	self.alert        = params.get("alert", b"")
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
+	self.path         = params.get("path", b"")
+	self.accept       = params.get("accept", b"")
 	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
+	self.alert        = params.get("alert", b"")
 	return self
 
 # <a href="%(path)s" download="%(filename)s" class="btn btn-outline-primary " name="%(name)s" %(disabled)s>%(text)s</a>
@@ -483,11 +483,11 @@ def ExportFile(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.path         = params.get("path", b"")
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
-	self.text         = params.get("text", b"")
+	self.path         = params.get("path", b"")
 	self.filename     = params.get("filename", b"")
+	self.text         = params.get("text", b"")
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <form class="container %(class_)s" style="%(style)s" id="%(id)s" method="%(method)s">
@@ -508,9 +508,9 @@ def Form(*args, **params):
 		return endTagForm
 	self.getEnd       = getEnd
 
+	self.method       = params.get("method", b"")
 	self.content      = params.get("content", b"")
 	self.class_       = params.get("class_", b"")
-	self.method       = params.get("method", b"")
 	self.style        = params.get("style", b"")
 	self.id           = params.get("id", b"%d"%id(self))
 	return self
@@ -550,9 +550,9 @@ def Container(*args, **params):
 	self.getEnd       = getEnd
 
 	self.content      = params.get("content", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
 	return self
 
 # <div class="card shadow %(class_)s" style="%(style)s" id="%(id)s">
@@ -574,9 +574,9 @@ def Card(*args, **params):
 	self.getEnd       = getEnd
 
 	self.content      = params.get("content", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
 	return self
 
 # <p class="%(class_)s" style="%(style)s" id="%(id)s">%(content)s%(text)s</p>
@@ -597,8 +597,8 @@ def Paragraph(*args, **params):
 
 	self.content      = params.get("content", b"")
 	self.class_       = params.get("class_", b"")
-	self.text         = params.get("text", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
 	return self
 
@@ -620,8 +620,8 @@ def ListItem(*args, **params):
 
 	self.content      = params.get("content", b"")
 	self.class_       = params.get("class_", b"")
-	self.text         = params.get("text", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
 	return self
 
@@ -643,8 +643,8 @@ def ButtonItem(*args, **params):
 
 	self.content      = params.get("content", b"")
 	self.class_       = params.get("class_", b"")
-	self.text         = params.get("text", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
 	return self
 
@@ -667,9 +667,9 @@ def List(*args, **params):
 	self.getEnd       = getEnd
 
 	self.content      = params.get("content", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
 	return self
 
 # <button class="btn btn-outline-primary %(class_)s" style="%(style)s" id="%(id)s" type="submit" value="%(value)s">%(content)s%(text)s</button>
@@ -690,9 +690,9 @@ def Submit(*args, **params):
 
 	self.content      = params.get("content", b"")
 	self.class_       = params.get("class_", b"")
-	self.text         = params.get("text", b"")
-	self.style        = params.get("style", b"")
 	self.value        = params.get("value", b"")
+	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
 	return self
 
@@ -712,11 +712,11 @@ def Cancel(*args, **params):
 		return endTagCancel%(self.text)
 	self.getEnd       = getEnd
 
-	self.href         = params.get("href", b"")
 	self.content      = params.get("content", b"")
 	self.class_       = params.get("class_", b"")
-	self.text         = params.get("text", b"")
+	self.href         = params.get("href", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
 	return self
 
@@ -736,11 +736,11 @@ def Link(*args, **params):
 		return endTagLink%(self.text)
 	self.getEnd       = getEnd
 
-	self.href         = params.get("href", b"")
 	self.content      = params.get("content", b"")
 	self.class_       = params.get("class_", b"")
-	self.text         = params.get("text", b"")
+	self.href         = params.get("href", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
 	return self
 
@@ -762,14 +762,14 @@ def TabItem(*args, **params):
 		return endTagTabItem%(self.text)
 	self.getEnd       = getEnd
 
-	self.href         = params.get("href", b"")
 	self.active       = params.get("active", False)
-	self.disabled     = params.get("disabled", False)
-	self.class_       = params.get("class_", b"")
 	self.content      = params.get("content", b"")
-	self.text         = params.get("text", b"")
+	self.class_       = params.get("class_", b"")
+	self.href         = params.get("href", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <ul class="nav nav-pills nav-stacked flex-column %(class_)s" style="%(style)s" id="%(id)s">
@@ -791,9 +791,9 @@ def Tab(*args, **params):
 	self.getEnd       = getEnd
 
 	self.content      = params.get("content", b"")
-	self.class_       = params.get("class_", b"")
-	self.id           = params.get("id", b"%d"%id(self))
 	self.style        = params.get("style", b"")
+	self.id           = params.get("id", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
 	return self
 
 # <a class="dropdown-item %(class_)s" style="%(style)s" id="%(id)s" href="%(href)s">%(text)s</a>
@@ -810,10 +810,10 @@ def DropdownItem(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.href         = params.get("href", b"")
 	self.class_       = params.get("class_", b"")
-	self.text         = params.get("text", b"")
+	self.href         = params.get("href", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
 	return self
 
@@ -842,8 +842,8 @@ def Dropdown(*args, **params):
 
 	self.content      = params.get("content", b"")
 	self.class_       = params.get("class_", b"")
-	self.text         = params.get("text", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
 	return self
 
@@ -868,16 +868,16 @@ def ComboBox(*args, **params):
 		return endTagComboBox
 	self.getEnd       = getEnd
 
-	self.placeholder  = params.get("placeholder", b"")
-	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
-	self.class_       = params.get("class_", b"")
 	self.content      = params.get("content", b"")
-	self.pattern      = params.get("pattern", b"*")
-	self.text         = params.get("text", b"")
-	self.style        = params.get("style", b"")
+	self.name         = params.get("name", b"%d"%id(self))
+	self.class_       = params.get("class_", b"")
 	self.value        = params.get("value", b"")
+	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
+	self.pattern      = params.get("pattern", b"*")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
+	self.placeholder  = params.get("placeholder", b"")
 	return self
 
 # <img src="%(src)s" class="%(class_)s" style="%(style)s" id="%(id)s" alt="%(alt)s">
@@ -894,11 +894,11 @@ def Image(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.style        = params.get("style", b"")
-	self.src          = params.get("src", b"")
 	self.class_       = params.get("class_", b"")
-	self.alt          = params.get("alt", b"")
+	self.style        = params.get("style", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.src          = params.get("src", b"")
+	self.alt          = params.get("alt", b"")
 	return self
 
 # <div class="alert alert-success alert-dismissible fade show">
@@ -1016,14 +1016,14 @@ def ButtonCmd(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.path         = params.get("path", b"")
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
+	self.path         = params.get("path", b"")
 	self.class_       = params.get("class_", b"")
+	self.style        = params.get("style", b"")
 	self.confirm      = params.get("confirm", b"")
 	self.text         = params.get("text", b"")
-	self.style        = params.get("style", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <label >%(text)s</label>
@@ -1057,17 +1057,17 @@ def SliderCmd(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.max          = params.get("max", b"")
-	self.path         = params.get("path", b"")
-	self.step         = params.get("step", b"")
 	self.name         = params.get("name", b"%d"%id(self))
-	self.min          = params.get("min", b"")
+	self.path         = params.get("path", b"")
 	self.class_       = params.get("class_", b"")
-	self.disabled     = params.get("disabled", False)
-	self.text         = params.get("text", b"")
-	self.style        = params.get("style", b"")
+	self.max          = params.get("max", b"")
 	self.value        = params.get("value", b"")
+	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
+	self.min          = params.get("min", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
+	self.step         = params.get("step", b"")
 	return self
 
 # <label >%(text)s</label>
@@ -1097,14 +1097,14 @@ def ComboCmd(*args, **params):
 		return endTagComboCmd%(self.id,self.path,self.id,self.id)
 	self.getEnd       = getEnd
 
-	self.path         = params.get("path", b"")
-	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
-	self.class_       = params.get("class_", b"")
 	self.content      = params.get("content", b"")
-	self.text         = params.get("text", b"")
+	self.name         = params.get("name", b"%d"%id(self))
+	self.path         = params.get("path", b"")
+	self.class_       = params.get("class_", b"")
 	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <div class="custom-control custom-switch">
@@ -1132,15 +1132,15 @@ def SwitchCmd(*args, **params):
 		return b''
 	self.getEnd       = getEnd
 
-	self.path         = params.get("path", b"")
 	self.name         = params.get("name", b"%d"%id(self))
-	self.disabled     = params.get("disabled", False)
+	self.path         = params.get("path", b"")
 	self.class_       = params.get("class_", b"")
-	self.checked      = params.get("checked", True)
-	self.text         = params.get("text", b"")
-	self.style        = params.get("style", b"")
 	self.value        = params.get("value", b"")
+	self.checked      = params.get("checked", True)
+	self.style        = params.get("style", b"")
+	self.text         = params.get("text", b"")
 	self.id           = params.get("id", b"%d"%id(self))
+	self.disabled     = params.get("disabled", False)
 	return self
 
 # <html lang="fr" charset="utf-8">
@@ -1168,8 +1168,8 @@ def Page(*args, **params):
 		return endTagPage
 	self.getEnd       = getEnd
 
-	self.content      = params.get("content", b"")
-	self.class_       = params.get("class_", b"")
 	self.title        = params.get("title", b"")
 	self.style        = params.get("style", b"")
+	self.content      = params.get("content", b"")
+	self.class_       = params.get("class_", b"")
 	return self

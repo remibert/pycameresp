@@ -12,7 +12,7 @@
 #include "py/objstr.h"
 
 #ifdef CONFIG_ESP32CAM
-#include "esp_camera.h"
+	#include "esp_camera.h"
 #endif
 #define TAG "camera"
 
@@ -115,6 +115,19 @@ static camera_config_t camera_config =
 };
 #endif
 
+typedef struct Shape_t
+{
+	uint16_t id;
+	uint32_t x;
+	uint32_t y;
+	uint16_t minx;
+	uint16_t maxx;
+	uint16_t miny;
+	uint16_t maxy;
+	uint16_t size;
+} Shape_t;
+
+
 typedef struct 
 {
 	mp_obj_base_t base;
@@ -140,13 +153,11 @@ typedef struct
 
 	uint16_t       *diffs;
 
+	uint16_t       *stack;
+	uint16_t       stackpos;
+
 	u_int32_t  meanLight;
 	u_int32_t  meanSaturation;
-
-	uint16_t maxLight;
-	uint16_t minLight;
-	uint16_t maxSaturation;
-	uint16_t minSaturation;
 
 	int errorLight;
 	int errorSaturation;
@@ -293,7 +304,6 @@ STATIC mp_obj_t camera_capture()
 		ESP_LOGE(TAG, "Camera capture Failed");
 		return mp_const_false;
 	}
-
 	mp_obj_t image = mp_obj_new_bytes(fb->buf, fb->len);
 
 	// Return the frame buffer back to the driver for reuse
@@ -502,6 +512,7 @@ static bool Motion_parseImage(void * arg, uint16_t x, uint16_t y, uint16_t w, ui
 			motion->saturations = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 			motion->lights      = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 			motion->diffs       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
+			motion->stack       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max*2*4);
 		}
 		else
 		{
@@ -603,11 +614,6 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 				*pSaturations = (uint16_t)saturation;
 				*pLights      = (uint16_t)light;
 
-				if (saturation > motion->maxSaturation) motion->maxSaturation = saturation;
-				if (saturation < motion->minSaturation) motion->minSaturation = saturation;
-				if (light      > motion->maxLight)      motion->maxLight      = light;
-				if (light      < motion->minLight)      motion->minLight      = light;
-
 				meanSaturation += saturation;
 				meanLight      += light;
 				
@@ -681,6 +687,7 @@ STATIC mp_obj_t Motion_deinit(mp_obj_t self_in)
 		_free((void**)&motion->lights);
 		_free((void**)&motion->diffs);
 		_free((void**)&motion->imageData);
+		_free((void**)&motion->stack);
 	}
 	return mp_const_none;
 }
@@ -787,6 +794,108 @@ STATIC mp_obj_t Motion_setErrorHue(mp_obj_t self_in, mp_obj_t hue_in)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_setErrorHue_obj, Motion_setErrorHue);
 
+// Push coordinates
+void Motion_push(Motion_t * motion, int x, int y)
+{
+	motion->stack[motion->stackpos++] = x;
+	motion->stack[motion->stackpos++] = y;
+}
+
+// Pop coordinates
+void Motion_pop(Motion_t * motion, int *x, int *y)
+{
+	if (motion->stackpos > 0)
+	{
+		*y = motion->stack[--motion->stackpos];
+		*x = motion->stack[--motion->stackpos];
+	}
+}
+
+// Check if difference detected in the current pixel
+bool Motion_isDifference(Motion_t * motion, int x, int y)
+{
+	bool result = false;
+
+	// If position is in image
+	if (x >= 0 && x < motion->width/motion->square_x && y >= 0 && y < motion->height/motion->square_y)
+	{
+		int i = y*(motion->width/motion->square_x) + x;
+		uint16_t diff = motion->diffs[i];
+
+		// If difference detected not yet found
+		if (((diff & 0xFF00) == 0) && ((diff & 0xFF) != 0))
+		{
+			result = true;
+		}
+	}
+	return result;
+}
+
+// Set the difference
+void Motion_setDifference(Motion_t * motion, int x, int y, Shape_t * shape)
+{
+	int i = y*(motion->width/motion->square_x) + x;
+	uint16_t diff = motion->diffs[i];
+
+	// If difference not yet parsed
+	if ((diff & 0xFF00) == 0)
+	{
+		// Modify current difference to add shape identifier
+		motion->diffs[i] = (diff &0xFF) | (shape->id << 8);
+
+		// Compute the difference informations
+		shape->size ++;
+		shape->x += x;
+		shape->y += y;
+		if (x < shape->minx) shape->minx = x;
+		if (x > shape->maxx) shape->maxx = x;
+		if (y < shape->miny) shape->miny = y;
+		if (y > shape->maxy) shape->maxy = y;
+	}
+}
+
+// Search a shape in the differences
+bool Motion_searchShape(Motion_t * motion, int x, int y, Shape_t * shape)
+{
+	bool result = false;
+
+	// Push coordinates
+	motion->stackpos = 0;
+
+	if (Motion_isDifference(motion, x, y))
+	{
+		Motion_push(motion, x,  y);
+		
+		while(motion->stackpos > 0)
+		{
+			// Pop coordinates
+			Motion_pop(motion, &x, &y);
+			
+			Motion_setDifference(motion, x, y, shape);
+
+			// Search in contigous pixels
+			if (Motion_isDifference(motion, x+1,y  )) Motion_push(motion, x+1, y);
+			if (Motion_isDifference(motion, x-1,y  )) Motion_push(motion, x-1, y);
+			if (Motion_isDifference(motion, x  ,y+1)) Motion_push(motion, x  , y+1);
+			if (Motion_isDifference(motion, x  ,y-1)) Motion_push(motion, x  , y-1);
+			if (Motion_isDifference(motion, x+1,y+1)) Motion_push(motion, x+1, y+1);
+			if (Motion_isDifference(motion, x-1,y+1)) Motion_push(motion, x-1, y+1);
+			if (Motion_isDifference(motion, x+1,y-1)) Motion_push(motion, x+1, y-1);
+			if (Motion_isDifference(motion, x-1,y-1)) Motion_push(motion, x-1, y-1);
+		}
+		result = true;
+	}
+
+	// Compute the center of shape
+	if (shape->size > 0)
+	{
+		shape->x = shape->x / shape->size;
+		shape->y = shape->y / shape->size;
+		result = true;
+	}
+	return result;
+}
+
 // compare method
 STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 {
@@ -806,7 +915,7 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 		int diffHue        = 0;
 		int diffSaturation = 0;
 		int diffLight      = 0;
-		int diffContigous  = 0;
+		int diffDetected   = 0;
 
 #define MIN_LIGHT 20
 #define MIN_SATURATION 20
@@ -915,100 +1024,106 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 				// Save the diff
 				self->diffs[i] = diff;
 
-				// If difference detected
 				if (diff)
 				{
-					if (y > 1)
-					{
-						if (x > 1)
-						{
-							uint16_t * prev; 
-							uint16_t * current;
-
-							// Square above
-							prev    = &(self->diffs[(y * width) + x-1]);
-							current = &(self->diffs[(y * width) + x]);
-
-							// If previous column have also a difference
-							if (*prev != 0)
-							{
-								// Set the contigous of the previous column
-								*prev |= 0x80;
-								
-								// Set the contigous of the current column
-								*current |= 0x80;
-							}
-
-							// Square left
-							prev = &(self->diffs[((y-1) * width) + x]);
-
-							// If previous line have also a difference
-							if (*prev)
-							{
-								// Set the contigous of the previous line
-								*prev |= 0x80;
-
-								// Set the contigous of the current line
-								*current |= 0x80;
-							}
-
-							// Square above diagonal
-							prev = &(self->diffs[((y -1) * width) + x -1]);
-
-							// If previous line have in diagonal also a difference
-							if (*prev)
-							{
-								// Set the contigous of the previous line in diagonal
-								*prev |= 0x80;
-
-								// Set the contigous of the current line
-								*current |= 0x80;
-							}
-						}
-					}
+					diffDetected ++;
 				}
 			}
 		}
 
-		// Compute the difference contigous
-		diffContigous = 0;
-		for (i = 0; i < self->max; i++)
+		// Get the list of shapes detected
+		mp_obj_t shapeslist = mp_obj_new_list(0, NULL);
+		if (diffDetected)
 		{
-			if (self->diffs[i] & 0x80) 
+			Shape_t shape;
+			int shapeId = 1;
+
+			for (y = 0; y < height; y++)
 			{
-				diffContigous++;
+				for (x = 0; x < width; x++)
+				{
+					memset(&shape, 0, sizeof(shape));
+					shape.minx = self->max;
+					shape.miny = self->max;
+					shape.id = shapeId;
+
+					// If shape found
+					if (Motion_searchShape(self, x, y,&shape))
+					{
+						mp_obj_t shapedict = mp_obj_new_dict(0);
+							mp_obj_dict_store(shapedict, mp_obj_new_str("size",    strlen("size")),     mp_obj_new_int(shape.size));
+#if 1
+							mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x*self->square_x*8));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y*self->square_y*8));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("x",       strlen("x")),        mp_obj_new_int(shape.minx*self->square_x*8));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("y",       strlen("y")),        mp_obj_new_int(shape.miny*self->square_y*8));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int((shape.maxx + 1 - shape.minx)*self->square_x*8));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int((shape.maxy + 1 - shape.miny)*self->square_y*8));
+#else
+							mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("minx",    strlen("minx")),     mp_obj_new_int(shape.minx));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("miny",    strlen("miny")),     mp_obj_new_int(shape.miny));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("maxx",    strlen("maxx")),     mp_obj_new_int(shape.maxx));
+							mp_obj_dict_store(shapedict, mp_obj_new_str("maxy",    strlen("maxy")),     mp_obj_new_int(shape.maxy));
+#endif
+							mp_obj_dict_store(shapedict, mp_obj_new_str("id",      strlen("id")),       mp_obj_new_int(shape.id));
+						mp_obj_list_append(shapeslist, shapedict);
+						shapeId++;
+					}
+				}
 			}
 		}
+		#if 0
+		{
+			char line[100];
 
-		mp_obj_t res = mp_obj_new_list(0, NULL);
-		mp_obj_list_append(res, mp_obj_new_int(diffHue));
-		mp_obj_list_append(res, mp_obj_new_int(diffSaturation));
-		mp_obj_list_append(res, mp_obj_new_int(diffLight));
-		mp_obj_list_append(res, mp_obj_new_int(diffContigous));
-		mp_obj_list_append(res, mp_obj_new_int(self->max));
-		return res;
+			for (y = 0; y < height; y++)
+			{
+				for (x = 0; x < width; x++)
+				{
+					i = y * width + x;
+					if (self->diffs[i])
+					{
+						line[x] = ((self->diffs[i]&0xFF00)>>8) + 0x30;
+						line[x+1] = '\0';
+					}
+					else
+					{
+						line[x] = ' ';
+						line[x+1] = '\0';
+					}
+				}
+				ESP_LOGE(TAG,"|%s|",line);
+			}
+		}
+		#endif
+
+		mp_obj_t result = mp_obj_new_dict(0);
+			mp_obj_t diffdict = mp_obj_new_dict(0);
+				mp_obj_dict_store(diffdict, mp_obj_new_str("hue"       , strlen("hue"))       ,  mp_obj_new_int(diffHue));
+				mp_obj_dict_store(diffdict, mp_obj_new_str("saturation", strlen("saturation")),  mp_obj_new_int(diffSaturation));
+				mp_obj_dict_store(diffdict, mp_obj_new_str("light"     , strlen("light"))     ,  mp_obj_new_int(diffLight));
+				mp_obj_dict_store(diffdict, mp_obj_new_str("count"     , strlen("count"))     ,  mp_obj_new_int(diffDetected));
+				mp_obj_dict_store(diffdict, mp_obj_new_str("max"       , strlen("max"))       ,  mp_obj_new_int(self->max));
+			mp_obj_dict_store(result, mp_obj_new_str("diff"     , strlen("diff")), diffdict);
+
+			mp_obj_t geometrydict = mp_obj_new_dict(0);
+				mp_obj_dict_store(geometrydict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int(self->width  * 8));
+				mp_obj_dict_store(geometrydict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int(self->height * 8));
+			mp_obj_dict_store(result, mp_obj_new_str("geometry"     , strlen("geometry")), geometrydict);
+
+			mp_obj_t featuredict = mp_obj_new_dict(0);
+				mp_obj_dict_store(featuredict, mp_obj_new_str("saturation", strlen("saturation")),  mp_obj_new_int(self->meanSaturation));
+				mp_obj_dict_store(featuredict, mp_obj_new_str("light"     , strlen("light"))     ,  mp_obj_new_int(self->meanLight));
+			mp_obj_dict_store(result, mp_obj_new_str("feature"     , strlen("feature")), featuredict);
+
+			mp_obj_dict_store(result, mp_obj_new_str("shapes"      , strlen("shapes")) , shapeslist);
+		return result;
 	}
 	return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_compare_obj, Motion_compare);
-
-// get feature method (mean, min and max for light and saturation)
-STATIC mp_obj_t Motion_getFeature(mp_obj_t self_in)
-{
-	Motion_t *self = self_in;
-	mp_obj_t res = mp_obj_new_list(0, NULL);
-	mp_obj_list_append(res, mp_obj_new_int(self->meanLight));
-	mp_obj_list_append(res, mp_obj_new_int(self->minLight));
-	mp_obj_list_append(res, mp_obj_new_int(self->maxLight));
-
-	mp_obj_list_append(res, mp_obj_new_int(self->meanSaturation));
-	mp_obj_list_append(res, mp_obj_new_int(self->minSaturation));
-	mp_obj_list_append(res, mp_obj_new_int(self->maxSaturation));
-
-	mp_obj_list_append(res, mp_obj_new_int(self->max));
-	return res;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getFeature_obj, Motion_getFeature);
 
 // print method
 STATIC void Motion_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) 
@@ -1027,7 +1142,6 @@ STATIC const mp_rom_map_elem_t Motion_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_setErrorHue),        MP_ROM_PTR(&Motion_setErrorHue_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_setErrorSaturation), MP_ROM_PTR(&Motion_setErrorSaturation_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_setErrorLight),      MP_ROM_PTR(&Motion_setErrorLight_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_getFeature),         MP_ROM_PTR(&Motion_getFeature_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_getImage),           MP_ROM_PTR(&Motion_getImage_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Motion_locals_dict, Motion_locals_dict_table);

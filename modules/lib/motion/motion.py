@@ -4,6 +4,7 @@
 import sys
 import machine
 import uos
+import re
 try:
 	import camera
 except:
@@ -11,10 +12,11 @@ except:
 import uasyncio
 import video
 import time
-from tools import useful
-from tools import jsonconfig
+from tools import useful, jsonconfig
+import json
 import server
 from motion import presence
+from motion import historic
 
 class MotionConfig:
 	""" Configuration class of motion detection """
@@ -76,16 +78,13 @@ class ImageMotion:
 		self.baseIndex[0] += 1
 		self.index    = self.baseIndex[0]
 		self.filename = None
-		self.diffSaturation = 0
-		self.diffLight = 0
-		self.diffHue  = 0
-		self.diffContigous = 0
-		self.notified = False
 		self.motionId = None
-		self.date     = useful.dateToFilename()
+		self.date     = useful.dateToString()
+		self.filename = useful.dateToFilename()[2:]
 		self.path     = useful.dateToFilename()[:-3]+"-00"
 		self.motionDetected = False
 		self.config = config
+		self.comparison = None
 
 	def deinit(self):
 		""" Destructor """
@@ -108,23 +107,58 @@ class ImageMotion:
 
 	def getFilename(self):
 		""" Get the storage filename """
-		return "%s Id=%d D=%d.jpg"%(self.date[2:], self.index, self.diffContigous)
+		return "%s Id=%d D=%d"%(self.filename, self.index, self.getDiffCount())
+
+	def getHtmlShapes(self):
+		""" Get the html page with shapes on the image """
+		html = b"""<script type='text/javascript'>
+		window.onload=function()
+		{
+			var img    = new Image;
+			img.src    = '%s.jpg';
+			img.onload = function () 
+			{
+				var ctx = document.getElementById('motion').getContext('2d');
+				ctx.strokeStyle = "red";
+				ctx.drawImage(img, 0, 0, motion.width, motion.height);
+				%s
+			}
+		}
+		</script>
+		<canvas id="motion" width="%d" height="%d"></canvas>"""
+		shapes = b""
+		for shape in self.comparison["shapes"]:
+			shapes += b"ctx.strokeRect(%d, %d, %d, %d);\n"%(shape["x"]+1,shape["y"]+1,shape["width"]-2,shape["height"]-2)
+		return html%(useful.tobytes(self.getFilename()), shapes, self.comparison["geometry"]["width"], self.comparison["geometry"]["height"])
+
+	def getInformations(self):
+		""" Return the informations of motion """
+		result    = self.comparison.copy()
+		result["image"]    = self.getFilename() + ".jpg"
+		result["path"]     = self.path
+		result["index"]    = self.index
+		result["date"]     = self.date
+		result["motionId"] = self.motionId
+		return result
 
 	def save(self):
 		""" Save the image on sd card """
 		if useful.SdCard.isMounted():
 			useful.makedir(useful.SdCard.getMountpoint() + "/" + self.path, True)
-			useful.SdCard.save(self.path + "/" + self.getFilename(), self.motion.getImage())
+			filename = self.path + "/" + self.getFilename()
+			useful.SdCard.save(filename + ".jpg" , self.motion.getImage())
+			useful.SdCard.save(filename + ".html", self.getHtmlShapes())
+			useful.SdCard.save(filename + ".json", useful.tobytes(json.dumps(self.getInformations())))
 
 	def compare(self, previous, set=False):
 		""" Compare two motion images to get differences """
-		self.motion.setErrorLight(self.config.lightErrorRange)
+		self.motion.setErrorLight     (self.config.lightErrorRange)
 		self.motion.setErrorSaturation(self.config.saturationErrorRange)
-		self.motion.setErrorHue(self.config.hueErrorRange)
+		self.motion.setErrorHue       (self.config.hueErrorRange)
 		res = self.motion.compare(previous.motion)
 		if set:
-			self.diffHue, self.diffSaturation, self.diffLight, self.diffContigous  = res[0],res[1],res[2],res[3]
-		return (res[0],res[1],res[2],res[3])
+			self.comparison = res
+		return res
 
 	def getMotionDetected(self):
 		""" Get the motion detection status """
@@ -138,30 +172,19 @@ class ImageMotion:
 		""" Get the image captured """
 		return self.motion.getImage()
 	
-	def getDiffHue(self):
-		""" Get the hue difference """
-		return self.diffHue
+	def getComparison(self):
+		""" Return the comparison result """
+		return self.comparison
 
-	def getDiffSaturation(self):
-		""" Get the saturation difference """
-		return self.diffSaturation
-
-	def getDiffLight(self):
-		""" Get the light difference """
-		return self.diffLight
-
-	def getDiffContigous(self):
+	def getDiffCount(self):
 		""" Get the difference contigous """
-		return self.diffContigous
-
-	def getFeature(self):
-		""" Return mean, min, max light, mean, min, max, saturation, total count """
-		return self.motion.getFeature()
+		if self.comparison:
+			return self.comparison["diff"]["count"]
+		return 0
 
 	def resetDifferences(self):
 		""" Reset the differences, used during the camera stabilization image """
-		self.diffSaturation = 0
-		self.diffLight = 0
+		self.comparison = None
 
 class Motion:
 	""" Class to manage the motion capture """
@@ -174,7 +197,6 @@ class Motion:
 
 	def open(self):
 		""" Open camera """
-		#print("Open camera")
 		video.Camera.open()
 		self.resume()
 
@@ -184,7 +206,6 @@ class Motion:
 		# video.Camera.framesize(b"SXGA") # 1280x1024
 		# video.Camera.framesize(b"XGA")  # 1024x768
 		video.Camera.framesize(b"SVGA") # 800x600
-
 		video.Camera.pixformat(b"JPEG")
 		video.Camera.quality(10)
 		video.Camera.brightness(0)
@@ -192,6 +213,10 @@ class Motion:
 		video.Camera.saturation(0)
 		video.Camera.hmirror(0)
 		video.Camera.vflip(0)
+
+		detected, changePolling = self.detect(False)
+		if detected == False:
+			self.images = []
 
 	def capture(self):
 		""" Capture motion image """
@@ -203,7 +228,7 @@ class Motion:
 			# If motion detected on image, on battery the first five images are sent
 			if image.getMotionDetected() or (self.onBattery and self.pirDetection and image.index <= 3):
 				# Notification of motion
-				result = ("Motion %s"%image.getFilename(), image)
+				result = ("Motion %s.jpg"%image.getFilename(), image)
 
 				# Save image to sdcard
 				image.save()
@@ -239,13 +264,13 @@ class Motion:
 
 	def isDetected(self, comparison):
 		""" Indicates if motion detected """
-		hue, saturation, light, contigous = comparison[0], comparison[1], comparison[2], comparison[3]
-		# If image seem not equal to previous
-		if contigous > self.config.contigousDetection:
-			return True
+		if comparison:
+			# If image seem not equal to previous
+			if comparison["diff"]["count"] > self.config.contigousDetection:
+				return True
 		return False
 
-	def compare(self):
+	def compare(self, display=True):
 		""" Compare all images captured and search differences """
 		differences = {}
 		if len(self.images) >= 2:
@@ -275,18 +300,18 @@ class Motion:
 			for image in self.images:
 				differences.setdefault(image.getMotionId(), []).append(image.getMotionId())
 				if image.getMotionId() != None:
-					# diffs += " %d:%d,%d,%d,%d"%(image.getMotionId(), image.getDiffHue(), image.getDiffSaturation(), image.getDiffLight(), image.getDiffContigous())
-					diffs += " %d:%d"%(image.getMotionId(), image.getDiffContigous())
-			sys.stdout.write("\r%s %s    "%(useful.dateToString()[12:], diffs))
+					diffs += " %d:%d"%(image.getMotionId(), image.getDiffCount())
+			if display:
+				sys.stdout.write("\r%s %s    "%(useful.dateToString()[12:], diffs))
 		return differences
 
-	def detect(self):
+	def detect(self, display=True):
 		""" Detect motion """
 		detected = False
 		changePolling = False
 
 		# Compute the list of differences
-		differences = self.compare()
+		differences = self.compare(display)
 
 		# Too many differences found
 		if len(list(differences.keys())) >= self.config.thresholdMotion:
@@ -302,7 +327,6 @@ class Motion:
 			# Check if it is a glitch
 			for diff in differences.values():
 				if len(diff) <= 1:
-					#print("%s Glitch (S=%d,L=%d)    "%(useful.dateToString()[12:], self.images[0].getDiffSaturation(), self.images[0].getDiffLight()))
 					# Glitch ignored
 					detected = False
 					break
@@ -313,72 +337,14 @@ class Motion:
 		if detected:
 			# Mark all motion images
 			for image in self.images:
-				diffHue        = image.getDiffHue()
-				diffSaturation = image.getDiffSaturation()
-				diffLight      = image.getDiffLight()
-				diffContigous  = image.getDiffContigous()
-				
 				# If image seem not equal to previous
-				if self.isDetected((diffHue, diffSaturation, diffLight, diffContigous)):
+				if self.isDetected(image.getComparison()):
 					image.setMotionDetected()
 		return detected, changePolling
 
 async def sleep_ms(duration):
 	""" Multiplatform sleep_ms """
 	await uasyncio.sleep_ms(duration)
-
-def getOlderDirectories(mountpoint, quantity=10):
-	""" Get the list of older directories """
-	older = []
-	# Parse all directories in sdcard
-	for fileinfo in uos.ilistdir(useful.SdCard.getMountpoint()):
-		filename = fileinfo[0]
-		typ = fileinfo[1]
-		# If directory found
-		if typ & 0xF000 == 0x4000:
-			# If motion directory recognized
-			if  (filename[4] == "-" and filename[7] == "-" and len(filename) == 10) or \
-				(filename[4] == "-" and filename[7] == "-" and (filename[10] == "_" or filename[10] == " ") and filename[13] == "-" and (len(filename) == 16 or len(filename) == 19)):
-				# Add directory to the list
-				older.append(filename)
-				if len(older) > (quantity + 10):
-					older.sort()
-					older = older[:quantity]
-	older.sort()
-	older = older[:quantity]
-	return older
-
-def removeFiles(directory, simulate=False):
-	""" Remove all files in the directory """
-	import shell
-	notEmpty = False
-	# Parse all directories in sdcard
-	for fileinfo in uos.ilistdir(directory):
-		filename = fileinfo[0]
-		typ      = fileinfo[1]
-		# If file found
-		if typ & 0xF000 != 0x4000:
-			shell.rmfile(directory + "/" + filename, simulate=simulate)
-		else:
-			removeFiles(directory + "/" + filename)
-			notEmpty = True
-	
-	if notEmpty:
-		shell.rm(directory, recursive=True, simulate=simulate)
-	else:
-		shell.rmdir(directory, recursive=True, simulate=simulate)
-
-async def removeOlder():
-	""" Remove older files to make space """
-	while 1:
-		await sleep_ms(100000)
-		await server.waitResume()
-		if useful.SdCard.isMounted():
-			# If not enough space available on sdcard
-			if useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5:
-				olders = getOlderDirectories(useful.SdCard.getMountpoint())
-				for directory in olders:
-					removeFiles(useful.SdCard.getMountpoint()+ "/"+ directory)
 
 async def detectMotion(onBattery, pirDetection):
 	""" Asynchronous motion detection main routine """
@@ -481,14 +447,21 @@ async def detectMotion(onBattery, pirDetection):
 						# Detect motion
 						detected, changePolling = motion.detect()
 
+						# If detection 
+						if detected:
+							# Increase the detection counter
+							historic.Historic.setDetection()
+
 						# If motion found
 						if changePolling == True:
 							# Speed up the polling frequency
 							pollingFrequency = 15
+							historic.Historic.setMotionState(True)
 							startTime = time.time()
 						else:
 							# Slow down the polling frequency
 							pollingFrequency = 200
+							historic.Historic.setMotionState(False)
 				except Exception as err:
 					print(useful.exception(err))
 			else:
