@@ -17,7 +17,7 @@ import re
 class HttpServer:
 	""" Http main class """
 	routes = {}
-	wildroutes = {}
+	wildroutes = []
 	menus = []
 	wwwDir = None
 
@@ -60,7 +60,7 @@ class HttpServer:
 		For the server to know the pages, it must imperatively use this decorator """
 		def addRoute(function):
 			if useful.tobytes(url[-1]) == ord(b"*"):
-				HttpServer.wildroutes[useful.tobytes(url[:-1])] = (function, kwargs)
+				HttpServer.wildroutes.append([useful.tobytes(url),(function, kwargs)])
 			else:
 				HttpServer.routes[useful.tobytes(url)] = (function, kwargs)
 			if kwargs.get("available", True):
@@ -109,9 +109,10 @@ class HttpServer:
 		else:
 			found = HttpServer.routes.get(request.path,None)
 			if found == None:
-				path = useful.split(useful.tostrings(request.path))[0] + "/"
-    
-				found = HttpServer.wildroutes.get(useful.tobytes(path),None)
+				for route, func in HttpServer.wildroutes:
+					if re.match(useful.tostrings(route), useful.tostrings(request.path)):
+						found = func
+						break
 				if found == None:
 					staticRe = re.compile("^/("+useful.tostrings(HttpServer.wwwDir)+"/.+|.+)")
 					if staticRe.match(useful.tostrings(request.path)):
@@ -125,13 +126,8 @@ class HttpServer:
 	@staticmethod
 	async def staticPages(request, response, args):
 		""" Treat the case of static pages """
-		sd = useful.SdCard.getMountpoint()
-		sd = "/sd"
-		if request.path[:len(sd)] == useful.tobytes(sd):
-			path = request.path[1:]
-		else:
-			path = useful.tobytes(HttpServer.wwwDir) + request.path
-			path = path.replace(b"//",b"/")
+		path = useful.tobytes(HttpServer.wwwDir) + request.path
+		path = path.replace(b"//",b"/")
 		
 		if b".." in path:
 			await response.sendError(status=b"403",content=b"Forbidden")

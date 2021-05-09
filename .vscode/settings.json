@@ -24,6 +24,8 @@
 		"chrono": "c",
 		"limits": "c",
 		"ratio": "c",
-		"__config": "c"
-	}
+		"__config": "c",
+		"memory": "c"
+	},
+	"C_Cpp.dimInactiveRegions": false
 }

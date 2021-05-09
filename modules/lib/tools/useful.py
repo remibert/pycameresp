@@ -166,6 +166,11 @@ def dateToFilename(date = None):
 	filename = filename.replace(":","-")
 	return filename
 
+def dateToPath(date=None):
+	""" Get a path with year/month/day/hour """
+	year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
+	return b"%04d/%02d/%02d/%02dh%02d"%(year,month,day,hour,minute)
+
 def sizeToString(size, largeur=6):
 	""" Convert a size in a string with k, m, g, t..."""
 	return sizeToBytes(size, largeur).decode("utf8")
@@ -513,11 +518,18 @@ def ispunctuation(char):
 def dump(buff):
 	""" Dump buffer """
 	string = "\x1B[7m "
-	for i in buff:
-		if isascii(i):
-			string += i
-		else:
-			string += "\\x%02x"%ord(i)
+	if type(buff) == type(b"") or type(buff) == type(bytearray()):
+		for i in buff:
+			if isascii(chr(i)):
+				string += chr(i)
+			else:
+				string += "\\x%02x"%i
+	else:
+		for i in buff:
+			if isascii(i):
+				string += i
+			else:
+				string += "\\x%02x"%ord(i)
 	string += " \x1B[m"
 	return string
 
@@ -690,8 +702,12 @@ class SdCard:
 				SdCard.mountpoint[0] = mountpoint[1:]
 				SdCard.opened[0] = True
 				result = True
-		elif SdCard.isMounted()  and mountpoint == SdCard.getMountpoint():
-			result = True
+		elif SdCard.isMounted():
+			if ismicropython():
+				if mountpoint == SdCard.getMountpoint():
+					result = True
+			else:
+				result = True
 		return result
 
 	@staticmethod

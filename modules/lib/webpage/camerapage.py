@@ -44,7 +44,7 @@ async def cameraPage(request, response, args):
 		}
 		window.onload = () =>
 		{
-			setTimeout(() => { startStreaming();}, 100);
+			setTimeout(() => { startStreaming();}, 500);
 		}
 		function startStreaming()
 		{
@@ -166,6 +166,6 @@ async def cameraStartStreaming(request, response, args):
 		print(useful.exception(err))
 	finally:
 		print("Stop streaming")
-	cameraStreaming = False
-	Camera.unreserve()
-	await writer.close()
+		cameraStreaming = False
+		Camera.unreserve()
+		await writer.close()

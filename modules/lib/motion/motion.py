@@ -80,8 +80,8 @@ class ImageMotion:
 		self.filename = None
 		self.motionId = None
 		self.date     = useful.dateToString()
-		self.filename = useful.dateToFilename()[2:]
-		self.path     = useful.dateToFilename()[:-3]+"-00"
+		self.filename = useful.dateToFilename()
+		self.path     = useful.dateToPath()[:-1] + "0"
 		self.motionDetected = False
 		self.config = config
 		self.comparison = None
@@ -107,7 +107,7 @@ class ImageMotion:
 
 	def getFilename(self):
 		""" Get the storage filename """
-		return "%s Id=%d D=%d"%(self.filename, self.index, self.getDiffCount())
+		return "%s D=%d"%(self.filename, self.getDiffCount())
 
 	def getHtmlShapes(self):
 		""" Get the html page with shapes on the image """
@@ -141,14 +141,9 @@ class ImageMotion:
 		result["motionId"] = self.motionId
 		return result
 
-	def save(self):
+	async def save(self):
 		""" Save the image on sd card """
-		if useful.SdCard.isMounted():
-			useful.makedir(useful.SdCard.getMountpoint() + "/" + self.path, True)
-			filename = self.path + "/" + self.getFilename()
-			useful.SdCard.save(filename + ".jpg" , self.motion.getImage())
-			useful.SdCard.save(filename + ".html", self.getHtmlShapes())
-			useful.SdCard.save(filename + ".json", useful.tobytes(json.dumps(self.getInformations())))
+		await historic.Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations(), self.getHtmlShapes())
 
 	def compare(self, previous, set=False):
 		""" Compare two motion images to get differences """
@@ -218,7 +213,7 @@ class Motion:
 		if detected == False:
 			self.images = []
 
-	def capture(self):
+	async def capture(self):
 		""" Capture motion image """
 		result = None
 		retry = 10
@@ -231,7 +226,7 @@ class Motion:
 				result = ("Motion %s.jpg"%image.getFilename(), image)
 
 				# Save image to sdcard
-				image.save()
+				await image.save()
 			else:
 				image.deinit()
 		while 1:
@@ -373,6 +368,8 @@ async def detectMotion(onBattery, pirDetection):
 	detection = None
 
 	previousActivated = None
+	reservedCount = 0
+	
 	while True:
 		await server.waitResume()
   
@@ -402,13 +399,14 @@ async def detectMotion(onBattery, pirDetection):
 			if motion == None:
 				# The sdcard not available on battery
 				if onBattery != True:
-					useful.SdCard.mount()
+					await historic.Historic.getRoot()
 				motion = Motion(motionConfig, onBattery, pirDetection)
 				motion.open()
 				await sleep_ms(3000)
 
 			# If camera available to detect motion
 			if video.Camera.isReserved() == False:
+				reservedCount = 0
 				# If the camera previously reserved
 				if previousReserved == True:
 					# Restore camera motion configuration
@@ -422,7 +420,7 @@ async def detectMotion(onBattery, pirDetection):
 					# If camera available to detect motion
 					if video.Camera.isReserved() == False:
 						# Capture motion image
-						detection = motion.capture()
+						detection = await motion.capture()
 
 						# If camera not stabilized speed start
 						if motion.isStabilized() == True:
@@ -447,11 +445,6 @@ async def detectMotion(onBattery, pirDetection):
 						# Detect motion
 						detected, changePolling = motion.detect()
 
-						# If detection 
-						if detected:
-							# Increase the detection counter
-							historic.Historic.setDetection()
-
 						# If motion found
 						if changePolling == True:
 							# Speed up the polling frequency
@@ -467,8 +460,11 @@ async def detectMotion(onBattery, pirDetection):
 			else:
 				# Camera buzy, motion capture suspended
 				previousReserved = True
-				await notifyMessage(b"Streaming video suspend motion detection")
-				await sleep_ms(30000)
+				reservedCount += 1
+				if reservedCount > 6:
+					await notifyMessage(b"Motion detection suspended during web browsing")
+					reservedCount = 0
+				await sleep_ms(10000)
 		else:
 			# Motion capture disabled
 			await sleep_ms(500)

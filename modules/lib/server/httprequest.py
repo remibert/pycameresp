@@ -40,7 +40,7 @@ import server.stream
 from tools import useful
 import hashlib
 import time
-from binascii import hexlify
+from binascii import hexlify, b2a_base64
 from tools.useful import log
 
 class Http:
@@ -211,18 +211,22 @@ class Http:
 		# Data too big write in file
 		else:
 			self.contentFile = "%d.tmp"%id(self)
-			content = open(self.contentFile, "wb")
-			while content.tell() < length:
-				content.write(await streamio.read(int(self.headers.get(b"Content-Length","0"))))
-			content.close()
+			try:
+				content = open(self.contentFile, "wb")
+				while content.tell() < length:
+					content.write(await streamio.read(int(self.headers.get(b"Content-Length","0"))))
+			finally:
+				content.close()
 
 	def getContentFilename(self):
 		""" Copy the content into file """
 		if self.content != None:
 			self.contentFile = "%d.tmp"%id(self)
-			content = open(self.contentFile, "wb")
-			content.write(self.content)
-			content.close()
+			try:
+				content = open(self.contentFile, "wb")
+				content.write(self.content)
+			finally:
+				content.close()
 			self.content = None
 		return self.contentFile
 
@@ -359,9 +363,10 @@ class ContentText:
 
 class ContentFile:
 	""" Class that contains a file """
-	def __init__(self, filename, contentType=None):
+	def __init__(self, filename, contentType=None, base64=False):
 		""" Constructor """
 		self.filename = filename
+		self.base64 = base64
 		if contentType == None:
 			global MIMES
 			ext = useful.splitext(useful.tostrings(filename))[1]
@@ -372,22 +377,38 @@ class ContentFile:
 	async def serialize(self, streamio):
 		""" Serialize file """
 		try:
-			with open(useful.tostrings(self.filename), "rb") as f:
-				result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.contentType))
-				step = 1440*10
-				buf = bytearray(step)
-				f.seek(0,2)
-				size = f.tell()
-				f.seek(0)
-				while size > 0:
-					if size < step:
-						buf = bytearray(size)
-					length = f.readinto(buf)
-					size -= length
-					result += await streamio.write(buf)
+			f = None
+			# print("Begin send %s"%useful.tostrings(self.filename))
+			f = open(useful.tostrings(self.filename), "rb")
+			result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.contentType))
+			step = 1440*10
+			buf = bytearray(step)
+			f.seek(0,2)
+			size = f.tell()
+			f.seek(0)
+
+			if self.base64 and step % 3 != 0:
+				step = (step//3)*3
+
+			lengthWritten = 0
+
+			while size > 0:
+				if size < step:
+					buf = bytearray(size)
+				length = f.readinto(buf)
+				size -= length
+				if self.base64:
+					lengthWritten += await streamio.write(b2a_base64(buf))
+				else:
+					lengthWritten += await streamio.write(buf)
+			# print("End send %s"%useful.tostrings(self.filename))
+			result += lengthWritten
 		except Exception as err:
 			result = await streamio.write(b'Content-Type: text/plain\r\n\r\n')
 			result += await streamio.write(b"File %s not found"%useful.tobytes(self.filename))
+		finally:
+			if f:
+				f.close()
 		return result
 
 class ContentBuffer:
@@ -451,7 +472,13 @@ class PartFile:
 	async def serialize(self, identifier, streamio):
 		""" Serialize multi part file """
 		result = await self.serializeHeader(identifier, streamio)
-		result += await streamio.write(b"\r\n%s\r\n"%open(useful.tostrings(self.filename),"rb").read())
+		try:
+			part = b""
+			file = open(useful.tostrings(self.filename),"rb")
+			part = file.read()
+		finally:
+			file.close()
+		result += await streamio.write(b"\r\n%s\r\n"%part)
 		result +=  await streamio.write(b"--%s"%identifier)
 		return result
 		
@@ -504,9 +531,9 @@ class HttpResponse(Http):
 		""" Send ok to the client web browser """
 		return await self.sendError(status=b"200", content=content)
 
-	async def sendFile(self, filename, mimeType=None, headers=None):
+	async def sendFile(self, filename, mimeType=None, headers=None, base64=False):
 		""" Send a file to the client web browser """
-		return await self.send(content=ContentFile(filename, mimeType), status=b"200", headers=headers)
+		return await self.send(content=ContentFile(filename, mimeType, base64), status=b"200", headers=headers)
 
 	async def sendBuffer(self, filename, buffer, mimeType=None, headers=None):
 		""" Send a file to the client web browser """

@@ -23,6 +23,7 @@ def ntptime():
 
 def setdate(offsetTime=+1, dst=True, display=False):
 	""" Set the date """
+	result = False
 	try:
 		import time
 		year,month,day,hour,minute,second,weekday,yearday = time.localtime(ntptime())[:8]
@@ -40,7 +41,9 @@ def setdate(offsetTime=+1, dst=True, display=False):
 		if display:
 			from tools import useful
 			print("Date updated : %s"%(useful.dateToString()))
+		result = True
 	except Exception as exc:
 		print("Cannot set time '%s'"%exc)
+	return result
 
 

@@ -168,7 +168,9 @@ class Bufferedio:
 
 	async def close(self):
 		""" Close the stream """
-		if self.buffered.tell() > 0:
-			await self.streamio.write(self.buffered.getvalue())
-		self.buffered.close()
+		try:
+			if self.buffered.tell() > 0:
+				await self.streamio.write(self.buffered.getvalue())
+		finally:
+			self.buffered.close()
  

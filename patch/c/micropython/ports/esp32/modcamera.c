@@ -258,7 +258,8 @@ STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_pixformat_obj, 0, 1, camera_pixformat);
 #endif
 
-STATIC mp_obj_t camera_isavailable(){
+STATIC mp_obj_t camera_isavailable()
+{
 #ifdef CONFIG_ESP32CAM
 	return mp_const_true;
 #else
@@ -311,7 +312,6 @@ STATIC mp_obj_t camera_capture()
 	return image;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_capture_obj, camera_capture);
-
 
 // Get motion information
 STATIC mp_obj_t camera_motion_detect()
@@ -878,10 +878,10 @@ bool Motion_searchShape(Motion_t * motion, int x, int y, Shape_t * shape)
 			if (Motion_isDifference(motion, x-1,y  )) Motion_push(motion, x-1, y);
 			if (Motion_isDifference(motion, x  ,y+1)) Motion_push(motion, x  , y+1);
 			if (Motion_isDifference(motion, x  ,y-1)) Motion_push(motion, x  , y-1);
-			if (Motion_isDifference(motion, x+1,y+1)) Motion_push(motion, x+1, y+1);
-			if (Motion_isDifference(motion, x-1,y+1)) Motion_push(motion, x-1, y+1);
-			if (Motion_isDifference(motion, x+1,y-1)) Motion_push(motion, x+1, y-1);
-			if (Motion_isDifference(motion, x-1,y-1)) Motion_push(motion, x-1, y-1);
+			//if (Motion_isDifference(motion, x+1,y+1)) Motion_push(motion, x+1, y+1);
+			//if (Motion_isDifference(motion, x-1,y+1)) Motion_push(motion, x-1, y+1);
+			//if (Motion_isDifference(motion, x+1,y-1)) Motion_push(motion, x+1, y-1);
+			//if (Motion_isDifference(motion, x-1,y-1)) Motion_push(motion, x-1, y-1);
 		}
 		result = true;
 	}
@@ -894,6 +894,212 @@ bool Motion_searchShape(Motion_t * motion, int x, int y, Shape_t * shape)
 		result = true;
 	}
 	return result;
+}
+
+// Compute the difference between two motion detection
+STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
+{
+#define MIN_LIGHT 20
+#define MIN_SATURATION 20
+	int diffDetected   = 0;
+	int diffHue        = 0;
+	int diffSaturation = 0;
+	int diffLight      = 0;
+	
+	bool enoughLight = true;
+	bool enoughSaturation = true;
+	int i;
+	int errSaturation        = self->errorSaturation;
+	int errLight             = self->errorLight;
+	int errHue               = self->errorHue;
+	int correctionSaturation = (int)self->meanSaturation - (int)other->meanSaturation;
+	int correctionLight      = (int)self->meanLight      - (int)other->meanLight;
+	uint16_t hue1,hue2,saturation1,saturation2,light1,light2;
+	int width  = self->width /self->square_x;
+	int height = self->height/self->square_y;
+	int x;
+	int y;
+	uint16_t diff;
+
+	for (y = 0; y < height; y++)
+	{
+		for (x = 0; x < width; x++)
+		{
+			i = y * width + x;
+			
+			hue1        = self->hues[i];        hue2        = other->hues[i];
+			saturation1 = self->saturations[i]; saturation2 = other->saturations[i];
+			light1      = self->lights[i];      light2      = other->lights[i];
+			
+			// If two image has not enough light
+			if (light1 < MIN_LIGHT && light2 < MIN_LIGHT)
+			{
+				enoughLight = false;
+			}
+			// If one of two image has not enough light
+			else if (light1 < MIN_LIGHT || light2 < MIN_LIGHT)
+			{
+				// If the difference of light between two image is not too big
+				if (abs(light1 - light2) < errLight)
+				{
+					enoughLight = false;
+				}
+				else
+				{
+					enoughLight = true;
+				}
+			}
+			else
+			{
+				enoughLight = true;
+			}
+			
+			// If two image has not enough saturation
+			if (saturation1 < MIN_SATURATION && saturation2 < MIN_SATURATION)
+			{
+				enoughSaturation = false;
+			}
+			// If one of two image has not enough saturation
+			else if (saturation1 < MIN_SATURATION || saturation2 < MIN_SATURATION)
+			{
+				// If the difference of saturation between two image is not too big
+				if (abs(saturation1 - saturation2) < errSaturation)
+				{
+					enoughSaturation = false;
+				}
+				else
+				{
+					enoughSaturation = true;
+				}
+			}
+			else
+			{
+				enoughSaturation = true;
+			}
+
+			diff = 0;
+			// Compare light
+			if (abs(light1 - light2) > (errLight + abs(correctionLight)))
+			{
+				diff = 0x01;
+				diffLight ++;
+			}
+			
+			// If enough light
+			if (enoughLight)
+			{
+				// Compare saturation
+				if (abs(saturation1 - saturation2) > (errSaturation + abs(correctionSaturation)))
+				{
+					diff |= 0x02;
+					diffSaturation ++;
+				}
+			}
+			
+			// If enough light and saturation
+			if (enoughLight && enoughSaturation)
+			{
+				// Compare hue
+				if (abs(hue1 - hue2) > errHue && abs(hue1 - hue2) < 360-errHue)
+				{
+					diff |= 0x04;
+					diffHue++;
+				}
+			}
+
+			// Save the diff
+			self->diffs[i] = diff;
+
+			if (diff)
+			{
+				diffDetected ++;
+			}
+		}
+	}
+	mp_obj_t diffdict = mp_obj_new_dict(0);
+		mp_obj_dict_store(diffdict, mp_obj_new_str("hue"       , strlen("hue"))       ,  mp_obj_new_int(diffHue));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("saturation", strlen("saturation")),  mp_obj_new_int(diffSaturation));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("light"     , strlen("light"))     ,  mp_obj_new_int(diffLight));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("count"     , strlen("count"))     ,  mp_obj_new_int(diffDetected));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("max"       , strlen("max"))       ,  mp_obj_new_int(self->max));
+	mp_obj_dict_store(result, mp_obj_new_str("diff"     , strlen("diff")), diffdict);
+	return diffDetected;
+}
+
+
+STATIC void Motion_extractShape(Motion_t *self, mp_obj_t result)
+{
+	int x;
+	int y;
+	int width  = self->width /self->square_x;
+	int height = self->height/self->square_y;
+
+	// Get the list of shapes detected
+	mp_obj_t shapeslist = mp_obj_new_list(0, NULL);
+	Shape_t shape;
+	int shapeId = 1;
+
+	for (y = 0; y < height; y++)
+	{
+		for (x = 0; x < width; x++)
+		{
+			memset(&shape, 0, sizeof(shape));
+			shape.minx = self->max;
+			shape.miny = self->max;
+			shape.id = shapeId;
+
+			// If shape found
+			if (Motion_searchShape(self, x, y,&shape))
+			{
+				mp_obj_t shapedict = mp_obj_new_dict(0);
+					mp_obj_dict_store(shapedict, mp_obj_new_str("size",    strlen("size")),     mp_obj_new_int(shape.size));
+#if 1
+					mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x*self->square_x*8));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y*self->square_y*8));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("x",       strlen("x")),        mp_obj_new_int(shape.minx*self->square_x*8));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("y",       strlen("y")),        mp_obj_new_int(shape.miny*self->square_y*8));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int((shape.maxx + 1 - shape.minx)*self->square_x*8));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int((shape.maxy + 1 - shape.miny)*self->square_y*8));
+#else
+					mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("minx",    strlen("minx")),     mp_obj_new_int(shape.minx));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("miny",    strlen("miny")),     mp_obj_new_int(shape.miny));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("maxx",    strlen("maxx")),     mp_obj_new_int(shape.maxx));
+					mp_obj_dict_store(shapedict, mp_obj_new_str("maxy",    strlen("maxy")),     mp_obj_new_int(shape.maxy));
+#endif
+					mp_obj_dict_store(shapedict, mp_obj_new_str("id",      strlen("id")),       mp_obj_new_int(shape.id));
+				mp_obj_list_append(shapeslist, shapedict);
+				shapeId++;
+			}
+		}
+	}
+	#if 0
+	{
+		char line[100];
+		int i;
+
+		for (y = 0; y < height; y++)
+		{
+			for (x = 0; x < width; x++)
+			{
+				i = y * width + x;
+				if (self->diffs[i])
+				{
+					line[x] = ((self->diffs[i]&0xFF00)>>8) + 0x30;
+					line[x+1] = '\0';
+				}
+				else
+				{
+					line[x] = ' ';
+					line[x+1] = '\0';
+				}
+			}
+			ESP_LOGE(TAG,"|%s|",line);
+		}
+	}
+	#endif
+	mp_obj_dict_store(result, mp_obj_new_str("shapes"      , strlen("shapes")) , shapeslist);
 }
 
 // compare method
@@ -912,213 +1118,23 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 	}
 	else
 	{
-		int diffHue        = 0;
-		int diffSaturation = 0;
-		int diffLight      = 0;
-		int diffDetected   = 0;
-
-#define MIN_LIGHT 20
-#define MIN_SATURATION 20
-		
-		bool enoughLight = true;
-		bool enoughSaturation = true;
-		int i;
-		int errSaturation        = self->errorSaturation;
-		int errLight             = self->errorLight;
-		int errHue               = self->errorHue;
-		int correctionSaturation = (int)self->meanSaturation - (int)other->meanSaturation;
-		int correctionLight      = (int)self->meanLight      - (int)other->meanLight;
-		uint16_t hue1,hue2,saturation1,saturation2,light1,light2;
-		int width  = self->width /self->square_x;
-		int height = self->height/self->square_y;
-		int x;
-		int y;
-		uint16_t diff;
-
-		for (y = 0; y < height; y++)
-		{
-			for (x = 0; x < width; x++)
-			{
-				i = y * width + x;
-				
-				hue1        = self->hues[i];        hue2        = other->hues[i];
-				saturation1 = self->saturations[i]; saturation2 = other->saturations[i];
-				light1      = self->lights[i];      light2      = other->lights[i];
-				
-				// If two image has not enough light
-				if (light1 < MIN_LIGHT && light2 < MIN_LIGHT)
-				{
-					enoughLight = false;
-				}
-				// If one of two image has not enough light
-				else if (light1 < MIN_LIGHT || light2 < MIN_LIGHT)
-				{
-					// If the difference of light between two image is not too big
-					if (abs(light1 - light2) < errLight)
-					{
-						enoughLight = false;
-					}
-					else
-					{
-						enoughLight = true;
-					}
-				}
-				else
-				{
-					enoughLight = true;
-				}
-				
-				// If two image has not enough saturation
-				if (saturation1 < MIN_SATURATION && saturation2 < MIN_SATURATION)
-				{
-					enoughSaturation = false;
-				}
-				// If one of two image has not enough saturation
-				else if (saturation1 < MIN_SATURATION || saturation2 < MIN_SATURATION)
-				{
-					// If the difference of saturation between two image is not too big
-					if (abs(saturation1 - saturation2) < errSaturation)
-					{
-						enoughSaturation = false;
-					}
-					else
-					{
-						enoughSaturation = true;
-					}
-				}
-				else
-				{
-					enoughSaturation = true;
-				}
-
-				diff = 0;
-				// Compare light
-				if (abs(light1 - light2) > (errLight + abs(correctionLight)))
-				{
-					diff = 0x01;
-					diffLight ++;
-				}
-				
-				// If enough light
-				if (enoughLight)
-				{
-					// Compare saturation
-					if (abs(saturation1 - saturation2) > (errSaturation + abs(correctionSaturation)))
-					{
-						diff |= 0x02;
-						diffSaturation ++;
-					}
-				}
-				
-				// If enough light and saturation
-				if (enoughLight && enoughSaturation)
-				{
-					// Compare hue
-					if (abs(hue1 - hue2) > errHue && abs(hue1 - hue2) < 360-errHue)
-					{
-						diff |= 0x04;
-						diffHue++;
-					}
-				}
-
-				// Save the diff
-				self->diffs[i] = diff;
-
-				if (diff)
-				{
-					diffDetected ++;
-				}
-			}
-		}
-
-		// Get the list of shapes detected
-		mp_obj_t shapeslist = mp_obj_new_list(0, NULL);
-		if (diffDetected)
-		{
-			Shape_t shape;
-			int shapeId = 1;
-
-			for (y = 0; y < height; y++)
-			{
-				for (x = 0; x < width; x++)
-				{
-					memset(&shape, 0, sizeof(shape));
-					shape.minx = self->max;
-					shape.miny = self->max;
-					shape.id = shapeId;
-
-					// If shape found
-					if (Motion_searchShape(self, x, y,&shape))
-					{
-						mp_obj_t shapedict = mp_obj_new_dict(0);
-							mp_obj_dict_store(shapedict, mp_obj_new_str("size",    strlen("size")),     mp_obj_new_int(shape.size));
-#if 1
-							mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x*self->square_x*8));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y*self->square_y*8));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("x",       strlen("x")),        mp_obj_new_int(shape.minx*self->square_x*8));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("y",       strlen("y")),        mp_obj_new_int(shape.miny*self->square_y*8));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int((shape.maxx + 1 - shape.minx)*self->square_x*8));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int((shape.maxy + 1 - shape.miny)*self->square_y*8));
-#else
-							mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("minx",    strlen("minx")),     mp_obj_new_int(shape.minx));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("miny",    strlen("miny")),     mp_obj_new_int(shape.miny));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("maxx",    strlen("maxx")),     mp_obj_new_int(shape.maxx));
-							mp_obj_dict_store(shapedict, mp_obj_new_str("maxy",    strlen("maxy")),     mp_obj_new_int(shape.maxy));
-#endif
-							mp_obj_dict_store(shapedict, mp_obj_new_str("id",      strlen("id")),       mp_obj_new_int(shape.id));
-						mp_obj_list_append(shapeslist, shapedict);
-						shapeId++;
-					}
-				}
-			}
-		}
-		#if 0
-		{
-			char line[100];
-
-			for (y = 0; y < height; y++)
-			{
-				for (x = 0; x < width; x++)
-				{
-					i = y * width + x;
-					if (self->diffs[i])
-					{
-						line[x] = ((self->diffs[i]&0xFF00)>>8) + 0x30;
-						line[x+1] = '\0';
-					}
-					else
-					{
-						line[x] = ' ';
-						line[x+1] = '\0';
-					}
-				}
-				ESP_LOGE(TAG,"|%s|",line);
-			}
-		}
-		#endif
-
 		mp_obj_t result = mp_obj_new_dict(0);
-			mp_obj_t diffdict = mp_obj_new_dict(0);
-				mp_obj_dict_store(diffdict, mp_obj_new_str("hue"       , strlen("hue"))       ,  mp_obj_new_int(diffHue));
-				mp_obj_dict_store(diffdict, mp_obj_new_str("saturation", strlen("saturation")),  mp_obj_new_int(diffSaturation));
-				mp_obj_dict_store(diffdict, mp_obj_new_str("light"     , strlen("light"))     ,  mp_obj_new_int(diffLight));
-				mp_obj_dict_store(diffdict, mp_obj_new_str("count"     , strlen("count"))     ,  mp_obj_new_int(diffDetected));
-				mp_obj_dict_store(diffdict, mp_obj_new_str("max"       , strlen("max"))       ,  mp_obj_new_int(self->max));
-			mp_obj_dict_store(result, mp_obj_new_str("diff"     , strlen("diff")), diffdict);
 
-			mp_obj_t geometrydict = mp_obj_new_dict(0);
-				mp_obj_dict_store(geometrydict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int(self->width  * 8));
-				mp_obj_dict_store(geometrydict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int(self->height * 8));
-			mp_obj_dict_store(result, mp_obj_new_str("geometry"     , strlen("geometry")), geometrydict);
+		if (Motion_computeDiff(self, other, result) > 0)
+		{
+			Motion_extractShape(self, result);
+		}
 
-			mp_obj_t featuredict = mp_obj_new_dict(0);
-				mp_obj_dict_store(featuredict, mp_obj_new_str("saturation", strlen("saturation")),  mp_obj_new_int(self->meanSaturation));
-				mp_obj_dict_store(featuredict, mp_obj_new_str("light"     , strlen("light"))     ,  mp_obj_new_int(self->meanLight));
-			mp_obj_dict_store(result, mp_obj_new_str("feature"     , strlen("feature")), featuredict);
+		mp_obj_t geometrydict = mp_obj_new_dict(0);
+			mp_obj_dict_store(geometrydict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int(self->width  * 8));
+			mp_obj_dict_store(geometrydict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int(self->height * 8));
+		mp_obj_dict_store(result, mp_obj_new_str("geometry"     , strlen("geometry")), geometrydict);
 
-			mp_obj_dict_store(result, mp_obj_new_str("shapes"      , strlen("shapes")) , shapeslist);
+		mp_obj_t featuredict = mp_obj_new_dict(0);
+			mp_obj_dict_store(featuredict, mp_obj_new_str("saturation", strlen("saturation")),  mp_obj_new_int(self->meanSaturation));
+			mp_obj_dict_store(featuredict, mp_obj_new_str("light"     , strlen("light"))     ,  mp_obj_new_int(self->meanLight));
+		mp_obj_dict_store(result, mp_obj_new_str("feature"     , strlen("feature")), featuredict);
+
 		return result;
 	}
 	return mp_const_none;

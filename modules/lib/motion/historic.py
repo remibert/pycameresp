@@ -8,117 +8,202 @@ from tools import useful
 import json
 import server
 
+MAX_DETECTION = 100
+
 class Historic:
 	""" Manage the motion detection history file """
-	detectionCount    = [0]
-	detectionPrevious = [-1]
 	motionInProgress  = [False]
+	historic = []
+	firstExtract = [False]
+	lock = uasyncio.Lock()
 
 	@staticmethod
-	async def build(mountpoint, directories):
-		""" Parse the all motions files to build historic """
-		result = []
-		count = 0
-		try:
-			# For all directories
-			for directory in directories:
-				path = mountpoint + "/" + directory
+	async def acquire():
+		""" Lock historic """
+		await Historic.lock.acquire()
 
-				# Open directory
-				for fileinfo in uos.ilistdir(path):
-					filename = fileinfo[0]
-					typ = fileinfo[1]
-					# If file detected
-					if typ & 0xF000 != 0x4000:
-						# If file is json type
-						if re.match(".*\.json", filename):
-							try:
-								# Parse json file
-								file = open(path + "/" + filename, "rb")
-								content = json.load(file)
-								file.close()
-								content["image"] = path + "/" + content["image"]
-								# Add json file to the historic
-								result.append([content["date"], content])
-							except Exception as err:
-								print(useful.exception(err))
-					count += 1
+	@staticmethod
+	async def release():
+		""" Release historic """
+		Historic.lock.release()
+
+	@staticmethod
+	async def locked():
+		""" Indicates if historic is locked """
+		return Historic.lock.locked()
+
+	@staticmethod
+	async def getRoot():
+		""" Get the root path of sdcard and mount it """
+		if useful.SdCard.mount():
+			return useful.SdCard.getMountpoint()
+		return None
+
+	@staticmethod
+	async def addMotion(path, name, image, info, html):
+		""" Add motion detection in the historic """
+		root = await Historic.getRoot()
+		if root:
+			try:
+				await Historic.acquire()
+				useful.makedir(root + "/" + useful.tostrings(path), True)
+				filename = path + "/" + name
+				jsonInfo = useful.tobytes(json.dumps(info))
+				useful.SdCard.save(filename + ".jpg" , image)
+				useful.SdCard.save(filename + ".html", html)
+				useful.SdCard.save(filename + ".json", jsonInfo)
+				Historic.addItem(root + "/" + filename+".json", info)
+			except Exception as err:
+				print(useful.exception(err))
+			finally:
+				await Historic.release()
+
+	@staticmethod
+	def addItem(filename, info):
+		name = useful.splitext(filename)[0] + ".jpg"
+		
+		shapes = []
+		for shape in info["shapes"]:
+			shapes.append([shape["size"],shape["x"],shape["y"],shape["width"],shape["height"]])
+		# Add json file to the historic
+		Historic.historic.insert(0,[name, info["geometry"]["width"],info["geometry"]["height"], shapes])
+
+	@staticmethod
+	async def build(motions):
+		""" Parse the all motions files to build historic """
+		root = await Historic.getRoot()
+		if root:
+			count = 0
+			try:
+				await Historic.acquire()
+				Historic.historic.clear()
+
+				# For all motions
+				for motion in motions:
+					path = root + "/" + motion
+
+					try:
+						# Parse json file
+						file = open(motion, "rb")
+						Historic.addItem(motion, json.load(file))
+					except Exception as err:
+						print(useful.exception(err))
+					finally:
+						file.close()
+						count += 1
 					if count > 10:
 						count = 0
 						await sleep_ms(5)
-		except Exception as err:
-			print(useful.exception(err))
-		result.sort()
-		result.reverse()
+			except Exception as err:
+				print(useful.exception(err))
+			finally:
+				await Historic.release()
+
+	@staticmethod
+	async def getJson():
+		""" Read the historic from disk """
+		root = await Historic.getRoot()
+		result = b""
+		if root:
+			try:
+				await Historic.acquire()
+				Historic.historic.sort()
+				Historic.historic.reverse()
+				while len(Historic.historic) > MAX_DETECTION:
+					del Historic.historic[-1]
+				result = useful.tobytes(json.dumps(Historic.historic))
+			except Exception as err:
+				print(useful.exception(err))
+			finally:
+				await Historic.release()
 		return result
 
 	@staticmethod
-	async def extractHistoric(directory):
+	async def extract():
 		""" Extract motion historic """
-		# If historic must be refreshed
-		if Historic.detectionCount[0] != Historic.detectionPrevious[0]:
+		# If this is the fisrt update (parse all directory)
+		if  Historic.firstExtract[0] == False:
+			Historic.firstExtract[0] = True
 			try:
-				Historic.detectionPrevious[0] = Historic.detectionCount[0]
-
-				useful.log("Start build historic")
-				# Scan sd card and get more recent directories
-				directories = await Historic.scanDirectories(useful.SdCard.getMountpoint(), 50, False)
+				print("Start historic creation")
+				# Scan sd card and get more recent motions
+				motions = await Historic.scanDirectories(MAX_DETECTION, False)
 
 				# Build historic file
-				files = await Historic.build(useful.SdCard.getMountpoint(), directories)
-    
-				# Save historic file
-				file = open(directory +"/historic.json", "w")
-				json.dump(files, file)
-				file.close()
-				useful.log("End   build historic")
-
+				files = await Historic.build(motions)
+				print("End   historic creation")
 			except Exception as err:
 				print(useful.exception(err))
 
 	@staticmethod
-	async def scanDirectories(mountpoint, quantity=10, older=True):
-		""" Get the list of older or newer directories in the sd card """
-		directories = []
+	async def scanDir(path, pattern, older=True, directory=True):
+		""" Scan directory """
+		result = []
 		count = 0
-		# Parse all directories in sdcard
-		for fileinfo in uos.ilistdir(useful.SdCard.getMountpoint()):
-			filename = fileinfo[0]
-			typ = fileinfo[1]
-			# If directory found
-			if typ & 0xF000 == 0x4000:
-				# If motion directory recognized
-				if re.match("\d\d\d\d-\d\d-\d\d \d\d-\d\d-\d\d", filename):
-					# Add directory to the list
-					directories.append(filename)
-					if len(directories) > (quantity + 10):
-						directories.sort()
-						if older == False:
-							directories.reverse()
-						directories = directories[:quantity]
+		for fileinfo in uos.ilistdir(path):
+			name = fileinfo[0]
+			typ  = fileinfo[1]
+			if directory:
+				if typ & 0xF000 == 0x4000:
+					if re.match(pattern, name):
+						result.append(name)
+			else:
+				if typ & 0xF000 != 0x4000:
+					if re.match(pattern, name):
+						result.append(name)
 			count += 1
 			if count > 10:
 				count = 0
 				await sleep_ms(5)
-
-		directories.sort()
+		result.sort()
 		if older == False:
-			directories.reverse()
-		directories = directories[:quantity]
-		return directories
+			result.reverse()
+		return result
+
+	@staticmethod
+	async def scanDirectories(quantity=10, older=True):
+		""" Get the list of older or older directories in the sd card """
+		motions = []
+		root = await Historic.getRoot()
+		if root:
+			try:
+				await Historic.acquire()
+				years = await Historic.scanDir(root, "\d\d\d\d", older)
+				for year in years:
+					pathYear = root + "/" + year
+					months = await Historic.scanDir(pathYear, "\d\d", older)
+					for month in months:
+						pathMonth = pathYear + "/" + month
+						days = await Historic.scanDir(pathMonth, "\d\d", older)
+						for day in days:
+							pathDay = pathMonth + "/" + day
+							hours = await Historic.scanDir(pathDay, "\d\dh\d\d", older)
+							for hour in hours:
+								pathHour = pathDay + "/" + hour
+								detections = await Historic.scanDir(pathHour, ".*\.json", older, directory=False)
+								for detection in detections:
+									motions.append(pathHour + "/" + detection)
+								if len(motions) > quantity:
+									motions.sort()
+									if older == False:
+										motions.reverse()
+									return motions
+				motions.sort()
+				if older == False:
+					motions.reverse()
+			except Exception as err:
+				print(useful.exception(err))
+			finally:
+				await Historic.release()
+		return motions
 
 	@staticmethod
 	def setMotionState(state):
 		""" Indicates if motion is actually in detection """
 		Historic.motionInProgress[0] = state
-  
-	@staticmethod
-	def setDetection():
-		""" Indicates that motion detected """
-		Historic.detectionCount[0] += 1
 
 	@staticmethod
-	async def removeFiles(directory, simulate=False):
+	async def __removeFiles(directory, simulate=False):
 		""" Remove all files in the directory """
 		import shell
 		notEmpty = False
@@ -130,9 +215,8 @@ class Historic:
 			if typ & 0xF000 != 0x4000:
 				shell.rmfile(directory + "/" + filename, simulate=simulate)
 			else:
-				await Historic.removeFiles(directory + "/" + filename)
+				await Historic.__removeFiles(directory + "/" + filename)
 				notEmpty = True
-			await sleep_ms(5)
 		
 		if notEmpty:
 			shell.rm(directory, recursive=True, simulate=simulate)
@@ -140,32 +224,40 @@ class Historic:
 			shell.rmdir(directory, recursive=True, simulate=simulate)
 
 	@staticmethod
-	async def removeOlder(directory):
+	async def removeOlder():
 		""" Remove older files to make space """
-		# If not enough space available on sdcard
-		if useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5:
-			olders = await Historic.scanDirectories(useful.SdCard.getMountpoint())
-			for directory in olders:
-				await Historic.removeFiles(useful.SdCard.getMountpoint()+ "/"+ directory)
+		root = await Historic.getRoot()
+		if root:
+			# If not enough space available on sdcard
+			if useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5:
+				print("Start cleanup sd card")
+				olders = await Historic.scanDirectories()
+				for directory in olders:
+					try:
+						await Historic.acquire()
+						await Historic.__removeFiles(root+ "/"+ directory)
+					except Exception as err:
+						print(useful.exception(err))
+					finally:
+						await Historic.release()
+				print("End cleanup sd card")
 
 	@staticmethod
 	async def periodicTask():
 		""" Execute periodic traitment """
 		while 1:
-			await sleep_ms(60000)
+			await sleep_ms(1000)
 			await server.waitResume()
 			if Historic.motionInProgress[0] == False:
 				if useful.SdCard.isMounted():
-					await Historic.extractHistoric(useful.SdCard.getMountpoint())
-					await Historic.removeOlder(useful.SdCard.getMountpoint())
-
+					await Historic.extract()
+					await Historic.removeOlder()
 
 async def sleep_ms(duration):
 	""" Multiplatform sleep_ms """
 	await uasyncio.sleep_ms(duration)
 
 
-	
 
 
 

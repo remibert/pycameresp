@@ -98,10 +98,35 @@ class Motion:
 		pass
 
 	def compare(self, other):
-		return (0,0)
+		return {
+			'feature': {'light': 37, 'saturation': 13}, 
+			'path': '2021-04-25 11-37-00', 
+			'diff': 
+			{
+				'count': 0, 
+				'saturation': 48, 
+				'max': 300, 
+				'hue': 21, 
+				'light': 94
+			}, 
+			'shapes': 
+			[
+				{'size': 35, 'id': 1, 'height': 360, 'width': 200, 'y': 0, 'x': 0, 'centerx': 40, 'centery': 120},
+				{'size': 94, 'id': 2, 'height': 600, 'width': 400, 'y': 0, 'x': 360, 'centerx': 480, 'centery': 240}
+			], 
+			'index': 5417, 
+			'image': '21-04-25 11-37-01 Id=5417 D=129.jpg', 
+			'date': '2021-04-25 11-37-01', 
+			'motionId': 46, 
+			'geometry': 
+			{
+				'height': 600, 'width': 800
+			}
+		}
 
-	def setError(self, light, saturation):
-		pass
+	def setErrorLight     (self, lightErrorRange): pass
+	def setErrorSaturation(self, saturationErrorRange): pass
+	def setErrorHue       (self, hueErrorRange):pass
 
 	def getImage(self):
 		return b""

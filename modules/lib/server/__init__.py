@@ -95,7 +95,11 @@ async def periodic():
 		config = server.ServerConfig()
 		config.load()
 		if config.ntp:
-			setdate(config.offsettime, dst=config.dst, display=True)
+			for i in range(6):
+				if setdate(config.offsettime, dst=config.dst, display=True):
+					break
+				else:
+					await uasyncio.sleep(10)
 		await uasyncio.sleep(3600)
 
 

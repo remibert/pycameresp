@@ -27,6 +27,7 @@ class HttpServerCore:
 		response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
 		try:
 			await request.receive()
+			# print(request.path)
 			function, args = HttpServer.searchRoute(request)
 			if function == None:
 				await response.sendError(status=b"404", content=b"Page not found")
@@ -34,4 +35,5 @@ class HttpServerCore:
 				await function(request, response, args)
 		except Exception as err:
 			await response.sendError(status=b"404", content=useful.htmlException(err))
-		await stream.close()
+		finally:
+			await stream.close()
