@@ -9,21 +9,21 @@ from tools import useful
 from video import CameraConfig, Camera
 import uasyncio
 
-cameraStreaming = False
+cameraStreamingId = 0
 cameraConfig = CameraConfig()
 INACTIVITY=600000
 @HttpServer.addRoute(b'/camera', title=b"Camera", index=1000)
 async def cameraPage(request, response, args):
 	""" Camera streaming page """
+	global cameraStreamingId
+	cameraStreamingId += 1
 	framesizes = []
-	global cameraStreaming
-	cameraStreaming = False
+
 	for size in [b"1600x1200",b"1280x1024",b"1024x768",b"800x600",b"640x480",b"400x296",b"320x240",b"240x176",b"160x120"  ]:
 		framesizes.append(Option(value=size, text=size, selected= True if cameraConfig.framesize == size else False))
 	page = mainFrame(request, response, args, b"Camera",
 		Tag(b"""
 <p>
-	<button id="button-stream" class="btn btn-outline-primary" onclick="onStartVideoClick()" type="button">Show</button>
 	<figure>
 		<div id="container-stream" class="display: none;">
 			<img id="video-stream" src="">
@@ -31,28 +31,18 @@ async def cameraPage(request, response, args):
 	</figure>
 
 	<script>
-		function onStartVideoClick()
-		{
-			if (document.getElementById('button-stream').innerHTML == 'Show')
-			{
-				startStreaming();
-			}
-			else
-			{
-				stopStreaming();
-			}
-		}
 		window.onload = () =>
 		{
-			setTimeout(() => { startStreaming();}, 500);
+			stopStreaming();
+			setTimeout(() => { startStreaming();}, 100);
 		}
 		function startStreaming()
 		{
+
 			window.stop();
 			var streamUrl = document.location.protocol + "//" + document.location.hostname + ':%d';
 			document.getElementById('video-stream').src = `${streamUrl}/camera/start`;
 			document.getElementById('container-stream').style.display = "block";
-			document.getElementById('button-stream').innerHTML = 'Hide';
 			setTimeout(() => { stopStreaming(); }, %d);
 		}
 		function stopStreaming()
@@ -60,7 +50,6 @@ async def cameraPage(request, response, args):
 			var xhttp = new XMLHttpRequest();
 			xhttp.open("GET","camera/stop",true);
 			xhttp.send();
-			document.getElementById('button-stream').innerHTML = 'Show';
 		}
 	</script>
 </p>"""%(request.port+1,INACTIVITY)),
@@ -86,15 +75,15 @@ async def cameraConfigure(request, response, args):
 @HttpServer.addRoute('/camera/stop')
 async def cameraStopStreaming(request, response, args):
 	""" Stop video streaming """
-	global cameraStreaming
-	cameraStreaming = False
+	global cameraStreamingId 
+	cameraStreamingId += 1
 	stopInactivityTimer()
 	await response.sendOk()
 
 def inactivityTimeoutStreaming(param=None):
 	""" Suspend video streaming after delay """
-	global cameraStreaming
-	cameraStreaming = False
+	global cameraStreamingId
+	cameraStreamingId += 1
 
 inactivityTimer = None
 def startInactivityTimer():
@@ -114,11 +103,7 @@ def stopInactivityTimer():
 @HttpServer.addRoute('/camera/start')
 async def cameraStartStreaming(request, response, args):
 	""" Start video streaming """
-	global cameraStreaming, cameraConfig
-	
-	if cameraStreaming:
-		cameraStreaming = False
-		await uasyncio.sleep(0.2)
+	global cameraConfig, cameraStreamingId
 	
 	if request.name != "StreamingServer":
 		print("Streaming ignored")
@@ -126,6 +111,8 @@ async def cameraStartStreaming(request, response, args):
 
 	try:
 		print("Start streaming")
+		cameraStreamingId += 1
+		currentStreamingId = cameraStreamingId
 
 		startInactivityTimer()
 		Camera.open()
@@ -151,21 +138,21 @@ async def cameraStartStreaming(request, response, args):
 		length = len(image)
 		await writer.write(frame%(b"", length, length))
 		await writer.write(image)
-		cameraStreaming = True
 		# count = 0
-		while cameraStreaming:
+
+		while currentStreamingId == cameraStreamingId:
 			image = Camera.capture()
 			length = len(image)
 			await writer.write(frame%(identifier, length, length))
 			await writer.write(image)
 			if micropython == False:
 				await uasyncio.sleep(0.1)
-			# print("%d"%count)
+			# if count % 50 == 0:
+			# 	print("Streaming %d"%count)
 			# count += 1
 	except Exception as err:
 		print(useful.exception(err))
 	finally:
 		print("Stop streaming")
-		cameraStreaming = False
 		Camera.unreserve()
 		await writer.close()

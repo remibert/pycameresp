@@ -464,8 +464,7 @@ def getHash(password):
 
 def now():
 	""" Get time now """
-	now = time.localtime()
-	return now
+	return time.localtime()
 
 def isascii(char):
 	""" Indicates if the char is ascii """

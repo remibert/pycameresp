@@ -26,6 +26,7 @@ if __name__ == "__main__":
 	for path, filename in filesToAdd:
 		content = open(filename,"r").read()
 		content = content.replace('"""',"'''")
+		content = content.replace("\x5C","\x5C\x5C") # Replace \ by \\
 		if path != "":
 			patchIni += "    try:\n        uos.mkdir('%s')\n    except: pass\n"%path
 			filename = "%s/%s"%(path, split(filename)[1])

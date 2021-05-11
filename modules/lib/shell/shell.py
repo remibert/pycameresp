@@ -70,6 +70,8 @@ def mkdir(directory, recursive=False, quiet=False):
 def removedir(directory, force=False, quiet=False, simulate=False):
 	""" Remove directory """
 	try:
+		if useful.exists(directory+"/.DS_Store"):
+			rmfile(directory+"/.DS_Store", quiet, force, simulate)
 		if (useful.ismicropython() or force) and simulate == False:
 			uos.rmdir(directory)
 		if quiet == False:

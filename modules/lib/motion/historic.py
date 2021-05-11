@@ -8,7 +8,8 @@ from tools import useful
 import json
 import server
 
-MAX_DETECTION = 100
+MAX_DISPLAYED = 100
+MAX_REMOVED   = 100
 
 class Historic:
 	""" Manage the motion detection history file """
@@ -109,7 +110,7 @@ class Historic:
 				await Historic.acquire()
 				Historic.historic.sort()
 				Historic.historic.reverse()
-				while len(Historic.historic) > MAX_DETECTION:
+				while len(Historic.historic) > MAX_DISPLAYED:
 					del Historic.historic[-1]
 				result = useful.tobytes(json.dumps(Historic.historic))
 			except Exception as err:
@@ -127,7 +128,7 @@ class Historic:
 			try:
 				print("Start historic creation")
 				# Scan sd card and get more recent motions
-				motions = await Historic.scanDirectories(MAX_DETECTION, False)
+				motions = await Historic.scanDirectories(MAX_DISPLAYED, False)
 
 				# Build historic file
 				files = await Historic.build(motions)
@@ -180,7 +181,11 @@ class Historic:
 							hours = await Historic.scanDir(pathDay, "\d\dh\d\d", older)
 							for hour in hours:
 								pathHour = pathDay + "/" + hour
-								detections = await Historic.scanDir(pathHour, ".*\.json", older, directory=False)
+								if older:
+									extension = "jpg"
+								else:
+									extension = "json"
+								detections = await Historic.scanDir(pathHour, "\d\d.*\."+extension, older, directory=False)
 								for detection in detections:
 									motions.append(pathHour + "/" + detection)
 								if len(motions) > quantity:
@@ -207,21 +212,26 @@ class Historic:
 		""" Remove all files in the directory """
 		import shell
 		notEmpty = False
-		# Parse all directories in sdcard
-		for fileinfo in uos.ilistdir(directory):
-			filename = fileinfo[0]
-			typ      = fileinfo[1]
-			# If file found
-			if typ & 0xF000 != 0x4000:
-				shell.rmfile(directory + "/" + filename, simulate=simulate)
+		force = True
+		if useful.exists(directory):
+			# Parse all directories in sdcard
+			for fileinfo in uos.ilistdir(directory):
+				filename = fileinfo[0]
+				typ      = fileinfo[1]
+				print(filename)
+				# If file found
+				if typ & 0xF000 != 0x4000:
+					shell.rmfile(directory + "/" + filename, simulate=simulate, force=force)
+				else:
+					await Historic.__removeFiles(directory + "/" + filename)
+					notEmpty = True
+			
+			if notEmpty:
+				shell.rm(directory, recursive=True, simulate=simulate, force=force)
 			else:
-				await Historic.__removeFiles(directory + "/" + filename)
-				notEmpty = True
-		
-		if notEmpty:
-			shell.rm(directory, recursive=True, simulate=simulate)
+				shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
 		else:
-			shell.rmdir(directory, recursive=True, simulate=simulate)
+			print("Directory not existing '%s'"%directory)
 
 	@staticmethod
 	async def removeOlder():
@@ -231,11 +241,15 @@ class Historic:
 			# If not enough space available on sdcard
 			if useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5:
 				print("Start cleanup sd card")
-				olders = await Historic.scanDirectories()
-				for directory in olders:
+				olders = await Historic.scanDirectories(MAX_REMOVED, True)
+				previous = ""
+				for motion in olders:
 					try:
 						await Historic.acquire()
-						await Historic.__removeFiles(root+ "/"+ directory)
+						directory = useful.split(motion)[0]
+						if previous != directory:
+							await Historic.__removeFiles(directory)
+							previous = directory
 					except Exception as err:
 						print(useful.exception(err))
 					finally:
@@ -246,7 +260,7 @@ class Historic:
 	async def periodicTask():
 		""" Execute periodic traitment """
 		while 1:
-			await sleep_ms(1000)
+			await sleep_ms(10000)
 			await server.waitResume()
 			if Historic.motionInProgress[0] == False:
 				if useful.SdCard.isMounted():

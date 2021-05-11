@@ -18,7 +18,7 @@ async def historic(request, response, args):
 
 		document.onkeydown = checkKey;
 		window.onload = loadHistoric;
-  
+
 		var historic = null;
 		var images = [];
 		var currentId = 0;
@@ -38,6 +38,20 @@ async def historic(request, response, args):
 		const SHAPE_Y=2;
 		const SHAPE_WIDTH=3;
 		const SHAPE_HEIGHT=4;
+
+		function download(fileUrl) 
+		{
+			var a = document.createElement("a");
+			a.href = fileUrl;
+			filename = fileUrl.split("/").pop();
+			a.setAttribute("download", filename);
+			a.click();
+		}
+
+		function downloadMotion()
+		{
+			download("/historic/download/" + historic[currentId][MOTION_FILENAME]);
+		}
 
 		function loadHistoric()
 		{
@@ -87,7 +101,7 @@ async def historic(request, response, args):
 					var motion = historic[lastId];
 					var image = new Image();
 					image.id     = lastId;
-					image.src = 'data:image/jpeg;base64,' + imageRequest.response;
+					image.src    = 'data:image/jpeg;base64,' + imageRequest.response;
 					image.width  = motion[MOTION_WIDTH] /15;
 					image.height = motion[MOTION_HEIGHT]/15;
 					image.alt    = getName(motion[MOTION_FILENAME]);
@@ -270,6 +284,7 @@ async def historic(request, response, args):
 		<button type="button" class="btn btn-outline-primary" onclick="previousMotion()" >&lt-</button>
 		<button type="button" class="btn btn-outline-primary" onclick="nextMotion()"     >-&gt</button>
 		<button type="button" class="btn btn-outline-primary" onclick="lastMotion()"     >-&gt|</button>
+		<button type="button" class="btn btn-outline-primary" onclick="downloadMotion()">Download</button>
 		<br>
 		<br>
 		<canvas id="motion" width="%d" height="%d">The reconstruction is in progress, wait a few minutes after a reboot of the terminal</canvas>
@@ -291,11 +306,22 @@ async def historicJson(request, response, args):
 
 @HttpServer.addRoute(b'/historic/images/.*', available=useful.iscamera())
 async def historicImage(request, response, args):
-	""" Send historic json file """
+	""" Send historic image """
 	Camera.reserve()
 	try:
 		await Historic.acquire()
 		await response.sendFile(useful.tostrings(request.path[len("/historic/images/"):]), base64=True)
+	finally:
+		await Historic.release()
+		Camera.unreserve()
+
+@HttpServer.addRoute(b'/historic/download/.*', available=useful.iscamera())
+async def downloadImage(request, response, args):
+	""" Download historic image """
+	Camera.reserve()
+	try:
+		await Historic.acquire()
+		await response.sendFile(useful.tostrings(request.path[len("/historic/download/"):]), base64=False)
 	finally:
 		await Historic.release()
 		Camera.unreserve()

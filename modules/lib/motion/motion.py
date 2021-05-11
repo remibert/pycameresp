@@ -369,6 +369,7 @@ async def detectMotion(onBattery, pirDetection):
 
 	previousActivated = None
 	reservedCount = 0
+	waitAfterUnreserve = 0
 	
 	while True:
 		await server.waitResume()
@@ -406,57 +407,63 @@ async def detectMotion(onBattery, pirDetection):
 
 			# If camera available to detect motion
 			if video.Camera.isReserved() == False:
-				reservedCount = 0
-				# If the camera previously reserved
-				if previousReserved == True:
-					# Restore camera motion configuration
-					previousReserved = False
-					motion.resume()
-				try:
-					# If camera not stabilized speed start
-					if motion.isStabilized() == True:
-						await sleep_ms(pollingFrequency)
-
-					# If camera available to detect motion
-					if video.Camera.isReserved() == False:
-						# Capture motion image
-						detection = await motion.capture()
-
+				if waitAfterUnreserve > 0:
+					waitAfterUnreserve -= 1
+					#print("Waiting before restart %d"%waitAfterUnreserve)
+					await sleep_ms(500)
+				else:
+					waitAfterUnreserve = 0
+					reservedCount = 0
+					# If the camera previously reserved
+					if previousReserved == True:
+						# Restore camera motion configuration
+						previousReserved = False
+						motion.resume()
+					try:
 						# If camera not stabilized speed start
 						if motion.isStabilized() == True:
 							await sleep_ms(pollingFrequency)
 
-					# If camera available to detect motion
-					if video.Camera.isReserved() == False:
-						# If motion detected
-						if detection != None:
-							# Notify motion with push over
-							message, image = detection
-							# On battery the wifi start after taking pictures
-							if wifiOn == False:
-								from server import start
-								from tools import Battery
-								start(withoutServer=True)
-								wifiOn = True
-								batteryLevel = Battery.getLevel()
-							if batteryLevel >= 0:
-								message = message [:-4] + " Bat %s %%"%batteryLevel
-							await notifyMessage(message, image.get())
-						# Detect motion
-						detected, changePolling = motion.detect()
+						# If camera available to detect motion
+						if video.Camera.isReserved() == False:
+							# Capture motion image
+							detection = await motion.capture()
 
-						# If motion found
-						if changePolling == True:
-							# Speed up the polling frequency
-							pollingFrequency = 15
-							historic.Historic.setMotionState(True)
-							startTime = time.time()
-						else:
-							# Slow down the polling frequency
-							pollingFrequency = 200
-							historic.Historic.setMotionState(False)
-				except Exception as err:
-					print(useful.exception(err))
+							# If camera not stabilized speed start
+							if motion.isStabilized() == True:
+								await sleep_ms(pollingFrequency)
+
+						# If camera available to detect motion
+						if video.Camera.isReserved() == False:
+							# If motion detected
+							if detection != None:
+								# Notify motion with push over
+								message, image = detection
+								# On battery the wifi start after taking pictures
+								if wifiOn == False:
+									from server import start
+									from tools import Battery
+									start(withoutServer=True)
+									wifiOn = True
+									batteryLevel = Battery.getLevel()
+								if batteryLevel >= 0:
+									message = message [:-4] + " Bat %s %%"%batteryLevel
+								await notifyMessage(message, image.get())
+							# Detect motion
+							detected, changePolling = motion.detect()
+
+							# If motion found
+							if changePolling == True:
+								# Speed up the polling frequency
+								pollingFrequency = 15
+								historic.Historic.setMotionState(True)
+								startTime = time.time()
+							else:
+								# Slow down the polling frequency
+								pollingFrequency = 200
+								historic.Historic.setMotionState(False)
+					except Exception as err:
+						print(useful.exception(err))
 			else:
 				# Camera buzy, motion capture suspended
 				previousReserved = True
@@ -465,6 +472,7 @@ async def detectMotion(onBattery, pirDetection):
 					await notifyMessage(b"Motion detection suspended during web browsing")
 					reservedCount = 0
 				await sleep_ms(10000)
+				waitAfterUnreserve = 20
 		else:
 			# Motion capture disabled
 			await sleep_ms(500)
