@@ -767,33 +767,6 @@ STATIC mp_obj_t Motion_getImage(mp_obj_t self_in)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getImage_obj, Motion_getImage);
 
-// setErrorSaturation method (used for compare)
-STATIC mp_obj_t Motion_setErrorSaturation(mp_obj_t self_in, mp_obj_t saturation_in)
-{
-	Motion_t *self = self_in;
-	self->errorSaturation = mp_obj_get_int(saturation_in);
-	return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_setErrorSaturation_obj, Motion_setErrorSaturation);
-
-// setErrorLight method (used for compare)
-STATIC mp_obj_t Motion_setErrorLight(mp_obj_t self_in, mp_obj_t light_in)
-{
-	Motion_t *self = self_in;
-	self->errorLight = mp_obj_get_int(light_in);
-	return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_setErrorLight_obj, Motion_setErrorLight);
-
-// setErrorHue method (used for compare)
-STATIC mp_obj_t Motion_setErrorHue(mp_obj_t self_in, mp_obj_t hue_in)
-{
-	Motion_t *self = self_in;
-	self->errorHue = mp_obj_get_int(hue_in);
-	return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_setErrorHue_obj, Motion_setErrorHue);
-
 // Push coordinates
 void Motion_push(Motion_t * motion, int x, int y)
 {
@@ -1027,7 +1000,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 }
 
 
-STATIC void Motion_extractShape(Motion_t *self, mp_obj_t result)
+STATIC void Motion_extractShape(Motion_t *self, mp_obj_t result, bool extractShape)
 {
 	int x;
 	int y;
@@ -1036,74 +1009,78 @@ STATIC void Motion_extractShape(Motion_t *self, mp_obj_t result)
 
 	// Get the list of shapes detected
 	mp_obj_t shapeslist = mp_obj_new_list(0, NULL);
-	Shape_t shape;
-	int shapeId = 1;
 
-	for (y = 0; y < height; y++)
+	if (extractShape)
 	{
-		for (x = 0; x < width; x++)
-		{
-			memset(&shape, 0, sizeof(shape));
-			shape.minx = self->max;
-			shape.miny = self->max;
-			shape.id = shapeId;
-
-			// If shape found
-			if (Motion_searchShape(self, x, y,&shape))
-			{
-				mp_obj_t shapedict = mp_obj_new_dict(0);
-					mp_obj_dict_store(shapedict, mp_obj_new_str("size",    strlen("size")),     mp_obj_new_int(shape.size));
-#if 1
-					mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x*self->square_x*8));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y*self->square_y*8));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("x",       strlen("x")),        mp_obj_new_int(shape.minx*self->square_x*8));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("y",       strlen("y")),        mp_obj_new_int(shape.miny*self->square_y*8));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int((shape.maxx + 1 - shape.minx)*self->square_x*8));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int((shape.maxy + 1 - shape.miny)*self->square_y*8));
-#else
-					mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("minx",    strlen("minx")),     mp_obj_new_int(shape.minx));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("miny",    strlen("miny")),     mp_obj_new_int(shape.miny));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("maxx",    strlen("maxx")),     mp_obj_new_int(shape.maxx));
-					mp_obj_dict_store(shapedict, mp_obj_new_str("maxy",    strlen("maxy")),     mp_obj_new_int(shape.maxy));
-#endif
-					mp_obj_dict_store(shapedict, mp_obj_new_str("id",      strlen("id")),       mp_obj_new_int(shape.id));
-				mp_obj_list_append(shapeslist, shapedict);
-				shapeId++;
-			}
-		}
-	}
-	#if 0
-	{
-		char line[100];
-		int i;
+		Shape_t shape;
+		int shapeId = 1;
 
 		for (y = 0; y < height; y++)
 		{
 			for (x = 0; x < width; x++)
 			{
-				i = y * width + x;
-				if (self->diffs[i])
+				memset(&shape, 0, sizeof(shape));
+				shape.minx = self->max;
+				shape.miny = self->max;
+				shape.id = shapeId;
+
+				// If shape found
+				if (Motion_searchShape(self, x, y,&shape))
 				{
-					line[x] = ((self->diffs[i]&0xFF00)>>8) + 0x30;
-					line[x+1] = '\0';
-				}
-				else
-				{
-					line[x] = ' ';
-					line[x+1] = '\0';
+					mp_obj_t shapedict = mp_obj_new_dict(0);
+						mp_obj_dict_store(shapedict, mp_obj_new_str("size",    strlen("size")),     mp_obj_new_int(shape.size));
+	#if 1
+						mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x*self->square_x*8));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y*self->square_y*8));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("x",       strlen("x")),        mp_obj_new_int(shape.minx*self->square_x*8));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("y",       strlen("y")),        mp_obj_new_int(shape.miny*self->square_y*8));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int((shape.maxx + 1 - shape.minx)*self->square_x*8));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int((shape.maxy + 1 - shape.miny)*self->square_y*8));
+	#else
+						mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("minx",    strlen("minx")),     mp_obj_new_int(shape.minx));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("miny",    strlen("miny")),     mp_obj_new_int(shape.miny));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("maxx",    strlen("maxx")),     mp_obj_new_int(shape.maxx));
+						mp_obj_dict_store(shapedict, mp_obj_new_str("maxy",    strlen("maxy")),     mp_obj_new_int(shape.maxy));
+	#endif
+						mp_obj_dict_store(shapedict, mp_obj_new_str("id",      strlen("id")),       mp_obj_new_int(shape.id));
+					mp_obj_list_append(shapeslist, shapedict);
+					shapeId++;
 				}
 			}
-			ESP_LOGE(TAG,"|%s|",line);
 		}
+		#if 0
+		{
+			char line[100];
+			int i;
+
+			for (y = 0; y < height; y++)
+			{
+				for (x = 0; x < width; x++)
+				{
+					i = y * width + x;
+					if (self->diffs[i])
+					{
+						line[x] = ((self->diffs[i]&0xFF00)>>8) + 0x30;
+						line[x+1] = '\0';
+					}
+					else
+					{
+						line[x] = ' ';
+						line[x+1] = '\0';
+					}
+				}
+				ESP_LOGE(TAG,"|%s|",line);
+			}
+		}
+		#endif
 	}
-	#endif
 	mp_obj_dict_store(result, mp_obj_new_str("shapes"      , strlen("shapes")) , shapeslist);
 }
 
 // compare method
-STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
+STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t params_in)
 {
 	Motion_t *self = self_in;
 	Motion_t *other = other_in;
@@ -1116,13 +1093,22 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 	{
 		mp_raise_TypeError(MP_ERROR_TEXT("Motions not same format"));
 	}
+	else if (!mp_obj_is_dict_or_ordereddict(params_in) && params_in != mp_const_none)
+	{
+		mp_raise_TypeError(MP_ERROR_TEXT("Motions bad parameters"));
+	}
 	else
 	{
+		int extractShape = mp_obj_is_true(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_extractShape)));
+		self->errorSaturation = mp_obj_get_int(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorSaturation)));
+		self->errorLight      = mp_obj_get_int(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLight)));
+		self->errorHue        = mp_obj_get_int(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorHue)));
+
 		mp_obj_t result = mp_obj_new_dict(0);
 
 		if (Motion_computeDiff(self, other, result) > 0)
 		{
-			Motion_extractShape(self, result);
+			Motion_extractShape(self, result, extractShape);
 		}
 
 		mp_obj_t geometrydict = mp_obj_new_dict(0);
@@ -1139,7 +1125,7 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_compare_obj, Motion_compare);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(Motion_compare_obj, Motion_compare);
 
 // print method
 STATIC void Motion_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) 
@@ -1155,9 +1141,6 @@ STATIC const mp_rom_map_elem_t Motion_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_deinit),             MP_ROM_PTR(&Motion_deinit_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_extract),            MP_ROM_PTR(&Motion_extract_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_compare),            MP_ROM_PTR(&Motion_compare_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setErrorHue),        MP_ROM_PTR(&Motion_setErrorHue_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setErrorSaturation), MP_ROM_PTR(&Motion_setErrorSaturation_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setErrorLight),      MP_ROM_PTR(&Motion_setErrorLight_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_getImage),           MP_ROM_PTR(&Motion_getImage_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Motion_locals_dict, Motion_locals_dict_table);

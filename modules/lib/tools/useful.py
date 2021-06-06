@@ -146,7 +146,8 @@ def log(msg):
 	global previousTime
 	if previousTime == 0:
 		previousTime = current
-	print("%03d.%03d:%s"%((current-previousTime)/1000, (current-previousTime)%1000, msg))
+	if msg != None:
+		print("%03d.%03d:%s"%((current-previousTime)/1000, (current-previousTime)%1000, msg))
 	previousTime = ticks()
 
 def dateToString(date = None):
@@ -590,6 +591,14 @@ def tostrings(datas, encoding="utf8"):
 			result[tostrings(key,encoding)] = tostrings(value, encoding)
 	return result
 
+def tofilename(filename):
+	""" Replace forbid characters in filename """
+	filename = tostrings(filename)
+	if len(filename) > 0:
+		for char in "<>:/\\|?*":
+			filename = filename.replace(char,"_%d_"%ord(char))
+	return filename
+
 def iscamera():
 	""" Indicates if the board is esp32cam """
 	try:
@@ -859,22 +868,3 @@ def importFiles(importFilename, simulated=False):
 		imported.close()
 	remove(importFilename)
 	return result
-
-async def asyncShell():
-	""" Asynchronous shell """
-	import uasyncio
-
-	if ismicropython():
-		while 1:
-			# If key pressed
-			if kbhit(0):
-				import shell
-				import uos
-				currentDir = uos.getcwd()
-				print("\n"+"<"*20+"   ENTER SHELL   " +">"*20)
-				# Start shell
-				shell.shell()
-				print("\n"+"<"*20+"   EXIT  SHELL   " +">"*20)
-				uos.chdir(currentDir)
-			else:
-				await uasyncio.sleep(1)

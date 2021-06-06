@@ -11,7 +11,6 @@ If you have enough memory (SPIRAM or other), just start the server with the prel
 
 from tools.useful import log
 from tools import useful
-from server import waitResume
 import re
 
 class HttpServer:
@@ -136,7 +135,6 @@ class HttpServer:
 
 	async def onConnection(self, reader, writer):
 		""" Http server connection detected """
-		await waitResume()
 		try:
 			# Preload the server
 			self.preload()

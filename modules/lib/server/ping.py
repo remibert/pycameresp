@@ -27,6 +27,7 @@ except:
 	import struct as ustruct
 	import random as urandom
 	import asyncio as uasyncio
+import wifi
 
 def ticks_us():
 	""" Get tick in microseconds """
@@ -225,10 +226,16 @@ class Ping:
 
 async def asyncPing(host, count=4, timeout=1, quiet=False):
 	""" Asynchronous ping of host """
-	ping_ = Ping()
-	return await ping_.asyncPing(host, count, timeout, quiet)
+	if wifi.Station.isActive():
+		ping_ = Ping()
+		return await ping_.asyncPing(host, count, timeout, quiet)
+	else:
+		return (0,0,None)
 
 def ping(host, count=4, timeout=1, quiet=False):
 	""" Ping of host """
-	ping_ = Ping()
-	return ping_.ping(host, count, timeout, quiet)
+	if wifi.Station.isActive():
+		ping_ = Ping()
+		return ping_.ping(host, count, timeout, quiet)
+	else:
+		return (0,0,None)

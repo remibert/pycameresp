@@ -8,7 +8,7 @@ from motion import Historic
 from tools import useful
 from video import Camera
 
-@HttpServer.addRoute(b'/historic', title=b"Historic", index=18, available=useful.iscamera())
+@HttpServer.addRoute(b'/historic', title=b"Historic", index=19, available=useful.iscamera())
 async def historic(request, response, args):
 	""" Historic motion detection page """
 	await Historic.getRoot()
@@ -55,6 +55,9 @@ async def historic(request, response, args):
 
 		function loadHistoric()
 		{
+			var canvas = document.getElementById('motion'); 
+			canvas.addEventListener("mousedown", function (e) { getClickPosition(canvas, e); });
+
 			console.log("loadHistoric");
 			historicRequest.onreadystatechange = historicLoaded;
 			historicRequest.open("GET","historic/historic.json",true);
@@ -175,13 +178,21 @@ async def historic(request, response, args):
 					}
 				}
 			}
+			
 			ctx.font = '20px monospace';
 			ctx.fillStyle = "red";
 			ctx.fillText(getName(motion[MOTION_FILENAME]), 10, 20);
 
+			ctx.fillStyle = 'rgba(255,255,255,10)';
+
+			ctx.font = '30px monospace';
+			ctx.fillText("\xE2\x86\x90", 0, motion[MOTION_HEIGHT]/2);
+			ctx.fillText("\xE2\x86\x92", motion[MOTION_WIDTH]-20, motion[MOTION_HEIGHT]/2);
+			ctx.fillText("\xE2\x87\xA4", motion[MOTION_WIDTH]/2, 20);
+			ctx.fillText("\xE2\x87\xA5", motion[MOTION_WIDTH]/2, motion[MOTION_HEIGHT]);
 			console.log("loaded " +id);
 		}
-  
+
 		function getName(filename)
 		{
 			filename = filename.split(".")[0];
@@ -279,16 +290,76 @@ async def historic(request, response, args):
 			}
 		}
 
+		function getClickPosition(canvas, e)
+		{
+			const rect = canvas.getBoundingClientRect();
+			const x = e.clientX - rect.left;
+			const y = e.clientY - rect.top;
+
+			if (x > rect.width/3 && x < (2*rect.width/3) && y > rect.height/3 && y < (2*rect.height/3))
+			{
+				if (confirm("Download this image ?"))
+				{
+					downloadMotion();
+				}
+			}
+			else
+			{
+				if (x < rect.width / 2)
+				{
+					if (y < rect.height / 2)
+					{
+						if (x < y)
+						{
+							previousMotion();
+						}
+						else
+						{
+							firstMotion();
+						}
+					}
+					else
+					{
+						if (x < rect.height - y)
+						{
+							previousMotion();
+						}
+						else
+						{
+							lastMotion();
+						}
+					}
+				}
+				else
+				{
+					if (y < rect.height / 2)
+					{
+						if (rect.width - x < y)
+						{
+							nextMotion();
+						}
+						else
+						{
+							firstMotion();
+						}
+					}
+					else
+					{
+						if (rect.width - x < rect.height - y)
+						{
+							nextMotion();
+						}
+						else
+						{
+							lastMotion();
+						}
+					}
+				}
+			}
+		}
+
 		</script>
-		<button type="button" class="btn btn-outline-primary" onclick="firstMotion()"    >|&lt-</button>
-		<button type="button" class="btn btn-outline-primary" onclick="previousMotion()" >&lt-</button>
-		<button type="button" class="btn btn-outline-primary" onclick="nextMotion()"     >-&gt</button>
-		<button type="button" class="btn btn-outline-primary" onclick="lastMotion()"     >-&gt|</button>
-		<button type="button" class="btn btn-outline-primary" onclick="downloadMotion()">Download</button>
-		<br>
-		<br>
-		<canvas id="motion" width="%d" height="%d">The reconstruction is in progress, wait a few minutes after a reboot of the terminal</canvas>
-		<br>
+		<canvas id="motion" width="%d" height="%d" >The reconstruction is in progress, wait a few minutes after a reboot of the terminal</canvas>
 		<br>
 		<div id="motions"></div>
 		"""%(800,600)),

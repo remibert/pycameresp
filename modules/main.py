@@ -71,7 +71,7 @@ if useful.iscamera():
 	import motion 
 	motion.start(loop, onBattery, isPinWakeUp)
 
-from tools.useful import asyncShell
+from shell.shell import asyncShell
 loop.create_task(asyncShell())
 
 # Run asyncio for ever

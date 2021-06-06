@@ -554,7 +554,7 @@ def execCommand(args):
 def shell():
 	""" Start the shell """
 	global shell_exited
-	server.suspend()
+	
 	shell_exited = False
 	while shell_exited == False:
 		try:
@@ -563,8 +563,28 @@ def shell():
 			print("")
 			break
 		parseCommandLine(commandLine)
-	server.resume()
+	
 
+async def asyncShell():
+	""" Asynchronous shell """
+	import uasyncio
+
+	if useful.ismicropython():
+		while 1:
+			# If key pressed
+			if useful.kbhit(0):
+				import uos
+				server.suspend()
+				await server.waitAllSuspended()
+				currentDir = uos.getcwd()
+				print("\n"+"<"*20+"   ENTER SHELL   " +">"*20)
+				# Start shell
+				shell()
+				print("\n"+"<"*20+"   EXIT  SHELL   " +">"*20)
+				uos.chdir(currentDir)
+				server.resume()
+			else:
+				await uasyncio.sleep(1)
 
 
 shellCommands = \

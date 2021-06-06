@@ -260,8 +260,7 @@ class Historic:
 	async def periodicTask():
 		""" Execute periodic traitment """
 		while 1:
-			await sleep_ms(10000)
-			await server.waitResume()
+			await server.waitResume(10)
 			if Historic.motionInProgress[0] == False:
 				if useful.SdCard.isMounted():
 					await Historic.extract()

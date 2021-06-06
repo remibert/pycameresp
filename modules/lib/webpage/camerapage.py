@@ -12,7 +12,7 @@ import uasyncio
 cameraStreamingId = 0
 cameraConfig = CameraConfig()
 INACTIVITY=600000
-@HttpServer.addRoute(b'/camera', title=b"Camera", index=1000)
+@HttpServer.addRoute(b'/camera', title=b"Camera", index=100)
 async def cameraPage(request, response, args):
 	""" Camera streaming page """
 	global cameraStreamingId

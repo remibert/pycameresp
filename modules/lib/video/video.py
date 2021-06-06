@@ -57,21 +57,9 @@ class Motion:
 		""" Extract the full content of motion """
 		return self.motion.extract()
 
-	def compare(self, other):
+	def compare(self, other, params):
 		""" Compare image to detect motion """
-		return self.motion.compare(other.motion)
-
-	def setErrorHue(self, hue):
-		""" Define the error tolered in the compare method on hue """
-		self.motion.setErrorHue(hue)
-
-	def setErrorLight(self, light):
-		""" Define the error tolered in the compare method on light """
-		self.motion.setErrorLight(light)
-
-	def setErrorSaturation(self,saturation):
-		""" Define the error tolered in the compare method on  saturation """
-		self.motion.setErrorSaturation(saturation)
+		return self.motion.compare(other.motion, params)
 
 	def getImage(self):
 		""" Return the jpeg buffer of motion """

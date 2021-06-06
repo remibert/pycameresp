@@ -6,10 +6,12 @@ from htmltemplate import *
 from webpage import *
 from tools import useful
 from tools.useful import log
+import uasyncio
+import server
 import sys
 import gc
 
-@HttpServer.addRoute(b'/system', title=b"System", index=20)
+@HttpServer.addRoute(b'/system', title=b"System", index=22)
 async def systemPage(request, response, args):
 	""" Function define the web page to manage system of the board """
 	page = mainFrame(request, response, args, b"System management",
@@ -60,7 +62,8 @@ async def reboot(request, response, args):
 		print(useful.exception(err))
 	try:
 		import machine
-		print("Reboot")
+		server.suspend()
+		await server.waitAllSuspended()
 		machine.reset()
 	except Exception as err:
 		print(useful.exception(err))

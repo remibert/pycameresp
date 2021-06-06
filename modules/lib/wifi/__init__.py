@@ -12,6 +12,12 @@ def start(force = False):
 	from wifi.station     import Station
 	result2 = AccessPoint.start(force)
 	result1 = Station.start(force)
+	if result1 == False and result2 == False:
+		# If the wifi station cannot be connected
+		if Station.isActivated():
+			# Force the access point
+			print("Access point start forced")
+			result2 = AccessPoint.start(True)
 	return result1 or result2
 
 def stop():

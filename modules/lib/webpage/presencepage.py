@@ -9,45 +9,32 @@ from motion import PresenceConfig
 import wifi
 from tools import useful
 
-@HttpServer.addRoute(b'/presence', title=b"Presence", index=19, available=useful.iscamera())
+@HttpServer.addRoute(b'/presence', title=b"Presence", index=18, available=useful.iscamera())
 async def presence(request, response, args):
 	""" Presence configuration page """
 	config = PresenceConfig()
-	config.load()
-	action = request.params.get(b"modify",b"none")
-	if   action == b"none"  : disabled = True
-	elif action == b"modify": disabled = False 
-	elif action == b"save"  : 
-		disabled = True
-		del request.params[b"modify"]
+	def updateConfig(request, config):
 		if b"resolve" in request.params:
-			del request.params[b"resolve"]
 			resolve = True
 		else:
 			resolve = False
-		config.update(request.params)
 
 		if resolve:
-			wifiConfig = wifi.StationConfig()
-			wifiConfig.load()
-			if wifiConfig.dns != b"":
+			ipaddress, netmask, gateway, dns = wifi.Station.getInfo()
+			if dns != "":
 				for i in range(len(config.smartphones)):
 					smartphone = config.smartphones[i]
 					try:
 						if isIpAddress(useful.tostrings(smartphone)):
-							hostname = getHostname(useful.tostrings(wifiConfig.dns), useful.tostrings(smartphone))
+							hostname = getHostname(dns, useful.tostrings(smartphone))
 							if hostname != None:
 								config.smartphones[i] = useful.tobytes(hostname)
 					except:
 							pass
-		config.save()
 
-	if disabled:
-		submit = Submit(text=b"Modify")
-		value = b'modify'
-	else:
-		submit = Switch(text=b"Convert ip address into DNS name", name=b"resolve", checked=False, disabled=disabled),Submit(text=b"Save")
-		value = b'save'
+	disabled, action, submit = manageDefaultButton(request, config, updateConfig)
+	if action == b'modify':
+		submit = Switch(text=b"Convert ip address into DNS name", name=b"resolve", checked=False, disabled=disabled),submit
 
 	editSmartphones = []
 	i = 0
@@ -58,9 +45,9 @@ async def presence(request, response, args):
 		i += 1
 
 	page = mainFrame(request, response, args,b"Presence detection configuration",
-		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
+		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),Br(),
 		editSmartphones,
-		Input (text=b"modify" , name=b"modify", type=b"hidden", value=value),
+		Switch(text=b"Notification", name=b"notify", checked=config.notify, disabled=disabled),Br(),
 		submit)
 
 	await response.sendPage(page)

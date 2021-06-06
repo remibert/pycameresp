@@ -15,8 +15,7 @@ import time
 from tools import useful, jsonconfig
 import json
 import server
-from motion import presence
-from motion import historic
+from motion import presence,historic
 
 class MotionConfig:
 	""" Configuration class of motion detection """
@@ -54,6 +53,9 @@ class MotionConfig:
 		# Number of images before camera stabilization
 		self.stabilizationCamera=8
 
+		# Notify motion
+		self.notify = True
+
 	def save(self, file = None):
 		""" Save configuration """
 		result = jsonconfig.save(self, file)
@@ -73,21 +75,26 @@ class ImageMotion:
 	""" Class managing a motion detection image """
 	baseIndex = [0]
 	motionBaseId = [0]
+	created = [0]
 	def __init__(self, motion, config):
 		self.motion = motion
 		self.baseIndex[0] += 1
+		self.created[0] += 1
 		self.index    = self.baseIndex[0]
 		self.filename = None
 		self.motionId = None
 		self.date     = useful.dateToString()
 		self.filename = useful.dateToFilename()
-		self.path     = useful.dateToPath()[:-1] + "0"
+		self.path     = useful.dateToPath()[:-1] + b"0"
 		self.motionDetected = False
 		self.config = config
 		self.comparison = None
 
 	def deinit(self):
 		""" Destructor """
+		self.created[0] -= 1
+		if self.created[0] >= 12:
+			print("Destroy %d"%self.created[0])
 		self.motion.deinit()
 	
 	def setMotionId(self, motionId = None):
@@ -107,7 +114,11 @@ class ImageMotion:
 
 	def getFilename(self):
 		""" Get the storage filename """
-		return "%s D=%d"%(self.filename, self.getDiffCount())
+		return "%s Id=%d D=%d"%(self.filename, self.index, self.getDiffCount())
+
+	def getMessage(self):
+		""" Get the message of motion """
+		return "%s Id=%d D=%d"%(self.date, self.index, self.getDiffCount())
 
 	def getHtmlShapes(self):
 		""" Get the html page with shapes on the image """
@@ -128,7 +139,7 @@ class ImageMotion:
 		<canvas id="motion" width="%d" height="%d"></canvas>"""
 		shapes = b""
 		for shape in self.comparison["shapes"]:
-			shapes += b"ctx.strokeRect(%d, %d, %d, %d);\n"%(shape["x"]+1,shape["y"]+1,shape["width"]-2,shape["height"]-2)
+			shapes += b"				ctx.strokeRect(%d, %d, %d, %d);\n"%(shape["x"]+1,shape["y"]+1,shape["width"]-2,shape["height"]-2)
 		return html%(useful.tobytes(self.getFilename()), shapes, self.comparison["geometry"]["width"], self.comparison["geometry"]["height"])
 
 	def getInformations(self):
@@ -145,12 +156,9 @@ class ImageMotion:
 		""" Save the image on sd card """
 		await historic.Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations(), self.getHtmlShapes())
 
-	def compare(self, previous, set=False):
+	def compare(self, previous, set=False, extractShape=True):
 		""" Compare two motion images to get differences """
-		self.motion.setErrorLight     (self.config.lightErrorRange)
-		self.motion.setErrorSaturation(self.config.saturationErrorRange)
-		self.motion.setErrorHue       (self.config.hueErrorRange)
-		res = self.motion.compare(previous.motion)
+		res = self.motion.compare(previous.motion, {"errorLight":self.config.lightErrorRange, "errorSaturation":self.config.saturationErrorRange, "errorHue":self.config.hueErrorRange, "extractShape":extractShape})
 		if set:
 			self.comparison = res
 		return res
@@ -189,6 +197,21 @@ class Motion:
 		self.config = config
 		self.onBattery = onBattery
 		self.pirDetection = pirDetection
+		self.imageBackground = None
+
+	def __del__(self):
+		""" Destructor """
+		self.cleanup()
+
+	def cleanup(self):
+		""" Clean up all images """
+		for image in self.images:
+			if id(image) != id(self.imageBackground):
+				image.deinit()
+		self.images = []
+		if self.imageBackground:
+			self.imageBackground.deinit()
+		self.imageBackground = None
 
 	def open(self):
 		""" Open camera """
@@ -211,24 +234,28 @@ class Motion:
 
 		detected, changePolling = self.detect(False)
 		if detected == False:
-			self.images = []
+			self.cleanup()
 
 	async def capture(self):
 		""" Capture motion image """
 		result = None
 		retry = 10
+		# If enough image taken
 		if len(self.images) >= self.config.maxMotionImages:
+			# Get older image
 			image = self.images.pop()
 			
 			# If motion detected on image, on battery the first five images are sent
 			if image.getMotionDetected() or (self.onBattery and self.pirDetection and image.index <= 3):
 				# Notification of motion
-				result = ("Motion %s.jpg"%image.getFilename(), image)
+				result = (image.getMessage(), image)
 
 				# Save image to sdcard
 				await image.save()
 			else:
-				image.deinit()
+				# Destroy image
+				self.deinitImage(image)
+
 		while 1:
 			if retry == 0:
 				print("Reset")
@@ -270,25 +297,33 @@ class Motion:
 		differences = {}
 		if len(self.images) >= 2:
 			current = self.images[0]
+			checkedMotionIds = []
 			
 			# Compute the motion identifier
 			for previous in self.images[1:]:
-				comparison = current.compare(previous, True)
+				# If image not already compared
+				if not previous.getMotionId() in checkedMotionIds:
+					checkedMotionIds.append(previous.getMotionId())
+					comparison = current.compare(previous, False, False)
+		
+					# If camera not stabilized
+					if self.isStabilized() == False:
+						# Reject the differences
+						current.resetDifferences()
+						break
 
-				# If camera not stabilized
-				if self.isStabilized() == False:
-					# Reject the differences
-					current.resetDifferences()
-					break
-
-				# If image seem equal to previous
-				if not self.isDetected(comparison):
-					# Reuse the motion identifier
-					current.setMotionId(previous.motionId)
-					break
+					# If image seem equal to previous
+					if not self.isDetected(comparison):
+						# Reuse the motion identifier
+						current.setMotionId(previous.motionId)
+						break
 			else:
 				# Create new motion id
 				current.setMotionId()
+
+				# Compare the image with the background if existing and extract modification
+				if self.imageBackground != None:
+					comparison = current.compare(self.imageBackground, True, True)
 
 			# Compute the list of differences
 			diffs = ""
@@ -299,6 +334,13 @@ class Motion:
 			if display:
 				sys.stdout.write("\r%s %s    "%(useful.dateToString()[12:], diffs))
 		return differences
+
+	def deinitImage(self, image):
+		
+		if image:
+			if not image in self.images:
+				if image != self.imageBackground:
+					image.deinit()
 
 	def detect(self, display=True):
 		""" Detect motion """
@@ -314,6 +356,9 @@ class Motion:
 			changePolling = True
 		# If no differences
 		elif len(list(differences.keys())) == 1:
+			image = self.imageBackground
+			self.imageBackground = self.images[0]
+			self.deinitImage(image)
 			detected = False
 		# If not enough differences
 		elif len(list(differences.keys())) <= self.config.thresholdGlitch:
@@ -378,7 +423,7 @@ async def detectMotion(onBattery, pirDetection):
 		if detection != None:
 			message, image = detection
 			# Release image buffer
-			image.deinit()
+			motion.deinitImage(image)
 
 		if motionConfig.activated:
 			activated = False
@@ -391,7 +436,8 @@ async def detectMotion(onBattery, pirDetection):
 			activated = False
 
 		if previousActivated != activated:
-			await notifyMessage(b"Motion detection %s" %(b"activated" if activated else b"stopped"))
+			if motionConfig.notify:
+				await notifyMessage(b"motion detection %s" %(b"on" if activated else b"off"))
 			previousActivated = activated
 
 		# If the motion activated
@@ -447,15 +493,16 @@ async def detectMotion(onBattery, pirDetection):
 									wifiOn = True
 									batteryLevel = Battery.getLevel()
 								if batteryLevel >= 0:
-									message = message [:-4] + " Bat %s %%"%batteryLevel
-								await notifyMessage(message, image.get())
+									message += " Bat=%s%%"%batteryLevel
+								if motionConfig.notify:
+									await notifyMessage(message, image.get())
 							# Detect motion
 							detected, changePolling = motion.detect()
 
 							# If motion found
 							if changePolling == True:
 								# Speed up the polling frequency
-								pollingFrequency = 15
+								pollingFrequency = 10
 								historic.Historic.setMotionState(True)
 								startTime = time.time()
 							else:
@@ -469,7 +516,8 @@ async def detectMotion(onBattery, pirDetection):
 				previousReserved = True
 				reservedCount += 1
 				if reservedCount > 6:
-					await notifyMessage(b"Motion detection suspended during web browsing")
+					if motionConfig.notify:
+						await notifyMessage(b"motion detection suspended")
 					reservedCount = 0
 				await sleep_ms(10000)
 				waitAfterUnreserve = 20

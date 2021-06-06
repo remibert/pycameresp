@@ -9,9 +9,9 @@ class UserConfig:
 	""" User configuration """
 	def __init__(self):
 		""" Constructor """
+		self.user = b""
+		self.password = EMPTY_PASSWORD
 		if self.load() == False:
-			self.user = b""
-			self.password = EMPTY_PASSWORD
 			self.save()
 
 	def save(self, file = None):

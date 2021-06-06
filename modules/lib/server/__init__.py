@@ -11,9 +11,9 @@ from server.wanip import *
 from server.ping import *
 from server.dnsclient import *
 from server.timesetting import *
-from tools import jsonconfig
-from tools import useful
+from tools import jsonconfig,useful
 import uasyncio
+import wifi
 
 
 class ServerConfig:
@@ -47,9 +47,7 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
 	pageLoader : callback to load html page
 	preload : True force the load of page at the start, 
 	False the load of page is done a the first http connection (Takes time on first connection) """
-	from tools import useful
-	import wifi
-	
+
 	# If wifi started
 	if wifi.start():
 		from server import ServerConfig
@@ -95,15 +93,19 @@ async def periodic():
 		config = server.ServerConfig()
 		config.load()
 		if config.ntp:
-			for i in range(6):
-				if setdate(config.offsettime, dst=config.dst, display=True):
-					break
-				else:
-					await uasyncio.sleep(10)
+			if wifi.Station.isActive():
+				for i in range(6):
+					if setdate(config.offsettime, dst=config.dst, display=True):
+						break
+					else:
+						await uasyncio.sleep(10)
+			else:
+				print("Cannot set date : wifi not connected")
 		await uasyncio.sleep(3600)
 
 
 _suspended = [False]
+_tasks = {}
 def suspend():
 	""" Suspend the asyncio task of servers """
 	_suspended[0] = True
@@ -112,8 +114,32 @@ def resume():
 	""" Resume the asyncio task of servers """
 	_suspended[0] = False
 
-async def waitResume():
+async def waitResume(duration=None):
 	""" Wait the resume of task servers """
+	if duration != None:
+		_tasks[id(uasyncio.current_task())] = True
+		await uasyncio.sleep(duration)
 	if _suspended[0]:
+		_tasks[id(uasyncio.current_task())] = True
 		while _suspended[0]:
 			await uasyncio.sleep(1)
+	_tasks[id(uasyncio.current_task())] = False
+
+def isAllWaiting():
+	""" Check if all task resumed """
+	result = True
+	for key, value in _tasks.items():
+		if value == False:
+			result = False
+	return result
+
+async def waitAllSuspended():
+	""" Wait all servers suspended """
+	for i in range(150):
+		if server.isAllWaiting() == True:
+			break
+		else:
+			if i % 30 == 0:
+				print("Wait all servers suspended...")
+			await uasyncio.sleep(0.1)
+

@@ -5,6 +5,7 @@ import uasyncio
 import time
 from tools import useful, jsonconfig
 import server
+import wifi
 
 class PresenceConfig:
 	""" Configuration class of presence detection """
@@ -14,6 +15,9 @@ class PresenceConfig:
 
 		# Ip addresses of smartphones
 		self.smartphones = [b"",b"",b"",b"",b""]
+
+		# Notify presence
+		self.notify = True
 
 	def save(self, file = None):
 		""" Save configuration """
@@ -67,9 +71,7 @@ async def detectPresence():
 		else:
 			readConfig -= pollingDuration
 
-		if config.activated == True:
-			# Wait server resume
-			await server.waitResume()
+		if config.activated == True and wifi.Station.isActive():
 			presents = []
 			currentDetected = None
 			smartphoneInList = False
@@ -102,14 +104,16 @@ async def detectPresence():
 					msg = b""
 					for present in presents:
 						msg += b"%s "%present
-					await notifyMessage(b"Presence of %s"%(msg))
+					if config.notify:
+						await notifyMessage(b"presence of %s"%(msg))
 					presenceDetected = True
 			# If no smartphone detected
 			elif currentDetected == False:
 				# If smartphone previously detected
 				if presenceDetected != currentDetected:
 					# Notify the house in empty
-					await notifyMessage(b"Empty house")
+					if config.notify:
+						await notifyMessage(b"empty house")
 					presenceDetected = False
 
 			# If all smartphones not responded during a long time
@@ -129,10 +133,11 @@ async def detectPresence():
 
 		# If the presence detection change
 		if activated != config.activated:
-			await notifyMessage(b"Presence detection %s"%(b"actived" if config.activated else b"stopped"))
+			if config.notify:
+				await notifyMessage(b"presence detection %s"%(b"on" if config.activated else b"off"))
 			activated = config.activated
 
 		# Wait before new ping
-		await uasyncio.sleep(pollingDuration)
+		await server.waitResume(pollingDuration)
 
 

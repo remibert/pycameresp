@@ -34,6 +34,6 @@ class HttpServerCore:
 			else:
 				await function(request, response, args)
 		except Exception as err:
-			await response.sendError(status=b"404", content=useful.htmlException(err))
+			await response.sendError(status=b"404", content=useful.tobytes(useful.exception(err)))
 		finally:
 			await stream.close()

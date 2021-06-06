@@ -1631,6 +1631,7 @@ class Editor:
 			self.edit.view.flush()
 			startTime = useful.ticks()
 			try:
+				useful.log(None)
 				useful.import_(self.filename)
 			except KeyboardInterrupt:
 				pass

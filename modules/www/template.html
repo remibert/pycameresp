@@ -57,7 +57,7 @@
 
 			<!--Input:begin-->
 			<div class="form-group">
-				<input class="form-control %(class_)s" style="%(style)s" id="%(id)s" pattern="%(pattern)s" placeholder="%(placeholder)s" type="%(type)s" value="%(value)s" name="%(name)s" %(disabled)s>
+				<input class="form-control %(class_)s" style="%(style)s" id="%(id)s" pattern="%(pattern)s" placeholder="%(placeholder)s" type="%(type)s" value="%(value)s" name="%(name)s" %(disabled)s />
 			</div>
 			<!--Input:end-->
 
@@ -80,34 +80,33 @@
 			<!--Edit:begin-->
 			<div class="form-group">
 				<label >%(text)s</label>
-				<input type="%(type)s" class="form-control %(class_)s" style="%(style)s" id="%(id)s" pattern="%(pattern)s" placeholder="%(placeholder)s" type="%(type)s" value="%(value)s" name="%(name)s" %(disabled)s>
+				<input type="%(type)s" class="form-control %(class_)s" style="%(style)s" id="%(id)s" pattern="%(pattern)s" placeholder="%(placeholder)s" type="%(type)s" value="%(value)s" name="%(name)s" %(disabled)s />
 			</div>
 			<!--Edit:end-->
 
 			<!--Switch:begin-->
 			<div class="custom-control custom-switch">
-				<input type="checkbox" class="custom-control-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s>
+				<input type="hidden" value="0" name="%(name)s" /><input type="checkbox" class="custom-control-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s onchange="%(onchange)s" />
 				<label class="custom-control-label" for="%(id)s">%(text)s</label>
 			</div>
-			<br>
 			<!--Switch:end-->
 
 			<!--Checkbox:begin-->
 			<div class="form-check">
 				<label class="form-check-label">
-					<input type="checkbox" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s>%(text)s
+					<input type="checkbox" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s>%(text)s</input>
 				</label>
 			</div>
 			<!--Checkbox:end-->
 
 			<!--Button:begin-->
-			<input class="btn %(class_)s" style="%(style)s" id="%(id)s" type="button" name="%(name)s" %(disabled)s> %(text)s</input>
+			<button class="btn btn-outline-primary %(class_)s" style="%(style)s" id="%(id)s" type="%(type)s" name="%(name)s" value="%(value)s" %(disabled)s>%(text)s</button>
 			<!--Button:end-->
 
 			<!--Radio:begin-->
 			<div class="form-check">
 				<label class="form-check-label">
-					<input type="radio" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(checked)s %(disabled)s>%(text)s
+					<input type="radio" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(checked)s %(disabled)s onchange="%(onchange)s">%(text)s</input>
 				</label>
 			</div>
 			<!--Radio:end-->
@@ -159,7 +158,13 @@
 		<!--Container:end-->
 
 		<!--Card:begin-->
-		<div class="card shadow %(class_)s" style="%(style)s" id="%(id)s">
+		<div class="card %(class_)s" style="%(style)s" id="%(id)s">
+			<!--CardHeader:begin-->
+			<div class="card-header %(class_)s" style="%(style)s" id="%(id)s">%(text)s %(content)s</div>
+			<!--CardHeader:end-->
+			<!--CardBody:begin-->
+			<div class="card-body %(class_)s" style="%(style)s" id="%(id)s">%(content)s</div>
+			<!--CardBody:end-->
 			%(content)s
 		</div>
 		<!--Card:end-->
@@ -181,7 +186,7 @@
 		<!--List:end-->
 
 		<!--Submit:begin-->
-		<button class="btn btn-outline-primary %(class_)s" style="%(style)s" id="%(id)s" type="submit" value="%(value)s">%(content)s%(text)s</button>
+		<button class="btn btn-outline-primary %(class_)s" style="%(style)s" id="%(id)s" type="submit" name="%(name)s" value="%(value)s">%(content)s%(text)s</button>
 		<!--Submit:end-->
 
 		<!--Cancel:begin-->
@@ -223,6 +228,7 @@
 		<datalist id="%(id)s">
 			%(content)s
 		</datalist>
+		</input>
 		<br>
 		<!--ComboBox:end-->
 
@@ -314,7 +320,7 @@
 
 		<!--SwitchCmd:begin-->
 		<div class="custom-control custom-switch">
-			<input type="checkbox" class="custom-control-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s oninput="oncommand_%(id)s()">
+			<input type="checkbox" class="custom-control-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s oninput="oncommand_%(id)s()" />
 			<label class="custom-control-label" for="%(id)s">%(text)s</label>
 		</div>
 		<script type="text/javascript">

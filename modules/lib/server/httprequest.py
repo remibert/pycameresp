@@ -195,9 +195,12 @@ class Http:
 					param.append(True)
 				previousValue = self.params.get(param[0])
 				if previousValue is not None:
-					if not isinstance(previousValue, list):
-						self.params[param[0]] = [previousValue]
-					self.params[param[0]].append(param[1])
+					if previousValue == b'0' and param[1] == b'':
+						self.params[param[0]] = b'1'
+					else:
+						if not isinstance(previousValue, list):
+							self.params[param[0]] = [previousValue]
+						self.params[param[0]].append(param[1])
 				else:
 					self.params[param[0]] = param[1]
 
@@ -315,7 +318,7 @@ class Http:
 			except Exception as err:
 				# Serialize error detected
 				result += await streamio.write(b'Content-Type: text/plain\r\n\r\n')
-				result += await streamio.write(useful.htmlException(err))
+				result += await streamio.write(useful.tostrings(useful.exception(err)))
 		# If multipart detected
 		elif len(self.parts) > 0:
 			# If the header is a multipart

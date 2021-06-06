@@ -97,7 +97,7 @@ class Motion:
 	def deinit (self):
 		pass
 
-	def compare(self, other):
+	def compare(self, other, params):
 		return {
 			'feature': {'light': 37, 'saturation': 13}, 
 			'path': '2021-04-25 11-37-00', 
@@ -123,10 +123,6 @@ class Motion:
 				'height': 600, 'width': 800
 			}
 		}
-
-	def setErrorLight     (self, lightErrorRange): pass
-	def setErrorSaturation(self, saturationErrorRange): pass
-	def setErrorHue       (self, hueErrorRange):pass
 
 	def getImage(self):
 		return b""
