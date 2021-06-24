@@ -25,7 +25,8 @@
 		"limits": "c",
 		"ratio": "c",
 		"__config": "c",
-		"memory": "c"
+		"memory": "c",
+		"complex": "c"
 	},
 	"C_Cpp.dimInactiveRegions": false
 }

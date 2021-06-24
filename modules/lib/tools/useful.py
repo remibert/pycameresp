@@ -739,6 +739,20 @@ def remove(filename):
 	try:    uos.remove(filename)
 	except: pass 
 
+def uptime():
+	""" Tell how long the system has been running """
+	try:
+		up = time.ticks_ms()
+	except:
+		up = time.time() * 1000
+
+	millis  = (up%1000)
+	seconds = (up/1000)%60
+	mins    = (up/1000/60)%60
+	hours   = (up/1000/3600)%24
+	days    = (up/1000/86400)
+	return "up %d days, %d:%02d:%02d"%(days,hours,mins,seconds)
+
 HEADER_FILE=b"## PYCAMERESP ##\r\n"
 def exportFiles(exportFilename, path="./config",pattern="*.json", recursive=False):
 	""" Exports many file into only one file """

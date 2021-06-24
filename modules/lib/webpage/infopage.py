@@ -44,11 +44,17 @@ async def index(request, response, args):
 		platform = useful.tobytes(sys.platform)
 	except:
 		platform = b"Unavailable"
+  
+	try:
+		uptime = useful.tobytes(useful.uptime())
+	except:
+		uptime = b""
 
 	date = useful.dateToBytes()
 
 	page = mainFrame(request, response, args, b"Device informations",
 		Edit(text=b"Date",             value=date,      disabled=True),
+		Edit(text=b"Uptime",           value=uptime,    disabled=True),
 		Edit(text=b"Platform",         value=platform,  disabled=True),
 		Edit(text=b"Frequency",        value=frequency, disabled=True),
 		Edit(text=b"Memory free",      value=memFree,   disabled=True),

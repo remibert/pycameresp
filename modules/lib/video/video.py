@@ -160,7 +160,7 @@ class Camera:
 				except ValueError:
 					print("Failed to get motion %d retry before reset"%retry)
 					retry += 1
-					time.sleep(0.5)
+					time.sleep(0.1)
 		return result
 
 	@staticmethod

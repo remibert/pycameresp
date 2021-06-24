@@ -104,9 +104,7 @@ class Motion:
 			'diff': 
 			{
 				'count': 0, 
-				'saturation': 48, 
 				'max': 300, 
-				'hue': 21, 
 				'light': 94
 			}, 
 			'shapes': 

@@ -15,6 +15,7 @@ import time
 from tools import useful, jsonconfig
 import json
 import server
+from gc import collect
 from motion import presence,historic
 
 class MotionConfig:
@@ -32,14 +33,8 @@ class MotionConfig:
 		# Awake time on battery (seconds)
 		self.awakeTime = 120
 
-		# Error range ignore hue modification (5%)
-		self.hueErrorRange=18 
-
-		# Error range ignore saturation modification (10%)
-		self.saturationErrorRange=10
-
-		# Error range ignore light modification (5%)
-		self.lightErrorRange=5
+		# Error range ignore light modification (5% of 256)
+		self.lightErrorRange=13
 
 		# Max images in motion historic
 		self.maxMotionImages=10
@@ -158,8 +153,8 @@ class ImageMotion:
 
 	def compare(self, previous, set=False, extractShape=True):
 		""" Compare two motion images to get differences """
-		res = self.motion.compare(previous.motion, {"errorLight":self.config.lightErrorRange, "errorSaturation":self.config.saturationErrorRange, "errorHue":self.config.hueErrorRange, "extractShape":extractShape})
-		if set:
+		res = self.motion.compare(previous.motion, {"errorLight":self.config.lightErrorRange, "extractShape":extractShape})
+		if set or self.comparison == None:
 			self.comparison = res
 		return res
 
@@ -183,6 +178,12 @@ class ImageMotion:
 		""" Get the difference contigous """
 		if self.comparison:
 			return self.comparison["diff"]["count"]
+		return 0
+
+	def getDiffHisto(self):
+		""" Get the histogram difference """
+		if self.comparison:
+			return self.comparison["diff"]["histo"]
 		return 0
 
 	def resetDifferences(self):
@@ -239,7 +240,6 @@ class Motion:
 	async def capture(self):
 		""" Capture motion image """
 		result = None
-		retry = 10
 		# If enough image taken
 		if len(self.images) >= self.config.maxMotionImages:
 			# Get older image
@@ -256,20 +256,9 @@ class Motion:
 				# Destroy image
 				self.deinitImage(image)
 
-		while 1:
-			if retry == 0:
-				print("Reset")
-				machine.reset()
-
-			try:
-				image = ImageMotion(video.Camera.motion(), self.config)
-				self.images.insert(0, image)
-				self.index += 1
-				break
-			except ValueError:
-				print("Failed to get motion %d try before reset"%retry)
-				retry += 1
-				time.sleep(0.5)
+		image = ImageMotion(video.Camera.motion(), self.config)
+		self.images.insert(0, image)
+		self.index += 1
 		return result
 
 	def isStabilized(self):
@@ -297,26 +286,24 @@ class Motion:
 		differences = {}
 		if len(self.images) >= 2:
 			current = self.images[0]
-			checkedMotionIds = []
 			
 			# Compute the motion identifier
-			for previous in self.images[1:]:
-				# If image not already compared
-				if not previous.getMotionId() in checkedMotionIds:
-					checkedMotionIds.append(previous.getMotionId())
-					comparison = current.compare(previous, False, False)
-		
-					# If camera not stabilized
-					if self.isStabilized() == False:
-						# Reject the differences
-						current.resetDifferences()
-						break
+			for previous in self.images[1:5]:
+				# # If image not already compared
+				comparison = current.compare(previous, False, False)
+				# print("D%d H%d id%d idx%d"%(comparison["diff"]["count"], comparison["diff"]["histo"], previous.getMotionId() if previous.getMotionId() else -1, previous.index))
+	
+				# If camera not stabilized
+				if self.isStabilized() == False:
+					# Reject the differences
+					current.resetDifferences()
+					break
 
-					# If image seem equal to previous
-					if not self.isDetected(comparison):
-						# Reuse the motion identifier
-						current.setMotionId(previous.motionId)
-						break
+				# If image seem equal to previous
+				if not self.isDetected(comparison):
+					# Reuse the motion identifier
+					current.setMotionId(previous.motionId)
+					break
 			else:
 				# Create new motion id
 				current.setMotionId()
@@ -330,13 +317,13 @@ class Motion:
 			for image in self.images:
 				differences.setdefault(image.getMotionId(), []).append(image.getMotionId())
 				if image.getMotionId() != None:
-					diffs += " %d:%d"%(image.getMotionId(), image.getDiffCount())
+					diffs += " %d:%d%s"%(image.getMotionId(), image.getDiffCount(), chr(0x41 + ((256-image.getDiffHisto())//10)))
 			if display:
 				sys.stdout.write("\r%s %s    "%(useful.dateToString()[12:], diffs))
 		return differences
 
 	def deinitImage(self, image):
-		
+		""" Release image allocated """
 		if image:
 			if not image in self.images:
 				if image != self.imageBackground:
@@ -418,7 +405,7 @@ async def detectMotion(onBattery, pirDetection):
 	
 	while True:
 		await server.waitResume()
-  
+
 		# If detection
 		if detection != None:
 			message, image = detection
@@ -507,7 +494,7 @@ async def detectMotion(onBattery, pirDetection):
 								startTime = time.time()
 							else:
 								# Slow down the polling frequency
-								pollingFrequency = 200
+								pollingFrequency = 50
 								historic.Historic.setMotionState(False)
 					except Exception as err:
 						print(useful.exception(err))
@@ -525,6 +512,9 @@ async def detectMotion(onBattery, pirDetection):
 			# Motion capture disabled
 			await sleep_ms(500)
 		pollingCounter += 1
+
+		if motion.index %20 == 0:
+			collect()
 
 		# Reload configuration each 3 s
 		if pollingCounter % 5 == 0:

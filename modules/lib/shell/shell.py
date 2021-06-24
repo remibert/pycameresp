@@ -406,6 +406,10 @@ def gc():
 	from gc import collect
 	collect()
 
+def uptime():
+	""" Tell how long the system has been running """
+	print(useful.uptime())
+
 def man(command):
 	""" Man command """
 	print(manOne(command))
@@ -599,6 +603,7 @@ shellCommands = \
 	"rm"       :[rm       ,"file",                 ("-r","recursive",True),("-f","force",True),("-s","simulate",True)],
 	"ls"       :[ls       ,"file",                 ("-r","recursive",True),("-l","long",True)],
 	"date"     :[date     ,"offsetUTC" ,           ("-u","update",True),   ("-n","noDst",True)],
+	"uptime"   :[uptime   ],
 	"find"     :[find     ,"file"],
 	"run"      :[useful.import_  ,"filename"],
 	"edit"     :[edit     ,"file"],

@@ -143,25 +143,18 @@ typedef struct
 	uint16_t       square_x;
 	uint16_t       square_y;
 
-	uint16_t       *reds;
-	uint16_t       *greens;
-	uint16_t       *blues;
-
-	uint16_t       *hues;
-	uint16_t       *saturations;
 	uint16_t       *lights;
 
 	uint16_t       *diffs;
 
 	uint16_t       *stack;
+
+#define MAX_HISTO 16
+	uint16_t histo[MAX_HISTO];
+
 	uint16_t       stackpos;
 
-	u_int32_t  meanLight;
-	u_int32_t  meanSaturation;
-
 	int errorLight;
-	int errorSaturation;
-	int errorHue;
 } Motion_t;
 const mp_obj_type_t Motion_type;
 
@@ -203,7 +196,12 @@ CAMERA_SETTING(uint8_t    , colorbar      , colorbar      ,  0, 255 )
 
 static void *_malloc(size_t size)
 {
-	return heap_caps_calloc(1, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+	void * result = heap_caps_calloc(1, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+	if (result == 0)
+	{
+		ESP_LOGE(TAG, "Malloc failed !!!!!!");
+	}
+	return result;
 }
 
 static void _free(void ** ptr)
@@ -335,130 +333,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_motion_detect_obj, camera_motion_detect)
 
 #endif
 
-/** Conversion from HSL to RGB color
-@param hue hue value (0-359)
-@param saturation saturation value (0-100)
-@param light light value (0-100) */
-void hsl_to_rgb(uint32_t hue, uint32_t saturation, uint32_t light, uint32_t *red, uint32_t *green, uint32_t *blue)
-{
-	int v;
-	int m, sv, fract, vsf, mid1, mid2, sextant;
-	*red = *green = *blue = 0;
-
-	hue %= 360;
-	v = (light < 50) ? (light * (saturation + 100) / 100) : (light + saturation - (light * saturation / 100));
-	if (v > 0) 
-	{
-		m = light + light - v;
-		sv = 100 * (v - m) / v;
-
-		sextant = hue/60;
-		fract = 100 * (hue - (sextant * 60)) / 60;
-		vsf = v * sv * fract / 10000;
-		mid1 = m + vsf;
-		mid2 = v - vsf;
-
-		switch (sextant) 
-		{
-		case 0: 
-			*red = v;
-			*green = mid1;
-			*blue = m;
-			break;
-
-		case 1:
-			*red = mid2;
-			*green = v;
-			*blue = m;
-			break;
-
-		case 2:
-			*red = m;
-			*green = v;
-			*blue = mid1;
-			break;
-
-		case 3:
-			*red = m;
-			*green = mid2;
-			*blue = v;
-			break;
-
-		case 4:
-			*red = mid1;
-			*green = m;
-			*blue = v;
-			break;
-
-		case 5:
-			*red = v;
-			*green = m;
-			*blue = mid2;
-			break;
-		}
-
-		*red   = (*red   * 255) / 100;
-		*green = (*green * 255) / 100;
-		*blue  = (*blue  * 255) / 100;
-	}
-}
-
-/** Conversion from RGB to HSL color space. 
-@param color color to convert
-@param hue hue value returned (0-359)
-@param saturation saturation value returned (0-100)
-@param light light value returned (0-100) */
-void rgb_to_hsl(uint32_t red, uint32_t green, uint32_t blue, uint32_t *hue, uint32_t *saturation, uint32_t *light)
-{
-	uint32_t v, m, vm;
-	uint32_t hue2, saturation2, light2;
-
-	if (hue && saturation && light)
-	{
-		red   = red   << 8;
-		green = green << 8;
-		blue  = blue  << 8;
-		
-		hue2 = saturation2 = light2 = 0;
-
-		v = max(red,green);
-		v = max(v,blue);
-		m = min(red,green);
-		m = min(m,blue);
-
-		light2 = (m + v)/2;
-		if (light2 != 0) 
-		{
-			saturation2 = vm = (v - m);
-			if (saturation2 != 0)
-			{
-				uint32_t red2, green2, blue2;
-				saturation2 = (saturation2 << 16) / ((light2 < 32768) ? (v+m) : (131072 - v - m));
-
-				red2   = ((((v-red)   << 16) / vm) * 60) >> 16;
-				green2 = ((((v-green) << 16) / vm) * 60) >> 16;
-				blue2  = ((((v-blue)  << 16) / vm) * 60) >> 16;
-
-				if (red == v)
-				{
-					hue2 = (green == m ? 300 + blue2 : 60 - green2);
-				}
-				else if (green == v)
-				{
-					hue2 = (blue == m ? 60 + red2 : 180 - blue2);
-				}
-				else
-				{
-					hue2 = (red == m ? 180 + green2 : 300 - red2);
-				}
-			}
-		}
-
-		*hue = hue2 % 360;
-		*saturation = (saturation2 * 100) >> 16;
-		*light = (light2 * 100) >> 16;
-	}
-}
 
 // input buffer
 static uint32_t Motion_jpgRead(void * arg, size_t index, uint8_t *buf, size_t len)
@@ -505,11 +379,6 @@ static bool Motion_parseImage(void * arg, uint16_t x, uint16_t y, uint16_t w, ui
 
 			motion->max    = (w/motion->square_x) * (h/motion->square_y);
 			//ESP_LOGE(TAG, "motion %dx%d %dx%d %d",w,h, motion->square_x, motion->square_y, motion->max);
-			motion->reds        = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
-			motion->greens      = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
-			motion->blues       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
-			motion->hues        = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
-			motion->saturations = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 			motion->lights      = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 			motion->diffs       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
 			motion->stack       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max*2*4);
@@ -521,33 +390,38 @@ static bool Motion_parseImage(void * arg, uint16_t x, uint16_t y, uint16_t w, ui
 	}
 	else
 	{
-		uint16_t *reds;
-		uint16_t *greens;
-		uint16_t *blues;
 		uint16_t Y, X;
-		
-		uint16_t       square_x = motion->square_x;
-		uint16_t       square_y = motion->square_y;
+		uint32_t red;
+		uint32_t green;
+		uint32_t blue;
+		uint32_t light;
+		uint16_t *lights;
+		uint16_t square_x = motion->square_x;
+		uint16_t square_y = motion->square_y;
+		uint16_t posX;
+		uint16_t posY;
+		uint8_t * pdata;
+
+		lights = motion->lights;
 
 		// Compute the motion in the square detection
 		for (Y = y; Y < (y + h); Y ++)
 		{
-			reds   = motion->reds;
-			greens = motion->greens;
-			blues  = motion->blues;
-			
+			posY = ((Y/square_y)*(motion->width/square_x));
 			for (X = x; X < (x + w); X ++) 
 			{
-				uint16_t posX = ((Y/square_y)*(motion->width/square_x)) + X / square_x;
-				reds  [posX] += data[(X-x)*3+2]; // Red
-				greens[posX] += data[(X-x)*3+1]; // Green
-				blues [posX] += data[(X-x)*3];   // Blue
-				//~ ESP_LOGE(TAG, "%d:%d %d %d", posX, reds[posX], greens[posX], blues[posX]);
+				posX  = posY + (X / square_x);
+				pdata = &(data[(X-x)*3]);
+				blue  = *pdata; pdata++;
+				green = *pdata; pdata++;
+				red   = *pdata; pdata++;
+				light = ((max(max(red,green),blue) + min(min(red,green),blue)) >> 1);
+				motion->histo[light/MAX_HISTO] ++;
+				lights[posX] += light;
 			}
 			data += (w * 3);
 		}
 	}
-	
 	return true;
 }
 
@@ -567,67 +441,24 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 
 		if (ret == ESP_OK)
 		{
+			int square = motion->square_x * motion->square_y;
 			int i;
-			uint8_t  * pBluesRes    = (uint8_t*)motion->blues;
-			uint8_t  * pRedRes      = (uint8_t*)motion->reds;
-			uint8_t  * pGreenRes    = (uint8_t*)motion->greens;
-			uint16_t * pHues        = motion->hues;
-			uint16_t * pSaturations = motion->saturations;
-			uint16_t * pLights      = motion->lights;
-			uint32_t red;
-			uint32_t green;
-			uint32_t blue;
-			uint32_t hue;
-			uint32_t saturation;
-			uint32_t light;
-			uint32_t meanSaturation = 0;
-			uint32_t meanLight= 0;
-			uint16_t square = motion->square_x * motion->square_y;
-
 			motion->imageData = _malloc(imageLength);
 			if (motion->imageData)
 			{
 				motion->imageLength = imageLength;
 				memcpy(motion->imageData, imageData, imageLength);
 			}
-			
-			//ESP_LOGE(TAG, "Motion_create %d %d",motion->width,motion->height);
+
 			for (i = 0; i < motion->max; i++)
 			{
 				// Calculate the average on the detection square
-				motion->blues [i] = motion->blues [i]/square;
-				motion->reds  [i] = motion->reds  [i]/square;
-				motion->greens[i] = motion->greens[i]/square;
-				
-				blue  = (uint8_t)motion->blues  [i];
-				red   = (uint8_t)motion->reds   [i];
-				green = (uint8_t)motion->greens [i];
-				
-				// Reduces the size of data to be returned
-				*pBluesRes = blue;
-				*pRedRes   = red;
-				*pGreenRes = green;
-				
-				rgb_to_hsl(red, green, blue, &hue, &saturation, &light);
-
-				*pHues        = (uint16_t)hue;
-				*pSaturations = (uint16_t)saturation;
-				*pLights      = (uint16_t)light;
-
-				meanSaturation += saturation;
-				meanLight      += light;
-				
-				pBluesRes++;
-				pRedRes++;
-				pGreenRes++;
-
-				pHues++;
-				pSaturations++;
-				pLights++;
+				motion->lights [i] = motion->lights [i]/square;
 			}
-
-			motion->meanLight      = meanLight/motion->max;
-			motion->meanSaturation = meanSaturation/motion->max;
+			for (i = 0; i < MAX_HISTO; i++)
+			{
+				motion->histo[i] /= square;
+			}
 		}
 		else
 		{
@@ -679,11 +510,6 @@ STATIC mp_obj_t Motion_deinit(mp_obj_t self_in)
 	Motion_t *motion = self_in;
 	if (motion)
 	{
-		_free((void**)&motion->blues);
-		_free((void**)&motion->reds);
-		_free((void**)&motion->greens);
-		_free((void**)&motion->hues);
-		_free((void**)&motion->saturations);
 		_free((void**)&motion->lights);
 		_free((void**)&motion->diffs);
 		_free((void**)&motion->imageData);
@@ -701,53 +527,41 @@ STATIC mp_obj_t Motion_extract(mp_obj_t self_in)
 	if (motion)
 	{
 		int i;
-		uint16_t * pHues        = motion->hues;
-		uint16_t * pSaturations = motion->saturations;
 		uint16_t * pLights      = motion->lights;
 		uint16_t * pDiffs       = motion->diffs;
 
-		// Build list of hue, saturation, light
-		pHues        = motion->hues;
-		pSaturations = motion->saturations;
+		// Build list of light
 		pLights      = motion->lights;
 		pDiffs       = motion->diffs;
 		
-		mp_obj_t objHues        = mp_obj_new_list(0, NULL);
-		mp_obj_t objSaturations = mp_obj_new_list(0, NULL);
 		mp_obj_t objLights      = mp_obj_new_list(0, NULL);
 		mp_obj_t objDiffs       = mp_obj_new_list(0, NULL);
 		for (i = 0; i < motion->max; i++)
 		{
-			mp_obj_list_append(objHues       , mp_obj_new_int(*pHues));
-			mp_obj_list_append(objSaturations, mp_obj_new_int(*pSaturations));
 			mp_obj_list_append(objLights     , mp_obj_new_int(*pLights));
 			mp_obj_list_append(objDiffs      , mp_obj_new_int(*pDiffs));
-			pHues++;
-			pSaturations++;
 			pLights++;
 			pDiffs++;
 		}
-		
-		// Create binary string with motion result
-		mp_obj_t objReds   = mp_obj_new_bytes((uint8_t *) motion->reds  , motion->max);
-		mp_obj_t objGreens = mp_obj_new_bytes((uint8_t *) motion->greens, motion->max);
-		mp_obj_t objBlues  = mp_obj_new_bytes((uint8_t *) motion->blues , motion->max);
+
+		mp_obj_t objHisto      = mp_obj_new_list(0,NULL);
+
+		for (i = 0; i < MAX_HISTO; i++)
+		{
+			mp_obj_list_append(objHisto      , mp_obj_new_int(motion->histo[i]));
+		}
 		
 		// Add image buffer
 		mp_obj_list_append(res,mp_obj_new_bytes(motion->imageData, motion->imageLength));
 
-		// Add the motion result in the list returned
-		mp_obj_list_append(res, objReds  );
-		mp_obj_list_append(res, objGreens);
-		mp_obj_list_append(res, objBlues );
-		
-		// Add list of hues, saturations, lights
-		mp_obj_list_append(res, objHues);
-		mp_obj_list_append(res, objSaturations);
+		// Add list of lights
 		mp_obj_list_append(res, objLights);
 
 		// Add list with differences
 		mp_obj_list_append(res, objDiffs);
+
+		// Add list with histo
+		mp_obj_list_append(res, objHisto);
 	}
 
 	return res;
@@ -869,132 +683,47 @@ bool Motion_searchShape(Motion_t * motion, int x, int y, Shape_t * shape)
 	return result;
 }
 
+// Compute histogram
+int Motion_getDiffHisto(Motion_t *self, Motion_t *other)
+{
+	int i;
+	int diff = 0;
+	for (i = 0; i < MAX_HISTO; i++)
+	{
+		diff += abs(self->histo[i] - other->histo[i]);
+	}
+
+	if (diff > self->max)
+	{
+		return 0;
+	}
+	else
+	{
+		return (256 - ((diff<< 8)/self->max));
+	}
+}
+
 // Compute the difference between two motion detection
 STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 {
-#define MIN_LIGHT 20
-#define MIN_SATURATION 20
-	int diffDetected   = 0;
-	int diffHue        = 0;
-	int diffSaturation = 0;
-	int diffLight      = 0;
-	
-	bool enoughLight = true;
-	bool enoughSaturation = true;
 	int i;
-	int errSaturation        = self->errorSaturation;
-	int errLight             = self->errorLight;
-	int errHue               = self->errorHue;
-	int correctionSaturation = (int)self->meanSaturation - (int)other->meanSaturation;
-	int correctionLight      = (int)self->meanLight      - (int)other->meanLight;
-	uint16_t hue1,hue2,saturation1,saturation2,light1,light2;
-	int width  = self->width /self->square_x;
-	int height = self->height/self->square_y;
-	int x;
-	int y;
-	uint16_t diff;
+	int diffDetected = 0;
+	int diffHisto    = Motion_getDiffHisto(self, other);
+	int errLight     = self->errorLight;
 
-	for (y = 0; y < height; y++)
+	for (i = 0; i < self->max; i++)
 	{
-		for (x = 0; x < width; x++)
+		// Compare light
+		if (((abs(self->lights[i] - other->lights[i]) * diffHisto)>>8) > errLight)
 		{
-			i = y * width + x;
-			
-			hue1        = self->hues[i];        hue2        = other->hues[i];
-			saturation1 = self->saturations[i]; saturation2 = other->saturations[i];
-			light1      = self->lights[i];      light2      = other->lights[i];
-			
-			// If two image has not enough light
-			if (light1 < MIN_LIGHT && light2 < MIN_LIGHT)
-			{
-				enoughLight = false;
-			}
-			// If one of two image has not enough light
-			else if (light1 < MIN_LIGHT || light2 < MIN_LIGHT)
-			{
-				// If the difference of light between two image is not too big
-				if (abs(light1 - light2) < errLight)
-				{
-					enoughLight = false;
-				}
-				else
-				{
-					enoughLight = true;
-				}
-			}
-			else
-			{
-				enoughLight = true;
-			}
-			
-			// If two image has not enough saturation
-			if (saturation1 < MIN_SATURATION && saturation2 < MIN_SATURATION)
-			{
-				enoughSaturation = false;
-			}
-			// If one of two image has not enough saturation
-			else if (saturation1 < MIN_SATURATION || saturation2 < MIN_SATURATION)
-			{
-				// If the difference of saturation between two image is not too big
-				if (abs(saturation1 - saturation2) < errSaturation)
-				{
-					enoughSaturation = false;
-				}
-				else
-				{
-					enoughSaturation = true;
-				}
-			}
-			else
-			{
-				enoughSaturation = true;
-			}
-
-			diff = 0;
-			// Compare light
-			if (abs(light1 - light2) > (errLight + abs(correctionLight)))
-			{
-				diff = 0x01;
-				diffLight ++;
-			}
-			
-			// If enough light
-			if (enoughLight)
-			{
-				// Compare saturation
-				if (abs(saturation1 - saturation2) > (errSaturation + abs(correctionSaturation)))
-				{
-					diff |= 0x02;
-					diffSaturation ++;
-				}
-			}
-			
-			// If enough light and saturation
-			if (enoughLight && enoughSaturation)
-			{
-				// Compare hue
-				if (abs(hue1 - hue2) > errHue && abs(hue1 - hue2) < 360-errHue)
-				{
-					diff |= 0x04;
-					diffHue++;
-				}
-			}
-
-			// Save the diff
-			self->diffs[i] = diff;
-
-			if (diff)
-			{
-				diffDetected ++;
-			}
+			self->diffs[i] = 0x01;
+			diffDetected ++;
 		}
 	}
 	mp_obj_t diffdict = mp_obj_new_dict(0);
-		mp_obj_dict_store(diffdict, mp_obj_new_str("hue"       , strlen("hue"))       ,  mp_obj_new_int(diffHue));
-		mp_obj_dict_store(diffdict, mp_obj_new_str("saturation", strlen("saturation")),  mp_obj_new_int(diffSaturation));
-		mp_obj_dict_store(diffdict, mp_obj_new_str("light"     , strlen("light"))     ,  mp_obj_new_int(diffLight));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("count"     , strlen("count"))     ,  mp_obj_new_int(diffDetected));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("max"       , strlen("max"))       ,  mp_obj_new_int(self->max));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("histo"     , strlen("histo"))     ,  mp_obj_new_int(diffHisto));
 	mp_obj_dict_store(result, mp_obj_new_str("diff"     , strlen("diff")), diffdict);
 	return diffDetected;
 }
@@ -1100,9 +829,7 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t par
 	else
 	{
 		int extractShape = mp_obj_is_true(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_extractShape)));
-		self->errorSaturation = mp_obj_get_int(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorSaturation)));
 		self->errorLight      = mp_obj_get_int(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLight)));
-		self->errorHue        = mp_obj_get_int(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorHue)));
 
 		mp_obj_t result = mp_obj_new_dict(0);
 
@@ -1115,11 +842,6 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t par
 			mp_obj_dict_store(geometrydict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int(self->width  * 8));
 			mp_obj_dict_store(geometrydict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int(self->height * 8));
 		mp_obj_dict_store(result, mp_obj_new_str("geometry"     , strlen("geometry")), geometrydict);
-
-		mp_obj_t featuredict = mp_obj_new_dict(0);
-			mp_obj_dict_store(featuredict, mp_obj_new_str("saturation", strlen("saturation")),  mp_obj_new_int(self->meanSaturation));
-			mp_obj_dict_store(featuredict, mp_obj_new_str("light"     , strlen("light"))     ,  mp_obj_new_int(self->meanLight));
-		mp_obj_dict_store(result, mp_obj_new_str("feature"     , strlen("feature")), featuredict);
 
 		return result;
 	}

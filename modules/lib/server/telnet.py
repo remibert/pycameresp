@@ -7,6 +7,11 @@ from server import User
 from tools import useful
 import sys
 
+try:
+	import wifi
+	hostname = useful.tobytes(wifi.Station.getHostname())
+except:
+	hostname = useful.tobytes(sys.platform)
 last_client_socket = None
 server_socket = None
 
@@ -53,9 +58,11 @@ class TelnetWrapper(IOBase):
 		return readbytes
 
 	def getlogin(self, b=None):
+		global hostname
 		result = b
 		if self.state == 0:
-			self.socket.write(b"%s\r\nTelnet connected to %s\r\n%s\r\n"%(b"*"*30, useful.tobytes(sys.platform), b"*"*30))
+			message = b"* Telnet on '%s' started *"%hostname
+			self.socket.write(b"\r\n%s\r\n%s\r\n%s\r\n"%(b"*"*len(message), message, b"*"*len(message)))
 			if User.isEmpty():
 				self.state = 3
 			else:
