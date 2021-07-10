@@ -11,8 +11,10 @@ from webpage.serverpage import *
 from webpage.wifipage import *
 if iscamera():
 	from webpage.motionpage import *
+	from webpage.streamingpage import *
 	from webpage.camerapage import *
 	from webpage.historicpage import *
+	from webpage.zonemaskingpage import *
 from webpage.presencepage import *
 from webpage.batterypage import *
 from webpage.systempage import *

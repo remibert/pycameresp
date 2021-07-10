@@ -138,7 +138,9 @@ typedef struct
 	uint16_t       width;
 	const uint8_t *input;
 
-	uint16_t       max;
+	uint16_t       diffWidth;
+	uint16_t       diffHeight;
+	uint16_t       diffMax;
 
 	uint16_t       square_x;
 	uint16_t       square_y;
@@ -377,11 +379,13 @@ static bool Motion_parseImage(void * arg, uint16_t x, uint16_t y, uint16_t w, ui
 				motion->square_y = 5;
 			}
 
-			motion->max    = (w/motion->square_x) * (h/motion->square_y);
-			//ESP_LOGE(TAG, "motion %dx%d %dx%d %d",w,h, motion->square_x, motion->square_y, motion->max);
-			motion->lights      = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
-			motion->diffs       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max);
-			motion->stack       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->max*2*4);
+			motion->diffMax    = (w/motion->square_x) * (h/motion->square_y);
+			motion->diffWidth  = (w/motion->square_x);
+			motion->diffHeight = (h/motion->square_y);
+			//ESP_LOGE(TAG, "motion %dx%d %dx%d %d",w,h, motion->square_x, motion->square_y, motion->diffMax);
+			motion->lights      = (uint16_t*)_malloc(sizeof(uint16_t) * motion->diffMax);
+			motion->diffs       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->diffMax);
+			motion->stack       = (uint16_t*)_malloc(sizeof(uint16_t) * motion->diffMax*2*4);
 		}
 		else
 		{
@@ -390,16 +394,15 @@ static bool Motion_parseImage(void * arg, uint16_t x, uint16_t y, uint16_t w, ui
 	}
 	else
 	{
-		uint16_t Y, X;
-		uint32_t red;
-		uint32_t green;
-		uint32_t blue;
-		uint32_t light;
+		int Y, X;
+		unsigned int red;
+		unsigned int green;
+		unsigned int blue;
+		unsigned int light;
 		uint16_t *lights;
-		uint16_t square_x = motion->square_x;
-		uint16_t square_y = motion->square_y;
-		uint16_t posX;
-		uint16_t posY;
+		unsigned int square_x = motion->square_x;
+		unsigned int square_y = motion->square_y;
+		int posY;
 		uint8_t * pdata;
 
 		lights = motion->lights;
@@ -410,14 +413,13 @@ static bool Motion_parseImage(void * arg, uint16_t x, uint16_t y, uint16_t w, ui
 			posY = ((Y/square_y)*(motion->width/square_x));
 			for (X = x; X < (x + w); X ++) 
 			{
-				posX  = posY + (X / square_x);
 				pdata = &(data[(X-x)*3]);
 				blue  = *pdata; pdata++;
 				green = *pdata; pdata++;
 				red   = *pdata; pdata++;
 				light = ((max(max(red,green),blue) + min(min(red,green),blue)) >> 1);
 				motion->histo[light/MAX_HISTO] ++;
-				lights[posX] += light;
+				lights[posY + (X / square_x)] += light;
 			}
 			data += (w * 3);
 		}
@@ -450,10 +452,10 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 				memcpy(motion->imageData, imageData, imageLength);
 			}
 
-			for (i = 0; i < motion->max; i++)
+			for (i = 0; i < motion->diffMax; i++)
 			{
 				// Calculate the average on the detection square
-				motion->lights [i] = motion->lights [i]/square;
+				motion->lights[i] /= square;
 			}
 			for (i = 0; i < MAX_HISTO; i++)
 			{
@@ -472,8 +474,8 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 STATIC mp_obj_t Motion_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args)
 {
 	mp_obj_t  result = mp_const_none;
-	enum 
-	{ 
+	enum
+	{
 		ARG_image,
 	};
 	// Constructor parameters
@@ -536,7 +538,7 @@ STATIC mp_obj_t Motion_extract(mp_obj_t self_in)
 		
 		mp_obj_t objLights      = mp_obj_new_list(0, NULL);
 		mp_obj_t objDiffs       = mp_obj_new_list(0, NULL);
-		for (i = 0; i < motion->max; i++)
+		for (i = 0; i < motion->diffMax; i++)
 		{
 			mp_obj_list_append(objLights     , mp_obj_new_int(*pLights));
 			mp_obj_list_append(objDiffs      , mp_obj_new_int(*pDiffs));
@@ -693,13 +695,13 @@ int Motion_getDiffHisto(Motion_t *self, Motion_t *other)
 		diff += abs(self->histo[i] - other->histo[i]);
 	}
 
-	if (diff > self->max)
+	if (diff > self->diffMax)
 	{
 		return 0;
 	}
 	else
 	{
-		return (256 - ((diff<< 8)/self->max));
+		return (256 - ((diff<< 8)/self->diffMax));
 	}
 }
 
@@ -710,24 +712,33 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 	int diffDetected = 0;
 	int diffHisto    = Motion_getDiffHisto(self, other);
 	int errLight     = self->errorLight;
+	uint16_t       *pCurrentLights = self->lights;
+	uint16_t       *pOtherLights   = other->lights;
+	uint16_t       *pDiffs         = self->diffs;
 
-	for (i = 0; i < self->max; i++)
+	for (i = 0; i < self->diffMax; i++)
 	{
 		// Compare light
-		if (((abs(self->lights[i] - other->lights[i]) * diffHisto)>>8) > errLight)
+		if (((abs(*pCurrentLights - *pOtherLights) * diffHisto)>>8) > errLight)
 		{
-			self->diffs[i] = 0x01;
+			*pDiffs = 0x01;
 			diffDetected ++;
 		}
+		pDiffs ++;
+		pCurrentLights ++;
+		pOtherLights ++;
 	}
 	mp_obj_t diffdict = mp_obj_new_dict(0);
 		mp_obj_dict_store(diffdict, mp_obj_new_str("count"     , strlen("count"))     ,  mp_obj_new_int(diffDetected));
-		mp_obj_dict_store(diffdict, mp_obj_new_str("max"       , strlen("max"))       ,  mp_obj_new_int(self->max));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("max"       , strlen("max"))       ,  mp_obj_new_int(self->diffMax));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("squarex"   , strlen("squarex"))   ,  mp_obj_new_int(self->square_x*8));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("squarey"   , strlen("squarey"))   ,  mp_obj_new_int(self->square_y*8));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("width"     , strlen("width"))     ,  mp_obj_new_int(self->diffWidth));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("height"    , strlen("height"))    ,  mp_obj_new_int(self->diffHeight));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("histo"     , strlen("histo"))     ,  mp_obj_new_int(diffHisto));
 	mp_obj_dict_store(result, mp_obj_new_str("diff"     , strlen("diff")), diffdict);
 	return diffDetected;
 }
-
 
 STATIC void Motion_extractShape(Motion_t *self, mp_obj_t result, bool extractShape)
 {
@@ -749,8 +760,8 @@ STATIC void Motion_extractShape(Motion_t *self, mp_obj_t result, bool extractSha
 			for (x = 0; x < width; x++)
 			{
 				memset(&shape, 0, sizeof(shape));
-				shape.minx = self->max;
-				shape.miny = self->max;
+				shape.minx = self->diffMax;
+				shape.miny = self->diffMax;
 				shape.id = shapeId;
 
 				// If shape found
@@ -818,7 +829,7 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t par
 	{
 		mp_raise_TypeError(MP_ERROR_TEXT("Not motion object"));
 	}
-	else if (self->max != other->max)
+	else if (self->diffMax != other->diffMax)
 	{
 		mp_raise_TypeError(MP_ERROR_TEXT("Motions not same format"));
 	}

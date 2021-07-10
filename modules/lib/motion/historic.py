@@ -8,8 +8,8 @@ from tools import useful
 import json
 import server
 
-MAX_DISPLAYED = 100
-MAX_REMOVED   = 100
+MAX_DISPLAYED = 300
+MAX_REMOVED   = 300
 
 class Historic:
 	""" Manage the motion detection history file """
@@ -94,7 +94,7 @@ class Historic:
 						count += 1
 					if count > 10:
 						count = 0
-						await sleep_ms(5)
+						await uasyncio.sleep_ms(5)
 			except Exception as err:
 				print(useful.exception(err))
 			finally:
@@ -155,7 +155,7 @@ class Historic:
 			count += 1
 			if count > 10:
 				count = 0
-				await sleep_ms(5)
+				await uasyncio.sleep_ms(5)
 		result.sort()
 		if older == False:
 			result.reverse()
@@ -256,19 +256,20 @@ class Historic:
 						await Historic.release()
 				print("End cleanup sd card")
 
+	@staticmethod 
+	async def periodicTask_():
+		""" Internal periodic task """
+		await server.waitResume(10)
+		if Historic.motionInProgress[0] == False:
+			if useful.SdCard.isMounted():
+				await Historic.extract()
+				await Historic.removeOlder()
+		return True
+
 	@staticmethod
 	async def periodicTask():
 		""" Execute periodic traitment """
-		while 1:
-			await server.waitResume(10)
-			if Historic.motionInProgress[0] == False:
-				if useful.SdCard.isMounted():
-					await Historic.extract()
-					await Historic.removeOlder()
-
-async def sleep_ms(duration):
-	""" Multiplatform sleep_ms """
-	await uasyncio.sleep_ms(duration)
+		await useful.taskMonitoring(Historic.periodicTask_)
 
 
 

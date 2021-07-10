@@ -378,21 +378,29 @@ async def historicJson(request, response, args):
 @HttpServer.addRoute(b'/historic/images/.*', available=useful.iscamera())
 async def historicImage(request, response, args):
 	""" Send historic image """
-	Camera.reserve()
+	reserved = await Camera.reserve(Historic, timeout=5, suspension=5)
 	try:
-		await Historic.acquire()
-		await response.sendFile(useful.tostrings(request.path[len("/historic/images/"):]), base64=True)
+		if reserved:
+			await Historic.acquire()
+			await response.sendFile(useful.tostrings(request.path[len("/historic/images/"):]), base64=True)
+		else:
+			await response.sendError(status=b"404", content=b"Image not found")
 	finally:
 		await Historic.release()
-		Camera.unreserve()
+		if reserved:
+			await Camera.unreserve(Historic)
 
 @HttpServer.addRoute(b'/historic/download/.*', available=useful.iscamera())
 async def downloadImage(request, response, args):
 	""" Download historic image """
-	Camera.reserve()
+	reserved = await Camera.reserve(Historic, timeout=5, suspension=5)
 	try:
-		await Historic.acquire()
-		await response.sendFile(useful.tostrings(request.path[len("/historic/download/"):]), base64=False)
+		if reserved:
+			await Historic.acquire()
+			await response.sendFile(useful.tostrings(request.path[len("/historic/download/"):]), base64=False)
+		else:
+			await response.sendError(status=b"404", content=b"Image not found")
 	finally:
 		await Historic.release()
-		Camera.unreserve()
+		if reserved:
+			await Camera.unreserve(Historic)

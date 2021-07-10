@@ -163,6 +163,7 @@ def dateToFilename(date = None):
 	""" Get a filename with a date """
 	filename = dateToString(date)
 	filename = filename.replace("  "," ")
+	filename = filename.replace(" ","_")
 	filename = filename.replace("/","-")
 	filename = filename.replace(":","-")
 	return filename
@@ -752,6 +753,32 @@ def uptime():
 	hours   = (up/1000/3600)%24
 	days    = (up/1000/86400)
 	return "up %d days, %d:%02d:%02d"%(days,hours,mins,seconds)
+
+
+async def taskMonitoring(task):
+	""" Check if task crash, log message and reboot if it too frequent """
+	import uasyncio
+	from server   import notifyMessage
+
+	retryCounter = 0
+	lastError = ""
+
+	while retryCounter < 100:
+		try:
+			while True:
+				if await task():
+					retryCounter = 0
+
+		except Exception as err:
+			lastError = exception(err)
+			print(lastError)
+			open("%s.crash"%dateToFilename(),"w").write(lastError)
+			retryCounter += 1
+			await uasyncio.sleep_ms(6000)
+
+	await notifyMessage(b"Reboot after many crash : \n%s"%tobytes(lastError))
+	import machine
+	machine.reset()
 
 HEADER_FILE=b"## PYCAMERESP ##\r\n"
 def exportFiles(exportFilename, path="./config",pattern="*.json", recursive=False):

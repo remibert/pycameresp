@@ -89,19 +89,22 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
 
 async def periodic():
 	""" Periodic traitment update time, get wanip """
-	while True:
-		config = server.ServerConfig()
-		config.load()
-		if config.ntp:
-			if wifi.Station.isActive():
-				for i in range(6):
-					if setdate(config.offsettime, dst=config.dst, display=True):
-						break
-					else:
-						await uasyncio.sleep(10)
-			else:
-				print("Cannot set date : wifi not connected")
-		await uasyncio.sleep(3600)
+	try:
+		while True:
+			config = server.ServerConfig()
+			config.load()
+			if config.ntp:
+				if wifi.Station.isActive():
+					for i in range(6):
+						if setdate(config.offsettime, dst=config.dst, display=True):
+							break
+						else:
+							await uasyncio.sleep(10)
+				else:
+					print("Cannot set date : wifi not connected")
+			await uasyncio.sleep(3600)
+	except Exception as err:
+		open("%s.crash"%useful.dateToFilename(),"w").write(useful.exception(err))
 
 
 _suspended = [False]

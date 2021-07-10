@@ -9,11 +9,11 @@ import sys
 import machine
 import camera
 import time
+import uasyncio
 from tools import useful
 from tools import jsonconfig
 
 class CameraConfig:
-	streamingBase = [0]
 	""" Class that collects the camera rendering configuration """
 	def __init__(self):
 		""" Constructor """
@@ -25,8 +25,6 @@ class CameraConfig:
 		self.saturation = 0
 		self.hmirror    = False
 		self.vflip      = False
-		self.streamingBase[0] = self.streamingBase[0] + 1
-		self.streamingId = self.streamingBase[0]
 
 	def save(self, file = None):
 		""" Save configuration """
@@ -65,10 +63,89 @@ class Motion:
 		""" Return the jpeg buffer of motion """
 		return self.motion.getImage()
 
+class Reservation:
+	""" Manage the camera reservation """
+	def __init__(self):
+		""" Constructor """
+		self.identifier = None
+		self.count = 0
+		self.lock = uasyncio.Lock()
+		self.suspended = 0
+
+	async def reserve(self, object, timeout=0, suspension=None):
+		""" Wait the ressource and reserve """
+		result = False
+		# Wait 
+		while True:
+			result = await self.acquire(object, suspension)
+			if result:
+				break
+			timeout -= 1
+			if timeout <= 0:
+				break
+			await uasyncio.sleep_ms(1000)
+		return result
+
+	async def acquire(self, object, suspension=None):
+		""" Reserve the camera, is used to stream the output of the camera
+		to the web page. It stop the motion detection during this phase """
+		result = False
+		await self.lock.acquire()
+		identifier = id(object)
+		try:
+			# If not reserved
+			if self.identifier == None:
+				# If suspension not required
+				if suspension == None:
+					# If previous suspension ended
+					if self.suspended <= 0:
+						# Reserve
+						self.identifier = identifier
+						self.count = 1
+						self.suspended = 0
+						result = True
+					else:
+						# Decrease suspension counter
+						self.suspended -= 1
+				else:
+					# Reserve
+					self.identifier = identifier
+					self.count = 1
+					self.suspended = suspension
+					result = True
+			# If already reserved by the current object
+			elif self.identifier == identifier:
+				# Increase reservation counter
+				self.count += 1
+				self.suspended = suspension
+				result = True
+		finally:
+			self.lock.release()
+		return result
+
+	async def unreserve(self, object):
+		""" Unreserve the camera """
+		result = False
+		await self.lock.acquire()
+		identifier = id(object)
+		try:
+			if self.identifier == identifier:
+				if self.count <= 1:
+					self.count = 0
+					self.identifier = None
+				else:
+					self.count -= 1
+				result = True
+		finally:
+			self.lock.release()
+		return result
+
 class Camera:
 	""" Singleton class to manage the camera """
-	reserved = [False]
+	reservation = Reservation()
 	opened = False
+	lock = uasyncio.Lock()
+	modified = [False]
 
 	@staticmethod
 	def open():
@@ -83,8 +160,7 @@ class Camera:
 				else:
 					break
 			else:
-				print("Failed to initialized camera reboot")
-				machine.reset()
+				raise Exception("Failed to initialized camera reboot")
 			
 			# Photo on 800x600, motion detection / 8 (100x75), each square detection 8x8 (12.5 x 9.375)
 			Camera.opened = True
@@ -122,26 +198,25 @@ class Camera:
 		return result
 
 	@staticmethod
-	def reserve():
+	async def reserve(object, timeout=0, suspension=None):
 		""" Reserve the camera, is used to stream the output of the camera
 		to the web page. It stop the motion detection during this phase """
-		if Camera.reserved[0] == False:
-			Camera.reserved[0] = True
-			return True
-		return False
+		return await Camera.reservation.reserve(object, timeout, suspension)
 
 	@staticmethod
-	def unreserve():
+	async def unreserve(object):
 		""" Unreserve the camera """
-		if Camera.reserved[0] == True:
-			Camera.reserved[0] = False
-			return True
-		return False
+		return await Camera.reservation.unreserve(object)
 
 	@staticmethod
-	def isReserved():
-		""" Indicates if the camera is reserved or no """
-		return Camera.reserved[0]
+	def isModified():
+		""" Indicates that the camera configuration has been changed """
+		return Camera.modified[0]
+
+	@staticmethod
+	def clearModified():
+		""" Reset the indicator of configuration modification """
+		Camera.modified[0] = False
 
 	@staticmethod
 	def motion():
@@ -172,6 +247,7 @@ class Camera:
 	def framesize(resolution):
 		""" Configure the frame size """
 		val = None
+		Camera.modified[0] = True
 		if resolution == b"UXGA"  or resolution == b"1600x1200" :val = camera.FRAMESIZE_UXGA
 		if resolution == b"SXGA"  or resolution == b"1280x1024" :val = camera.FRAMESIZE_SXGA
 		if resolution == b"XGA"   or resolution == b"1024x768"  :val = camera.FRAMESIZE_XGA
@@ -190,6 +266,7 @@ class Camera:
 	@staticmethod
 	def pixformat(format):
 		""" Change the format of image """
+		Camera.modified[0] = True
 		val = None
 		if format == b"RGB565"    : val=camera.PIXFORMAT_RGB565
 		if format == b"YUV422"    : val=camera.PIXFORMAT_YUV422
@@ -208,6 +285,7 @@ class Camera:
 	@staticmethod
 	def quality(val=None):
 		""" Configure the compression """
+		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Quality %d"%val)
 			return camera.quality(val)
@@ -216,6 +294,7 @@ class Camera:
 	@staticmethod
 	def brightness(val=None):
 		""" Change the brightness """
+		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Brightness %d"%val)
 			if camera.brightness() != val:
@@ -227,6 +306,7 @@ class Camera:
 	@staticmethod
 	def contrast(val=None):
 		""" Change the contrast """
+		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Contrast %d"%val)
 			if camera.contrast() != val:
@@ -238,6 +318,7 @@ class Camera:
 	@staticmethod
 	def saturation(val=None):
 		""" Change the saturation """
+		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Saturation %d"%val)
 			if camera.saturation() != val:
@@ -249,6 +330,7 @@ class Camera:
 	@staticmethod
 	def sharpness(val=None):
 		""" Change the sharpness """
+		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Sharpness %d"%val)
 			return camera.sharpness(val)
@@ -257,6 +339,7 @@ class Camera:
 	@staticmethod
 	def hmirror(val=None):
 		""" Set horizontal mirroring """
+		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Hmirror %d"%val)
 			return camera.hmirror(val)
@@ -265,6 +348,7 @@ class Camera:
 	@staticmethod
 	def vflip(val=None):
 		""" Set the vertical flip """
+		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Vflip %d"%val)
 			return camera.vflip(val)
