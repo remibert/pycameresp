@@ -150,6 +150,7 @@ class Camera:
 	@staticmethod
 	def open():
 		""" Open the camera """
+		result = True
 		if Camera.opened == False:
 			for i in range(10):
 				res = camera.init()
@@ -160,10 +161,12 @@ class Camera:
 				else:
 					break
 			else:
-				raise Exception("Failed to initialized camera reboot")
-			
-			# Photo on 800x600, motion detection / 8 (100x75), each square detection 8x8 (12.5 x 9.375)
-			Camera.opened = True
+				result = False
+
+			if result:
+				# Photo on 800x600, motion detection / 8 (100x75), each square detection 8x8 (12.5 x 9.375)
+				Camera.opened = True
+		return result
 
 	@staticmethod
 	def close():

@@ -249,8 +249,11 @@ class Motion:
 
 	def open(self):
 		""" Open camera """
-		video.Camera.open()
-		self.resume()
+		if video.Camera.open():
+			self.resume()
+			return True
+		else:
+			return False
 
 	def resume(self):
 		""" Resume the camera, restore the camera configuration after an interruption """
@@ -501,9 +504,8 @@ class Detection:
 			if self.onBattery != True:
 				await historic.Historic.getRoot()
 			self.motion = Motion(self.motionConfig, self.onBattery, self.pirDetection)
-			try:
-				self.motion.open()
-			except:
+			if self.motion.open() == False:
+				self.motion = None
 				raise Exception("Cannot open camera")
 
 	def releaseImage(self):
@@ -574,8 +576,6 @@ class Detection:
 				await notifyMessage(b"motion detection suspended")
 				result = True
 
-		except Exception as err:
-			print(useful.exception(err))
 		finally:
 			if reserved:
 				await video.Camera.unreserve(self)

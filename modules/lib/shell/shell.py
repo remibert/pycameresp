@@ -577,16 +577,17 @@ async def asyncShell():
 		while 1:
 			# If key pressed
 			if useful.kbhit(0):
-				import uos
-				server.suspend()
-				await server.waitAllSuspended()
-				currentDir = uos.getcwd()
-				print("\n"+"<"*20+"   ENTER SHELL   " +">"*20)
-				# Start shell
-				shell()
-				print("\n"+"<"*20+"   EXIT  SHELL   " +">"*20)
-				uos.chdir(currentDir)
-				server.resume()
+				if ord(useful.getch()) != 0:
+					import uos
+					server.suspend()
+					await server.waitAllSuspended()
+					currentDir = uos.getcwd()
+					print("\n"+"<"*20+"   ENTER SHELL   " +">"*20)
+					# Start shell
+					shell()
+					print("\n"+"<"*20+"   EXIT  SHELL   " +">"*20)
+					uos.chdir(currentDir)
+					server.resume()
 			else:
 				await uasyncio.sleep(1)
 

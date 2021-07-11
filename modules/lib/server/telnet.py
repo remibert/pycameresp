@@ -6,6 +6,7 @@ from io import IOBase
 from server import User
 from tools import useful
 import sys
+import time
 
 try:
 	import wifi
@@ -20,7 +21,11 @@ class TelnetWrapper(IOBase):
 	def __init__(self, socket):
 		self.socket = socket
 		self.discard_count = 0
-		self.state = 0
+		if User.isEmpty():
+			self.state = 3
+		else:
+			self.state = 0
+
 		self.password = b""
 		self.login = b""
 		self.getlogin()
@@ -60,56 +65,79 @@ class TelnetWrapper(IOBase):
 	def getlogin(self, b=None):
 		global hostname
 		result = b
+		# Init state
 		if self.state == 0:
-			message = b"* Telnet on '%s' started *"%hostname
-			self.socket.write(b"\r\n%s\r\n%s\r\n%s\r\n"%(b"*"*len(message), message, b"*"*len(message)))
+			message = b"# Telnet on '%s' started #"%hostname
+			self.socket.write(b"\r\n%s\r\n%s\r\n%s\r\n"%(b"#"*len(message), message, b"#"*len(message)))
+			# If login password not defined
 			if User.isEmpty():
 				self.state = 3
 			else:
-				self.socket.write(b"Username:")
+				# Display enter password
+				self.socket.write(b"Username :")
 				self.state = 1
+		# Login state
 		elif self.state == 1:
+			# If validation
 			if b[0] == 0x0D or b[0] == 0x0A:
-				self.socket.write(b"\r\nPassword:")
+				self.socket.write(b"\r\nPassword :")
 				self.state = 2
+			# If backspace
 			elif b[0] == 0x7F:
 				if len(self.login) >= 1:
 					self.login = self.login[:-1]
+				self.socket.write("\r"+" "*80)
+				self.socket.write("\rUsername :" + "*"*len(self.login))
+			# If character ignored
+			elif b[0] < 0x20 or b[0] > 0x7F:
+				pass
 			else:
 				self.login += bytes([b[0]])
+				self.socket.write("\rUsername :" + "*"*len(self.login))
+		# Password state
 		elif self.state == 2:
+			# If validation
 			if b[0] == 0x0D or b[0] == 0x0A:
+				# If password is a success
 				if User.check(self.login, self.password):
 					self.state = 3
 					self.password = b""
 					self.login = b""
-					self.socket.write(b" Logging success\r\n%s\r\n"%(b"*"*30))
+					self.socket.write(b"\r\n%s\r\n"%(b"-"*30))
 				else:
 					self.state = 1
-					self.socket.write(b" Logging failed\r\n\r\nUsername:")
+					self.socket.write(b"\n\r\nUsername :")
 					self.password = b""
 					self.login = b""
+			# If backspace
 			elif b[0] == 0x7F:
 				if len(self.password) >= 1:
 					self.password = self.password[:-1]
+				self.socket.write("\r"+" "*80)
+				self.socket.write("\rPassword :" + "*"*len(self.password))
+			# If character ignored
+			elif b[0] < 0x20 or b[0] > 0x7F:
+				pass
 			else:
 				self.password += bytes([b[0]])
+				self.socket.write("\rPassword :" + "*"*len(self.password))
 		return result
 
 	def write(self, data):
 		# we need to write all the data but it's a non-blocking socket
 		# so loop until it's all written eating EAGAIN exceptions
-		while len(data) > 0:
-			try:
-				written_bytes = self.socket.write(data)
-				data = data[written_bytes:]
-			except OSError as e:
-				if len(e.args) > 0 and e.args[0] == errno.EAGAIN:
-					# can't write yet, try again
-					pass
-				else:
-					# something else...propagate the exception
-					raise
+		if self.state >= 3:
+			while len(data) > 0:
+				try:
+					written_bytes = self.socket.write(data)
+					data = data[written_bytes:]
+				except OSError as e:
+					if len(e.args) > 0 and e.args[0] == errno.EAGAIN:
+						# can't write yet, try again
+						pass
+					else:
+						# something else...propagate the exception
+						raise
 	
 	def close(self):
 		self.socket.close()

@@ -371,7 +371,7 @@ def filetime(path):
 	""" Get the file modified time """
 	return fileinfo(path)[8]
 
-def exception(err):
+def exception(err, msg=""):
 	""" Return the content of exception into a string """
 	file = io.StringIO()
 	if ismicropython():
@@ -385,6 +385,10 @@ def exception(err):
 			print(err)
 		text = file.getvalue()
 		print(text)
+
+	logFile = open("crash.txt","a")
+	logFile.write(dateToString() + " %s\n%s\n"%(msg,text))
+	logFile.close()
 	return text
 
 def htmlException(err):
@@ -760,20 +764,18 @@ async def taskMonitoring(task):
 	import uasyncio
 	from server   import notifyMessage
 
-	retryCounter = 0
+	retry = 0
 	lastError = ""
 
-	while retryCounter < 100:
+	while retry < 100:
 		try:
 			while True:
 				if await task():
-					retryCounter = 0
+					retry = 0
 
 		except Exception as err:
-			lastError = exception(err)
-			print(lastError)
-			open("%s.crash"%dateToFilename(),"w").write(lastError)
-			retryCounter += 1
+			lastError = exception(err, "Task error")
+			retry += 1
 			await uasyncio.sleep_ms(6000)
 
 	await notifyMessage(b"Reboot after many crash : \n%s"%tobytes(lastError))
