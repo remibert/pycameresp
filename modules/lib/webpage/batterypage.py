@@ -6,7 +6,7 @@ from htmltemplate import *
 from webpage import *
 from tools import BatteryConfig
 
-@HttpServer.addRoute(b'/battery', title=b"Battery", index=20)
+@HttpServer.addRoute(b'/battery', title=b"Battery", index=200)
 async def battery(request, response, args):
 	""" Battery configuration web page """
 	config = BatteryConfig()

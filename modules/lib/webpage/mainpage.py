@@ -63,7 +63,7 @@ def mainFrame(request, response, args, titleFrame, *content):
 	internal = [Container([Card([Form([Title3(text=titleFrame, style=b"padding-top:0.5em;padding-bottom:0.5em;"),content,])], class_=b"shadow")], style=b"margin-top:1em")]
 	return mainPage(request, response, args, content=internal)
 
-def manageDefaultButton(request, config, callback=None):
+def manageDefaultButton(request, config, callback=None, onclick=b""):
 	""" Manage the 'modify' and 'save' button on the page """
 	if config.load() == False:
 		config.save()
@@ -82,5 +82,5 @@ def manageDefaultButton(request, config, callback=None):
 	if disabled:
 		submit = Submit(text=b"Modify", name=b"action", value=b"modify")
 	else:
-		submit = Submit(text=b"Save", name=b"action", value=b"save")
+		submit = Submit(text=b"Save", name=b"action", value=b"save", onclick=onclick)
 	return disabled, action, submit

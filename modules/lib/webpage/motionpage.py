@@ -6,7 +6,7 @@ from htmltemplate import *
 from webpage import *
 from motion import MotionConfig
 
-@HttpServer.addRoute(b'/motion', title=b"Motion", index=17, available=useful.iscamera())
+@HttpServer.addRoute(b'/motion', title=b"Motion", index=51, available=useful.iscamera())
 async def motion(request, response, args):
 	""" Motion configuration page """
 	config = MotionConfig()

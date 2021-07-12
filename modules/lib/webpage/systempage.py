@@ -11,7 +11,7 @@ import server
 import sys
 import gc
 
-@HttpServer.addRoute(b'/system', title=b"System", index=22)
+@HttpServer.addRoute(b'/system', title=b"System", index=300)
 async def systemPage(request, response, args):
 	""" Function define the web page to manage system of the board """
 	page = mainFrame(request, response, args, b"System management",

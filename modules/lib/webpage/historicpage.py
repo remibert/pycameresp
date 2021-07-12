@@ -8,7 +8,7 @@ from motion import Historic
 from tools import useful
 from video import Camera
 
-@HttpServer.addRoute(b'/historic', title=b"Historic", index=19, available=useful.iscamera())
+@HttpServer.addRoute(b'/historic', title=b"Historic", index=53, available=useful.iscamera())
 async def historic(request, response, args):
 	""" Historic motion detection page """
 	await Historic.getRoot()
@@ -386,8 +386,8 @@ async def historicImage(request, response, args):
 		else:
 			await response.sendError(status=b"404", content=b"Image not found")
 	finally:
-		await Historic.release()
 		if reserved:
+			await Historic.release()
 			await Camera.unreserve(Historic)
 
 @HttpServer.addRoute(b'/historic/download/.*', available=useful.iscamera())
@@ -401,6 +401,6 @@ async def downloadImage(request, response, args):
 		else:
 			await response.sendError(status=b"404", content=b"Image not found")
 	finally:
-		await Historic.release()
 		if reserved:
+			await Historic.release()
 			await Camera.unreserve(Historic)

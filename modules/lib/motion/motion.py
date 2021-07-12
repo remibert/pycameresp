@@ -67,6 +67,31 @@ class MotionConfig:
 		result = jsonconfig.load(self, file)
 		return result
 
+class MaskingConfig:
+	""" Configuration class of zone masking for hide area in motion detection """
+	def __init__(self):
+		# Indicates if the motion is activated
+		self.activated = False
+
+		# Empty mask is equal disable masking
+		self.masking = ""
+
+
+	def save(self, file = None):
+		""" Save configuration """
+		result = jsonconfig.save(self, file)
+		return result
+
+	def update(self, params):
+		""" Update configuration """
+		result = jsonconfig.update(self, params)
+		return result
+
+	def load(self, file = None):
+		""" Load configuration """
+		result = jsonconfig.load(self, file)
+		return result
+
 class ImageMotion:
 	""" Class managing a motion detection image """
 	baseIndex = [0]
@@ -195,7 +220,7 @@ class ImageMotion:
 
 class MotionInfo:
 	""" Store last motion information """
-	motion = {
+	motion = [{
 			'diff': 
 			{
 				'count': 0, 
@@ -210,20 +235,19 @@ class MotionInfo:
 			{
 				'height': 600, 'width': 800
 			}
-		}
+		}]
 
 	@staticmethod
 	def get():
 		""" Get the last motion information """
-		return MotionInfo.motion
+		return MotionInfo.motion[0]
 
 	@staticmethod
 	def set(motion):
 		""" Set the last motion information """
-		MotionInfo.motion = motion
+		MotionInfo.motion[0] = motion
 
 class Motion:
-	info = [0,0,0]
 	""" Class to manage the motion capture """
 	def __init__(self, config= None, onBattery=False, pirDetection=False):
 		self.images = []
@@ -257,12 +281,12 @@ class Motion:
 
 	def resume(self):
 		""" Resume the camera, restore the camera configuration after an interruption """
-		# video.Camera.framesize(b"UXGA") # 1600x1200
-		# video.Camera.framesize(b"SXGA") # 1280x1024
-		# video.Camera.framesize(b"XGA")  # 1024x768
-		video.Camera.framesize(b"SVGA") # 800x600
+		# video.Camera.framesize(b"1600x1200") # 1600x1200
+		# video.Camera.framesize(b"1280x1024") # 1280x1024
+		# video.Camera.framesize(b"1024x768")  # 1024x768
+		video.Camera.framesize(b"800x600") # 800x600
 		video.Camera.pixformat(b"JPEG")
-		video.Camera.quality(10)
+		video.Camera.quality(15)
 		video.Camera.brightness(0)
 		video.Camera.contrast(0)
 		video.Camera.saturation(0)
@@ -324,7 +348,7 @@ class Motion:
 			current = self.images[0]
 			
 			# Compute the motion identifier
-			for previous in self.images[1:5]:
+			for previous in self.images[1:]:
 				# # If image not already compared
 				comparison = current.compare(previous, False, False)
 				# print("D%d H%d id%d idx%d"%(comparison["diff"]["count"], comparison["diff"]["histo"], previous.getMotionId() if previous.getMotionId() else -1, previous.index))

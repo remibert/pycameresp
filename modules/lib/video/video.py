@@ -19,7 +19,7 @@ class CameraConfig:
 		""" Constructor """
 		self.framesize  = b"640x480"
 		self.pixformat  = b"JPEG"
-		self.quality    = 10
+		self.quality    = 25
 		self.brightness = 0
 		self.contrast   = 0
 		self.saturation = 0
