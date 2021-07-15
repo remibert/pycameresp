@@ -41,9 +41,13 @@ def selectNetwork(increase=0, reparse=False):
 		current += increase
 	currentNetwork = wifi.NetworkConfig()
 	try:
-		currentNetwork.load(partFilename = currentNetworks[current])
-	except:
-		pass
+		try:
+			partFilename = currentNetworks[current]
+		except:
+			partFilename = b""
+		currentNetwork.load(partFilename = partFilename)
+	except Exception as err:
+		print(exception(err))
 	return currentNetwork
 
 @HttpServer.addRoute(b'/wifi', title=b"Wifi", index=11)

@@ -19,6 +19,7 @@ class JsonConfig:
 	def save(self, file = None, partFilename=""):
 		""" Save object in json file """
 		try:
+			filename = self.getFilename(useful.tofilename(partFilename))
 			file, filename = self.open(file=file, readWrite="w", partFilename=partFilename)
 			data = self.__dict__.copy()
 			del data["modificationDate"]
@@ -36,7 +37,7 @@ class JsonConfig:
 	def listAll(self):
 		""" List all configuration files """
 		result = []
-		pattern = self.getFilename(".*")
+		pattern = self.__class__.__name__ + ".*"
 		for fileinfo in uos.ilistdir(CONFIG_ROOT):
 			name = fileinfo[0]
 			typ  = fileinfo[1]
@@ -120,6 +121,7 @@ class JsonConfig:
 	def load(self, file = None, partFilename=""):
 		""" Load object with the file specified """
 		try:
+			filename = self.getFilename(useful.tofilename(partFilename))
 			file, filename = self.open(file=file, readWrite="r", partFilename=partFilename)
 			self.update(useful.tobytes(json.load(file)))
 			file.close()

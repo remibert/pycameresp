@@ -113,6 +113,10 @@ async def cameraStartStreaming(request, response, args):
 			else:
 				micropython = False
 
+			if Streaming.isDurty():
+				Camera.configure(Streaming.getConfig())
+				Streaming.resetDurty()
+
 			image = Camera.capture()
 			length = len(image)
 			try:
