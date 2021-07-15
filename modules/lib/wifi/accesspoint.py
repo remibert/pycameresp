@@ -5,10 +5,11 @@ import sys
 from tools import jsonconfig
 from tools import useful
 
-class AccessPointConfig:
+class AccessPointConfig(jsonconfig.JsonConfig):
 	""" Access point configuration class """
 	def __init__(self):
 		""" Constructor """
+		jsonconfig.JsonConfig.__init__(self)
 		self.activated = True
 		self.wifipassword  = b"Micropython"
 		self.ssid          = b"Micropython"
@@ -32,21 +33,6 @@ class AccessPointConfig:
 		result +="   Password   :%s\n"%useful.tostrings(self.wifipassword)
 		result +="   Authmode   :%s\n"%useful.tostrings(self.authmode)
 		result +="   Activated  :%s\n"%useful.tostrings(self.activated)
-		return result
-
-	def save(self, file = None):
-		""" Save access point configuration """
-		result = jsonconfig.save(self, file)
-		return result
-
-	def update(self, params):
-		""" Update access point configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file = None):
-		""" Load access point configuration """
-		result = jsonconfig.load(self, file)
 		return result
 
 class AccessPoint:

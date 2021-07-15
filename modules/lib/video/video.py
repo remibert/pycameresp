@@ -13,10 +13,11 @@ import uasyncio
 from tools import useful
 from tools import jsonconfig
 
-class CameraConfig:
+class CameraConfig(jsonconfig.JsonConfig):
 	""" Class that collects the camera rendering configuration """
 	def __init__(self):
 		""" Constructor """
+		jsonconfig.JsonConfig.__init__(self)
 		self.framesize  = b"640x480"
 		self.pixformat  = b"JPEG"
 		self.quality    = 25
@@ -25,21 +26,6 @@ class CameraConfig:
 		self.saturation = 0
 		self.hmirror    = False
 		self.vflip      = False
-
-	def save(self, file = None):
-		""" Save configuration """
-		result = jsonconfig.save(self, file)
-		return result
-
-	def update(self, params):
-		""" Update configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file = None):
-		""" Load configuration """
-		result = jsonconfig.load(self, file)
-		return result
 
 class Motion:
 	""" Class motion detection returned by the detect function """
@@ -55,9 +41,13 @@ class Motion:
 		""" Extract the full content of motion """
 		return self.motion.extract()
 
-	def compare(self, other, params):
+	def compare(self, other, extractShape):
 		""" Compare image to detect motion """
-		return self.motion.compare(other.motion, params)
+		return self.motion.compare(other.motion, extractShape)
+
+	def configure(self, mask, errorLight):
+		""" Configure the motion detection """
+		self.motion.configure(mask, errorLight)
 
 	def getImage(self):
 		""" Return the jpeg buffer of motion """

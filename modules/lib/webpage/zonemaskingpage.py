@@ -8,27 +8,28 @@ from server.httprequest import *
 from tools import useful
 from video import CameraConfig, Camera
 from webpage import streamingpage
-from motion import MotionInfo, MaskingConfig
+from motion import SnapConfig
 import uasyncio
 
 zoneConfig = CameraConfig()
 
 def zoneMasking(config, disabled):
 	""" displays an html page to hide certain area of the camera, in order to ignore movements """
-	info = MotionInfo.get()
+	info = SnapConfig.get()
 	
-	squarex = info["diff"]["squarex"] - 2
-	squarey = info["diff"]["squarey"] - 2
-	width   = info["diff"]["width"]
-	height  = info["diff"]["height"]
-	max     = info["diff"]["max"]
+	squarex = SnapConfig.get().square_x - 2
+	squarey = SnapConfig.get().square_y - 2
+	width   = SnapConfig.get().diff_x
+	height  = SnapConfig.get().diff_y
+	max     = SnapConfig.get().max
 	if disabled:
 		buttons = b""
 	else:
 		buttons = b"""
+			<p>Color the squares to ignore for motion detection</p>
 			<button type="button" class="btn btn-outline-primary" onclick="onClearZoneMasking()" >Clear</button>
-			<button type="button" class="btn btn-outline-primary" onclick="onSetZoneMasking()" >Set</button>
-	"""
+			&nbsp;<button type="button" class="btn btn-outline-primary" onclick="onSetZoneMasking()" >Set</button>
+			&nbsp;<input type="hidden" name="mask" id="mask" value="">"""
 	result= Tag(b"""
 			%s
 			<style> 
@@ -45,10 +46,12 @@ def zoneMasking(config, disabled):
 				.zoneMask:checked
 				{
 					background-color: #1460ff;
-					opacity: 0.92;
+					opacity: 0.80;
 				}
 			</style>
 			<script>
+				var initMask='%s';
+				var disabled = %d;
 				function check(box)
 				{
 					if (pressed)
@@ -75,22 +78,37 @@ def zoneMasking(config, disabled):
 						var row = table.insertRow(line);
 						for (column = 0; column < %d; column ++)
 						{
-							var cell = row.insertCell(column);
-							cell.innerHTML = '<input type="checkbox" class="zoneMask" onmousemove="check(this)" id="'+id+'"/>';
+							var tag = 'type="checkbox" class="zoneMask" onmousemove="check(this)" id="'+id+'"';
+							if (initMask.charAt(id) == "/")
+							{
+								tag += " checked ";
+							}
+							if (disabled)
+							{
+								tag += " disabled ";
+							}
+
+							row.insertCell(column).innerHTML = '<input ' + tag + ' />';
 							id += 1;
 						}
 					}
 				}
 				function onValidZoneMasking()
 				{
+					var result = ""
 					for (id = 0; id < %d; id ++)
 					{
 						var cell = document.getElementById(id);
 						if (cell.checked)
 						{
-							console.log(id+":"+cell.checked);
+							result += "/";
+						}
+						else
+						{
+							result += " ";
 						}
 					}
+					document.getElementById('mask').value = result;
 				}
 				function onClearZoneMasking()
 				{
@@ -110,34 +128,30 @@ def zoneMasking(config, disabled):
 				}
 				onLoadZoneMasking();
 			</script>
-"""%(buttons,squarex,squarey,height,width,max,max,max))
+"""%(buttons,squarex,squarey,config.mask,disabled,height,width,max,max,max))
 	return result
 
 @HttpServer.addRoute(b'/zonemasking', title=b"Masking", index=52)
 async def zoneMaskingPage(request, response, args):
 	""" Camera streaming page """
-	zoneConfig.framesize  = b"800x600"
+	zoneConfig.framesize  = b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height)
 	zoneConfig.quality = 30
 	Streaming.setConfig(zoneConfig)
-	config = MaskingConfig()
-	disabled = False
-	disabled, action, submit = manageDefaultButton(request, config, onclick=b"onValidZoneMasking()")
  
-	page = mainFrame(request, response, args, b"Masking", Streaming.getHtml(request), zoneMasking(config, disabled), submit)
+	# Read motion config and keep it
+	backupConfig = MotionConfig()
+	backupConfig.load()
+
+	config = MotionConfig()
+
+	# Keep activated status
+	activated = config.activated
+	disabled, action, submit = manageDefaultButton(request, config, onclick=b"onValidZoneMasking()")
+
+	if action == b"save":
+		# Save config with mask modified
+		backupConfig.mask = config.mask
+		backupConfig.save()
+
+	page = mainFrame(request, response, args, b"Masking", Br(),Streaming.getHtml(request, SnapConfig.get().width, SnapConfig.get().height), zoneMasking(config, disabled), submit)
 	await response.sendPage(page)
-
-	# framesizes = []
-	# Streaming.setConfig(cameraConfig)
-
-	# for size in [b"1600x1200",b"1280x1024",b"1024x768",b"800x600",b"640x480",b"400x296",b"320x240",b"240x176",b"160x120"  ]:
-	# 	framesizes.append(Option(value=size, text=size, selected= True if cameraConfig.framesize == size else False))
-	# page = mainFrame(request, response, args, b"Camera",
-	# 			Streaming.getHtml(request),
-	# 			ComboCmd(framesizes, text=b"Resolution", path=b"camera/configure", name=b"framesize"),
-	# 			SliderCmd(           text=b"Quality"   , path=b"camera/configure", name=b"quality",    min=b"10", max=b"63", step=b"1", value=b"%d"%cameraConfig.quality),
-	# 			SliderCmd(           text=b"Brightness", path=b"camera/configure", name=b"brightness", min=b"-2", max=b"2" , step=b"1", value=b"%d"%cameraConfig.brightness),
-	# 			SliderCmd(           text=b"Contrast"  , path=b"camera/configure", name=b"contrast"  , min=b"-2", max=b"2" , step=b"1", value=b"%d"%cameraConfig.contrast),
-	# 			SliderCmd(           text=b"Saturation", path=b"camera/configure", name=b"saturation", min=b"-2", max=b"2" , step=b"1", value=b"%d"%cameraConfig.saturation),
-	# 			SwitchCmd(           text=b"H-Mirror"  , path=b"camera/configure", name=b"hmirror"   , checked=cameraConfig.hmirror),
-	# 			SwitchCmd(           text=b"V-Flip"    , path=b"camera/configure", name=b"vflip"     , checked=cameraConfig.vflip))
-	# await response.sendPage(page)

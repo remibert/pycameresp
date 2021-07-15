@@ -25,7 +25,7 @@ class WLAN:
 		self.password = password
 		self.ssid     = ssid
 		self.authmode = authmode
-		self._isconnected = True
+		self._isconnected = False
 
 	def config(self, dhcp_hostname="", essid="", password="", authmode=3):
 		self.ssid=essid

@@ -40,21 +40,25 @@ class Streaming:
 		Streaming.durty[0] = False
 
 	@staticmethod
-	def getHtml(request):
+	def getHtml(request, width=None, height=None):
 		""" Return streaming html part with javascript code """
 		Streaming.startInactivityTimer()
 		Streaming.streamingId[0] += id(request)
+		if width != None and height != None:
+			size = b'width="%d" height="%d"'%(width, height)
+		else:
+			size = b""
 		return Tag(b"""
 		<p>
 			<div style="position: relative;">
-				<img id="video-stream" src=""/>
+				<img id="video-stream" src="" %s/>
 				<table id="zoneMasking" style="position: absolute;top:0px" />
 			</div>
 		</p>
 		<script>
 			var streamUrl = document.location.protocol + "//" + document.location.hostname + ':%d';
 			document.getElementById('video-stream').src = `${streamUrl}/camera/start?streamingid=%d`;
-		</script>"""%(request.port+1,Streaming.streamingId[0]))
+		</script>"""%(size, request.port+1,Streaming.streamingId[0]))
 
 	@staticmethod
 	def inactivityTimeout():

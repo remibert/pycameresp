@@ -16,30 +16,16 @@ import uasyncio
 import wifi
 
 
-class ServerConfig:
+class ServerConfig(jsonconfig.JsonConfig):
 	""" Servers configuration """
 	def __init__(self):
+		jsonconfig.JsonConfig.__init__(self)
 		self.ntp = True
 		self.ftp = True
 		self.http = True
 		self.telnet = True
 		self.offsettime = 1
 		self.dst = True
-
-	def save(self, file = None):
-		""" Save configuration """
-		result = jsonconfig.save(self, file)
-		return result
-
-	def update(self, params):
-		""" Update configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file = None):
-		""" Load configuration """
-		result = jsonconfig.load(self, file)
-		return result
 
 def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
 	""" Start all servers
@@ -93,16 +79,23 @@ async def periodic():
 		while True:
 			config = server.ServerConfig()
 			config.load()
-			if config.ntp:
-				if wifi.Station.isActive():
+			if wifi.Station.isActive():
+				if config.ntp:
 					for i in range(6):
 						if setdate(config.offsettime, dst=config.dst, display=True):
 							break
 						else:
 							await uasyncio.sleep(10)
+				await uasyncio.sleep(3600)
+			else:
+				if wifi.Station.isActivated() == False:
+					print("Cannot set date : wifi disabled")
+					await uasyncio.sleep(3600)
 				else:
 					print("Cannot set date : wifi not connected")
-			await uasyncio.sleep(3600)
+					await uasyncio.sleep(360)
+					wifi.Station.chooseNetwork(True, maxRetry=10000)
+			
 	except Exception as err:
 		open("%s.crash"%useful.dateToFilename(),"w").write(useful.exception(err))
 

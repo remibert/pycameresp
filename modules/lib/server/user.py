@@ -5,29 +5,15 @@ from tools import useful,jsonconfig
 
 EMPTY_PASSWORD = b"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" # empty password
 
-class UserConfig:
+class UserConfig(jsonconfig.JsonConfig):
 	""" User configuration """
 	def __init__(self):
 		""" Constructor """
+		jsonconfig.JsonConfig.__init__(self)
 		self.user = b""
 		self.password = EMPTY_PASSWORD
 		if self.load() == False:
 			self.save()
-
-	def save(self, file = None):
-		""" Save user configuration """
-		result = jsonconfig.save(self, file)
-		return result
-
-	def update(self, params):
-		""" Update user configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file = None):
-		""" Load user configuration """
-		result = jsonconfig.load(self, file)
-		return result
 
 class User:
 	""" Singleton class to manage the user. Only one user can be defined """

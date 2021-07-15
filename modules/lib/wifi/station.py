@@ -5,10 +5,11 @@ import sys
 from tools import jsonconfig,useful
 import time
 
-class NetworkConfig:
+class NetworkConfig(jsonconfig.JsonConfig):
 	""" Wifi station configuration class """
 	def __init__(self):
 		""" Constructor """
+		jsonconfig.JsonConfig.__init__(self)
 		self.hostname      = b"Esp32"
 		self.wifipassword  = b""
 		self.ssid          = b""
@@ -33,33 +34,19 @@ class NetworkConfig:
 		# result +="   Password   :%s\n"%useful.tostrings(self.wifipassword)
 		return result
 
-	def save(self, file = None):
-		""" Save wifi configuration """
-		result = jsonconfig.save(self, file=file, partFilename=self.ssid)
-		return result
-
-	def update(self, params):
-		""" Update wifi configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file=None, partFilename=""):
-		""" Load wifi configuration """
-		result = jsonconfig.load(self, file=file, partFilename=partFilename)
-		return result
-
 	def listKnown(self):
 		""" List all configuration files """
-		return jsonconfig.listAll(self)
+		return self.listAll()
 
 	def forget(self):
 		""" Forget configuration """
-		return jsonconfig.forget(self, partFilename=self.ssid)
+		return jsonconfig.JsonConfig.forget(self, partFilename=self.ssid)
 
-class StationConfig:
+class StationConfig(jsonconfig.JsonConfig):
 	""" Wifi station configuration class """
 	def __init__(self):
 		""" Constructor """
+		jsonconfig.JsonConfig.__init__(self)
 		self.activated     = True
 		self.default       = b""
 
@@ -68,21 +55,6 @@ class StationConfig:
 		# Get network address
 		result = "%s:\n"%self.__class__.__name__
 		result +="   Activated  :%s\n"%useful.tostrings(self.activated)
-		return result
-
-	def save(self, file = None):
-		""" Save wifi configuration """
-		result = jsonconfig.save(self, file=file)
-		return result
-
-	def update(self, params):
-		""" Update wifi configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file=None, partFilename=None):
-		""" Load wifi configuration """
-		result = jsonconfig.load(self, file=file)
 		return result
 
 class Station:
@@ -95,7 +67,7 @@ class Station:
 	lastScan = [0]
 
 	@staticmethod
-	def connect(network):
+	def connect(network, maxRetry=20000):
 		""" Connect to wifi hotspot """
 		result = False
 		if not Station.wlan.isconnected():
@@ -104,14 +76,13 @@ class Station:
 			Station.wlan.connect(useful.tobytes(network.ssid), useful.tobytes(network.wifipassword))
 			from time import sleep
 			retry = 0
-			maxRetry = 200
 			count = 0
 			while not Station.wlan.isconnected() and retry < maxRetry:
 				sleep(0.1)
-				retry += 1
-				if count % 10 == 0:
-					print ("   %d/%d wait connection to %s"%(retry/10, maxRetry/10, useful.tostrings(network.ssid)))
-				count += 1
+				retry += 100
+				if count % 1000 == 0:
+					print ("   %-2d/%d wait connection to %s"%(retry/1000+1, maxRetry/1000, useful.tostrings(network.ssid)))
+				count += 100
 
 			if Station.wlan.isconnected() == False:
 				Station.wlan.active(False)
@@ -173,7 +144,9 @@ class Station:
 	@staticmethod
 	def isConnected():
 		""" Indicates if the wifi is connected """
-		return Station.wlan.isconnected()
+		if Station.wlan:
+			return Station.wlan.isconnected()
+		return False
 
 	@staticmethod
 	def scan():
@@ -196,7 +169,7 @@ class Station:
 			return False
 
 	@staticmethod
-	def chooseNetwork(force=False):
+	def chooseNetwork(force=False, maxRetry=20000):
 		""" Choose network within reach """
 		result = False
 		Station.config  = StationConfig()
@@ -209,7 +182,7 @@ class Station:
 				if Station.network.load(partFilename=Station.config.default):
 					
 					# If the connection failed
-					if Station.connect(Station.network) == False:
+					if Station.connect(Station.network, maxRetry) == False:
 						print("Not connected to the default %s"%useful.tostrings(Station.network.ssid))
 						# Scan other networks
 						Station.scan()
@@ -225,7 +198,7 @@ class Station:
 								if Station.network.load(partFilename=networkName):
 									print("Try to connect to %s"%useful.tostrings(Station.network.ssid))
 									# Connect to the other network found
-									if Station.connect(Station.network) == True:
+									if Station.connect(Station.network, maxRetry) == True:
 										print("Connected to %s"%useful.tostrings(Station.network.ssid))
 										Station.config.default = networkName
 										Station.config.save()
@@ -240,7 +213,7 @@ class Station:
 							# Load default network
 							if Station.network.load(partFilename=Station.config.default):
 								# If the connection failed
-								if Station.connect(Station.network) == True:
+								if Station.connect(Station.network, maxRetry) == True:
 									print("Connected to %s"%useful.tostrings(Station.network.ssid))
 									result = True
 					else:
@@ -253,7 +226,7 @@ class Station:
 
 
 	@staticmethod
-	def start(force):
+	def start(force, maxRetry=20000):
 		""" Start the wifi according to the configuration. Force is used to skip configuration activation flag """
 		result = False
 		if Station.isActive() == False:
@@ -261,7 +234,7 @@ class Station:
 			Station.wlan = WLAN(STA_IF)
 
 			print("Start wifi")
-			if Station.chooseNetwork(force) == True:
+			if Station.chooseNetwork(force, maxRetry) == True:
 				print(repr(Station.config) + repr(Station.network))
 				result = True
 		else:

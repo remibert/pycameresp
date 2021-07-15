@@ -8,9 +8,10 @@ import server
 import wifi
 from server import notifyMessage, asyncPing
 
-class PresenceConfig:
+class PresenceConfig(jsonconfig.JsonConfig):
 	""" Configuration class of presence detection """
 	def __init__(self):
+		jsonconfig.JsonConfig.__init__(self)
 		# Indicates if the presence detection is activated
 		self.activated = False
 
@@ -19,21 +20,6 @@ class PresenceConfig:
 
 		# Notify presence
 		self.notify = True
-
-	def save(self, file = None):
-		""" Save configuration """
-		result = jsonconfig.save(self, file)
-		return result
-
-	def update(self, params):
-		""" Update configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file = None):
-		""" Load configuration """
-		result = jsonconfig.load(self, file)
-		return result
 
 class Presence:
 	""" Presence detection of smartphones """
@@ -62,7 +48,7 @@ class Presence:
 		""" Initialize the task """
 		Presence.readConfig = 0.
 		Presence.pollingDuration = Presence.FAST_POLLING
-		Presence.config = None
+		Presence.config = PresenceConfig()
 		Presence.activated = None
 		Presence.lastTime = 0
 		Presence.detected[0] = False
@@ -71,12 +57,9 @@ class Presence:
 	async def task():
 		""" Run the task """
 		# If configuration must be read
-		if Presence.readConfig <= 0.:
-			Presence.config = PresenceConfig()
-			Presence.config.load()
-			Presence.readConfig = Presence.SLOW_POLLING
-		else:
-			Presence.readConfig -= Presence.pollingDuration
+		if Presence.config:
+			if Presence.config.isChanged():
+				Presence.config.load()
 
 		if Presence.config.activated == True and wifi.Station.isActive():
 			presents = []

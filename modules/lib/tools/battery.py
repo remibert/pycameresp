@@ -8,30 +8,16 @@ except: pass
 try:import esp32
 except:pass
 
-class BatteryConfig:
+class BatteryConfig(jsonconfig.JsonConfig):
 	""" Battery configuration """
 	def __init__(self):
 		""" Constructor """
+		jsonconfig.JsonConfig.__init__(self)
 		self.activated = False
 		self.levelGpio  = 12
 		self.wakeUpGpio = 13
 		self.fullBattery  = 191 # 4.2V mesured with resistor 100k + 47k
 		self.emptyBattery = 161 # 3.6V mesured with resistor 100k + 47k
-
-	def save(self, file = None):
-		""" Save configuration """
-		result = jsonconfig.save(self, file)
-		return result
-
-	def update(self, params):
-		""" Update configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file = None):
-		""" Load configuration """
-		result = jsonconfig.load(self, file)
-		return result
 
 class Battery:
 	config = None

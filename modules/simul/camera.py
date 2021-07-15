@@ -97,7 +97,10 @@ class Motion:
 	def deinit (self):
 		pass
 
-	def compare(self, other, params):
+	def setMask(self):
+		pass
+
+	def compare(self, other, extractShape):
 		return {
 			'feature': {'light': 37, 'saturation': 13}, 
 			'path': '2021-04-25 11-37-00', 
@@ -113,6 +116,9 @@ class Motion:
 			'motionId': 46, 
 			'geometry': {'height': 600, 'width': 800}
 		}
+
+	def configure(self, mask, errorLight):
+		pass
 
 	def getImage(self):
 		return b""

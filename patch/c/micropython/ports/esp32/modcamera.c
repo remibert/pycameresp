@@ -160,6 +160,14 @@ typedef struct
 } Motion_t;
 const mp_obj_type_t Motion_type;
 
+typedef struct 
+{
+	uint8_t * mask_data;
+	uint16_t  mask_length;
+	int errorLight;
+} MotionConfiguration_t;
+
+MotionConfiguration_t motionConfiguration = {0,0,0};
 // Create motion objet with an image
 static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength);
 
@@ -711,7 +719,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 	int i;
 	int diffDetected = 0;
 	int diffHisto    = Motion_getDiffHisto(self, other);
-	int errLight     = self->errorLight;
+	int errLight     = motionConfiguration.errorLight;
 	uint16_t       *pCurrentLights = self->lights;
 	uint16_t       *pOtherLights   = other->lights;
 	uint16_t       *pDiffs         = self->diffs;
@@ -728,6 +736,32 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 		pCurrentLights ++;
 		pOtherLights ++;
 	}
+
+	if (motionConfiguration.mask_length > 0 && motionConfiguration.mask_length == self->diffMax)
+	{
+		int ignored = 0;
+		uint8_t * pMask = motionConfiguration.mask_data;
+		pDiffs         = self->diffs;
+		for (i = 0; i < self->diffMax; i++)
+		{
+			if (*pMask == '/')
+			{
+				if (*pDiffs)
+				{
+					diffDetected --;
+					ignored ++;
+					*pDiffs = 0;
+					// ESP_LOGE(TAG,"ignored = %d %c %d", i, *pMask, diffDetected);
+				}
+			}
+			pDiffs++;
+			pMask++;
+		}
+		//ESP_LOGE(TAG,"ignored=%d diff=%d",  ignored, diffDetected);
+	}
+
+
+
 	mp_obj_t diffdict = mp_obj_new_dict(0);
 		mp_obj_dict_store(diffdict, mp_obj_new_str("count"     , strlen("count"))     ,  mp_obj_new_int(diffDetected));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("max"       , strlen("max"))       ,  mp_obj_new_int(self->diffMax));
@@ -820,7 +854,7 @@ STATIC void Motion_extractShape(Motion_t *self, mp_obj_t result, bool extractSha
 }
 
 // compare method
-STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t params_in)
+STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t extract_shape_in)
 {
 	Motion_t *self = self_in;
 	Motion_t *other = other_in;
@@ -833,14 +867,13 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t par
 	{
 		mp_raise_TypeError(MP_ERROR_TEXT("Motions not same format"));
 	}
-	else if (!mp_obj_is_dict_or_ordereddict(params_in) && params_in != mp_const_none)
+	else if (!mp_obj_is_bool(extract_shape_in) && extract_shape_in != mp_const_none)
 	{
 		mp_raise_TypeError(MP_ERROR_TEXT("Motions bad parameters"));
 	}
 	else
 	{
-		int extractShape = mp_obj_is_true(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_extractShape)));
-		self->errorLight      = mp_obj_get_int(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLight)));
+		int extractShape = mp_obj_is_true(extract_shape_in);
 
 		mp_obj_t result = mp_obj_new_dict(0);
 
@@ -860,6 +893,56 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t par
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(Motion_compare_obj, Motion_compare);
 
+// configure method
+STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t mask_in, mp_obj_t errorLight_in)
+{
+	Motion_t *self = self_in;
+
+	if (self->base.type != &Motion_type)
+	{
+		mp_raise_TypeError(MP_ERROR_TEXT("Not motion object"));
+	}
+	else
+	{
+		if (mp_obj_is_int(errorLight_in))
+		{
+			motionConfiguration.errorLight = mp_obj_get_int(errorLight_in);
+		}
+		else
+		{
+			mp_raise_TypeError(MP_ERROR_TEXT("Bad error light type"));
+		}
+		if (mp_obj_is_str_or_bytes(mask_in))
+		{
+			GET_STR_DATA_LEN(mask_in, mask_data, mask_length);
+			if (motionConfiguration.mask_data)
+			{
+				_free((void**)&motionConfiguration.mask_data);
+				motionConfiguration.mask_data = 0;
+				motionConfiguration.mask_length = 0;
+			}
+
+			if (mask_length > 0)
+			{
+				motionConfiguration.mask_data = _malloc(mask_length + 1);
+				if (motionConfiguration.mask_data)
+				{
+					memcpy(motionConfiguration.mask_data, mask_data, mask_length);
+					motionConfiguration.mask_length = mask_length;
+					motionConfiguration.mask_data[mask_length] = '\0';
+					ESP_LOGE(TAG,"|%s|",motionConfiguration.mask_data);
+				}
+			}
+		}
+		else
+		{
+			mp_raise_TypeError(MP_ERROR_TEXT("Bad mask type"));
+		}
+	}
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(Motion_configure_obj, Motion_configure);
+
 // print method
 STATIC void Motion_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) 
 {
@@ -874,6 +957,7 @@ STATIC const mp_rom_map_elem_t Motion_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_deinit),             MP_ROM_PTR(&Motion_deinit_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_extract),            MP_ROM_PTR(&Motion_extract_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_compare),            MP_ROM_PTR(&Motion_compare_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_configure),          MP_ROM_PTR(&Motion_configure_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_getImage),           MP_ROM_PTR(&Motion_getImage_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Motion_locals_dict, Motion_locals_dict_table);

@@ -12,28 +12,14 @@ from server.httprequest import *
 from tools import jsonconfig
 import wifi
 
-class PushOverConfig:
+class PushOverConfig(jsonconfig.JsonConfig):
 	""" Configuration of the pushover """
 	def __init__(self):
 		""" Constructor """
+		jsonconfig.JsonConfig.__init__(self)
 		self.activated = False
 		self.token = b""
 		self.user = b""
-
-	def save(self, file = None):
-		""" Save the configuration """
-		result = jsonconfig.save(self, file)
-		return result
-
-	def update(self, params):
-		""" Update configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file = None):
-		""" Load configuration """
-		result = jsonconfig.load(self, file)
-		return result
 
 class Notification:
 	""" Class that manages a push over notification """

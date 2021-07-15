@@ -19,9 +19,10 @@ from gc import collect
 from motion import presence,historic
 from server   import notifyMessage
 
-class MotionConfig:
+class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
 	def __init__(self):
+		jsonconfig.JsonConfig.__init__(self)
 		# Indicates if the motion is activated
 		self.activated = False
 
@@ -52,45 +53,8 @@ class MotionConfig:
 		# Notify motion
 		self.notify = True
 
-	def save(self, file = None):
-		""" Save configuration """
-		result = jsonconfig.save(self, file)
-		return result
-
-	def update(self, params):
-		""" Update configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file = None):
-		""" Load configuration """
-		result = jsonconfig.load(self, file)
-		return result
-
-class MaskingConfig:
-	""" Configuration class of zone masking for hide area in motion detection """
-	def __init__(self):
-		# Indicates if the motion is activated
-		self.activated = False
-
 		# Empty mask is equal disable masking
-		self.masking = ""
-
-
-	def save(self, file = None):
-		""" Save configuration """
-		result = jsonconfig.save(self, file)
-		return result
-
-	def update(self, params):
-		""" Update configuration """
-		result = jsonconfig.update(self, params)
-		return result
-
-	def load(self, file = None):
-		""" Load configuration """
-		result = jsonconfig.load(self, file)
-		return result
+		self.mask = b""
 
 class ImageMotion:
 	""" Class managing a motion detection image """
@@ -98,6 +62,7 @@ class ImageMotion:
 	motionBaseId = [0]
 	created = [0]
 	def __init__(self, motion, config):
+		""" Constructor """
 		self.motion = motion
 		self.baseIndex[0] += 1
 		self.created[0] += 1
@@ -180,9 +145,8 @@ class ImageMotion:
 
 	def compare(self, previous, set=False, extractShape=True):
 		""" Compare two motion images to get differences """
-		res = self.motion.compare(previous.motion, {"errorLight":self.config.lightErrorRange, "extractShape":extractShape})
+		res = self.motion.compare(previous.motion, extractShape)
 		if set or self.comparison == None:
-			MotionInfo.set(res)
 			self.comparison = res
 		return res
 
@@ -218,34 +182,43 @@ class ImageMotion:
 		""" Reset the differences, used during the camera stabilization image """
 		self.comparison = None
 
-class MotionInfo:
+	def refreshConfig(self):
+		""" Refresh the motion detection configuration """
+		if self.motion != None:
+			mask = useful.tobytes(self.config.mask)
+			if not b"/" in mask:
+				mask = b""
+			self.motion.configure(mask, self.config.lightErrorRange)
+
+class SnapConfig:
 	""" Store last motion information """
-	motion = [{
-			'diff': 
-			{
-				'count': 0, 
-				'max': 300, 
-				'light': 94,
-				'squarex':40,
-				'squarey':40,
-				'width':20,
-				'height':15
-			}, 
-			'geometry': 
-			{
-				'height': 600, 'width': 800
-			}
-		}]
+	info = None
 
 	@staticmethod
-	def get():
+	def get(width=None, height=None):
 		""" Get the last motion information """
-		return MotionInfo.motion[0]
+		if width != None and height != None:
+			SnapConfig.info = SnapConfig(width, height)
+		elif SnapConfig.info == None:
+			SnapConfig.info = SnapConfig()
+		return SnapConfig.info
 
-	@staticmethod
-	def set(motion):
-		""" Set the last motion information """
-		MotionInfo.motion[0] = motion
+	def __init__(self, width=800, height=600):
+		""" Constructor """
+		self.width  = width
+		self.height = height
+		if (((self.width/8) % 8) == 0):
+			self.square_x = 64
+		else:
+			self.square_x = 40
+
+		if (((self.height/8) % 8) == 0):
+			self.square_y = 64
+		else:
+			self.square_y = 40
+		self.diff_x = self.width  // self.square_x
+		self.diff_y = self.height // self.square_y
+		self.max = self.diff_x * self.diff_y
 
 class Motion:
 	""" Class to manage the motion capture """
@@ -256,6 +229,7 @@ class Motion:
 		self.onBattery = onBattery
 		self.pirDetection = pirDetection
 		self.imageBackground = None
+		self.mustRefreshConfig = True
 
 	def __del__(self):
 		""" Destructor """
@@ -274,17 +248,14 @@ class Motion:
 	def open(self):
 		""" Open camera """
 		if video.Camera.open():
-			self.resume()
+			#self.resume()
 			return True
 		else:
 			return False
 
 	def resume(self):
 		""" Resume the camera, restore the camera configuration after an interruption """
-		# video.Camera.framesize(b"1600x1200") # 1600x1200
-		# video.Camera.framesize(b"1280x1024") # 1280x1024
-		# video.Camera.framesize(b"1024x768")  # 1024x768
-		video.Camera.framesize(b"800x600") # 800x600
+		video.Camera.framesize(b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height))
 		video.Camera.pixformat(b"JPEG")
 		video.Camera.quality(15)
 		video.Camera.brightness(0)
@@ -317,9 +288,16 @@ class Motion:
 				self.deinitImage(image)
 
 		image = ImageMotion(video.Camera.motion(), self.config)
+		if self.mustRefreshConfig:
+			image.refreshConfig()
+			self.mustRefreshConfig = False
 		self.images.insert(0, image)
 		self.index += 1
 		return result
+
+	def refreshConfig(self):
+		""" Force the refresh of motion configuration """
+		self.mustRefreshConfig = True
 
 	def isStabilized(self):
 		""" Indicates if the camera is stabilized """
@@ -374,6 +352,7 @@ class Motion:
 
 			# Compute the list of differences
 			diffs = ""
+			index = 0
 			for image in self.images:
 				differences.setdefault(image.getMotionId(), []).append(image.getMotionId())
 				if image.getMotionId() != None:
@@ -381,9 +360,11 @@ class Motion:
 						trace = "_"
 					else:
 						trace = " "
+					if image.index > index:
+						index = image.index
 					diffs += "%d:%d%s%s"%(image.getMotionId(), image.getDiffCount(), chr(0x41 + ((256-image.getDiffHisto())//10)), trace)
 			if display:
-				sys.stdout.write("\r%s %s  "%(useful.dateToString()[12:], diffs))
+				sys.stdout.write("\r%s %s (%d) "%(useful.dateToString()[12:], diffs, index))
 		return differences
 
 	def deinitImage(self, image):
@@ -443,7 +424,6 @@ class Detection:
 		self.pirDetection = pirDetection
 		self.loadConfig()
 		self.motion = None
-		self.pollingConfig = 0
 		self.pollingFrequency = 100
 		self.batteryLevel = -2
 		if self.onBattery:
@@ -465,11 +445,11 @@ class Detection:
 
 	def refreshConfig(self):
 		""" Refresh the configuration : it can be changed by web page """
-		self.pollingConfig += 1
-
-		# Reload configuration each 3 s
-		if self.pollingConfig % 5 == 0:
+		# If configuration changed
+		if self.motionConfig.isChanged():
 			self.motionConfig.load()
+			if self.motion:
+				self.motion.refreshConfig()
 
 	async def run(self):
 		""" Main asynchronous task """
@@ -486,9 +466,6 @@ class Detection:
 
 		# If the motion detection activated
 		if await self.isActivated():
-			# Initialize motion detection
-			await self.initMotion()
-
 			# Capture motion
 			result = await self.capture()
 		else:
@@ -522,6 +499,8 @@ class Detection:
 
 	async def initMotion(self):
 		""" Initialize motion detection """
+		firstInit = False
+
 		# If motion not initialized
 		if self.motion == None:
 			# The sdcard not available on battery
@@ -531,6 +510,14 @@ class Detection:
 			if self.motion.open() == False:
 				self.motion = None
 				raise Exception("Cannot open camera")
+			else:
+				firstInit = True
+
+		# If the camera configuration changed
+		if video.Camera.isModified() or firstInit:
+			# Restore motion configuration
+			self.motion.resume()
+			video.Camera.clearModified()
 
 	def releaseImage(self):
 		""" Release motion image allocated """
@@ -548,8 +535,9 @@ class Detection:
 	async def capture(self):
 		""" Capture motion """
 		result = False
+
 		# If camera not stabilized speed start
-		if self.motion.isStabilized() == True:
+		if self.motion and self.motion.isStabilized() == True:
 			await uasyncio.sleep_ms(self.pollingFrequency)
 
 		try:
@@ -558,11 +546,8 @@ class Detection:
 
 			# If reserved
 			if reserved:
-				# If the camera configuration changed
-				if video.Camera.isModified():
-					# Restore motion configuration
-					self.motion.resume()
-					video.Camera.clearModified()
+				# Initialize motion detection
+				await self.initMotion()
 
 				# Capture motion image
 				self.detection = await self.motion.capture()
