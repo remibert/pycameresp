@@ -26,6 +26,7 @@ class ServerConfig(jsonconfig.JsonConfig):
 		self.telnet = True
 		self.offsettime = 1
 		self.dst = True
+		self.currentTime = 0
 
 def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
 	""" Start all servers
@@ -72,29 +73,45 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
 	# Display system informations
 	useful.sysinfo()
 
-
+class DateTimeConfig(jsonconfig.JsonConfig):
+	""" Configuration of the date time """
+	def __init__(self):
+		""" Constructor """
+		jsonconfig.JsonConfig.__init__(self)
+		self.activated = False
+		self.token = b""
+		self.user = b""
+  
 async def periodic():
 	""" Periodic traitment update time, get wanip """
 	try:
+		refreshTime = 0
 		while True:
 			config = server.ServerConfig()
 			config.load()
+			setTime(config.currentTime)
 			if wifi.Station.isActive():
 				if config.ntp:
-					for i in range(6):
-						if setdate(config.offsettime, dst=config.dst, display=True):
-							break
-						else:
-							await uasyncio.sleep(10)
-				await uasyncio.sleep(3600)
+					if refreshTime %10 == 0:
+						for i in range(6):
+							currentTime = setDate(config.offsettime, dst=config.dst, display=True)
+							if currentTime > 0:
+								config.currentTime = int(currentTime)
+								config.save()
+								break
+							else:
+								await uasyncio.sleep(10)
+					refreshTime += 1
 			else:
 				if wifi.Station.isActivated() == False:
 					print("Cannot set date : wifi disabled")
-					await uasyncio.sleep(3600)
 				else:
 					print("Cannot set date : wifi not connected")
-					await uasyncio.sleep(360)
-					wifi.Station.chooseNetwork(True, maxRetry=10000)
+					if wifi.Station.chooseNetwork(True, maxRetry=10000) == True:
+						if wifi.AccessPoint.isActive() and wifi.AccessPoint.isActivated() == False:
+							wifi.AccessPoint.stop()
+			await uasyncio.sleep(600)
+
 			
 	except Exception as err:
 		open("%s.crash"%useful.dateToFilename(),"w").write(useful.exception(err))

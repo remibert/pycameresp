@@ -72,7 +72,7 @@ class Station:
 	lastScan = [0]
 
 	@staticmethod
-	def connect(network, maxRetry=20000):
+	def connect(network, maxRetry=15000):
 		""" Connect to wifi hotspot """
 		result = False
 		if not Station.wlan.isconnected():
@@ -174,6 +174,40 @@ class Station:
 			return False
 
 	@staticmethod
+	def selectNetwork(networkName, maxRetry):
+		""" Select the network and try to connect """
+		# Load default network
+		if Station.network.load(partFilename=networkName):
+			print("Try to connect to %s"%useful.tostrings(Station.network.ssid))
+			# If the connection failed
+			if Station.connect(Station.network, maxRetry) == True:
+				print("Connected to %s"%useful.tostrings(Station.network.ssid))
+				Station.config.default = networkName
+				Station.config.save()
+				return True
+		return False
+
+	@staticmethod
+	def scanNetworks(maxRetry):
+		""" Scan networks known """
+		result = False
+		# Scan other networks
+		Station.scan()
+
+		# List known networks
+		Station.knownNetworks = Station.network.listKnown()
+
+		# For all known networks
+		for networkName in Station.knownNetworks:
+			# If the network not already tested
+			if networkName != Station.config.default:
+				result = Station.selectNetwork(networkName, maxRetry)
+				if result == True:
+					break
+
+		return result
+
+	@staticmethod
 	def chooseNetwork(force=False, maxRetry=20000):
 		""" Choose network within reach """
 		result = False
@@ -183,52 +217,14 @@ class Station:
 		# Load wifi configuration
 		if Station.config.load():
 			if Station.config.activated or force:
-				# Load default network
-				if Station.network.load(partFilename=Station.config.default):
-					
-					# If the connection failed
-					if Station.connect(Station.network, maxRetry) == False:
-						print("Not connected to the default %s"%useful.tostrings(Station.network.ssid))
-						# Scan other networks
-						Station.scan()
-
-						# List known networks
-						Station.knownNetworks = Station.network.listKnown()
-
-						# For all known networks
-						for networkName in Station.knownNetworks:
-							# If the network not already tested
-							if networkName != Station.config.default:
-								# Load other
-								if Station.network.load(partFilename=networkName):
-									print("Try to connect to %s"%useful.tostrings(Station.network.ssid))
-									# Connect to the other network found
-									if Station.connect(Station.network, maxRetry) == True:
-										print("Connected to %s"%useful.tostrings(Station.network.ssid))
-										Station.config.default = networkName
-										Station.config.save()
-										result = True
-										break
-									else:
-										result = result
-
-						# If no other network available
-						if result == False:
-							print("Retry to connect to default %s"%useful.tostrings(Station.network.ssid))
-							# Load default network
-							if Station.network.load(partFilename=Station.config.default):
-								# If the connection failed
-								if Station.connect(Station.network, maxRetry) == True:
-									print("Connected to %s"%useful.tostrings(Station.network.ssid))
-									result = True
-					else:
-						result = True
+				result = Station.selectNetwork(Station.config.default, maxRetry)
+				if result == False:
+					result = Station.scanNetworks(maxRetry)
 			else:
 				print("Wifi disabled")
 		else:
 			print("Wifi not initialized")
 		return result
-
 
 	@staticmethod
 	def start(force, maxRetry=20000):

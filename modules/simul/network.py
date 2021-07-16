@@ -22,10 +22,11 @@ class WLAN:
 		return self._active
 
 	def connect(self, ssid, password, authmode=3):
+		#self._isconnected = False
+		self._isconnected = True
 		self.password = password
 		self.ssid     = ssid
 		self.authmode = authmode
-		self._isconnected = True
 
 	def config(self, dhcp_hostname="", essid="", password="", authmode=3):
 		self.ssid=essid

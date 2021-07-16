@@ -73,6 +73,14 @@ class AccessPoint:
 		return AccessPoint.wlan.active()
 
 	@staticmethod
+	def isActivated():
+		""" Indicates if the access point is configured to be activated """
+		if AccessPoint.config != None:
+			return AccessPoint.config.activated
+		else:
+			return False
+
+	@staticmethod
 	def getInfo():
 		if AccessPoint.wlan != None and AccessPoint.wlan.active():
 			return AccessPoint.wlan.ifconfig()

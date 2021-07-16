@@ -21,11 +21,7 @@ class TelnetWrapper(IOBase):
 	def __init__(self, socket):
 		self.socket = socket
 		self.discard_count = 0
-		if User.isEmpty():
-			self.state = 3
-		else:
-			self.state = 0
-
+		self.state = 0
 		self.password = b""
 		self.login = b""
 		self.getlogin()

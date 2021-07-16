@@ -19,7 +19,7 @@ class JsonConfig:
 	def save(self, file = None, partFilename=""):
 		""" Save object in json file """
 		try:
-			filename = self.getFilename(useful.tofilename(partFilename))
+			filename = self.getPathname(useful.tofilename(partFilename))
 			file, filename = self.open(file=file, readWrite="w", partFilename=partFilename)
 			data = self.__dict__.copy()
 			del data["modificationDate"]
@@ -30,21 +30,29 @@ class JsonConfig:
 			print("Cannot save %s (%s)"%(filename,err))
 			return False
 
-	def getFilename(self, partFilename=""):
+	def getPathname(self, partFilename=""):
 		""" Get the configuration filename according to the class name """
-		return CONFIG_ROOT+"/"+self.__class__.__name__ + useful.tostrings(partFilename) + ".json"
+		return CONFIG_ROOT+"/"+self.getFilename(partFilename) + ".json"
 
 	def listAll(self):
 		""" List all configuration files """
 		result = []
-		pattern = self.__class__.__name__ + ".*"
+		pattern = self.getFilename() + ".*"
 		for fileinfo in uos.ilistdir(CONFIG_ROOT):
 			name = fileinfo[0]
 			typ  = fileinfo[1]
 			if typ & 0xF000 != 0x4000:
 				if re.match(pattern, name):
-					result.append(useful.tobytes(name[len(self.__class__.__name__):-len(".json")]))
+					result.append(useful.tobytes(name[len(self.getFilename()):-len(".json")]))
 		return result
+
+	def getFilename(self, partFilename=""):
+		""" Return the config filename """
+		if self.__class__.__name__[-len("Config"):] == "Config":
+			name = self.__class__.__name__[:-len("Config")]
+		else:
+			name = self.__class__.__name__
+		return name + useful.tostrings(partFilename)
 
 	def open(self, file=None, readWrite="r", partFilename=""):
 		""" Create or open configuration file """
@@ -52,7 +60,7 @@ class JsonConfig:
 		if useful.exists(CONFIG_ROOT) == False:
 			useful.makedir(CONFIG_ROOT)
 		if file == None:
-			filename = self.getFilename(useful.tofilename(partFilename))
+			filename = self.getPathname(useful.tofilename(partFilename))
 			file = open(filename, readWrite)
 		elif type(file) == type(""):
 			file = open(filename, readWrite)
@@ -121,7 +129,7 @@ class JsonConfig:
 	def load(self, file = None, partFilename=""):
 		""" Load object with the file specified """
 		try:
-			filename = self.getFilename(useful.tofilename(partFilename))
+			filename = self.getPathname(useful.tofilename(partFilename))
 			file, filename = self.open(file=file, readWrite="r", partFilename=partFilename)
 			self.update(useful.tobytes(json.load(file)))
 			file.close()
@@ -132,13 +140,13 @@ class JsonConfig:
 
 	def forget(self, partFilename=""):
 		""" Forget configuration """
-		filename = self.getFilename(partFilename=partFilename)
+		filename = self.getPathname(partFilename=partFilename)
 		useful.remove(CONFIG_ROOT+"/"+filename)
 
 	def isChanged(self, partFilename=""):
 		""" Indicates if the configuration changed """
 		try:
-			modificationDate = uos.stat(self.getFilename(useful.tofilename(partFilename)))[8]
+			modificationDate = uos.stat(self.getPathname(useful.tofilename(partFilename)))[8]
 			if self.modificationDate != modificationDate:
 				self.modificationDate = modificationDate
 				return True

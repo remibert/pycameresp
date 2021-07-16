@@ -343,13 +343,13 @@ def umountsd(mountpoint="/sd"):
 
 def date(update=False, offsetUTC=+1, noDst=False):
 	""" Get or set date """
-	from server.timesetting import setdate
+	from server.timesetting import setDate
 	if update:
 		if noDst:
 			dst = False
 		else:
 			dst = True
-		setdate(offsetUTC, dst)
+		setDate(offsetUTC, dst)
 	print(useful.dateToString())
 	del sys.modules["server.timesetting"]
 
