@@ -5,7 +5,6 @@ from server.httpserver import HttpServer
 from htmltemplate import *
 from webpage import *
 from tools import useful
-from tools.useful import log
 import uasyncio
 import server
 import sys
@@ -61,9 +60,8 @@ async def reboot(request, response, args):
 	except Exception as err:
 		print(useful.exception(err))
 	try:
-		import machine
 		server.suspend()
 		await server.waitAllSuspended()
-		machine.reset()
+		useful.reboot("Reboot asked on system html page")
 	except Exception as err:
 		print(useful.exception(err))

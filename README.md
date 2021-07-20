@@ -89,7 +89,7 @@ To flash a firmware on the ESP32CAM, see the excellent video :
 [ESP32 CAM - 10 Dollar Camera for IoT Projects](https://www.youtube.com/watch?v=visj0KE5VtY)
 
 Once the firmware flashed, the ESP32CAM automatically starts a wifi access point.
-You must connect to the SSID **Micropython** access point, the wifi password is **Micropython** .
+You must connect to the SSID **Esp_??????** access point (????? = hexadecimal value), the wifi password is **Pycam_??????** (?????? = same value as the hexa part of the ssid).
 
 Once wifi connected, open your web browser on the ip address (http://192.168.3.1).
 To use motion detection with image notification, you have to configure :

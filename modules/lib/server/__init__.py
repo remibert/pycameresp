@@ -14,6 +14,7 @@ from server.timesetting import *
 from tools import jsonconfig,useful
 import uasyncio
 import wifi
+import time
 
 
 class ServerConfig(jsonconfig.JsonConfig):
@@ -41,6 +42,9 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
 		config = ServerConfig()
 		if config.load() == False:
 			config.save()
+		
+		# restore saved time
+		setTime(config.currentTime)
 
 		# If ntp synchronisation activated
 		if config.ntp:
@@ -89,18 +93,21 @@ async def periodic():
 		while True:
 			config = server.ServerConfig()
 			config.load()
-			setTime(config.currentTime)
+			
 			if wifi.Station.isActive():
 				if config.ntp:
-					if refreshTime %10 == 0:
-						for i in range(6):
-							currentTime = setDate(config.offsettime, dst=config.dst, display=True)
-							if currentTime > 0:
-								config.currentTime = int(currentTime)
-								config.save()
-								break
-							else:
-								await uasyncio.sleep(10)
+					for i in range(6):
+						if refreshTime %10 == 0:
+							display = True
+						else:
+							display = False
+						currentTime = setDate(config.offsettime, dst=config.dst, display=display)
+						if currentTime > 0:
+							config.currentTime = int(currentTime)
+							config.save()
+							break
+						else:
+							await uasyncio.sleep(10)
 					refreshTime += 1
 			else:
 				if wifi.Station.isActivated() == False:
@@ -111,8 +118,6 @@ async def periodic():
 						if wifi.AccessPoint.isActive() and wifi.AccessPoint.isActivated() == False:
 							wifi.AccessPoint.stop()
 			await uasyncio.sleep(600)
-
-			
 	except Exception as err:
 		open("%s.crash"%useful.dateToFilename(),"w").write(useful.exception(err))
 

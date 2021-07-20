@@ -14,7 +14,7 @@ INACTIVITY=60*10*1000
 class Streaming:
 	""" Management class of video streaming of the camera via an html page """
 	streamingId = [0]
-	inactivityTimer = [None]
+	inactivity = [None]
 	config = [None]
 	durty = [False]
 
@@ -69,15 +69,14 @@ class Streaming:
 	def startInactivityTimer():
 		""" Start inactivity timer for stop streaming video after delay """
 		Streaming.stopInactivityTimer()
-		Streaming.inactivityTimer[0] = machine.Timer(0)
-		Streaming.inactivityTimer[0].init(period=INACTIVITY, mode=machine.Timer.ONE_SHOT, callback=Streaming.inactivityTimeout)
+		Streaming.inactivity[0] = useful.Inactivity(Streaming.inactivityTimeout)
 
 	@staticmethod
 	def stopInactivityTimer():
 		""" Stop inactivity timer """
-		if Streaming.inactivityTimer[0]:
-			Streaming.inactivityTimer[0].deinit()
-			Streaming.inactivityTimer[0] = None
+		if Streaming.inactivity[0]:
+			Streaming.inactivity[0].stop()
+			Streaming.inactivity[0] = None
 
 	@staticmethod
 	def getStreamingId():

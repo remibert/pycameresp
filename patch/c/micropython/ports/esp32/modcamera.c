@@ -760,8 +760,6 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 		//ESP_LOGE(TAG,"ignored=%d diff=%d",  ignored, diffDetected);
 	}
 
-
-
 	mp_obj_t diffdict = mp_obj_new_dict(0);
 		mp_obj_dict_store(diffdict, mp_obj_new_str("count"     , strlen("count"))     ,  mp_obj_new_int(diffDetected));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("max"       , strlen("max"))       ,  mp_obj_new_int(self->diffMax));
@@ -930,7 +928,7 @@ STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t mask_in, mp_obj_t er
 					memcpy(motionConfiguration.mask_data, mask_data, mask_length);
 					motionConfiguration.mask_length = mask_length;
 					motionConfiguration.mask_data[mask_length] = '\0';
-					ESP_LOGE(TAG,"|%s|",motionConfiguration.mask_data);
+					//ESP_LOGE(TAG,"|%s|",motionConfiguration.mask_data);
 				}
 			}
 		}

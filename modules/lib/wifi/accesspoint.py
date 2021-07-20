@@ -11,8 +11,8 @@ class AccessPointConfig(jsonconfig.JsonConfig):
 		""" Constructor """
 		jsonconfig.JsonConfig.__init__(self)
 		self.activated = True
-		self.wifipassword  = b"Micropython"
-		self.ssid          = b"Micropython"
+		self.wifipassword  = b""
+		self.ssid          = b""
 		self.authmode      = b"WPA2-PSK"
 		self.ipaddress     = b"192.168.3.1"
 		self.netmask       = b"255.255.255.0"
@@ -125,14 +125,24 @@ class AccessPoint:
 			config = AccessPointConfig()
 
 			if not config.load():
+				from network import WLAN, AP_IF
 				config.activated    = True
+				wlan = WLAN(AP_IF)
+				ident = wlan.config("mac")
+				config.ssid          = b"Esp_%02X%02X%02X"%(ident[0],ident[1],ident[2])
+				config.wifipassword  = b"Pycam_%02X%02X%02X"%(ident[0],ident[1],ident[2])
 				config.save()
-		
+			else:
+				wlan = None
+
 			if config.activated or force:
 				print("Start AccessPoint")
 				from network import WLAN, AP_IF
 				AccessPoint.config = config
-				AccessPoint.wlan = WLAN(AP_IF)
+				if wlan == None:
+					AccessPoint.wlan = WLAN(AP_IF)
+				else:
+					AccessPoint.wlan = wlan
 				AccessPoint.configure()
 				AccessPoint.open()
 				AccessPoint.configure()

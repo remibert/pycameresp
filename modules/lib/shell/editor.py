@@ -30,6 +30,7 @@ On the boards with low memory, it may work, but on very small files, otherwise i
 """
 import sys
 sys.path.append("lib")
+sys.path.append("lib/tools")
 try:
 	from tools import useful
 except:
@@ -1461,6 +1462,7 @@ class Editor:
 		self.edit.text.load(filename)
 		self.isRefreshHeader = True
 		self.findText = None
+		self.replaceText = None
 		self.keys= []
 	
 		if (not useful.exists(filename) and readOnly == True) or useful.isdir(filename):
@@ -1542,11 +1544,11 @@ class Editor:
 		result = None
 		while 1:
 			edit.view.refresh()
-			key = useful.getch()
-			if key == "\n" or key == "\r":
+			key = self.getKey()
+			if key[0] in NEW_LINE:
 				result = edit.text.lines[0]
 				break
-			elif key == ESCAPE:
+			elif key[0] in ESCAPE:
 				break
 			else:
 				edit.text.treatKey(key)
@@ -1571,8 +1573,9 @@ class Editor:
 
 	def replaceCurrent(self):
 		""" Replace current """
-		if self.edit.text.replace(self.findText, self.replaceText):
-			self.findNext()
+		if self.findText and self.replaceText:
+			if self.edit.text.replace(self.findText, self.replaceText):
+				self.findNext()
 
 	def findNext(self):
 		""" Find next text """

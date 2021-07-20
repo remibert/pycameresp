@@ -13,10 +13,14 @@ async def pushover(request, response, args):
 	disabled, action, submit = manageDefaultButton(request, config)
 	if action == b"save":
 		await asyncNotify(token=config.token, user=config.user, message = b"pushover notification %s"%(b"on" if config.activated else b"off"))
+	if disabled:
+		type = b"password"
+	else:
+		type = b""
 	page = mainFrame(request, response, args,b"Notification configuration",
 		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),Br(),
-		Edit(text=b"User",  name=b"user",  placeholder=b"Enter pushover user",  type=b"password", value=config.user,  disabled=disabled),
-		Edit(text=b"Token", name=b"token", placeholder=b"Enter pushover token", type=b"password", value=config.token, disabled=disabled),
+		Edit(text=b"User",  name=b"user",  placeholder=b"Enter pushover user",  type=type, value=config.user,  disabled=disabled),
+		Edit(text=b"Token", name=b"token", placeholder=b"Enter pushover token", type=type, value=config.token, disabled=disabled),
 		submit,
 		Br(), Br(), Link(href=b"https://pushover.net", text=b"See pushover website"))
 

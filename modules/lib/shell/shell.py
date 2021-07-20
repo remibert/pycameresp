@@ -355,8 +355,7 @@ def date(update=False, offsetUTC=+1, noDst=False):
 
 def reboot():
 	""" Reboot command """
-	import machine
-	machine.reset()
+	useful.reboot("Reboot device")
 
 def deepsleep():
 	""" Deep sleep command """
@@ -555,19 +554,26 @@ def execCommand(args):
 	except Exception as err:
 		print(useful.exception(err))
 
+
 def shell():
 	""" Start the shell """
 	global shell_exited
+
+	def inactivityShell(timer):
+		useful.reboot("\nAutomatic reboot after inactivity")
+
+	inactivity = useful.Inactivity(inactivityShell)
 	
 	shell_exited = False
 	while shell_exited == False:
 		try:
 			commandLine = input("%s=> "%os.getcwd())
+			inactivity.restart()
 		except EOFError:
 			print("")
 			break
 		parseCommandLine(commandLine)
-	
+	inactivity.stop()
 
 async def asyncShell():
 	""" Asynchronous shell """
@@ -577,7 +583,7 @@ async def asyncShell():
 		while 1:
 			# If key pressed
 			if useful.kbhit(0):
-				if ord(useful.getch()) != 0:
+				if ord(useful.getch()[0]) != 0:
 					import uos
 					server.suspend()
 					await server.waitAllSuspended()

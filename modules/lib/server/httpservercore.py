@@ -33,6 +33,13 @@ class HttpServerCore:
 				await response.sendError(status=b"404", content=b"Page not found")
 			else:
 				await function(request, response, args)
+		except OSError as err:
+			# If ECONNRESET or ENOTCONN
+			if err.args[0] == 104 or err.args[0] == 128:
+				# Ignore error
+				pass
+			else:
+				await response.sendError(status=b"404", content=useful.tobytes(useful.exception(err)))
 		except Exception as err:
 			await response.sendError(status=b"404", content=useful.tobytes(useful.exception(err)))
 		finally:

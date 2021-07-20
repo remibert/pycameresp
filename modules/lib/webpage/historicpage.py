@@ -90,7 +90,7 @@ async def historic(request, response, args):
 				var ctx = document.getElementById('motion').getContext('2d');
 				ctx.font = '25px Arial';
 				ctx.fillStyle = "black";
-				ctx.fillText("Not yet available, try again in few minutes", 10, 20);
+				ctx.fillText("Not yet available, retry again in 5 minutes", 10, 20);
 			}
 		}
 

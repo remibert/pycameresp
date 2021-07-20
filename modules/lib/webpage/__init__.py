@@ -7,6 +7,7 @@ from webpage.mainpage import *
 from webpage.changepasswordpage import *
 from webpage.infopage import *
 from webpage.pushoverpage import *
+# from webpage.telegrampage import *
 from webpage.serverpage import *
 from webpage.wifipage import *
 if iscamera():

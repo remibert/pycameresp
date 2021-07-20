@@ -6,7 +6,6 @@ I added in the firmware the possibility of detecting movements,
 as well as a lot of adjustment on the camera, not available on the other firmware that manages the esp32cam.
 """
 import sys
-import machine
 import camera
 import time
 import uasyncio
@@ -178,8 +177,7 @@ class Camera:
 			retry = 10
 			while 1:
 				if retry == 0:
-					print("Reset")
-					machine.reset()
+					useful.reboot("Reboot forced after camera problem")
 				try:
 					# camera.quality(32)
 					result = camera.capture()
@@ -220,8 +218,7 @@ class Camera:
 			retry = 10
 			while 1:
 				if retry == 0:
-					print("Reset")
-					machine.reset()
+					useful.reboot("Reboot forced after camera problem")
 				try:
 					result = camera.motion()
 					break

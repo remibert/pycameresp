@@ -7,6 +7,7 @@ import io
 import time
 import select
 import hashlib
+import machine
 try:
 	from tools import fnmatch
 except:
@@ -219,7 +220,6 @@ def flashinfo(display=True):
 def sysinfo(display=True, text=""):
 	""" Get system informations """
 	try:
-		import machine
 		result = b"%s%s %dMhz, %s, %s, %s"%(text, sys.platform, machine.freq()//1000000, dateToBytes(), meminfo(False), flashinfo(False))
 		if display:
 			print(tostrings(result))
@@ -386,7 +386,7 @@ def exception(err, msg=""):
 		text = file.getvalue()
 		print(text)
 
-	logFile = open("crash.txt","a")
+	logFile = open("errors.log","a")
 	logFile.write(dateToString() + " %s\n%s\n"%(msg,text))
 	logFile.close()
 	return text
@@ -402,7 +402,6 @@ def htmlException(err):
 def blink(duration=10):
 	""" Blink led """
 	try:
-		import machine
 		from time import sleep_ms
 		pin2 = machine.Pin(2, machine.Pin.OUT)
 		pin2.value(1)
@@ -704,7 +703,6 @@ class SdCard:
 				try:
 					# If the sdcard not already mounted
 					if uos.statvfs("/") == uos.statvfs(mountpoint):
-						import machine
 						uos.mount(machine.SDCard(), mountpoint)
 						SdCard.mountpoint[0] = mountpoint
 						SdCard.opened[0]= True
@@ -758,6 +756,41 @@ def uptime():
 	days    = (up/1000/86400)
 	return "up %d days, %d:%02d:%02d"%(days,hours,mins,seconds)
 
+def reboot(message="Reboot"):
+	""" Reboot command """
+	print(message)
+	try:
+		import camera
+		camera.deinit()
+	except:
+		pass
+	machine.deepsleep(1000)
+
+class Inactivity:
+	""" Class to manage inactivity timer """
+	def __init__(self, callback, duration=15*60*1000):
+		""" Inactivity timer constructor """
+		self.timer = machine.Timer(-1)
+		self.duration = duration
+		self.callback = callback
+		self.start()
+
+	def __del__(self):
+		""" Destructor """
+		self.stop()
+
+	def start(self):
+		""" Restart inactivity timer """
+		self.timer.init(period=self.duration, mode=machine.Timer.ONE_SHOT, callback=self.callback)
+
+	def stop(self):
+		""" Stop timer """
+		self.timer.deinit()
+
+	def restart(self):
+		""" Restart timer """
+		self.stop()
+		self.start()
 
 async def taskMonitoring(task):
 	""" Check if task crash, log message and reboot if it too frequent """
@@ -779,8 +812,7 @@ async def taskMonitoring(task):
 			await uasyncio.sleep_ms(6000)
 
 	await notifyMessage(b"Reboot after many crash : \n%s"%tobytes(lastError))
-	import machine
-	machine.reset()
+	reboot()
 
 HEADER_FILE=b"## PYCAMERESP ##\r\n"
 def exportFiles(exportFilename, path="./config",pattern="*.json", recursive=False):
