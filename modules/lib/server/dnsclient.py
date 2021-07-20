@@ -45,7 +45,7 @@ class DnsHeader:
 		result = ""
 		spl = splitIpAddress(name)
 		# Ip address detected
-		if len(spl) > 1:
+		if type(spl) == type([]):
 			spl.reverse()
 			spl.append("in-addr")
 			spl.append("arpa")

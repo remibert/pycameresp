@@ -322,6 +322,20 @@ def ping(host):
 	""" Ping host """
 	server.ping(host, count=4, timeout=1)
 
+def ip2host(ipaddress):
+	""" Convert ip to hostname """
+	import wifi
+	_, _, _, dns = wifi.Station.getInfo()
+	import server.dnsclient
+	print(server.dnsclient.getHostname(dns, ipaddress))
+
+def host2ip(hostname):
+	""" Convert hostname to ip """
+	import wifi
+	_, _, _, dns = wifi.Station.getInfo()
+	import server.dnsclient
+	print(server.dnsclient.getIpAddress(dns, hostname))
+
 def mountsd(mountpoint="/sd"):
 	""" Mount command """
 	import uos
@@ -628,6 +642,8 @@ shellCommands = \
 	"help"     :[help     ],
 	"man"      :[man      ,"command"],
 	"df"       :[df       ,"mountpoint"],
+	"ip2host"  :[ip2host  ,"ipaddress"],
+	"host2ip"  :[host2ip  ,"hostname"],
 }
 
 if __name__ == "__main__":

@@ -14,10 +14,10 @@ async def presence(request, response, args):
 	""" Presence configuration page """
 	config = PresenceConfig()
 	def updateConfig(request, config):
+		resolve = False
 		if b"resolve" in request.params:
-			resolve = True
-		else:
-			resolve = False
+			if request.params[b"resolve"] != b"0":
+				resolve = True
 
 		if resolve:
 			ipaddress, netmask, gateway, dns = wifi.Station.getInfo()
