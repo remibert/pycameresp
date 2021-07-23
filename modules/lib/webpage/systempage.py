@@ -58,10 +58,10 @@ async def reboot(request, response, args):
 	try:
 		await response.sendOk()
 	except Exception as err:
-		print(useful.exception(err))
+		useful.exception(err)
 	try:
 		server.suspend()
 		await server.waitAllSuspended()
 		useful.reboot("Reboot asked on system html page")
 	except Exception as err:
-		print(useful.exception(err))
+		useful.exception(err)

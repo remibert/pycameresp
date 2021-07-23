@@ -115,7 +115,7 @@ class AccessPoint:
 					useful.tostrings(AccessPoint.config.gateway),
 					useful.tostrings(AccessPoint.config.dns)))
 		except Exception as err:
-			print("Cannot configure wifi AccessPoint %s"%useful.exception(err))
+			useful.exception(err, msg="Cannot configure wifi AccessPoint")
 
 	@staticmethod
 	def start(force):

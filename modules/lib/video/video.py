@@ -44,9 +44,9 @@ class Motion:
 		""" Compare image to detect motion """
 		return self.motion.compare(other.motion, extractShape)
 
-	def configure(self, mask, errorLight):
+	def configure(self, param):
 		""" Configure the motion detection """
-		self.motion.configure(mask, errorLight)
+		self.motion.configure(param)
 
 	def getImage(self):
 		""" Return the jpeg buffer of motion """

@@ -49,7 +49,7 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
 		# If ntp synchronisation activated
 		if config.ntp:
 			# Load and start ntp synchronisation
-			loop.create_task(periodic())
+			loop.create_task(periodicTask())
 
 		# If telnet activated
 		if config.telnet and withoutServer == False:
@@ -85,42 +85,49 @@ class DateTimeConfig(jsonconfig.JsonConfig):
 		self.activated = False
 		self.token = b""
 		self.user = b""
-  
+
+async def periodicTask():
+	""" Detect the presence of occupants of the housing and automatically suspend the detection (ping the ip of occupants smartphones) """
+	await useful.taskMonitoring(periodic)
+
 async def periodic():
 	""" Periodic traitment update time, get wanip """
-	try:
-		refreshTime = 0
-		while True:
-			config = server.ServerConfig()
-			config.load()
-			
-			if wifi.Station.isActive():
-				if config.ntp:
-					for i in range(6):
-						if refreshTime %10 == 0:
-							display = True
-						else:
-							display = False
-						currentTime = setDate(config.offsettime, dst=config.dst, display=display)
-						if currentTime > 0:
-							config.currentTime = int(currentTime)
-							config.save()
-							break
-						else:
-							await uasyncio.sleep(10)
-					refreshTime += 1
+	refreshTime = 0
+	rebootLogged = False
+	while True:
+		config = server.ServerConfig()
+		config.load()
+		
+		if wifi.Station.isActive():
+			if config.ntp:
+				for i in range(6):
+					if refreshTime %10 == 0:
+						display = True
+					else:
+						display = False
+					currentTime = setDate(config.offsettime, dst=config.dst, display=display)
+					if currentTime > 0:
+						if rebootLogged == False:
+							rebootLogged = True
+							useful.logError("Boot device",display=False)
+						config.currentTime = int(currentTime)
+						config.save()
+						break
+					else:
+						await uasyncio.sleep(10)
+				refreshTime += 1
+		else:
+			if rebootLogged == False:
+				rebootLogged = True
+				useful.logError("Boot device without time set",display=False)
+			if wifi.Station.isActivated() == False:
+				print("Cannot set date : wifi disabled")
 			else:
-				if wifi.Station.isActivated() == False:
-					print("Cannot set date : wifi disabled")
-				else:
-					print("Cannot set date : wifi not connected")
-					if wifi.Station.chooseNetwork(True, maxRetry=10000) == True:
-						if wifi.AccessPoint.isActive() and wifi.AccessPoint.isActivated() == False:
-							wifi.AccessPoint.stop()
-			await uasyncio.sleep(600)
-	except Exception as err:
-		open("%s.crash"%useful.dateToFilename(),"w").write(useful.exception(err))
-
+				print("Cannot set date : wifi not connected")
+				if wifi.Station.chooseNetwork(True, maxRetry=10000) == True:
+					if wifi.AccessPoint.isActive() and wifi.AccessPoint.isActivated() == False:
+						wifi.AccessPoint.stop()
+		await uasyncio.sleep(600)
 
 _suspended = [False]
 _tasks = {}

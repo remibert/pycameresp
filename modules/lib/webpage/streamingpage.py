@@ -138,7 +138,7 @@ async def cameraStartStreaming(request, response, args):
 				if micropython == False:
 					await uasyncio.sleep(0.1)
 	except Exception as err:
-		print(useful.exception(err))
+		useful.exception(err)
 	finally:
 		if reserved:
 			print("End streaming %d"%currentStreamingId)

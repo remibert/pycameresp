@@ -136,7 +136,7 @@ class Battery:
 				val = file.read()
 				brownoutCounter = int(val) + 1
 			except Exception as err:
-				print(useful.exception(err))
+				useful.exception(err)
 
 		try:
 			file = open("brownout.txt","w")
@@ -144,7 +144,7 @@ class Battery:
 			file.flush()
 			file.close()
 		except Exception as err:
-			print(useful.exception(err))
+			useful.exception(err)
 
 		# If the battery level seems sufficient
 		if batteryProtect == False:

@@ -144,7 +144,7 @@ class FtpServerCore:
 		try:
 			self.sendFileListWithPattern(path, stream, full, now)
 		except Exception as err:
-			self.log(useful.exception(err))
+			useful.exception(err)
 			pattern = path.split(b"/")[-1]
 			path = path[:-(len(pattern) + 1)]
 			if path == b"": path = b"/"
@@ -172,8 +172,7 @@ class FtpServerCore:
 				else:
 					showError = True
 		if showError:
-			err = useful.exception(err)
-			self.log(b"%s> %-10s %-30s : err=%s"%(useful.tobytes(self.cwd), self.command, self.payload, useful.tobytes(err)))
+			useful.exception(err, msg="%s> %-10s %-30s"%(useful.tobytes(self.cwd), self.command, self.payload))
 		await self.sendResponse(550, b"Failed")
 
 	async def USER(self):
@@ -342,7 +341,7 @@ class FtpServerCore:
 			try:
 				self.writeFile(filename, self.pasvsocket)
 			except Exception as err:
-				self.logDebug(useful.exception(err))
+				useful.exception(err)
 				directory, file = useful.split(useful.tostrings(filename))
 				useful.makedir(directory, True)
 				self.writeFile(filename, self.pasvsocket)

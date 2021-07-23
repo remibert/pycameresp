@@ -55,7 +55,7 @@ class Historic:
 				useful.SdCard.save(filename + ".json", jsonInfo)
 				Historic.addItem(root + "/" + filename+".json", info)
 			except Exception as err:
-				print(useful.exception(err))
+				useful.exception(err)
 			finally:
 				await Historic.release()
 
@@ -85,15 +85,17 @@ class Historic:
 
 					try:
 						# Parse json file
+						file = None
 						file = open(motion, "rb")
 						Historic.addItem(motion, json.load(file))
 					except Exception as err:
-						print(useful.exception(err))
+						useful.exception(err)
 					finally:
-						file.close()
+						if file:
+							file.close()
 					await uasyncio.sleep_ms(3)
 			except Exception as err:
-				print(useful.exception(err))
+				useful.exception(err)
 			finally:
 				await Historic.release()
 
@@ -111,7 +113,7 @@ class Historic:
 					del Historic.historic[-1]
 				result = useful.tobytes(json.dumps(Historic.historic))
 			except Exception as err:
-				print(useful.exception(err))
+				useful.exception(err)
 			finally:
 				await Historic.release()
 		return result
@@ -131,7 +133,7 @@ class Historic:
 				files = await Historic.build(motions)
 				print("End   historic creation")
 			except Exception as err:
-				print(useful.exception(err))
+				useful.exception(err)
 
 	@staticmethod
 	async def scanDir(path, pattern, older=True, directory=True):
@@ -194,7 +196,7 @@ class Historic:
 				if older == False:
 					motions.reverse()
 			except Exception as err:
-				print(useful.exception(err))
+				useful.exception(err)
 			finally:
 				await Historic.release()
 		return motions
@@ -248,13 +250,13 @@ class Historic:
 							await Historic.__removeFiles(directory)
 							previous = directory
 					except Exception as err:
-						print(useful.exception(err))
+						useful.exception(err)
 					finally:
 						await Historic.release()
 				print("End cleanup sd card")
 
 	@staticmethod 
-	async def periodicTask_():
+	async def periodic():
 		""" Internal periodic task """
 		await server.waitResume(4*60)
 		if Historic.motionInProgress[0] == False:
@@ -266,4 +268,4 @@ class Historic:
 	@staticmethod
 	async def periodicTask():
 		""" Execute periodic traitment """
-		await useful.taskMonitoring(Historic.periodicTask_)
+		await useful.taskMonitoring(Historic.periodic)

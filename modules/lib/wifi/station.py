@@ -122,14 +122,14 @@ class Station:
 			try:
 				Station.wlan.ifconfig((useful.tostrings(network.ipaddress),useful.tostrings(network.netmask),useful.tostrings(network.gateway),useful.tostrings(network.dns)))
 			except Exception as err:
-				print("Cannot configure wifi station %s"%useful.exception(err))
+				useful.exception(err, msg="Cannot configure wifi station")
 		try:
 			network.ipaddress = useful.tobytes(Station.wlan.ifconfig()[0])
 			network.netmask   = useful.tobytes(Station.wlan.ifconfig()[1])
 			network.gateway   = useful.tobytes(Station.wlan.ifconfig()[2])
 			network.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
 		except Exception as err:
-			print("Cannot get ip station %s"%useful.exception(err))
+			useful.exception(err, msg="Cannot get ip station")
 
 	@staticmethod
 	def getInfo():

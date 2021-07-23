@@ -127,7 +127,14 @@ typedef struct Shape_t
 	uint16_t size;
 } Shape_t;
 
-
+#define MAX_ERROR_LIGHTS 4
+typedef struct 
+{
+	int light;
+	int error;
+	int a; // a * x + b
+	int b;
+} ErrorLight_t;
 typedef struct 
 {
 	mp_obj_base_t base;
@@ -156,7 +163,7 @@ typedef struct
 
 	uint16_t       stackpos;
 
-	int errorLight;
+	
 } Motion_t;
 const mp_obj_type_t Motion_type;
 
@@ -164,10 +171,10 @@ typedef struct
 {
 	uint8_t * mask_data;
 	uint16_t  mask_length;
-	int errorLight;
+	ErrorLight_t errorLights[MAX_ERROR_LIGHTS];
 } MotionConfiguration_t;
 
-MotionConfiguration_t motionConfiguration = {0,0,0};
+MotionConfiguration_t motionConfiguration = {0,0};
 // Create motion objet with an image
 static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength);
 
@@ -342,7 +349,6 @@ STATIC mp_obj_t camera_motion_detect()
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_motion_detect_obj, camera_motion_detect);
 
 #endif
-
 
 // input buffer
 static uint32_t Motion_jpgRead(void * arg, size_t index, uint8_t *buf, size_t len)
@@ -716,16 +722,27 @@ int Motion_getDiffHisto(Motion_t *self, Motion_t *other)
 // Compute the difference between two motion detection
 STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 {
-	int i;
+	int i, j;
 	int diffDetected = 0;
 	int diffHisto    = Motion_getDiffHisto(self, other);
-	int errLight     = motionConfiguration.errorLight;
+	int errLight;
 	uint16_t       *pCurrentLights = self->lights;
 	uint16_t       *pOtherLights   = other->lights;
 	uint16_t       *pDiffs         = self->diffs;
+	int light;
 
 	for (i = 0; i < self->diffMax; i++)
 	{
+		light = max(*pCurrentLights, *pOtherLights);
+		errLight = 256;
+		for (j = 1; j < MAX_ERROR_LIGHTS; j++)
+		{
+			if (motionConfiguration.errorLights[j].light <= light)
+			{
+				errLight =((motionConfiguration.errorLights[j].a * light)>>8) + motionConfiguration.errorLights[j].b;
+				break;
+			}
+		}
 		// Compare light
 		if (((abs(*pCurrentLights - *pOtherLights) * diffHisto)>>8) > errLight)
 		{
@@ -891,8 +908,33 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t ext
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(Motion_compare_obj, Motion_compare);
 
+
+// Get list item at the index
+mp_obj_t list_get_item(mp_obj_t list, size_t index)
+{
+	mp_obj_t result = mp_const_none;
+	size_t length;
+	mp_obj_t *items;
+	mp_obj_list_get(list, &length, &items);
+
+	if (index < length)
+	{
+		result = items[index];
+	}
+	return result;
+}
+
+size_t list_get_size(mp_obj_t list)
+{
+	size_t result = 0;
+	mp_obj_t *items;
+	mp_obj_list_get(list, &result, &items);
+	return result;
+}
+
+
 // configure method
-STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t mask_in, mp_obj_t errorLight_in)
+STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t params_in)
 {
 	Motion_t *self = self_in;
 
@@ -900,16 +942,54 @@ STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t mask_in, mp_obj_t er
 	{
 		mp_raise_TypeError(MP_ERROR_TEXT("Not motion object"));
 	}
+	else if (!mp_obj_is_dict_or_ordereddict(params_in) && params_in != mp_const_none)
+	{
+		mp_raise_TypeError(MP_ERROR_TEXT("Motions bad parameters"));
+	}
 	else
 	{
-		if (mp_obj_is_int(errorLight_in))
+		size_t lenErrorLight = list_get_size(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLights)));
+
+		if (lenErrorLight == MAX_ERROR_LIGHTS)
 		{
-			motionConfiguration.errorLight = mp_obj_get_int(errorLight_in);
+			ErrorLight_t el1, el2;
+			mp_obj_t errorLights = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLights));
+			for (size_t i = 0; i < lenErrorLight; i++)
+			{
+				mp_obj_t points = list_get_item (errorLights, i);
+				if (list_get_size(points) == 2)
+				{
+					el1.light = mp_obj_get_int(list_get_item(points, 0));
+					el1.error = mp_obj_get_int(list_get_item(points, 1));
+					if (i > 0)
+					{
+						el2 = motionConfiguration.errorLights[i-1];
+						if ((el1.light - el2.light) != 0)
+						{
+							el1.a = (((el1.error - el2.error)<<8) / (el1.light - el2.light));
+							el1.b = (el1.error - ((el1.a*el1.light)>>8));
+						}
+						else
+						{
+							mp_raise_TypeError(MP_ERROR_TEXT("Motions configure divide 0 for errorLights"));
+						}
+					}
+					else
+					{
+						el1.a = 0;
+						el1.b = 0;
+					}
+					//ESP_LOGE(TAG,"light=%d error=%d a=%d b=%d",el1.light, el1.error, el1.a, el1.b);
+					motionConfiguration.errorLights[i] = el1;
+				}
+			}
 		}
 		else
 		{
-			mp_raise_TypeError(MP_ERROR_TEXT("Bad error light type"));
+			mp_raise_TypeError(MP_ERROR_TEXT("Motions bad configure size for errorLights"));
 		}
+
+		mp_obj_t mask_in = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_mask));
 		if (mp_obj_is_str_or_bytes(mask_in))
 		{
 			GET_STR_DATA_LEN(mask_in, mask_data, mask_length);
@@ -939,7 +1019,7 @@ STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t mask_in, mp_obj_t er
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(Motion_configure_obj, Motion_configure);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_configure_obj, Motion_configure);
 
 // print method
 STATIC void Motion_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) 

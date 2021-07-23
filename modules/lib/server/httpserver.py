@@ -142,7 +142,7 @@ class HttpServer:
 			# Call on connection method
 			await self.server.onConnection(reader, writer)
 		except Exception as err:
-			print(useful.exception(err))
+			useful.exception(err)
 
 def start(loop=None, port=80, loader=None, preload=False, name=""):
 	""" Start http server.

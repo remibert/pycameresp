@@ -88,9 +88,7 @@ class Notification:
 				await writer.wait_closed()
 				
 			except Exception as err:
-				# Display exception
-				print("Notification exception")
-				print(useful.exception(err))
+				useful.exception(err)
 		else:
 			print("Notification not sent : wifi not connected")
 

@@ -52,13 +52,13 @@ if ismicropython():
 				return True
 		return False
 
-	def getch(raw = True):
+	def getch(raw = True, duration=0.01):
 		key = ""
 		while 1:
 			if len(key) == 0:
 				delay = 1000000000
 			else:
-				delay = 0.01
+				delay = duration
 			keyPressed = kbhit(delay)
 			if isKeyEnded(key):
 				break
@@ -78,9 +78,17 @@ if ismicropython():
 		if r != []:
 			return True
 		return False
+
+	def kbflush(duration=0.1):
+		while 1:
+			r,w,e = select.select([sys.stdin],[],[],duration)
+			if r != []:
+				sys.stdin.buffer.read(1)
+			else:
+				break
 		
 else:
-	def getch(raw = True):
+	def getch(raw = True, duration=0.1):
 		return readKeyboard(10000000, raw, getChar)
 
 	def kbhit(duration=0.001):
@@ -124,6 +132,9 @@ else:
 			fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
 			termios.tcsetattr(fd, termios.TCSAFLUSH, oldattr)
 		return result
+
+	def kbflush(duration=0.5):
+		pass
 
 
 try:
@@ -277,9 +288,19 @@ def import_(filename):
 				sys.modules[moduleName].main()
 				break
 	except Exception as err:
-		print(exception(err))
+		exception(err)
 	except KeyboardInterrupt as err:
-		print(exception(err))
+		exception(err)
+
+def temperature():
+	""" Get the internal temperature in celcius and farenheit """
+	try:
+		import esp32
+		farenheit = esp32.raw_temperature()
+		celcius = (farenheit-32)/1.8
+		return (celcius, farenheit)
+	except:
+		return (0,0)
 
 def abspath(cwd, payload):
 	""" Get the absolute path """
@@ -384,12 +405,28 @@ def exception(err, msg=""):
 		except Exception as err:
 			print(err)
 		text = file.getvalue()
-		print(text)
-
-	logFile = open("errors.log","a")
-	logFile.write(dateToString() + " %s\n%s\n"%(msg,text))
-	logFile.close()
+	logError(text, msg)
 	return text
+
+def logError(err, msg="", display=True):
+	""" Log the error in trace.log file """
+	if msg != "":
+		msg += "\n"
+		if display:
+			print(msg)
+	if display:
+		print(err)
+	logFile = open("trace.log","a")
+	logFile.seek(0,2)
+	if logFile.tell() >32*1024:
+		logFile.close()
+		print("File trace.log too big")
+		remove("trace.old")
+		uos.rename("trace.log","trace.old")
+		logFile = open("trace.log","a")
+
+	logFile.write(dateToString() + " %s%s\n"%(msg,err))
+	logFile.close()
 
 def htmlException(err):
 	""" Return the content of exception into an html bytes """
@@ -411,18 +448,39 @@ def blink(duration=10):
 	except:
 		print("Blink")
 
+screenSize = None
+
+def refreshScreenSize():
+	""" Refresh the screen size """
+	global screenSize
+	try:
+		sys.stdout.write("\x1B"+"7") # Save cursor position
+		sys.stdout.write("\x1B[999;999f") # Set cursor position far
+		try:
+			sys.stdout.flush()
+		except:
+			pass
+		size = getch(False, duration=0.5)
+		size = size[2:-1].split(";")
+		screenSize = int(size[0]), int(size[1])
+		if screenSize[0] < 5 or screenSize[1] < 5:
+			result = screenSize
+			screenSize = None
+		else:
+			result = screenSize
+		sys.stdout.write("\x1B"+"8") # Restore cursor position
+		return result
+	except:
+		screenSize = (20,40)
+		return screenSize
+
 def getScreenSize():
 	""" Get the VT100 screen size """
-	sys.stdout.write("\x1B[999;999f\x1B[6n")
-	try:
-		sys.stdout.flush()
-	except:
-		pass
-	size = ""
-	size = getch(False)
-	size = size[2:-1].split(";")
-	sys.stdout.write("\x1B[1000D")
-	return int(size[0]), int(size[1])
+	global screenSize
+	if screenSize != None:
+		return screenSize
+	else:
+		return refreshScreenSize()
 
 def prefix(files):
 	""" Get the common prefix of all files """
@@ -661,8 +719,8 @@ def scandir(path, pattern, recursive, displayer=None):
 							displayer.show(filename)
 						else:
 							filenames.append(filename)
-	except Exception as error:
-		print(exception(error))
+	except Exception as err:
+		exception(err)
 	return directories, filenames
 
 class SdCard:
@@ -732,8 +790,8 @@ class SdCard:
 				file.write(data)
 				file.close()
 				result = True
-			except Exception as error:
-				# print(exception(error))
+			except Exception as err:
+				# print(exception(err))
 				print("Cannot save %s"%filename)
 		return result
 
@@ -851,14 +909,14 @@ def exportFiles(exportFilename, path="./config",pattern="*.json", recursive=Fals
 
 					# Write end of file
 					out.write(b"\r\n\r\n")
-				except Exception as error:
-					print(exception(error))
+				except Exception as err:
+					exception(err)
 					result = False
 					break
 				finally:
 					content.close()
-	except Exception as error:
-		print(exception(error))
+	except Exception as err:
+		exception(err)
 		result = False
 	finally:
 		print("Export %s"%("success" if result else "failed"))
@@ -924,8 +982,8 @@ def importFiles(importFilename, simulated=False):
 						if simulated == False:
 							content.write(data)
 						size -= len(data)
-				except Exception as error:
-					print(exception(error))
+				except Exception as err:
+					exception(err)
 					result = False
 				finally:
 					if simulated == False:
@@ -935,8 +993,8 @@ def importFiles(importFilename, simulated=False):
 				if imported.read(4) != b"\r\n\r\n":
 					result = False
 					break
-	except Exception as error:
-		print(exception(error))
+	except Exception as err:
+		exception(err)
 		result = False
 	finally:
 		print("Import %s"%("success" if result else "failed"))

@@ -5,7 +5,7 @@ from server.httpserver import HttpServer
 from htmltemplate import *
 from webpage import *
 from tools.useful import *
-from tools import jsonconfig
+from tools import useful, jsonconfig
 import wifi
 
 
@@ -47,7 +47,7 @@ def selectNetwork(increase=0, reparse=False):
 			partFilename = b""
 		currentNetwork.load(partFilename = partFilename)
 	except Exception as err:
-		print(exception(err))
+		useful.exception(err)
 	return currentNetwork
 
 @HttpServer.addRoute(b'/wifi', title=b"Wifi", index=11)

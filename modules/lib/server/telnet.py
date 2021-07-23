@@ -24,6 +24,7 @@ class TelnetWrapper(IOBase):
 		self.state = 0
 		self.password = b""
 		self.login = b""
+		self.dataEntered = False
 		self.getlogin()
 		
 	def readinto(self, b):
@@ -76,47 +77,55 @@ class TelnetWrapper(IOBase):
 		elif self.state == 1:
 			# If validation
 			if b[0] == 0x0D or b[0] == 0x0A:
-				self.socket.write(b"\r\nPassword :")
-				self.state = 2
+				if self.dataEntered == True:
+					self.socket.write(b"\r\nPassword :")
+					self.dataEntered = False
+					self.state = 2
 			# If backspace
 			elif b[0] == 0x7F:
 				if len(self.login) >= 1:
 					self.login = self.login[:-1]
 				self.socket.write("\r"+" "*80)
 				self.socket.write("\rUsername :" + "*"*len(self.login))
+				self.dataEntered = True
 			# If character ignored
 			elif b[0] < 0x20 or b[0] > 0x7F:
-				pass
+				self.dataEntered = True
 			else:
+				self.dataEntered = True
 				self.login += bytes([b[0]])
-				self.socket.write("\rUsername :" + "*"*len(self.login))
+				self.socket.write("*")
 		# Password state
 		elif self.state == 2:
 			# If validation
 			if b[0] == 0x0D or b[0] == 0x0A:
-				# If password is a success
-				if User.check(self.login, self.password):
-					self.state = 3
-					self.password = b""
-					self.login = b""
-					self.socket.write(b"\r\n%s\r\n"%(b"-"*30))
-				else:
-					self.state = 1
-					self.socket.write(b"\n\r\nUsername :")
-					self.password = b""
-					self.login = b""
+				if self.dataEntered == True:
+					self.dataEntered = False
+					# If password is a success
+					if User.check(self.login, self.password):
+						self.state = 3
+						self.password = b""
+						self.login = b""
+						self.socket.write(b"\r\n%s\r\n"%(b"-"*30))
+					else:
+						self.state = 1
+						self.socket.write(b"\n\r\nUsername :")
+						self.password = b""
+						self.login = b""
 			# If backspace
 			elif b[0] == 0x7F:
+				self.dataEntered = True
 				if len(self.password) >= 1:
 					self.password = self.password[:-1]
 				self.socket.write("\r"+" "*80)
 				self.socket.write("\rPassword :" + "*"*len(self.password))
 			# If character ignored
 			elif b[0] < 0x20 or b[0] > 0x7F:
-				pass
+				self.dataEntered = True
 			else:
+				self.dataEntered = True
 				self.password += bytes([b[0]])
-				self.socket.write("\rPassword :" + "*"*len(self.password))
+				self.socket.write("*")
 		return result
 
 	def write(self, data):

@@ -117,7 +117,7 @@ class Motion:
 			'geometry': {'height': 600, 'width': 800}
 		}
 
-	def configure(self, mask, errorLight):
+	def configure(self, config):
 		pass
 
 	def getImage(self):

@@ -267,7 +267,10 @@ def printPart(message, width, height, count):
 			return None
 		print("\n", end="")
 	else:
-		count += 1
+		if count == None:
+			count = 1
+		else:
+			count += 1
 		print(message)
 	return count
 
@@ -500,6 +503,10 @@ def parseCommandLine(commandLine):
 	for command in commands:
 		execCommand(command)
 
+def cls():
+	""" Clear screen """
+	print("\x1B[2J\x1B[0;0f", end="")
+
 def getCommand(commandName):
 	""" Get a command callback according to the command name """
 	try:
@@ -561,13 +568,16 @@ def execCommand(args):
 		if commandName.strip() != "":
 			commandFunction(**flags)
 	except TypeError as err:
-		print("Missing parameters for '%s'"%commandName)
-		print(useful.exception(err))
+		useful.exception(err, msg="Missing parameters for '%s'"%commandName)
 	except KeyboardInterrupt:
-		print("Canceled")
+		print(" [Canceled]")
 	except Exception as err:
-		print(useful.exception(err))
+		useful.exception(err)
 
+def temperature():
+	""" Get the internal temperature """
+	celcius, farenheit = useful.temperature()
+	print("%.2f°C, %d°F"%(celcius, farenheit))
 
 def shell():
 	""" Start the shell """
@@ -593,23 +603,26 @@ async def asyncShell():
 	""" Asynchronous shell """
 	import uasyncio
 
-	if useful.ismicropython():
-		while 1:
-			# If key pressed
-			if useful.kbhit(0):
-				if ord(useful.getch()[0]) != 0:
-					import uos
-					server.suspend()
-					await server.waitAllSuspended()
-					currentDir = uos.getcwd()
-					print("\n"+"<"*20+"   ENTER SHELL   " +">"*20)
-					# Start shell
-					shell()
-					print("\n"+"<"*20+"   EXIT  SHELL   " +">"*20)
-					uos.chdir(currentDir)
-					server.resume()
-			else:
-				await uasyncio.sleep(1)
+	# if useful.ismicropython():
+	while 1:
+		# If key pressed
+		if useful.kbhit(0):
+			character = useful.getch()[0]
+			if ord(character) in [0x20,0x0D,0x1B]:
+				import uos
+				server.suspend()
+				await server.waitAllSuspended()
+				currentDir = uos.getcwd()
+				useful.refreshScreenSize()
+				useful.kbflush()
+				print("\n"+"<"*10+" ENTER SHELL " +">"*10)
+				# Start shell
+				shell()
+				print("\n"+"<"*10+" EXIT  SHELL " +">"*10)
+				uos.chdir(currentDir)
+				server.resume()
+		else:
+			await uasyncio.sleep(1)
 
 
 shellCommands = \
@@ -617,6 +630,7 @@ shellCommands = \
 	"cd"       :[cd       ,"directory"],
 	"pwd"      :[pwd      ],
 	"cat"      :[cat      ,"file"],
+	"cls"      :[cls      ],
 	"mkdir"    :[mkdir    ,"directory",            ("-r","recursive",True)],
 	"mv"       :[mv       ,"source","destination"],
 	"rmdir"    :[rmdir    ,"directory",            ("-r","recursive",True),("-f","force",True),("-q","quiet",True),("-s","simulate",True)],
@@ -633,6 +647,7 @@ shellCommands = \
 	"grep"     :[grep     ,"text","file",          ("-r","recursive",True),("-i","ignorecase",True),("-e","regexp",True)],
 	"mount"    :[mountsd  ,"mountpoint"],
 	"umount"   :[umountsd ,"mountpoint"],
+	"temperature":[temperature],
 	"meminfo"  :[useful.meminfo  ],
 	"flashinfo":[useful.flashinfo],
 	"sysinfo"  :[useful.sysinfo  ],

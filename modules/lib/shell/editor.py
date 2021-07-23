@@ -611,8 +611,8 @@ class Text:
 		except OSError:
 			self.lines = [""]
 			# File not existing
-		except Exception as error:
-			print(useful.exception(error))
+		except Exception as err:
+			useful.exception(err)
 			self.lines = [""]
 
 	def save(self):
@@ -627,8 +627,8 @@ class Text:
 					file.close()
 					self.modified = False
 					result = True
-				except Exception as error:
-					print(useful.exception(error))
+				except Exception as err:
+					useful.exception(err)
 		return result
 
 	def changeLine(self, moveLine):

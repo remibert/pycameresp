@@ -47,7 +47,7 @@ class Ftp:
 			server.close()
 			del server
 		except Exception as err:
-			print(useful.exception(err))
+			useful.exception(err)
 
 def start(loop=None, port=21, preload=False):
 	""" Start the ftp server with asyncio loop.

@@ -188,7 +188,8 @@ class ImageMotion:
 			mask = useful.tobytes(self.config.mask)
 			if not b"/" in mask:
 				mask = b""
-			self.motion.configure(mask, self.config.lightErrorRange)
+			errorLight = self.config.lightErrorRange
+			self.motion.configure({"mask":mask, "errorLights":[[0,1],[2*errorLight,errorLight//2],[3*errorLight, errorLight],[256,errorLight]]})
 
 class SnapConfig:
 	""" Store last motion information """
