@@ -144,7 +144,7 @@ class Camera:
 			for i in range(10):
 				res = camera.init()
 				if res == False:
-					print("Camera not initialized")
+					useful.logError("Camera not initialized")
 					camera.deinit()
 					time.sleep(0.5)
 				else:
@@ -183,7 +183,7 @@ class Camera:
 					result = camera.capture()
 					break
 				except ValueError:
-					print("Failed to get capture %d retry before reset"%retry)
+					useful.logError("Failed to get capture %d retry before reset"%retry)
 					retry += 1
 					time.sleep(0.5)
 		return result
@@ -223,7 +223,7 @@ class Camera:
 					result = camera.motion()
 					break
 				except ValueError:
-					print("Failed to get motion %d retry before reset"%retry)
+					useful.logError("Failed to get motion %d retry before reset"%retry)
 					retry += 1
 					time.sleep(0.1)
 		return result

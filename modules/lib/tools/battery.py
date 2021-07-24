@@ -63,7 +63,7 @@ class Battery:
 					level = int(level)
 				print("Battery level %d %% (%d)"%(level, int(val/count)))
 			except:
-				print("Cannot read battery status")
+				useful.logError("Cannot read battery status")
 			Battery.level[0] = level
 		return Battery.level[0]
 
@@ -95,7 +95,7 @@ class Battery:
 			esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
 			return True
 		except Exception as err:
-			print("Cannot set wake up")
+			useful.logError("Cannot set wake up")
 		return False
 
 	@staticmethod
@@ -151,10 +151,7 @@ class Battery:
 			# if the number of consecutive brownout resets is too high
 			if brownoutCounter > 10:
 				# Battery too low, save the battery status
-				file = open("battery.txt","w")
-				file.write("Too many brownout reset with battery level at %d %%"%batteryLevel)
-				file.flush()
-				file.close()
+				useful.logError("Too many brownout reset with battery level at %d %%"%batteryLevel)
 				batteryProtect = True
 
 		# Case the battery has not enough current and must be protected

@@ -37,9 +37,9 @@ if ismicropython():
 			if key[0] == "\x1B" and key[1] == "\x1B":
 				return False
 			elif key[0] == "\x1B":
-				if key[1] == "[" or key[1] == "(" or \
+				if  key[1] == "[" or key[1] == "(" or \
 					key[1] == ")" or key[1] == "#" or \
-					key[1] == "O":
+					key[1] == "?" or key[1] == "O":
 					return False
 				else:
 					return True
@@ -52,13 +52,13 @@ if ismicropython():
 				return True
 		return False
 
-	def getch(raw = True, duration=0.01):
+	def getch(raw = True, duration=1000000000, interchar=0.01):
 		key = ""
 		while 1:
 			if len(key) == 0:
-				delay = 1000000000
-			else:
 				delay = duration
+			else:
+				delay = interchar
 			keyPressed = kbhit(delay)
 			if isKeyEnded(key):
 				break
@@ -88,8 +88,8 @@ if ismicropython():
 				break
 		
 else:
-	def getch(raw = True, duration=0.1):
-		return readKeyboard(10000000, raw, getChar)
+	def getch(raw = True, duration=1000000000, interchar=0.01):
+		return readKeyboard(duration, raw, getChar)
 
 	def kbhit(duration=0.001):
 		return readKeyboard(duration, True, testChar)
@@ -454,13 +454,15 @@ def refreshScreenSize():
 	""" Refresh the screen size """
 	global screenSize
 	try:
-		sys.stdout.write("\x1B"+"7") # Save cursor position
+		sys.stdout.write("\x1B"+"7")      # Save cursor position
 		sys.stdout.write("\x1B[999;999f") # Set cursor position far
+		sys.stdout.write("\x1B[6n")       # Cursor position report
 		try:
 			sys.stdout.flush()
 		except:
 			pass
-		size = getch(False, duration=0.5)
+
+		size = getch(False, interchar=0.5)
 		size = size[2:-1].split(";")
 		screenSize = int(size[0]), int(size[1])
 		if screenSize[0] < 5 or screenSize[1] < 5:
@@ -471,7 +473,7 @@ def refreshScreenSize():
 		sys.stdout.write("\x1B"+"8") # Restore cursor position
 		return result
 	except:
-		screenSize = (20,40)
+		screenSize = (18,40)
 		return screenSize
 
 def getScreenSize():

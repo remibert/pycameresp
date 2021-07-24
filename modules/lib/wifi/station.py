@@ -223,7 +223,7 @@ class Station:
 			else:
 				print("Wifi disabled")
 		else:
-			print("Wifi not initialized")
+			useful.logError("Wifi not initialized")
 		return result
 
 	@staticmethod

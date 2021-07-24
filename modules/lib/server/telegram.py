@@ -84,7 +84,7 @@ class Notification:
 				# If response failed
 				if response.status != b"200":
 					# Print error
-					print("Notification failed to sent")
+					useful.logError("Notification failed to sent")
 
 				# Close all connection
 				writer.close()
@@ -93,7 +93,7 @@ class Notification:
 			except Exception as err:
 				useful.exception(err)
 		else:
-			print("Notification not sent : wifi not connected")
+			useful.logError("Notification not sent : wifi not connected")
 
 async def asyncNotify(chatId, botToken, message, image=None):
 	""" Asyncio notification function (only in asyncio) """

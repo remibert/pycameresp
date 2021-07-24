@@ -158,9 +158,8 @@ def accept_telnet_connect(telnet_server):
 		# close any previous clients
 		uos.dupterm(None)
 		last_client_socket.close()
-	
 	last_client_socket, remote_addr = telnet_server.accept()
-	print("Telnet connected from : %s" % remote_addr[0])
+	useful.logError("Telnet connected from : %s" % remote_addr[0])
 	last_client_socket.setblocking(False)
 	last_client_socket.setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
 	
