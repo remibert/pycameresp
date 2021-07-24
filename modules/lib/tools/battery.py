@@ -63,7 +63,7 @@ class Battery:
 					level = int(level)
 				print("Battery level %d %% (%d)"%(level, int(val/count)))
 			except:
-				useful.logError("Cannot read battery status")
+				print("Cannot read battery status")
 			Battery.level[0] = level
 		return Battery.level[0]
 
@@ -95,7 +95,7 @@ class Battery:
 			esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
 			return True
 		except Exception as err:
-			useful.logError("Cannot set wake up")
+			print("Cannot set wake up")
 		return False
 
 	@staticmethod

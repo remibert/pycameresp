@@ -249,7 +249,6 @@ class Motion:
 	def open(self):
 		""" Open camera """
 		if video.Camera.open():
-			#self.resume()
 			return True
 		else:
 			return False

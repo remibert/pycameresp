@@ -52,7 +52,7 @@ if ismicropython():
 				return True
 		return False
 
-	def getch(raw = True, duration=1000000000, interchar=0.01):
+	def getch(raw = True, duration=100000000, interchar=0.01):
 		key = ""
 		while 1:
 			if len(key) == 0:
@@ -88,7 +88,7 @@ if ismicropython():
 				break
 		
 else:
-	def getch(raw = True, duration=1000000000, interchar=0.01):
+	def getch(raw = True, duration=100000000, interchar=0.01):
 		return readKeyboard(duration, raw, getChar)
 
 	def kbhit(duration=0.001):
@@ -125,7 +125,10 @@ else:
 			if raw:
 				tty.setraw(fd)
 			key = None
-			inp, outp, err = select.select([sys.stdin], [], [], duration)
+			try:
+				inp, outp, err = select.select([sys.stdin], [], [], duration)
+			except Exception as err:
+				print(exception(err))
 			result = callback(inp)
 		finally:
 			# Reset the terminal:
@@ -462,7 +465,7 @@ def refreshScreenSize():
 		except:
 			pass
 
-		size = getch(False, interchar=0.5)
+		size = getch(raw=False, duration=1, interchar=0.2)
 		size = size[2:-1].split(";")
 		screenSize = int(size[0]), int(size[1])
 		if screenSize[0] < 5 or screenSize[1] < 5:
@@ -470,11 +473,13 @@ def refreshScreenSize():
 			screenSize = None
 		else:
 			result = screenSize
-		sys.stdout.write("\x1B"+"8") # Restore cursor position
-		return result
 	except:
-		screenSize = (18,40)
-		return screenSize
+		screenSize = None
+		result = (18,40)
+
+	sys.stdout.write("\x1B"+"8") # Restore cursor position
+	kbflush()
+	return result
 
 def getScreenSize():
 	""" Get the VT100 screen size """

@@ -603,18 +603,23 @@ async def asyncShell():
 	""" Asynchronous shell """
 	import uasyncio
 
-	# if useful.ismicropython():
+	if useful.ismicropython():
+		polling1 = 1
+		polling2 = 0.01
+	else:
+		polling1 = 0.1
+		polling2 = 0.5
 	while 1:
 		# If key pressed
-		if useful.kbhit(0):
+		if useful.kbhit(polling2):
 			character = useful.getch()[0]
-			if ord(character) in [0x20,0x0D,0x1B]:
+			if not ord(character) in [0,0xA]:
 				import uos
 				server.suspend()
 				await server.waitAllSuspended()
 				currentDir = uos.getcwd()
 				useful.refreshScreenSize()
-				useful.kbflush()
+				
 				print("\n"+"<"*10+" ENTER SHELL " +">"*10)
 				# Start shell
 				shell()
@@ -622,7 +627,7 @@ async def asyncShell():
 				uos.chdir(currentDir)
 				server.resume()
 		else:
-			await uasyncio.sleep(1)
+			await uasyncio.sleep(polling1)
 
 
 shellCommands = \

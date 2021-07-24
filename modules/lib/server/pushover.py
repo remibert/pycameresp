@@ -38,6 +38,7 @@ class Notification:
 		""" Send a push over notication message, and if image is added it must be a jpeg buffer.
 		message : the message of notification (bytes field not a string)
 		image : the jpeg image or nothing (bytes field)"""
+		useful.logError(useful.tostrings(message))
 		if wifi.Station.isActive():
 			try:
 				# Open pushover connection
@@ -106,7 +107,6 @@ async def notifyMessage(message, image = None, forced=False):
 	""" Notify message """
 	config = PushOverConfig()
 	config.load()
-	print("%s"%useful.tostrings(message))
 	if config.activated or forced:
 		await asyncNotify(config.user, config.token, message, image)
 
