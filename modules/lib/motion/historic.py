@@ -44,20 +44,23 @@ class Historic:
 	async def addMotion(path, name, image, info, html):
 		""" Add motion detection in the historic """
 		root = await Historic.getRoot()
+		result = False
 		if root:
 			try:
 				await Historic.acquire()
 				useful.makedir(root + "/" + useful.tostrings(path), True)
 				filename = path + "/" + name
 				jsonInfo = useful.tobytes(json.dumps(info))
-				useful.SdCard.save(filename + ".jpg" , image)
-				useful.SdCard.save(filename + ".html", html)
-				useful.SdCard.save(filename + ".json", jsonInfo)
+				res1 = useful.SdCard.save(filename + ".jpg" , image)
+				res2 = useful.SdCard.save(filename + ".html", html)
+				res3 = useful.SdCard.save(filename + ".json", jsonInfo)
 				Historic.addItem(root + "/" + filename+".json", info)
+				result = res1 and res2 and res3
 			except Exception as err:
 				useful.exception(err)
 			finally:
 				await Historic.release()
+		return result
 
 	@staticmethod
 	def addItem(filename, info):

@@ -584,7 +584,7 @@ def shell():
 	global shell_exited
 
 	def inactivityShell(timer):
-		useful.reboot("\nAutomatic reboot after inactivity")
+		useful.reboot("Automatic reboot after inactivity")
 
 	inactivity = useful.Inactivity(inactivityShell)
 	

@@ -109,7 +109,7 @@ async def periodic():
 					if currentTime > 0:
 						if rebootLogged == False:
 							rebootLogged = True
-							useful.logError("Boot device",display=False)
+							useful.logError("%s Boot %s"%("-"*10, "-"*10),display=False)
 						config.currentTime = int(currentTime)
 						config.save()
 						break
@@ -119,7 +119,7 @@ async def periodic():
 		else:
 			if rebootLogged == False:
 				rebootLogged = True
-				useful.logError("Boot device without time set",display=False)
+				useful.logError("%s Boot (no time set) %s"%("-"*10, "-"*10),display=False)
 			if wifi.Station.isActivated() == False:
 				print("Cannot set date : wifi disabled")
 			else:

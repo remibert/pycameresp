@@ -34,6 +34,10 @@ class User:
 		elif user == User.instance.user:
 			if useful.getHash(password) == User.instance.password:
 				return True
+			else:
+				useful.logError("Login failed, wrong password for user '%s'"%useful.tostrings(user))
+		else:
+			useful.logError("Login failed, unkwnon user '%s'"%useful.tostrings(user))
 		return False
 
 	@staticmethod

@@ -30,7 +30,7 @@ class MotionConfig(jsonconfig.JsonConfig):
 		self.suspendOnPresence = True
 
 		# Minimum difference contigous threshold to detect movement
-		self.contigousDetection = 10
+		self.contigousDetection = 6
 
 		# Awake time on battery (seconds)
 		self.awakeTime = 120
@@ -141,7 +141,7 @@ class ImageMotion:
 
 	async def save(self):
 		""" Save the image on sd card """
-		await historic.Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations(), self.getHtmlShapes())
+		return await historic.Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations(), self.getHtmlShapes())
 
 	def compare(self, previous, set=False, extractShape=True):
 		""" Compare two motion images to get differences """
@@ -282,7 +282,8 @@ class Motion:
 				result = (image.getMessage(), image)
 
 				# Save image to sdcard
-				await image.save()
+				if await image.save() == False:
+					await notifyMessage("Failed to save on sd card")
 			else:
 				# Destroy image
 				self.deinitImage(image)

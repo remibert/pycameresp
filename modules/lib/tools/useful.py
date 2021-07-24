@@ -424,8 +424,8 @@ def logError(err, msg="", display=True):
 	if logFile.tell() >32*1024:
 		logFile.close()
 		print("File trace.log too big")
-		remove("trace.old")
-		uos.rename("trace.log","trace.old")
+		rename("trace.log.1","trace.log.2")
+		rename("trace.log","trace.log.1")
 		logFile = open("trace.log","a")
 
 	logFile.write(dateToString() + " %s%s\n"%(msg,err))
@@ -773,7 +773,7 @@ class SdCard:
 						SdCard.opened[0]= True
 						result = True
 				except Exception as err:
-					print("Cannot mount %s"%mountpoint)
+					logError("Cannot mount %s"%mountpoint)
 			else:
 				SdCard.mountpoint[0] = mountpoint[1:]
 				SdCard.opened[0] = True
@@ -799,13 +799,20 @@ class SdCard:
 				result = True
 			except Exception as err:
 				# print(exception(err))
-				print("Cannot save %s"%filename)
+				logError("Cannot save %s"%filename)
 		return result
 
 def remove(filename):
 	""" Remove file existing """
 	try:    uos.remove(filename)
 	except: pass 
+
+def rename(old, new):
+	""" Rename file """
+	if exists(new):
+		remove(new)
+	try: uos.rename(old, new)
+	except: pass
 
 def uptime():
 	""" Tell how long the system has been running """
@@ -823,7 +830,7 @@ def uptime():
 
 def reboot(message="Reboot"):
 	""" Reboot command """
-	print(message)
+	logError(message)
 	try:
 		import camera
 		camera.deinit()
