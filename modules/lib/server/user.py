@@ -18,12 +18,20 @@ class UserConfig(jsonconfig.JsonConfig):
 class User:
 	""" Singleton class to manage the user. Only one user can be defined """
 	instance = None
+	loginState = [None]
 
 	@staticmethod
 	def init():
 		""" Constructor """
 		if User.instance == None:
 			User.instance = UserConfig()
+
+	@staticmethod
+	def getLoginState():
+		""" Indicates if login success or failed detected """
+		result = User.loginState[0]
+		User.loginState[0] = None
+		return result
 
 	@staticmethod
 	def check(user, password):
@@ -33,10 +41,13 @@ class User:
 			return True
 		elif user == User.instance.user:
 			if useful.getHash(password) == User.instance.password:
+				User.loginState[0] = True
 				return True
 			else:
+				User.loginState[0] = False
 				useful.logError("Login failed, wrong password for user '%s'"%useful.tostrings(user))
 		else:
+			User.loginState[0] = False
 			useful.logError("Login failed, unkwnon user '%s'"%useful.tostrings(user))
 		return False
 

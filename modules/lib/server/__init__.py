@@ -11,6 +11,7 @@ from server.wanip import *
 from server.ping import *
 from server.dnsclient import *
 from server.timesetting import *
+from server.wanip import *
 from tools import jsonconfig,useful
 import uasyncio
 import wifi
@@ -35,6 +36,11 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
 	pageLoader : callback to load html page
 	preload : True force the load of page at the start, 
 	False the load of page is done a the first http connection (Takes time on first connection) """
+	useful.logError("%s Start %s"%('-'*10,'-'*10), display=False)
+
+	# Add notifier if no notifier registered
+	if useful.getNotifier() == []:
+		useful.addNotifier(notifyMessage)
 
 	# If wifi started
 	if wifi.start():
@@ -94,6 +100,7 @@ async def periodic():
 	""" Periodic traitment update time, get wanip """
 	refreshTime = 0
 	rebootLogged = False
+	previousDate = None
 	while True:
 		config = server.ServerConfig()
 		config.load()
@@ -109,17 +116,33 @@ async def periodic():
 					if currentTime > 0:
 						if rebootLogged == False:
 							rebootLogged = True
-							useful.logError("%s Boot %s"%("-"*10, "-"*10),display=False)
+							useful.logError("Time set", display=False)
 						config.currentTime = int(currentTime)
 						config.save()
 						break
 					else:
 						await uasyncio.sleep(10)
 				refreshTime += 1
+
+			await uasyncio.sleep(600)
+
+			# Get the wan ip one time a day at 12
+			date = useful.dateToBytes()[:14]
+			if previousDate == None or (date[:-2] == b"12" and date != previousDate):
+				wanip = await getWanIpAsync()
+				if wanip != None:
+					await useful.notifyMessage("Wan ip is %s"%wanip)
+					previousDate = date
+
+			# Inform that login detected
+			login =  User.getLoginState()
+			if login != None:
+				await useful.notifyMessage("Login %s detected"%("success" if login else "failed"))
+
 		else:
 			if rebootLogged == False:
 				rebootLogged = True
-				useful.logError("%s Boot (no time set) %s"%("-"*10, "-"*10),display=False)
+				useful.logError("Time not set", display=False)
 			if wifi.Station.isActivated() == False:
 				print("Cannot set date : wifi disabled")
 			else:
@@ -127,7 +150,7 @@ async def periodic():
 				if wifi.Station.chooseNetwork(True, maxRetry=10000) == True:
 					if wifi.AccessPoint.isActive() and wifi.AccessPoint.isActivated() == False:
 						wifi.AccessPoint.stop()
-		await uasyncio.sleep(600)
+			await uasyncio.sleep(600)
 
 _suspended = [False]
 _tasks = {}

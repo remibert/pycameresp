@@ -6,7 +6,7 @@ import time
 from tools import useful, jsonconfig
 import server
 import wifi
-from server import notifyMessage, asyncPing
+from server import asyncPing
 
 class PresenceConfig(jsonconfig.JsonConfig):
 	""" Configuration class of presence detection """
@@ -95,7 +95,7 @@ class Presence:
 					for present in presents:
 						msg += b"%s "%present
 					if Presence.config.notify:
-						await notifyMessage(b"presence of %s"%(msg))
+						await useful.notifyMessage(b"presence of %s"%(msg))
 					Presence.setDetection(True)
 			# If no smartphone detected
 			elif currentDetected == False:
@@ -103,7 +103,7 @@ class Presence:
 				if Presence.isDetected() != currentDetected:
 					# Notify the house in empty
 					if Presence.config.notify:
-						await notifyMessage(b"empty house")
+						await useful.notifyMessage(b"empty house")
 					Presence.setDetection(False)
 
 			# If all smartphones not responded during a long time
@@ -124,7 +124,7 @@ class Presence:
 		# If the presence detection change
 		if Presence.activated != Presence.config.activated:
 			if Presence.config.notify:
-				await notifyMessage(b"presence detection %s"%(b"on" if Presence.config.activated else b"off"))
+				await useful.notifyMessage(b"presence detection %s"%(b"on" if Presence.config.activated else b"off"))
 			Presence.activated = Presence.config.activated
 
 		# Wait before new ping

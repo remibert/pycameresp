@@ -413,22 +413,27 @@ def exception(err, msg=""):
 
 def logError(err, msg="", display=True):
 	""" Log the error in trace.log file """
+	filename = "trace.log"
+	if ismicropython():
+		filename = "/" + filename
 	if msg != "":
 		msg += "\n"
 		if display:
-			print(msg)
+			print(tostrings(msg))
 	if display:
-		print(err)
-	logFile = open("trace.log","a")
+		print(tostrings(err))
+
+	logFile = open(filename,"a")
 	logFile.seek(0,2)
+
 	if logFile.tell() >32*1024:
 		logFile.close()
-		print("File trace.log too big")
-		rename("trace.log.1","trace.log.2")
-		rename("trace.log","trace.log.1")
-		logFile = open("trace.log","a")
+		print("File %s too big"%filename)
+		rename(filename + ".1",filename + ".2")
+		rename(filename       ,filename + ".1")
+		logFile = open(filename,"a")
 
-	logFile.write(dateToString() + " %s%s\n"%(msg,err))
+	logFile.write(dateToString() + " %s%s\n"%(tostrings(msg),tostrings(err)))
 	logFile.close()
 
 def htmlException(err):
@@ -864,11 +869,30 @@ class Inactivity:
 		self.stop()
 		self.start()
 
+notifiers = []
+def addNotifier(callback):
+	""" Add notifier """
+	global notifiers
+	notifiers.append(callback)
+
+def getNotifier():
+	""" Get the list of notifiers """
+	global notifiers
+	return notifiers
+
+async def notifyMessage(message, image = None, forced=False):
+	""" Notify message for all notifier registered """
+	global notifiers
+	
+	if len(notifiers) >= 1:
+		for notifier in notifiers:
+			await notifier(message, image, forced)
+	else:
+		logError(message)
+
 async def taskMonitoring(task):
 	""" Check if task crash, log message and reboot if it too frequent """
 	import uasyncio
-	from server   import notifyMessage
-
 	retry = 0
 	lastError = ""
 

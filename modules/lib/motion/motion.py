@@ -17,7 +17,6 @@ import json
 import server
 from gc import collect
 from motion import presence,historic
-from server   import notifyMessage
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
@@ -283,7 +282,7 @@ class Motion:
 
 				# Save image to sdcard
 				if await image.save() == False:
-					await notifyMessage("Failed to save on sd card")
+					await useful.notifyMessage("Failed to save on sd card")
 			else:
 				# Destroy image
 				self.deinitImage(image)
@@ -491,7 +490,7 @@ class Detection:
 			
 		if self.activated != result:
 			if self.motionConfig.notify:
-				await notifyMessage(b"motion detection %s" %(b"on" if result else b"off"))
+				await useful.notifyMessage(b"motion detection %s" %(b"on" if result else b"off"))
 			self.activated = result
 		if result == False:
 			# Motion capture disabled
@@ -567,7 +566,7 @@ class Detection:
 					if self.batteryLevel >= 0:
 						message += " Bat=%s%%"%batteryLevel
 					if self.motionConfig.notify:
-						await notifyMessage(message, image.get())
+						await useful.notifyMessage(message, image.get())
 				# Detect motion
 				detected, changePolling = self.motion.detect()
 
@@ -583,7 +582,7 @@ class Detection:
 					historic.Historic.setMotionState(False)
 				result = True
 			else:
-				await notifyMessage(b"motion detection suspended")
+				await useful.notifyMessage(b"motion detection suspended")
 				result = True
 
 		finally:

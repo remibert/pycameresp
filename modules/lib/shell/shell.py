@@ -620,10 +620,12 @@ async def asyncShell():
 				currentDir = uos.getcwd()
 				useful.refreshScreenSize()
 				
-				print("\n"+"<"*10+" ENTER SHELL " +">"*10)
+				print("")
+				useful.logError("<"*10+" Enter shell " +">"*10)
 				# Start shell
 				shell()
-				print("\n"+"<"*10+" EXIT  SHELL " +">"*10)
+				print("")
+				useful.logError("<"*10+" Exit  shell " +">"*10)
 				uos.chdir(currentDir)
 				server.resume()
 		else:

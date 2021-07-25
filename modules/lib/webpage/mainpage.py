@@ -21,7 +21,6 @@ styleNav = b"""  height: 100%;
 styleContent = b""" 
   margin-left: 150px;
 """
-#def mainPage(title="", active=0, content=None, request=None, response=None):
 def mainPage(request, response, args, content=None):
 	""" Function define the main web page with menu, it check also the login password """
 
