@@ -29,13 +29,13 @@ class MotionConfig(jsonconfig.JsonConfig):
 		self.suspendOnPresence = True
 
 		# Minimum difference contigous threshold to detect movement
-		self.contigousDetection = 6
+		self.contigousDetection = 4
 
 		# Awake time on battery (seconds)
 		self.awakeTime = 120
 
-		# Error range ignore light modification (10% of 256)
-		self.lightErrorRange=24
+		# Error range ignore light modification (% of 256)
+		self.lightErrorRange=12
 
 		# Max images in motion historic
 		self.maxMotionImages=10
@@ -181,6 +181,10 @@ class ImageMotion:
 		""" Reset the differences, used during the camera stabilization image """
 		self.comparison = None
 
+	def getSize(self):
+		""" Return the size of image buffer """
+		return self.motion.getSize()
+
 	def refreshConfig(self):
 		""" Refresh the motion detection configuration """
 		if self.motion != None:
@@ -230,6 +234,7 @@ class Motion:
 		self.pirDetection = pirDetection
 		self.imageBackground = None
 		self.mustRefreshConfig = True
+		self.quality = 15
 
 	def __del__(self):
 		""" Destructor """
@@ -256,7 +261,7 @@ class Motion:
 		""" Resume the camera, restore the camera configuration after an interruption """
 		video.Camera.framesize(b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height))
 		video.Camera.pixformat(b"JPEG")
-		video.Camera.quality(15)
+		video.Camera.quality(self.quality)
 		video.Camera.brightness(0)
 		video.Camera.contrast(0)
 		video.Camera.saturation(0)
@@ -282,7 +287,8 @@ class Motion:
 
 				# Save image to sdcard
 				if await image.save() == False:
-					await useful.notifyMessage("Failed to save on sd card")
+					if self.config.notify:
+						await useful.notifyMessage("Failed to save on sd card")
 			else:
 				# Destroy image
 				self.deinitImage(image)
@@ -305,7 +311,7 @@ class Motion:
 		if self.pirDetection == True:
 			stabilized = True
 		# If the camera not stabilized
-		elif len(self.images) < self.config.stabilizationCamera:
+		elif len(self.images) < self.config.stabilizationCamera and len(self.images) < self.config.maxMotionImages:
 			stabilized = False
 		else:
 			stabilized = True
@@ -319,12 +325,29 @@ class Motion:
 				return True
 		return False
 
+	def adjustQuality(self, current):
+		""" Adjust the image quality according to the size of image """
+		size = current.getSize()
+		if size > 62*1024:
+			if self.quality < 63:
+				useful.logError("Decrease image quality %d (image size=%s)"%(self.quality, useful.sizeToString(size)))
+				self.quality += 1
+				video.Camera.quality(self.quality, False)
+		else:
+			if self.quality > 15:
+				if size < 50*1024:
+					self.quality -= 1
+					useful.logError("Increase image quality %d (image size=%s)"%(self.quality, useful.sizeToString(size)))
+					video.Camera.quality(self.quality, False)
+
 	def compare(self, display=True):
 		""" Compare all images captured and search differences """
 		differences = {}
 		if len(self.images) >= 2:
 			current = self.images[0]
 			
+			self.adjustQuality(current)
+
 			# Compute the motion identifier
 			for previous in self.images[1:]:
 				# # If image not already compared
@@ -448,9 +471,9 @@ class Detection:
 		# If configuration changed
 		if self.motionConfig.isChanged():
 			self.motionConfig.load()
+			useful.logError("Change motion config %s"%self.motionConfig.toString(), display=False)
 			if self.motion:
 				self.motion.refreshConfig()
-
 	async def run(self):
 		""" Main asynchronous task """
 		await useful.taskMonitoring(self.detect)
@@ -582,7 +605,7 @@ class Detection:
 					historic.Historic.setMotionState(False)
 				result = True
 			else:
-				await useful.notifyMessage(b"motion detection suspended")
+				if self.motionConfig.notify:await useful.notifyMessage(b"motion detection suspended")
 				result = True
 
 		finally:

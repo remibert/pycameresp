@@ -136,7 +136,7 @@ class AccessPoint:
 				wlan = None
 
 			if config.activated or force:
-				print("Start AccessPoint")
+				useful.logError("Start AccessPoint")
 				from network import WLAN, AP_IF
 				AccessPoint.config = config
 				if wlan == None:
@@ -149,7 +149,7 @@ class AccessPoint:
 				print(repr(AccessPoint.config))
 				result = True
 			else:
-				print("AccessPoint disabled")
+				useful.logError("AccessPoint disabled")
 		else:
 			print("%s already opened"%AccessPoint.__class__.__name__)
 			print(repr(AccessPoint.config))

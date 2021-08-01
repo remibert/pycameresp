@@ -34,11 +34,10 @@ class Notification:
 		self.host  = host
 		self.port  = port
 
-	async def notify(self, message, image=None):
+	async def notify(self, message, image=None, display=True):
 		""" Send a push over notication message, and if image is added it must be a jpeg buffer.
 		message : the message of notification (bytes field not a string)
 		image : the jpeg image or nothing (bytes field)"""
-		useful.logError(useful.tostrings(message))
 		if wifi.Station.isActive():
 			try:
 				# Open pushover connection
@@ -82,7 +81,7 @@ class Notification:
 				# If response failed
 				if response.status != b"200":
 					# Print error
-					useful.logError("Notification failed to sent")
+					useful.logError("Notification failed to sent", display=display)
 
 				# Close all connection with push over server
 				writer.close()
@@ -91,24 +90,24 @@ class Notification:
 			except Exception as err:
 				useful.exception(err)
 		else:
-			useful.logError("Notification not sent : wifi not connected")
+			useful.logError("Notification not sent : wifi not connected", display=display)
 
-async def asyncNotify(user, token, message, image=None):
+async def asyncNotify(user, token, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
 	notification = Notification(host=b"api.pushover.net", port=80, token=token, user=user)
-	await notification.notify(b"%s : %s"%(wifi.Station.getHostname(), message), image)
+	await notification.notify(b"%s : %s"%(wifi.Station.getHostname(), message), image, display)
 
 def notify(user, token, message, image=None):
 	""" Notification function """
 	loop = uasyncio.get_event_loop()
 	loop.run_until_complete(asyncNotify(user=user, token=token, message=message, image=image))
 
-async def notifyMessage(message, image = None, forced=False):
+async def notifyMessage(message, image = None, forced=False, display=True):
 	""" Notify message """
 	config = PushOverConfig()
 	config.load()
 	if config.activated or forced:
-		await asyncNotify(config.user, config.token, message, image)
+		await asyncNotify(config.user, config.token, message, image, display=True)
 
 if __name__ == "__main__":
 	config = pushoverconfig.PushOverConfig()

@@ -140,7 +140,7 @@ typedef struct
 	mp_obj_base_t base;
 
 	uint8_t       *imageData;
-	uint16_t       imageLength;
+	uint32_t       imageLength;
 	uint16_t       height;
 	uint16_t       width;
 	const uint8_t *input;
@@ -309,6 +309,100 @@ STATIC mp_obj_t camera_deinit()
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_deinit_obj, camera_deinit);
 
+typedef struct 
+{
+	mp_obj_t       writeCallback;
+	uint16_t       height;
+	uint16_t       width;
+	const uint8_t *input;
+} Decoder_t;
+
+
+static uint32_t camera_decodeRead(void * arg, size_t index, uint8_t *buf, size_t len)
+{
+	Decoder_t * decoder = (Decoder_t *)arg;
+	if(buf) 
+	{
+		memcpy(buf, decoder->input + index, len);
+	}
+	return len;
+}
+
+//output buffer and image width
+static bool camera_decodeImage(void * arg, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *data)
+{
+	Decoder_t * decoder = (Decoder_t *)arg;
+	
+	// First access
+	if(!data)
+	{
+		if(x == 0 && y == 0)
+		{
+			// Get the size of image
+			decoder->width  = w;
+			decoder->height = h;
+		}
+		else
+		{
+			// Write end
+		}
+	}
+	else
+	{
+		int Y, X;
+		//unsigned int red;
+		//unsigned int green;
+		//unsigned int blue;
+		//uint8_t * pdata;
+		ESP_LOGE(TAG, "Decode x=%d, y=%d, w=%d, h=%d",x,y,w,h);
+		for (Y = y; Y < (y + h); Y ++)
+		{
+			for (X = x; X < (x + w); X ++) 
+			{
+				//pdata = &(data[(X-x)*3]);
+				//blue  = *pdata; pdata++;
+				//green = *pdata; pdata++;
+				//red   = *pdata; pdata++;
+			}
+			data += (w * 3);
+		}
+	}
+	return true;
+}
+
+// Decode image
+STATIC mp_obj_t camera_decode(mp_obj_t image_in, mp_obj_t write_callback_in)
+{
+	if (mp_obj_is_str_or_bytes(image_in))
+	{
+		Decoder_t decoder;
+		GET_STR_DATA_LEN(image_in, imageData, imageLength);
+		memset(&decoder, 0, sizeof(decoder));
+		decoder.input = imageData;
+
+		if (write_callback_in != mp_const_none && !mp_obj_is_callable(write_callback_in)) 
+		{
+			mp_raise_ValueError(MP_ERROR_TEXT("Invalid write_callback"));
+		}
+		else
+		{
+			decoder.writeCallback = write_callback_in;
+			esp_err_t ret = esp_jpg_decode(imageLength, JPG_SCALE_8X, camera_decodeRead, camera_decodeImage, (void*)&decoder);
+			if (ret != ESP_OK)
+			{
+				mp_raise_ValueError(MP_ERROR_TEXT("Decoder error failed"));\
+			}
+		}
+	}
+	else
+	{
+		mp_raise_ValueError(MP_ERROR_TEXT("Invalid image buffer"));
+	}
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(camera_decode_obj, camera_decode);
+
+
 STATIC mp_obj_t camera_capture()
 {
 	camera_fb_t * fb;
@@ -318,7 +412,7 @@ STATIC mp_obj_t camera_capture()
 	if (!fb) 
 	{
 		ESP_LOGE(TAG, "Camera capture Failed");
-		return mp_const_false;
+		return mp_const_none;
 	}
 	mp_obj_t image = mp_obj_new_bytes(fb->buf, fb->len);
 
@@ -338,7 +432,7 @@ STATIC mp_obj_t camera_motion_detect()
 	if (!fb) 
 	{
 		ESP_LOGE(TAG, "Camera capture Failed");
-		return mp_const_false;
+		return mp_const_none;
 	}
 
 	res = Motion_new(fb->buf, fb->len);
@@ -441,6 +535,18 @@ static bool Motion_parseImage(void * arg, uint16_t x, uint16_t y, uint16_t w, ui
 	return true;
 }
 
+unsigned long computeCrc(const uint8_t *imageData, size_t imageLength)
+{
+	unsigned long result =0;
+	const unsigned long * ptrSrc = (unsigned long *)imageData;
+	for (int i = 0; i < imageLength/4; i++)
+	{
+		result ^= *ptrSrc;
+		ptrSrc ++;
+	}
+	return result;
+}
+
 // Create motion objet with an image
 static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 {
@@ -459,11 +565,11 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 		{
 			int square = motion->square_x * motion->square_y;
 			int i;
-			motion->imageData = _malloc(imageLength);
+			motion->imageData = _malloc(max(imageLength, 64*1024)); // Max size image is 65536 limited by system
 			if (motion->imageData)
 			{
 				motion->imageLength = imageLength;
-				memcpy(motion->imageData, imageData, imageLength);
+				memcpy(motion->imageData, imageData, max(imageLength, 64*1024)); // Max size image is 65536 limited by system
 			}
 
 			for (i = 0; i < motion->diffMax; i++)
@@ -596,6 +702,19 @@ STATIC mp_obj_t Motion_getImage(mp_obj_t self_in)
 	return res;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getImage_obj, Motion_getImage);
+
+// getSize method
+STATIC mp_obj_t Motion_getSize(mp_obj_t self_in)
+{
+	Motion_t *motion = self_in;
+	mp_obj_t res = mp_const_none;
+	if (motion)
+	{
+		res = mp_obj_new_int(motion->imageLength);
+	}
+	return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getSize_obj, Motion_getSize);
 
 // Push coordinates
 void Motion_push(Motion_t * motion, int x, int y)
@@ -730,7 +849,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 	uint16_t       *pOtherLights   = other->lights;
 	uint16_t       *pDiffs         = self->diffs;
 	int light;
-
+	
 	for (i = 0; i < self->diffMax; i++)
 	{
 		light = max(*pCurrentLights, *pOtherLights);
@@ -908,7 +1027,6 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t ext
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(Motion_compare_obj, Motion_compare);
 
-
 // Get list item at the index
 mp_obj_t list_get_item(mp_obj_t list, size_t index)
 {
@@ -1037,6 +1155,7 @@ STATIC const mp_rom_map_elem_t Motion_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_compare),            MP_ROM_PTR(&Motion_compare_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_configure),          MP_ROM_PTR(&Motion_configure_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_getImage),           MP_ROM_PTR(&Motion_getImage_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_getSize),            MP_ROM_PTR(&Motion_getSize_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Motion_locals_dict, Motion_locals_dict_table);
 
@@ -1058,6 +1177,7 @@ STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR_deinit             ), MP_ROM_PTR(&camera_deinit_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_capture            ), MP_ROM_PTR(&camera_capture_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_motion             ), MP_ROM_PTR(&camera_motion_detect_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_decode             ), MP_ROM_PTR(&camera_decode_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_pixformat          ), MP_ROM_PTR(&camera_pixformat_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_aec_value          ), MP_ROM_PTR(&camera_aec_value_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_framesize          ), MP_ROM_PTR(&camera_framesize_obj) },

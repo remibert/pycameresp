@@ -19,5 +19,6 @@ async def server(request, response, args):
 		Switch(text=b"Time synchronization"   , name=b"ntp"   , checked=config.ntp,    disabled=disabled),Br(),
 		Edit  (text=b"UTC offset" , name=b"offsettime",       pattern=b"-*[0-9]*[0-9]", placeholder=b"Offset time to add to UTC",        value=b"%d"%config.offsettime,       disabled=disabled),
 		Switch(text=b"Daylight saving time"   , name=b"dst"   , checked=config.dst,    disabled=disabled),Br(),
+		Switch(text=b"Notification (WanIp, Reboot...)", name=b"notify", checked=config.notify, disabled=disabled),Br(),
 		submit)
 	await response.sendPage(page)

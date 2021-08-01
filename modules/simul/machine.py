@@ -17,7 +17,7 @@ def reset_cause():
 def reset():
 	pass
 
-def deepsleep():
+def deepsleep(duration):
 	pass
 	
 class ADC:

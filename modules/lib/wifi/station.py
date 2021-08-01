@@ -157,12 +157,16 @@ class Station:
 	def scan():
 		""" Scan other networks """
 		if Station.lastScan[0] + 120 < time.time() or len(Station.otherNetworks) == 0:
-			Station.lastScan[0] = time.time()
 			Station.otherNetworks = []
 			Station.wlan.active(True)
-			otherNetworks = Station.wlan.scan()
-			for ssid, bssid, channel, rssi, authmode, hidden in sorted(otherNetworks, key=lambda x: x[3], reverse=True):
-				Station.otherNetworks.append((ssid, channel, authmode))
+			try:
+				otherNetworks = Station.wlan.scan()
+				for ssid, bssid, channel, rssi, authmode, hidden in sorted(otherNetworks, key=lambda x: x[3], reverse=True):
+					Station.otherNetworks.append((ssid, channel, authmode))
+				Station.lastScan[0] = time.time()
+			except Exception as err:
+				useful.logError("No access found or antenna disconnected")
+
 		return Station.otherNetworks
 
 	@staticmethod
@@ -178,10 +182,10 @@ class Station:
 		""" Select the network and try to connect """
 		# Load default network
 		if Station.network.load(partFilename=networkName):
-			print("Try to connect to %s"%useful.tostrings(Station.network.ssid))
+			useful.logError("Try to connect to %s"%useful.tostrings(Station.network.ssid))
 			# If the connection failed
 			if Station.connect(Station.network, maxRetry) == True:
-				print("Connected to %s"%useful.tostrings(Station.network.ssid))
+				useful.logError("Connected to %s"%useful.tostrings(Station.network.ssid))
 				Station.config.default = networkName
 				Station.config.save()
 				return True
@@ -208,7 +212,7 @@ class Station:
 		return result
 
 	@staticmethod
-	def chooseNetwork(force=False, maxRetry=20000):
+	def chooseNetwork(force=False, maxRetry=15000):
 		""" Choose network within reach """
 		result = False
 		Station.config  = StationConfig()
@@ -221,20 +225,20 @@ class Station:
 				if result == False:
 					result = Station.scanNetworks(maxRetry)
 			else:
-				print("Wifi disabled")
+				useful.logError("Wifi disabled")
 		else:
-			print("Wifi not initialized")
+			useful.logError("Wifi not initialized")
 		return result
 
 	@staticmethod
-	def start(force, maxRetry=20000):
+	def start(force, maxRetry=15000):
 		""" Start the wifi according to the configuration. Force is used to skip configuration activation flag """
 		result = False
 		if Station.isActive() == False:
 			from network import WLAN, STA_IF
 			Station.wlan = WLAN(STA_IF)
 
-			print("Start wifi")
+			useful.logError("Start wifi")
 			if Station.chooseNetwork(force, maxRetry) == True:
 				print(repr(Station.config) + repr(Station.network))
 				result = True
@@ -248,7 +252,7 @@ class Station:
 	def stop():
 		""" Stop the wifi station """
 		if Station.isActive() == False:
-			print("Wifi stopped")
+			useful.logError("Wifi stopped")
 
 	@staticmethod
 	def isIpOnInterface(ipAddr):

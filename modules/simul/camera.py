@@ -90,9 +90,19 @@ def capture():
 	return None
 
 class Motion:
+	sizeBase = [10*1024]
+	sizeDirection = [1]
 	""" Class motion detection returned by the detect function """
 	def __init__(self, motion):
-		pass
+		self.size = self.sizeBase[0]
+		if self.sizeDirection[0] == 1:
+			self.sizeBase[0] += 1024
+			if self.sizeBase[0] > 66*1024:
+				self.sizeDirection[0] = 0
+		else:
+			self.sizeBase[0] -= 1024
+			if self.sizeBase[0] < 10*1024:
+				self.sizeDirection[0] = 1
 
 	def deinit (self):
 		pass
@@ -122,6 +132,9 @@ class Motion:
 
 	def getImage(self):
 		return b""
+
+	def getSize(self):
+		return self.size
 
 def motion():
 	return Motion(None)

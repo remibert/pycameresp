@@ -12,11 +12,11 @@ from server.ping import *
 from server.dnsclient import *
 from server.timesetting import *
 from server.wanip import *
+from server.periodic import *
 from tools import jsonconfig,useful
 import uasyncio
 import wifi
 import time
-
 
 class ServerConfig(jsonconfig.JsonConfig):
 	""" Servers configuration """
@@ -29,6 +29,7 @@ class ServerConfig(jsonconfig.JsonConfig):
 		self.offsettime = 1
 		self.dst = True
 		self.currentTime = 0
+		self.notify = True
 
 def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
 	""" Start all servers
@@ -83,74 +84,6 @@ def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPo
 	# Display system informations
 	useful.sysinfo()
 
-class DateTimeConfig(jsonconfig.JsonConfig):
-	""" Configuration of the date time """
-	def __init__(self):
-		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
-		self.activated = False
-		self.token = b""
-		self.user = b""
-
-async def periodicTask():
-	""" Detect the presence of occupants of the housing and automatically suspend the detection (ping the ip of occupants smartphones) """
-	await useful.taskMonitoring(periodic)
-
-async def periodic():
-	""" Periodic traitment update time, get wanip """
-	refreshTime = 0
-	rebootLogged = False
-	previousDate = None
-	while True:
-		config = server.ServerConfig()
-		config.load()
-		
-		if wifi.Station.isActive():
-			if config.ntp:
-				for i in range(6):
-					if refreshTime %10 == 0:
-						display = True
-					else:
-						display = False
-					currentTime = setDate(config.offsettime, dst=config.dst, display=display)
-					if currentTime > 0:
-						if rebootLogged == False:
-							rebootLogged = True
-							useful.logError("Time set", display=False)
-						config.currentTime = int(currentTime)
-						config.save()
-						break
-					else:
-						await uasyncio.sleep(10)
-				refreshTime += 1
-
-			await uasyncio.sleep(600)
-
-			# Get the wan ip one time a day at 12
-			date = useful.dateToBytes()[:14]
-			if previousDate == None or (date[:-2] == b"12" and date != previousDate):
-				wanip = await getWanIpAsync()
-				if wanip != None:
-					await useful.notifyMessage("Wan ip is %s"%wanip)
-					previousDate = date
-
-			# Inform that login detected
-			login =  User.getLoginState()
-			if login != None:
-				await useful.notifyMessage("Login %s detected"%("success" if login else "failed"))
-
-		else:
-			if rebootLogged == False:
-				rebootLogged = True
-				useful.logError("Time not set", display=False)
-			if wifi.Station.isActivated() == False:
-				print("Cannot set date : wifi disabled")
-			else:
-				print("Cannot set date : wifi not connected")
-				if wifi.Station.chooseNetwork(True, maxRetry=10000) == True:
-					if wifi.AccessPoint.isActive() and wifi.AccessPoint.isActivated() == False:
-						wifi.AccessPoint.stop()
-			await uasyncio.sleep(600)
 
 _suspended = [False]
 _tasks = {}

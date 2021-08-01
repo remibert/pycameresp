@@ -18,6 +18,9 @@ class BatteryConfig(jsonconfig.JsonConfig):
 		self.wakeUpGpio = 13
 		self.fullBattery  = 191 # 4.2V mesured with resistor 100k + 47k
 		self.emptyBattery = 161 # 3.6V mesured with resistor 100k + 47k
+		# Awake time on battery (seconds)
+		self.awakeTime = 120
+
 
 class Battery:
 	config = None

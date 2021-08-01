@@ -30,6 +30,12 @@ class JsonConfig:
 			print("Cannot save %s (%s)"%(filename,err))
 			return False
 
+	def toString(self):
+		""" Convert the configuration to string """
+		data = self.__dict__.copy()
+		del data["modificationDate"]
+		return json.dumps(useful.tostrings(data))
+
 	def getPathname(self, partFilename=""):
 		""" Get the configuration filename according to the class name """
 		return CONFIG_ROOT+"/"+self.getFilename(partFilename) + ".json"

@@ -35,11 +35,10 @@ class Notification:
 		self.host  = host
 		self.port  = port
 
-	async def notify(self, message, image=None):
+	async def notify(self, message, image=None, display=True):
 		""" Send telegram notication message, and if image is added it must be a jpeg buffer.
 		message : the message of notification (bytes field not a string)
 		image : the jpeg image or nothing (bytes field)"""
-		useful.logError(useful.tostrings(message))
 		if wifi.Station.isActive():
 			try:
 				# Open connection
@@ -85,7 +84,7 @@ class Notification:
 				# If response failed
 				if response.status != b"200":
 					# Print error
-					useful.logError("Notification failed to sent")
+					useful.logError("Notification failed to sent", display=display)
 
 				# Close all connection
 				writer.close()
@@ -94,24 +93,24 @@ class Notification:
 			except Exception as err:
 				useful.exception(err)
 		else:
-			useful.logError("Notification not sent : wifi not connected")
+			useful.logError("Notification not sent : wifi not connected", display=display)
 
-async def asyncNotify(chatId, botToken, message, image=None):
+async def asyncNotify(chatId, botToken, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
 	notification = Notification(host=b"api.telegram.org", port=443, botToken=botToken, chatId=chatId)
-	await notification.notify(b"%s : %s"%(wifi.Station.getHostname(), message), image)
+	await notification.notify(b"%s : %s"%(wifi.Station.getHostname(), message), image, display)
 
 def notify(chatId, botToken, message, image=None):
 	""" Notification function """
 	loop = uasyncio.get_event_loop()
 	loop.run_until_complete(asyncNotify(chatId=chatId, botToken=botToken, message=message, image=image))
 
-async def notifyMessage(message, image = None, forced=False):
+async def notifyMessage(message, image = None, forced=False, display=True):
 	""" Notify message """
 	config = TelegramConfig()
 	config.load()
 	if config.activated or forced:
-		await asyncNotify(config.chatId, config.botToken, message, image)
+		await asyncNotify(config.chatId, config.botToken, message, image, display)
 
 if __name__ == "__main__":
 	config = telegram.TelegramConfig()

@@ -60,6 +60,7 @@ class Presence:
 		if Presence.config:
 			if Presence.config.isChanged():
 				Presence.config.load()
+				useful.logError("Change presence config %s"%Presence.config.toString(), display=False)
 
 		if Presence.config.activated == True and wifi.Station.isActive():
 			presents = []

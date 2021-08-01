@@ -880,15 +880,15 @@ def getNotifier():
 	global notifiers
 	return notifiers
 
-async def notifyMessage(message, image = None, forced=False):
+async def notifyMessage(message, image = None, forced=False, display=True):
 	""" Notify message for all notifier registered """
 	global notifiers
 	
 	if len(notifiers) >= 1:
 		for notifier in notifiers:
-			await notifier(message, image, forced)
+			await notifier(message, image, forced, display=display)
 	else:
-		logError(message)
+		logError(message, display=display)
 
 async def taskMonitoring(task):
 	""" Check if task crash, log message and reboot if it too frequent """
@@ -906,8 +906,14 @@ async def taskMonitoring(task):
 			lastError = exception(err, "Task error")
 			retry += 1
 			await uasyncio.sleep_ms(6000)
+		logError("Task retry %d"%retry)
 
-	await notifyMessage(b"Reboot after many crash : \n%s"%tobytes(lastError))
+	logError("Too many task error reboot")
+	from server import ServerConfig
+	config = ServerConfig()
+	config.load()
+	if config.notify:
+		await notifyMessage(b"Reboot after many crash : \n%s"%tobytes(lastError))
 	reboot()
 
 HEADER_FILE=b"## PYCAMERESP ##\r\n"

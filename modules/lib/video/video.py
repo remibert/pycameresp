@@ -135,6 +135,9 @@ class Camera:
 	opened = False
 	lock = uasyncio.Lock()
 	modified = [False]
+	success = [0]
+	failed  = [0]
+	newFailed = [0]
 
 	@staticmethod
 	def open():
@@ -158,6 +161,18 @@ class Camera:
 		return result
 
 	@staticmethod
+	def getStat():
+		""" Statistic """
+		return Camera.success[0], Camera.failed[0]
+
+	@staticmethod
+	def resetStat():
+		""" Reset statistic """
+		Camera.success[0] = 0
+		Camera.failed [0] = 0
+		Camera.newFailed[0] = 0
+
+	@staticmethod
 	def close():
 		""" Close the camera """
 		if Camera.opened == True:
@@ -172,20 +187,43 @@ class Camera:
 	@staticmethod
 	def capture():
 		""" Capture an image on the camera """
+		return Camera.retry(camera.capture)
+
+	@staticmethod
+	def motion():
+		""" Get the motion informations. 
+		This contains a jpeg image, with matrices of the different color RGB """
+		return Camera.retry(camera.motion)
+
+	@staticmethod
+	def retry(callback):
+		""" Retry camera action and manage error """
 		result = None
 		if Camera.opened:
 			retry = 10
 			while 1:
-				if retry == 0:
+				if retry <= 0:
 					useful.reboot("Reboot forced after camera problem")
 				try:
-					# camera.quality(32)
-					result = camera.capture()
+					result = callback()
+					Camera.success[0] += 1
 					break
 				except ValueError:
-					print("Failed to get capture %d retry before reset"%retry)
-					retry += 1
+					Camera.failed[0] += 1
+					Camera.newFailed[0] += 1
+					if retry <= 3:
+						useful.logError("Failed to get image %d retry before reset"%retry)
+					retry -= 1
 					time.sleep(0.5)
+			if (Camera.success[0] % 1000) == 0:
+				if Camera.success[0] != 0:
+					newFailed = ((Camera.newFailed[0]*100)/Camera.success[0])
+					failed    = ((Camera.failed[0]*100)/Camera.success[0])
+				else:
+					newFailed = 0.
+					failed    = 0.
+				useful.logError("Camera : %-3.2f%% failed, %-3.2f%% total"%(newFailed, failed))
+				Camera.newFailed[0] = 0
 		return result
 
 	@staticmethod
@@ -208,25 +246,6 @@ class Camera:
 	def clearModified():
 		""" Reset the indicator of configuration modification """
 		Camera.modified[0] = False
-
-	@staticmethod
-	def motion():
-		""" Get the motion informations. 
-		This contains a jpeg image, with matrices of the different color RGB """
-		result = None
-		if Camera.opened:
-			retry = 10
-			while 1:
-				if retry == 0:
-					useful.reboot("Reboot forced after camera problem")
-				try:
-					result = camera.motion()
-					break
-				except ValueError:
-					print("Failed to get motion %d retry before reset"%retry)
-					retry += 1
-					time.sleep(0.1)
-		return result
 
 	@staticmethod
 	def compare(image1, image2):
@@ -273,9 +292,9 @@ class Camera:
 			print("Pixformat not set")
 	
 	@staticmethod
-	def quality(val=None):
+	def quality(val=None, modified=True):
 		""" Configure the compression """
-		Camera.modified[0] = True
+		Camera.modified[0] = modified
 		if Camera.opened:
 			# print("Quality %d"%val)
 			return camera.quality(val)
