@@ -105,7 +105,8 @@ def notify(user, token, message, image=None):
 async def notifyMessage(message, image = None, forced=False, display=True):
 	""" Notify message """
 	config = PushOverConfig()
-	config.load()
+	if config.load() == False:
+		config.save()
 	if config.activated or forced:
 		await asyncNotify(config.user, config.token, message, image, display=True)
 
