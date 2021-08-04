@@ -8,13 +8,20 @@ import sys
 import uos
 from tools import useful
 import re
-CONFIG_ROOT="config"
+
 
 class JsonConfig:
 	""" Manage json configuration """
 	def __init__(self):
 		""" Constructor """
 		self.modificationDate = 0
+
+	def configRoot(self):
+		""" Configuration root path """
+		if useful.ismicropython():
+			return "/config"
+		else:
+			return "config"
 
 	def save(self, file = None, partFilename=""):
 		""" Save object in json file """
@@ -27,7 +34,7 @@ class JsonConfig:
 			file.close()
 			return True
 		except Exception as err:
-			print("Cannot save %s (%s)"%(filename,err))
+			useful.exception(err, "Cannot save %s "%(filename))
 			return False
 
 	def toString(self):
@@ -38,13 +45,13 @@ class JsonConfig:
 
 	def getPathname(self, partFilename=""):
 		""" Get the configuration filename according to the class name """
-		return CONFIG_ROOT+"/"+self.getFilename(partFilename) + ".json"
+		return self.configRoot()+"/"+self.getFilename(partFilename) + ".json"
 
 	def listAll(self):
 		""" List all configuration files """
 		result = []
 		pattern = self.getFilename() + ".*"
-		for fileinfo in uos.ilistdir(CONFIG_ROOT):
+		for fileinfo in uos.ilistdir(self.configRoot()):
 			name = fileinfo[0]
 			typ  = fileinfo[1]
 			if typ & 0xF000 != 0x4000:
@@ -63,8 +70,8 @@ class JsonConfig:
 	def open(self, file=None, readWrite="r", partFilename=""):
 		""" Create or open configuration file """
 		filename = file
-		if useful.exists(CONFIG_ROOT) == False:
-			useful.makedir(CONFIG_ROOT)
+		if useful.exists(self.configRoot()) == False:
+			useful.makedir(self.configRoot())
 		if file == None:
 			filename = self.getPathname(useful.tofilename(partFilename))
 			file = open(filename, readWrite)
@@ -124,10 +131,8 @@ class JsonConfig:
 				if existing:
 					execval = "self_config.%s = %s"%(execval, repr(value))
 					exec(execval)
-				# else:
-				# 	print("%s not in object "%name)
 			except Exception as err:
-				print("Error on %s (%s)"%(execval, err))
+				useful.exception(err, "Error on %s"%(execval))
 				result = False
 		del self_config
 		return result
@@ -141,13 +146,13 @@ class JsonConfig:
 			file.close()
 			return True
 		except Exception as err:
-			print("Cannot load %s (%s)"%(filename,err))
+			useful.exception(err, "Cannot load %s "%(filename))
 			return False
 
 	def forget(self, partFilename=""):
 		""" Forget configuration """
 		filename = self.getPathname(partFilename=partFilename)
-		useful.remove(CONFIG_ROOT+"/"+filename)
+		useful.remove(self.configRoot()+"/"+filename)
 
 	def isChanged(self, partFilename=""):
 		""" Indicates if the configuration changed """

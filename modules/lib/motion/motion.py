@@ -11,28 +11,25 @@ except:
 	pass
 import uasyncio
 import video
-import time
-from tools import useful, jsonconfig
-import json
-import server
 from gc import collect
-from motion import presence,historic
+from tools import useful, jsonconfig, battery
+from server.notifier import Notifier
+from server.server   import Server
+from server.presence import Presence
+from motion.historic import Historic
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
 	def __init__(self):
 		jsonconfig.JsonConfig.__init__(self)
 		# Indicates if the motion is activated
-		self.activated = False
+		self.activated = True
 
 		# Suspend the motion detection when presence detected
 		self.suspendOnPresence = True
 
 		# Minimum difference contigous threshold to detect movement
-		self.contigousDetection = 4
-
-		# Awake time on battery (seconds)
-		self.awakeTime = 120
+		self.differencesDetection = 4
 
 		# Error range ignore light modification (% of 256)
 		self.lightErrorRange=12
@@ -140,7 +137,7 @@ class ImageMotion:
 
 	async def save(self):
 		""" Save the image on sd card """
-		return await historic.Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations(), self.getHtmlShapes())
+		return await Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations(), self.getHtmlShapes())
 
 	def compare(self, previous, set=False, extractShape=True):
 		""" Compare two motion images to get differences """
@@ -226,15 +223,15 @@ class SnapConfig:
 
 class Motion:
 	""" Class to manage the motion capture """
-	def __init__(self, config= None, onBattery=False, pirDetection=False):
+	def __init__(self, config= None, pirDetection=False):
 		self.images = []
 		self.index  = 0
 		self.config = config
-		self.onBattery = onBattery
 		self.pirDetection = pirDetection
 		self.imageBackground = None
 		self.mustRefreshConfig = True
 		self.quality = 15
+		self.previousQuality = 0
 
 	def __del__(self):
 		""" Destructor """
@@ -281,14 +278,14 @@ class Motion:
 			image = self.images.pop()
 			
 			# If motion detected on image, on battery the first five images are sent
-			if image.getMotionDetected() or (self.onBattery and self.pirDetection and image.index <= 3):
+			if image.getMotionDetected() or (self.pirDetection and image.index <= 3):
 				# Notification of motion
 				result = (image.getMessage(), image)
 
 				# Save image to sdcard
 				if await image.save() == False:
 					if self.config.notify:
-						await useful.notifyMessage("Failed to save on sd card")
+						await Notifier.notify("Failed to save on sd card")
 			else:
 				# Destroy image
 				self.deinitImage(image)
@@ -321,24 +318,30 @@ class Motion:
 		""" Indicates if motion detected """
 		if comparison:
 			# If image seem not equal to previous
-			if comparison["diff"]["count"] > self.config.contigousDetection:
+			if comparison["diff"]["count"] >= self.config.differencesDetection:
 				return True
 		return False
 
 	def adjustQuality(self, current):
-		""" Adjust the image quality according to the size of image """
-		size = current.getSize()
-		if size > 62*1024:
-			if self.quality < 63:
-				useful.logError("Decrease image quality %d (image size=%s)"%(self.quality, useful.sizeToString(size)))
-				self.quality += 1
-				video.Camera.quality(self.quality, False)
-		else:
-			if self.quality > 15:
-				if size < 50*1024:
-					self.quality -= 1
-					useful.logError("Increase image quality %d (image size=%s)"%(self.quality, useful.sizeToString(size)))
+		""" Adjust the image quality according to the size of image to"""
+		if len(self.images) >= self.config.maxMotionImages:
+			changed = False
+			size = current.getSize()
+			if size > 62*1024:
+				if self.quality < 63:
+					self.quality += 1
+					changed = True
 					video.Camera.quality(self.quality, False)
+			else:
+				if self.quality >= 1:
+					if size < 50*1024:
+						self.quality -= 1
+						changed = True
+						video.Camera.quality(self.quality, False)
+			if changed == False:
+				if self.previousQuality != self.quality:
+					useful.logError("Adjust image quality from %d to %d"%(self.previousQuality, self.quality))
+					self.previousQuality = self.quality
 
 	def compare(self, display=True):
 		""" Compare all images captured and search differences """
@@ -439,25 +442,20 @@ class Motion:
 
 class Detection:
 	""" Asynchronous motion detection object """
-	def __init__(self, onBattery, pirDetection):
+	def __init__(self, pirDetection):
 		""" Constructor """
-		import wifi
-
-		self.onBattery = onBattery
 		self.pirDetection = pirDetection
 		self.loadConfig()
 		self.motion = None
-		self.pollingFrequency = 100
+		
 		self.batteryLevel = -2
-		if self.onBattery:
-			if self.pirDetection == True:
-				self.pollingFrequency = 3
-			self.wifiOn = False
-			self.startTime = time.time()
+		if self.pirDetection == True:
+			self.pollingFrequency = 3
 		else:
-			self.wifiOn = True
+			self.pollingFrequency = 100
 		self.detection = None
 		self.activated = None
+		self.inactivity = useful.Inactivity(self.inactivityTimeout, 60*1000)
 
 	def loadConfig(self):
 		""" Load motion configuration """
@@ -465,6 +463,9 @@ class Detection:
 		self.motionConfig      = MotionConfig()
 		if self.motionConfig.load() == False:
 			self.motionConfig.save()
+		self.batteryConfig = battery.BatteryConfig()
+		if self.batteryConfig.load() == False:
+			self.batteryConfig.save()
 
 	def refreshConfig(self):
 		""" Refresh the configuration : it can be changed by web page """
@@ -477,12 +478,19 @@ class Detection:
 	async def run(self):
 		""" Main asynchronous task """
 		await useful.taskMonitoring(self.detect)
+
+	def inactivityTimeout(timer):
+		""" Inactivity timeout """
+		useful.reboot("Automatic reboot after inactivity in motion")
 	
 	async def detect(self):
 		""" Detect motion """
 		result = False
 		# Wait the server resume
-		await server.waitResume()
+		await Server.waitResume()
+
+		# Check if detection freeze
+		self.inactivity.start()
 
 		# Release previously alocated image
 		self.releaseImage()
@@ -492,13 +500,15 @@ class Detection:
 			# Capture motion
 			result = await self.capture()
 		else:
+			await uasyncio.sleep(3)
 			result = True
 
 		# Refresh configuration when it changed
 		self.refreshConfig()
 
-		# Deep sleep on battery
-		self.deepsleep()
+		# Disable check if detection freeze
+		self.inactivity.stop()
+
 		return result
 
 	async def isActivated(self):
@@ -506,14 +516,14 @@ class Detection:
 		result = False
 		if self.motionConfig.activated:
 			if self.motionConfig.suspendOnPresence:
-				if presence.Presence.isDetected() == False:
+				if Presence.isDetected() == False:
 					result = True
 			else:
 				result = True
 			
 		if self.activated != result:
 			if self.motionConfig.notify:
-				await useful.notifyMessage(b"motion detection %s" %(b"on" if result else b"off"))
+				await Notifier.notify(b"Motion detection %s" %(b"on" if result else b"off"))
 			self.activated = result
 		if result == False:
 			# Motion capture disabled
@@ -526,10 +536,7 @@ class Detection:
 
 		# If motion not initialized
 		if self.motion == None:
-			# The sdcard not available on battery
-			if self.onBattery != True:
-				await historic.Historic.getRoot()
-			self.motion = Motion(self.motionConfig, self.onBattery, self.pirDetection)
+			self.motion = Motion(self.motionConfig, self.pirDetection)
 			if self.motion.open() == False:
 				self.motion = None
 				raise Exception("Cannot open camera")
@@ -579,17 +586,8 @@ class Detection:
 				if self.detection != None:
 					# Notify motion with push over
 					message, image = self.detection
-					# On battery the wifi start after taking pictures
-					if self.wifiOn == False:
-						from server import start
-						from tools import Battery
-						start(withoutServer=True)
-						self.wifiOn = True
-						self.batteryLevel = Battery.getLevel()
-					if self.batteryLevel >= 0:
-						message += " Bat=%s%%"%batteryLevel
 					if self.motionConfig.notify:
-						await useful.notifyMessage(message, image.get())
+						await Notifier.notify(message, image.get())
 				# Detect motion
 				detected, changePolling = self.motion.detect()
 
@@ -597,39 +595,23 @@ class Detection:
 				if changePolling == True:
 					# Speed up the polling frequency
 					self.pollingFrequency = 10
-					historic.Historic.setMotionState(True)
-					self.startTime = time.time()
+					Historic.setMotionState(True)
 				else:
 					# Slow down the polling frequency
 					self.pollingFrequency = 50
-					historic.Historic.setMotionState(False)
+					Historic.setMotionState(False)
 				result = True
 			else:
-				if self.motionConfig.notify:await useful.notifyMessage(b"motion detection suspended")
+				if self.motionConfig.notify:await Notifier.notify(b"Motion detection suspended")
 				result = True
 
 		finally:
 			if reserved:
 				await video.Camera.unreserve(self)
 		return result
-	
-	def deepsleep(self):
-		""" Post treatment for detection and force deep sleep on battery """
-		# If the battery mode activated
-		if self.onBattery:
-			# If the motion detection activated
-			if self.motionConfig.activated:
-				# Wait duration after the last detection
-				if time.time() > self.startTime + self.motionConfig.awakeTime:
-					import machine
-					print("")
-					print("####################################")
-					print("# DEEP SLEEP TO WAIT PIR DETECTION #")
-					print("####################################")
-					machine.deepsleep(10000)
 
-async def detectMotion(onBattery, pirDetection):
+async def detectMotion(pirDetection):
 	""" Asynchronous motion detection main routine """
-	detection = Detection(onBattery, pirDetection)
+	detection = Detection(pirDetection)
 	await detection.run()
 

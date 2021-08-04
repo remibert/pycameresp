@@ -3,14 +3,16 @@
 """ Classes used to manage the wifi station """
 import sys
 from tools import jsonconfig,useful
+from wifi.hostname import Hostname
 import time
+import uasyncio
 
 class NetworkConfig(jsonconfig.JsonConfig):
 	""" Wifi station configuration class """
 	def __init__(self):
 		""" Constructor """
 		jsonconfig.JsonConfig.__init__(self)
-		self.hostname      = b"Esp32"
+		self.hostname      = Hostname.get()
 		self.wifipassword  = b""
 		self.ssid          = b""
 		self.ipaddress     = b""
@@ -72,7 +74,7 @@ class Station:
 	lastScan = [0]
 
 	@staticmethod
-	def connect(network, maxRetry=15000):
+	async def connect(network, maxRetry=15):
 		""" Connect to wifi hotspot """
 		result = False
 		if not Station.wlan.isconnected():
@@ -81,13 +83,10 @@ class Station:
 			Station.wlan.connect(useful.tobytes(network.ssid), useful.tobytes(network.wifipassword))
 			from time import sleep
 			retry = 0
-			count = 0
 			while not Station.wlan.isconnected() and retry < maxRetry:
-				sleep(0.1)
-				retry += 100
-				if count % 1000 == 0:
-					print ("   %-2d/%d wait connection to %s"%(retry/1000+1, maxRetry/1000, useful.tostrings(network.ssid)))
-				count += 100
+				await uasyncio.sleep(1)
+				print ("   %-2d/%d wait connection to %s"%(retry+1, maxRetry, useful.tostrings(network.ssid)))
+				retry += 1
 
 			if Station.wlan.isconnected() == False:
 				Station.wlan.active(False)
@@ -117,6 +116,7 @@ class Station:
 		# If ip is dynamic
 		if  network.dynamic   == True:
 			if len(network.hostname) > 0:
+				Hostname.set(network.hostname)
 				Station.wlan.config(dhcp_hostname= useful.tostrings(network.hostname))
 		else:
 			try:
@@ -162,10 +162,11 @@ class Station:
 			try:
 				otherNetworks = Station.wlan.scan()
 				for ssid, bssid, channel, rssi, authmode, hidden in sorted(otherNetworks, key=lambda x: x[3], reverse=True):
+					useful.logError("Network detected %s"%useful.tostrings(ssid))
 					Station.otherNetworks.append((ssid, channel, authmode))
 				Station.lastScan[0] = time.time()
 			except Exception as err:
-				useful.logError("No access found or antenna disconnected")
+				useful.logError("No network found or antenna disconnected")
 
 		return Station.otherNetworks
 
@@ -178,13 +179,13 @@ class Station:
 			return False
 
 	@staticmethod
-	def selectNetwork(networkName, maxRetry):
+	async def selectNetwork(networkName, maxRetry):
 		""" Select the network and try to connect """
 		# Load default network
 		if Station.network.load(partFilename=networkName):
 			useful.logError("Try to connect to %s"%useful.tostrings(Station.network.ssid))
 			# If the connection failed
-			if Station.connect(Station.network, maxRetry) == True:
+			if await Station.connect(Station.network, maxRetry) == True:
 				useful.logError("Connected to %s"%useful.tostrings(Station.network.ssid))
 				Station.config.default = networkName
 				Station.config.save()
@@ -192,7 +193,7 @@ class Station:
 		return False
 
 	@staticmethod
-	def scanNetworks(maxRetry):
+	async def scanNetworks(maxRetry):
 		""" Scan networks known """
 		result = False
 		# Scan other networks
@@ -205,14 +206,14 @@ class Station:
 		for networkName in Station.knownNetworks:
 			# If the network not already tested
 			if networkName != Station.config.default:
-				result = Station.selectNetwork(networkName, maxRetry)
+				result = await Station.selectNetwork(networkName, maxRetry)
 				if result == True:
 					break
 
 		return result
 
 	@staticmethod
-	def chooseNetwork(force=False, maxRetry=15000):
+	async def chooseNetwork(force=False, maxRetry=15):
 		""" Choose network within reach """
 		result = False
 		Station.config  = StationConfig()
@@ -221,17 +222,18 @@ class Station:
 		# Load wifi configuration
 		if Station.config.load():
 			if Station.config.activated or force:
-				result = Station.selectNetwork(Station.config.default, maxRetry)
+				result = await Station.selectNetwork(Station.config.default, maxRetry)
 				if result == False:
-					result = Station.scanNetworks(maxRetry)
+					result = await Station.scanNetworks(maxRetry)
 			else:
 				useful.logError("Wifi disabled")
 		else:
+			Station.config.save()
 			useful.logError("Wifi not initialized")
 		return result
 
 	@staticmethod
-	def start(force, maxRetry=15000):
+	async def start(force=False, maxRetry=15):
 		""" Start the wifi according to the configuration. Force is used to skip configuration activation flag """
 		result = False
 		if Station.isActive() == False:
@@ -239,7 +241,7 @@ class Station:
 			Station.wlan = WLAN(STA_IF)
 
 			useful.logError("Start wifi")
-			if Station.chooseNetwork(force, maxRetry) == True:
+			if await Station.chooseNetwork(force, maxRetry) == True:
 				print(repr(Station.config) + repr(Station.network))
 				result = True
 		else:

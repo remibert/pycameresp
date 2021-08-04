@@ -3,7 +3,8 @@
 """ Function define the web page to change the login password """
 from htmltemplate import *
 from tools import useful
-from server import User, Sessions
+from server.user import User
+from server.sessions import Sessions
 
 class PasswordPage:
 	""" Html page of password """

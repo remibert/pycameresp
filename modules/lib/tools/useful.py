@@ -429,6 +429,8 @@ def logError(err, msg="", display=True):
 	if logFile.tell() >32*1024:
 		logFile.close()
 		print("File %s too big"%filename)
+		rename(filename + ".3",filename + ".4")
+		rename(filename + ".2",filename + ".3")
 		rename(filename + ".1",filename + ".2")
 		rename(filename       ,filename + ".1")
 		logFile = open(filename,"a")
@@ -540,6 +542,19 @@ def getHash(password):
 def now():
 	""" Get time now """
 	return time.localtime()
+
+def computeHash(string):
+	""" Compute hash 
+	>>> print(computeHash("1234"))
+	49307
+	>>> print(computeHash(b"1234"))
+	49307
+	"""
+	string = tostrings(string)
+	hash_ = 63689
+	for char in string:
+		hash_ = hash_ * 378551 + ord(char)
+	return hash_ % 65536
 
 def isascii(char):
 	""" Indicates if the char is ascii """
@@ -836,6 +851,12 @@ def uptime():
 def reboot(message="Reboot"):
 	""" Reboot command """
 	logError(message)
+	from server.server import ServerConfig
+	serverConfig = ServerConfig()
+	if serverConfig.load():
+		import time
+		serverConfig.currentTime = time.time() + 8
+		serverConfig.save()
 	try:
 		import camera
 		camera.deinit()
@@ -869,27 +890,6 @@ class Inactivity:
 		self.stop()
 		self.start()
 
-notifiers = []
-def addNotifier(callback):
-	""" Add notifier """
-	global notifiers
-	notifiers.append(callback)
-
-def getNotifier():
-	""" Get the list of notifiers """
-	global notifiers
-	return notifiers
-
-async def notifyMessage(message, image = None, forced=False, display=True):
-	""" Notify message for all notifier registered """
-	global notifiers
-	
-	if len(notifiers) >= 1:
-		for notifier in notifiers:
-			await notifier(message, image, forced, display=display)
-	else:
-		logError(message, display=display)
-
 async def taskMonitoring(task):
 	""" Check if task crash, log message and reboot if it too frequent """
 	import uasyncio
@@ -909,11 +909,14 @@ async def taskMonitoring(task):
 		logError("Task retry %d"%retry)
 
 	logError("Too many task error reboot")
-	from server import ServerConfig
+
+	from server.server import ServerConfig
+	from server.notifier import Notifier
+
 	config = ServerConfig()
 	config.load()
 	if config.notify:
-		await notifyMessage(b"Reboot after many crash : \n%s"%tobytes(lastError))
+		await Notifier.notify(b"Reboot after many crash : \n%s"%tobytes(lastError))
 	reboot()
 
 HEADER_FILE=b"## PYCAMERESP ##\r\n"

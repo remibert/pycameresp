@@ -3,6 +3,8 @@
 """ Manage the battery """
 from tools import jsonconfig
 from tools import useful
+import time
+
 try: import machine
 except: pass
 try:import esp32
@@ -13,19 +15,28 @@ class BatteryConfig(jsonconfig.JsonConfig):
 	def __init__(self):
 		""" Constructor """
 		jsonconfig.JsonConfig.__init__(self)
-		self.activated = False
-		self.levelGpio  = 12
-		self.wakeUpGpio = 13
+
+		# Battery monitoring
+		self.monitoring = False # Monitoring status
+		self.levelGpio    = 12  # Monitoring GPIO
 		self.fullBattery  = 191 # 4.2V mesured with resistor 100k + 47k
 		self.emptyBattery = 161 # 3.6V mesured with resistor 100k + 47k
-		# Awake time on battery (seconds)
-		self.awakeTime = 120
+
+		# GPIO wake up
+		self.wakeUp = False  # Wake up on GPIO status
+		self.wakeUpGpio = 13 # Wake up GPIO number
+		self.awakeTime = 120 # Awake time on battery (seconds)
+
+		# Force deep sleep if to many successive brown out reset detected
+		self.brownoutDetection = True
+		self.brownoutCount = 0
 
 
 class Battery:
+	""" Manage the battery information """
 	config = None
 	level = [-2]
-	""" Manage the battery information """
+	awakeCounter = [0] # Decrease each second
 
 	@staticmethod
 	def init():
@@ -37,6 +48,7 @@ class Battery:
 			if Battery.config.load() == False:
 				# Write default config
 				Battery.config.save()
+		Battery.keepAwake()
 
 	@staticmethod
 	def getLevel():
@@ -74,7 +86,7 @@ class Battery:
 	def isActivated():
 		""" Indicates if the battery management activated """
 		Battery.init()
-		return Battery.config.activated
+		return Battery.config.monitoring
 
 	@staticmethod
 	def calcPercent(x, config):
@@ -105,64 +117,81 @@ class Battery:
 	def isPinWakeUp():
 		""" Indicates that the machine wake up on pin modification (Only available at start) """
 		Battery.init()
-		try:
-			pin = machine.Pin(Battery.config.wakeUpGpio, machine.Pin.IN, machine.Pin.PULL_UP)
-			return True if pin.value() == 1 else False
-		except:
+		if Battery.config.wakeUp:
+			try:
+				pin = machine.Pin(Battery.config.wakeUpGpio, machine.Pin.IN, machine.Pin.PULL_UP)
+				return True if pin.value() == 1 else False
+			except:
+				return False
+		else:
 			return False
 
 	@staticmethod
 	def protect():
-		""" Checks if the battery level is sufficient, and checks the number of brownout reset. 
-			If the battery is too low, we enter indefinite deep sleep to protect the battery """
-		# Can only be done once at boot before start the camera and sd card
-		batteryLevel = Battery.getLevel()
-
-		# If the battery is too low
-		if batteryLevel > 5:
-			batteryProtect = False
-		# If the battery level can't be read
-		elif batteryLevel < 0:
-			# If the reset is due to insufficient battery
-			if machine.reset_cause() == machine.BROWNOUT_RESET:
-				batteryProtect = True
-			else:
-				batteryProtect = False
-		else:
-			batteryProtect = True
-
-		brownoutCounter = 0
-		# If the reset can probably due to insufficient battery
-		if machine.reset_cause() == machine.BROWNOUT_RESET:
-			try:
-				file = open("brownout.txt","r")
-				val = file.read()
-				brownoutCounter = int(val) + 1
-			except Exception as err:
-				useful.exception(err)
-
-		try:
-			file = open("brownout.txt","w")
-			file.write("%d"%brownoutCounter)
-			file.flush()
-			file.close()
-		except Exception as err:
-			useful.exception(err)
-
-		# If the battery level seems sufficient
-		if batteryProtect == False:
-			# if the number of consecutive brownout resets is too high
-			if brownoutCounter > 10:
-				# Battery too low, save the battery status
-				useful.logError("Too many brownout reset with battery level at %d %%"%batteryLevel)
-				batteryProtect = True
-
-		# Case the battery has not enough current and must be protected
-		if batteryProtect:
-			print("#####################################")
-			print("# DEEP SLEEP TO PROTECT THE BATTERY #")
-			print("#####################################")
+		""" Protect the battery """
+		Battery.init()
+		if Battery.manageLevel() or Battery.manageBrownout():
+			import machine
 			machine.deepsleep()
-		else:
-			# Set the wake up on PIR detection
-			Battery.setPinWakeUp()
+
+	@staticmethod
+	def manageLevel():
+		""" Checks if the battery level is sufficient. 
+			If the battery is too low, we enter indefinite deep sleep to protect the battery """
+		deepsleep = False
+		if Battery.config.monitoring:
+			# Can only be done once at boot before start the camera and sd card
+			batteryLevel = Battery.getLevel()
+
+			# If the battery is too low
+			if batteryLevel > 5:
+				batteryProtect = False
+			# If the battery level can't be read
+			elif batteryLevel <= 0:
+				batteryProtect = False
+			else:
+				batteryProtect = True
+
+			# Case the battery has not enough current and must be protected
+			if batteryProtect:
+				deepsleep = True
+				useful.logError("Battery too low %d %%"%batteryLevel)
+		return deepsleep
+
+	@staticmethod
+	def manageBrownout():
+		""" Checks the number of brownout reset """
+		deepsleep = False
+		if Battery.config.brownoutDetection:
+			# If the reset can probably due to insufficient battery
+			if machine.reset_cause() == machine.BROWNOUT_RESET:
+				Battery.config.brownoutCount += 1
+			else:
+				Battery.config.brownoutCount = 0
+
+			Battery.config.save()
+
+			# if the number of consecutive brownout resets is too high
+			if Battery.config.brownoutCount > 10:
+				# Battery too low, save the battery status
+				useful.logError("Too many successive brownout reset")
+				deepsleep = True
+		return deepsleep
+
+	@staticmethod
+	def keepAwake():
+		""" Keep awake more time """
+		if Battery.config.wakeUp:
+			Battery.awakeCounter[0] = Battery.config.awakeTime
+
+	@staticmethod
+	def manageAwake():
+		""" Manage the awake duration """
+		if Battery.config.wakeUp:
+			Battery.awakeCounter[0] -= 1
+			if Battery.awakeCounter[0] < 0:
+				useful.logError("Sleeping")
+				# Set the wake up on PIR detection
+				Battery.setPinWakeUp()
+				import machine
+				machine.deepsleep()

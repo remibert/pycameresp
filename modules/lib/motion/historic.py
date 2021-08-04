@@ -261,11 +261,14 @@ class Historic:
 	@staticmethod 
 	async def periodic():
 		""" Internal periodic task """
-		await server.waitResume(4*60)
+		from server.server import Server
+		await Server.waitResume(4*60)
 		if Historic.motionInProgress[0] == False:
 			if useful.SdCard.isMounted():
 				await Historic.extract()
 				await Historic.removeOlder()
+			else:
+				await Historic.getRoot()
 		return True
 
 	@staticmethod

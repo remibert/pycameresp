@@ -4,13 +4,14 @@
 import sys
 from tools import jsonconfig
 from tools import useful
+from wifi.hostname import Hostname
 
 class AccessPointConfig(jsonconfig.JsonConfig):
 	""" Access point configuration class """
 	def __init__(self):
 		""" Constructor """
 		jsonconfig.JsonConfig.__init__(self)
-		self.activated = True
+		self.activated = False
 		self.wifipassword  = b""
 		self.ssid          = b""
 		self.authmode      = b"WPA2-PSK"
@@ -44,7 +45,6 @@ class AccessPoint:
 	def open(ssid=None, password=None, authmode=None):
 		""" Open access point """
 		from wifi import AUTHMODE
-		from time import sleep
 		if ssid     != None: AccessPoint.config.ssid         = useful.tobytes(ssid)
 		if password != None: AccessPoint.config.wifipassword = useful.tobytes(password)
 		if authmode != None: AccessPoint.config.authmode     = useful.tobytes(authmode)
@@ -125,24 +125,15 @@ class AccessPoint:
 			config = AccessPointConfig()
 
 			if not config.load():
-				from network import WLAN, AP_IF
-				config.activated    = True
-				wlan = WLAN(AP_IF)
-				ident = wlan.config("mac")
-				config.ssid          = b"Esp_%02X%02X%02X"%(ident[0],ident[1],ident[2])
-				config.wifipassword  = b"Pycam_%02X%02X%02X"%(ident[0],ident[1],ident[2])
+				config.ssid          = Hostname.get()
+				config.wifipassword  = b"Pycam_%05d"%Hostname.getNumber()
 				config.save()
-			else:
-				wlan = None
 
 			if config.activated or force:
 				useful.logError("Start AccessPoint")
 				from network import WLAN, AP_IF
 				AccessPoint.config = config
-				if wlan == None:
-					AccessPoint.wlan = WLAN(AP_IF)
-				else:
-					AccessPoint.wlan = wlan
+				AccessPoint.wlan = WLAN(AP_IF)
 				AccessPoint.configure()
 				AccessPoint.open()
 				AccessPoint.configure()

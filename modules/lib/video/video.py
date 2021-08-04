@@ -215,14 +215,15 @@ class Camera:
 						useful.logError("Failed to get image %d retry before reset"%retry)
 					retry -= 1
 					time.sleep(0.5)
-			if (Camera.success[0] % 1000) == 0:
+			total = Camera.success[0] + Camera.failed[0]
+			if (total % 5000) == 0:
 				if Camera.success[0] != 0:
 					newFailed = ((Camera.newFailed[0]*100)/Camera.success[0])
 					failed    = ((Camera.failed[0]*100)/Camera.success[0])
 				else:
 					newFailed = 0.
 					failed    = 0.
-				useful.logError("Camera : %-3.2f%% failed, %-3.2f%% total"%(newFailed, failed))
+				useful.logError("Camera failed : Last %-3.1f%%, All %-3.1f%% on %d"%(newFailed, failed, total))
 				Camera.newFailed[0] = 0
 		return result
 

@@ -5,7 +5,7 @@ from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage           import *
 from tools.useful      import *
-from server            import *
+from server.server     import ServerConfig
 
 @HttpServer.addRoute(b'/server', title=b"Server", index=13)
 async def server(request, response, args):

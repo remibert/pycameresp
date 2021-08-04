@@ -3,7 +3,7 @@
 import socket
 import errno
 from io import IOBase
-from server import User
+from server.user import User
 from tools import useful
 import sys
 import time

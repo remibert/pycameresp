@@ -323,21 +323,22 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 
 def ping(host):
 	""" Ping host """
-	server.ping(host, count=4, timeout=1)
+	from server.ping import ping
+	ping(host, count=4, timeout=1)
 
 def ip2host(ipaddress):
 	""" Convert ip to hostname """
 	import wifi
 	_, _, _, dns = wifi.Station.getInfo()
-	import server.dnsclient
-	print(server.dnsclient.getHostname(dns, ipaddress))
+	from server.dnsclient import getHostname
+	print(getHostname(dns, ipaddress))
 
 def host2ip(hostname):
 	""" Convert hostname to ip """
 	import wifi
 	_, _, _, dns = wifi.Station.getInfo()
-	import server.dnsclient
-	print(server.dnsclient.getIpAddress(dns, hostname))
+	from server.dnsclient import getIpAddress
+	print(getIpAddress(dns, hostname))
 
 def mountsd(mountpoint="/sd"):
 	""" Mount command """
@@ -591,17 +592,24 @@ def shell():
 	shell_exited = False
 	while shell_exited == False:
 		try:
+			commandLine = ""
 			commandLine = input("%s=> "%os.getcwd())
 			inactivity.restart()
 		except EOFError:
 			print("")
 			break
+		except KeyboardInterrupt:
+			print("Ctr-C detected, use 'exit' to restart server, 'quit' to get python prompt")
+
+		if commandLine.strip() == "quit":
+			raise KeyboardInterrupt()
 		parseCommandLine(commandLine)
 	inactivity.stop()
 
 async def asyncShell():
 	""" Asynchronous shell """
 	import uasyncio
+	from server.server import Server
 
 	if useful.ismicropython():
 		polling1 = 1
@@ -615,9 +623,8 @@ async def asyncShell():
 			character = useful.getch()[0]
 			if not ord(character) in [0,0xA]:
 				import uos
-				server.suspend()
-				await server.waitAllSuspended()
-				currentDir = uos.getcwd()
+				Server.suspend()
+				await Server.waitAllSuspended()
 				useful.refreshScreenSize()
 				
 				print("")
@@ -626,8 +633,8 @@ async def asyncShell():
 				shell()
 				print("")
 				useful.logError("<"*10+" Exit  shell " +">"*10)
-				uos.chdir(currentDir)
-				server.resume()
+				uos.chdir("/")
+				Server.resume()
 		else:
 			await uasyncio.sleep(polling1)
 

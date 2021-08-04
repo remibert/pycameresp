@@ -3,9 +3,9 @@
 """ Function define the web page to configure the presence detection """
 from server.httpserver import HttpServer
 from server.dnsclient import getHostname, isIpAddress
+from server.presence import PresenceConfig
 from htmltemplate import *
 from webpage import *
-from motion import PresenceConfig
 import wifi
 from tools import useful
 

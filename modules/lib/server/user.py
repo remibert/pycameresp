@@ -47,8 +47,8 @@ class User:
 				User.loginState[0] = False
 				useful.logError("Login failed, wrong password for user '%s'"%useful.tostrings(user))
 		else:
-			User.loginState[0] = False
 			if user != b"":
+				User.loginState[0] = False
 				useful.logError("Login failed, unkwnon user '%s'"%useful.tostrings(user))
 		return False
 

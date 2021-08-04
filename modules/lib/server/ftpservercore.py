@@ -13,7 +13,7 @@ import time
 from tools import fnmatch
 from server import stream
 from tools import useful
-from server import User
+from server.user import User
 from wifi.accesspoint import AccessPoint
 from wifi.station import Station
 

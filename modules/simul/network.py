@@ -33,6 +33,8 @@ class WLAN:
 		self.dhcp_hostname=dhcp_hostname
 		self.password=password
 		self.authmode = authmode
+		if dhcp_hostname == "mac":
+			return [1,2,3,4,5,6,7,8]
 
 	def ifconfig(self, data=None):
 		import socket 

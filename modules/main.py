@@ -10,66 +10,50 @@ sys.path.append("sample")
 import uasyncio
 import machine
 from tools.battery import Battery
+from tools import useful
 
 machine.freq(240000000)
 
+# Check the battery level and force deepsleep is to low
+Battery.protect()
+
 # Can only be done once at boot before start the camera and sd card
-onBattery   = Battery.isActivated()
+isPinWakeUp = Battery.isPinWakeUp()
 
-# If the power supply is the mains
-if onBattery == False:
-	from tools import useful
-	isPinWakeUp = False
+# Html pages loader
+def pageLoader():
+	# The html pages only loaded when the connection of http server is done
+	# This reduces memory consumption if the server is not used
+	import webpage
+	from server.httpserver import HttpServer
 
-	# Create asyncio loop
-	loop = uasyncio.get_event_loop()
+	try:
+		# Welcome page (can be suppressed)
+		from welcome import welcomePage
+	except ImportError as err:
+		#print(useful.exception(err))
+		pass
 
-	# Html pages loader
-	def pageLoader():
-		# The html pages only loaded when the connection of http server is done
-		# This reduces memory consumption if the server is not used
-		import webpage
-		from server.httpserver import HttpServer
+	try:
+		# Sample page (can be suppressed)
+		import sample
+	except ImportError as err:
+		#print(useful.exception(err))
+		pass
 
-		try:
-			# Welcome page (can be suppressed)
-			from welcome import welcomePage
-		except ImportError as err:
-			#print(useful.exception(err))
-			pass
+# Create asyncio loop
+loop = uasyncio.get_event_loop()
 
-		try:
-			# Sample page (can be suppressed)
-			import sample
-		except ImportError as err:
-			#print(useful.exception(err))
-			pass
-
-	import server
-
-	# Start all server (Http, Ftp, Telnet) and start wifi manager
-	# If you set the last parameter to True it preloads the pages of the http server at startup
-	server.start(loop=loop, pageLoader=pageLoader, preload=False, httpPort=80)
-	isPinWakeUp = False
-else:
-	# Check if PIR detection
-	isPinWakeUp = Battery.isPinWakeUp()
-	print("Detection %s"%(isPinWakeUp))
-
-	# Check the battery level and force deepsleep is to low
-	Battery.protect()
-
-	# Create asyncio loop
-	loop = uasyncio.get_event_loop()
-
-	from tools import useful
-
+# Start all server (Http, Ftp, Telnet) and start wifi manager
+# If you set the last parameter to True it preloads the pages of the http server at startup
+import server 
+server.init(loop=loop, pageLoader=pageLoader, preload=False, httpPort=80)
 
 # If camera is available (required specific firmware)
 if useful.iscamera():
 	# Start motion detection (only used with ESP32CAM)
 	import motion 
-	motion.start(loop, onBattery, isPinWakeUp)
+	motion.start(loop, isPinWakeUp)
 
 from shell.shell import asyncShell
 loop.create_task(asyncShell())
