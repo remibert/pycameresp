@@ -18,7 +18,7 @@ server_socket = None
 # Provide necessary functions for dupterm and replace telnet control characters that come in.
 class TelnetWrapper(IOBase):
 	def __init__(self, sock):
-		IOBase.__init__(self)
+		# pylint: disable=super-init-not-called
 		self.socket = sock
 		self.discard_count = 0
 		self.state = 0
