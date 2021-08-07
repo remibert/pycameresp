@@ -47,8 +47,9 @@ def findall(pattern, text):
 	return result, beginTag, endTag, beginFormat, endFormat
 
 def parse(force=False):
-	""" Parse the www/template.html and creates the content of file lib/htmltemplate/htmlclasses.py """
+	""" Parse the www/template.html and createsthe content of file lib/htmltemplate/htmlclasses.py """
 	from htmltemplate import WWW_DIR, TEMPLATE_FILE, TEMPLATE_PY
+	# pylint: disable=duplicate-string-formatting-argument
 	print("Parse html template")
 	lines = open(WWW_DIR+TEMPLATE_FILE).readlines()
 	pyClassFile = open(TEMPLATE_PY,"w")
@@ -65,9 +66,7 @@ def parse(force=False):
 				if classname != stack[-1][0]:
 					raise SyntaxError()
 				classname, text, comment = stack.pop()
-				if classname == "Tab":
-					classname = classname
-				attributes, beginTag, endTag, beginFormat, endFormat = findall('\%\([A-Za-z_0-9]*\)s',text)
+				attributes, beginTag, endTag, beginFormat, endFormat = findall(r'\%\([A-Za-z_0-9]*\)s',text)
 
 				print("Html template update %s"%classname)
 				classattributes = set()

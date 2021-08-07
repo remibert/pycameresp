@@ -8,7 +8,6 @@ from tools.useful import *
 from tools import useful, jsonconfig
 import wifi
 
-
 def staticIpHtml(config, disabled):
 	""" Html to get static ip """
 	patternIp = b"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"

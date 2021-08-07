@@ -4,12 +4,11 @@
 All configuration classes end the name with the word Config. 
 For each of these classes, a json file with the same name is stored in the config directory of the board. """
 import json
-import sys
 import uos
 from tools import useful
 import re
 
-
+self_config = None
 class JsonConfig:
 	""" Manage json configuration """
 	def __init__(self):
@@ -123,6 +122,7 @@ class JsonConfig:
 			execval = useful.tostrings(name)
 			try:
 				try:
+					# pylint: disable=exec-used
 					exec("a = self_config.%s"%execval)
 					existing = True
 				except:
@@ -130,6 +130,7 @@ class JsonConfig:
 
 				if existing:
 					execval = "self_config.%s = %s"%(execval, repr(value))
+					# pylint: disable=exec-used
 					exec(execval)
 			except Exception as err:
 				useful.exception(err, "Error on %s"%(execval))
@@ -145,6 +146,12 @@ class JsonConfig:
 			self.update(useful.tobytes(json.load(file)))
 			file.close()
 			return True
+		except OSError as err:
+			if err.args[0] == 2:
+				useful.logError("Not existing %s "%(filename))
+			else:
+				useful.exception(err, "Cannot load %s "%(filename))
+			return False
 		except Exception as err:
 			useful.exception(err, "Cannot load %s "%(filename))
 			return False

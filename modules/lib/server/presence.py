@@ -1,7 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Presence detection (determine if an occupant is present in the house) """
-import uasyncio
 import time
 from tools import useful, jsonconfig
 import wifi

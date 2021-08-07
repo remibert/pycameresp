@@ -37,7 +37,6 @@ def setTime(currenttime):
 
 def calcLocalTime(currenttime, offsetTime=+1, dst=True):
 	""" Calculate the local time """
-	import time
 	year,month,day,hour,minute,second,weekday,yearday = time.localtime(currenttime)[:8]
 	startDST = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
 	endDST   = time.mktime((year,10,( 7-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of November change to EST

@@ -1,17 +1,15 @@
 # Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET 
+# Copyright (c) 2021 Remi BERTHOLET
 # historically based on :
 # https://github.com/jczic/MicroWebSrv/blob/master/microWebSocket.py
 # but I have modified a lot, there must still be some original functions.
 """ This class is used to manage an http server.
-This class contains few lines of code, this is to save memory. 
-The core of the server is in the other class HttpServerCore, which is loaded into memory only when connecting an HTTP client. 
+This class contains few lines of code, this is to save memory.
+The core of the server is in the other class HttpServerCore, which is loaded into memory only when connecting an HTTP client.
 It takes a little while the first time you connect, but limits memory consumption if not in use.
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True. """
-
-from tools.useful import log
-from tools import useful
 import re
+from tools import useful
 
 class HttpServer:
 	""" Http main class """
@@ -44,7 +42,7 @@ class HttpServer:
 			HttpServer.wwwDir = WWW_DIR
 			loaded = True
 
-		if self.server == None:
+		if self.server is None:
 			print("Http start server")
 			from server.httpservercore import HttpServerCore
 			self.server = HttpServerCore(self.port, self.name)
@@ -72,7 +70,7 @@ class HttpServer:
 	@staticmethod
 	def removeRoute(url=None):
 		""" Remove a route of html page """
-		if url == None:
+		if url is None:
 			HttpServer.routes = {}
 			HttpServer.menus = []
 		else:
@@ -98,21 +96,21 @@ class HttpServer:
 	def searchRoute(request):
 		""" Search route according to the request """
 		function, args = None, None
-		
+
 		if request.method == b"PUT":
-			dir, file = useful.split(useful.tostrings(request.path))
-			found = HttpServer.routes.get(useful.tobytes(dir),None)
+			directory, file = useful.split(useful.tostrings(request.path))
+			found = HttpServer.routes.get(useful.tobytes(directory),None)
 			if found:
 				function, args = found
 			return function, args
 		else:
 			found = HttpServer.routes.get(request.path,None)
-			if found == None:
+			if found is None:
 				for route, func in HttpServer.wildroutes:
 					if re.match(useful.tostrings(route), useful.tostrings(request.path)):
 						found = func
 						break
-				if found == None:
+				if found is None:
 					staticRe = re.compile("^/("+useful.tostrings(HttpServer.wwwDir)+"/.+|.+)")
 					if staticRe.match(useful.tostrings(request.path)):
 						function, args = HttpServer.staticPages, {}
@@ -127,7 +125,7 @@ class HttpServer:
 		""" Treat the case of static pages """
 		path = useful.tobytes(HttpServer.wwwDir) + request.path
 		path = path.replace(b"//",b"/")
-		
+
 		if b".." in path:
 			await response.sendError(status=b"403",content=b"Forbidden")
 		else:
@@ -152,7 +150,7 @@ def start(loop=None, port=80, loader=None, preload=False, name=""):
 	import uasyncio
 	server = HttpServer(port=port, loader=loader, preload=preload, name=name)
 
-	if loop == None:
+	if loop is None:
 		loop = uasyncio.get_event_loop()
 		run_forever = True
 	else:
@@ -163,4 +161,3 @@ def start(loop=None, port=80, loader=None, preload=False, name=""):
 	loop.create_task(asyncServer)
 	if run_forever:
 		loop.run_forever()
-

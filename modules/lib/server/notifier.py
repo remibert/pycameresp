@@ -33,7 +33,7 @@ class Notifier:
 	async def notify(message, image = None, forced=False, display=True):
 		""" Notify message for all notifier registered """
 		useful.logError(message, display=display)
-		if len(Notifier.notifiers) == 0 or Station.isActive() == False:
+		if len(Notifier.notifiers) == 0 or Station.isActive() is False:
 			# Wifi not connected the message is postponed
 			Notifier.postponed.append([message, image, forced, display])
 
@@ -41,7 +41,7 @@ class Notifier:
 			if len(Notifier.postponed) > 10:
 				# Remove older
 				message, image, forced, display = Notifier.postponed[0]
-				useful.logError("Wifi not connected for : " + message, display=display)
+				useful.logError("Wifi not connected for : " + useful.tostrings(message), display=display)
 				del Notifier.postponed[0]
 		else:
 			await Notifier.flush()

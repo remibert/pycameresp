@@ -2,11 +2,11 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Class defining a VT100 text editor.
-This editor works directly in the board. 
-This allows you to make quick and easy changes directly on the board, without having to use synchronization tools. 
+This editor works directly in the board.
+This allows you to make quick and easy changes directly on the board, without having to use synchronization tools.
 This editor allows script execution, and displays errors and execution time.
 
-Editor shortcuts : 
+Editor shortcuts :
 <br> - <b>Exit          </b>: Escape
 <br> - <b>Move cursor   </b>: Arrows, Home, End, PageUp, PageDown, Ctrl-Home, Ctrl-End, Ctrl-Left, Ctrl-Right
 <br> - <b>Selection     </b>: Shift-Arrows, Shift-Home, Shift-End, Alt-Shift-Arrows, Ctrl-Shift-Left, Ctrl-Shift-Right
@@ -23,7 +23,7 @@ Editor shortcuts :
 <br> - <b>Execute       </b>: F5
 
 This editor also works on linux and osx, and can also be used autonomously,
-you need to add the useful.py script to its side. 
+you need to add the useful.py script to its side.
 All the keyboard shortcuts are at the start of the script.
 
 On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.
@@ -39,7 +39,7 @@ except:
 TABSIZE = 4          # Tabulation size
 HORIZONTAL_MOVE=8    # Scrolling minimal deplacement
 
-ESCAPE           = "\x1B" 
+ESCAPE           = "\x1B"
 
 # Move shortcuts
 UP               = ["\x1B[A"]
@@ -101,7 +101,7 @@ class View:
 		""" Constructor """
 		self.line     = 0
 		self.column   = 0
-		if viewHeight == None:
+		if viewHeight is None:
 			self.height   = 20
 		else:
 			self.height          = viewHeight
@@ -116,6 +116,8 @@ class View:
 		self.tabCursorColumn     = 0
 		self.selLineStart        = None
 		self.selLineEnd          = None
+		self.screenHeight = 1
+		self.screenWidth = 1
 
 	def write(self, data):
 		""" Write data to stdout """
@@ -335,7 +337,7 @@ class View:
 		self.moveCursor()
 		self.flush()
 
-	def refreshContent(self, selectionStart, selectionEnd, all):
+	def refreshContent(self, selectionStart, selectionEnd, all_):
 		""" Refresh content """
 		# If selection present
 		if selectionStart != None:
@@ -376,17 +378,17 @@ class View:
 			lineEnd = self.line + self.height
 		currentLine = self.line
 		screenLine = self.top
-		if type(all) == type([]):
-			lineStart, lineEnd = all
-			all = False
+		if type(all_) == type([]):
+			lineStart, lineEnd = all_
+			all_ = False
 		# Refresh all lines visible
 		while currentLine < self.text.getCountLines() and currentLine <= self.line + self.height:
 			# If the line is in selection or all must be refreshed
-			if lineStart <= currentLine <= lineEnd or all:
+			if lineStart <= currentLine <= lineEnd or all_:
 				self.showLine(currentLine, screenLine, selectionStart, selectionEnd)
 			screenLine  += 1
 			currentLine += 1
-		if all == True:
+		if all_ == True:
 			# Erase the rest of the screen with empty line (used when the text is shorter than the screen)
 			while currentLine <= self.line + self.height:
 				self.moveCursor(screenLine, 0)
@@ -456,6 +458,7 @@ class Text:
 		self.selectionStart = None
 		self.selectionEnd   = None
 		self.selection = []
+		self.filename = None
 
 	def setView(self, view):
 		""" Define the view attached to the text """
@@ -975,7 +978,6 @@ class Text:
 				if selectionStart[0] == currentColumn:
 					# Move the start of search after the text selected
 					currentColumn = selectionEnd[0]
-					pass
 
 		# Find the text in next lines
 		while currentLine < len(self.lines):
@@ -1102,7 +1104,6 @@ class Text:
 			if selLineStart < selLineEnd:
 				for line in range(selLineEnd, selLineStart,-1):
 					del self.lines[line]
-			pass
 			self.moveCursor(selLineStart, selColumnStart)
 			self.hideSelection()
 			self.view.setRefreshAll()
@@ -1296,7 +1297,7 @@ class Text:
 			self.backspace()
 		else:
 			self.modified = True
-	
+
 			# Unindent selection
 			selectionStart, selectionEnd = self.getSelection()
 			selColumnStart, selLineStart, dummy = selectionStart
@@ -1425,8 +1426,8 @@ class Text:
 		elif keys[0] in SELECT_NEXT_WORD:self.selectNextWord()
 		elif keys[0] in SELECT_PREV_WORD:self.selectPreviousWord()
 
-		# If the edit is not in read only 
-		elif self.readOnly == False:
+		# If the edit is not in read only
+		elif self.readOnly is False:
 			# Modification in the edit field
 			if   keys[0] in COPY:            self.copy()
 			elif keys[0] in CUT:             self.cut()
@@ -1464,13 +1465,14 @@ class Editor:
 		self.findText = None
 		self.replaceText = None
 		self.keys= []
-	
+		self.loop = None
+
 		if (not useful.exists(filename) and readOnly == True) or useful.isdir(filename):
 			print("Cannot open '%s'"%self.filename)
 		else:
 			self.run()
 
-	def refreshHeader(self, alone=False):
+	def refreshHeader(self):
 		""" Refresh the header of editor """
 		if self.isRefreshHeader:
 			self.edit.view.moveCursor(0, 0)
@@ -1480,7 +1482,7 @@ class Editor:
 				end = "Mode: %s"%("Replace" if self.edit.text.replaceMode else "Insert")
 			else:
 				end = "Read only" if self.edit.text.readOnly else ""
-			
+
 			header = "\x1B[7m %s%s%s \x1B[m"%(filename, " "*(self.edit.view.width - len(filename) - len(end)-2), end)
 			self.edit.view.write(header)
 			self.edit.view.moveCursor()

@@ -13,7 +13,6 @@
 try:
 	import utime
 	import uselect
-	import uctypes
 	import usocket
 	import ustruct
 	import urandom
@@ -22,7 +21,6 @@ try:
 except:
 	import time   as utime
 	import select as uselect
-	import ctypes as uctypes
 	import socket as usocket
 	import struct as ustruct
 	import random as urandom
@@ -40,16 +38,17 @@ class Packet:
 	""" Create ICMP packet for ping """
 	ECHO_REQUEST = 8
 	ECHO_REPLY   = 0
-	def __init__(self, type, code, sequence, size = 64):
+	def __init__(self, typ, code, sequence, size = 64):
 		""" Constructor of ICMP packet for ping """
 		self.format = b">BBHHHQ"
-		self.type       = type #B
+		self.type       = typ #B
 		self.code       = code #B
 		self.checksum   = 0 #H
 		self.identifier = urandom.randint(0, 65535) #H
 		self.sequence   = sequence   #H
 		self.timestamp  = ticks_us() #Q
 		self.size       = size
+		self.ttl = None
 
 	def computeChecksum(self, data):
 		""" Compute the checksum of packet """
@@ -128,6 +127,14 @@ class Ping:
 	def __init__(self):
 		""" Constructor """
 		self.sock = None
+		self.ttl = None
+		self.host = None
+		self.packetsTransmitted = 0
+		self.packetsReceived = 0
+		self.addr = None
+		self.request = None
+		self.quiet = None
+		self.response = None
 	
 	def open(self, host):
 		""" Open connection to host """

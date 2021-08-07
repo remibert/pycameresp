@@ -1,7 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Classes used to manage the wifi access point """
-import sys
 from tools import jsonconfig
 from tools import useful
 from wifi.hostname import Hostname

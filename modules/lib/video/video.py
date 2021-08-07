@@ -5,7 +5,6 @@ This requires the modified firmware.
 I added in the firmware the possibility of detecting movements, 
 as well as a lot of adjustment on the camera, not available on the other firmware that manages the esp32cam.
 """
-import sys
 import camera
 import time
 import uasyncio
@@ -29,7 +28,7 @@ class CameraConfig(jsonconfig.JsonConfig):
 class Motion:
 	""" Class motion detection returned by the detect function """
 	def __init__(self, motion):
-		""" Constructor with motion object """
+		""" Constructor with motion object_ """
 		self.motion = motion
 
 	def deinit (self):
@@ -61,12 +60,12 @@ class Reservation:
 		self.lock = uasyncio.Lock()
 		self.suspended = 0
 
-	async def reserve(self, object, timeout=0, suspension=None):
+	async def reserve(self, object_, timeout=0, suspension=None):
 		""" Wait the ressource and reserve """
 		result = False
 		# Wait 
 		while True:
-			result = await self.acquire(object, suspension)
+			result = await self.acquire(object_, suspension)
 			if result:
 				break
 			timeout -= 1
@@ -75,12 +74,12 @@ class Reservation:
 			await uasyncio.sleep_ms(1000)
 		return result
 
-	async def acquire(self, object, suspension=None):
+	async def acquire(self, object_, suspension=None):
 		""" Reserve the camera, is used to stream the output of the camera
 		to the web page. It stop the motion detection during this phase """
 		result = False
 		await self.lock.acquire()
-		identifier = id(object)
+		identifier = id(object_)
 		try:
 			# If not reserved
 			if self.identifier == None:
@@ -102,7 +101,7 @@ class Reservation:
 					self.count = 1
 					self.suspended = suspension
 					result = True
-			# If already reserved by the current object
+			# If already reserved by the current object_
 			elif self.identifier == identifier:
 				# Increase reservation counter
 				self.count += 1
@@ -112,11 +111,11 @@ class Reservation:
 			self.lock.release()
 		return result
 
-	async def unreserve(self, object):
+	async def unreserve(self, object_):
 		""" Unreserve the camera """
 		result = False
 		await self.lock.acquire()
-		identifier = id(object)
+		identifier = id(object_)
 		try:
 			if self.identifier == identifier:
 				if self.count <= 1:
@@ -228,15 +227,15 @@ class Camera:
 		return result
 
 	@staticmethod
-	async def reserve(object, timeout=0, suspension=None):
+	async def reserve(object_, timeout=0, suspension=None):
 		""" Reserve the camera, is used to stream the output of the camera
 		to the web page. It stop the motion detection during this phase """
-		return await Camera.reservation.reserve(object, timeout, suspension)
+		return await Camera.reservation.reserve(object_, timeout, suspension)
 
 	@staticmethod
-	async def unreserve(object):
+	async def unreserve(object_):
 		""" Unreserve the camera """
-		return await Camera.reservation.unreserve(object)
+		return await Camera.reservation.unreserve(object_)
 
 	@staticmethod
 	def isModified():
@@ -274,20 +273,20 @@ class Camera:
 			print("Framesize not set")
 
 	@staticmethod
-	def pixformat(format):
+	def pixformat(format_):
 		""" Change the format of image """
 		Camera.modified[0] = True
 		val = None
-		if format == b"RGB565"    : val=camera.PIXFORMAT_RGB565
-		if format == b"YUV422"    : val=camera.PIXFORMAT_YUV422
-		if format == b"GRAYSCALE" : val=camera.PIXFORMAT_GRAYSCALE
-		if format == b"JPEG"      : val=camera.PIXFORMAT_JPEG
-		if format == b"RGB888"    : val=camera.PIXFORMAT_RGB888
-		if format == b"RAW"       : val=camera.PIXFORMAT_RAW
-		if format == b"RGB444"    : val=camera.PIXFORMAT_RGB444
-		if format == b"RGB555"    : val=camera.PIXFORMAT_RGB555
+		if format_ == b"RGB565"    : val=camera.PIXFORMAT_RGB565
+		if format_ == b"YUV422"    : val=camera.PIXFORMAT_YUV422
+		if format_ == b"GRAYSCALE" : val=camera.PIXFORMAT_GRAYSCALE
+		if format_ == b"JPEG"      : val=camera.PIXFORMAT_JPEG
+		if format_ == b"RGB888"    : val=camera.PIXFORMAT_RGB888
+		if format_ == b"RAW"       : val=camera.PIXFORMAT_RAW
+		if format_ == b"RGB444"    : val=camera.PIXFORMAT_RGB444
+		if format_ == b"RGB555"    : val=camera.PIXFORMAT_RGB555
 		if Camera.opened and val != None:
-			print("Pixformat %s"%useful.tostrings(format))
+			print("Pixformat %s"%useful.tostrings(format_))
 			camera.pixformat(val)
 		else:
 			print("Pixformat not set")

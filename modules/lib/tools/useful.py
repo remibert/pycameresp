@@ -18,6 +18,9 @@ except:
 	pass
 from binascii import hexlify
 
+LONG_DURATION=15*60*1000
+SHORT_DURATION=1*60*1000
+
 def ismicropython():
 	""" Indicates if the python is micropython """
 	if sys.implementation.name == "micropython":
@@ -54,6 +57,7 @@ if ismicropython():
 
 	def getch(raw = True, duration=100000000, interchar=0.01):
 		key = ""
+		WatchDog.feed()
 		while 1:
 			if len(key) == 0:
 				delay = duration
@@ -106,11 +110,7 @@ else:
 
 	def readKeyboard(duration=0.001, raw=True, callback=None):
 		import termios, fcntl
-		import select
-		import os
-		import sys
 		import tty
-		import time
 		fd = sys.stdin.fileno()
 		oldattr = termios.tcgetattr(fd)
 		oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
@@ -146,7 +146,6 @@ try:
 		return ticks_ms()
 except:
 	def ticks():
-		import time
 		return (int)(time.time() * 1000)
 
 def ticksToString():
@@ -528,16 +527,15 @@ def prefix(files):
 				result += list(counter.keys())[0] + "/"
 			else:
 				return result [:-1]
-				break
 		return result
 	except IndexError:
 		return ""
 
 def getHash(password):
 	""" Get the hash associated to the password """
-	hash = hashlib.sha256()
-	hash.update(password)
-	return hexlify(hash.digest())
+	hash_ = hashlib.sha256()
+	hash_.update(password)
+	return hexlify(hash_.digest())
 
 def now():
 	""" Get time now """
@@ -854,23 +852,38 @@ def reboot(message="Reboot"):
 	from server.server import ServerConfig
 	serverConfig = ServerConfig()
 	if serverConfig.load():
-		import time
 		serverConfig.currentTime = time.time() + 8
 		serverConfig.save()
 	try:
-		import camera
-		camera.deinit()
+		if ismicropython():
+			import camera
+			camera.deinit()
 	except:
 		pass
 	machine.deepsleep(1000)
 
+class WatchDog:
+	""" Watch dog timer """
+	watchdog = None
+	@staticmethod
+	def start(timeout=LONG_DURATION):
+		""" Start watch dog """
+		WatchDog.watchdog  = machine.WDT(0, timeout)
+
+	@staticmethod
+	def feed():
+		""" Feed the WDT """
+		if WatchDog.watchdog:
+			WatchDog.watchdog.feed()
+
 class Inactivity:
 	""" Class to manage inactivity timer """
-	def __init__(self, callback, duration=15*60*1000):
+	def __init__(self, callback, duration=LONG_DURATION, timerId=-1):
 		""" Inactivity timer constructor """
-		self.timer = machine.Timer(-1)
+		self.timer = machine.Timer(timerId)
 		self.duration = duration
 		self.callback = callback
+		self.timerId = timerId
 		self.start()
 
 	def __del__(self):

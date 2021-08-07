@@ -42,7 +42,7 @@ class Streaming:
 	@staticmethod
 	def getHtml(request, width=None, height=None):
 		""" Return streaming html part with javascript code """
-		Streaming.startInactivityTimer()
+		Streaming.activity()
 		Streaming.streamingId[0] += id(request)
 		if width != None and height != None:
 			size = b'width="%d" height="%d"'%(width, height)
@@ -61,22 +61,17 @@ class Streaming:
 		</script>"""%(size, request.port+1,Streaming.streamingId[0]))
 
 	@staticmethod
-	def inactivityTimeout():
+	def inactivityTimeout(timer):
 		""" Suspend video streaming after delay """
 		Streaming.streamingId[0] += 1
 
 	@staticmethod
-	def startInactivityTimer():
-		""" Start inactivity timer for stop streaming video after delay """
-		Streaming.stopInactivityTimer()
-		Streaming.inactivity[0] = useful.Inactivity(Streaming.inactivityTimeout)
-
-	@staticmethod
-	def stopInactivityTimer():
-		""" Stop inactivity timer """
+	def activity():
+		""" User activity detected """
 		if Streaming.inactivity[0]:
 			Streaming.inactivity[0].stop()
 			Streaming.inactivity[0] = None
+		Streaming.inactivity[0] = useful.Inactivity(Streaming.inactivityTimeout, duration=useful.LONG_DURATION, timerId=1)
 
 	@staticmethod
 	def getStreamingId():

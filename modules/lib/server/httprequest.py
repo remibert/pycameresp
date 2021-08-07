@@ -41,7 +41,6 @@ from tools import useful
 import hashlib
 import time
 from binascii import hexlify, b2a_base64
-from tools.useful import log
 
 class Http:
 	""" Http request or reponse """
@@ -164,10 +163,10 @@ class Http:
 
 	def getId(self):
 		""" Get the unique identifier of the request or response. Used for multipart request """
-		hash = hashlib.sha256()
+		hash_ = hashlib.sha256()
 		ids = b"%d"%time.time()
-		hash.update(ids)
-		return hexlify(hash.digest())[32:]
+		hash_.update(ids)
+		return hexlify(hash_.digest())[32:]
 
 	async def unserialize(self, streamio):
 		""" Unserialize the request or response in the stream """
@@ -368,50 +367,63 @@ class ContentFile:
 	""" Class that contains a file """
 	def __init__(self, filename, contentType=None, base64=False):
 		""" Constructor """
-		self.filename = filename
+		if type(filename) == type([]):
+			self.filenames = filename
+		else:
+			self.filenames = [filename]
 		self.base64 = base64
 		if contentType == None:
 			global MIMES
-			ext = useful.splitext(useful.tostrings(filename))[1]
+			ext = useful.splitext(useful.tostrings(self.filenames[0]))[1]
 			self.contentType = MIMES.get(useful.tobytes(ext),b"text/plain")
 		else:
 			self.contentType = contentType
 		
 	async def serialize(self, streamio):
 		""" Serialize file """
+		found = False
 		try:
 			f = None
 			# print("Begin send %s"%useful.tostrings(self.filename))
-			f = open(useful.tostrings(self.filename), "rb")
-			result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.contentType))
-			step = 1440*10
-			buf = bytearray(step)
-			f.seek(0,2)
-			size = f.tell()
-			f.seek(0)
+			for filename in self.filenames:
+				if useful.exists(filename):
+					f = open(useful.tostrings(filename), "rb")
+					if found == False:
+						result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.contentType))
+					found = True
+					step = 1440*10
+					buf = bytearray(step)
+					f.seek(0,2)
+					size = f.tell()
+					f.seek(0)
 
-			if self.base64 and step % 3 != 0:
-				step = (step//3)*3
+					if self.base64 and step % 3 != 0:
+						step = (step//3)*3
 
-			lengthWritten = 0
+					lengthWritten = 0
 
-			while size > 0:
-				if size < step:
-					buf = bytearray(size)
-				length = f.readinto(buf)
-				size -= length
-				if self.base64:
-					lengthWritten += await streamio.write(b2a_base64(buf))
-				else:
-					lengthWritten += await streamio.write(buf)
-			# print("End send %s"%useful.tostrings(self.filename))
-			result += lengthWritten
+					while size > 0:
+						if size < step:
+							buf = bytearray(size)
+						length = f.readinto(buf)
+						size -= length
+						if self.base64:
+							lengthWritten += await streamio.write(b2a_base64(buf))
+						else:
+							lengthWritten += await streamio.write(buf)
+					# print("End send %s"%useful.tostrings(self.filename))
+					result += lengthWritten
 		except Exception as err:
-			result = await streamio.write(b'Content-Type: text/plain\r\n\r\n')
-			result += await streamio.write(b"File %s not found"%useful.tobytes(self.filename))
+			pass
 		finally:
 			if f:
 				f.close()
+		if found == False:
+			result = await streamio.write(b'Content-Type: text/plain\r\n\r\n')
+			filenames = b""
+			for filename in self.filenames:
+				filenames += filename + b" "
+			result += await streamio.write(b"File %s not found"%useful.tobytes(filename))
 		return result
 
 class ContentBuffer:
@@ -517,8 +529,10 @@ class HttpResponse(Http):
 		Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port, name=name)
 		self.streamio = streamio
 
-	async def send(self, content=None, status=b"200", headers={}):
+	async def send(self, content=None, status=b"200", headers=None):
 		""" Send response to client web browser """
+		if headers == None:
+			headers = {}
 		self.setContent(content)
 		self.setStatus(status)
 		if headers != None:
@@ -570,6 +584,5 @@ class HttpRequest(Http):
 	async def send(self, streamio):
 		""" Send request to server """
 		if streamio == None:
-			raise 1
 			streamio = self.streamio
 		await self.serialize(streamio)

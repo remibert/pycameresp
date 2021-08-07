@@ -6,7 +6,6 @@ from io import IOBase
 from server.user import User
 from tools import useful
 import sys
-import time
 
 try:
 	import wifi
@@ -18,8 +17,9 @@ server_socket = None
 
 # Provide necessary functions for dupterm and replace telnet control characters that come in.
 class TelnetWrapper(IOBase):
-	def __init__(self, socket):
-		self.socket = socket
+	def __init__(self, sock):
+		IOBase.__init__(self)
+		self.socket = sock
 		self.discard_count = 0
 		self.state = 0
 		self.password = b""

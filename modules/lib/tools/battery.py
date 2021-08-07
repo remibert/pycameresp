@@ -3,7 +3,6 @@
 """ Manage the battery """
 from tools import jsonconfig
 from tools import useful
-import time
 
 try: import machine
 except: pass
@@ -76,9 +75,9 @@ class Battery:
 					level = 100
 				else:
 					level = int(level)
-				print("Battery level %d %% (%d)"%(level, int(val/count)))
-			except:
-				print("Cannot read battery status")
+				useful.logError("Battery level %d %% (%d)"%(level, int(val/count)))
+			except Exception as err:
+				useful.logError("Cannot read battery status",err)
 			Battery.level[0] = level
 		return Battery.level[0]
 
@@ -110,7 +109,7 @@ class Battery:
 			esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
 			return True
 		except Exception as err:
-			print("Cannot set wake up")
+			useful.logError("Cannot set wake up",err)
 		return False
 
 	@staticmethod
@@ -130,8 +129,8 @@ class Battery:
 	def protect():
 		""" Protect the battery """
 		Battery.init()
+		Battery.keepResetCause()
 		if Battery.manageLevel() or Battery.manageBrownout():
-			import machine
 			machine.deepsleep()
 
 	@staticmethod
@@ -159,9 +158,23 @@ class Battery:
 		return deepsleep
 
 	@staticmethod
+	def keepResetCause():
+		""" Keep reset cause """
+		causes = {
+			machine.PWRON_RESET     : "Power on",
+			machine.HARD_RESET      : "Hard",
+			machine.WDT_RESET       : "Watch dog",
+			machine.DEEPSLEEP_RESET : "Deep sleep",
+			machine.SOFT_RESET      : "Soft",
+			machine.BROWNOUT_RESET  : "Brownout",
+		}.setdefault(machine.reset_cause(), "%d"%machine.reset_cause())
+		useful.logError("%s reset"%causes)
+
+	@staticmethod
 	def manageBrownout():
 		""" Checks the number of brownout reset """
 		deepsleep = False
+  
 		if Battery.config.brownoutDetection:
 			# If the reset can probably due to insufficient battery
 			if machine.reset_cause() == machine.BROWNOUT_RESET:
@@ -172,7 +185,7 @@ class Battery:
 			Battery.config.save()
 
 			# if the number of consecutive brownout resets is too high
-			if Battery.config.brownoutCount > 10:
+			if Battery.config.brownoutCount > 32:
 				# Battery too low, save the battery status
 				useful.logError("Too many successive brownout reset")
 				deepsleep = True
@@ -180,7 +193,7 @@ class Battery:
 
 	@staticmethod
 	def keepAwake():
-		""" Keep awake more time """
+		""" Keep awake  """
 		if Battery.config.wakeUp:
 			Battery.awakeCounter[0] = Battery.config.awakeTime
 
@@ -193,5 +206,4 @@ class Battery:
 				useful.logError("Sleeping")
 				# Set the wake up on PIR detection
 				Battery.setPinWakeUp()
-				import machine
 				machine.deepsleep()

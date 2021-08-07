@@ -15,6 +15,7 @@ class Hostname:
 			Hostname.hostname[0]         = b"Esp_%05d"%Hostname.getNumber()
 		return Hostname.hostname[0]
 
+	@staticmethod
 	def getNumber():
 		""" Get the unic number of device """
 		if Hostname.number[0] == None:

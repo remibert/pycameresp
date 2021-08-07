@@ -28,5 +28,34 @@
 		"memory": "c",
 		"complex": "c"
 	},
-	"C_Cpp.dimInactiveRegions": false
+	"C_Cpp.dimInactiveRegions": false,
+	"python.linting.enabled": true,
+	"python.linting.pylintUseMinimalCheckers": false, 
+	"python.autoComplete.extraPaths": [
+		"./modules/lib",
+		"./modules/simul",
+		"./modules/lib/tools",
+		"./modules/lib/shell"
+	],
+	"python.pythonPath": "./modules/lib;./modules/simul;./modules/lib/tools;./modules/lib/shell",
+	"python.linting.pylintEnabled": true,
+	"python.linting.pylintCategorySeverity.convention": "Information",
+	"python.linting.pylintArgs": [
+		"--disable=C",
+		"--disable=R",
+		"--disable=bad-indentation",
+		"--disable=unused-argument",
+		"--disable=invalid-name",
+		"--disable=import-outside-toplevel",
+		"--disable=broad-except",
+		"--disable=unused-variable",
+		"--disable=line-too-long",
+		"--disable=superfluous-parens",
+		"--disable=unidiomatic-typecheck",
+		"--disable=bare-except",
+		"--disable=unused-wildcard-import",
+		"--disable=wildcard-import",
+		"--disable=global-statement",
+		"--disable=eval-used",
+		"--disable=exec-used"]
 }

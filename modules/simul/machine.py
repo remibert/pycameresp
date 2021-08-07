@@ -64,3 +64,10 @@ class Timer:
 	def deinit(self):
 		if self.timer:
 			self.timer.cancel()
+
+class WDT:
+	def __init__(self, id, duration):
+		pass
+
+	def feed(self):
+		pass

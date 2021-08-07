@@ -57,8 +57,6 @@ async def historic(request, response, args):
 		{
 			var canvas = document.getElementById('motion'); 
 			canvas.addEventListener("mousedown", function (e) { getClickPosition(canvas, e); });
-
-			console.log("loadHistoric");
 			historicRequest.onreadystatechange = historicLoaded;
 			historicRequest.open("GET","historic/historic.json",true);
 			historicRequest.send();
@@ -100,7 +98,6 @@ async def historic(request, response, args):
 			{
 				if (imageRequest.status === 200)
 				{
-					console.log("imageLoaded create image");
 					var motion = historic[lastId];
 					var image = new Image();
 					image.id     = lastId;
@@ -190,7 +187,6 @@ async def historic(request, response, args):
 			ctx.fillText("\xE2\x86\x92", motion[MOTION_WIDTH]-20, motion[MOTION_HEIGHT]/2);
 			ctx.fillText("\xE2\x87\xA4", motion[MOTION_WIDTH]/2, 20);
 			ctx.fillText("\xE2\x87\xA5", motion[MOTION_WIDTH]/2, motion[MOTION_HEIGHT]);
-			console.log("loaded " +id);
 		}
 
 		function getName(filename)
@@ -200,17 +196,13 @@ async def historic(request, response, args):
 			filename = lst[lst.length-1];
 			spl = filename.split(" ");
 
-			if (spl.length >= 3)
+			if (spl.length == 3)
 			{
-				date = spl[0].replaceAll("-","/") + " " + spl[1].replaceAll("-",":")
-				if (spl.length >= 4)
-				{
-					last = spl[2] + " " + spl[3];
-				}
-				else
-				{
-					last = spl[2];
-				}
+				date = spl[0].split("_")[0];
+				hour = spl[0].split("_")[1];
+
+				date = date.replaceAll("-","/") + " " + hour.replaceAll("-",":");
+				last = spl[1] + " " + spl[2];
 				result = date + " "+ last;
 			}
 			else

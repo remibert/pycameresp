@@ -36,5 +36,5 @@ async def cameraConfigure(request, response, args):
 	print(useful.tostrings(b"%s=%s"%(request.params[b"name"],request.params[b"value"])))
 	cameraConfig.update(request.params)
 	Streaming.setConfig(cameraConfig)
-	Streaming.startInactivityTimer()
+	Streaming.activity()
 	await response.sendOk()

@@ -6,7 +6,6 @@ import re
 import uasyncio
 from tools import useful
 import json
-import server
 
 MAX_DISPLAYED = 100
 MAX_REMOVED   = 100
@@ -128,13 +127,13 @@ class Historic:
 		if  Historic.firstExtract[0] == False:
 			Historic.firstExtract[0] = True
 			try:
-				print("Start historic creation")
+				useful.logError("Start historic creation")
 				# Scan sd card and get more recent motions
 				motions = await Historic.scanDirectories(MAX_DISPLAYED, False)
 
 				# Build historic file
 				files = await Historic.build(motions)
-				print("End   historic creation")
+				useful.logError("End   historic creation")
 			except Exception as err:
 				useful.exception(err)
 
@@ -171,23 +170,23 @@ class Historic:
 		if root:
 			try:
 				await Historic.acquire()
-				years = await Historic.scanDir(root, "\d\d\d\d", older)
+				years = await Historic.scanDir(root, r"\d\d\d\d", older)
 				for year in years:
 					pathYear = root + "/" + year
-					months = await Historic.scanDir(pathYear, "\d\d", older)
+					months = await Historic.scanDir(pathYear, r"\d\d", older)
 					for month in months:
 						pathMonth = pathYear + "/" + month
-						days = await Historic.scanDir(pathMonth, "\d\d", older)
+						days = await Historic.scanDir(pathMonth, r"\d\d", older)
 						for day in days:
 							pathDay = pathMonth + "/" + day
-							hours = await Historic.scanDir(pathDay, "\d\dh\d\d", older)
+							hours = await Historic.scanDir(pathDay, r"\d\dh\d\d", older)
 							for hour in hours:
 								pathHour = pathDay + "/" + hour
 								if older:
 									extension = "jpg"
 								else:
 									extension = "json"
-								detections = await Historic.scanDir(pathHour, "\d\d.*\."+extension, older, directory=False)
+								detections = await Historic.scanDir(pathHour, r"\d\d.*\."+extension, older, directory=False)
 								for detection in detections:
 									motions.append(pathHour + "/" + detection)
 								if len(motions) > quantity:
@@ -242,7 +241,7 @@ class Historic:
 		if root:
 			# If not enough space available on sdcard
 			if useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5:
-				print("Start cleanup sd card")
+				useful.logError("Start cleanup sd card")
 				olders = await Historic.scanDirectories(MAX_REMOVED, True)
 				previous = ""
 				for motion in olders:
@@ -256,13 +255,16 @@ class Historic:
 						useful.exception(err)
 					finally:
 						await Historic.release()
-				print("End cleanup sd card")
+				useful.logError("End cleanup sd card")
 
 	@staticmethod 
 	async def periodic():
 		""" Internal periodic task """
 		from server.server import Server
-		await Server.waitResume(4*60)
+		if useful.ismicropython():
+			await Server.waitResume(4*60)
+		else:
+			await Server.waitResume(4)
 		if Historic.motionInProgress[0] == False:
 			if useful.SdCard.isMounted():
 				await Historic.extract()

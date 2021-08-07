@@ -1,10 +1,9 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Classes used to manage the wifi station """
-import sys
+import time
 from tools import jsonconfig,useful
 from wifi.hostname import Hostname
-import time
 import uasyncio
 
 class NetworkConfig(jsonconfig.JsonConfig):
@@ -81,11 +80,10 @@ class Station:
 			Station.wlan.active(True)
 			Station.configure(network)
 			Station.wlan.connect(useful.tobytes(network.ssid), useful.tobytes(network.wifipassword))
-			from time import sleep
 			retry = 0
 			while not Station.wlan.isconnected() and retry < maxRetry:
 				await uasyncio.sleep(1)
-				print ("   %-2d/%d wait connection to %s"%(retry+1, maxRetry, useful.tostrings(network.ssid)))
+				useful.logError ("   %-2d/%d wait connection to %s"%(retry+1, maxRetry, useful.tostrings(network.ssid)))
 				retry += 1
 
 			if Station.wlan.isconnected() == False:
@@ -97,7 +95,7 @@ class Station:
 		return result
 
 	@staticmethod
-	def disconnect(self):
+	def disconnect():
 		""" Disconnect the wifi """
 		if Station.wlan.isconnected():
 			Station.wlan.disconnect()
@@ -130,13 +128,6 @@ class Station:
 			network.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
 		except Exception as err:
 			useful.exception(err, msg="Cannot get ip station")
-
-	@staticmethod
-	def getInfo():
-		""" Get the network information """
-		if Station.wlan != None and Station.wlan.isconnected():
-			return Station.wlan.ifconfig()
-		return None
 
 	@staticmethod
 	def getHostname():
@@ -181,15 +172,17 @@ class Station:
 	@staticmethod
 	async def selectNetwork(networkName, maxRetry):
 		""" Select the network and try to connect """
-		# Load default network
-		if Station.network.load(partFilename=networkName):
-			useful.logError("Try to connect to %s"%useful.tostrings(Station.network.ssid))
-			# If the connection failed
-			if await Station.connect(Station.network, maxRetry) == True:
-				useful.logError("Connected to %s"%useful.tostrings(Station.network.ssid))
-				Station.config.default = networkName
-				Station.config.save()
-				return True
+		if networkName != b"":
+			# Load default network
+			if Station.network.load(partFilename=networkName):
+				useful.logError("Try to connect to %s"%useful.tostrings(Station.network.ssid))
+				# If the connection failed
+				if await Station.connect(Station.network, maxRetry) == True:
+					useful.logError("Connected to %s"%useful.tostrings(Station.network.ssid))
+					print(repr(Station.config) + repr(Station.network))
+					Station.config.default = networkName
+					Station.config.save()
+					return True
 		return False
 
 	@staticmethod
@@ -242,11 +235,9 @@ class Station:
 
 			useful.logError("Start wifi")
 			if await Station.chooseNetwork(force, maxRetry) == True:
-				print(repr(Station.config) + repr(Station.network))
 				result = True
 		else:
-			print("Wifi already started")
-			print(repr(Station.config) + repr(Station.network))
+			useful.logError("Wifi already started")
 			result = True
 		return result
 

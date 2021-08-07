@@ -84,6 +84,7 @@ class Server:
 				if i % 30 == 0:
 					print("Wait all servers suspended...")
 				await uasyncio.sleep(0.1)
+				useful.WatchDog.feed()
 
 	@staticmethod
 	def isWifiStarted():
@@ -93,7 +94,7 @@ class Server:
 	@staticmethod
 	def isWanConnected():
 		""" Indicates if the wan is connected """
-		return wifi.Station.isActive()
+		return wifi.Station.isConnected()
 
 	@staticmethod
 	def init(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
@@ -109,27 +110,27 @@ class Server:
 		from server.periodic import periodicTask
 		loop.create_task(periodicTask())
 
-
 	@staticmethod
 	async def synchronizeTime():
 		""" Synchronize time """
 		result = False
 		if Server.context.config.ntp:
-			if Server.context.setDate == None:
-				from server.timesetting import setDate
-				Server.context.setDate = setDate
-			for i in range(3):
-				oldTime = time.time()
-				currentTime = Server.context.setDate(Server.context.config.offsettime, dst=Server.context.config.dst, display=False)
-				if currentTime > 0:
-					result = True
-					Server.context.config.currentTime = int(currentTime)
-					Server.context.config.save()
-					if abs(oldTime - currentTime) > 0:
-						useful.logError("Time synchronized delta=%ds"%(currentTime-oldTime))
-					break
-				else:
-					await uasyncio.sleep(1)
+			if Server.isWanConnected():
+				if Server.context.setDate == None:
+					from server.timesetting import setDate
+					Server.context.setDate = setDate
+				for i in range(3):
+					oldTime = time.time()
+					currentTime = Server.context.setDate(Server.context.config.offsettime, dst=Server.context.config.dst, display=False)
+					if currentTime > 0:
+						result = True
+						Server.context.config.currentTime = int(currentTime)
+						Server.context.config.save()
+						if abs(oldTime - currentTime) > 0:
+							useful.logError("Time synchronized delta=%ds"%(currentTime-oldTime))
+						break
+					else:
+						await uasyncio.sleep(1)
 		return result
 
 	@staticmethod
@@ -208,7 +209,6 @@ class Server:
 
 				from server.presence import detectPresence
 				Server.context.loop.create_task(detectPresence())
-
 
 	@staticmethod
 	async def manage():

@@ -2,7 +2,6 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Base class of html templates """
 from tools import useful
-from tools.useful import log
 
 class Template:
 	""" Base class of html templates """

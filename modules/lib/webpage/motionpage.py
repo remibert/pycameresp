@@ -8,7 +8,6 @@ from webpage.streamingpage import *
 from server.httprequest import *
 from tools import useful
 from video import CameraConfig, Camera
-from webpage import streamingpage
 from motion import SnapConfig, MotionConfig
 import uasyncio
 
@@ -22,7 +21,7 @@ def zoneMasking(config, disabled):
 	squarey = SnapConfig.get().square_y - 2
 	width   = SnapConfig.get().diff_x
 	height  = SnapConfig.get().diff_y
-	max     = SnapConfig.get().max
+	maxi     = SnapConfig.get().max
 	if disabled:
 		buttons = b""
 	else:
@@ -129,7 +128,7 @@ def zoneMasking(config, disabled):
 				}
 				onLoadZoneMasking();
 			</script>
-"""%(buttons,squarex,squarey,config.mask,disabled,height,width,max,max,max))
+"""%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
 	return result
 
 @HttpServer.addRoute(b'/motion', title=b"Motion", index=51, available=useful.iscamera())

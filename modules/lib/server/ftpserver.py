@@ -10,7 +10,6 @@ It takes a little while the first time you connect, but limits memory consumptio
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True.
 """
 import uasyncio
-import sys
 from tools import useful
 
 class Ftp:

@@ -2,13 +2,6 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Motion detection only work with ESP32CAM (Requires specially modified ESP32CAM firmware to handle motion detection.) """
 import sys
-import machine
-import uos
-import re
-try:
-	import camera
-except:
-	pass
 import uasyncio
 import video
 from gc import collect
@@ -23,7 +16,7 @@ class MotionConfig(jsonconfig.JsonConfig):
 	def __init__(self):
 		jsonconfig.JsonConfig.__init__(self)
 		# Indicates if the motion is activated
-		self.activated = True
+		self.activated = False
 
 		# Suspend the motion detection when presence detected
 		self.suspendOnPresence = True
@@ -75,7 +68,7 @@ class ImageMotion:
 	def deinit(self):
 		""" Destructor """
 		self.created[0] -= 1
-		if self.created[0] >= 12:
+		if self.created[0] >= 32:
 			print("Destroy %d"%self.created[0])
 		if self.motion:
 			self.motion.deinit()
@@ -139,11 +132,10 @@ class ImageMotion:
 		""" Save the image on sd card """
 		return await Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations(), self.getHtmlShapes())
 
-	def compare(self, previous, set=False, extractShape=True):
+	def compare(self, previous, extractShape=True):
 		""" Compare two motion images to get differences """
 		res = self.motion.compare(previous.motion, extractShape)
-		if set or self.comparison == None:
-			self.comparison = res
+		self.comparison = res
 		return res
 
 	def getMotionDetected(self):
@@ -354,8 +346,7 @@ class Motion:
 			# Compute the motion identifier
 			for previous in self.images[1:]:
 				# # If image not already compared
-				comparison = current.compare(previous, False, False)
-				# print("D%d H%d id%d idx%d"%(comparison["diff"]["count"], comparison["diff"]["histo"], previous.getMotionId() if previous.getMotionId() else -1, previous.index))
+				comparison = current.compare(previous, False)
 	
 				# If camera not stabilized
 				if self.isStabilized() == False:
@@ -374,7 +365,7 @@ class Motion:
 
 				# Compare the image with the background if existing and extract modification
 				if self.imageBackground != None:
-					comparison = current.compare(self.imageBackground, True, True)
+					comparison = current.compare(self.imageBackground, True)
 
 			# Compute the list of differences
 			diffs = ""
@@ -455,7 +446,6 @@ class Detection:
 			self.pollingFrequency = 100
 		self.detection = None
 		self.activated = None
-		self.inactivity = useful.Inactivity(self.inactivityTimeout, 60*1000)
 
 	def loadConfig(self):
 		""" Load motion configuration """
@@ -479,7 +469,7 @@ class Detection:
 		""" Main asynchronous task """
 		await useful.taskMonitoring(self.detect)
 
-	def inactivityTimeout(timer):
+	def inactivityTimeout(self, timer):
 		""" Inactivity timeout """
 		useful.reboot("Automatic reboot after inactivity in motion")
 	
@@ -488,9 +478,6 @@ class Detection:
 		result = False
 		# Wait the server resume
 		await Server.waitResume()
-
-		# Check if detection freeze
-		self.inactivity.start()
 
 		# Release previously alocated image
 		self.releaseImage()
@@ -505,9 +492,6 @@ class Detection:
 
 		# Refresh configuration when it changed
 		self.refreshConfig()
-
-		# Disable check if detection freeze
-		self.inactivity.stop()
 
 		return result
 

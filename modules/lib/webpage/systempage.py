@@ -2,7 +2,6 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to manage board """
 from server.httpserver import HttpServer
-from server.server import Server
 from wifi.hostname import Hostname
 from htmltemplate import *
 from webpage import *
@@ -22,6 +21,9 @@ async def systemPage(request, response, args):
 		Br(),Br(),Label(text=b"File system"),Br(),
 		ImportFile(text=b"Import", path=b"/system/importFileSystem", alert=b"Import in progress, wait a few minutes the automatic reboot", accept=b".cfs"),
 		ExportFile(text=b"Export", path=b"/system/exportFileSystem", filename=b"FileSystem_%s.cfs"%Hostname.get()),
+
+		Br(),Br(),Label(text=b"Trace"),Br(),
+		ExportFile(text=b"Trace", path=b"/system/exportTrace", filename=b"trace_%s.log"%Hostname.get()),
 
 		Br(), Br(),Label(text=b"Reboot device"),Br(),
 		ButtonCmd(text=b"Reboot",path=b"/system/reboot",confirm=b"Confirm reboot", name=b"reboot"))
@@ -53,6 +55,11 @@ async def exportFileSystem(request, response, args):
 	await response.sendFile(b"fileSystem.cfs", headers=request.headers)
 	useful.remove("fileSystem.cfs")
 
+@HttpServer.addRoute(b'/system/exportTrace')
+async def exportTrace(request, response, args):
+	""" Export file system """
+	await response.sendFile([b"trace.log.4",b"trace.log.3",b"trace.log.2",b"trace.log.1",b"trace.log"], headers=request.headers)
+
 @HttpServer.addRoute(b'/system/reboot')
 async def reboot(request, response, args):
 	""" Reboot device """
@@ -61,8 +68,6 @@ async def reboot(request, response, args):
 	except Exception as err:
 		useful.exception(err)
 	try:
-		Server.suspend()
-		await Server.waitAllSuspended()
 		useful.reboot("Reboot asked on system html page")
 	except Exception as err:
 		useful.exception(err)

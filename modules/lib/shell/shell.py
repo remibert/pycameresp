@@ -35,8 +35,7 @@ import sys
 sys.path.append("lib")
 import os
 import uos
-import server
-
+import machine
 try:
 	from tools import useful
 except:
@@ -342,8 +341,6 @@ def host2ip(hostname):
 
 def mountsd(mountpoint="/sd"):
 	""" Mount command """
-	import uos
-	import machine
 	try:
 		uos.mount(machine.SDCard(), mountpoint)
 		print("Sd mounted on '%s'"%mountpoint)
@@ -352,7 +349,6 @@ def mountsd(mountpoint="/sd"):
 
 def umountsd(mountpoint="/sd"):
 	""" Umount command """
-	import uos
 	try:
 		uos.umount(mountpoint)
 		print("Sd umounted from '%s'"%mountpoint)
@@ -377,7 +373,6 @@ def reboot():
 
 def deepsleep():
 	""" Deep sleep command """
-	import machine 
 	machine.deepsleep()
 
 editClass = None
@@ -460,6 +455,7 @@ def help():
 			if count == None:
 				return 
 
+shell_exited = False
 def exit():
 	""" Exit shell command """
 	global shell_exited
@@ -584,17 +580,12 @@ def shell():
 	""" Start the shell """
 	global shell_exited
 
-	def inactivityShell(timer):
-		useful.reboot("Automatic reboot after inactivity")
-
-	inactivity = useful.Inactivity(inactivityShell)
-	
 	shell_exited = False
 	while shell_exited == False:
 		try:
 			commandLine = ""
 			commandLine = input("%s=> "%os.getcwd())
-			inactivity.restart()
+			useful.WatchDog.feed()
 		except EOFError:
 			print("")
 			break
@@ -604,7 +595,6 @@ def shell():
 		if commandLine.strip() == "quit":
 			raise KeyboardInterrupt()
 		parseCommandLine(commandLine)
-	inactivity.stop()
 
 async def asyncShell():
 	""" Asynchronous shell """
@@ -622,9 +612,9 @@ async def asyncShell():
 		if useful.kbhit(polling2):
 			character = useful.getch()[0]
 			if not ord(character) in [0,0xA]:
-				import uos
 				Server.suspend()
 				await Server.waitAllSuspended()
+				useful.WatchDog.start(useful.LONG_DURATION*2)
 				useful.refreshScreenSize()
 				
 				print("")
@@ -634,6 +624,9 @@ async def asyncShell():
 				print("")
 				useful.logError("<"*10+" Exit  shell " +">"*10)
 				uos.chdir("/")
+
+				useful.WatchDog.start(useful.SHORT_DURATION)
+
 				Server.resume()
 		else:
 			await uasyncio.sleep(polling1)
