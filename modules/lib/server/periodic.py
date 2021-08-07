@@ -43,8 +43,14 @@ class Periodic:
 			if self.station is None:
 				from wifi.station import Station
 				self.station = Station
-			newWanIp = await self.getWanIpAsync()
+			try:
+				newWanIp = None
+				newWanIp = await self.getWanIpAsync()
+			except Exception as err:
+				useful.logError("Cannot get wan ip", err)
 			if newWanIp is not None:
+				from tools.battery import Battery
+				Battery.clearBrownout()
 				if self.wanIp != newWanIp or forced:
 					if self.serverConfig.notify:
 						await Notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(self.station.getInfo()[0],newWanIp, useful.uptime()))

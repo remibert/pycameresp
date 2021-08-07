@@ -126,6 +126,10 @@ class Server:
 						result = True
 						Server.context.config.currentTime = int(currentTime)
 						Server.context.config.save()
+
+						from tools.battery import Battery
+						Battery.clearBrownout()
+
 						if abs(oldTime - currentTime) > 0:
 							useful.logError("Time synchronized delta=%ds"%(currentTime-oldTime))
 						break

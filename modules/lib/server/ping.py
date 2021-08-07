@@ -10,29 +10,20 @@
 #    https://github.com/olavmrk/python-ping/blob/master/ping.py
 #    @data: bytes
 
-try:
-	import utime
-	import uselect
-	import usocket
-	import ustruct
-	import urandom
-	import usocket
-	import uasyncio
-except:
-	import time   as utime
-	import select as uselect
-	import socket as usocket
-	import struct as ustruct
-	import random as urandom
-	import asyncio as uasyncio
+import time
+import uselect
+import struct
+import random
+import socket
+import uasyncio
 import wifi
 
 def ticks_us():
 	""" Get tick in microseconds """
 	try:
-		return utime.ticks_us()
+		return time.ticks_us()
 	except:
-		return utime.time_ns()//1000
+		return time.time_ns()//1000
 
 class Packet:
 	""" Create ICMP packet for ping """
@@ -44,7 +35,7 @@ class Packet:
 		self.type       = typ #B
 		self.code       = code #B
 		self.checksum   = 0 #H
-		self.identifier = urandom.randint(0, 65535) #H
+		self.identifier = random.randint(0, 65535) #H
 		self.sequence   = sequence   #H
 		self.timestamp  = ticks_us() #Q
 		self.size       = size
@@ -73,13 +64,13 @@ class Packet:
 	def unserialize(self, resp):
 		""" Unserialize packet """
 		data = resp[20:]
-		data = data[0:ustruct.calcsize(self.format)]
-		self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = ustruct.unpack(self.format, data)
-		self.ttl = ustruct.unpack("!B",resp[8:9])[0]
+		data = data[0:struct.calcsize(self.format)]
+		self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = struct.unpack(self.format, data)
+		self.ttl = struct.unpack("!B",resp[8:9])[0]
 	
 	def __getBuffer(self):
 		""" Create the serialized buffer of data """
-		data = ustruct.pack(self.format, self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
+		data = struct.pack(self.format, self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
 		padding = b"."*(self.size-len(data))
 		return data + padding
 		
@@ -105,7 +96,7 @@ class Packet:
 def getAddressIp(hostname):
 	""" Return the address ip of the hostname """
 	try:
-		return usocket.getaddrinfo(hostname, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+		return socket.getaddrinfo(hostname, 1, socket.SOCK_DGRAM, socket.AF_INET)[0][-1][0]
 	except:
 		return None
 
@@ -144,9 +135,9 @@ class Ping:
 		try:
 			result = True
 			self.close()
-			self.sock = usocket.socket(usocket.AF_INET, usocket.SOCK_RAW, 1)
+			self.sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, 1)
 			self.sock.setblocking(0)
-			self.addr = usocket.getaddrinfo(self.host, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+			self.addr = socket.getaddrinfo(self.host, 1, socket.SOCK_DGRAM, socket.AF_INET)[0][-1][0]
 			self.sock.connect((self.addr, 1))
 			if self.quiet == False: print("PING %s (%s)"%(self.host, self.addr))
 		except:
@@ -195,7 +186,7 @@ class Ping:
 				else:
 					socks, _, _ = uselect.select([self.sock], [], [], timeout)
 					if self.receive(seq, socks):
-						utime.sleep(timeout)
+						time.sleep(timeout)
 			self.showResult()
 		else:
 			result = None

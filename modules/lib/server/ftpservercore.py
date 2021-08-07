@@ -188,7 +188,7 @@ class FtpServerCore:
 	async def PASS(self):
 		""" Ftp command PASS """
 		self.password = self.path[1:]
-		if User.check(self.user, self.password):
+		if User.check(self.user, self.password, False):
 			await self.sendResponse(230, b"Logged in.")
 		else:
 			await self.sendResponse(430, b"Invalid username or password")

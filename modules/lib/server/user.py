@@ -34,22 +34,25 @@ class User:
 		return result
 
 	@staticmethod
-	def check(user, password):
+	def check(user, password, log=True):
 		""" Check the user and password """
 		User.init()
 		if User.instance.user == b"":
 			return True
 		elif user == User.instance.user:
 			if useful.getHash(password) == User.instance.password:
-				User.loginState[0] = True
+				if log == True:
+					User.loginState[0] = True
 				return True
 			else:
-				User.loginState[0] = False
-				useful.logError("Login failed, wrong password for user '%s'"%useful.tostrings(user))
+				if log == True:
+					User.loginState[0] = False
+					useful.logError("Login failed, wrong password for user '%s'"%useful.tostrings(user))
 		else:
 			if user != b"":
-				User.loginState[0] = False
-				useful.logError("Login failed, unkwnon user '%s'"%useful.tostrings(user))
+				if log == True:
+					User.loginState[0] = False
+					useful.logError("Login failed, unkwnon user '%s'"%useful.tostrings(user))
 		return False
 
 	@staticmethod

@@ -141,7 +141,7 @@ else:
 
 
 try:
-	from utime import ticks_ms
+	from time import ticks_ms
 	def ticks():
 		return ticks_ms()
 except:

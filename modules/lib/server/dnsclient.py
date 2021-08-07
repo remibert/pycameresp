@@ -1,18 +1,10 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 # DNS spec https://www2.cs.duke.edu/courses/fall16/compsci356/DNS/DNS-primer.pdf
-try:
-	# Micropython import
-	import ustruct
-	import urandom
-	import usocket
-	import ure
-except:
-	# Python3 import
-	import socket as usocket
-	import struct as ustruct
-	import random as urandom
-	import re     as ure
+import struct
+import random
+import socket
+import re
 
 class DnsHeader:
 	""" DNS packet header """
@@ -28,12 +20,12 @@ class DnsHeader:
 
 	def serialize(self):
 		""" Serialize DNS header """
-		return ustruct.pack(self.format, self.ident, self.flag, self.query, self.answer, self.autority, self.additional)
+		return struct.pack(self.format, self.ident, self.flag, self.query, self.answer, self.autority, self.additional)
 
 	def unserialize(self, data):
 		""" Unserialize DNS header """
-		length = ustruct.calcsize(self.format)
-		self.ident, self.flag, self.query, self.answer, self.autority, self.additional = ustruct.unpack(self.format, data[:length])
+		length = struct.calcsize(self.format)
+		self.ident, self.flag, self.query, self.answer, self.autority, self.additional = struct.unpack(self.format, data[:length])
 		return length
 
 	def __repr__(self):
@@ -90,15 +82,15 @@ class DnsQuery:
 		""" Serialize query """
 		data = self.header.serialize()
 		data += self.header.encodeName(self.name).encode("latin-1") 
-		data += ustruct.pack(self.format,self.qtype, self.qclass)
+		data += struct.pack(self.format,self.qtype, self.qclass)
 		return data
 		
 	def unserialize(self, data):
 		""" Unserialize query """
 		pos = self.header.unserialize(data)
 		self.name, pos = self.header.decodeName(data, pos)
-		self.qtype, self.qclass = ustruct.unpack(self.format, data[pos:pos+ustruct.calcsize(self.format)])
-		return pos + ustruct.calcsize(self.format)
+		self.qtype, self.qclass = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
+		return pos + struct.calcsize(self.format)
 
 	def __repr__(self):
 		""" Display result """
@@ -120,8 +112,8 @@ class DnsAnswer:
 	def unserialize(self, data):
 		""" Unserialize answer """
 		pos = self.query.unserialize(data)
-		self.info, self.atype, self.aclass, self.timetolive, self.length = ustruct.unpack(self.format, data[pos:pos+ustruct.calcsize(self.format)])
-		pos += ustruct.calcsize(self.format)
+		self.info, self.atype, self.aclass, self.timetolive, self.length = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
+		pos += struct.calcsize(self.format)
 		if self.atype == 1:
 			self.name = "%d.%d.%d.%d"%(data[pos],data[pos+1],data[pos+2],data[pos+3])
 		else:
@@ -134,7 +126,7 @@ class DnsAnswer:
 def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
 	""" Exchange DNS query and wait answer """
 	result = None
-	sock = usocket.socket(usocket.AF_INET, usocket.SOCK_DGRAM)
+	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	try:
 		sock.settimeout(1)
 		query = dnsQuery.serialize()
@@ -153,11 +145,11 @@ def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
 
 def getHostname(dnsIp, ipAddress):
 	""" Get hostname with ip address """
-	return dnsExchange(dnsIp, DnsQuery(DnsHeader(urandom.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())
+	return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())
 
 def getIpAddress(dnsIp, hostname):
 	""" Get ip address with hostname """
-	return dnsExchange(dnsIp, DnsQuery(DnsHeader(urandom.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())
+	return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())
 
 def splitIpAddress(url):
 	""" Split ip address """
@@ -169,7 +161,7 @@ def splitIpAddress(url):
 def isIpAddress(url):
 	""" Indicates if the url is an ip address """
 	# Ip address detected
-	if ure.match(r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)", url):
+	if re.match(r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)", url):
 		return True
 	return False
 

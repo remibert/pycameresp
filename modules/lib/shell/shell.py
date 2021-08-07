@@ -39,6 +39,7 @@ import machine
 try:
 	from tools import useful
 except:
+	# pylint: disable=unresolved-import
 	import useful
 
 try:
@@ -383,6 +384,7 @@ def edit(file):
 		try:
 			from shell.editor import Editor
 		except:
+			# pylint: disable=unresolved-import
 			from editor import Editor
 		editClass = Editor
 	editClass(file)

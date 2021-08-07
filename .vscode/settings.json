@@ -57,5 +57,6 @@
 		"--disable=wildcard-import",
 		"--disable=global-statement",
 		"--disable=eval-used",
-		"--disable=exec-used"]
+		"--disable=exec-used"],
+	"python.linting.pylintPath": "./modules/simul"
 }

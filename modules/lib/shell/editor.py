@@ -34,6 +34,7 @@ sys.path.append("lib/tools")
 try:
 	from tools import useful
 except:
+	# pylint: disable=unresolved-import
 	import useful
 
 TABSIZE = 4          # Tabulation size
