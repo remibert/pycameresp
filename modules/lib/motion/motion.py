@@ -113,14 +113,21 @@ class ImageMotion:
 		}
 		</script>
 		<canvas id="motion" width="%d" height="%d"></canvas>"""
-		shapes = b""
-		for shape in self.comparison["shapes"]:
-			shapes += b"				ctx.strokeRect(%d, %d, %d, %d);\n"%(shape["x"]+1,shape["y"]+1,shape["width"]-2,shape["height"]-2)
-		return html%(useful.tobytes(self.getFilename()), shapes, self.comparison["geometry"]["width"], self.comparison["geometry"]["height"])
+		result =b""
+		if self.comparison is not None:
+			shapes = b""
+			if "shapes" in self.comparison:
+				for shape in self.comparison["shapes"]:
+					shapes += b"				ctx.strokeRect(%d, %d, %d, %d);\n"%(shape["x"]+1,shape["y"]+1,shape["width"]-2,shape["height"]-2)
+			result = html%(useful.tobytes(self.getFilename()), shapes, self.comparison["geometry"]["width"], self.comparison["geometry"]["height"])
+		return result
 
 	def getInformations(self):
 		""" Return the informations of motion """
-		result    = self.comparison.copy()
+		if self.comparison != None:
+			result    = self.comparison.copy()
+		else:
+			result = {}
 		result["image"]    = self.getFilename() + ".jpg"
 		result["path"]     = self.path
 		result["index"]    = self.index

@@ -19,7 +19,8 @@ async def battery(request, response, args):
 				CardBody([
 					Switch(text=b"Activated",              name=b"wakeUp", checked=config.wakeUp, disabled=disabled),Br(),
 					Edit(text=b"GPIO used to wake up",      name=b"wakeUpGpio", placeholder=b"GPIO connected to passive infrared sensor (PIR)", pattern=b"[0-9]*[0-9]", value=b"%d"%config.wakeUpGpio,   disabled=disabled),
-					Edit(text=b"Automatic sleep after a duration in second",  name=b"awakeTime",  placeholder=b"Time in seconds it stays awake when on battery power", pattern=b"[0-9]*[0-9]", value=b"%d"%config.awakeTime, disabled=disabled),
+					Edit(text=b"Awake duration in seconds",  name=b"awakeDuration",  placeholder=b"Duration in seconds it stays awake", pattern=b"[0-9]*[0-9]", value=b"%d"%config.awakeDuration, disabled=disabled),
+					Edit(text=b"Sleep duration in seconds",  name=b"sleepDuration",  placeholder=b"Duration in seconds to sleep", pattern=b"[0-9]*[0-9]", value=b"%d"%config.sleepDuration, disabled=disabled),
 				])
 			]),Br(),
 		Card(

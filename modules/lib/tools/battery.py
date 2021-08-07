@@ -24,7 +24,8 @@ class BatteryConfig(jsonconfig.JsonConfig):
 		# GPIO wake up
 		self.wakeUp = False  # Wake up on GPIO status
 		self.wakeUpGpio = 13 # Wake up GPIO number
-		self.awakeTime = 120 # Awake time on battery (seconds)
+		self.awakeDuration = 120 # Awake duration in seconds
+		self.sleepDuration = 3600*24*365 # Sleep duration in seconds
 
 		# Force deep sleep if to many successive brown out reset detected
 		self.brownoutDetection = True
@@ -77,7 +78,7 @@ class Battery:
 					level = int(level)
 				useful.logError("Battery level %d %% (%d)"%(level, int(val/count)))
 			except Exception as err:
-				useful.logError("Cannot read battery status",err)
+				useful.exception(err,"Cannot read battery status")
 			Battery.level[0] = level
 		return Battery.level[0]
 
@@ -109,7 +110,7 @@ class Battery:
 			esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
 			return True
 		except Exception as err:
-			useful.logError("Cannot set wake up",err)
+			useful.exception(err,"Cannot set wake up")
 		return False
 
 	@staticmethod
@@ -202,7 +203,7 @@ class Battery:
 	def keepAwake():
 		""" Keep awake  """
 		if Battery.config.wakeUp:
-			Battery.awakeCounter[0] = Battery.config.awakeTime
+			Battery.awakeCounter[0] = Battery.config.awakeDuration
 
 	@staticmethod
 	def manageAwake():
@@ -210,7 +211,7 @@ class Battery:
 		if Battery.config.wakeUp:
 			Battery.awakeCounter[0] -= 1
 			if Battery.awakeCounter[0] < 0:
-				useful.logError("Sleeping")
+				useful.logError("Sleep %d s"%Battery.config.sleepDuration)
 				# Set the wake up on PIR detection
 				Battery.setPinWakeUp()
-				machine.deepsleep()
+				machine.deepsleep(Battery.config.sleepDuration)

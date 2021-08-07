@@ -17,7 +17,7 @@ class ServerConfig(jsonconfig.JsonConfig):
 		self.dst = True
 		self.currentTime = 0
 		self.notify = True
-		self.serverPostponed = 10
+		self.serverPostponed = 20
 
 class ServerContext:
 	""" Context to initialize the servers """

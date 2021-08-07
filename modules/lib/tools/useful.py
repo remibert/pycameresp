@@ -128,7 +128,7 @@ else:
 			try:
 				inp, outp, err = select.select([sys.stdin], [], [], duration)
 			except Exception as err:
-				print(exception(err))
+				exception(err)
 			result = callback(inp)
 		finally:
 			# Reset the terminal:
@@ -816,7 +816,6 @@ class SdCard:
 				file.close()
 				result = True
 			except Exception as err:
-				# print(exception(err))
 				logError("Cannot save %s"%filename)
 		return result
 

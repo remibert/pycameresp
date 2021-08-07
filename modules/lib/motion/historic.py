@@ -64,12 +64,14 @@ class Historic:
 	@staticmethod
 	def addItem(filename, info):
 		name = useful.splitext(filename)[0] + ".jpg"
-		
 		shapes = []
-		for shape in info["shapes"]:
-			shapes.append([shape["size"],shape["x"],shape["y"],shape["width"],shape["height"]])
-		# Add json file to the historic
-		Historic.historic.insert(0,[name, info["geometry"]["width"],info["geometry"]["height"], shapes])
+		if "shapes" in info:
+			for shape in info["shapes"]:
+				shapes.append([shape["size"],shape["x"],shape["y"],shape["width"],shape["height"]])
+
+		if "geometry" in info:
+			# Add json file to the historic
+			Historic.historic.insert(0,[name, info["geometry"]["width"],info["geometry"]["height"], shapes])
 
 	@staticmethod
 	async def build(motions):
