@@ -17,7 +17,7 @@ class ServerConfig(jsonconfig.JsonConfig):
 		self.dst = True
 		self.currentTime = 0
 		self.notify = True
-		self.serverPostponed = 20
+		self.serverPostponed = 10
 
 class ServerContext:
 	""" Context to initialize the servers """
@@ -104,7 +104,6 @@ class Server:
 		preload : True force the load of page at the start, 
 		False the load of page is done a the first http connection (Takes time on first connection) """
 		Server.context = ServerContext(loop, pageLoader, preload, withoutServer, httpPort)
-		useful.logError("%s Start %s"%('-'*10,'-'*10), display=False)
 		useful.logError(useful.sysinfo(display=False))
 
 		from server.periodic import periodicTask
@@ -113,29 +112,40 @@ class Server:
 	@staticmethod
 	async def synchronizeTime():
 		""" Synchronize time """
-		result = False
+		# If ntp synchronization enabled
 		if Server.context.config.ntp:
+			# If the wan is present
 			if Server.isWanConnected():
+				# If synchronisation not yet done
 				if Server.context.setDate == None:
 					from server.timesetting import setDate
 					Server.context.setDate = setDate
+
+				# Try many time
 				for i in range(3):
+					# Keep old date
 					oldTime = time.time()
+
+					# Read date from ntp server
 					currentTime = Server.context.setDate(Server.context.config.offsettime, dst=Server.context.config.dst, display=False)
+
+					# If date get
 					if currentTime > 0:
-						result = True
+						# Save new date
 						Server.context.config.currentTime = int(currentTime)
 						Server.context.config.save()
 
 						from tools.battery import Battery
+						# Wan echange is a success enough power to work, clear brownout reset
 						Battery.clearBrownout()
 
+						# If clock changed
 						if abs(oldTime - currentTime) > 0:
+							# Log difference
 							useful.logError("Time synchronized delta=%ds"%(currentTime-oldTime))
 						break
 					else:
 						await uasyncio.sleep(1)
-		return result
 
 	@staticmethod
 	async def connectNetwork():

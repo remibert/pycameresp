@@ -211,7 +211,7 @@ class Historic:
 		Historic.motionInProgress[0] = state
 
 	@staticmethod
-	async def __removeFiles(directory, simulate=False):
+	async def removeFiles(directory, simulate=False):
 		""" Remove all files in the directory """
 		import shell
 		notEmpty = False
@@ -226,7 +226,7 @@ class Historic:
 				if typ & 0xF000 != 0x4000:
 					shell.rmfile(directory + "/" + filename, simulate=simulate, force=force)
 				else:
-					await Historic.__removeFiles(directory + "/" + filename)
+					await Historic.removeFiles(directory + "/" + filename)
 					notEmpty = True
 			
 			if notEmpty:
@@ -237,12 +237,12 @@ class Historic:
 			print("Directory not existing '%s'"%directory)
 
 	@staticmethod
-	async def removeOlder():
+	async def removeOlder(force=False):
 		""" Remove older files to make space """
 		root = await Historic.getRoot()
 		if root:
 			# If not enough space available on sdcard
-			if useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5:
+			if (useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5) or force:
 				useful.logError("Start cleanup sd card")
 				olders = await Historic.scanDirectories(MAX_REMOVED, True)
 				previous = ""
@@ -251,7 +251,7 @@ class Historic:
 						await Historic.acquire()
 						directory = useful.split(motion)[0]
 						if previous != directory:
-							await Historic.__removeFiles(directory)
+							await Historic.removeFiles(directory)
 							previous = directory
 					except Exception as err:
 						useful.exception(err)
@@ -279,3 +279,9 @@ class Historic:
 	async def periodicTask():
 		""" Execute periodic traitment """
 		await useful.taskMonitoring(Historic.periodic)
+
+	@staticmethod
+	async def test():
+		""" Test historic """
+		await Historic.extract()
+		await Historic.removeOlder(True)

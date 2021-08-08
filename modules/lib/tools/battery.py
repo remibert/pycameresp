@@ -3,11 +3,8 @@
 """ Manage the battery """
 from tools import jsonconfig
 from tools import useful
-
-try: import machine
-except: pass
-try:import esp32
-except:pass
+import machine
+import esp32
 
 class BatteryConfig(jsonconfig.JsonConfig):
 	""" Battery configuration """
@@ -30,7 +27,6 @@ class BatteryConfig(jsonconfig.JsonConfig):
 		# Force deep sleep if to many successive brown out reset detected
 		self.brownoutDetection = True
 		self.brownoutCount = 0
-
 
 class Battery:
 	""" Manage the battery information """
@@ -169,6 +165,8 @@ class Battery:
 			machine.SOFT_RESET      : "Soft",
 			machine.BROWNOUT_RESET  : "Brownout",
 		}.setdefault(machine.reset_cause(), "%d"%machine.reset_cause())
+		useful.logError(" ")
+		useful.logError("%s Start %s"%('-'*10,'-'*10), display=False)
 		useful.logError("%s reset"%causes)
 
 	@staticmethod

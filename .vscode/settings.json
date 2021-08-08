@@ -30,16 +30,14 @@
 	},
 	"C_Cpp.dimInactiveRegions": false,
 	"python.linting.enabled": true,
-	"python.linting.pylintUseMinimalCheckers": false, 
+	"python.linting.pylintEnabled": true,
 	"python.autoComplete.extraPaths": [
+		"./modules",
 		"./modules/lib",
 		"./modules/simul",
 		"./modules/lib/tools",
 		"./modules/lib/shell"
 	],
-	"python.pythonPath": "./modules/lib;./modules/simul;./modules/lib/tools;./modules/lib/shell",
-	"python.linting.pylintEnabled": true,
-	"python.linting.pylintCategorySeverity.convention": "Information",
 	"python.linting.pylintArgs": [
 		"--disable=C",
 		"--disable=R",
@@ -58,5 +56,6 @@
 		"--disable=global-statement",
 		"--disable=eval-used",
 		"--disable=exec-used"],
-	"python.linting.pylintPath": "./modules/simul"
+	"python.envFile": "${workspaceFolder}/.env",
+	"python.linting.pylintUseMinimalCheckers":false,
 }

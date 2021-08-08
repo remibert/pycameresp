@@ -50,7 +50,7 @@ class Notifier:
 
 	@staticmethod
 	async def flush():
-		""" Flush postponed message if wifi connected """
+		""" Flush postponed message if wan connected """
 		if Station.isActive():
 			for notification in Notifier.postponed:
 				message, image, forced, display = notification

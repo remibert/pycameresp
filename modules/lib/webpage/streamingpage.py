@@ -9,8 +9,6 @@ from tools import useful
 from video import Camera
 import uasyncio
 
-INACTIVITY=60*10*1000
-
 class Streaming:
 	""" Management class of video streaming of the camera via an html page """
 	streamingId = [0]
@@ -71,7 +69,7 @@ class Streaming:
 		if Streaming.inactivity[0]:
 			Streaming.inactivity[0].stop()
 			Streaming.inactivity[0] = None
-		Streaming.inactivity[0] = useful.Inactivity(Streaming.inactivityTimeout, duration=useful.LONG_DURATION, timerId=1)
+		Streaming.inactivity[0] = useful.Inactivity(Streaming.inactivityTimeout, duration=useful.LONG_WATCH_DOG, timerId=1)
 
 	@staticmethod
 	def getStreamingId():

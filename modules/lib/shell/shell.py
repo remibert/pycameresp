@@ -592,7 +592,7 @@ def shell():
 			print("")
 			break
 		except KeyboardInterrupt:
-			print("Ctr-C detected, use 'exit' to restart server, 'quit' to get python prompt")
+			print("Ctr-C detected, use 'exit' to restart server or 'quit' to get python prompt")
 
 		if commandLine.strip() == "quit":
 			raise KeyboardInterrupt()
@@ -604,7 +604,7 @@ async def asyncShell():
 	from server.server import Server
 
 	if useful.ismicropython():
-		polling1 = 1
+		polling1 = 2
 		polling2 = 0.01
 	else:
 		polling1 = 0.1
@@ -613,22 +613,35 @@ async def asyncShell():
 		# If key pressed
 		if useful.kbhit(polling2):
 			character = useful.getch()[0]
+
+			# Check if character is correct to start shell
 			if not ord(character) in [0,0xA]:
+				# Ask to suspend server during shell
 				Server.suspend()
+
+				# Wait all server suspended
 				await Server.waitAllSuspended()
-				useful.WatchDog.start(useful.LONG_DURATION*2)
+
+				# Extend watch dog duration
+				useful.WatchDog.start(useful.LONG_WATCH_DOG*2)
+
+				# Get the size of screen
 				useful.refreshScreenSize()
-				
+
+				# Start shell
 				print("")
 				useful.logError("<"*10+" Enter shell " +">"*10)
-				# Start shell
 				shell()
 				print("")
 				useful.logError("<"*10+" Exit  shell " +">"*10)
+
+				# Restore default path
 				uos.chdir("/")
 
-				useful.WatchDog.start(useful.SHORT_DURATION)
+				# Resume watch dog duration
+				useful.WatchDog.start(useful.SHORT_WATCH_DOG)
 
+				# Resume server
 				Server.resume()
 		else:
 			await uasyncio.sleep(polling1)

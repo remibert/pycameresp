@@ -18,8 +18,8 @@ except:
 	pass
 from binascii import hexlify
 
-LONG_DURATION=15*60*1000
-SHORT_DURATION=1*60*1000
+LONG_WATCH_DOG=15*60*1000
+SHORT_WATCH_DOG=5*60*1000
 
 def ismicropython():
 	""" Indicates if the python is micropython """
@@ -865,7 +865,7 @@ class WatchDog:
 	""" Watch dog timer """
 	watchdog = None
 	@staticmethod
-	def start(timeout=LONG_DURATION):
+	def start(timeout=LONG_WATCH_DOG):
 		""" Start watch dog """
 		WatchDog.watchdog  = machine.WDT(0, timeout)
 
@@ -877,7 +877,7 @@ class WatchDog:
 
 class Inactivity:
 	""" Class to manage inactivity timer """
-	def __init__(self, callback, duration=LONG_DURATION, timerId=-1):
+	def __init__(self, callback, duration=LONG_WATCH_DOG, timerId=-1):
 		""" Inactivity timer constructor """
 		self.timer = machine.Timer(timerId)
 		self.duration = duration

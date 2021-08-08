@@ -24,7 +24,7 @@ class Periodic:
 		self.getLoginState = None
 		self.station = None
 		self.serverPostponed = None
-		useful.WatchDog.start(useful.SHORT_DURATION)
+		useful.WatchDog.start(useful.SHORT_WATCH_DOG)
 
 	def isOnePerDay(self):
 		""" Indicates if the action must be done on per day """
@@ -37,34 +37,50 @@ class Periodic:
 	async def synchronizeWanIp(self, forced):
 		""" Synchronize wan ip """
 		if Server.isWanConnected():
+			# Wan ip not yet get
 			if self.getWanIpAsync is None:
 				from server.wanip import getWanIpAsync
 				self.getWanIpAsync = getWanIpAsync
+
+			# Station not yet interrogated
 			if self.station is None:
 				from wifi.station import Station
 				self.station = Station
+
+			# Get wan ip 
 			try:
-				newWanIp = None
 				newWanIp = await self.getWanIpAsync()
 			except Exception as err:
-				useful.logError("Cannot get wan ip", err)
+				newWanIp = None
+				useful.exception(err, "Cannot get wan ip")
+
+			# If wan ip get
 			if newWanIp is not None:
 				from tools.battery import Battery
+
+				# Wan echange is a success enough power to work, clear brownout reset
 				Battery.clearBrownout()
-				if self.wanIp != newWanIp or forced:
-					if self.serverConfig.notify:
+
+				# If wan ip must be notified
+				if (self.wanIp != newWanIp or forced) and self.serverConfig.notify:
 						await Notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(self.station.getInfo()[0],newWanIp, useful.uptime()))
 				self.wanIp = newWanIp
 
 	async def checkLogin(self):
 		""" Inform that login detected """
+		# Login state not yet get
 		if self.getLoginState is None:
 			from server.user import User
 			self.getLoginState = User.getLoginState
+
+		# Get login state
 		login =  self.getLoginState()
+
+		# If login detected
 		if login is not None:
-			message = "Login %s detected"%("success" if login else "failed")
+			# If notification must be send
 			if self.serverConfig.notify:
+				message = "Login %s detected"%("success" if login else "failed")
 				await Notifier.notify(message, display=False)
 
 	async def manageNetwork(self, pollingId):
@@ -93,7 +109,7 @@ class Periodic:
 		""" Periodic task method """
 		self.serverPostponed = self.serverConfig.serverPostponed
 		pollingId = 0
-		useful.WatchDog.start(useful.SHORT_DURATION)
+		useful.WatchDog.start(useful.SHORT_WATCH_DOG)
 		while True:
 			if self.serverConfig.isChanged():
 				self.serverConfig.load()
