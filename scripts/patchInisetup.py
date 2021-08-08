@@ -2,7 +2,6 @@
 filesToAdd = [
 	("","modules/main.py"),
 	("","modules/welcome.py"),
-	("","modules/sample.py"),
 ]
 
 if __name__ == "__main__":
@@ -36,3 +35,6 @@ if __name__ == "__main__":
 
 	inisetup = open("patch/python/micropython/ports/esp32/modules/inisetup.py","r").read()
 	open(root + "/micropython/ports/esp32/modules/inisetup.py","w").write(inisetup%patchIni)
+	import time
+	year,month,day,hour,minute,second,weekday,yearday = time.localtime()[:8]
+	open("modules/lib/tools/info.py","w").write("build='%04d/%02d/%02d  %02d:%02d:%02d'\n"%(year,month,day,hour,minute,second))

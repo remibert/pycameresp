@@ -1,6 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-from tools import jsonconfig,useful
+from tools import jsonconfig,useful,info
 import wifi
 import uasyncio
 import time
@@ -105,6 +105,7 @@ class Server:
 		False the load of page is done a the first http connection (Takes time on first connection) """
 		Server.context = ServerContext(loop, pageLoader, preload, withoutServer, httpPort)
 		useful.logError(useful.sysinfo(display=False))
+		useful.logError("PyCam build '%s'"%info.build)
 
 		from server.periodic import periodicTask
 		loop.create_task(periodicTask())

@@ -15,8 +15,8 @@ class BatteryConfig(jsonconfig.JsonConfig):
 		# Battery monitoring
 		self.monitoring = False # Monitoring status
 		self.levelGpio    = 12  # Monitoring GPIO
-		self.fullBattery  = 191 # 4.2V mesured with resistor 100k + 47k
-		self.emptyBattery = 161 # 3.6V mesured with resistor 100k + 47k
+		self.fullBattery  = 188 # 4.2V mesured with resistor 100k + 47k
+		self.emptyBattery = 158 # 3.6V mesured with resistor 100k + 47k
 
 		# GPIO wake up
 		self.wakeUp = False  # Wake up on GPIO status
@@ -65,13 +65,18 @@ class Battery:
 				val = 0
 				for i in range(count):
 					val += adc.read()
-				level = Battery.calcPercent(val/count, Battery.config)
-				if level < 0.:
-					level = 0
-				elif level > 100.:
-					level = 100
+				# If battery level pin not connected
+				if val < (Battery.config.emptyBattery * count) // 2:
+					level = -1
 				else:
-					level = int(level)
+					# Compute battery level
+					level = Battery.calcPercent(val/count, Battery.config)
+					if level < 0.:
+						level = 0
+					elif level > 100.:
+						level = 100
+					else:
+						level = int(level)
 				useful.logError("Battery level %d %% (%d)"%(level, int(val/count)))
 			except Exception as err:
 				useful.exception(err,"Cannot read battery status")
@@ -128,6 +133,7 @@ class Battery:
 		Battery.init()
 		Battery.keepResetCause()
 		if Battery.manageLevel() or Battery.manageBrownout():
+			useful.logError("Sleep infinite")
 			machine.deepsleep()
 
 	@staticmethod
@@ -140,10 +146,7 @@ class Battery:
 			batteryLevel = Battery.getLevel()
 
 			# If the battery is too low
-			if batteryLevel > 5:
-				batteryProtect = False
-			# If the battery level can't be read
-			elif batteryLevel <= 0:
+			if batteryLevel > 5 or batteryLevel < 0:
 				batteryProtect = False
 			else:
 				batteryProtect = True
