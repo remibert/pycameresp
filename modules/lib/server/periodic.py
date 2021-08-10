@@ -48,11 +48,7 @@ class Periodic:
 				self.station = Station
 
 			# Get wan ip 
-			try:
-				newWanIp = await self.getWanIpAsync()
-			except Exception as err:
-				newWanIp = None
-				useful.exception(err, "Cannot get wan ip")
+			newWanIp = await self.getWanIpAsync()
 
 			# If wan ip get
 			if newWanIp is not None:
@@ -65,6 +61,8 @@ class Periodic:
 				if (self.wanIp != newWanIp or forced) and self.serverConfig.notify:
 						await Notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(self.station.getInfo()[0],newWanIp, useful.uptime()))
 				self.wanIp = newWanIp
+			else:
+				useful.logError("Cannot get wan ip")
 
 	async def checkLogin(self):
 		""" Inform that login detected """
@@ -119,3 +117,5 @@ class Periodic:
 			battery.Battery.manageAwake()
 			pollingId += 1
 			useful.WatchDog.feed()
+			if pollingId % 600 == 0:
+				useful.logError("-")

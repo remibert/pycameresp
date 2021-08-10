@@ -93,7 +93,7 @@ class Motion:
 	sizeBase = [10*1024]
 	sizeDirection = [1]
 	""" Class motion detection returned by the detect function """
-	def __init__(self, motion):
+	def __init__(self, motion_):
 		self.size = self.sizeBase[0]
 		if self.sizeDirection[0] == 1:
 			self.sizeBase[0] += 1024

@@ -56,5 +56,10 @@ if useful.iscamera():
 from shell.shell import asyncShell
 loop.create_task(asyncShell())
 
-# Run asyncio for ever
-loop.run_forever()
+try:
+	# Run asyncio for ever
+	loop.run_forever()
+except Exception as err:
+	useful.exception(err)
+finally:
+	useful.reboot("Crash in main")

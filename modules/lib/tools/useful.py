@@ -810,6 +810,7 @@ class SdCard:
 		result = False
 		if SdCard.isMounted():
 			filename = "%s/%s"%(SdCard.getMountpoint(),filename)
+			file = None
 			try:
 				file = open(filename,"wb")
 				file.write(data)
@@ -817,6 +818,9 @@ class SdCard:
 				result = True
 			except Exception as err:
 				logError("Cannot save %s"%filename)
+			finally:
+				if file is not None:
+					file.close()
 		return result
 
 def remove(filename):

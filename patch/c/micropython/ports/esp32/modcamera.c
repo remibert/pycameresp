@@ -155,15 +155,12 @@ typedef struct
 	uint16_t       *lights;
 
 	uint16_t       *diffs;
-
 	uint16_t       *stack;
 
 #define MAX_HISTO 16
 	uint16_t histo[MAX_HISTO];
 
 	uint16_t       stackpos;
-
-	
 } Motion_t;
 const mp_obj_type_t Motion_type;
 
@@ -873,6 +870,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 		pOtherLights ++;
 	}
 
+	char * diffs = (char*)_malloc(sizeof(char) * self->diffMax + 1);
 	if (motionConfiguration.mask_length > 0 && motionConfiguration.mask_length == self->diffMax)
 	{
 		int ignored = 0;
@@ -880,20 +878,45 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 		pDiffs         = self->diffs;
 		for (i = 0; i < self->diffMax; i++)
 		{
-			if (*pMask == '/')
+			if (*pDiffs)
 			{
-				if (*pDiffs)
+				if (*pMask == '/')
 				{
+					diffs[i] = ' ';
 					diffDetected --;
 					ignored ++;
 					*pDiffs = 0;
 					// ESP_LOGE(TAG,"ignored = %d %c %d", i, *pMask, diffDetected);
 				}
+				else
+				{
+					diffs[i] = '#';
+				}
+			}
+			else
+			{
+				diffs[i] = ' ';
 			}
 			pDiffs++;
 			pMask++;
 		}
 		//ESP_LOGE(TAG,"ignored=%d diff=%d",  ignored, diffDetected);
+	}
+	else
+	{
+		pDiffs         = self->diffs;
+		for (i = 0; i < self->diffMax; i++)
+		{
+			if (*pDiffs)
+			{
+				diffs[i] = '#';
+			}
+			else
+			{
+				diffs[i] = ' ';
+			}
+			pDiffs++;
+		}
 	}
 
 	mp_obj_t diffdict = mp_obj_new_dict(0);
@@ -904,7 +927,9 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 		mp_obj_dict_store(diffdict, mp_obj_new_str("width"     , strlen("width"))     ,  mp_obj_new_int(self->diffWidth));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("height"    , strlen("height"))    ,  mp_obj_new_int(self->diffHeight));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("histo"     , strlen("histo"))     ,  mp_obj_new_int(diffHisto));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("diffs"     , strlen("diffs"))     ,  mp_obj_new_str(diffs     , self->diffMax));
 	mp_obj_dict_store(result, mp_obj_new_str("diff"     , strlen("diff")), diffdict);
+	_free((void**)&diffs);
 	return diffDetected;
 }
 

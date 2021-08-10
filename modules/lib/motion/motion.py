@@ -60,7 +60,12 @@ class ImageMotion:
 		self.motionId = None
 		self.date     = useful.dateToString()
 		self.filename = useful.dateToFilename()
-		self.path     = useful.dateToPath()[:-1] + b"0"
+		path = useful.dateToPath()[:-1]
+		if path[-1] in [0x30,0x31,0x32]:
+			path = path[:-1] + b"00"
+		else:
+			path = path[:-1] + b"30"
+		self.path     = path
 		self.motionDetected = False
 		self.config = config
 		self.comparison = None
@@ -137,6 +142,12 @@ class ImageMotion:
 
 	async def save(self):
 		""" Save the image on sd card """
+		# if self.getDifferences() != "":
+		# 	width = self.comparison["diff"]["width"]
+		# 	height = self.comparison["diff"]["height"]
+		# 	diffs  = self.comparison["diff"]["diffs"]
+		# 	for line in range(height):
+		# 		print(diffs[line*width:line*width+width])
 		return await Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations(), self.getHtmlShapes())
 
 	def compare(self, previous, extractShape=True):
@@ -172,6 +183,12 @@ class ImageMotion:
 		if self.comparison:
 			return self.comparison["diff"]["histo"]
 		return 0
+
+	def getDifferences(self):
+		""" Get the differences """
+		if self.comparison:
+			return self.comparison["diff"]["diffs"]
+		return ""
 
 	def resetDifferences(self):
 		""" Reset the differences, used during the camera stabilization image """

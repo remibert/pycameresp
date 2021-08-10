@@ -38,8 +38,10 @@ class Notification:
 		""" Send a push over notication message, and if image is added it must be a jpeg buffer.
 		message : the message of notification (bytes field not a string)
 		image : the jpeg image or nothing (bytes field)"""
+		result = False
 		if wifi.Station.isActive():
 			try:
+				streamio = None
 				# Open pushover connection
 				reader,writer = await uasyncio.open_connection(useful.tostrings(self.host), self.port)
 				streamio = Stream(reader, writer)
@@ -84,13 +86,15 @@ class Notification:
 					useful.logError("Notification failed to sent", display=display)
 
 				# Close all connection with push over server
-				writer.close()
-				await writer.wait_closed()
-				
+				result = True
 			except Exception as err:
 				useful.exception(err)
+			finally:
+				if streamio:
+					await streamio.close()
 		else:
 			useful.logError("Notification not sent : wifi not connected", display=display)
+		return result
 
 async def asyncNotify(user, token, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
