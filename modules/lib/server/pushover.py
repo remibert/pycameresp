@@ -99,7 +99,7 @@ class Notification:
 async def asyncNotify(user, token, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
 	notification = Notification(host=b"api.pushover.net", port=80, token=token, user=user)
-	await notification.notify(b"%s : %s"%(wifi.Station.getHostname(), message), image, display)
+	return await notification.notify(b"%s : %s"%(wifi.Station.getHostname(), message), image, display)
 
 def notify(user, token, message, image=None):
 	""" Notification function """
@@ -111,5 +111,9 @@ async def notifyMessage(message, image = None, forced=False, display=True):
 	config = PushOverConfig()
 	if config.load() == False:
 		config.save()
+	
 	if config.activated or forced:
-		await asyncNotify(config.user, config.token, message, image, display=True)
+		result = await asyncNotify(config.user, config.token, message, image, display=True)
+	else:
+		result = True
+	return result

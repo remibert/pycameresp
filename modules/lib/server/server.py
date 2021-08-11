@@ -31,8 +31,14 @@ class ServerContext:
 		self.wifiStarted   = False
 		self.wanConnected  = False
 		self.serverStarted = False
+		self.notifier      = None
+		self.station = None
+		self.getWanIpAsync = None
+		self.wanIp = None
+		self.networkFault = 0
 		self.config        = ServerConfig()
 		self.setDate = None
+		
 		if self.config.load() == False:
 			self.config.save()
 		setTime(self.config.currentTime)
@@ -114,6 +120,40 @@ class Server:
 		loop.create_task(periodicTask())
 
 	@staticmethod
+	async def synchronizeWanIp(forced):
+		""" Synchronize wan ip """
+		if Server.isWanConnected():
+			# Wan ip not yet get
+			if Server.context.getWanIpAsync is None:
+				from server.wanip import getWanIpAsync
+				Server.context.getWanIpAsync = getWanIpAsync
+
+			# Station not yet interrogated
+			if Server.context.station is None:
+				from wifi.station import Station
+				Server.context.station = Station
+
+			# Get wan ip 
+			newWanIp = await Server.context.getWanIpAsync()
+
+			# If wan ip get
+			if newWanIp is not None:
+				from tools.battery import Battery
+
+				# Wan echange is a success enough power to work, clear brownout reset
+				Battery.clearBrownout()
+
+				# If wan ip must be notified
+				if (Server.context.wanIp != newWanIp or forced) and Server.context.config.notify:
+					await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(Server.context.station.getInfo()[0],newWanIp, useful.uptime()))
+				Server.context.wanIp = newWanIp
+				Server.context.networkFault = 0
+			else:
+				useful.logError("Cannot get wan ip")
+				Server.context.networkFault += 1
+
+
+	@staticmethod
 	async def synchronizeTime():
 		""" Synchronize time """
 		# If ntp synchronization enabled
@@ -125,6 +165,7 @@ class Server:
 					from server.timesetting import setDate
 					Server.context.setDate = setDate
 
+				updated = False
 				# Try many time
 				for i in range(3):
 					# Keep old date
@@ -144,12 +185,17 @@ class Server:
 						Battery.clearBrownout()
 
 						# If clock changed
-						if abs(oldTime - currentTime) > 0:
+						if abs(oldTime - currentTime) > 1:
 							# Log difference
 							useful.logError("Time synchronized delta=%ds"%(currentTime-oldTime))
+						updated = True
 						break
 					else:
 						await uasyncio.sleep(1)
+				if updated:
+					Server.context.networkFault = 0
+				else:
+					Server.context.networkFault += 1
 
 	@staticmethod
 	async def connectNetwork():
@@ -185,11 +231,14 @@ class Server:
 		# If flush of message required
 		if flush:
 			from server.notifier import Notifier
+			Server.context.notifier = Notifier
+
 			# Add notifier if no notifier registered
-			if Notifier.isEmpty():
+			if Server.context.notifier.isEmpty():
 				from server.pushover import notifyMessage
-				Notifier.add(notifyMessage)
-			await Notifier.flush()
+				Server.context.notifier.add(notifyMessage)
+			await Server.context.notifier.flush()
+
 			await Server.synchronizeTime()
 
 	@staticmethod
@@ -231,5 +280,19 @@ class Server:
 	@staticmethod
 	async def manage():
 		""" Manage the network and server """
+		if Server.context.notifier is None:
+			from server.notifier import Notifier
+			Server.context.notifier = Notifier
+
+		if Server.context.wanConnected == True and \
+			(Server.context.notifier.getStatus() == -1 or Server.context.networkFault > 3):
+			useful.logError("Lost wifi connection retry connection")
+			wifi.Station.stop()
+			Server.context.wifiStarted   = False
+			Server.context.wanConnected  = False
+
+			if Server.context.networkFault > 6:
+				useful.reboot("Too many network fault")
+
 		await Server.connectNetwork()
 		await Server.startServer()

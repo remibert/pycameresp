@@ -912,7 +912,7 @@ async def taskMonitoring(task):
 	retry = 0
 	lastError = ""
 
-	while retry < 100:
+	while retry < 40:
 		try:
 			while True:
 				if await task():

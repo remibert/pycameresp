@@ -244,8 +244,14 @@ class Station:
 	@staticmethod
 	def stop():
 		""" Stop the wifi station """
-		if Station.isActive() == False:
-			useful.logError("Wifi stopped")
+		useful.logError("Stop wifi")
+		if Station.wlan is not None:
+			try:
+				Station.wlan.disconnect()
+				Station.wlan.active(False)
+			except:
+				pass
+			Station.wlan = None
 
 	@staticmethod
 	def isIpOnInterface(ipAddr):

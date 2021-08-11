@@ -17,12 +17,8 @@ class Periodic:
 		""" Constructor """
 		self.serverConfig = ServerConfig()
 		self.serverConfig.load()
-		self.wanIp = None
 		self.onePerDay = None
-		self.getWanIpAsync = None
-		self.setDate  = None
 		self.getLoginState = None
-		self.station = None
 		self.serverPostponed = None
 		useful.WatchDog.start(useful.SHORT_WATCH_DOG)
 
@@ -33,36 +29,6 @@ class Periodic:
 			self.onePerDay = date
 			return True
 		return False
-
-	async def synchronizeWanIp(self, forced):
-		""" Synchronize wan ip """
-		if Server.isWanConnected():
-			# Wan ip not yet get
-			if self.getWanIpAsync is None:
-				from server.wanip import getWanIpAsync
-				self.getWanIpAsync = getWanIpAsync
-
-			# Station not yet interrogated
-			if self.station is None:
-				from wifi.station import Station
-				self.station = Station
-
-			# Get wan ip 
-			newWanIp = await self.getWanIpAsync()
-
-			# If wan ip get
-			if newWanIp is not None:
-				from tools.battery import Battery
-
-				# Wan echange is a success enough power to work, clear brownout reset
-				Battery.clearBrownout()
-
-				# If wan ip must be notified
-				if (self.wanIp != newWanIp or forced) and self.serverConfig.notify:
-						await Notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(self.station.getInfo()[0],newWanIp, useful.uptime()))
-				self.wanIp = newWanIp
-			else:
-				useful.logError("Cannot get wan ip")
 
 	async def checkLogin(self):
 		""" Inform that login detected """
@@ -89,14 +55,14 @@ class Periodic:
 					await Server.synchronizeTime()
 
 				forced =  self.isOnePerDay()
-				if pollingId % 3600 == 0 or forced:
-					await self.synchronizeWanIp(forced)
+				if pollingId % 3605 == 0 or forced:
+					await Server.synchronizeWanIp(forced)
 
 				if pollingId % 4 == 0:
 					await self.checkLogin()
-			else:
-				if pollingId % 600 == 0:
-					await Server.manage()
+
+			if pollingId % 60 == 0:
+				await Server.manage()
 		else:
 			if self.serverPostponed == 0:
 				await Server.manage()

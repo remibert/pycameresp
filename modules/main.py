@@ -59,7 +59,8 @@ loop.create_task(asyncShell())
 try:
 	# Run asyncio for ever
 	loop.run_forever()
+except KeyboardInterrupt:
+	useful.logError("Control C in main")
 except Exception as err:
 	useful.exception(err)
-finally:
 	useful.reboot("Crash in main")
