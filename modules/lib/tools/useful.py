@@ -805,19 +805,64 @@ class SdCard:
 		return result
 
 	@staticmethod
-	def save(filename, data):
+	def createFile(directory, filename, mode="w"):
+		""" Create file with directory """
+		result = None
+		filepath = directory + "/" + filename
+		directories = [directory]
+		direct = directory
+		while 1:
+			parts = split(direct)
+
+			if parts[1] == "" or parts[0] == "":
+				break
+			directories.append(parts[0])
+			direct = parts[0]
+
+		if "/" in directories:
+			directories.remove("/")
+		if SdCard.mountpoint[0] in directories:
+			directories.remove(SdCard.mountpoint[0])
+
+		newdirs = []
+		for l in range(len(directories)):
+			part = directories[:l]
+			part.reverse()
+			newdirs.append(part)
+		directories.reverse()
+		newdirs.append(directories)
+
+		for directories in newdirs:
+			for direct in directories:
+				try:
+					uos.mkdir(direct)
+				except OSError as err:
+					if err.args[0] not in [2,17]:
+						exception(err)
+						break
+			try:
+				result = open(filepath,mode)
+				break
+			except OSError as err:
+				if err.args[0] not in [2,17]:
+					exception(err)
+					break
+
+		return result
+
+	@staticmethod
+	def save(directory, filename, data):
 		""" Save file on sd card """
 		result = False
 		if SdCard.isMounted():
-			filename = "%s/%s"%(SdCard.getMountpoint(),filename)
 			file = None
 			try:
-				file = open(filename,"wb")
+				file = SdCard.createFile(SdCard.getMountpoint() + "/" + directory, filename, "w")
 				file.write(data)
 				file.close()
 				result = True
 			except Exception as err:
-				logError("Cannot save %s"%filename)
+				exception(err, "Cannot save %s/%s/%s"%(SdCard.getMountpoint(), directory, filename))
 			finally:
 				if file is not None:
 					file.close()

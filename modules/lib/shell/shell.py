@@ -92,7 +92,10 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 				break
 			directories.append(parts[0])
 			d = parts[0]
-
+		if "/" in directories:
+			directories.remove("/")
+		if useful.SdCard.getMountpoint() in directories:
+			directories.remove(useful.SdCard.getMountpoint())
 		for d in directories:
 			if useful.exists(d) and d != ".":
 				removedir(d, force=force, quiet=quiet, simulate=simulate)

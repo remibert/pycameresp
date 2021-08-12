@@ -15,7 +15,6 @@ class Historic:
 	motionInProgress  = [False]
 	historic = []
 	firstExtract = [False]
-	previousDirectory = [None]
 	lock = uasyncio.Lock()
 
 	@staticmethod
@@ -48,16 +47,13 @@ class Historic:
 		if root:
 			try:
 				await Historic.acquire()
-				newDirectory = root + "/" + useful.tostrings(path)
-				if Historic.previousDirectory[0] != newDirectory:
-					useful.makedir(newDirectory, True)
-					Historic.previousDirectory[0] = newDirectory
-				filename = path + "/" + name
+				path = useful.tostrings(path)
+				name = useful.tostrings(name) 
 				jsonInfo = useful.tobytes(json.dumps(info))
-				res1 = useful.SdCard.save(filename + ".jpg" , image)
-				res2 = useful.SdCard.save(filename + ".html", html)
-				res3 = useful.SdCard.save(filename + ".json", jsonInfo)
-				Historic.addItem(root + "/" + filename+".json", info)
+				res1 = useful.SdCard.save(path, name + ".jpg" , image)
+				res2 = useful.SdCard.save(path, name + ".html", html)
+				res3 = useful.SdCard.save(path, name + ".json", jsonInfo)
+				Historic.addItem(root + "/" + path + "/" + name +".json", info)
 				result = res1 and res2 and res3
 			except Exception as err:
 				useful.exception(err)
