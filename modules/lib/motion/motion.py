@@ -181,7 +181,7 @@ class ImageMotion:
 	def getDiffHisto(self):
 		""" Get the histogram difference """
 		if self.comparison:
-			return self.comparison["diff"]["histo"]
+			return self.comparison["diff"]["diffhisto"]
 		return 0
 
 	def getDifferences(self):
@@ -205,7 +205,13 @@ class ImageMotion:
 			if not b"/" in mask:
 				mask = b""
 			errorLight = self.config.lightErrorRange
-			self.motion.configure({"mask":mask, "errorLights":[[0,1],[2*errorLight,errorLight//2],[3*errorLight, errorLight],[256,errorLight]]})
+			self.motion.configure(\
+				{
+					"mask":mask,
+					"errorLights":[[0,1],[errorLight,errorLight//3],[3*errorLight, errorLight],[256,errorLight]],
+					"errorHistos":[[0,0],[96,32],[160,224],[256,256]]
+					# "errorHistos":[[0,0],[128,128],[192, 192],[256,256]]
+				})
 
 class SnapConfig:
 	""" Store last motion information """

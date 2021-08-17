@@ -7,6 +7,7 @@ import wifi
 from server.ping import asyncPing
 from server.notifier import Notifier
 from server.server import Server
+from server.dnsclient import resolveHostname
 
 class PresenceConfig(jsonconfig.JsonConfig):
 	""" Configuration class of presence detection """
@@ -25,8 +26,9 @@ class Presence:
 	""" Presence detection of smartphones """
 	ABSENCE_TIMEOUT   = 15.*60.
 	NO_ANSWER_TIMEOUT = 10.*60.
-	FAST_POLLING      = 2.
+	FAST_POLLING      = 5.
 	SLOW_POLLING      = 1.*60.
+	DNS_POLLING       = 1.*60.
 
 	PING_TIMEOUT      = 0.5
 	PING_COUNT        = 4
@@ -52,6 +54,7 @@ class Presence:
 		
 		Presence.activated = None
 		Presence.lastTime = 0
+		Presence.lastDnsTime = 0
 		Presence.detected[0] = False
 
 	@staticmethod
@@ -64,7 +67,16 @@ class Presence:
 					Presence.config.save()
 				useful.logError("Change presence config %s"%Presence.config.toString(), display=False)
 
-		if Presence.config.activated == True and wifi.Station.isActive():
+		if Presence.config.activated == True and wifi.Wifi.isWanAvailable():
+			if Presence.lastDnsTime + Presence.DNS_POLLING < time.time():
+				Presence.lastDnsTime = time.time()
+				sent,received,success = await asyncPing(wifi.Wifi.getDns(), count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
+
+				if received == 0:
+					wifi.Wifi.disconnectLan()
+				else:
+					wifi.Wifi.connectLan()
+		if Presence.config.activated == True and wifi.Wifi.isWanAvailable():
 			presents = []
 			currentDetected = None
 			smartphoneInList = False
@@ -80,9 +92,10 @@ class Presence:
 					# If a response received from smartphone
 					if received > 0:
 						presents.append(smartphone)
-						print("%s %s detected"%(useful.dateToString()[12:], useful.tostrings(smartphone)))
+						useful.logError("%s %s detected"%(useful.dateToString()[12:], useful.tostrings(smartphone)))
 						Presence.lastTime = time.time()
 						currentDetected = True
+						wifi.Wifi.connectLan()
 
 			# If no smartphones detected during a very long time
 			if Presence.lastTime + Presence.ABSENCE_TIMEOUT < time.time():
@@ -112,12 +125,12 @@ class Presence:
 			# If all smartphones not responded during a long time
 			if Presence.lastTime + Presence.NO_ANSWER_TIMEOUT < time.time() and smartphoneInList == True:
 				if Presence.pollingDuration != Presence.FAST_POLLING:
-					print("%s fast polling"%(useful.dateToString()[12:]))
+					useful.logError("%s fast polling"%(useful.dateToString()[12:]))
 				# Set fast polling rate
 				Presence.pollingDuration = Presence.FAST_POLLING
 			else:
 				if Presence.pollingDuration != Presence.SLOW_POLLING:
-					print("%s slow polling"%(useful.dateToString()[12:]))
+					useful.logError("%s slow polling"%(useful.dateToString()[12:]))
 				# Reduce polling rate
 				Presence.pollingDuration = Presence.SLOW_POLLING
 		else:

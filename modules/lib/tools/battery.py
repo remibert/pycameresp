@@ -173,13 +173,6 @@ class Battery:
 		useful.logError("%s reset"%causes)
 
 	@staticmethod
-	def clearBrownout():
-		""" If network connection successful, the brownout can counter can be cleared """
-		if Battery.config.brownoutDetection:
-			Battery.config.brownoutCount = 0
-			Battery.config.save()
-
-	@staticmethod
 	def manageBrownout():
 		""" Checks the number of brownout reset """
 		deepsleep = False
@@ -207,8 +200,13 @@ class Battery:
 			Battery.awakeCounter[0] = Battery.config.awakeDuration
 
 	@staticmethod
-	def manageAwake():
+	def manageAwake(resetBrownout=False):
 		""" Manage the awake duration """
+		if resetBrownout:
+			if Battery.config.brownoutDetection:
+				Battery.config.brownoutCount = 0
+				Battery.config.save()
+
 		if Battery.config.wakeUp:
 			Battery.awakeCounter[0] -= 1
 			if Battery.awakeCounter[0] < 0:

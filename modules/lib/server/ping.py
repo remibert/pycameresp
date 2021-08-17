@@ -93,13 +93,6 @@ class Packet:
 			"sequence   : %d\n"\
 			"timestamp  : %d"%(self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
 
-def getAddressIp(hostname):
-	""" Return the address ip of the hostname """
-	try:
-		return socket.getaddrinfo(hostname, 1, socket.SOCK_DGRAM, socket.AF_INET)[0][-1][0]
-	except:
-		return None
-
 async def select(rlist, wlist, xlist, timeout=0):
 	""" Asynchronous select """
 	while 1:

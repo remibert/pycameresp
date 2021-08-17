@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to manage board """
 from server.httpserver import HttpServer
-from wifi.hostname import Hostname
+from wifi.station import Station
 from htmltemplate import *
 from webpage import *
 from tools import useful
@@ -13,17 +13,17 @@ import gc
 @HttpServer.addRoute(b'/system', title=b"System", index=300)
 async def systemPage(request, response, args):
 	""" Function define the web page to manage system of the board """
-	page = mainFrame(request, response, args, b"System management %s"%Hostname.get(),
+	page = mainFrame(request, response, args, b"System management %s"%Station.getHostname(),
 		Label(text=b"Configuration" ),Br(),
 		ImportFile(text=b"Import", path=b"/system/importConfig", alert=b"Configuration imported", accept=b".cfg"),
-		ExportFile(text=b"Export", path=b"/system/exportConfig", filename=b"Config_%s.cfg"%Hostname.get()),
+		ExportFile(text=b"Export", path=b"/system/exportConfig", filename=b"Config_%s.cfg"%Station.getHostname()),
 
 		Br(),Br(),Label(text=b"File system"),Br(),
 		ImportFile(text=b"Import", path=b"/system/importFileSystem", alert=b"Import in progress, wait a few minutes the automatic reboot", accept=b".cfs"),
-		ExportFile(text=b"Export", path=b"/system/exportFileSystem", filename=b"FileSystem_%s.cfs"%Hostname.get()),
+		ExportFile(text=b"Export", path=b"/system/exportFileSystem", filename=b"FileSystem_%s.cfs"%Station.getHostname()),
 
 		Br(),Br(),Label(text=b"Trace"),Br(),
-		ExportFile(text=b"Trace", path=b"/system/exportTrace", filename=b"trace_%s.log"%Hostname.get()),
+		ExportFile(text=b"Trace", path=b"/system/exportTrace", filename=b"trace_%s.log"%Station.getHostname()),
 
 		Br(), Br(),Label(text=b"Reboot device"),Br(),
 		ButtonCmd(text=b"Reboot",path=b"/system/reboot",confirm=b"Confirm reboot", name=b"reboot"))

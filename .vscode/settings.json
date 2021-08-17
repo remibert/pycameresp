@@ -32,11 +32,18 @@
 	"python.linting.enabled": true,
 	"python.linting.pylintEnabled": true,
 	"python.autoComplete.extraPaths": [
-		"./modules",
-		"./modules/lib",
-		"./modules/simul",
-		"./modules/lib/tools",
-		"./modules/lib/shell"
+		"${workspaceFolder}/modules",
+		"${workspaceFolder}/modules/lib",
+		"${workspaceFolder}/modules/simul",
+		"${workspaceFolder}/modules/lib/tools",
+		"${workspaceFolder}/modules/lib/shell"
+	],
+	"python.analysis.extraPaths":[
+		"${workspaceFolder}/modules",
+		"${workspaceFolder}/modules/lib",
+		"${workspaceFolder}/modules/simul",
+		"${workspaceFolder}/modules/lib/tools",
+		"${workspaceFolder}/modules/lib/shell"
 	],
 	"python.linting.pylintArgs": [
 		"--disable=C",
@@ -57,5 +64,5 @@
 		"--disable=eval-used",
 		"--disable=exec-used"],
 	"python.envFile": "${workspaceFolder}/.env",
-	"python.linting.pylintUseMinimalCheckers":false,
+	"python.linting.pylintUseMinimalCheckers":true,
 }

@@ -127,14 +127,15 @@ typedef struct Shape_t
 	uint16_t size;
 } Shape_t;
 
-#define MAX_ERROR_LIGHTS 4
+#define MAX_POINTS 4
+// Straight line portion
 typedef struct 
 {
-	int light;
-	int error;
+	int x; // First x point of line
+	int y; // First y point of line
 	int a; // a * x + b
 	int b;
-} ErrorLight_t;
+} Line_t;
 typedef struct 
 {
 	mp_obj_base_t base;
@@ -168,7 +169,8 @@ typedef struct
 {
 	uint8_t * mask_data;
 	uint16_t  mask_length;
-	ErrorLight_t errorLights[MAX_ERROR_LIGHTS];
+	Line_t errorLights[MAX_POINTS];
+	Line_t errorHistos[MAX_POINTS];
 } MotionConfiguration_t;
 
 MotionConfiguration_t motionConfiguration = {0,0};
@@ -228,6 +230,29 @@ static void _free(void ** ptr)
 			*ptr = 0;
 		}
 	}
+}
+
+// Get list item at the index
+mp_obj_t list_get_item(mp_obj_t list, size_t index)
+{
+	mp_obj_t result = mp_const_none;
+	size_t length;
+	mp_obj_t *items;
+	mp_obj_list_get(list, &length, &items);
+
+	if (index < length)
+	{
+		result = items[index];
+	}
+	return result;
+}
+
+size_t list_get_size(mp_obj_t list)
+{
+	size_t result = 0;
+	mp_obj_t *items;
+	mp_obj_list_get(list, &result, &items);
+	return result;
 }
 
 #ifdef CONFIG_ESP32CAM
@@ -816,13 +841,13 @@ bool Motion_searchShape(Motion_t * motion, int x, int y, Shape_t * shape)
 }
 
 // Compute histogram
-int Motion_getDiffHisto(Motion_t *self, Motion_t *other)
+int Motion_getDiffHisto(Motion_t *self, Motion_t *previous)
 {
 	int i;
 	int diff = 0;
 	for (i = 0; i < MAX_HISTO; i++)
 	{
-		diff += abs(self->histo[i] - other->histo[i]);
+		diff += abs(self->histo[i] - previous->histo[i]);
 	}
 
 	if (diff > self->diffMax)
@@ -835,39 +860,116 @@ int Motion_getDiffHisto(Motion_t *self, Motion_t *other)
 	}
 }
 
-// Compute the difference between two motion detection
-STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
+
+/** Extract lines from the lists of points */
+void Lines_configure(mp_obj_t points, Line_t * lines, int maxPoints)
 {
-	int i, j;
-	int diffDetected = 0;
-	int diffHisto    = Motion_getDiffHisto(self, other);
-	int errLight;
-	uint16_t       *pCurrentLights = self->lights;
-	uint16_t       *pOtherLights   = other->lights;
-	uint16_t       *pDiffs         = self->diffs;
-	int light;
-	
-	for (i = 0; i < self->diffMax; i++)
+	size_t size = list_get_size(points);
+
+	if (maxPoints == size)
 	{
-		light = max(*pCurrentLights, *pOtherLights);
-		errLight = 256;
-		for (j = 1; j < MAX_ERROR_LIGHTS; j++)
+		Line_t point1, point2;
+
+		// For all points defined
+		for (size_t i = 0; i < size; i++)
 		{
-			if (motionConfiguration.errorLights[j].light <= light)
+			mp_obj_t point = list_get_item (points, i);
+
+			// If x and y defined
+			if (list_get_size(point) == 2)
 			{
-				errLight =((motionConfiguration.errorLights[j].a * light)>>8) + motionConfiguration.errorLights[j].b;
-				break;
+				// Get point of line
+				point1.x = mp_obj_get_int(list_get_item(point, 0));
+				point1.y = mp_obj_get_int(list_get_item(point, 1));
+
+				// If it is not the first point of line
+				if (i > 0)
+				{
+					// Save the point in the previous point
+					point2 = lines[i-1];
+
+					// If two points distincts
+					if ((point1.x - point2.x) != 0)
+					{
+						// Compute the slope of line
+						point1.a = (((point1.y - point2.y)<<8) / (point1.x - point2.x));
+						point1.b = (point1.y - ((point1.a*point1.x)>>8));
+					}
+					else
+					{
+						mp_raise_TypeError(MP_ERROR_TEXT("Motions configure divide 0 for points"));
+					}
+				}
+				else
+				{
+					point1.a = 0;
+					point1.b = 0;
+				}
+				// ESP_LOGE(TAG,"x=%d y=%d a=%d b=%d",point1.x, point1.y, point1.a, point1.b);
+				lines[i] = point1;
 			}
 		}
-		// Compare light
-		if (((abs(*pCurrentLights - *pOtherLights) * diffHisto)>>8) > errLight)
+	}
+	else
+	{
+		mp_raise_TypeError(MP_ERROR_TEXT("Motions bad configure size for points"));
+	}
+}
+
+/** Compute Y value according to X */
+int Lines_getY(Line_t * lines, int maxPoints, int x)
+{
+	int i;
+	int y =0;
+
+	// Search the error x according to the x level
+	for (i = 1; i < maxPoints; i++)
+	{
+		// If right straight line found
+		if (x >= lines[i-1].x && x < lines[i].x)
+		{
+			// Compute the error light according its position in the straight line
+			y =((lines[i].a * x)>>8) + lines[i].b;
+			break;
+		}
+	}
+	return y;
+}
+
+// Compute the difference between two motion detection
+STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t result)
+{
+	int i;
+	int diffDetected = 0;
+	int diffHisto    = Motion_getDiffHisto(self, previous);
+	int errLight;
+	int errHisto;
+	uint16_t       *pCurrentLights  = self->lights;
+	uint16_t       *pPreviousLights = previous->lights;
+	uint16_t       *pDiffs          = self->diffs;
+	int light;
+
+	// Compute the error histo according to the curves configured
+	errHisto = Lines_getY(motionConfiguration.errorHistos, MAX_POINTS, diffHisto);
+
+	// For all square detection
+	for (i = 0; i < self->diffMax; i++)
+	{
+		// Get the current max light of the selected square for two motion images
+		light = max(*pCurrentLights, *pPreviousLights);
+
+		// Compute the error light according to the curves configured
+		errLight = Lines_getY(motionConfiguration.errorLights, MAX_POINTS, light);
+
+		// Mitigate the error according to the change in brightness
+		if (((abs(*pCurrentLights - *pPreviousLights) * errHisto)>>8) > errLight)
 		{
 			*pDiffs = 0x01;
 			diffDetected ++;
 		}
 		pDiffs ++;
 		pCurrentLights ++;
-		pOtherLights ++;
+		pPreviousLights ++;
 	}
 
 	char * diffs = (char*)_malloc(sizeof(char) * self->diffMax + 1);
@@ -926,7 +1028,8 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *other, mp_obj_t result)
 		mp_obj_dict_store(diffdict, mp_obj_new_str("squarey"   , strlen("squarey"))   ,  mp_obj_new_int(self->square_y*8));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("width"     , strlen("width"))     ,  mp_obj_new_int(self->diffWidth));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("height"    , strlen("height"))    ,  mp_obj_new_int(self->diffHeight));
-		mp_obj_dict_store(diffdict, mp_obj_new_str("histo"     , strlen("histo"))     ,  mp_obj_new_int(diffHisto));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("diffhisto" , strlen("diffhisto")) ,  mp_obj_new_int(diffHisto));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("errhisto"  , strlen("errhisto"))  ,  mp_obj_new_int(errHisto));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("diffs"     , strlen("diffs"))     ,  mp_obj_new_str(diffs     , self->diffMax));
 	mp_obj_dict_store(result, mp_obj_new_str("diff"     , strlen("diff")), diffdict);
 	_free((void**)&diffs);
@@ -1016,13 +1119,13 @@ STATIC void Motion_extractShape(Motion_t *self, mp_obj_t result, bool extractSha
 STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t extract_shape_in)
 {
 	Motion_t *self = self_in;
-	Motion_t *other = other_in;
+	Motion_t *previous = other_in;
 
-	if (other->base.type != &Motion_type)
+	if (previous->base.type != &Motion_type)
 	{
 		mp_raise_TypeError(MP_ERROR_TEXT("Not motion object"));
 	}
-	else if (self->diffMax != other->diffMax)
+	else if (self->diffMax != previous->diffMax)
 	{
 		mp_raise_TypeError(MP_ERROR_TEXT("Motions not same format"));
 	}
@@ -1036,7 +1139,7 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t ext
 
 		mp_obj_t result = mp_obj_new_dict(0);
 
-		if (Motion_computeDiff(self, other, result) > 0)
+		if (Motion_computeDiff(self, previous, result) > 0)
 		{
 			Motion_extractShape(self, result, extractShape);
 		}
@@ -1052,28 +1155,6 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t ext
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(Motion_compare_obj, Motion_compare);
 
-// Get list item at the index
-mp_obj_t list_get_item(mp_obj_t list, size_t index)
-{
-	mp_obj_t result = mp_const_none;
-	size_t length;
-	mp_obj_t *items;
-	mp_obj_list_get(list, &length, &items);
-
-	if (index < length)
-	{
-		result = items[index];
-	}
-	return result;
-}
-
-size_t list_get_size(mp_obj_t list)
-{
-	size_t result = 0;
-	mp_obj_t *items;
-	mp_obj_list_get(list, &result, &items);
-	return result;
-}
 
 
 // configure method
@@ -1091,46 +1172,11 @@ STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t params_in)
 	}
 	else
 	{
-		size_t lenErrorLight = list_get_size(mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLights)));
+		mp_obj_t errorLights = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLights));
+		Lines_configure(errorLights, motionConfiguration.errorLights, MAX_POINTS);
 
-		if (lenErrorLight == MAX_ERROR_LIGHTS)
-		{
-			ErrorLight_t el1, el2;
-			mp_obj_t errorLights = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLights));
-			for (size_t i = 0; i < lenErrorLight; i++)
-			{
-				mp_obj_t points = list_get_item (errorLights, i);
-				if (list_get_size(points) == 2)
-				{
-					el1.light = mp_obj_get_int(list_get_item(points, 0));
-					el1.error = mp_obj_get_int(list_get_item(points, 1));
-					if (i > 0)
-					{
-						el2 = motionConfiguration.errorLights[i-1];
-						if ((el1.light - el2.light) != 0)
-						{
-							el1.a = (((el1.error - el2.error)<<8) / (el1.light - el2.light));
-							el1.b = (el1.error - ((el1.a*el1.light)>>8));
-						}
-						else
-						{
-							mp_raise_TypeError(MP_ERROR_TEXT("Motions configure divide 0 for errorLights"));
-						}
-					}
-					else
-					{
-						el1.a = 0;
-						el1.b = 0;
-					}
-					//ESP_LOGE(TAG,"light=%d error=%d a=%d b=%d",el1.light, el1.error, el1.a, el1.b);
-					motionConfiguration.errorLights[i] = el1;
-				}
-			}
-		}
-		else
-		{
-			mp_raise_TypeError(MP_ERROR_TEXT("Motions bad configure size for errorLights"));
-		}
+		mp_obj_t errorHistos = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorHistos));
+		Lines_configure(errorHistos, motionConfiguration.errorHistos, MAX_POINTS);
 
 		mp_obj_t mask_in = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_mask));
 		if (mp_obj_is_str_or_bytes(mask_in))

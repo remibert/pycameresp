@@ -115,5 +115,5 @@ async def notifyMessage(message, image = None, forced=False, display=True):
 	if config.activated or forced:
 		result = await asyncNotify(config.user, config.token, message, image, display=True)
 	else:
-		result = True
+		result = None
 	return result

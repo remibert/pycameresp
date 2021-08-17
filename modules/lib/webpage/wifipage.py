@@ -2,15 +2,15 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to configure the wifi """
 from server.httpserver import HttpServer
-from htmltemplate import *
-from webpage import *
+from htmltemplate.htmlclasses import *
+from webpage.mainpage import *
 from tools.useful import *
-from tools import useful, jsonconfig
+from tools import useful
 import wifi
 
 def staticIpHtml(config, disabled):
 	""" Html to get static ip """
-	patternIp = b"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+	patternIp = br"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
 	return [
 			Edit(text=b"Ip address",  name=b"ipaddress", pattern=patternIp, placeholder=b"Enter ip address", value=config.ipaddress, disabled=disabled),
 			Edit(text=b"Netmask",     name=b"netmask",   pattern=patternIp, placeholder=b"Enter netmask",    value=config.netmask,   disabled=disabled),
@@ -53,7 +53,9 @@ def selectNetwork(increase=0, reparse=False):
 async def wifiConfig(request, response, args):
 	""" Page to configure the wifi station """
 	global currentNetworks, currentConfig, currentNetwork
- 
+
+	patternDns = rb"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*$"
+
 	if currentConfig == None:
 		currentConfig = wifi.Station.config
 		currentNetwork = wifi.Station.network
@@ -86,6 +88,7 @@ async def wifiConfig(request, response, args):
 		network.update(request.params)
 		network.save()
 		network = selectNetwork(0, True)
+		config.update(request.params)
 		config.default = network.ssid
 		config.save()
 		forced  = b"none"
@@ -131,6 +134,8 @@ async def wifiConfig(request, response, args):
 
 	page = mainFrame(request, response, args, b"Wifi configuration",
 		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),Br(),
+		Edit(text=b"Hostname" ,   name=b"hostname",  placeholder=b"Hostname not available with static IP", pattern=patternDns, value=config.hostname, disabled=disabled), 
+		Switch(text=b"Fallback to the access point if the wifi is not reachable", name=b"fallback", checked=config.fallback, disabled=disabled),Br(),
 		Card(
 			[
 				CardHeader(text= b"Wifi" if useful.tostrings(network.ssid) != useful.tostrings(config.default) else b"Wifi (default)"),
@@ -144,8 +149,7 @@ async def wifiConfig(request, response, args):
 				CardHeader([\
 					Switch(text=b"Dynamic IP", checked=dynamic, name=b"dynamic", onchange=b"this.form.submit()", disabled=disabled)]),
 				CardBody([\
-					Edit(text=b"DHCP Hostname" ,   name=b"hostname",  placeholder=b"Hostname not available with static IP",        value=network.hostname,       disabled=disabled) 
-					if dynamic else staticIpHtml(network, disabled)])
+					None if dynamic else staticIpHtml(network, disabled)])
 			]),
 		Br(),
 		submit)

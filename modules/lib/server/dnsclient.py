@@ -143,12 +143,12 @@ def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
 	
 	return result
 
-def getHostname(dnsIp, ipAddress):
-	""" Get hostname with ip address """
+def resolveHostname(dnsIp, ipAddress):
+	""" Resolve hostname with ip address """
 	return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())
 
-def getIpAddress(dnsIp, hostname):
-	""" Get ip address with hostname """
+def resolveIpAddress(dnsIp, hostname):
+	""" Resolve ip address with hostname """
 	return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())
 
 def splitIpAddress(url):
@@ -167,11 +167,11 @@ def isIpAddress(url):
 
 def main():
 	ROUTER = "192.168.1.1"
-	print(getHostname(ROUTER,"192.168.1.51"))
-	print(getHostname(ROUTER,ROUTER))
-	print(getIpAddress(ROUTER,"iphoneremi.home"))
-	ip   = getIpAddress(ROUTER,"google.fr")
-	ip2  = getIpAddress(ROUTER, getHostname (ROUTER,ip))
+	print(resolveHostname(ROUTER,"192.168.1.51"))
+	print(resolveHostname(ROUTER,ROUTER))
+	print(resolveIpAddress(ROUTER,"iphoneremi.home"))
+	ip   = resolveIpAddress(ROUTER,"google.fr")
+	ip2  = resolveIpAddress(ROUTER, resolveHostname (ROUTER,ip))
 	if ip != ip2: raise Exception("Test failed")
 
 

@@ -13,6 +13,7 @@ class ServerConfig(jsonconfig.JsonConfig):
 		self.ftp = True
 		self.http = True
 		self.telnet = True
+		self.wanip = True
 		self.offsettime = 1
 		self.dst = True
 		self.currentTime = 0
@@ -21,26 +22,24 @@ class ServerConfig(jsonconfig.JsonConfig):
 
 class ServerContext:
 	""" Context to initialize the servers """
-	def __init__(self, loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
+	def __init__(self, loop=None, pageLoader=None, preload=False, httpPort=80):
 		from server.timesetting import setTime
 		self.loop          = loop
 		self.pageLoader    = pageLoader
 		self.preload       = preload
-		self.withoutServer = withoutServer
 		self.httpPort      = httpPort
-		self.wifiStarted   = False
-		self.wanConnected  = False
 		self.serverStarted = False
 		self.notifier      = None
-		self.station = None
 		self.getWanIpAsync = None
 		self.wanIp = None
-		self.networkFault = 0
 		self.config        = ServerConfig()
 		self.setDate = None
+		self.onePerDay = None
+		self.flushed = False
 		
 		if self.config.load() == False:
 			self.config.save()
+		self.serverPostponed = self.config.serverPostponed
 		setTime(self.config.currentTime)
 
 class Server:
@@ -93,23 +92,13 @@ class Server:
 				useful.WatchDog.feed()
 
 	@staticmethod
-	def isWifiStarted():
-		""" Indicates if the wifi is started """
-		return Server.context.wifiStarted
-
-	@staticmethod
-	def isWanConnected():
-		""" Indicates if the wan is connected """
-		return wifi.Station.isConnected()
-
-	@staticmethod
-	def init(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
+	def init(loop=None, pageLoader=None, preload=False, httpPort=80):
 		""" Init servers
 		loop : asyncio loop
 		pageLoader : callback to load html page
 		preload : True force the load of page at the start, 
 		False the load of page is done a the first http connection (Takes time on first connection) """
-		Server.context = ServerContext(loop, pageLoader, preload, withoutServer, httpPort)
+		Server.context = ServerContext(loop, pageLoader, preload, httpPort)
 		useful.logError(useful.sysinfo(display=False))
 		build = info.build.replace("/","-")
 		build = build.replace("  ","_")
@@ -122,36 +111,28 @@ class Server:
 	@staticmethod
 	async def synchronizeWanIp(forced):
 		""" Synchronize wan ip """
-		if Server.isWanConnected():
-			# Wan ip not yet get
-			if Server.context.getWanIpAsync is None:
-				from server.wanip import getWanIpAsync
-				Server.context.getWanIpAsync = getWanIpAsync
+		# If wan ip synchronization enabled
+		if Server.context.config.wanip:
+			if wifi.Wifi.isWanAvailable():
+				useful.logError("Synchronize Wan ip")
+				# Wan ip not yet get
+				if Server.context.getWanIpAsync is None:
+					from server.wanip import getWanIpAsync
+					Server.context.getWanIpAsync = getWanIpAsync
 
-			# Station not yet interrogated
-			if Server.context.station is None:
-				from wifi.station import Station
-				Server.context.station = Station
+				# Get wan ip 
+				newWanIp = await Server.context.getWanIpAsync()
 
-			# Get wan ip 
-			newWanIp = await Server.context.getWanIpAsync()
-
-			# If wan ip get
-			if newWanIp is not None:
-				from tools.battery import Battery
-
-				# Wan echange is a success enough power to work, clear brownout reset
-				Battery.clearBrownout()
-
-				# If wan ip must be notified
-				if (Server.context.wanIp != newWanIp or forced) and Server.context.config.notify:
-					await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(Server.context.station.getInfo()[0],newWanIp, useful.uptime()))
-				Server.context.wanIp = newWanIp
-				Server.context.networkFault = 0
-			else:
-				useful.logError("Cannot get wan ip")
-				Server.context.networkFault += 1
-
+				# If wan ip get
+				if newWanIp is not None:
+					# If wan ip must be notified
+					if (Server.context.wanIp != newWanIp or forced):
+						await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(wifi.Station.getInfo()[0],newWanIp, useful.uptime()))
+					Server.context.wanIp = newWanIp
+					wifi.Wifi.connectWan()
+				else:
+					useful.logError("Cannot get wan ip")
+					wifi.Wifi.disconnectWan()
 
 	@staticmethod
 	async def synchronizeTime():
@@ -159,7 +140,9 @@ class Server:
 		# If ntp synchronization enabled
 		if Server.context.config.ntp:
 			# If the wan is present
-			if Server.isWanConnected():
+			if wifi.Wifi.isWanAvailable():
+				useful.logError("Synchronize time")
+
 				# If synchronisation not yet done
 				if Server.context.setDate == None:
 					from server.timesetting import setDate
@@ -180,10 +163,6 @@ class Server:
 						Server.context.config.currentTime = int(currentTime)
 						Server.context.config.save()
 
-						from tools.battery import Battery
-						# Wan echange is a success enough power to work, clear brownout reset
-						Battery.clearBrownout()
-
 						# If clock changed
 						if abs(oldTime - currentTime) > 1:
 							# Log difference
@@ -193,53 +172,18 @@ class Server:
 					else:
 						await uasyncio.sleep(1)
 				if updated:
-					Server.context.networkFault = 0
+					wifi.Wifi.connectWan()
 				else:
-					Server.context.networkFault += 1
+					wifi.Wifi.disconnectWan()
 
 	@staticmethod
-	async def connectNetwork():
-		""" Connect the network """
-		flush = False
-		# If wifi not started
-		if Server.context.wifiStarted == False:
-			Server.context.wifiStarted = True
-			forceAccessPoint = False
-			# If wifi station connected
-			if await wifi.Station.start():
-				flush = True
-				Server.context.wanConnected = True
-			else:
-				# If wifi station enabled
-				if wifi.Station.isActivated():
-					# Fall back on access point
-					forceAccessPoint = True
-
-			# Start access point and force it if no wifi station connected
-			wifi.AccessPoint.start(forceAccessPoint)
-		
-		# If wifi station not connected
-		if Server.context.wanConnected == False:
-			# If wifi connected
-			if await wifi.Station.chooseNetwork(True, maxRetry=5) == True:
-				Server.context.wanConnected = True
-				flush = True
-				# If access point forced 
-				if wifi.AccessPoint.isActive() and wifi.AccessPoint.isActivated() == False:
-					wifi.AccessPoint.stop()
-
-		# If flush of message required
-		if flush:
-			from server.notifier import Notifier
-			Server.context.notifier = Notifier
-
-			# Add notifier if no notifier registered
-			if Server.context.notifier.isEmpty():
-				from server.pushover import notifyMessage
-				Server.context.notifier.add(notifyMessage)
-			await Server.context.notifier.flush()
-
-			await Server.synchronizeTime()
+	def isOnePerDay():
+		""" Indicates if the action must be done on per day """
+		date = useful.dateToBytes()[:14]
+		if Server.context.onePerDay is None or (date[-2:] == b"12" and date != Server.context.onePerDay):
+			Server.context.onePerDay = date
+			return True
+		return False
 
 	@staticmethod
 	async def startServer():
@@ -247,24 +191,29 @@ class Server:
 		# If server not started
 		if Server.context.serverStarted == False:
 			# If wifi available
-			if Server.context.wifiStarted:
+			if wifi.Wifi.isLanConnected():
 				Server.context.serverStarted = True
 				config = Server.context.config
 
+				# Add notifier if no notifier registered
+				if Server.context.notifier.isEmpty():
+					from server.pushover import notifyMessage
+					Server.context.notifier.add(notifyMessage)
+
 				# If telnet activated
-				if config.telnet and Server.context.withoutServer == False:
+				if config.telnet:
 					# Load and start telnet
 					import server.telnet
 					server.telnet.start()
 
 				# If ftp activated
-				if config.ftp and Server.context.withoutServer == False:
+				if config.ftp:
 					# Load and start ftp server
 					import server.ftpserver
 					server.ftpserver.start(loop=Server.context.loop, preload=Server.context.preload)
 
 				# If http activated
-				if config.http and Server.context.withoutServer == False:
+				if config.http:
 					# Load and start http server
 					import server.httpserver
 					server.httpserver.start(loop=Server.context.loop, loader=Server.context.pageLoader, preload=Server.context.preload, port=Server.context.httpPort, name="httpServer")
@@ -278,21 +227,40 @@ class Server:
 				Server.context.loop.create_task(detectPresence())
 
 	@staticmethod
-	async def manage():
+	async def manage(pollingId):
 		""" Manage the network and server """
-		if Server.context.notifier is None:
-			from server.notifier import Notifier
-			Server.context.notifier = Notifier
+		if Server.context.serverPostponed == 0:
+			await Server.startServer()
 
-		if Server.context.wanConnected == True and \
-			(Server.context.notifier.getStatus() == -1 or Server.context.networkFault > 3):
-			useful.logError("Lost wifi connection retry connection")
-			wifi.Station.stop()
-			Server.context.wifiStarted   = False
-			Server.context.wanConnected  = False
+			if pollingId %179 == 0:
+				await wifi.Wifi.manage()
 
-			if Server.context.networkFault > 6:
-				useful.reboot("Too many network fault")
+			if pollingId %181 == 0 and Server.context.flushed == False:
+				if wifi.Wifi.isWanAvailable():
+					await Server.synchronizeTime()
+					await Server.context.notifier.flush()
+					if wifi.Wifi.isWanConnected():
+						Server.context.flushed = True
 
-		await Server.connectNetwork()
-		await Server.startServer()
+			if pollingId % 3607 == 0:
+				await Server.synchronizeTime()
+
+			forced =  Server.isOnePerDay()
+			if pollingId % 3593 == 0 or forced:
+				await Server.synchronizeWanIp(forced)
+
+		else:
+			Server.context.serverPostponed -= 1
+   
+			if Server.context.serverPostponed == 0:
+				from server.notifier import Notifier
+				Server.context.notifier = Notifier
+
+				await wifi.Wifi.manage()
+				if wifi.Wifi.isWanAvailable():
+					await Server.synchronizeTime()
+					await Server.context.notifier.flush()
+					if wifi.Wifi.isWanConnected():
+						Server.context.flushed = True
+  
+

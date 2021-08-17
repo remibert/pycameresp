@@ -333,15 +333,15 @@ def ip2host(ipaddress):
 	""" Convert ip to hostname """
 	import wifi
 	_, _, _, dns = wifi.Station.getInfo()
-	from server.dnsclient import getHostname
-	print(getHostname(dns, ipaddress))
+	from server.dnsclient import resolveHostname
+	print(resolveHostname(dns, ipaddress))
 
 def host2ip(hostname):
 	""" Convert hostname to ip """
 	import wifi
 	_, _, _, dns = wifi.Station.getInfo()
-	from server.dnsclient import getIpAddress
-	print(getIpAddress(dns, hostname))
+	from server.dnsclient import resolveIpAddress
+	print(resolveIpAddress(dns, hostname))
 
 def mountsd(mountpoint="/sd"):
 	""" Mount command """

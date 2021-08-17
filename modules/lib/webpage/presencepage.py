@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to configure the presence detection """
 from server.httpserver import HttpServer
-from server.dnsclient import getHostname, isIpAddress
+from server.dnsclient import resolveHostname, isIpAddress
 from server.presence import PresenceConfig
 from htmltemplate import *
 from webpage import *
@@ -26,7 +26,7 @@ async def presence(request, response, args):
 					smartphone = config.smartphones[i]
 					try:
 						if isIpAddress(useful.tostrings(smartphone)):
-							hostname = getHostname(dns, useful.tostrings(smartphone))
+							hostname = resolveHostname(dns, useful.tostrings(smartphone))
 							if hostname != None:
 								config.smartphones[i] = useful.tobytes(hostname)
 					except:

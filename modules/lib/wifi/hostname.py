@@ -3,17 +3,10 @@
 """ Manage the host name """
 from tools import useful
 
+
 class Hostname:
 	""" Manage the host name """
-	hostname = [None]
 	number = [None]
-
-	@staticmethod
-	def get():
-		""" Return the current host name """
-		if Hostname.hostname[0] == None:
-			Hostname.hostname[0]         = b"Esp_%05d"%Hostname.getNumber()
-		return Hostname.hostname[0]
 
 	@staticmethod
 	def getNumber():
@@ -26,9 +19,5 @@ class Hostname:
 			for i in ident:
 				mac += "%02X"%i
 			Hostname.number[0] = useful.computeHash(mac)
+			del wlan
 		return Hostname.number[0]
-
-	@staticmethod
-	def set(hostname):
-		""" Change the default host name """
-		Hostname.hostname[0] = hostname

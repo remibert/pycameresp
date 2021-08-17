@@ -2,13 +2,12 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
 from tools import useful
-from wifi.station import Station
+import wifi
 
 class Notifier:
 	""" Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
 	notifiers = []
 	postponed = []
-	status    = [0]
 
 	@staticmethod
 	def add(callback):
@@ -50,31 +49,37 @@ class Notifier:
 		if len(Notifier.postponed) > 10:
 			# Remove older
 			message, image, forced, display = Notifier.postponed[0]
-			useful.logError("Wifi not connected for : " + useful.tostrings(message), display=display)
+			useful.logError("Notification miss out : " + useful.tostrings(message), display=display)
 			del Notifier.postponed[0]
 
-		if Station.isActive():
+		# If wan available
+		if wifi.Wifi.isWanAvailable():
 			result = True
-			# Try to send message
-			for notification in Notifier.postponed:
-				message, image, forced, display = notification
+			wanOk = None
 
-				for notifier in Notifier.notifiers:
-					if await notifier(message, image, forced, display=display) == False:
-						useful.logError("Cannot send notification")
+			# Try to send message
+			for notifier in Notifier.notifiers:
+				for notification in Notifier.postponed:
+					message, image, forced, display = notification
+					res = await notifier(message, image, forced, display=display)
+					if res == False:
 						result = False
-						
-			# If all message sent clear all
+						wanOk = False
+						break
+					elif res == True:
+						wanOk = True
+
+			# If wan connected
+			if wanOk == True:
+				wifi.Wifi.connectWan()
+			# If wan problem detected
+			if wanOk == False:
+				wifi.Wifi.disconnectWan()
+
+			# If all message notified
 			if result:
-				Notifier.status[0] = 1
 				Notifier.postponed.clear()
 			else:
-				Notifier.status[0] = -1
-
+				useful.logError("Cannot send notification")
 		return result
-
-	@staticmethod
-	def getStatus():
-		""" Get the status of notifier (0:not connected, 1:success, -1:failed) """
-		return Notifier.status[0]
 

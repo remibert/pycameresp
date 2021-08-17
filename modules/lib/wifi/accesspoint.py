@@ -124,7 +124,7 @@ class AccessPoint:
 			config = AccessPointConfig()
 
 			if not config.load():
-				config.ssid          = Hostname.get()
+				config.ssid          = b"esp%05d"%Hostname.getNumber()
 				config.wifipassword  = b"Pycam_%05d"%Hostname.getNumber()
 				config.save()
 
@@ -150,6 +150,7 @@ class AccessPoint:
 	def stop():
 		""" Stop access point """
 		if AccessPoint.isActive():
+			useful.logError("AccessPoint stopped")
 			AccessPoint.close()
 
 	@staticmethod

@@ -132,6 +132,9 @@ class JsonConfig:
 					execval = "self_config.%s = %s"%(execval, repr(value))
 					# pylint: disable=exec-used
 					exec(execval)
+				else:
+					if name != b"action":
+						print("%s.%s not existing"%(self.__class__.__name__, useful.tostrings(name)))
 			except Exception as err:
 				useful.exception(err, "Error on %s"%(execval))
 				result = False

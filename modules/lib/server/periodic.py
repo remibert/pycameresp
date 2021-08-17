@@ -2,8 +2,8 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Periodic task, get wanIp, synchronize time """
 from server.server import ServerConfig, Server
-from server.notifier import Notifier
 from tools import useful,battery
+import wifi
 import uasyncio
 
 async def periodicTask():
@@ -17,18 +17,8 @@ class Periodic:
 		""" Constructor """
 		self.serverConfig = ServerConfig()
 		self.serverConfig.load()
-		self.onePerDay = None
 		self.getLoginState = None
-		self.serverPostponed = None
 		useful.WatchDog.start(useful.SHORT_WATCH_DOG)
-
-	def isOnePerDay(self):
-		""" Indicates if the action must be done on per day """
-		date = useful.dateToBytes()[:14]
-		if self.onePerDay is None or (date[-2:] == b"12" and date != self.onePerDay):
-			self.onePerDay = date
-			return True
-		return False
 
 	async def checkLogin(self):
 		""" Inform that login detected """
@@ -42,46 +32,33 @@ class Periodic:
 
 		# If login detected
 		if login is not None:
+			from server.notifier import Notifier
 			# If notification must be send
 			if self.serverConfig.notify:
 				message = "Login %s detected"%("success" if login else "failed")
 				await Notifier.notify(message, display=False)
 
-	async def manageNetwork(self, pollingId):
-		""" Manage the start postponed of network """
-		if Server.isWifiStarted():
-			if Server.isWanConnected():
-				if pollingId % 3600 == 0:
-					await Server.synchronizeTime()
-
-				forced =  self.isOnePerDay()
-				if pollingId % 3605 == 0 or forced:
-					await Server.synchronizeWanIp(forced)
-
-				if pollingId % 4 == 0:
-					await self.checkLogin()
-
-			if pollingId % 60 == 0:
-				await Server.manage()
-		else:
-			if self.serverPostponed == 0:
-				await Server.manage()
-			else:
-				self.serverPostponed -= 1
-
 	async def task(self):
 		""" Periodic task method """
-		self.serverPostponed = self.serverConfig.serverPostponed
 		pollingId = 0
+		
 		useful.WatchDog.start(useful.SHORT_WATCH_DOG)
 		while True:
+			# Reload server config if changed
 			if self.serverConfig.isChanged():
 				self.serverConfig.load()
-			await self.manageNetwork(pollingId)
 
-			await uasyncio.sleep(1)
-			battery.Battery.manageAwake()
-			pollingId += 1
+			# Manage server
+			await Server.manage(pollingId)
+
+			# Manage login user
+			if pollingId % 5 == 0:
+				await self.checkLogin()
+
+			# Manage awake duration
+			battery.Battery.manageAwake(wifi.Wifi.isWanConnected())
+
+			# Reset watch dog
 			useful.WatchDog.feed()
-			if pollingId % 600 == 0:
-				useful.logError("-")
+			await uasyncio.sleep(1)
+			pollingId += 1
