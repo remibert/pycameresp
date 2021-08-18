@@ -582,7 +582,7 @@ class Detection:
 
 		# If camera not stabilized speed start
 		if self.motion and self.motion.isStabilized() == True:
-			await uasyncio.sleep_ms(self.pollingFrequency)
+			await uasyncio.sleep_ms(self.pollingFrequency*100 if Server.isSlow() else self.pollingFrequency)
 
 		try:
 			# Waits for the camera's availability

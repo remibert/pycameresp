@@ -64,8 +64,6 @@ class StationConfig(jsonconfig.JsonConfig):
 		result  ="   Hostname   :%s\n"%useful.tostrings(self.hostname)
 		return result
 
-
-
 class Station:
 	""" Class to manage wifi station """
 	wlan    = None
@@ -206,19 +204,17 @@ class Station:
 		""" Scan networks known """
 		result = False
 		# Scan other networks
-		Station.scan()
+		if len(Station.scan()) > 0:
+			# List known networks
+			Station.knownNetworks = Station.network.listKnown()
 
-		# List known networks
-		Station.knownNetworks = Station.network.listKnown()
-
-		# For all known networks
-		for networkName in Station.knownNetworks:
-			# If the network not already tested
-			if networkName != Station.config.default:
-				result = await Station.selectNetwork(networkName, maxRetry)
-				if result == True:
-					break
-
+			# For all known networks
+			for networkName in Station.knownNetworks:
+				# If the network not already tested
+				if networkName != Station.config.default:
+					result = await Station.selectNetwork(networkName, maxRetry)
+					if result == True:
+						break
 		return result
 
 	@staticmethod

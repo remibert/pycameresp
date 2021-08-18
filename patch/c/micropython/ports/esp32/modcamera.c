@@ -127,7 +127,7 @@ typedef struct Shape_t
 	uint16_t size;
 } Shape_t;
 
-#define MAX_POINTS 4
+#define MAX_LINES 4
 // Straight line portion
 typedef struct 
 {
@@ -169,8 +169,8 @@ typedef struct
 {
 	uint8_t * mask_data;
 	uint16_t  mask_length;
-	Line_t errorLights[MAX_POINTS];
-	Line_t errorHistos[MAX_POINTS];
+	Line_t errorLights[MAX_LINES];
+	Line_t errorHistos[MAX_LINES];
 } MotionConfiguration_t;
 
 MotionConfiguration_t motionConfiguration = {0,0};
@@ -862,11 +862,11 @@ int Motion_getDiffHisto(Motion_t *self, Motion_t *previous)
 
 
 /** Extract lines from the lists of points */
-void Lines_configure(mp_obj_t points, Line_t * lines, int maxPoints)
+void Lines_configure(mp_obj_t points, Line_t * lines, int maxLines)
 {
 	size_t size = list_get_size(points);
 
-	if (maxPoints == size)
+	if (maxLines == size)
 	{
 		Line_t point1, point2;
 
@@ -917,13 +917,13 @@ void Lines_configure(mp_obj_t points, Line_t * lines, int maxPoints)
 }
 
 /** Compute Y value according to X */
-int Lines_getY(Line_t * lines, int maxPoints, int x)
+int Lines_getY(Line_t * lines, int maxLines, int x)
 {
 	int i;
 	int y =0;
 
 	// Search the error x according to the x level
-	for (i = 1; i < maxPoints; i++)
+	for (i = 1; i < maxLines; i++)
 	{
 		// If right straight line found
 		if (x >= lines[i-1].x && x < lines[i].x)
@@ -950,7 +950,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 	int light;
 
 	// Compute the error histo according to the curves configured
-	errHisto = Lines_getY(motionConfiguration.errorHistos, MAX_POINTS, diffHisto);
+	errHisto = Lines_getY(motionConfiguration.errorHistos, MAX_LINES, diffHisto);
 
 	// For all square detection
 	for (i = 0; i < self->diffMax; i++)
@@ -959,13 +959,17 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 		light = max(*pCurrentLights, *pPreviousLights);
 
 		// Compute the error light according to the curves configured
-		errLight = Lines_getY(motionConfiguration.errorLights, MAX_POINTS, light);
+		errLight = Lines_getY(motionConfiguration.errorLights, MAX_LINES, light);
 
 		// Mitigate the error according to the change in brightness
 		if (((abs(*pCurrentLights - *pPreviousLights) * errHisto)>>8) > errLight)
 		{
 			*pDiffs = 0x01;
 			diffDetected ++;
+		}
+		else
+		{
+			*pDiffs = 0x00;
 		}
 		pDiffs ++;
 		pCurrentLights ++;
@@ -1006,12 +1010,14 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 	}
 	else
 	{
+		int count = 0;
 		pDiffs         = self->diffs;
 		for (i = 0; i < self->diffMax; i++)
 		{
 			if (*pDiffs)
 			{
 				diffs[i] = '#';
+				count ++;
 			}
 			else
 			{
@@ -1173,10 +1179,10 @@ STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t params_in)
 	else
 	{
 		mp_obj_t errorLights = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLights));
-		Lines_configure(errorLights, motionConfiguration.errorLights, MAX_POINTS);
+		Lines_configure(errorLights, motionConfiguration.errorLights, MAX_LINES);
 
 		mp_obj_t errorHistos = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorHistos));
-		Lines_configure(errorHistos, motionConfiguration.errorHistos, MAX_POINTS);
+		Lines_configure(errorHistos, motionConfiguration.errorHistos, MAX_LINES);
 
 		mp_obj_t mask_in = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_mask));
 		if (mp_obj_is_str_or_bytes(mask_in))

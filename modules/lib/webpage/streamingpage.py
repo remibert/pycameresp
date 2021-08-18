@@ -2,6 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to see the camera streaming """
 from server.httpserver import HttpServer
+from server.server   import Server
 from htmltemplate import *
 from webpage import *
 from server.httprequest import *
@@ -79,13 +80,14 @@ class Streaming:
 @HttpServer.addRoute(b'/camera/start', available=useful.iscamera())
 async def cameraStartStreaming(request, response, args):
 	""" Start video streaming """
+	Server.slowDown()
 	if request.name != "StreamingServer":
 		return 
 
 	try:
 		writer = None
 		currentStreamingId = int(request.params[b"streamingid"])
-		reserved = await Camera.reserve(request, timeout=20, suspension=5)
+		reserved = await Camera.reserve(request, timeout=20, suspension=30)
 		print("Start streaming %d"%currentStreamingId)
 		if reserved:
 			Camera.open()

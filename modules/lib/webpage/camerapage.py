@@ -2,6 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to see the camera streaming """
 from server.httpserver import HttpServer
+from server.server   import Server
 from htmltemplate import *
 from webpage import *
 from server.httprequest import *
@@ -33,6 +34,7 @@ async def cameraPage(request, response, args):
 @HttpServer.addRoute(b'/camera/configure')
 async def cameraConfigure(request, response, args):
 	""" Real time camera configuration """
+	Server.slowDown()
 	print(useful.tostrings(b"%s=%s"%(request.params[b"name"],request.params[b"value"])))
 	cameraConfig.update(request.params)
 	Streaming.setConfig(cameraConfig)

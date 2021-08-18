@@ -2,6 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to view recent motion detection """
 from server.httpserver import HttpServer
+from server.server   import Server
 from htmltemplate import *
 from webpage import *
 from motion import Historic
@@ -12,6 +13,10 @@ from video import Camera
 async def historic(request, response, args):
 	""" Historic motion detection page """
 	await Historic.getRoot()
+	if len(request.params) == 0:
+		detailled = False
+	else:
+		detailled = True
 	pageContent = [\
 		Tag(b"""
 		<script type='text/javascript'>
@@ -29,15 +34,19 @@ async def historic(request, response, args):
 
 		setInterval(show, 200);
   
-		const MOTION_FILENAME=0;
-		const MOTION_WIDTH=1;
-		const MOTION_HEIGHT=2;
-		const MOTION_SHAPES=3;
-		const SHAPE_COUNT=0;
-		const SHAPE_X=1;
-		const SHAPE_Y=2;
-		const SHAPE_WIDTH=3;
-		const SHAPE_HEIGHT=4;
+		const MOTION_FILENAME =0;
+		const MOTION_WIDTH    =1;
+		const MOTION_HEIGHT   =2;
+		const MOTION_SHAPES   =3;
+		const MOTION_DIFFS    =4;
+		const MOTION_SQUAREX  =5;
+		const MOTION_SQUAREY  =6;
+
+		const SHAPE_COUNT     =0;
+		const SHAPE_X         =1;
+		const SHAPE_Y         =2;
+		const SHAPE_WIDTH     =3;
+		const SHAPE_HEIGHT    =4;
 
 		function download(fileUrl) 
 		{
@@ -135,53 +144,79 @@ async def historic(request, response, args):
 			ctx.drawImage(document.getElementById(id), 0, 0, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
 			var x;
 			var y;
-			var width;
-			var height;
 
+			// Show thumb image selected
 			document.getElementById(previousId).style.border = "";
 			document.getElementById(id).style.border = "3px solid dodgerblue";
 			previousId = id;
 
-			var bigger = 0;
-			var biggerId = 0;
-			var size = 0;
-			for (let i = 0; i < motion[MOTION_SHAPES].length; i++)
+			var squarex = motion[MOTION_SQUAREX];
+			var squarey = motion[MOTION_SQUAREY];
+			var maxx = motion[MOTION_WIDTH] /squarex;
+			var maxy = motion[MOTION_HEIGHT]/squarey;
+			
+			if (%d)
 			{
-				size = motion[MOTION_SHAPES][i][SHAPE_WIDTH]*motion[MOTION_SHAPES][i][SHAPE_HEIGHT];
-				if (size > bigger)
+				for (y = 0; y < maxy; y ++)
 				{
-					bigger = size;
-					biggerId = i;
+					for (x = 0; x < maxx; x ++)
+					{
+						detection = motion[MOTION_DIFFS][y*maxx + x];
+						if (detection != " ")
+						{
+							ctx.strokeStyle = "yellow";
+							ctx.strokeRect(x * squarex + 15, y*squarey +15, squarex-30, squarey-30);
+						}
+					}
 				}
 			}
 
-			for (let i = 0; i < motion[MOTION_SHAPES].length; i++)
+			ctx.strokeStyle = "red";
+			for (y = 0; y < maxy; y ++)
 			{
-				x      = motion[MOTION_SHAPES][i][SHAPE_X]      + 1;
-				y      = motion[MOTION_SHAPES][i][SHAPE_Y]      + 1;
-				width  = motion[MOTION_SHAPES][i][SHAPE_WIDTH]  - 2;
-				height = motion[MOTION_SHAPES][i][SHAPE_HEIGHT] - 2;
-				if (i == biggerId)
+				for (x = 0; x < maxx; x ++)
 				{
-					ctx.strokeStyle = "red";
-					ctx.strokeRect(x, y, width, height);
-				}
-				else
-				{
-					if (motion[MOTION_SHAPES][i][SHAPE_COUNT] >= 10)
+					var detection = motion[MOTION_DIFFS][y*maxx + x];
+					if (x >= 1)
 					{
-						ctx.strokeStyle = "white";
-						ctx.strokeRect(x, y, width, height);
+						var previous = motion[MOTION_DIFFS][y*maxx + x -1];
+						if (previous != detection)
+						{
+							ctx.beginPath();
+							ctx.moveTo(x*squarex, y*squarey);
+							ctx.lineTo(x*squarex, y*squarey + squarey);
+							ctx.stroke();
+						}
 					}
 				}
 			}
 			
+			for (x = 0; x < maxx; x ++)
+			{
+				for (y = 0; y < maxy; y ++)
+				{
+					var detection = motion[MOTION_DIFFS][y*maxx + x];
+					if (y >= 1)
+					{
+						var previous = motion[MOTION_DIFFS][(y-1)*maxx + x];
+						if (previous != detection)
+						{
+							ctx.beginPath();
+							ctx.moveTo(x*squarex, y*squarey);
+							ctx.lineTo(x*squarex + squarex, y*squarey);
+							ctx.stroke();
+						}
+					}
+				}
+			}
+
+			// Show text image
 			ctx.font = '20px monospace';
 			ctx.fillStyle = "red";
 			ctx.fillText(getName(motion[MOTION_FILENAME]), 10, 20);
 
+			// Show arrows
 			ctx.fillStyle = 'rgba(255,255,255,10)';
-
 			ctx.font = '30px monospace';
 			ctx.fillText("\xE2\x86\x90", 0, motion[MOTION_HEIGHT]/2);
 			ctx.fillText("\xE2\x86\x92", motion[MOTION_WIDTH]-20, motion[MOTION_HEIGHT]/2);
@@ -189,6 +224,7 @@ async def historic(request, response, args):
 			ctx.fillText("\xE2\x87\xA5", motion[MOTION_WIDTH]/2, motion[MOTION_HEIGHT]);
 		}
 
+		// Convert the filename into text displayed
 		function getName(filename)
 		{
 			filename = filename.split(".")[0];
@@ -288,8 +324,10 @@ async def historic(request, response, args):
 			const x = e.clientX - rect.left;
 			const y = e.clientY - rect.top;
 
+			// If the click is in the middle
 			if (x > rect.width/3 && x < (2*rect.width/3) && y > rect.height/3 && y < (2*rect.height/3))
 			{
+				// Download image
 				if (confirm("Download this image ?"))
 				{
 					downloadMotion();
@@ -354,7 +392,7 @@ async def historic(request, response, args):
 		<canvas id="motion" width="%d" height="%d" >The reconstruction is in progress, wait a few minutes after a reboot of the terminal</canvas>
 		<br>
 		<div id="motions"></div>
-		"""%(800,600)),
+		"""%(detailled, 800,600)),
 	]
 	page = mainFrame(request, response, args,b"Last motion detections",pageContent)
 	await response.sendPage(page)
@@ -362,6 +400,7 @@ async def historic(request, response, args):
 @HttpServer.addRoute(b'/historic/historic.json', available=useful.iscamera())
 async def historicJson(request, response, args):
 	""" Send historic json file """
+	Server.slowDown()
 	if await Historic.locked() == False:
 		await response.sendBuffer(b"historic.json", await Historic.getJson())
 	else:
@@ -370,7 +409,8 @@ async def historicJson(request, response, args):
 @HttpServer.addRoute(b'/historic/images/.*', available=useful.iscamera())
 async def historicImage(request, response, args):
 	""" Send historic image """
-	reserved = await Camera.reserve(Historic, timeout=5, suspension=5)
+	Server.slowDown()
+	reserved = await Camera.reserve(Historic, timeout=5, suspension=30)
 	try:
 		if reserved:
 			await Historic.acquire()
@@ -385,7 +425,8 @@ async def historicImage(request, response, args):
 @HttpServer.addRoute(b'/historic/download/.*', available=useful.iscamera())
 async def downloadImage(request, response, args):
 	""" Download historic image """
-	reserved = await Camera.reserve(Historic, timeout=5, suspension=5)
+	Server.slowDown()
+	reserved = await Camera.reserve(Historic, timeout=5, suspension=30)
 	try:
 		if reserved:
 			await Historic.acquire()

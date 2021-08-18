@@ -45,6 +45,7 @@ class ServerContext:
 class Server:
 	""" Class used to manage the servers """
 	suspended = [False]
+	slowSpeed = [None]
 	tasks = {}
 	context = None
 
@@ -69,6 +70,22 @@ class Server:
 			while Server.suspended[0]:
 				await uasyncio.sleep(1)
 		Server.tasks[id(uasyncio.current_task())] = False
+
+	@staticmethod
+	def isSlow():
+		""" Indicates that task other than server must be slower """
+		if Server.slowSpeed[0] == None:
+			return False
+		elif time.time() > Server.slowSpeed[0]:
+			Server.slowSpeed[0] = None
+			return False
+		else:
+			return True
+
+	@staticmethod
+	def slowDown(duration=10):
+		""" Set the state slow for a specified duration """
+		Server.slowSpeed[0] = time.time() + duration
 
 	@staticmethod
 	def isAllWaiting():

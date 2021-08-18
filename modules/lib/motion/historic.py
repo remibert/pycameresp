@@ -50,10 +50,11 @@ class Historic:
 				path = useful.tostrings(path)
 				name = useful.tostrings(name) 
 				jsonInfo = useful.tobytes(json.dumps(info))
+				item = Historic.createItem(root + "/" + path + "/" + name +".json", info)
 				res1 = useful.SdCard.save(path, name + ".jpg" , image)
 				res2 = useful.SdCard.save(path, name + ".html", html)
-				res3 = useful.SdCard.save(path, name + ".json", jsonInfo)
-				Historic.addItem(root + "/" + path + "/" + name +".json", info)
+				res3 = useful.SdCard.save(path, name + ".json", json.dumps(item))
+				Historic.addItem(item)
 				result = res1 and res2 and res3
 			except Exception as err:
 				useful.exception(err)
@@ -62,8 +63,10 @@ class Historic:
 		return result
 
 	@staticmethod
-	def addItem(filename, info):
+	def createItem(filename, info):
+		""" Create historic item """
 		name = useful.splitext(filename)[0] + ".jpg"
+		result = None
 		shapes = []
 		if "shapes" in info:
 			for shape in info["shapes"]:
@@ -71,7 +74,17 @@ class Historic:
 
 		if "geometry" in info:
 			# Add json file to the historic
-			Historic.historic.insert(0,[name, info["geometry"]["width"],info["geometry"]["height"], shapes])
+			result = [name, info["geometry"]["width"],info["geometry"]["height"], shapes, info["diff"]["diffs"], info["diff"]["squarex"], info["diff"]["squarey"]]
+		return result
+
+	@staticmethod
+	def addItem(item):
+		""" Add item in the historic """
+		if item is not None:
+			if not useful.ismicropython():
+				item [0] = item[0][1:]
+			# Add json file to the historic
+			Historic.historic.insert(0,item)
 
 	@staticmethod
 	async def build(motions):
@@ -91,7 +104,7 @@ class Historic:
 						# Parse json file
 						file = None
 						file = open(motion, "rb")
-						Historic.addItem(motion, json.load(file))
+						Historic.addItem(json.load(file))
 					except Exception as err:
 						useful.exception(err)
 					finally:
@@ -264,7 +277,8 @@ class Historic:
 		""" Internal periodic task """
 		from server.server import Server
 		if useful.ismicropython():
-			await Server.waitResume(4*60)
+			await Server.waitResume(10)
+			# await Server.waitResume(4*60)
 		else:
 			await Server.waitResume(4)
 		if Historic.motionInProgress[0] == False:

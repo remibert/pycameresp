@@ -4,6 +4,7 @@
 from htmltemplate import *
 from webpage.passwordpage import PasswordPage
 from server.httpserver import HttpServer
+from server.server   import Server
 from wifi.station import Station
 
 styleNav = b"""  height: 100%;
@@ -55,6 +56,7 @@ def mainPage(request, response, args, content=None):
 					], title=title)
 	else:
 		page = Page(page + [stylesheet], title=b"Login")
+	Server.slowDown()
 	return page
 
 def mainFrame(request, response, args, titleFrame, *content):

@@ -2,6 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to manage board """
 from server.httpserver import HttpServer
+from server.server   import Server
 from wifi.station import Station
 from htmltemplate import *
 from webpage import *
@@ -32,12 +33,14 @@ async def systemPage(request, response, args):
 @HttpServer.addRoute(b'/system/importConfig')
 async def importConfig(request, response, args):
 	""" Import configuration """
+	Server.slowDown()
 	useful.importFiles(request.getContentFilename())
 	await response.sendOk()
 
 @HttpServer.addRoute(b'/system/exportConfig')
 async def exportConfig(request, response, args):
 	""" Export all configuration """
+	Server.slowDown()
 	useful.exportFiles("config.cfg", path="./config",pattern="*.json", recursive=False)
 	await response.sendFile(b"config.cfg", headers=request.headers)
 	useful.remove("config.cfg")
@@ -45,12 +48,14 @@ async def exportConfig(request, response, args):
 @HttpServer.addRoute(b'/system/importFileSystem')
 async def importFileSystem(request, response, args):
 	""" Import file system """
+	Server.slowDown()
 	useful.importFiles(request.getContentFilename())
 	await reboot(request, response, args)
 
 @HttpServer.addRoute(b'/system/exportFileSystem')
 async def exportFileSystem(request, response, args):
 	""" Export file system """
+	Server.slowDown()
 	useful.exportFiles("fileSystem.cfs", path="./",pattern="*.*", recursive=True)
 	await response.sendFile(b"fileSystem.cfs", headers=request.headers)
 	useful.remove("fileSystem.cfs")
@@ -58,6 +63,7 @@ async def exportFileSystem(request, response, args):
 @HttpServer.addRoute(b'/system/exportTrace')
 async def exportTrace(request, response, args):
 	""" Export file system """
+	Server.slowDown()
 	await response.sendFile([b"trace.log.4",b"trace.log.3",b"trace.log.2",b"trace.log.1",b"trace.log"], headers=request.headers)
 
 @HttpServer.addRoute(b'/system/reboot')

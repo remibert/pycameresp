@@ -422,7 +422,7 @@ class ContentFile:
 			result = await streamio.write(b'Content-Type: text/plain\r\n\r\n')
 			filenames = b""
 			for filename in self.filenames:
-				filenames += filename + b" "
+				filenames += useful.tobytes(filename) + b" "
 			result += await streamio.write(b"File %s not found"%useful.tobytes(filename))
 		return result
 
