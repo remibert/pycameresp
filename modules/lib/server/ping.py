@@ -21,6 +21,7 @@ import wifi
 def ticks_us():
 	""" Get tick in microseconds """
 	try:
+		# pylint: disable=no-member
 		return time.ticks_us()
 	except:
 		return time.time_ns()//1000
@@ -103,8 +104,8 @@ async def select(rlist, wlist, xlist, timeout=0):
 			if timeout <= 0:
 				return [],[],[]
 			else:
-				timeout -= 0.1
-				await uasyncio.sleep(0.1)
+				timeout -= 0.25
+				await uasyncio.sleep(0.25)
 
 class Ping:
 	""" Class used to ping host """

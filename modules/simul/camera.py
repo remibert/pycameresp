@@ -300,3 +300,6 @@ def colorbar      (val=None):
 	if val != None:
 		_colorbar = val
 	return _colorbar
+
+def isavailable():
+	return True

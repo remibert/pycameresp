@@ -4,7 +4,8 @@
 from server.httpserver import HttpServer
 from server.server   import Server
 from htmltemplate import *
-from webpage import *
+from webpage.mainpage import *
+from webpage.streamingpage import *
 from server.httprequest import *
 from tools import useful
 from video import CameraConfig, Camera

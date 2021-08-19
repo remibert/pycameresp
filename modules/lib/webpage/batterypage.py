@@ -3,7 +3,7 @@
 """ Function define the web page to configure the battery level detection """
 from server.httpserver import HttpServer
 from htmltemplate import *
-from webpage import *
+from webpage.mainpage import *
 from tools import BatteryConfig
 
 @HttpServer.addRoute(b'/battery', title=b"Battery", index=200)

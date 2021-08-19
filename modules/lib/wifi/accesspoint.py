@@ -117,7 +117,7 @@ class AccessPoint:
 			useful.exception(err, msg="Cannot configure wifi AccessPoint")
 
 	@staticmethod
-	def start(force):
+	def start(force=False):
 		""" Start the access point according to the configuration. Force is used to skip configuration activation flag """
 		result = False
 		if AccessPoint.isActive() == False:

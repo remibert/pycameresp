@@ -3,7 +3,7 @@
 """ Function define the web page to see the camera streaming """
 from server.httpserver import HttpServer
 from htmltemplate import *
-from webpage import *
+from webpage.mainpage import *
 from webpage.streamingpage import *
 from server.httprequest import *
 from tools import useful

@@ -34,7 +34,6 @@ sys.path.append("lib/tools")
 try:
 	from tools import useful
 except:
-	# pylint: disable=unresolved-import
 	import useful
 
 TABSIZE = 4          # Tabulation size
@@ -596,13 +595,13 @@ class Text:
 			else:
 				self.cursorColumn = 0
 
-	def load(self, filename):
+	def load(self, filename_):
 		""" Load file in the editor """
 		self.filename = None
 		try:
 			self.lines = []
-			self.filename = filename
-			file = open(filename, "r")
+			self.filename = filename_
+			file = open(filename_, "r")
 			line = file.readline()
 			while line != "":
 				self.lines.append(line.replace("\r\n","\n"))
@@ -611,6 +610,7 @@ class Text:
 			if len(self.lines) == 0:
 				self.lines = [""]
 		except MemoryError:
+			# pylint: disable=raise-missing-from
 			raise MemoryError()
 		except OSError:
 			self.lines = [""]
@@ -1456,19 +1456,19 @@ class Edit:
 
 class Editor:
 	""" Class which manage a complete editor """
-	def __init__(self, filename, readOnly=False):
+	def __init__(self, filename_, readOnly=False):
 		""" Constructor """
-		self.file = filename
-		self.filename = useful.split(filename)[1]
+		self.file = filename_
+		self.filename = useful.split(filename_)[1]
 		self.edit = Edit(readOnly=readOnly)
-		self.edit.text.load(filename)
+		self.edit.text.load(filename_)
 		self.isRefreshHeader = True
 		self.findText = None
 		self.replaceText = None
 		self.keys= []
 		self.loop = None
 
-		if (not useful.exists(filename) and readOnly == True) or useful.isdir(filename):
+		if (not useful.exists(filename_) and readOnly == True) or useful.isdir(filename_):
 			print("Cannot open '%s'"%self.filename)
 		else:
 			self.run()
@@ -1477,14 +1477,14 @@ class Editor:
 		""" Refresh the header of editor """
 		if self.isRefreshHeader:
 			self.edit.view.moveCursor(0, 0)
-			filename = "File: %s"%(self.filename)
+			filename_ = "File: %s"%(self.filename)
 			if self.edit.text.readOnly == False:
-				filename += " (*)" if self.edit.text.modified else ""
+				filename_ += " (*)" if self.edit.text.modified else ""
 				end = "Mode: %s"%("Replace" if self.edit.text.replaceMode else "Insert")
 			else:
 				end = "Read only" if self.edit.text.readOnly else ""
 
-			header = "\x1B[7m %s%s%s \x1B[m"%(filename, " "*(self.edit.view.width - len(filename) - len(end)-2), end)
+			header = "\x1B[7m %s%s%s \x1B[m"%(filename_, " "*(self.edit.view.width - len(filename_) - len(end)-2), end)
 			self.edit.view.write(header)
 			self.edit.view.moveCursor()
 			self.isRefreshHeader = False
@@ -1536,25 +1536,25 @@ class Editor:
 		else:
 			self.loop = False
 
-	def input(self, text, help=""):
+	def input(self, text, help_=""):
 		""" Input value, used to get a line number, or text searched """
-		edit = Edit(viewTop=2, viewHeight=1, readOnly=False)
-		edit.view.cls()
-		edit.view.moveCursor(1,0)
-		edit.view.write(text)
-		edit.view.moveCursor(4,0)
-		edit.view.write(help)
+		edit_ = Edit(viewTop=2, viewHeight=1, readOnly=False)
+		edit_.view.cls()
+		edit_.view.moveCursor(1,0)
+		edit_.view.write(text)
+		edit_.view.moveCursor(4,0)
+		edit_.view.write(help_)
 		result = None
 		while 1:
-			edit.view.refresh()
+			edit_.view.refresh()
 			key = self.getKey()
 			if key[0] in NEW_LINE:
-				result = edit.text.lines[0]
+				result = edit_.text.lines[0]
 				break
 			elif key[0] in ESCAPE:
 				break
 			else:
-				edit.text.treatKey(key)
+				edit_.text.treatKey(key)
 		return result
 
 	def find(self):
@@ -1685,10 +1685,8 @@ class Editor:
 		self.edit.view.reset()
 
 if __name__ == "__main__":
-	readOnly = True
-	readOnly = False
 	if len(sys.argv) > 1:
 		filename = sys.argv[1]
 	else:
 		filename = "editor.txt"
-	edit = Editor(filename, readOnly=readOnly)
+	edit = Editor(filename, readOnly=True)

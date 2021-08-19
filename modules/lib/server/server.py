@@ -83,7 +83,7 @@ class Server:
 			return True
 
 	@staticmethod
-	def slowDown(duration=10):
+	def slowDown(duration=20):
 		""" Set the state slow for a specified duration """
 		Server.slowSpeed[0] = time.time() + duration
 
@@ -99,13 +99,13 @@ class Server:
 	@staticmethod
 	async def waitAllSuspended():
 		""" Wait all servers suspended """
-		for i in range(150):
+		for i in range(30):
 			if Server.isAllWaiting() == True:
 				break
 			else:
-				if i % 30 == 0:
+				if i % 6 == 0:
 					print("Wait all servers suspended...")
-				await uasyncio.sleep(0.1)
+				await uasyncio.sleep(0.5)
 				useful.WatchDog.feed()
 
 	@staticmethod
@@ -246,12 +246,16 @@ class Server:
 	@staticmethod
 	async def manage(pollingId):
 		""" Manage the network and server """
+		# Server can be started
 		if Server.context.serverPostponed == 0:
+			# Start server if no yet started
 			await Server.startServer()
 
+			# Polling for wifi
 			if pollingId %179 == 0:
 				await wifi.Wifi.manage()
 
+			# Polling for notification not sent
 			if pollingId %181 == 0 and Server.context.flushed == False:
 				if wifi.Wifi.isWanAvailable():
 					await Server.synchronizeTime()
@@ -259,23 +263,32 @@ class Server:
 					if wifi.Wifi.isWanConnected():
 						Server.context.flushed = True
 
+			# Polling for time synchronisation
 			if pollingId % 3607 == 0:
 				await Server.synchronizeTime()
 
+			# Polling for get wan ip
 			forced =  Server.isOnePerDay()
 			if pollingId % 3593 == 0 or forced:
 				await Server.synchronizeWanIp(forced)
 
 		else:
 			Server.context.serverPostponed -= 1
-   
+
+			# If server can start
 			if Server.context.serverPostponed == 0:
 				from server.notifier import Notifier
 				Server.context.notifier = Notifier
 
+				# Start wifi
 				await wifi.Wifi.manage()
+
+				# If wan connected
 				if wifi.Wifi.isWanAvailable():
+					# Synchronize time
 					await Server.synchronizeTime()
+
+					# Flush notification not sent
 					await Server.context.notifier.flush()
 					if wifi.Wifi.isWanConnected():
 						Server.context.flushed = True

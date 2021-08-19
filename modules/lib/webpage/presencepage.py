@@ -5,7 +5,7 @@ from server.httpserver import HttpServer
 from server.dnsclient import resolveHostname, isIpAddress
 from server.presence import PresenceConfig
 from htmltemplate import *
-from webpage import *
+from webpage.mainpage import *
 import wifi
 from tools import useful
 

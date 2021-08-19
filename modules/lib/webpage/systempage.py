@@ -5,11 +5,8 @@ from server.httpserver import HttpServer
 from server.server   import Server
 from wifi.station import Station
 from htmltemplate import *
-from webpage import *
+from webpage.mainpage import *
 from tools import useful
-import uasyncio
-import sys
-import gc
 
 @HttpServer.addRoute(b'/system', title=b"System", index=300)
 async def systemPage(request, response, args):

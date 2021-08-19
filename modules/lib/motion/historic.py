@@ -40,7 +40,7 @@ class Historic:
 		return None
 
 	@staticmethod
-	async def addMotion(path, name, image, info, html):
+	async def addMotion(path, name, image, info):
 		""" Add motion detection in the historic """
 		root = await Historic.getRoot()
 		result = False
@@ -52,10 +52,9 @@ class Historic:
 				jsonInfo = useful.tobytes(json.dumps(info))
 				item = Historic.createItem(root + "/" + path + "/" + name +".json", info)
 				res1 = useful.SdCard.save(path, name + ".jpg" , image)
-				res2 = useful.SdCard.save(path, name + ".html", html)
-				res3 = useful.SdCard.save(path, name + ".json", json.dumps(item))
+				res2 = useful.SdCard.save(path, name + ".json", json.dumps(item))
 				Historic.addItem(item)
-				result = res1 and res2 and res3
+				result = res1 and res2
 			except Exception as err:
 				useful.exception(err)
 			finally:
@@ -82,6 +81,7 @@ class Historic:
 		""" Add item in the historic """
 		if item is not None:
 			if not useful.ismicropython():
+				# Remove the "/" before filename
 				item [0] = item[0][1:]
 			# Add json file to the historic
 			Historic.historic.insert(0,item)
@@ -277,8 +277,8 @@ class Historic:
 		""" Internal periodic task """
 		from server.server import Server
 		if useful.ismicropython():
-			await Server.waitResume(10)
-			# await Server.waitResume(4*60)
+			# await Server.waitResume(10)
+			await Server.waitResume(4*60)
 		else:
 			await Server.waitResume(4)
 		if Historic.motionInProgress[0] == False:

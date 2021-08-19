@@ -3,22 +3,18 @@
 """ Function define the web page to display all informations of the board """
 from server.httpserver import HttpServer
 from htmltemplate import *
-from webpage import *
+from webpage.mainpage import *
 from tools import useful
-from tools.useful import log
 import sys
 import gc
-
-try:
-	import machine
-	import esp
-except:
-	pass
+import machine
+import esp
 
 @HttpServer.addRoute(b'/', title=b"Information", index=10)
 async def index(request, response, args):
 	""" Function define the web page to display all informations of the board """
 	try:
+		# pylint: disable=no-member
 		allocated = gc.mem_alloc()
 		freed     = gc.mem_free()
 		memAlloc = useful.sizeToBytes(allocated)

@@ -7,7 +7,7 @@ DEEPSLEEP_RESET = 4
 SOFT_RESET = 5
 BROWNOUT_RESET = 6
 
-def freq(a):
+def freq(a=0):
 	return 240*1000000
 
 def reset_cause():
@@ -66,8 +66,14 @@ class Timer:
 			self.timer.cancel()
 
 class WDT:
-	def __init__(self, id, duration):
+	def __init__(self, id_, duration):
 		pass
 
 	def feed(self):
 		pass
+
+class RTC:
+	def datetime(self, date_):
+		return None
+class SDCard:
+	pass

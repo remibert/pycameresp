@@ -101,32 +101,6 @@ class ImageMotion:
 		""" Get the message of motion """
 		return "%s Id=%d D=%d"%(self.date, self.index, self.getDiffCount())
 
-	def getHtmlShapes(self):
-		""" Get the html page with shapes on the image """
-		html = b"""<script type='text/javascript'>
-		window.onload=function()
-		{
-			var img    = new Image;
-			img.src    = '%s.jpg';
-			img.onload = function () 
-			{
-				var ctx = document.getElementById('motion').getContext('2d');
-				ctx.strokeStyle = "red";
-				ctx.drawImage(img, 0, 0, motion.width, motion.height);
-				%s
-			}
-		}
-		</script>
-		<canvas id="motion" width="%d" height="%d"></canvas>"""
-		result =b""
-		if self.comparison is not None:
-			shapes = b""
-			if "shapes" in self.comparison:
-				for shape in self.comparison["shapes"]:
-					shapes += b"				ctx.strokeRect(%d, %d, %d, %d);\n"%(shape["x"]+1,shape["y"]+1,shape["width"]-2,shape["height"]-2)
-			result = html%(useful.tobytes(self.getFilename()), shapes, self.comparison["geometry"]["width"], self.comparison["geometry"]["height"])
-		return result
-
 	def getInformations(self):
 		""" Return the informations of motion """
 		if self.comparison != None:
@@ -142,13 +116,7 @@ class ImageMotion:
 
 	async def save(self):
 		""" Save the image on sd card """
-		# if self.getDifferences() != "":
-		# 	width = self.comparison["diff"]["width"]
-		# 	height = self.comparison["diff"]["height"]
-		# 	diffs  = self.comparison["diff"]["diffs"]
-		# 	for line in range(height):
-		# 		print(diffs[line*width:line*width+width])
-		return await Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations(), self.getHtmlShapes())
+		return await Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations())
 
 	def compare(self, previous, extractShape=True):
 		""" Compare two motion images to get differences """
@@ -208,7 +176,8 @@ class ImageMotion:
 			self.motion.configure(\
 				{
 					"mask":mask,
-					"errorLights":[[0,1],[errorLight,errorLight//3],[3*errorLight, errorLight],[256,errorLight]],
+					# "errorLights":[[0,1],[errorLight,errorLight//3],[3*errorLight, errorLight],[256,errorLight]],
+					"errorLights":[[0,1],[128,errorLight],[192, errorLight],[256,errorLight]],
 					"errorHistos":[[0,0],[96,32],[160,224],[256,256]]
 					# "errorHistos":[[0,0],[128,128],[192, 192],[256,256]]
 				})

@@ -248,11 +248,6 @@ class Camera:
 		Camera.modified[0] = False
 
 	@staticmethod
-	def compare(image1, image2):
-		""" Compare motion images """
-		return camera.compare(image1, image2)
-
-	@staticmethod
 	def framesize(resolution):
 		""" Configure the frame size """
 		val = None

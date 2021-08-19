@@ -3,7 +3,7 @@
 """ Function define the web page to configure the start of servers """
 from server.httpserver import HttpServer
 from htmltemplate      import *
-from webpage           import *
+from webpage.mainpage  import *
 from tools.useful      import *
 from server.server     import ServerConfig
 

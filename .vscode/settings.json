@@ -29,7 +29,6 @@
 		"complex": "c"
 	},
 	"C_Cpp.dimInactiveRegions": false,
-	"python.linting.enabled": true,
 	"python.linting.pylintEnabled": true,
 	"python.autoComplete.extraPaths": [
 		"${workspaceFolder}/modules",
@@ -64,5 +63,6 @@
 		"--disable=eval-used",
 		"--disable=exec-used"],
 	"python.envFile": "${workspaceFolder}/.env",
-	"python.linting.pylintUseMinimalCheckers":true,
+	"python.linting.pylintUseMinimalCheckers": true,
+	"python.linting.enabled": true,
 }

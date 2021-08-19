@@ -3,7 +3,6 @@
 """ Manage the host name """
 from tools import useful
 
-
 class Hostname:
 	""" Manage the host name """
 	number = [None]

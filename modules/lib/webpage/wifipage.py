@@ -169,6 +169,8 @@ async def accessPoint(request, response, args):
 			authmodes.append(Option(text=value, selected=b"selected", value=value))
 		else:
 			authmodes.append(Option(text=value, value=value))
+	# pylint: disable=missing-parentheses-for-call-in-test
+	# pylint: disable=using-constant-test
 	page = mainFrame(request, response, args, b"Access point configuration" if accessPoint else b"Wifi configuration",
 		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),Br(),
 		Card(

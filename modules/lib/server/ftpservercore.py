@@ -309,6 +309,7 @@ class FtpServerCore:
 			with open(useful.tostrings(filename), "r") as file:
 				length = file.readinto(chunk)
 				while length > 0:
+					# pylint: disable=no-member
 					sent = self.pasvsocket.write(chunk[:length])
 					length = file.readinto(chunk)
 		else:

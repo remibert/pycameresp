@@ -26,6 +26,7 @@ class Template:
 	async def write(self, file):
 		""" Write to the file stream the html template (parse also all children) """
 		try:
+			# pylint: disable=no-member
 			await file.write(self.getBegin(self))
 			for child in self.children:
 				if isinstance(child, Template):

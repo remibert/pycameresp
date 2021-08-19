@@ -7,12 +7,13 @@ from wifi.hostname import *
 from tools import useful
 
 WIFI_OFF            = 0
-WIFI_OTHER_NETWORK = 1
+WIFI_OTHER_NETWORK  = 1
 WIFI_CONNECTED      = 2
 LAN_CONNECTED       = 3
 WAN_CONNECTED       = 4
 ACCESS_POINT_FORCED = 5
 WIFI_LOST           = 6
+WIFI_ABSENT         = 7
 
 class WifiContext:
 	""" Wifi context """
@@ -130,7 +131,7 @@ class Wifi:
 						# Start access point and force it if no wifi station connected
 						AccessPoint.start(True)
 					else:
-						Wifi.setState(WIFI_STOP)
+						Wifi.setState(WIFI_OFF)
 
 			# If access point forced
 			elif state == ACCESS_POINT_FORCED:

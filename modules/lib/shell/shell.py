@@ -12,7 +12,8 @@ The commands are :
 - cp      : copy file
 - rm      : remove file
 - ls      : list file
-- date    : get the system date
+- date    : get the system date or synchronize with Ntp
+- setdate : set date and time
 - df      : display free disk space
 - find    : find a file
 - run     : run a script
@@ -39,13 +40,7 @@ import machine
 try:
 	from tools import useful
 except:
-	# pylint: disable=unresolved-import
 	import useful
-
-try:
-	from tools import fnmatch
-except:
-	from fnmatch import fnmatch
 
 def cd(directory = "/"):
 	""" Change directory """
@@ -219,24 +214,23 @@ class LsDisplayer:
 	def show(self, path):
 		""" Show the information of a file or directory """
 		fileinfo = useful.fileinfo(path)
-		date = fileinfo[8]
+		date_ = fileinfo[8]
 		size = fileinfo[6]
 
 		# If directory
 		if fileinfo[0] & 0x4000 == 0x4000:
 			if self.showdir:
 				if self.long:
-					message = "%s %s [%s]"%(useful.dateToString(date)," "*7,self.purgePath(path))
+					message = "%s %s [%s]"%(useful.dateToString(date_)," "*7,self.purgePath(path))
 				else:
 					message = "[%s]"%self.purgePath(path)
-				dir = True
 				self.count = printPart(message, self.width, self.height, self.count)
 		else:
 			if self.long:
 				fileinfo = useful.fileinfo(path)
-				date = fileinfo[8]
+				date_ = fileinfo[8]
 				size = fileinfo[6]
-				message = "%s %s %s"%(useful.dateToString(date),useful.sizeToString(size),self.purgePath(path))
+				message = "%s %s %s"%(useful.dateToString(date_),useful.sizeToString(size),self.purgePath(path))
 			else:
 				message = self.purgePath(path)
 			self.count = printPart(message, self.width, self.height, self.count)
@@ -326,8 +320,8 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 
 def ping(host):
 	""" Ping host """
-	from server.ping import ping
-	ping(host, count=4, timeout=1)
+	from server.ping import ping as ping_
+	ping_(host, count=4, timeout=1)
 
 def ip2host(ipaddress):
 	""" Convert ip to hostname """
@@ -371,6 +365,40 @@ def date(update=False, offsetUTC=+1, noDst=False):
 	print(useful.dateToString())
 	del sys.modules["server.timesetting"]
 
+def setdate(datetime=""):
+	""" Set date and time """
+	import re
+	date_=re.compile("[/: ]")
+	failed = False
+	try:
+		spls = date_.split(datetime)
+
+		lst = []
+		if len(spls) > 1:
+			for spl in spls:
+				if len(spl) > 0:
+					try:
+						r = spl.lstrip("0")
+						if len(r) == 0:
+							lst.append(0)
+						else:
+							lst.append(eval(r))
+					except:
+						failed = True
+						break
+		if len(lst) == 6:
+			# pylint: disable=unbalanced-tuple-unpacking
+			year,month,day,hour,minute,second = lst
+			machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
+		else:
+			failed = True
+	except Exception as err:
+		failed = True
+		useful.exception(err)
+
+	if failed == True:
+		print('Expected format "YYYY/MM/DD hh:mm:ss"')
+
 def reboot():
 	""" Reboot command """
 	useful.reboot("Reboot device")
@@ -387,7 +415,6 @@ def edit(file):
 		try:
 			from shell.editor import Editor
 		except:
-			# pylint: disable=unresolved-import
 			from editor import Editor
 		editClass = Editor
 	editClass(file)
@@ -446,6 +473,7 @@ def manOne(commandName):
 		result = "Unknown command '%s'"%commandName
 	return result
 
+# pylint: disable=redefined-builtin
 def help():
 	""" Help command """
 	height, width = useful.getScreenSize()
@@ -523,6 +551,7 @@ def getCommand(commandName):
 			if type(item) == type((0,)):
 				commandFlags.append(item)
 	except  Exception as err:
+		# pylint: disable=raise-missing-from
 		raise Exception("Command not found '%s'"%commandName)
 	return commandName, commandFunction, commandParams, commandFlags
 
@@ -663,6 +692,7 @@ shellCommands = \
 	"rm"       :[rm       ,"file",                 ("-r","recursive",True),("-f","force",True),("-s","simulate",True)],
 	"ls"       :[ls       ,"file",                 ("-r","recursive",True),("-l","long",True)],
 	"date"     :[date     ,"offsetUTC" ,           ("-u","update",True),   ("-n","noDst",True)],
+	"setdate"  :[setdate  ,"datetime"],
 	"uptime"   :[uptime   ],
 	"find"     :[find     ,"file"],
 	"run"      :[useful.import_  ,"filename"],

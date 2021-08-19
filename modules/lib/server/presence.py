@@ -7,7 +7,6 @@ import wifi
 from server.ping import asyncPing
 from server.notifier import Notifier
 from server.server import Server
-from server.dnsclient import resolveHostname
 
 class PresenceConfig(jsonconfig.JsonConfig):
 	""" Configuration class of presence detection """

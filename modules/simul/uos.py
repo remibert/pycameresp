@@ -2,12 +2,24 @@
 # Copyright (c) 2021 Remi BERTHOLET 
 from os import *
 
-def ilistdir(path):
+def ilistdir(path_):
 	result = []
-	for filename in listdir(path):
-		fileinfo = stat(path + "/" + filename)
+	for filename in listdir(path_):
+		fileinfo = stat(path_ + "/" + filename)
 		typ = fileinfo[0]
 		size = fileinfo[6]
 		
 		result.append((filename, typ, 0, size))
 	return result
+
+def umount(point):
+	pass
+
+def mount(card, point):
+	pass
+
+def dupterm(param):
+	pass
+
+def dupterm_notify(param):
+	pass

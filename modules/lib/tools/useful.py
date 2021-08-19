@@ -141,6 +141,8 @@ else:
 
 
 try:
+	# pylint: disable=no-name-in-module
+
 	from time import ticks_ms
 	def ticks():
 		return ticks_ms()
@@ -208,6 +210,7 @@ def meminfo(display=True):
 	""" Get memory informations """
 	import gc
 	try:
+		# pylint: disable=no-member
 		alloc = gc.mem_alloc()
 		free  = gc.mem_free()
 		result = b"Mem alloc=%s free=%s total=%s"%(sizeToBytes(alloc, 1), sizeToBytes(free, 1), sizeToBytes(alloc+free, 1))
@@ -398,6 +401,7 @@ def exception(err, msg=""):
 	""" Return the content of exception into a string """
 	file = io.StringIO()
 	if ismicropython():
+		# pylint: disable=no-member
 		sys.print_exception(err, file)
 		text = file.getvalue()
 	else:
@@ -448,6 +452,7 @@ def htmlException(err):
 def blink(duration=10):
 	""" Blink led """
 	try:
+		# pylint: disable=no-name-in-module
 		from time import sleep_ms
 		pin2 = machine.Pin(2, machine.Pin.OUT)
 		pin2.value(1)
@@ -689,7 +694,7 @@ def tofilename(filename):
 def iscamera():
 	""" Indicates if the board is esp32cam """
 	try:
-		import camera 
+		import camera
 		return camera.isavailable()
 	except:
 		if ismicropython():
@@ -883,6 +888,7 @@ def rename(old, new):
 def uptime():
 	""" Tell how long the system has been running """
 	try:
+		# pylint: disable=no-member
 		up = time.ticks_ms()
 	except:
 		up = time.time() * 1000

@@ -3,7 +3,7 @@
 """ Function define the web page to configure the pushover notifications """
 from server.httpserver import HttpServer
 from htmltemplate import *
-from webpage import *
+from webpage.mainpage import *
 from server.pushover import *
 
 @HttpServer.addRoute(b'/pushover', title=b"Pushover", index=15)
@@ -14,13 +14,13 @@ async def pushover(request, response, args):
 	if action == b"save":
 		await asyncNotify(token=config.token, user=config.user, message = b"pushover notification %s"%(b"on" if config.activated else b"off"))
 	if disabled:
-		type = b"password"
+		typ = b"password"
 	else:
-		type = b""
+		typ = b""
 	page = mainFrame(request, response, args,b"Notification configuration",
 		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),Br(),
-		Edit(text=b"User",  name=b"user",  placeholder=b"Enter pushover user",  type=type, value=config.user,  disabled=disabled),
-		Edit(text=b"Token", name=b"token", placeholder=b"Enter pushover token", type=type, value=config.token, disabled=disabled),
+		Edit(text=b"User",  name=b"user",  placeholder=b"Enter pushover user",  type=typ, value=config.user,  disabled=disabled),
+		Edit(text=b"Token", name=b"token", placeholder=b"Enter pushover token", type=typ, value=config.token, disabled=disabled),
 		submit,
 		Br(), Br(), Link(href=b"https://pushover.net", text=b"See pushover website"))
 
