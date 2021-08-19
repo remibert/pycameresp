@@ -272,6 +272,10 @@ class Server:
 			if pollingId % 3593 == 0 or forced:
 				await Server.synchronizeWanIp(forced)
 
+			# Save current time
+			if pollingId % 59 == 0:
+				Server.context.config.currentTime = time.time()
+				Server.context.config.save()
 		else:
 			Server.context.serverPostponed -= 1
 

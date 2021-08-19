@@ -13,7 +13,7 @@ LAN_CONNECTED       = 3
 WAN_CONNECTED       = 4
 ACCESS_POINT_FORCED = 5
 WIFI_LOST           = 6
-WIFI_ABSENT         = 7
+WIFI_CLOSE          = 7
 
 class WifiContext:
 	""" Wifi context """
@@ -48,9 +48,10 @@ class Wifi:
 			if state == WAN_CONNECTED      : useful.logError("Wifi WAN connected")
 			if state == ACCESS_POINT_FORCED: useful.logError("Wifi access point forced")
 			if state == WIFI_LOST          : useful.logError("Wifi lost connection")
+			if state == WIFI_CLOSE         : useful.logError("Wifi closed")
 			
 		Wifi.context.state = state
-		if Wifi.context.state in [WIFI_OFF,WIFI_OTHER_NETWORK,ACCESS_POINT_FORCED,WIFI_LOST]:
+		if Wifi.context.state in [WIFI_OFF,WIFI_CLOSE,WIFI_OTHER_NETWORK,ACCESS_POINT_FORCED,WIFI_LOST]:
 			Wifi.context.dns = ""
 
 	@staticmethod
@@ -120,43 +121,61 @@ class Wifi:
 
 			# If the network not reached select other network
 			elif state == WIFI_OTHER_NETWORK:
-				if await Station.chooseNetwork(True, maxRetry=5) == True:
-					Wifi.context.dns = Station.getInfo()[3]
-					Wifi.setState(WIFI_CONNECTED)
-				else:
-					# Wifi connection failed
-					if Station.isFallback():
-						Wifi.setState(ACCESS_POINT_FORCED)
-
-						# Start access point and force it if no wifi station connected
-						AccessPoint.start(True)
+				if Station.isActivated():
+					if await Station.chooseNetwork(True, maxRetry=5) == True:
+						Wifi.context.dns = Station.getInfo()[3]
+						Wifi.setState(WIFI_CONNECTED)
 					else:
-						Wifi.setState(WIFI_OFF)
+						# Wifi connection failed
+						if Station.isFallback():
+							Wifi.setState(ACCESS_POINT_FORCED)
+						else:
+							Wifi.setState(WIFI_CLOSE)
+				else:
+					Wifi.setState(WIFI_CLOSE)
 
 			# If access point forced
 			elif state == ACCESS_POINT_FORCED:
-				if await Station.chooseNetwork(True, maxRetry=5) == True:
-					Wifi.context.dns = Station.getInfo()[3]
-					Wifi.setState(WIFI_CONNECTED)
+				if Station.isActivated():
+					if await Station.chooseNetwork(True, maxRetry=5) == True:
+						Wifi.context.dns = Station.getInfo()[3]
+						Wifi.setState(WIFI_CONNECTED)
+				else:
+					Wifi.setState(WIFI_CLOSE)
 
 			# If the wan reponding
 			elif state in [WAN_CONNECTED, LAN_CONNECTED, WIFI_CONNECTED]:
-				# If many wan problem notified
-				if Wifi.context.problem > 3:
-					Wifi.setState(WIFI_LOST)
+				if Station.isActivated():
+					# If many wan problem notified
+					if Wifi.context.problem > 3:
+						Wifi.setState(WIFI_LOST)
+				else:
+					Wifi.setState(WIFI_CLOSE)
 
 			# If wifi lost
-			elif state == WIFI_LOST:
+			elif state in [WIFI_LOST, WIFI_CLOSE]:
 				Station.stop()
 				Wifi.setState(WIFI_OFF)
 
-			if state == Wifi.getState():
-				break
-			if Wifi.getState() == WIFI_OFF:
+			# If state unchanged or wifi off
+			if state == Wifi.getState() or Wifi.getState() == WIFI_OFF:
+				# Exit state loop
 				break
 
-		# If the accesspoint not activated
-		if AccessPoint.isActivated() == True and AccessPoint.isActive() == False:
-			# Start the access point
-			AccessPoint.start()
-			
+		# If the accesspoint can activate
+		if state == ACCESS_POINT_FORCED and Station.isFallback():
+			forced = True
+		else:
+			forced = False
+
+		# If the accesspoint can activate
+		if forced or AccessPoint.isActivated() == True:
+			# If access point inactive
+			if AccessPoint.isActive() == False:
+				# Start the access point
+				AccessPoint.start(forced)
+		else:
+			# If access point active
+			if AccessPoint.isActive() == True:
+				# Stop the access point
+				AccessPoint.stop()

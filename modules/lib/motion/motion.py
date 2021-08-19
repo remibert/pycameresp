@@ -176,10 +176,8 @@ class ImageMotion:
 			self.motion.configure(\
 				{
 					"mask":mask,
-					# "errorLights":[[0,1],[errorLight,errorLight//3],[3*errorLight, errorLight],[256,errorLight]],
 					"errorLights":[[0,1],[128,errorLight],[192, errorLight],[256,errorLight]],
 					"errorHistos":[[0,0],[96,32],[160,224],[256,256]]
-					# "errorHistos":[[0,0],[128,128],[192, 192],[256,256]]
 				})
 
 class SnapConfig:

@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET 
+# pylint: disable=redefined-builtin
 from os import *
 
 def ilistdir(path_):

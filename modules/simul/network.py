@@ -11,6 +11,7 @@ class WLAN:
 		self.ssid =""
 		self.password = ""
 		self.authmode = 0
+		self.dhcp_hostname_ = 0
 		self._ifconfig = (("0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0"))
 
 	def isconnected(self):
@@ -30,7 +31,7 @@ class WLAN:
 
 	def config(self, dhcp_hostname="", essid="", password="", authmode=3):
 		self.ssid=essid
-		self.dhcp_hostname=dhcp_hostname
+		self.dhcp_hostname_=dhcp_hostname
 		self.password=password
 		self.authmode = authmode
 		if dhcp_hostname == "mac":

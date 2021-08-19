@@ -58,6 +58,21 @@ class AccessPoint:
 			essid    = useful.tostrings(AccessPoint.config.ssid),
 			password = useful.tostrings(AccessPoint.config.wifipassword),
 			authmode = authmode)
+  
+	@staticmethod
+	def reloadConfig():
+		""" Reload configuration if it changed """
+		if AccessPoint.config == None:
+			AccessPoint.config = AccessPointConfig()
+			if AccessPoint.config.load() == False:
+				AccessPoint.config.ssid          = b"esp%05d"%Hostname.getNumber()
+				AccessPoint.config.wifipassword  = b"Pycam_%05d"%Hostname.getNumber()
+				AccessPoint.config.save()
+				useful.logError("Access point not initialized")
+		else:
+			if AccessPoint.config.isChanged():
+				AccessPoint.config.load()
+		return AccessPoint.config
 
 	@staticmethod
 	def close():
@@ -74,10 +89,8 @@ class AccessPoint:
 	@staticmethod
 	def isActivated():
 		""" Indicates if the access point is configured to be activated """
-		if AccessPoint.config != None:
-			return AccessPoint.config.activated
-		else:
-			return False
+		AccessPoint.reloadConfig()
+		return AccessPoint.config.activated
 
 	@staticmethod
 	def getInfo():
@@ -121,17 +134,11 @@ class AccessPoint:
 		""" Start the access point according to the configuration. Force is used to skip configuration activation flag """
 		result = False
 		if AccessPoint.isActive() == False:
-			config = AccessPointConfig()
+			AccessPoint.reloadConfig()
 
-			if not config.load():
-				config.ssid          = b"esp%05d"%Hostname.getNumber()
-				config.wifipassword  = b"Pycam_%05d"%Hostname.getNumber()
-				config.save()
-
-			if config.activated or force:
+			if AccessPoint.config.activated or force:
 				useful.logError("Start AccessPoint")
 				from network import WLAN, AP_IF
-				AccessPoint.config = config
 				AccessPoint.wlan = WLAN(AP_IF)
 				AccessPoint.configure()
 				AccessPoint.open()

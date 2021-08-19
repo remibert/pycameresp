@@ -204,7 +204,7 @@ class LsDisplayer:
 
 	def purgePath(self, path):
 		""" Purge the path for the display """
-		if path != "/":
+		if path != "/" and self.path != "/":
 			path = path.replace(self.path,"")
 		if len(path) >= 2 and path[:2] == "./":
 			path = path[2:]
@@ -386,10 +386,12 @@ def setdate(datetime=""):
 					except:
 						failed = True
 						break
-		if len(lst) == 6:
-			# pylint: disable=unbalanced-tuple-unpacking
-			year,month,day,hour,minute,second = lst
-			machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
+			if len(lst) == 6:
+				# pylint: disable=unbalanced-tuple-unpacking
+				year,month,day,hour,minute,second = lst
+				machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
+			else:
+				failed = True
 		else:
 			failed = True
 	except Exception as err:
