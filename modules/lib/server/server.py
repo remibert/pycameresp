@@ -116,11 +116,11 @@ class Server:
 		preload : True force the load of page at the start, 
 		False the load of page is done a the first http connection (Takes time on first connection) """
 		Server.context = ServerContext(loop, pageLoader, preload, httpPort)
-		useful.logError(useful.sysinfo(display=False))
+		useful.syslog(useful.sysinfo(display=False))
 		build = info.build.replace("/","-")
 		build = build.replace("  ","_")
 		build = build.replace(":","-")
-		useful.logError("PyCam version '%s'"%build)
+		useful.syslog("PyCam version '%s'"%build)
 
 		from server.periodic import periodicTask
 		loop.create_task(periodicTask())
@@ -131,7 +131,7 @@ class Server:
 		# If wan ip synchronization enabled
 		if Server.context.config.wanip:
 			if wifi.Wifi.isWanAvailable():
-				useful.logError("Synchronize Wan ip")
+				useful.syslog("Synchronize Wan ip")
 				# Wan ip not yet get
 				if Server.context.getWanIpAsync is None:
 					from server.wanip import getWanIpAsync
@@ -148,7 +148,7 @@ class Server:
 					Server.context.wanIp = newWanIp
 					wifi.Wifi.connectWan()
 				else:
-					useful.logError("Cannot get wan ip")
+					useful.syslog("Cannot get wan ip")
 					wifi.Wifi.disconnectWan()
 
 	@staticmethod
@@ -158,7 +158,7 @@ class Server:
 		if Server.context.config.ntp:
 			# If the wan is present
 			if wifi.Wifi.isWanAvailable():
-				useful.logError("Synchronize time")
+				useful.syslog("Synchronize time")
 
 				# If synchronisation not yet done
 				if Server.context.setDate == None:
@@ -183,7 +183,7 @@ class Server:
 						# If clock changed
 						if abs(oldTime - currentTime) > 1:
 							# Log difference
-							useful.logError("Time synchronized delta=%ds"%(currentTime-oldTime))
+							useful.syslog("Time synchronized delta=%ds"%(currentTime-oldTime))
 						updated = True
 						break
 					else:
@@ -296,5 +296,4 @@ class Server:
 					await Server.context.notifier.flush()
 					if wifi.Wifi.isWanConnected():
 						Server.context.flushed = True
-  
 

@@ -46,7 +46,7 @@ def selectNetwork(increase=0, reparse=False):
 			partFilename = b""
 		currentNetwork.load(partFilename = partFilename)
 	except Exception as err:
-		useful.exception(err)
+		useful.syslog(err)
 	return currentNetwork
 
 @HttpServer.addRoute(b'/wifi', title=b"Wifi", index=11)

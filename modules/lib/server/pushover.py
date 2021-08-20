@@ -83,17 +83,17 @@ class Notification:
 				# If response failed
 				if response.status != b"200":
 					# Print error
-					useful.logError("Notification failed to sent", display=display)
+					useful.syslog("Notification failed to sent", display=display)
 
 				# Close all connection with push over server
 				result = True
 			except Exception as err:
-				useful.exception(err)
+				useful.syslog(err)
 			finally:
 				if streamio:
 					await streamio.close()
 		else:
-			useful.logError("Notification not sent : wifi not connected", display=display)
+			useful.syslog("Notification not sent : wifi not connected", display=display)
 		return result
 
 async def asyncNotify(user, token, message, image=None, display=True):

@@ -84,7 +84,7 @@ class Station:
 			retry = 0
 			while not Station.wlan.isconnected() and retry < maxRetry:
 				await uasyncio.sleep(1)
-				useful.logError ("   %-2d/%d wait connection to %s"%(retry+1, maxRetry, useful.tostrings(network.ssid)))
+				useful.syslog ("   %-2d/%d wait connection to %s"%(retry+1, maxRetry, useful.tostrings(network.ssid)))
 				retry += 1
 
 			if Station.wlan.isconnected() == False:
@@ -126,14 +126,14 @@ class Station:
 			try:
 				Station.wlan.ifconfig((useful.tostrings(network.ipaddress),useful.tostrings(network.netmask),useful.tostrings(network.gateway),useful.tostrings(network.dns)))
 			except Exception as err:
-				useful.exception(err, msg="Cannot configure wifi station")
+				useful.syslog(err, msg="Cannot configure wifi station")
 		try:
 			network.ipaddress = useful.tobytes(Station.wlan.ifconfig()[0])
 			network.netmask   = useful.tobytes(Station.wlan.ifconfig()[1])
 			network.gateway   = useful.tobytes(Station.wlan.ifconfig()[2])
 			network.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
 		except Exception as err:
-			useful.exception(err, msg="Cannot get ip station")
+			useful.syslog(err, msg="Cannot get ip station")
 
 	@staticmethod
 	def reloadConfig():
@@ -143,7 +143,7 @@ class Station:
 			Station.network = NetworkConfig()
 			if Station.config.load() == False:
 				Station.config.save()
-				useful.logError("Wifi not initialized")
+				useful.syslog("Wifi not initialized")
 		else:
 			if Station.config.isChanged():
 				Station.config.load()
@@ -165,11 +165,11 @@ class Station:
 			try:
 				otherNetworks = Station.wlan.scan()
 				for ssid, bssid, channel, rssi, authmode, hidden in sorted(otherNetworks, key=lambda x: x[3], reverse=True):
-					useful.logError("Network detected %s"%useful.tostrings(ssid))
+					useful.syslog("Network detected %s"%useful.tostrings(ssid))
 					Station.otherNetworks.append((ssid, channel, authmode))
 				Station.lastScan[0] = time.time()
 			except Exception as err:
-				useful.logError("No network found")
+				useful.syslog("No network found")
 
 		return Station.otherNetworks
 
@@ -189,10 +189,10 @@ class Station:
 		if networkName != b"":
 			# Load default network
 			if Station.network.load(partFilename=networkName):
-				useful.logError("Try to connect to %s"%useful.tostrings(Station.network.ssid))
+				useful.syslog("Try to connect to %s"%useful.tostrings(Station.network.ssid))
 				# If the connection failed
 				if await Station.connect(Station.network, maxRetry) == True:
-					useful.logError("Connected to %s"%useful.tostrings(Station.network.ssid))
+					useful.syslog("Connected to %s"%useful.tostrings(Station.network.ssid))
 					print(repr(Station.config) + repr(Station.network))
 					Station.config.default = networkName
 					Station.config.save()
@@ -230,10 +230,10 @@ class Station:
 				if result == False:
 					result = await Station.scanNetworks(maxRetry)
 			else:
-				useful.logError("Wifi disabled")
+				useful.syslog("Wifi disabled")
 		else:
 			Station.config.save()
-			useful.logError("Wifi not initialized")
+			useful.syslog("Wifi not initialized")
 		return result
 
 	@staticmethod
@@ -244,21 +244,21 @@ class Station:
 			from network import WLAN, STA_IF
 			Station.wlan = WLAN(STA_IF)
 
-			useful.logError("Start wifi")
+			useful.syslog("Start wifi")
 			if await Station.chooseNetwork(force, maxRetry) == True:
 				result = True
 		else:
 			if Station.wlan.isconnected():
-				useful.logError("Wifi already started")
+				useful.syslog("Wifi already started")
 				result = True
 			else:
-				useful.logError("Wifi started but not connected")
+				useful.syslog("Wifi started but not connected")
 		return result
 
 	@staticmethod
 	def stop():
 		""" Stop the wifi station """
-		useful.logError("Stop wifi")
+		useful.syslog("Stop wifi")
 		if Station.wlan is not None:
 			try:
 				Station.wlan.disconnect()

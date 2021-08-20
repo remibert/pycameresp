@@ -90,7 +90,7 @@ else:
 			# print("<-      %s"%data[:-1])
 			result = self.writer.write(data)
 			if self.writer.is_closing():
-				raise OSError()
+				raise OSError(104,"Error")
 			if trace:
 				trace.write(data)
 				trace.flush()

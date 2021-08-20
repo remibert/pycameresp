@@ -41,14 +41,14 @@ class Wifi:
 	def setState(state):
 		""" Set the state of wifi """
 		if Wifi.context.state != state:
-			if state == WIFI_OFF           : useful.logError("Wifi off")
-			if state == WIFI_OTHER_NETWORK : useful.logError("Wifi select other network")
-			if state == WIFI_CONNECTED     : useful.logError("Wifi connected")
-			if state == LAN_CONNECTED      : useful.logError("Wifi LAN connected")
-			if state == WAN_CONNECTED      : useful.logError("Wifi WAN connected")
-			if state == ACCESS_POINT_FORCED: useful.logError("Wifi access point forced")
-			if state == WIFI_LOST          : useful.logError("Wifi lost connection")
-			if state == WIFI_CLOSE         : useful.logError("Wifi closed")
+			if state == WIFI_OFF           : useful.syslog("Wifi off")
+			if state == WIFI_OTHER_NETWORK : useful.syslog("Wifi select other network")
+			if state == WIFI_CONNECTED     : useful.syslog("Wifi connected")
+			if state == LAN_CONNECTED      : useful.syslog("Wifi LAN connected")
+			if state == WAN_CONNECTED      : useful.syslog("Wifi WAN connected")
+			if state == ACCESS_POINT_FORCED: useful.syslog("Wifi access point forced")
+			if state == WIFI_LOST          : useful.syslog("Wifi lost connection")
+			if state == WIFI_CLOSE         : useful.syslog("Wifi closed")
 			
 		Wifi.context.state = state
 		if Wifi.context.state in [WIFI_OFF,WIFI_CLOSE,WIFI_OTHER_NETWORK,ACCESS_POINT_FORCED,WIFI_LOST]:
@@ -75,7 +75,7 @@ class Wifi:
 		""" Indicates that wan have probably a problem """
 		if Wifi.getState() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.problem += 1
-			useful.logError("Wan problem %d detected"%Wifi.context.problem)
+			useful.syslog("Wan problem %d detected"%Wifi.context.problem)
 
 	@staticmethod
 	def connectLan():
@@ -89,7 +89,7 @@ class Wifi:
 		""" Indicates that lan disconnection detected """
 		if Wifi.getState() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.problem += 1
-			useful.logError("Lan problem %d detected"%Wifi.context.problem)
+			useful.syslog("Lan problem %d detected"%Wifi.context.problem)
 
 	@staticmethod
 	def isWanAvailable():

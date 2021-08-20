@@ -26,7 +26,7 @@ async def request(host, port, path):
 		if response.status == b"200":
 			result = response.getContent()
 	except Exception as err:
-		useful.exception(err)
+		useful.syslog(err)
 	finally:
 		if streamio:
 			await streamio.close()

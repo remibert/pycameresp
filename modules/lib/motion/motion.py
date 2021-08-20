@@ -329,7 +329,7 @@ class Motion:
 						video.Camera.quality(self.quality, False)
 			if changed == False:
 				if self.previousQuality != self.quality:
-					useful.logError("Adjust image quality from %d to %d"%(self.previousQuality, self.quality))
+					useful.syslog("Adjust image quality from %d to %d"%(self.previousQuality, self.quality))
 					self.previousQuality = self.quality
 
 	def compare(self, display=True):
@@ -459,7 +459,7 @@ class Detection:
 		# If configuration changed
 		if self.motionConfig.isChanged():
 			self.motionConfig.load()
-			useful.logError("Change motion config %s"%self.motionConfig.toString(), display=False)
+			useful.syslog("Change motion config %s"%self.motionConfig.toString(), display=False)
 			if self.motion:
 				self.motion.refreshConfig()
 	async def run(self):

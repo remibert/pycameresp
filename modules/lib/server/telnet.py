@@ -159,7 +159,7 @@ def accept_telnet_connect(telnet_server):
 		uos.dupterm(None)
 		last_client_socket.close()
 	last_client_socket, remote_addr = telnet_server.accept()
-	useful.logError("Telnet connected from : %s" % remote_addr[0])
+	useful.syslog("Telnet connected from : %s" % remote_addr[0])
 	last_client_socket.setblocking(False)
 	last_client_socket.setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
 	
@@ -192,7 +192,7 @@ def start(port=23):
 		server_socket.listen(1)
 		server_socket.setsockopt(socket.SOL_SOCKET, 20, accept_telnet_connect)
 		
-		print("Telnet start %d"%port)
+		useful.syslog("Telnet start %d"%port)
 
 	except Exception as err:
-		print("Telnet not available '%s'"%str(err))
+		useful.syslog("Telnet not available '%s'"%str(err))

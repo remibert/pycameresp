@@ -33,7 +33,7 @@ class Notifier:
 	async def notify(message, image = None, forced=False, display=True):
 		""" Notify message for all notifier registered """
 		result = True
-		useful.logError(message, display=display)
+		useful.syslog(message, display=display)
 
 		# Add message into postponed list
 		Notifier.postponed.append([message, image, forced, display])
@@ -49,7 +49,7 @@ class Notifier:
 		if len(Notifier.postponed) > 10:
 			# Remove older
 			message, image, forced, display = Notifier.postponed[0]
-			useful.logError("Notification miss out : " + useful.tostrings(message), display=display)
+			useful.syslog("Notification miss out : " + useful.tostrings(message), display=display)
 			del Notifier.postponed[0]
 
 		# If wan available
@@ -80,6 +80,6 @@ class Notifier:
 			if result:
 				Notifier.postponed.clear()
 			else:
-				useful.logError("Cannot send notification")
+				useful.syslog("Cannot send notification")
 		return result
 

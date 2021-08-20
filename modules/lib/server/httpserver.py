@@ -27,7 +27,7 @@ class HttpServer:
 		if preload:
 			self.preload()
 		else:
-			print("Http waiting on %d"%self.port)
+			useful.syslog("Http waiting on %d"%self.port)
 
 	def preload(self):
 		""" Method used to preload page template.
@@ -36,20 +36,20 @@ class HttpServer:
 
 		if self.loader:
 			from htmltemplate import WWW_DIR
-			print("Html load pages")
+			useful.syslog("Html load pages")
 			self.loader()
 			self.loader = None
 			HttpServer.wwwDir = WWW_DIR
 			loaded = True
 
 		if self.server is None:
-			print("Http start server")
+			useful.syslog("Http start server")
 			from server.httpservercore import HttpServerCore
 			self.server = HttpServerCore(self.port, self.name)
 			loaded = True
 
 		if loaded:
-			print("Http ready on %d"%self.port)
+			useful.syslog("Http ready on %d"%self.port)
 
 	@staticmethod
 	def addRoute(url, **kwargs):
@@ -140,7 +140,7 @@ class HttpServer:
 			# Call on connection method
 			await self.server.onConnection(reader, writer)
 		except Exception as err:
-			useful.exception(err)
+			useful.syslog(err)
 
 def start(loop=None, port=80, loader=None, preload=False, name=""):
 	""" Start http server.

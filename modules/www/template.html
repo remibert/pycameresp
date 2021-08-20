@@ -110,15 +110,6 @@
 				</label>
 			</div>
 			<!--Radio:end-->
-			
-			<!--ChooseFile:begin-->
-			<input type="file"  style="display: none;" 
-				id="%(id)s" 
-				onchange="document.getElementById('label_%(id)s').value=document.getElementById('%(id)s').value.split(/[\\\/]/).pop();" 
-				accept="%(accept)s" name="%(name)s" %(disabled)s />
-			<input type="button" id="label_%(id)s" value="%(text)s" onclick="document.getElementById('%(id)s').click()" class="btn btn-outline-primary " %(disabled)s />
-			<!--ChooseFile:end-->
-			
 
 			<!--ImportFile:begin-->
 			<input type="file" style="display:none" id="%(id)s" onchange="importFile_%(id)s()" name="%(name)s" accept="%(accept)s" %(disabled)s />

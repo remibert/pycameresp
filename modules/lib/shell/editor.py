@@ -616,7 +616,7 @@ class Text:
 			self.lines = [""]
 			# File not existing
 		except Exception as err:
-			useful.exception(err)
+			useful.syslog(err)
 			self.lines = [""]
 
 	def save(self):
@@ -632,7 +632,7 @@ class Text:
 					self.modified = False
 					result = True
 				except Exception as err:
-					useful.exception(err)
+					useful.syslog(err)
 		return result
 
 	def changeLine(self, moveLine):

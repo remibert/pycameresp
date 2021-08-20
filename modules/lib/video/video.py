@@ -211,7 +211,7 @@ class Camera:
 					Camera.failed[0] += 1
 					Camera.newFailed[0] += 1
 					if retry <= 3:
-						useful.logError("Failed to get image %d retry before reset"%retry)
+						useful.syslog("Failed to get image %d retry before reset"%retry)
 					retry -= 1
 					time.sleep(0.5)
 			total = Camera.success[0] + Camera.failed[0]
@@ -222,7 +222,7 @@ class Camera:
 				else:
 					newFailed = 0.
 					failed    = 0.
-				useful.logError("Camera failed : Last %-3.1f%%, All %-3.1f%% on %d"%(newFailed, failed, total))
+				useful.syslog("Camera failed : Last %-3.1f%%, All %-3.1f%% on %d"%(newFailed, failed, total))
 				Camera.newFailed[0] = 0
 		return result
 

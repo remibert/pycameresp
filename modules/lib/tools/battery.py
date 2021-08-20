@@ -77,9 +77,9 @@ class Battery:
 						level = 100
 					else:
 						level = int(level)
-				useful.logError("Battery level %d %% (%d)"%(level, int(val/count)))
+				useful.syslog("Battery level %d %% (%d)"%(level, int(val/count)))
 			except Exception as err:
-				useful.exception(err,"Cannot read battery status")
+				useful.syslog(err,"Cannot read battery status")
 			Battery.level[0] = level
 		return Battery.level[0]
 
@@ -111,7 +111,7 @@ class Battery:
 			esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
 			return True
 		except Exception as err:
-			useful.exception(err,"Cannot set wake up")
+			useful.syslog(err,"Cannot set wake up")
 		return False
 
 	@staticmethod
@@ -133,7 +133,7 @@ class Battery:
 		Battery.init()
 		Battery.keepResetCause()
 		if Battery.manageLevel() or Battery.manageBrownout():
-			useful.logError("Sleep infinite")
+			useful.syslog("Sleep infinite")
 			machine.deepsleep()
 
 	@staticmethod
@@ -154,7 +154,7 @@ class Battery:
 			# Case the battery has not enough current and must be protected
 			if batteryProtect:
 				deepsleep = True
-				useful.logError("Battery too low %d %%"%batteryLevel)
+				useful.syslog("Battery too low %d %%"%batteryLevel)
 		return deepsleep
 
 	@staticmethod
@@ -168,9 +168,9 @@ class Battery:
 			machine.SOFT_RESET      : "Soft",
 			machine.BROWNOUT_RESET  : "Brownout",
 		}.setdefault(machine.reset_cause(), "%d"%machine.reset_cause())
-		useful.logError(" ")
-		useful.logError("%s Start %s"%('-'*10,'-'*10), display=False)
-		useful.logError("%s reset"%causes)
+		useful.syslog(" ")
+		useful.syslog("%s Start %s"%('-'*10,'-'*10), display=False)
+		useful.syslog("%s reset"%causes)
 
 	@staticmethod
 	def manageBrownout():
@@ -189,7 +189,7 @@ class Battery:
 			# if the number of consecutive brownout resets is too high
 			if Battery.config.brownoutCount > 32:
 				# Battery too low, save the battery status
-				useful.logError("Too many successive brownout reset")
+				useful.syslog("Too many successive brownout reset")
 				deepsleep = True
 		return deepsleep
 
@@ -210,7 +210,7 @@ class Battery:
 		if Battery.config.wakeUp:
 			Battery.awakeCounter[0] -= 1
 			if Battery.awakeCounter[0] < 0:
-				useful.logError("Sleep %d s"%Battery.config.sleepDuration)
+				useful.syslog("Sleep %d s"%Battery.config.sleepDuration)
 				# Set the wake up on PIR detection
 				Battery.setPinWakeUp()
 				machine.deepsleep(Battery.config.sleepDuration)

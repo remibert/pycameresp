@@ -396,7 +396,7 @@ def setdate(datetime=""):
 			failed = True
 	except Exception as err:
 		failed = True
-		useful.exception(err)
+		useful.syslog(err)
 
 	if failed == True:
 		print('Expected format "YYYY/MM/DD hh:mm:ss"')
@@ -594,18 +594,18 @@ def execCommand(args):
 								flags[commandParams[paramsCount]] = arg
 								paramsCount += 1
 	except Exception as err:
-		# print(useful.exception(err))
+		# print(useful.syslog(err))
 		print(err)
 		return
 	try:
 		if commandName.strip() != "":
 			commandFunction(**flags)
 	except TypeError as err:
-		useful.exception(err, msg="Missing parameters for '%s'"%commandName)
+		useful.syslog(err, msg="Missing parameters for '%s'"%commandName)
 	except KeyboardInterrupt:
 		print(" [Canceled]")
 	except Exception as err:
-		useful.exception(err)
+		useful.syslog(err)
 
 def temperature():
 	""" Get the internal temperature """
@@ -664,10 +664,10 @@ async def asyncShell():
 
 				# Start shell
 				print("")
-				useful.logError("<"*10+" Enter shell " +">"*10)
+				useful.syslog("<"*10+" Enter shell " +">"*10)
 				shell()
 				print("")
-				useful.logError("<"*10+" Exit  shell " +">"*10)
+				useful.syslog("<"*10+" Exit  shell " +">"*10)
 
 				# Restore default path
 				uos.chdir("/")

@@ -68,7 +68,7 @@ class AccessPoint:
 				AccessPoint.config.ssid          = b"esp%05d"%Hostname.getNumber()
 				AccessPoint.config.wifipassword  = b"Pycam_%05d"%Hostname.getNumber()
 				AccessPoint.config.save()
-				useful.logError("Access point not initialized")
+				useful.syslog("Access point not initialized")
 		else:
 			if AccessPoint.config.isChanged():
 				AccessPoint.config.load()
@@ -127,7 +127,7 @@ class AccessPoint:
 					useful.tostrings(AccessPoint.config.gateway),
 					useful.tostrings(AccessPoint.config.dns)))
 		except Exception as err:
-			useful.exception(err, msg="Cannot configure wifi AccessPoint")
+			useful.syslog(err, msg="Cannot configure wifi AccessPoint")
 
 	@staticmethod
 	def start(force=False):
@@ -137,7 +137,7 @@ class AccessPoint:
 			AccessPoint.reloadConfig()
 
 			if AccessPoint.config.activated or force:
-				useful.logError("Start AccessPoint")
+				useful.syslog("Start AccessPoint")
 				from network import WLAN, AP_IF
 				AccessPoint.wlan = WLAN(AP_IF)
 				AccessPoint.configure()
@@ -146,7 +146,7 @@ class AccessPoint:
 				print(repr(AccessPoint.config))
 				result = True
 			else:
-				useful.logError("AccessPoint disabled")
+				useful.syslog("AccessPoint disabled")
 		else:
 			print("%s already opened"%AccessPoint.__class__.__name__)
 			print(repr(AccessPoint.config))
@@ -157,7 +157,7 @@ class AccessPoint:
 	def stop():
 		""" Stop access point """
 		if AccessPoint.isActive():
-			useful.logError("AccessPoint stopped")
+			useful.syslog("AccessPoint stopped")
 			AccessPoint.close()
 
 	@staticmethod

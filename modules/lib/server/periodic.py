@@ -1,6 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-""" Periodic task, get wanIp, synchronize time """
+""" Periodic task, wifi management, get wanIp, synchronize time """
 from server.server import ServerConfig, Server
 from tools import useful,battery
 import wifi

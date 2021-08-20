@@ -56,7 +56,7 @@ class Historic:
 				Historic.addItem(item)
 				result = res1 and res2
 			except Exception as err:
-				useful.exception(err)
+				useful.syslog(err)
 			finally:
 				await Historic.release()
 		return result
@@ -106,13 +106,13 @@ class Historic:
 						file = open(motion, "rb")
 						Historic.addItem(json.load(file))
 					except Exception as err:
-						useful.exception(err)
+						useful.syslog(err)
 					finally:
 						if file:
 							file.close()
 					await uasyncio.sleep_ms(3)
 			except Exception as err:
-				useful.exception(err)
+				useful.syslog(err)
 			finally:
 				await Historic.release()
 
@@ -130,7 +130,7 @@ class Historic:
 					del Historic.historic[-1]
 				result = useful.tobytes(json.dumps(Historic.historic))
 			except Exception as err:
-				useful.exception(err)
+				useful.syslog(err)
 			finally:
 				await Historic.release()
 		return result
@@ -142,15 +142,15 @@ class Historic:
 		if  Historic.firstExtract[0] == False:
 			Historic.firstExtract[0] = True
 			try:
-				useful.logError("Start historic creation")
+				useful.syslog("Start historic creation")
 				# Scan sd card and get more recent motions
 				motions = await Historic.scanDirectories(MAX_DISPLAYED, False)
 
 				# Build historic file
 				files = await Historic.build(motions)
-				useful.logError("End   historic creation")
+				useful.syslog("End   historic creation")
 			except Exception as err:
-				useful.exception(err)
+				useful.syslog(err)
 
 	@staticmethod
 	async def scanDir(path, pattern, older=True, directory=True):
@@ -213,7 +213,7 @@ class Historic:
 				if older == False:
 					motions.reverse()
 			except Exception as err:
-				useful.exception(err)
+				useful.syslog(err)
 			finally:
 				await Historic.release()
 		return motions
@@ -256,7 +256,7 @@ class Historic:
 		if root:
 			# If not enough space available on sdcard
 			if (useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5) or force:
-				useful.logError("Start cleanup sd card")
+				useful.syslog("Start cleanup sd card")
 				olders = await Historic.scanDirectories(MAX_REMOVED, True)
 				previous = ""
 				for motion in olders:
@@ -267,10 +267,10 @@ class Historic:
 							await Historic.removeFiles(directory)
 							previous = directory
 					except Exception as err:
-						useful.exception(err)
+						useful.syslog(err)
 					finally:
 						await Historic.release()
-				useful.logError("End cleanup sd card")
+				useful.syslog("End cleanup sd card")
 
 	@staticmethod 
 	async def periodic():

@@ -64,7 +64,7 @@ class Presence:
 			if Presence.config.isChanged():
 				if Presence.config.load() == False:
 					Presence.config.save()
-				useful.logError("Change presence config %s"%Presence.config.toString(), display=False)
+				useful.syslog("Change presence config %s"%Presence.config.toString(), display=False)
 
 		if Presence.config.activated == True and wifi.Wifi.isWanAvailable():
 			if Presence.lastDnsTime + Presence.DNS_POLLING < time.time():
@@ -91,7 +91,7 @@ class Presence:
 					# If a response received from smartphone
 					if received > 0:
 						presents.append(smartphone)
-						useful.logError("%s %s detected"%(useful.dateToString()[12:], useful.tostrings(smartphone)))
+						useful.syslog("%s %s detected"%(useful.dateToString()[12:], useful.tostrings(smartphone)))
 						Presence.lastTime = time.time()
 						currentDetected = True
 						wifi.Wifi.connectLan()
@@ -124,12 +124,12 @@ class Presence:
 			# If all smartphones not responded during a long time
 			if Presence.lastTime + Presence.NO_ANSWER_TIMEOUT < time.time() and smartphoneInList == True:
 				if Presence.pollingDuration != Presence.FAST_POLLING:
-					useful.logError("%s fast polling"%(useful.dateToString()[12:]))
+					useful.syslog("%s fast polling"%(useful.dateToString()[12:]))
 				# Set fast polling rate
 				Presence.pollingDuration = Presence.FAST_POLLING
 			else:
 				if Presence.pollingDuration != Presence.SLOW_POLLING:
-					useful.logError("%s slow polling"%(useful.dateToString()[12:]))
+					useful.syslog("%s slow polling"%(useful.dateToString()[12:]))
 				# Reduce polling rate
 				Presence.pollingDuration = Presence.SLOW_POLLING
 		else:

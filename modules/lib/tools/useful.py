@@ -175,6 +175,12 @@ def dateToBytes(date = None):
 	year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
 	return b"%04d/%02d/%02d  %02d:%02d:%02d"%(year,month,day,hour,minute,second)
 
+def dateMsToString():
+	""" Get a string with the current date with ms """
+	ms = (time.time_ns() // 1000000)%1000
+	year,month,day,hour,minute,second,weekday,yearday = time.localtime(None)[:8]
+	return "%04d/%02d/%02d %02d:%02d:%02d.%03d"%(year,month,day,hour,minute,second,ms)
+
 def dateToFilename(date = None):
 	""" Get a filename with a date """
 	filename = dateToString(date)
@@ -411,12 +417,13 @@ def exception(err, msg=""):
 		except Exception as err:
 			print(err)
 		text = file.getvalue()
-	logError(text, msg)
 	return text
 
-def logError(err, msg="", display=True):
-	""" Log the error in trace.log file """
-	filename = "trace.log"
+def syslog(err, msg="", display=True):
+	""" Log the error in syslog.log file """
+	filename = "syslog.log"
+	if isinstance(err, Exception):
+		err = exception(err)
 	if ismicropython():
 		filename = "/" + filename
 	if msg != "":
@@ -438,7 +445,7 @@ def logError(err, msg="", display=True):
 		rename(filename       ,filename + ".1")
 		logFile = open(filename,"a")
 
-	logFile.write(dateToString() + " %s%s\n"%(tostrings(msg),tostrings(err)))
+	logFile.write(dateMsToString() + " %s%s\n"%(tostrings(msg),tostrings(err)))
 	logFile.close()
 
 def htmlException(err):
@@ -796,7 +803,7 @@ class SdCard:
 						SdCard.opened[0]= True
 						result = True
 				except Exception as err:
-					logError("Cannot mount %s"%mountpoint)
+					syslog("Cannot mount %s"%mountpoint)
 			else:
 				SdCard.mountpoint[0] = mountpoint[1:]
 				SdCard.opened[0] = True
@@ -902,7 +909,7 @@ def uptime():
 
 def reboot(message="Reboot"):
 	""" Reboot command """
-	logError(message)
+	syslog(message)
 	from server.server import ServerConfig
 	serverConfig = ServerConfig()
 	if serverConfig.load():
@@ -973,9 +980,9 @@ async def taskMonitoring(task):
 			lastError = exception(err, "Task error")
 			retry += 1
 			await uasyncio.sleep_ms(6000)
-		logError("Task retry %d"%retry)
+		syslog("Task retry %d"%retry)
 
-	logError("Too many task error reboot")
+	syslog("Too many task error reboot")
 
 	from server.server import ServerConfig
 	from server.notifier import Notifier

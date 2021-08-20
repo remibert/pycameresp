@@ -20,15 +20,15 @@ class Ftp:
 		if preload:
 			self.preload()
 		else:
-			print("Ftp waiting on %d"%self.port)
+			useful.syslog("Ftp waiting on %d"%self.port)
 
 	def preload(self):
 		""" Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) """
 		if self.serverClass == None:
-			print("Ftp load server")
+			useful.syslog("Ftp load server")
 			from server.ftpservercore import FtpServerCore
 			self.serverClass = FtpServerCore
-			print("Ftp ready on %d"%self.port)
+			useful.syslog("Ftp ready on %d"%self.port)
 	
 	async def onConnection(self, reader, writer):
 		""" Asynchronous connection detected """
@@ -46,7 +46,7 @@ class Ftp:
 			server.close()
 			del server
 		except Exception as err:
-			useful.exception(err)
+			useful.syslog(err)
 
 def start(loop=None, port=21, preload=False):
 	""" Start the ftp server with asyncio loop.

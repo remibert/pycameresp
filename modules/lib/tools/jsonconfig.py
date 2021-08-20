@@ -33,7 +33,7 @@ class JsonConfig:
 			file.close()
 			return True
 		except Exception as err:
-			useful.exception(err, "Cannot save %s "%(filename))
+			useful.syslog(err, "Cannot save %s "%(filename))
 			return False
 
 	def toString(self):
@@ -136,7 +136,7 @@ class JsonConfig:
 					if name != b"action":
 						print("%s.%s not existing"%(self.__class__.__name__, useful.tostrings(name)))
 			except Exception as err:
-				useful.exception(err, "Error on %s"%(execval))
+				useful.syslog(err, "Error on %s"%(execval))
 				result = False
 		del self_config
 		return result
@@ -151,12 +151,12 @@ class JsonConfig:
 			return True
 		except OSError as err:
 			if err.args[0] == 2:
-				useful.logError("Not existing %s "%(filename))
+				useful.syslog("Not existing %s "%(filename))
 			else:
-				useful.exception(err, "Cannot load %s "%(filename))
+				useful.syslog(err, "Cannot load %s "%(filename))
 			return False
 		except Exception as err:
-			useful.exception(err, "Cannot load %s "%(filename))
+			useful.syslog(err, "Cannot load %s "%(filename))
 			return False
 
 	def forget(self, partFilename=""):

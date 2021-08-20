@@ -20,8 +20,8 @@ async def systemPage(request, response, args):
 		ImportFile(text=b"Import", path=b"/system/importFileSystem", alert=b"Import in progress, wait a few minutes the automatic reboot", accept=b".cfs"),
 		ExportFile(text=b"Export", path=b"/system/exportFileSystem", filename=b"FileSystem_%s.cfs"%Station.getHostname()),
 
-		Br(),Br(),Label(text=b"Trace"),Br(),
-		ExportFile(text=b"Trace", path=b"/system/exportTrace", filename=b"trace_%s.log"%Station.getHostname()),
+		Br(),Br(),Label(text=b"Syslog"),Br(),
+		ExportFile(text=b"Syslog", path=b"/system/exportSyslog", filename=b"Syslog_%s.log"%Station.getHostname()),
 
 		Br(), Br(),Label(text=b"Reboot device"),Br(),
 		ButtonCmd(text=b"Reboot",path=b"/system/reboot",confirm=b"Confirm reboot", name=b"reboot"))
@@ -57,11 +57,11 @@ async def exportFileSystem(request, response, args):
 	await response.sendFile(b"fileSystem.cfs", headers=request.headers)
 	useful.remove("fileSystem.cfs")
 
-@HttpServer.addRoute(b'/system/exportTrace')
-async def exportTrace(request, response, args):
+@HttpServer.addRoute(b'/system/exportSyslog')
+async def exportSyslog(request, response, args):
 	""" Export file system """
 	Server.slowDown()
-	await response.sendFile([b"trace.log.4",b"trace.log.3",b"trace.log.2",b"trace.log.1",b"trace.log"], headers=request.headers)
+	await response.sendFile([b"syslog.log.4",b"syslog.log.3",b"syslog.log.2",b"syslog.log.1",b"syslog.log"], headers=request.headers)
 
 @HttpServer.addRoute(b'/system/reboot')
 async def reboot(request, response, args):
@@ -69,8 +69,8 @@ async def reboot(request, response, args):
 	try:
 		await response.sendOk()
 	except Exception as err:
-		useful.exception(err)
+		useful.syslog(err)
 	try:
 		useful.reboot("Reboot asked on system html page")
 	except Exception as err:
-		useful.exception(err)
+		useful.syslog(err)

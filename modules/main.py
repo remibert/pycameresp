@@ -24,6 +24,8 @@ isPinWakeUp = Battery.isPinWakeUp()
 def pageLoader():
 	# The html pages only loaded when the connection of http server is done
 	# This reduces memory consumption if the server is not used
+	# pylint: disable=unused-import
+	# pylint: disable=redefined-outer-name
 	import webpage
 	from server.httpserver import HttpServer
 
@@ -60,7 +62,7 @@ try:
 	# Run asyncio for ever
 	loop.run_forever()
 except KeyboardInterrupt:
-	useful.logError("Control C in main")
+	useful.syslog("Control C in main")
 except Exception as err:
-	useful.exception(err)
+	useful.syslog(err)
 	useful.reboot("Crash in main")
