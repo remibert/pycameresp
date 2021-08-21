@@ -977,7 +977,8 @@ async def taskMonitoring(task):
 					retry = 0
 
 		except Exception as err:
-			lastError = exception(err, "Task error")
+			lastError = exception(err)
+			syslog(err, "Task error")
 			retry += 1
 			await uasyncio.sleep_ms(6000)
 		syslog("Task retry %d"%retry)
@@ -1122,3 +1123,27 @@ def importFiles(importFilename, simulated=False):
 		imported.close()
 	remove(importFilename)
 	return result
+
+def getLinear(x1, y1, x2, y2, offset=1000):
+	""" Return a and b for ax+b of two points x1,y1 and x2,y2 """
+	# If two points distincts
+	if x1 != x2:
+		# Compute the slope of line
+		a = (((y1 - y2)) *offset) // (x1 - x2)
+		b = y1*offset - a*x1
+	else:
+		a = 0
+		b = 0
+	return a,b,offset
+
+def getFx(x, linear):
+	""" Return the y value of function x """
+	a,b,offset = linear
+	y = ((a * x) + b)//offset
+	return y
+
+def getFy(y, linear):
+	""" Return the x value of function y """
+	a,b,offset = linear
+	x = ((y*offset) -b)//a
+	return x

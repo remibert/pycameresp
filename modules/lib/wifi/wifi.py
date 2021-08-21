@@ -15,11 +15,15 @@ ACCESS_POINT_FORCED = 5
 WIFI_LOST           = 6
 WIFI_CLOSE          = 7
 
+
+MAX_PROBLEM = 3
+
 class WifiContext:
 	""" Wifi context """
 	def __init__(self):
 		""" Constructor """
-		self.problem    = 0
+		self.lanProblem    = 0
+		self.wanProblem    = 0
 		self.dns = ""
 		self.state = WIFI_OFF
 
@@ -49,10 +53,7 @@ class Wifi:
 			if state == ACCESS_POINT_FORCED: useful.syslog("Wifi access point forced")
 			if state == WIFI_LOST          : useful.syslog("Wifi lost connection")
 			if state == WIFI_CLOSE         : useful.syslog("Wifi closed")
-			
 		Wifi.context.state = state
-		if Wifi.context.state in [WIFI_OFF,WIFI_CLOSE,WIFI_OTHER_NETWORK,ACCESS_POINT_FORCED,WIFI_LOST]:
-			Wifi.context.dns = ""
 
 	@staticmethod
 	def isLanConnected():
@@ -64,38 +65,47 @@ class Wifi:
 		return False
 
 	@staticmethod
-	def connectWan():
+	def wanConnected():
 		""" Set wan have establish dialog with external server """
-		Wifi.context.problem = 0
+		Wifi.context.lanProblem = 0
+		Wifi.context.wanProblem = 0
 		if Wifi.getState() == WIFI_CONNECTED:
 			Wifi.setState(WAN_CONNECTED)
 
 	@staticmethod
-	def disconnectWan():
+	def wanDisconnected():
 		""" Indicates that wan have probably a problem """
 		if Wifi.getState() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
-			Wifi.context.problem += 1
-			useful.syslog("Wan problem %d detected"%Wifi.context.problem)
+			Wifi.context.wanProblem += 1
+			useful.syslog("Wan problem %d detected"%Wifi.context.wanProblem)
 
 	@staticmethod
-	def connectLan():
+	def lanConnected():
 		""" Indicates that lan connection detected """
-		Wifi.context.problem = 0
+		Wifi.context.lanProblem = 0
 		if Wifi.getState() in [WIFI_CONNECTED]:
 			Wifi.setState(LAN_CONNECTED)
 
 	@staticmethod
-	def disconnectLan():
+	def lanDisconnected():
 		""" Indicates that lan disconnection detected """
 		if Wifi.getState() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
-			Wifi.context.problem += 1
-			useful.syslog("Lan problem %d detected"%Wifi.context.problem)
+			Wifi.context.lanProblem += 1
+			useful.syslog("Lan problem %d detected"%Wifi.context.lanProblem)
 
 	@staticmethod
 	def isWanAvailable():
 		""" Indicates if wan is connected or established """
 		if Wifi.getState() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED]:
 			return True
+		return False
+
+	@staticmethod
+	def isLanAvailable():
+		""" Indicates if lan is connected """
+		if Wifi.getState() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED]:
+			if Wifi.context.lanProblem < MAX_PROBLEM:
+				return True
 		return False
 
 	@staticmethod
@@ -111,6 +121,9 @@ class Wifi:
 
 			# If the wifi not started
 			if state == WIFI_OFF:
+				Wifi.context.dns = ""
+				Wifi.context.lanProblem = 0
+				Wifi.context.wanProblem = 0
 				if Station.isActivated():
 					# If wifi station connected
 					if await Station.start():
@@ -122,8 +135,10 @@ class Wifi:
 			# If the network not reached select other network
 			elif state == WIFI_OTHER_NETWORK:
 				if Station.isActivated():
-					if await Station.chooseNetwork(True, maxRetry=5) == True:
+					if await Station.chooseNetwork(maxRetry=5) == True:
 						Wifi.context.dns = Station.getInfo()[3]
+						Wifi.context.lanProblem = 0
+						Wifi.context.wanProblem = 0
 						Wifi.setState(WIFI_CONNECTED)
 					else:
 						# Wifi connection failed
@@ -137,8 +152,10 @@ class Wifi:
 			# If access point forced
 			elif state == ACCESS_POINT_FORCED:
 				if Station.isActivated():
-					if await Station.chooseNetwork(True, maxRetry=5) == True:
+					if await Station.chooseNetwork(maxRetry=5) == True:
 						Wifi.context.dns = Station.getInfo()[3]
+						Wifi.context.lanProblem = 0
+						Wifi.context.wanProblem = 0
 						Wifi.setState(WIFI_CONNECTED)
 				else:
 					Wifi.setState(WIFI_CLOSE)
@@ -146,8 +163,8 @@ class Wifi:
 			# If the wan reponding
 			elif state in [WAN_CONNECTED, LAN_CONNECTED, WIFI_CONNECTED]:
 				if Station.isActivated():
-					# If many wan problem notified
-					if Wifi.context.problem > 3:
+					# If many problem notified
+					if Wifi.context.lanProblem >= MAX_PROBLEM or Wifi.context.wanProblem >= MAX_PROBLEM:
 						Wifi.setState(WIFI_LOST)
 				else:
 					Wifi.setState(WIFI_CLOSE)

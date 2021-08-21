@@ -146,10 +146,10 @@ class Server:
 					if (Server.context.wanIp != newWanIp or forced):
 						await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(wifi.Station.getInfo()[0],newWanIp, useful.uptime()))
 					Server.context.wanIp = newWanIp
-					wifi.Wifi.connectWan()
+					wifi.Wifi.wanConnected()
 				else:
 					useful.syslog("Cannot get wan ip")
-					wifi.Wifi.disconnectWan()
+					wifi.Wifi.wanDisconnected()
 
 	@staticmethod
 	async def synchronizeTime():
@@ -189,9 +189,9 @@ class Server:
 					else:
 						await uasyncio.sleep(1)
 				if updated:
-					wifi.Wifi.connectWan()
+					wifi.Wifi.wanConnected()
 				else:
-					wifi.Wifi.disconnectWan()
+					wifi.Wifi.wanDisconnected()
 
 	@staticmethod
 	def isOnePerDay():

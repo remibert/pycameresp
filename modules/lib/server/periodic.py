@@ -35,7 +35,7 @@ class Periodic:
 			from server.notifier import Notifier
 			# If notification must be send
 			if self.serverConfig.notify:
-				message = "Login %s detected"%("success" if login else "failed")
+				message = b"Login %s detected"%(b"success" if login else b"failed")
 				await Notifier.notify(message, display=False)
 
 	async def task(self):

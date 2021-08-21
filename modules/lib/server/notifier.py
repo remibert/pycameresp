@@ -71,10 +71,10 @@ class Notifier:
 
 			# If wan connected
 			if wanOk == True:
-				wifi.Wifi.connectWan()
+				wifi.Wifi.wanConnected()
 			# If wan problem detected
 			if wanOk == False:
-				wifi.Wifi.disconnectWan()
+				wifi.Wifi.wanDisconnected()
 
 			# If all message notified
 			if result:

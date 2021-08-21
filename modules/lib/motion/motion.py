@@ -24,8 +24,8 @@ class MotionConfig(jsonconfig.JsonConfig):
 		# Minimum difference contigous threshold to detect movement
 		self.differencesDetection = 4
 
-		# Error range ignore light modification (% of 256)
-		self.lightErrorRange=12
+		# Sensitivity in percent (100% = max sensitivity, 0% = min sensitivity)
+		self.sensitivity=85
 
 		# Max images in motion historic
 		self.maxMotionImages=10
@@ -172,12 +172,12 @@ class ImageMotion:
 			mask = useful.tobytes(self.config.mask)
 			if not b"/" in mask:
 				mask = b""
-			errorLight = self.config.lightErrorRange
+			errorLight = useful.getFx(self.config.sensitivity, useful.getLinear(100,8,1,128))
 			self.motion.configure(\
 				{
 					"mask":mask,
 					"errorLights":[[0,1],[128,errorLight],[192, errorLight],[256,errorLight]],
-					"errorHistos":[[0,0],[96,32],[160,224],[256,256]]
+					"errorHistos":[[0,0],[32,32],[128,128],[256,256]]
 				})
 
 class SnapConfig:
@@ -274,7 +274,7 @@ class Motion:
 				# Save image to sdcard
 				if await image.save() == False:
 					if self.config.notify:
-						await Notifier.notify("Failed to save on sd card")
+						await Notifier.notify(b"Failed to save on sd card")
 			else:
 				# Destroy image
 				self.deinitImage(image)
@@ -583,7 +583,8 @@ class Detection:
 					Historic.setMotionState(False)
 				result = True
 			else:
-				if self.motionConfig.notify:await Notifier.notify(b"Motion detection suspended")
+				if self.motionConfig.notify:
+					await Notifier.notify(b"Motion detection suspended")
 				result = True
 
 		finally:

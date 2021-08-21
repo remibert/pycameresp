@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 from server.httpserver import HttpServer
 from htmltemplate import Br,ButtonCmd,Option,SwitchCmd,Tag,SliderCmd,ComboCmd,Paragraph
-from webpage     import mainFrame
+from webpage.mainpage     import *
 from tools       import useful
 
 # Called when the button pressed
