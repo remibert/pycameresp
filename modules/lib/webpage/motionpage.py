@@ -9,6 +9,7 @@ from server.httprequest import *
 from tools import useful
 from video import CameraConfig, Camera
 from motion import SnapConfig, MotionConfig
+from tools import lang
 import uasyncio
 
 zoneConfig = CameraConfig()
@@ -131,7 +132,7 @@ def zoneMasking(config, disabled):
 """%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
 	return result
 
-@HttpServer.addRoute(b'/motion', title=b"Motion", index=51, available=useful.iscamera())
+@HttpServer.addRoute(b'/motion', title=lang.motion, index=51, available=useful.iscamera())
 async def motion(request, response, args):
 	""" Motion configuration page """
 	zoneConfig.framesize  = b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height)
@@ -148,13 +149,13 @@ async def motion(request, response, args):
 	activated = config.activated
 	disabled, action, submit = manageDefaultButton(request, config, onclick=b"onValidZoneMasking()")
 
-	page = mainFrame(request, response, args, b"Motion detection configuration", 
-		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),
+	page = mainFrame(request, response, args, lang.motion_detection_configuration, 
+		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
 		Streaming.getHtml(request, SnapConfig.get().width, SnapConfig.get().height), 
 		zoneMasking(config, disabled), Br(),
-		Slider(text=b"Detects a movement if a number of different squares on two successive images is greater than or equal to",          name=b"differencesDetection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differencesDetection,         disabled=disabled),
-		Slider(text=b"Motion detection sensitivity",          name=b"sensitivity",        min=b"1",  max=b"100", step=b"1",  value=b"%d"%config.sensitivity,         disabled=disabled),
-		Switch(text=b"Notification", name=b"notify", checked=config.notify, disabled=disabled),Br(),
-		Switch(text=b"Suspends motion detection on the presence of an occupant",                name=b"suspendOnPresence", checked=config.suspendOnPresence, disabled=disabled),Br(),
+		Slider(text=lang.detects_a_movement,          name=b"differencesDetection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differencesDetection,         disabled=disabled),
+		Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"1",  max=b"100", step=b"1",  value=b"%d"%config.sensitivity,         disabled=disabled),
+		Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),Br(),
+		Switch(text=lang.suspends_motion_detection,                name=b"suspendOnPresence", checked=config.suspendOnPresence, disabled=disabled),Br(),
 		submit)
 	await response.sendPage(page)

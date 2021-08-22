@@ -5,8 +5,9 @@ from server.httpserver import HttpServer
 from htmltemplate import *
 from webpage.mainpage import *
 from server.pushover import *
+from tools import lang
 
-@HttpServer.addRoute(b'/pushover', title=b"Pushover", index=15)
+@HttpServer.addRoute(b'/pushover', title=lang.pushover, index=15)
 async def pushover(request, response, args):
 	""" Function define the web page to configure the pushover notifications """
 	config = PushOverConfig()
@@ -17,11 +18,11 @@ async def pushover(request, response, args):
 		typ = b"password"
 	else:
 		typ = b""
-	page = mainFrame(request, response, args,b"Notification configuration",
-		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),Br(),
-		Edit(text=b"User",  name=b"user",  placeholder=b"Enter pushover user",  type=typ, value=config.user,  disabled=disabled),
-		Edit(text=b"Token", name=b"token", placeholder=b"Enter pushover token", type=typ, value=config.token, disabled=disabled),
+	page = mainFrame(request, response, args,lang.notification_configuration,
+		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),Br(),
+		Edit(text=lang.user,  name=b"user",  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
+		Edit(text=lang.token, name=b"token", placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
 		submit,
-		Br(), Br(), Link(href=b"https://pushover.net", text=b"See pushover website"))
+		Br(), Br(), Link(href=b"https://pushover.net", text=lang.see_pushover_website))
 
 	await response.sendPage(page)

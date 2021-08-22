@@ -8,8 +8,9 @@ from webpage.mainpage import *
 from motion import Historic
 from tools import useful
 from video import Camera
+from tools import lang
 
-@HttpServer.addRoute(b'/historic', title=b"Historic", index=53, available=useful.iscamera())
+@HttpServer.addRoute(b'/historic', title=lang.historic, index=53, available=useful.iscamera())
 async def historic(request, response, args):
 	""" Historic motion detection page """
 	await Historic.getRoot()
@@ -394,7 +395,7 @@ async def historic(request, response, args):
 		<div id="motions"></div>
 		"""%(detailled, 800,600)),
 	]
-	page = mainFrame(request, response, args,b"Last motion detections",pageContent)
+	page = mainFrame(request, response, args,lang.last_motion_detections,pageContent)
 	await response.sendPage(page)
 
 @HttpServer.addRoute(b'/historic/historic.json', available=useful.iscamera())

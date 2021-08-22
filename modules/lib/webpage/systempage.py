@@ -7,24 +7,26 @@ from wifi.station import Station
 from htmltemplate import *
 from webpage.mainpage import *
 from tools import useful
+from tools import lang
 
-@HttpServer.addRoute(b'/system', title=b"System", index=300)
+
+@HttpServer.addRoute(b'/system', title=lang.system, index=300)
 async def systemPage(request, response, args):
 	""" Function define the web page to manage system of the board """
-	page = mainFrame(request, response, args, b"System management %s"%Station.getHostname(),
-		Label(text=b"Configuration" ),Br(),
-		ImportFile(text=b"Import", path=b"/system/importConfig", alert=b"Configuration imported", accept=b".cfg"),
-		ExportFile(text=b"Export", path=b"/system/exportConfig", filename=b"Config_%s.cfg"%Station.getHostname()),
+	page = mainFrame(request, response, args, lang.system_management_s%Station.getHostname(),
+		Label(text=lang.configuration ),Br(),
+		ImportFile(text=lang.import_, path=b"/system/importConfig", alert=lang.configuration_imported, accept=b".cfg"),
+		ExportFile(text=lang.export, path=b"/system/exportConfig", filename=b"Config_%s.cfg"%Station.getHostname()),
 
-		Br(),Br(),Label(text=b"File system"),Br(),
-		ImportFile(text=b"Import", path=b"/system/importFileSystem", alert=b"Import in progress, wait a few minutes the automatic reboot", accept=b".cfs"),
-		ExportFile(text=b"Export", path=b"/system/exportFileSystem", filename=b"FileSystem_%s.cfs"%Station.getHostname()),
+		Br(),Br(),Label(text=lang.file_system),Br(),
+		ImportFile(text=lang.import_, path=b"/system/importFileSystem", alert=lang.import_in_progress, accept=b".cfs"),
+		ExportFile(text=lang.export, path=b"/system/exportFileSystem", filename=b"FileSystem_%s.cfs"%Station.getHostname()),
 
-		Br(),Br(),Label(text=b"Syslog"),Br(),
-		ExportFile(text=b"Syslog", path=b"/system/exportSyslog", filename=b"Syslog_%s.log"%Station.getHostname()),
+		Br(),Br(),Label(text=lang.syslog),Br(),
+		ExportFile(text=lang.syslog, path=b"/system/exportSyslog", filename=b"Syslog_%s.log"%Station.getHostname()),
 
-		Br(), Br(),Label(text=b"Reboot device"),Br(),
-		ButtonCmd(text=b"Reboot",path=b"/system/reboot",confirm=b"Confirm reboot", name=b"reboot"))
+		Br(), Br(),Label(text=lang.reboot_device),Br(),
+		ButtonCmd(text=lang.reboot,path=b"/system/reboot",confirm=b"Confirm reboot", name=b"reboot"))
 	await response.sendPage(page)
 
 @HttpServer.addRoute(b'/system/importConfig')

@@ -10,6 +10,7 @@ from server.notifier import Notifier
 from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
+from tools import lang
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
@@ -274,7 +275,7 @@ class Motion:
 				# Save image to sdcard
 				if await image.save() == False:
 					if self.config.notify:
-						await Notifier.notify(b"Failed to save on sd card")
+						await Notifier.notify(lang.failed_to_save)
 			else:
 				# Destroy image
 				self.deinitImage(image)
@@ -505,9 +506,9 @@ class Detection:
 		if self.activated != result:
 			if self.motionConfig.notify:
 				if result:
-					await Notifier.notify(b"Motion detection on")
+					await Notifier.notify(lang.motion_detection_on)
 				else:
-					await Notifier.notify(b"Motion detection off")
+					await Notifier.notify(lang.motion_detection_off)
 			self.activated = result
 		if result == False:
 			# Motion capture disabled
@@ -587,7 +588,7 @@ class Detection:
 				result = True
 			else:
 				if self.motionConfig.notify:
-					await Notifier.notify(b"Motion detection suspended")
+					await Notifier.notify(lang.motion_detection_suspended)
 				result = True
 
 		finally:

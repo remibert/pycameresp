@@ -291,7 +291,7 @@ def import_(filename):
 	except:
 		pass
 	try:
-		module = exec("import %s"%moduleName)
+		exec("import %s"%moduleName)
 		
 		for fct in dir(sys.modules[moduleName]):
 			if fct == "main":
@@ -907,7 +907,7 @@ def uptime():
 	mins    = (up/1000/60)%60
 	hours   = (up/1000/3600)%24
 	days    = (up/1000/86400)
-	return "up %d days, %d:%02d:%02d"%(days,hours,mins,seconds)
+	return "%d days, %d:%02d:%02d"%(days,hours,mins,seconds)
 
 def reboot(message="Reboot"):
 	""" Reboot command """
@@ -991,7 +991,8 @@ async def taskMonitoring(task):
 	config = ServerConfig()
 	config.load()
 	if config.notify:
-		await Notifier.notify(b"Reboot after many crash : \n%s"%tobytes(lastError))
+		from tools import lang
+		await Notifier.notify(lang.reboot_after_many%tobytes(lastError))
 	reboot()
 
 HEADER_FILE=b"## PYCAMERESP ##\r\n"

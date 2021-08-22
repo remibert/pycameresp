@@ -5,34 +5,35 @@ from server.httpserver import HttpServer
 from htmltemplate import *
 from webpage.mainpage import *
 from tools import BatteryConfig
+from tools import lang
 
-@HttpServer.addRoute(b'/battery', title=b"Battery", index=200)
+@HttpServer.addRoute(b'/battery', title=lang.battery, index=200)
 async def battery(request, response, args):
 	""" Battery configuration web page """
 	config = BatteryConfig()
 	disabled, action, submit = manageDefaultButton(request, config)
 
-	page = mainFrame(request, response, args, b"Battery management", 
+	page = mainFrame(request, response, args, lang.battery_management, 
 		Card(
 			[
-				CardHeader(text=b"GPIO wake up"),
+				CardHeader(text=lang.gpio_wake_up),
 				CardBody([
-					Switch(text=b"Activated",              name=b"wakeUp", checked=config.wakeUp, disabled=disabled),Br(),
-					Edit(text=b"GPIO used to wake up",      name=b"wakeUpGpio", placeholder=b"GPIO connected to passive infrared sensor (PIR)", pattern=b"[0-9]*[0-9]", value=b"%d"%config.wakeUpGpio,   disabled=disabled),
-					Edit(text=b"Awake duration in seconds",  name=b"awakeDuration",  placeholder=b"Duration in seconds it stays awake", pattern=b"[0-9]*[0-9]", value=b"%d"%config.awakeDuration, disabled=disabled),
-					Edit(text=b"Sleep duration in seconds",  name=b"sleepDuration",  placeholder=b"Duration in seconds to sleep", pattern=b"[0-9]*[0-9]", value=b"%d"%config.sleepDuration, disabled=disabled),
+					Switch(text=lang.activated,              name=b"wakeUp", checked=config.wakeUp, disabled=disabled),Br(),
+					Edit(text=lang.gpio_used_to,      name=b"wakeUpGpio", placeholder=lang.gpio_connected_to, pattern=b"[0-9]*[0-9]", value=b"%d"%config.wakeUpGpio,   disabled=disabled),
+					Edit(text=lang.awake_duration_in,  name=b"awakeDuration",  placeholder=lang.duration_in_seconds, pattern=b"[0-9]*[0-9]", value=b"%d"%config.awakeDuration, disabled=disabled),
+					Edit(text=lang.sleep_duration_in,  name=b"sleepDuration",  placeholder=lang.duration_in_seconds_1, pattern=b"[0-9]*[0-9]", value=b"%d"%config.sleepDuration, disabled=disabled),
 				])
 			]),Br(),
 		Card(
 			[
-				CardHeader(text=b"Battery monitoring"),
+				CardHeader(text=lang.battery_monitoring),
 				CardBody([
-					Switch(text=b"Activated",              name=b"monitoring", checked=config.monitoring, disabled=disabled),Br(),
-					Edit(text=b"GPIO used to get battery level",       name=b"levelGpio",            placeholder=b"GPIO connect to battery level",                   pattern=b"[0-9]*[0-9]", value=b"%d"%config.levelGpio,    disabled=disabled),
-					Edit(text=b"GPIO value for 100%",  name=b"fullBattery",          placeholder=b"GPIO ADC value for battery full (4.2V)",          pattern=b"[0-9]*[0-9]", value=b"%d"%config.fullBattery,  disabled=disabled),
-					Edit(text=b"GPIO value for 0%",    name=b"emptyBattery",         placeholder=b"GPIO ADC value for battery empty (3.6V)",         pattern=b"[0-9]*[0-9]", value=b"%d"%config.emptyBattery, disabled=disabled),
+					Switch(text=lang.activated,              name=b"monitoring", checked=config.monitoring, disabled=disabled),Br(),
+					Edit(text=lang.gpio_used_to_2,       name=b"levelGpio",            placeholder=lang.gpio_connect_to,                   pattern=b"[0-9]*[0-9]", value=b"%d"%config.levelGpio,    disabled=disabled),
+					Edit(text=lang.gpio_value_for,  name=b"fullBattery",          placeholder=lang.gpio_adc_value,          pattern=b"[0-9]*[0-9]", value=b"%d"%config.fullBattery,  disabled=disabled),
+					Edit(text=lang.gpio_value_for_3,    name=b"emptyBattery",         placeholder=lang.gpio_adc_value_4,         pattern=b"[0-9]*[0-9]", value=b"%d"%config.emptyBattery, disabled=disabled),
 					Br(),
-					Switch(text=b"Force a deep sleep if several resets due to a power failure",              name=b"brownoutDetection", checked=config.brownoutDetection, disabled=disabled),
+					Switch(text=lang.force_a_deep,              name=b"brownoutDetection", checked=config.brownoutDetection, disabled=disabled),
 				])
 			]),Br(),
 		submit)

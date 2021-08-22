@@ -5,6 +5,7 @@ from server.server import ServerConfig, Server
 from tools import useful,battery
 import wifi
 import uasyncio
+from tools import lang
 
 async def periodicTask():
 	""" Periodic task """
@@ -36,9 +37,9 @@ class Periodic:
 			# If notification must be send
 			if self.serverConfig.notify:
 				if login:
-					await Notifier.notify(b"Login success detected", display=False)
+					await Notifier.notify(lang.login_success_detected, display=False)
 				else:
-					await Notifier.notify(b"Login failed detected", display=False)
+					await Notifier.notify(lang.login_failed_detected, display=False)
 
 	async def task(self):
 		""" Periodic task method """

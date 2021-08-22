@@ -8,8 +8,9 @@ from htmltemplate import *
 from webpage.mainpage import *
 import wifi
 from tools import useful
+from tools import lang
 
-@HttpServer.addRoute(b'/presence', title=b"Presence", index=60, available=useful.iscamera())
+@HttpServer.addRoute(b'/presence', title=lang.presence, index=60, available=useful.iscamera())
 async def presence(request, response, args):
 	""" Presence configuration page """
 	config = PresenceConfig()
@@ -34,20 +35,20 @@ async def presence(request, response, args):
 
 	disabled, action, submit = manageDefaultButton(request, config, updateConfig)
 	if action == b'modify':
-		submit = Switch(text=b"Convert ip address into DNS name", name=b"resolve", checked=False, disabled=disabled),submit
+		submit = Switch(text=lang.convert_ip_address, name=b"resolve", checked=False, disabled=disabled),submit
 
 	editSmartphones = []
 	i = 0
 	for smartphone in config.smartphones:
-		editSmartphones.append(Edit(text=b"Smartphone %d"%(i+1),         name=b"smartphones[%d]"%i,  
-								placeholder=b"Enter ip address or dns name",
+		editSmartphones.append(Edit(text=lang.smartphone_d%(i+1),         name=b"smartphones[%d]"%i,  
+								placeholder=lang.enter_ip_address,
 								value=useful.tobytes(config.smartphones[i]),  disabled=disabled))
 		i += 1
 
-	page = mainFrame(request, response, args,b"Presence detection configuration",
-		Switch(text=b"Activated", name=b"activated", checked=config.activated, disabled=disabled),Br(),
+	page = mainFrame(request, response, args,lang.presence_detection_configuration,
+		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),Br(),
 		editSmartphones,
-		Switch(text=b"Notification", name=b"notify", checked=config.notify, disabled=disabled),Br(),
+		Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),Br(),
 		submit)
 
 	await response.sendPage(page)

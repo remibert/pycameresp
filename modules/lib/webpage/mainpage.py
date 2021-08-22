@@ -6,6 +6,7 @@ from webpage.passwordpage import PasswordPage
 from server.httpserver import HttpServer
 from server.server   import Server
 from wifi.station import Station
+from tools import lang
 
 styleNav = b"""  height: 100%;
   width: 140px;
@@ -55,7 +56,7 @@ def mainPage(request, response, args, content=None):
 					Div(content,   style=styleContent)\
 					], title=title)
 	else:
-		page = Page(page + [stylesheet], title=b"Login")
+		page = Page(page + [stylesheet], title=lang.login)
 	Server.slowDown()
 	return page
 
@@ -81,7 +82,7 @@ def manageDefaultButton(request, config, callback=None, onclick=b""):
 			callback(request, config)
 		config.save()
 	if disabled:
-		submit = Submit(text=b"Modify", name=b"action", value=b"modify")
+		submit = Submit(text=lang.modify, name=b"action", value=b"modify")
 	else:
-		submit = Submit(text=b"Save", name=b"action", value=b"save", onclick=onclick)
+		submit = Submit(text=lang.save, name=b"action", value=b"save", onclick=onclick)
 	return disabled, action, submit

@@ -9,8 +9,10 @@ import sys
 import gc
 import machine
 import esp
+from tools import lang
 
-@HttpServer.addRoute(b'/', title=b"Information", index=10)
+
+@HttpServer.addRoute(b'/', title=lang.information, index=10)
 async def index(request, response, args):
 	""" Function define the web page to display all informations of the board """
 	try:
@@ -48,15 +50,15 @@ async def index(request, response, args):
 
 	date = useful.dateToBytes()
 
-	page = mainFrame(request, response, args, b"Device informations",
-		Edit(text=b"Date",             value=date,      disabled=True),
-		Edit(text=b"Uptime",           value=uptime,    disabled=True),
-		Edit(text=b"Platform",         value=platform,  disabled=True),
-		Edit(text=b"Frequency",        value=frequency, disabled=True),
-		Edit(text=b"Memory free",      value=memFree,   disabled=True),
-		Edit(text=b"Memory allocated", value=memAlloc,  disabled=True),
-		Edit(text=b"Memory total",     value=memTotal,  disabled=True),
-		Edit(text=b"Flash user",       value=flashUser, disabled=True),
-		Edit(text=b"Flash size",       value=flashSize, disabled=True))
+	page = mainFrame(request, response, args, lang.device_informations,
+		Edit(text=lang.date,             value=date,      disabled=True),
+		Edit(text=lang.uptime,           value=uptime,    disabled=True),
+		Edit(text=lang.platform,         value=platform,  disabled=True),
+		Edit(text=lang.frequency,        value=frequency, disabled=True),
+		Edit(text=lang.memory_free,      value=memFree,   disabled=True),
+		Edit(text=lang.memory_allocated, value=memAlloc,  disabled=True),
+		Edit(text=lang.memory_total,     value=memTotal,  disabled=True),
+		Edit(text=lang.flash_user,       value=flashUser, disabled=True),
+		Edit(text=lang.flash_size,       value=flashSize, disabled=True))
 
 	await response.sendPage(page)

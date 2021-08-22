@@ -5,6 +5,7 @@ from htmltemplate import *
 from tools import useful
 from server.user import User
 from server.sessions import Sessions
+from tools import lang
 
 class PasswordPage:
 	""" Html page of password """
@@ -16,34 +17,34 @@ class PasswordPage:
 		if newPassword != None:
 			res = User.change(request.params.get(b"user", b""), request.params.get(b"currentpassword", b""), request.params.get(b"newpassword"), request.params.get(b"renewpassword"))
 			if res == True:
-				return [Br(),AlertSuccess(text=b"Password changed")]
+				return [Br(),AlertSuccess(text=lang.password_changed)]
 			elif res == None:
-				return PasswordPage.changePage(alert=b"Passwords not equals")
+				return PasswordPage.changePage(alert=lang.passwords_not_equals)
 			else:
-				return PasswordPage.changePage(alert=b"Wrong user or password")
+				return PasswordPage.changePage(alert=lang.wrong_user_or)
 		else:
 			return PasswordPage.changePage()
 
 	@staticmethod
 	def loginPage(alert=None):
 		""" Login password page """
-		return PasswordPage.getDialog([Edit(text=b"User", name=b"loginuser"),Edit(text=b"Password", type=b"password", name=b"loginpassword")], b"Login", alert)
+		return PasswordPage.getDialog([Edit(text=b"User", name=b"loginuser"),Edit(text=lang.password, type=b"password", name=b"loginpassword")], b"Login", alert)
 
 	@staticmethod
 	def changePage(alert=None):
 		""" Change the password page """
 		if User.isEmpty():
-			part = [Edit(text=b"Create user name",     name=b"user"),]
+			part = [Edit(text=lang.create_user_name,     name=b"user"),]
 		else:
 			part = [\
-				Edit(text=b"Enter user name",          name=b"user"),
-				Edit(text=b"Current password",   type=b"password", name=b"currentpassword")]
+				Edit(text=lang.enter_user_name,          name=b"user"),
+				Edit(text=lang.current_password,   type=b"password", name=b"currentpassword")]
 
 		part += [\
-			Edit(text=b"New password",     type=b"password", name=b"newpassword"),
-			Edit(text=b"Repeat new password",     type=b"password", name=b"renewpassword")]
+			Edit(text=lang.new_password,     type=b"password", name=b"newpassword"),
+			Edit(text=lang.repeat_new_password,     type=b"password", name=b"renewpassword")]
 
-		return PasswordPage.getDialog(part, b"Change password", alert)
+		return PasswordPage.getDialog(part, lang.modify_password, alert)
 
 	@staticmethod
 	def getDialog(content, submit ,alert = None):
