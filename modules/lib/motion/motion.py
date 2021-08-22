@@ -504,7 +504,10 @@ class Detection:
 			
 		if self.activated != result:
 			if self.motionConfig.notify:
-				await Notifier.notify(b"Motion detection %s" %(b"on" if result else b"off"))
+				if result:
+					await Notifier.notify(b"Motion detection on")
+				else:
+					await Notifier.notify(b"Motion detection off")
 			self.activated = result
 		if result == False:
 			# Motion capture disabled

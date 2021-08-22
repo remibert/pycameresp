@@ -23,7 +23,7 @@ class PresenceConfig(jsonconfig.JsonConfig):
 
 class Presence:
 	""" Presence detection of smartphones """
-	ABSENCE_TIMEOUT   = 15.*60.
+	ABSENCE_TIMEOUT   = 20.*60.
 	NO_ANSWER_TIMEOUT = 10.*60.
 	FAST_POLLING      = 5.
 	SLOW_POLLING      = 1.*60.
@@ -139,7 +139,11 @@ class Presence:
 		# If the presence detection change
 		if Presence.activated != Presence.config.activated:
 			if Presence.config.notify:
-				await Notifier.notify(b"Presence detection %s"%(b"on" if Presence.config.activated else b"off"))
+				if Presence.config.activated:
+					await Notifier.notify(b"Presence detection on")
+				else:
+					await Notifier.notify(b"Presence detection off")
+
 			Presence.activated = Presence.config.activated
 
 		# Wait before new ping

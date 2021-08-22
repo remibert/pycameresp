@@ -26,6 +26,9 @@ class WifiContext:
 		self.wanProblem    = 0
 		self.dns = ""
 		self.state = WIFI_OFF
+		self.pollingId = 0
+		self.accessPointForced = 0
+
 
 class Wifi:
 	""" Class to manage the wifi station and access point """
@@ -116,6 +119,7 @@ class Wifi:
 	@staticmethod
 	async def manage():
 		""" Manage the wifi """
+		Wifi.context.pollingId += 1
 		while 1:
 			state = Wifi.getState()
 
@@ -133,8 +137,9 @@ class Wifi:
 						Wifi.setState(WIFI_OTHER_NETWORK)
 
 			# If the network not reached select other network
-			elif state == WIFI_OTHER_NETWORK:
+			elif state in [WIFI_OTHER_NETWORK, ACCESS_POINT_FORCED]:
 				if Station.isActivated():
+					Station.stop()
 					if await Station.chooseNetwork(maxRetry=5) == True:
 						Wifi.context.dns = Station.getInfo()[3]
 						Wifi.context.lanProblem = 0
@@ -146,17 +151,6 @@ class Wifi:
 							Wifi.setState(ACCESS_POINT_FORCED)
 						else:
 							Wifi.setState(WIFI_CLOSE)
-				else:
-					Wifi.setState(WIFI_CLOSE)
-
-			# If access point forced
-			elif state == ACCESS_POINT_FORCED:
-				if Station.isActivated():
-					if await Station.chooseNetwork(maxRetry=5) == True:
-						Wifi.context.dns = Station.getInfo()[3]
-						Wifi.context.lanProblem = 0
-						Wifi.context.wanProblem = 0
-						Wifi.setState(WIFI_CONNECTED)
 				else:
 					Wifi.setState(WIFI_CLOSE)
 
@@ -181,6 +175,7 @@ class Wifi:
 
 		# If the accesspoint can activate
 		if state == ACCESS_POINT_FORCED and Station.isFallback():
+			Wifi.context.accessPointForced = Wifi.context.pollingId + 4
 			forced = True
 		else:
 			forced = False
@@ -194,5 +189,7 @@ class Wifi:
 		else:
 			# If access point active
 			if AccessPoint.isActive() == True:
-				# Stop the access point
-				AccessPoint.stop()
+				# In case of access point forced it is not cut immediatly
+				if Wifi.context.accessPointForced <= Wifi.context.pollingId:
+					# Stop the access point
+					AccessPoint.stop()

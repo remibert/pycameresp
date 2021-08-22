@@ -74,8 +74,16 @@ class Station:
 	lastScan = [0]
 
 	@staticmethod
+	def init():
+		""" Initialize wlan object """
+		if Station.wlan is None:
+			from network import WLAN, STA_IF
+			Station.wlan = WLAN(STA_IF)
+
+	@staticmethod
 	async def connect(network, maxRetry=15):
 		""" Connect to wifi hotspot """
+		Station.init()
 		result = False
 		if not Station.wlan.isconnected():
 			Station.wlan.active(True)
@@ -98,6 +106,7 @@ class Station:
 	@staticmethod
 	def disconnect():
 		""" Disconnect the wifi """
+		Station.init()
 		if Station.wlan.isconnected():
 			Station.wlan.disconnect()
 			Station.wlan.active(False)
@@ -118,6 +127,7 @@ class Station:
 	@staticmethod
 	def configure(network):
 		""" Configure the wifi """
+		Station.init()
 		# If ip is dynamic
 		if  network.dynamic   == True:
 			if len(Station.getHostname()) > 0:
@@ -159,6 +169,7 @@ class Station:
 	@staticmethod
 	def scan():
 		""" Scan other networks """
+		Station.init()
 		if Station.lastScan[0] + 120 < time.time() or len(Station.otherNetworks) == 0:
 			Station.otherNetworks = []
 			Station.wlan.active(True)
@@ -190,6 +201,7 @@ class Station:
 			# Load default network
 			if Station.network.load(partFilename=networkName):
 				useful.syslog("Try to connect to %s"%useful.tostrings(Station.network.ssid))
+
 				# If the connection failed
 				if await Station.connect(Station.network, maxRetry) == True:
 					useful.syslog("Connected to %s"%useful.tostrings(Station.network.ssid))
@@ -240,10 +252,8 @@ class Station:
 	async def start(force=False, maxRetry=15):
 		""" Start the wifi according to the configuration. Force is used to skip configuration activation flag """
 		result = False
+		Station.init()
 		if Station.isActive() == False:
-			from network import WLAN, STA_IF
-			Station.wlan = WLAN(STA_IF)
-
 			useful.syslog("Start wifi")
 			if await Station.chooseNetwork(force, maxRetry) == True:
 				result = True

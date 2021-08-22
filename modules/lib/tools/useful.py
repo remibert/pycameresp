@@ -16,7 +16,7 @@ try:
 	import uos
 except:
 	pass
-from binascii import hexlify
+from binascii import hexlify, b2a_base64, a2b_base64
 
 LONG_WATCH_DOG=15*60*1000
 SHORT_WATCH_DOG=5*60*1000
@@ -128,7 +128,7 @@ else:
 			try:
 				inp, outp, err = select.select([sys.stdin], [], [], duration)
 			except Exception as err:
-				exception(err)
+				syslog(err)
 			result = callback(inp)
 		finally:
 			# Reset the terminal:
@@ -299,9 +299,9 @@ def import_(filename):
 				sys.modules[moduleName].main()
 				break
 	except Exception as err:
-		exception(err)
+		syslog(err)
 	except KeyboardInterrupt as err:
-		exception(err)
+		syslog(err)
 
 def temperature():
 	""" Get the internal temperature in celcius and farenheit """
@@ -445,8 +445,10 @@ def syslog(err, msg="", display=True):
 		rename(filename       ,filename + ".1")
 		logFile = open(filename,"a")
 
-	logFile.write(dateMsToString() + " %s%s\n"%(tostrings(msg),tostrings(err)))
+	result = "%s%s"%(tostrings(msg),tostrings(err))
+	logFile.write(dateMsToString() + " %s\n"%(result))
 	logFile.close()
+	return result
 
 def htmlException(err):
 	""" Return the content of exception into an html bytes """
@@ -757,7 +759,7 @@ def scandir(path, pattern, recursive, displayer=None):
 						else:
 							filenames.append(filename)
 	except Exception as err:
-		exception(err)
+		syslog(err)
 	return directories, filenames
 
 class SdCard:
@@ -850,14 +852,14 @@ class SdCard:
 					uos.mkdir(direct)
 				except OSError as err:
 					if err.args[0] not in [2,17]:
-						exception(err)
+						syslog(err)
 						break
 			try:
 				result = open(filepath,mode)
 				break
 			except OSError as err:
 				if err.args[0] not in [2,17]:
-					exception(err)
+					syslog(err)
 					break
 
 		return result
@@ -874,7 +876,7 @@ class SdCard:
 				file.close()
 				result = True
 			except Exception as err:
-				exception(err, "Cannot save %s/%s/%s"%(SdCard.getMountpoint(), directory, filename))
+				syslog(err, "Cannot save %s/%s/%s"%(SdCard.getMountpoint(), directory, filename))
 			finally:
 				if file is not None:
 					file.close()
@@ -977,12 +979,10 @@ async def taskMonitoring(task):
 					retry = 0
 
 		except Exception as err:
-			lastError = exception(err)
-			syslog(err, "Task error")
+			lastError = syslog(err, "Task error")
 			retry += 1
 			await uasyncio.sleep_ms(6000)
 		syslog("Task retry %d"%retry)
-
 	syslog("Too many task error reboot")
 
 	from server.server import ServerConfig
@@ -1032,13 +1032,13 @@ def exportFiles(exportFilename, path="./config",pattern="*.json", recursive=Fals
 					# Write end of file
 					out.write(b"\r\n\r\n")
 				except Exception as err:
-					exception(err)
+					syslog(err)
 					result = False
 					break
 				finally:
 					content.close()
 	except Exception as err:
-		exception(err)
+		syslog(err)
 		result = False
 	finally:
 		print("Export %s"%("success" if result else "failed"))
@@ -1105,7 +1105,7 @@ def importFiles(importFilename, simulated=False):
 							content.write(data)
 						size -= len(data)
 				except Exception as err:
-					exception(err)
+					syslog(err)
 					result = False
 				finally:
 					if simulated == False:
@@ -1116,7 +1116,7 @@ def importFiles(importFilename, simulated=False):
 					result = False
 					break
 	except Exception as err:
-		exception(err)
+		syslog(err)
 		result = False
 	finally:
 		print("Import %s"%("success" if result else "failed"))
@@ -1147,3 +1147,28 @@ def getFy(y, linear):
 	a,b,offset = linear
 	x = ((y*offset) -b)//a
 	return x
+
+Aes_ = None
+def Aes(key, mode):
+	""" AES object loaded on demand """
+	global Aes_
+	if Aes_ is None:
+		import cryptolib
+		Aes_ = cryptolib.aes
+	if len(key) % 16 != 0:
+		key = (key*16)[:16]
+	return  Aes_(tobytes(key), mode)
+
+def encrypt(buffer, key):
+	""" AES encryption of buffer """
+	data = b2a_base64(buffer)
+	data = data.rstrip()
+	if len(data) % 16 != 0:
+		data = data + b"="*(16-len(data)%16)
+	return Aes(key,1).encrypt(tobytes(data))
+
+def decrypt(buffer, key):
+	""" AES decryption of buffer """
+	data = Aes(key, 1).decrypt(buffer)
+	data = a2b_base64(tobytes(data))
+	return data
