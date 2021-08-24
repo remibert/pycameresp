@@ -2,15 +2,14 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to configure the presence detection """
 from server.httpserver import HttpServer
-from server.dnsclient import resolveHostname, isIpAddress
-from server.presence import PresenceConfig
-from htmltemplate import *
-from webpage.mainpage import *
+from server.dnsclient  import resolveHostname, isIpAddress
+from server.presence   import PresenceConfig
+from htmltemplate      import *
+from webpage.mainpage  import mainFrame, manageDefaultButton
 import wifi
-from tools import useful
-from tools import lang
+from tools import useful,lang
 
-@HttpServer.addRoute(b'/presence', title=lang.presence, index=60, available=useful.iscamera())
+@HttpServer.addRoute(b'/presence', title=lang.presence, index=140, available=useful.iscamera())
 async def presence(request, response, args):
 	""" Presence configuration page """
 	config = PresenceConfig()
@@ -41,7 +40,7 @@ async def presence(request, response, args):
 	i = 0
 	for smartphone in config.smartphones:
 		editSmartphones.append(Edit(text=lang.smartphone_d%(i+1),         name=b"smartphones[%d]"%i,  
-								placeholder=lang.enter_ip_address,
+								placeholder=lang.enter_ip_address_or_dns,
 								value=useful.tobytes(config.smartphones[i]),  disabled=disabled))
 		i += 1
 

@@ -1,8 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Manage the battery """
-from tools import jsonconfig
-from tools import useful
+from tools import jsonconfig, useful
 import machine
 import esp32
 

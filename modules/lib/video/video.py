@@ -8,8 +8,7 @@ as well as a lot of adjustment on the camera, not available on the other firmwar
 import camera
 import time
 import uasyncio
-from tools import useful
-from tools import jsonconfig
+from tools import useful,jsonconfig
 
 class CameraConfig(jsonconfig.JsonConfig):
 	""" Class that collects the camera rendering configuration """

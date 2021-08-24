@@ -2,15 +2,14 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to view recent motion detection """
 from server.httpserver import HttpServer
-from server.server   import Server
-from htmltemplate import *
-from webpage.mainpage import *
-from motion import Historic
-from tools import useful
-from video import Camera
-from tools import lang
+from server.server     import Server
+from htmltemplate      import *
+from webpage.mainpage  import mainFrame
+from motion            import Historic
+from tools             import useful, lang
+from video             import Camera
 
-@HttpServer.addRoute(b'/historic', title=lang.historic, index=53, available=useful.iscamera())
+@HttpServer.addRoute(b'/historic', title=lang.historic, index=220, available=useful.iscamera())
 async def historic(request, response, args):
 	""" Historic motion detection page """
 	await Historic.getRoot()
@@ -98,7 +97,7 @@ async def historic(request, response, args):
 				var ctx = document.getElementById('motion').getContext('2d');
 				ctx.font = '25px Arial';
 				ctx.fillStyle = "black";
-				ctx.fillText("Not yet available, retry again in 5 minutes", 10, 20);
+				ctx.fillText("%s", 10, 20);
 			}
 		}
 
@@ -390,10 +389,10 @@ async def historic(request, response, args):
 		}
 
 		</script>
-		<canvas id="motion" width="%d" height="%d" >The reconstruction is in progress, wait a few minutes after a reboot of the terminal</canvas>
+		<canvas id="motion" width="%d" height="%d" ></canvas>
 		<br>
 		<div id="motions"></div>
-		"""%(detailled, 800,600)),
+		"""%(lang.historic_not_available, detailled, 800,600)),
 	]
 	page = mainFrame(request, response, args,lang.last_motion_detections,pageContent)
 	await response.sendPage(page)

@@ -894,7 +894,7 @@ def rename(old, new):
 	try: uos.rename(old, new)
 	except: pass
 
-def uptime():
+def uptime(text="days"):
 	""" Tell how long the system has been running """
 	try:
 		# pylint: disable=no-member
@@ -907,16 +907,16 @@ def uptime():
 	mins    = (up/1000/60)%60
 	hours   = (up/1000/3600)%24
 	days    = (up/1000/86400)
-	return "%d days, %d:%02d:%02d"%(days,hours,mins,seconds)
+	return "%d %s, %d:%02d:%02d"%(days, tostrings(text),hours,mins,seconds)
 
 def reboot(message="Reboot"):
 	""" Reboot command """
 	syslog(message)
-	from server.server import ServerConfig
-	serverConfig = ServerConfig()
-	if serverConfig.load():
-		serverConfig.currentTime = time.time() + 8
-		serverConfig.save()
+	from tools.lang import RegionConfig
+	regionConfig = RegionConfig()
+	if regionConfig.load():
+		regionConfig.currentTime = time.time() + 8
+		regionConfig.save()
 	try:
 		if ismicropython():
 			import camera

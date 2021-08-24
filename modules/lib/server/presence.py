@@ -2,12 +2,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Presence detection (determine if an occupant is present in the house) """
 import time
-from tools import useful, jsonconfig
+from tools import useful, jsonconfig, lang
 import wifi
 from server.ping import asyncPing
 from server.notifier import Notifier
 from server.server import Server
-from tools import lang
 
 class PresenceConfig(jsonconfig.JsonConfig):
 	""" Configuration class of presence detection """
@@ -26,7 +25,7 @@ class Presence:
 	""" Presence detection of smartphones """
 	ABSENCE_TIMEOUT   = 20.*60.
 	NO_ANSWER_TIMEOUT = 10.*60.
-	FAST_POLLING      = 5.
+	FAST_POLLING      = 2.
 	SLOW_POLLING      = 1.*60.
 	DNS_POLLING       = 1.*60.
 

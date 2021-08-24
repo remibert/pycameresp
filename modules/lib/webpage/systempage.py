@@ -2,15 +2,13 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to manage board """
 from server.httpserver import HttpServer
-from server.server   import Server
-from wifi.station import Station
-from htmltemplate import *
-from webpage.mainpage import *
-from tools import useful
-from tools import lang
+from server.server     import Server
+from wifi.station      import Station
+from htmltemplate      import *
+from webpage.mainpage  import mainFrame
+from tools             import useful,lang
 
-
-@HttpServer.addRoute(b'/system', title=lang.system, index=300)
+@HttpServer.addRoute(b'/system', title=lang.system, index=1000)
 async def systemPage(request, response, args):
 	""" Function define the web page to manage system of the board """
 	page = mainFrame(request, response, args, lang.system_management_s%Station.getHostname(),
@@ -23,7 +21,7 @@ async def systemPage(request, response, args):
 		ExportFile(text=lang.export, path=b"/system/exportFileSystem", filename=b"FileSystem_%s.cfs"%Station.getHostname()),
 
 		Br(),Br(),Label(text=lang.syslog),Br(),
-		ExportFile(text=lang.syslog, path=b"/system/exportSyslog", filename=b"Syslog_%s.log"%Station.getHostname()),
+		ExportFile(text=lang.export, path=b"/system/exportSyslog", filename=b"Syslog_%s.log"%Station.getHostname()),
 
 		Br(), Br(),Label(text=lang.reboot_device),Br(),
 		ButtonCmd(text=lang.reboot,path=b"/system/reboot",confirm=b"Confirm reboot", name=b"reboot"))

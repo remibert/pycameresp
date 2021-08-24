@@ -1,6 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-from tools import jsonconfig,useful,info
+from tools import jsonconfig,useful,info,lang
 import wifi
 import uasyncio
 import time
@@ -14,9 +14,6 @@ class ServerConfig(jsonconfig.JsonConfig):
 		self.http = True
 		self.telnet = True
 		self.wanip = True
-		self.offsettime = 1
-		self.dst = True
-		self.currentTime = 0
 		self.notify = True
 		self.serverPostponed = 10
 
@@ -32,15 +29,20 @@ class ServerContext:
 		self.notifier      = None
 		self.getWanIpAsync = None
 		self.wanIp = None
-		self.config        = ServerConfig()
+		self.serverConfig  = ServerConfig()
+		self.regionConfig  = lang.RegionConfig()
 		self.setDate = None
 		self.onePerDay = None
 		self.flushed = False
 		
-		if self.config.load() == False:
-			self.config.save()
-		self.serverPostponed = self.config.serverPostponed
-		setTime(self.config.currentTime)
+		if self.serverConfig.load() == False:
+			self.serverConfig.save()
+
+		if self.regionConfig.load() == False:
+			self.regionConfig.save()
+
+		self.serverPostponed = self.serverConfig.serverPostponed
+		setTime(self.regionConfig.currentTime)
 
 class Server:
 	""" Class used to manage the servers """
@@ -129,7 +131,7 @@ class Server:
 	async def synchronizeWanIp(forced):
 		""" Synchronize wan ip """
 		# If wan ip synchronization enabled
-		if Server.context.config.wanip:
+		if Server.context.serverConfig.wanip:
 			if wifi.Wifi.isWanAvailable():
 				useful.syslog("Synchronize Wan ip")
 				# Wan ip not yet get
@@ -155,7 +157,7 @@ class Server:
 	async def synchronizeTime():
 		""" Synchronize time """
 		# If ntp synchronization enabled
-		if Server.context.config.ntp:
+		if Server.context.serverConfig.ntp:
 			# If the wan is present
 			if wifi.Wifi.isWanAvailable():
 				useful.syslog("Synchronize time")
@@ -172,13 +174,13 @@ class Server:
 					oldTime = time.time()
 
 					# Read date from ntp server
-					currentTime = Server.context.setDate(Server.context.config.offsettime, dst=Server.context.config.dst, display=False)
+					currentTime = Server.context.setDate(Server.context.regionConfig.offsettime, dst=Server.context.regionConfig.dst, display=False)
 
 					# If date get
 					if currentTime > 0:
 						# Save new date
-						Server.context.config.currentTime = int(currentTime)
-						Server.context.config.save()
+						Server.context.regionConfig.currentTime = int(currentTime)
+						Server.context.regionConfig.save()
 
 						# If clock changed
 						if abs(oldTime - currentTime) > 1:
@@ -210,7 +212,6 @@ class Server:
 			# If wifi available
 			if wifi.Wifi.isLanConnected():
 				Server.context.serverStarted = True
-				config = Server.context.config
 
 				# Add notifier if no notifier registered
 				if Server.context.notifier.isEmpty():
@@ -218,19 +219,19 @@ class Server:
 					Server.context.notifier.add(notifyMessage)
 
 				# If telnet activated
-				if config.telnet:
+				if Server.context.serverConfig.telnet:
 					# Load and start telnet
 					import server.telnet
 					server.telnet.start()
 
 				# If ftp activated
-				if config.ftp:
+				if Server.context.serverConfig.ftp:
 					# Load and start ftp server
 					import server.ftpserver
 					server.ftpserver.start(loop=Server.context.loop, preload=Server.context.preload)
 
 				# If http activated
-				if config.http:
+				if Server.context.serverConfig.http:
 					# Load and start http server
 					import server.httpserver
 					server.httpserver.start(loop=Server.context.loop, loader=Server.context.pageLoader, preload=Server.context.preload, port=Server.context.httpPort, name="httpServer")
@@ -274,8 +275,8 @@ class Server:
 
 			# Save current time
 			if pollingId % 59 == 0:
-				Server.context.config.currentTime = time.time()
-				Server.context.config.save()
+				Server.context.regionConfig.currentTime = time.time()
+				Server.context.regionConfig.save()
 		else:
 			Server.context.serverPostponed -= 1
 

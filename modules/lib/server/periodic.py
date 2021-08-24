@@ -2,10 +2,9 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Periodic task, wifi management, get wanIp, synchronize time """
 from server.server import ServerConfig, Server
-from tools import useful,battery
+from tools import useful,battery, lang
 import wifi
 import uasyncio
-from tools import lang
 
 async def periodicTask():
 	""" Periodic task """

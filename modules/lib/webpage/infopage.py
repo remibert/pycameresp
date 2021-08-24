@@ -1,18 +1,17 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to display all informations of the board """
-from server.httpserver import HttpServer
-from htmltemplate import *
-from webpage.mainpage import *
-from tools import useful
 import sys
 import gc
 import machine
 import esp
-from tools import lang
+from server.httpserver import HttpServer
+from htmltemplate      import *
+from webpage.mainpage  import mainFrame
+from tools             import useful, lang
 
 
-@HttpServer.addRoute(b'/', title=lang.information, index=10)
+@HttpServer.addRoute(b'/', title=lang.information, index=20)
 async def index(request, response, args):
 	""" Function define the web page to display all informations of the board """
 	try:
@@ -23,28 +22,28 @@ async def index(request, response, args):
 		memFree  = useful.sizeToBytes(freed)
 		memTotal = useful.sizeToBytes(allocated + freed)
 	except:
-		memAlloc = b"Unvailable"
-		memFree  = b"Unvailable"
-		memTotal = b"Unvailable"
+		memAlloc = lang.unavailable
+		memFree  = lang.unavailable
+		memTotal = lang.unavailable
 	try:
 		flashUser = useful.sizeToBytes(esp.flash_user_start())
 		flashSize = useful.sizeToBytes(esp.flash_size())
 	except:
-		flashUser = b"Unavailable"
-		flashSize = b"Unavailable"
+		flashUser = lang.unavailable
+		flashSize = lang.unavailable
 
 	try:
 		frequency = b"%d"%(machine.freq()//1000000)
 	except:
-		frequency = b"Unvailable"
+		frequency = lang.unavailable
 
 	try:
 		platform = useful.tobytes(sys.platform)
 	except:
-		platform = b"Unavailable"
+		platform = lang.unavailable
   
 	try:
-		uptime = useful.tobytes(useful.uptime())
+		uptime = useful.tobytes(useful.uptime(lang.days))
 	except:
 		uptime = b""
 

@@ -9,6 +9,7 @@ from webpage.infopage import *
 from webpage.pushoverpage import *
 from webpage.serverpage import *
 from webpage.wifipage import *
+from webpage.regionpage import *
 if iscamera():
 	from webpage.motionpage import *
 	from webpage.streamingpage import *

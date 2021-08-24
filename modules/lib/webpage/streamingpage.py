@@ -1,13 +1,12 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to see the camera streaming """
-from server.httpserver import HttpServer
-from server.server   import Server
-from htmltemplate import *
-from webpage.mainpage import *
+from server.httpserver  import HttpServer
+from server.server      import Server
+from htmltemplate       import *
 from server.httprequest import *
-from tools import useful
-from video import Camera
+from tools              import useful
+from video              import Camera
 import uasyncio
 
 class Streaming:

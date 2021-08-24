@@ -5,12 +5,11 @@ import sys
 import uasyncio
 import video
 from gc import collect
-from tools import useful, jsonconfig, battery
+from tools import useful, jsonconfig, battery, lang
 from server.notifier import Notifier
 from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
-from tools import lang
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """

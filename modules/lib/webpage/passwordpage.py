@@ -2,10 +2,9 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to change the login password """
 from htmltemplate import *
-from tools import useful
+from tools import useful, lang
 from server.user import User
 from server.sessions import Sessions
-from tools import lang
 
 class PasswordPage:
 	""" Html page of password """

@@ -5,11 +5,10 @@ See https://www.pushover.net """
 
 import sys
 sys.path.append("lib")
-from tools import useful
+from tools import useful, jsonconfig
 import uasyncio
 from server.stream import *
 from server.httprequest import *
-from tools import jsonconfig
 import wifi
 
 class PushOverConfig(jsonconfig.JsonConfig):

@@ -1,15 +1,14 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to see the camera streaming """
-from server.httpserver import HttpServer
-from htmltemplate import *
-from webpage.mainpage import *
+from server.httpserver     import HttpServer
+from htmltemplate          import *
+from webpage.mainpage      import mainFrame, manageDefaultButton
 from webpage.streamingpage import *
-from server.httprequest import *
-from tools import useful
-from video import CameraConfig, Camera
-from motion import SnapConfig, MotionConfig
-from tools import lang
+from server.httprequest    import *
+from tools                 import useful, lang
+from video                 import CameraConfig, Camera
+from motion                import SnapConfig, MotionConfig
 import uasyncio
 
 zoneConfig = CameraConfig()
@@ -132,7 +131,7 @@ def zoneMasking(config, disabled):
 """%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
 	return result
 
-@HttpServer.addRoute(b'/motion', title=lang.motion, index=51, available=useful.iscamera())
+@HttpServer.addRoute(b'/motion', title=lang.motion, index=200, available=useful.iscamera())
 async def motion(request, response, args):
 	""" Motion configuration page """
 	zoneConfig.framesize  = b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height)

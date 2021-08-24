@@ -1,20 +1,19 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to see the camera streaming """
-from server.httpserver import HttpServer
-from server.server   import Server
-from htmltemplate import *
-from webpage.mainpage import *
+from server.httpserver     import HttpServer
+from server.server         import Server
+from htmltemplate          import *
+from webpage.mainpage      import mainFrame
 from webpage.streamingpage import *
-from server.httprequest import *
-from tools import useful
-from video import CameraConfig, Camera
-from tools import lang
+from server.httprequest    import *
+from tools                 import useful, lang
+from video                 import CameraConfig, Camera
 import uasyncio
 
 cameraConfig = CameraConfig()
 
-@HttpServer.addRoute(b'/camera', title=lang.camera, index=110)
+@HttpServer.addRoute(b'/camera', title=lang.camera, index=240)
 async def cameraPage(request, response, args):
 	""" Camera streaming page """
 	framesizes = []
