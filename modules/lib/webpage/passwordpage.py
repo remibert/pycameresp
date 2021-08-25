@@ -27,7 +27,7 @@ class PasswordPage:
 	@staticmethod
 	def loginPage(alert=None):
 		""" Login password page """
-		return PasswordPage.getDialog([Edit(text=b"User", name=b"loginuser"),Edit(text=lang.password, type=b"password", name=b"loginpassword")], b"Login", alert)
+		return PasswordPage.getDialog([Edit(text=lang.user, name=b"loginuser"),Edit(text=lang.password, type=b"password", name=b"loginpassword")], lang.login, alert)
 
 	@staticmethod
 	def changePage(alert=None):

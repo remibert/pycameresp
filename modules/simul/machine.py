@@ -41,6 +41,7 @@ class Pin:
 	IN = 1
 	OUT = 1
 	PULL_UP = 1
+	PULL_DOWN =0
 	def __init__(self, *args, **params):
 		pass
 	

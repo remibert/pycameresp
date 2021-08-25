@@ -405,9 +405,9 @@ def reboot():
 	""" Reboot command """
 	useful.reboot("Reboot device")
 
-def deepsleep():
+def deepsleep(seconds=60):
 	""" Deep sleep command """
-	machine.deepsleep()
+	machine.deepsleep(int(seconds)*1000)
 
 editClass = None
 def edit(file):
@@ -708,7 +708,7 @@ shellCommands = \
 	"meminfo"  :[useful.meminfo  ],
 	"flashinfo":[useful.flashinfo],
 	"sysinfo"  :[useful.sysinfo  ],
-	"deepsleep":[deepsleep],
+	"deepsleep":[deepsleep,"seconds"],
 	"ping"     :[ping      ,"host"],
 	"reboot"   :[reboot   ],
 	"help"     :[help     ],

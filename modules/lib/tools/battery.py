@@ -106,8 +106,12 @@ class Battery:
 		""" Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector. """
 		Battery.init()
 		try:
-			wake1 = machine.Pin(Battery.config.wakeUpGpio, mode = machine.Pin.IN)
-			esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
+			if Battery.config.wakeUpGpio != 0:
+				wake1 = machine.Pin(Battery.config.wakeUpGpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
+				esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
+				useful.syslog("Pin wake up on %d"%Battery.config.wakeUpGpio)
+			else:
+				useful.syslog("Pin wake up disabled")
 			return True
 		except Exception as err:
 			useful.syslog(err,"Cannot set wake up")
@@ -176,6 +180,9 @@ class Battery:
 		""" Checks the number of brownout reset """
 		deepsleep = False
 
+		if Battery.config.isChanged():
+			Battery.config.load()
+
 		if Battery.config.brownoutDetection:
 			# If the reset can probably due to insufficient battery
 			if machine.reset_cause() == machine.BROWNOUT_RESET:
@@ -201,6 +208,9 @@ class Battery:
 	@staticmethod
 	def manageAwake(resetBrownout=False):
 		""" Manage the awake duration """
+		if Battery.config.isChanged():
+			Battery.config.load()
+
 		if resetBrownout:
 			if Battery.config.brownoutDetection:
 				Battery.config.brownoutCount = 0
@@ -209,7 +219,9 @@ class Battery:
 		if Battery.config.wakeUp:
 			Battery.awakeCounter[0] -= 1
 			if Battery.awakeCounter[0] < 0:
+
 				useful.syslog("Sleep %d s"%Battery.config.sleepDuration)
+
 				# Set the wake up on PIR detection
 				Battery.setPinWakeUp()
-				machine.deepsleep(Battery.config.sleepDuration)
+				machine.deepsleep(Battery.config.sleepDuration*1000)

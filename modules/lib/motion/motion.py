@@ -99,7 +99,7 @@ class ImageMotion:
 
 	def getMessage(self):
 		""" Get the message of motion """
-		return "%s Id=%d D=%d"%(self.date, self.index, self.getDiffCount())
+		return "%s %s D=%d"%(useful.tostrings(lang.motion_detected), self.date[-8:], self.getDiffCount())
 
 	def getInformations(self):
 		""" Return the informations of motion """
@@ -329,7 +329,6 @@ class Motion:
 						video.Camera.quality(self.quality, False)
 			if changed == False:
 				if self.previousQuality != self.quality:
-					useful.syslog("Adjust image quality from %d to %d"%(self.previousQuality, self.quality))
 					self.previousQuality = self.quality
 
 	def compare(self, display=True):

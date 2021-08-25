@@ -19,9 +19,14 @@ async def regionPage(request, response, args):
 			selected = b""
 		langages.append(Option(text=langage, selected=selected, value=langage))
 
+	if action == b"save":
+		alert = Br(), Br(), AlertError(text=lang.taken_into_account)
+	else:
+		alert = None
+
 	page = mainFrame(request, response, args, lang.region_configuration,
 		Edit  (text=lang.utc_offset             , name=b"offsettime",pattern=b"-*[0-9]*[0-9]", placeholder=lang.offset_time_to,        value=b"%d"%config.offsettime,       disabled=disabled),
 		Switch(text=lang.daylight_saving_time   , name=b"dst"       ,checked=config.dst,    disabled=disabled),Br(),
-		Select(langages,text=lang.language,name=b"lang", disabled=disabled), Br(), submit)
+		Select(langages,text=lang.language,name=b"lang", disabled=disabled), submit, alert)
 	await response.sendPage(page)
 

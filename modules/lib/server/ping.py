@@ -156,7 +156,7 @@ class Ping:
 		""" Receive and decode ICMP packet """
 		result = False
 		if sock:
-			resp = self.sock.recv(4096)
+			resp = self.sock.recv(256)
 			self.response = Packet(Packet.ECHO_REPLY, 0, seq)
 			
 			self.response.unserialize(resp)

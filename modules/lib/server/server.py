@@ -15,7 +15,7 @@ class ServerConfig(jsonconfig.JsonConfig):
 		self.telnet = True
 		self.wanip = True
 		self.notify = True
-		self.serverPostponed = 10
+		self.serverPostponed = 7
 
 class ServerContext:
 	""" Context to initialize the servers """

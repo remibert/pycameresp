@@ -147,11 +147,24 @@ class Bytesio:
 
 
 class Bufferedio:
+	memorysize = [None]
 	""" Class used to buffered stream write """
 	def __init__(self, streamio, part=1440*20):
 		""" Constructor """
 		self.buffered = BytesIO()
-		self.part = part
+		
+		if Bufferedio.memorysize[0] == None:
+			import gc
+			try:
+				# pylint: disable=no-member
+				Bufferedio.memorysize[0]  = gc.mem_free()
+			except:
+				Bufferedio.memorysize[0]  = 256*1024
+
+		if Bufferedio.memorysize[0] < 200*1024:
+			self.part = None
+		else:
+			self.part = part
 		self.streamio = streamio
 	
 	async def read(self):
@@ -160,10 +173,14 @@ class Bufferedio:
 
 	async def write(self, data):
 		""" Write data in the stream """
-		result = self.buffered.write(data)
-		if self.buffered.tell() > self.part:
-			await self.streamio.write(self.buffered.getvalue())
-			self.buffered = BytesIO()
+		if self.part == None:
+			result = len(data)
+			await self.streamio.write(data)
+		else:
+			result = self.buffered.write(data)
+			if self.buffered.tell() > self.part:
+				await self.streamio.write(self.buffered.getvalue())
+				self.buffered = BytesIO()
 		return result
 
 	async def close(self):

@@ -91,7 +91,6 @@ class Presence:
 					# If a response received from smartphone
 					if received > 0:
 						presents.append(smartphone)
-						useful.syslog("Smatphone %s detected"%(useful.tostrings(smartphone)))
 						Presence.lastTime = time.time()
 						currentDetected = True
 						wifi.Wifi.lanConnected()
@@ -123,13 +122,9 @@ class Presence:
 
 			# If all smartphones not responded during a long time
 			if Presence.lastTime + Presence.NO_ANSWER_TIMEOUT < time.time() and smartphoneInList == True:
-				if Presence.pollingDuration != Presence.FAST_POLLING:
-					useful.syslog("Fast polling for presence detection")
 				# Set fast polling rate
 				Presence.pollingDuration = Presence.FAST_POLLING
 			else:
-				if Presence.pollingDuration != Presence.SLOW_POLLING:
-					useful.syslog("Slow polling for presence detection")
 				# Reduce polling rate
 				Presence.pollingDuration = Presence.SLOW_POLLING
 		else:

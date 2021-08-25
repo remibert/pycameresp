@@ -9,7 +9,7 @@ from webpage.mainpage  import mainFrame, manageDefaultButton
 import wifi
 from tools import useful,lang
 
-@HttpServer.addRoute(b'/presence', title=lang.presence, index=140, available=useful.iscamera())
+@HttpServer.addRoute(b'/presence', title=lang.presence, index=140)
 async def presence(request, response, args):
 	""" Presence configuration page """
 	config = PresenceConfig()
