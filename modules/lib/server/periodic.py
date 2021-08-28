@@ -47,15 +47,15 @@ class Periodic:
 		useful.WatchDog.start(useful.SHORT_WATCH_DOG)
 		while True:
 			# Reload server config if changed
-			if self.serverConfig.isChanged():
-				self.serverConfig.load()
+			if pollingId % 5 == 0:
+				# Manage login user
+				await self.checkLogin()
+
+				if self.serverConfig.isChanged():
+					self.serverConfig.load()
 
 			# Manage server
 			await Server.manage(pollingId)
-
-			# Manage login user
-			if pollingId % 5 == 0:
-				await self.checkLogin()
 
 			# Manage awake duration
 			battery.Battery.manageAwake(wifi.Wifi.isWanConnected())

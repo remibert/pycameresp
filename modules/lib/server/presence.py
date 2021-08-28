@@ -23,11 +23,11 @@ class PresenceConfig(jsonconfig.JsonConfig):
 
 class Presence:
 	""" Presence detection of smartphones """
-	ABSENCE_TIMEOUT   = 20.*60.
-	NO_ANSWER_TIMEOUT = 10.*60.
+	ABSENCE_TIMEOUT   = 1201
+	NO_ANSWER_TIMEOUT = 607
 	FAST_POLLING      = 2.
-	SLOW_POLLING      = 1.*60.
-	DNS_POLLING       = 1.*60.
+	SLOW_POLLING      = 53
+	DNS_POLLING       = 67
 
 	PING_TIMEOUT      = 0.5
 	PING_COUNT        = 4
@@ -55,16 +55,19 @@ class Presence:
 		Presence.lastTime = 0
 		Presence.lastDnsTime = 0
 		Presence.detected[0] = False
+		Presence.configRefreshCounter = 0
 
 	@staticmethod
 	async def task():
 		""" Run the task """
 		# If configuration must be read
 		if Presence.config:
-			if Presence.config.isChanged():
-				if Presence.config.load() == False:
-					Presence.config.save()
-				useful.syslog("Change presence config %s"%Presence.config.toString(), display=False)
+			if Presence.configRefreshCounter % 7 == 0:
+				if Presence.config.isChanged():
+					if Presence.config.load() == False:
+						Presence.config.save()
+					useful.syslog("Change presence config %s"%Presence.config.toString(), display=False)
+			Presence.configRefreshCounter += 1
 
 		if Presence.config.activated == True and wifi.Wifi.isLanAvailable():
 			if Presence.lastDnsTime + Presence.DNS_POLLING < time.time():

@@ -60,8 +60,8 @@ SELECT_UP        = ["\x1B[1;2A"]
 SELECT_DOWN      = ["\x1B[1;2B"]
 SELECT_RIGHT     = ["\x1B[1;2C"]
 SELECT_LEFT      = ["\x1B[1;2D"]
-SELECT_PAGE_UP   = ["\x1B[1;10A","\x1B[1;4A"]
-SELECT_PAGE_DOWN = ["\x1B[1;10B","\x1B[1;4B"]
+SELECT_PAGE_UP   = ["\x1B[1;10A","\x1B[1;4A","\x1B[5;2~"]
+SELECT_PAGE_DOWN = ["\x1B[1;10B","\x1B[1;4B","\x1B[6;2~"]
 SELECT_HOME      = ["\x1B[1;2H","\x1B[1;10D"]
 SELECT_END       = ["\x1B[1;2F","\x1B[1;10C"]
 SELECT_ALL       = ["\x01"]
@@ -1650,8 +1650,8 @@ class Editor:
 					break
 				elif keys[0] in EXECUTE:
 					break
-				# else:
-					# print(useful.dump(keys))
+				else:
+					print(useful.dump(keys[0]))
 		self.edit.view.cls()
 		self.edit.view.setRefreshAll()
 		self.isRefreshHeader = True

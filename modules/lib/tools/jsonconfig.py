@@ -31,6 +31,7 @@ class JsonConfig:
 			del data["modificationDate"]
 			json.dump(useful.tostrings(data),file)
 			file.close()
+			self.modificationDate = uos.stat(filename)[8]
 			return True
 		except Exception as err:
 			useful.syslog(err, "Cannot save %s "%(filename))

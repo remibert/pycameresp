@@ -269,7 +269,11 @@ class Server:
 				await Server.synchronizeTime()
 
 			# Polling for get wan ip
-			forced =  Server.isOnePerDay()
+			if pollingId % 59 == 0:
+				forced =  Server.isOnePerDay()
+			else:
+				forced = False
+
 			if pollingId % 3593 == 0 or forced:
 				await Server.synchronizeWanIp(forced)
 

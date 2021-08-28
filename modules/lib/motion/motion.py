@@ -442,6 +442,7 @@ class Detection:
 			self.pollingFrequency = 100
 		self.detection = None
 		self.activated = None
+		self.refreshConfigCounter = 0
 
 	def loadConfig(self):
 		""" Load motion configuration """
@@ -455,12 +456,15 @@ class Detection:
 
 	def refreshConfig(self):
 		""" Refresh the configuration : it can be changed by web page """
-		# If configuration changed
-		if self.motionConfig.isChanged():
-			self.motionConfig.load()
-			useful.syslog("Change motion config %s"%self.motionConfig.toString(), display=False)
-			if self.motion:
-				self.motion.refreshConfig()
+		if self.refreshConfigCounter % 11 == 0:
+			# If configuration changed
+			if self.motionConfig.isChanged():
+				self.motionConfig.load()
+				useful.syslog("Change motion config %s"%self.motionConfig.toString(), display=False)
+				if self.motion:
+					self.motion.refreshConfig()
+		self.refreshConfigCounter += 1
+
 	async def run(self):
 		""" Main asynchronous task """
 		await useful.taskMonitoring(self.detect)

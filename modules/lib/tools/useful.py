@@ -7,7 +7,10 @@ import io
 import time
 import select
 import hashlib
-import machine
+try:
+	import machine
+except:
+	pass
 try:
 	from tools import fnmatch
 except:

@@ -25,7 +25,9 @@
 
 #define RTC_LAST_EXT_PIN 39
 #define RTC_IS_VALID_EXT_PIN(pin_id) ((1ll << (pin_id)) & RTC_VALID_EXT_PINS)
+//# REMI BERTHOLET START
 #define NVS_NAMESPACE "micropython"
+//# REMI BERTHOLET END
 
 extern const mp_obj_type_t esp32_nvs_type;
 extern const mp_obj_type_t esp32_partition_type;

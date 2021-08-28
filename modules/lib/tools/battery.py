@@ -208,17 +208,19 @@ class Battery:
 	@staticmethod
 	def manageAwake(resetBrownout=False):
 		""" Manage the awake duration """
-		if Battery.config.isChanged():
-			Battery.config.load()
+		if Battery.awakeCounter[0] % 10 == 0:
+			if Battery.config.isChanged():
+				Battery.config.load()
 
 		if resetBrownout:
 			if Battery.config.brownoutDetection:
-				Battery.config.brownoutCount = 0
-				Battery.config.save()
+				if Battery.config.brownoutCount > 0:
+					Battery.config.brownoutCount = 0
+					Battery.config.save()
 
 		if Battery.config.wakeUp:
 			Battery.awakeCounter[0] -= 1
-			if Battery.awakeCounter[0] < 0:
+			if Battery.awakeCounter[0] <= 0:
 
 				useful.syslog("Sleep %d s"%Battery.config.sleepDuration)
 

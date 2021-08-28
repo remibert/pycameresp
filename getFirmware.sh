@@ -24,7 +24,7 @@ echo "Get Micropython"
 echo "***************"
 git clone https://github.com/micropython/micropython.git
 cd $ROOT/micropython
-git checkout 680ce45323248df288ee8ebd055a4caacb3e46f3
+git checkout 145fedef8d74a504c4b7c000e6c305602d07feff
 
 echo "*************************"
 echo "Get micropython submodule"
@@ -60,7 +60,9 @@ echo "****************"
 cd $ROOT
 git clone https://github.com/espressif/esp32-camera.git esp32-camera
 cd esp32-camera
-git checkout 010709376a131c12c14bb074b6c5be82d2241338
+# After the version 722497cb19383cd4ee6b5d57bb73148b5af41b24 
+# all version until 1eb90a8849496e5d4c9b1ee10ab9e60ca756dca0 have contrast problem in part of image
+git checkout 722497cb19383cd4ee6b5d57bb73148b5af41b24
 cd $ESPIDF/components
 ln -s $ROOT/esp32-camera esp32-camera
 
