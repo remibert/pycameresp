@@ -32,6 +32,7 @@ class Battery:
 	config = None
 	level = [-2]
 	awakeCounter = [0] # Decrease each second
+	refreshCounter = [0]
 
 	@staticmethod
 	def init():
@@ -208,9 +209,10 @@ class Battery:
 	@staticmethod
 	def manageAwake(resetBrownout=False):
 		""" Manage the awake duration """
-		if Battery.awakeCounter[0] % 10 == 0:
+		if Battery.refreshCounter[0] % 10 == 0:
 			if Battery.config.isChanged():
 				Battery.config.load()
+		Battery.refreshCounter[0] += 1
 
 		if resetBrownout:
 			if Battery.config.brownoutDetection:
