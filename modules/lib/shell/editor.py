@@ -1399,51 +1399,61 @@ class Text:
 		""" Move the cursor to the last line of text """
 		self.goto(100000000000)
 
+	def treatChar(self, keys):
+		""" Treat character entered """
+		char = ord(keys[0][0])
+		if self.readOnly is False:
+			if char >= 0x20 and char != 0x7F:
+				self.addChar(keys)
+				return True
+		return False
+
 	def treatKey(self, keys):
 		""" Treat keys """
-		# Move in the edit field
-		if   keys[0] in UP  :            self.arrowUp(keys)
-		elif keys[0] in DOWN:            self.arrowDown(keys)
-		elif keys[0] in LEFT:            self.arrowLeft(keys)
-		elif keys[0] in RIGHT:           self.arrowRight(keys)
-		elif keys[0] in HOME:            self.home()
-		elif keys[0] in END:             self.end()
-		elif keys[0] in PAGE_UP:         self.pageUp(keys)
-		elif keys[0] in PAGE_DOWN:       self.pageDown(keys)
-		elif keys[0] in TOP:             self.top()
-		elif keys[0] in BOTTOM:          self.bottom()
-		elif keys[0] in NEXT_WORD:       self.nextWord()
-		elif keys[0] in PREVIOUS_WORD:   self.previousWord()
-		# Selection the edit field
-		elif keys[0] in SELECT_UP:       self.selectUp(keys)
-		elif keys[0] in SELECT_DOWN:     self.selectDown(keys)
-		elif keys[0] in SELECT_RIGHT:    self.selectRight(keys)
-		elif keys[0] in SELECT_LEFT:     self.selectLeft(keys)
-		elif keys[0] in SELECT_HOME:     self.selectHome()
-		elif keys[0] in SELECT_END:      self.selectEnd()
-		elif keys[0] in SELECT_PAGE_UP:  self.selectPageUp(keys)
-		elif keys[0] in SELECT_PAGE_DOWN:self.selectPageDown(keys)
-		elif keys[0] in SELECT_ALL:      self.selectAll()
-		elif keys[0] in SELECT_NEXT_WORD:self.selectNextWord()
-		elif keys[0] in SELECT_PREV_WORD:self.selectPreviousWord()
+		if self.treatChar(keys) == False:
+			# Move in the edit field
+			if   keys[0] in UP  :            self.arrowUp(keys)
+			elif keys[0] in DOWN:            self.arrowDown(keys)
+			elif keys[0] in LEFT:            self.arrowLeft(keys)
+			elif keys[0] in RIGHT:           self.arrowRight(keys)
+			elif keys[0] in HOME:            self.home()
+			elif keys[0] in END:             self.end()
+			elif keys[0] in PAGE_UP:         self.pageUp(keys)
+			elif keys[0] in PAGE_DOWN:       self.pageDown(keys)
+			elif keys[0] in TOP:             self.top()
+			elif keys[0] in BOTTOM:          self.bottom()
+			elif keys[0] in NEXT_WORD:       self.nextWord()
+			elif keys[0] in PREVIOUS_WORD:   self.previousWord()
+			# Selection the edit field
+			elif keys[0] in SELECT_UP:       self.selectUp(keys)
+			elif keys[0] in SELECT_DOWN:     self.selectDown(keys)
+			elif keys[0] in SELECT_RIGHT:    self.selectRight(keys)
+			elif keys[0] in SELECT_LEFT:     self.selectLeft(keys)
+			elif keys[0] in SELECT_HOME:     self.selectHome()
+			elif keys[0] in SELECT_END:      self.selectEnd()
+			elif keys[0] in SELECT_PAGE_UP:  self.selectPageUp(keys)
+			elif keys[0] in SELECT_PAGE_DOWN:self.selectPageDown(keys)
+			elif keys[0] in SELECT_ALL:      self.selectAll()
+			elif keys[0] in SELECT_NEXT_WORD:self.selectNextWord()
+			elif keys[0] in SELECT_PREV_WORD:self.selectPreviousWord()
 
-		# If the edit is not in read only
-		elif self.readOnly is False:
-			# Modification in the edit field
-			if   keys[0] in COPY:            self.copy()
-			elif keys[0] in CUT:             self.cut()
-			elif keys[0] in PASTE:           self.paste()
+			# If the edit is not in read only
+			elif self.readOnly is False:
+				# Modification in the edit field
+				if   keys[0] in COPY:            self.copy()
+				elif keys[0] in CUT:             self.cut()
+				elif keys[0] in PASTE:           self.paste()
 
-			elif keys[0] in INDENT:          self.indent(keys)
-			elif keys[0] in UNINDENT:        self.unindent(keys)
-			elif keys[0] in CHANGE_CASE:     self.changeCase()
-			elif keys[0] in COMMENT:         self.comment()
+				elif keys[0] in INDENT:          self.indent(keys)
+				elif keys[0] in UNINDENT:        self.unindent(keys)
+				elif keys[0] in CHANGE_CASE:     self.changeCase()
+				elif keys[0] in COMMENT:         self.comment()
 
-			elif keys[0] in BACKSPACE:       self.backspace()
-			elif keys[0] in DELETE:          self.delete()
-			elif keys[0] in NEW_LINE:        self.newLine()
-			elif keys[0] in DELETE_LINE:     self.deleteLine()
-			else: self.addChar(keys)
+				elif keys[0] in BACKSPACE:       self.backspace()
+				elif keys[0] in DELETE:          self.delete()
+				elif keys[0] in NEW_LINE:        self.newLine()
+				elif keys[0] in DELETE_LINE:     self.deleteLine()
+			# else: self.addChar(keys)
 
 class Edit:
 	""" Class which aggregate the View and Text """
@@ -1666,17 +1676,18 @@ class Editor:
 				self.refresh()
 				keys = self.getKey()
 				modified = self.edit.text.modified
-				if   keys[0] in TOGGLE_MODE:    self.toggleMode()
-				elif keys[0] in FIND:           self.find()
-				elif keys[0] in REPLACE:        self.replace()
-				elif keys[0] in FIND_PREVIOUS:  self.findPrevious()
-				elif keys[0] in FIND_NEXT:      self.findNext()
-				elif keys[0] in REPLACE_CURRENT:self.replaceCurrent()
-				elif keys[0] in EXIT:           self.exit()
-				elif keys[0] in GOTO:           self.goto()
-				elif keys[0] in SAVE:           self.save()
-				elif keys[0] in EXECUTE:        self.execute()
-				else: self.edit.text.treatKey(keys)
+				if ord(keys[0][0]) < 0x20:
+					if   keys[0] in TOGGLE_MODE:    self.toggleMode()
+					elif keys[0] in FIND:           self.find()
+					elif keys[0] in REPLACE:        self.replace()
+					elif keys[0] in FIND_PREVIOUS:  self.findPrevious()
+					elif keys[0] in FIND_NEXT:      self.findNext()
+					elif keys[0] in REPLACE_CURRENT:self.replaceCurrent()
+					elif keys[0] in EXIT:           self.exit()
+					elif keys[0] in GOTO:           self.goto()
+					elif keys[0] in SAVE:           self.save()
+					elif keys[0] in EXECUTE:        self.execute()
+				self.edit.text.treatKey(keys)
 				if modified != self.edit.text.modified:
 					self.isRefreshHeader = True
 			except KeyboardInterrupt:
@@ -1689,4 +1700,4 @@ if __name__ == "__main__":
 		filename = sys.argv[1]
 	else:
 		filename = "editor.txt"
-	edit = Editor(filename, readOnly=True)
+	edit = Editor(filename, readOnly=False)

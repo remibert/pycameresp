@@ -31,35 +31,58 @@ def ismicropython():
 	return False
 
 if ismicropython():
+	def getLengthUtf8(key):
+		""" Get the length utf8 string """
+		if len(key) > 0:
+			char = key[0]
+			if char <= 0x7F:
+				return 1
+			elif char >= 0xC2 and char <= 0xDF:
+				return 2
+			elif char >= 0xE0 and char <= 0xEF:
+				return 3
+			elif char >= 0xF0 and char <= 0xF4:
+				return 4
+			return 1
+		else:
+			return 0
+			
 	def isKeyEnded(key):
+		""" Indicates if the key completly entered """
 		if len(key) == 0:
 			return False
-		elif len(key) == 1:
-			if key == "\x1B":
-				return False
-			else:
-				return True
-		elif len(key) == 2:
-			if key[0] == "\x1B" and key[1] == "\x1B":
-				return False
-			elif key[0] == "\x1B":
-				if  key[1] == "[" or key[1] == "(" or \
-					key[1] == ")" or key[1] == "#" or \
-					key[1] == "?" or key[1] == "O":
-					return False
-				else:
-					return True
 		else:
-			if ord(key[-1]) >= ord("A") and ord(key[-1]) <= ord("Z"):
-				return True
-			elif ord(key[-1]) >= ord("a") and ord(key[-1]) <= ord("z"):
-				return True
-			elif key[-1] == "~":
-				return True
+			char = key[-1]
+			if len(key) == 1:
+				if char == 0x1B:
+					return False
+				elif getLengthUtf8(key) == len(key):
+					return True
+			elif len(key) == 2:
+				if key[0] == b"\x1B" and key[1] == b"\x1B":
+					return False
+				elif key[0] == b"\x1B":
+					if  key[1] == b"[" or key[1] == b"(" or \
+						key[1] == b")" or key[1] == b"#" or \
+						key[1] == b"?" or key[1] == b"O":
+						return False
+					else:
+						return True
+				elif getLengthUtf8(key) == len(key):
+					return True
+			else:
+				if key[-1] >= ord("A") and key[-1] <= ord("Z"):
+					return True
+				elif key[-1] >= ord("a") and key[-1] <= ord("z"):
+					return True
+				elif key[-1] == b"~":
+					return True
+				elif key[0] != b"\x1B" and getLengthUtf8(key) == len(key):
+					return True
 		return False
 
 	def getch(raw = True, duration=100000000, interchar=0.01):
-		key = ""
+		key = b""
 		WatchDog.feed()
 		while 1:
 			if len(key) == 0:
@@ -70,14 +93,14 @@ if ismicropython():
 			if isKeyEnded(key):
 				break
 			if keyPressed:
-				char = sys.stdin.buffer.read(1)
-				try:
-					key += char.decode("latin-1")
-				except:
-					key += chr(ord(char))
+				key += sys.stdin.buffer.read(1)
 			else:
 				if len(key) > 0:
 					break
+		try:
+			key = key.decode("utf8")
+		except:
+			key = dump(key,withColor=False)
 		return key
 
 	def kbhit(duration=0.01):
@@ -574,7 +597,7 @@ def computeHash(string):
 def isascii(char):
 	""" Indicates if the char is ascii """
 	if len(char) == 1:
-		if ord(char) >= 0x20 and ord(char) < 0x7F or char == "\t":
+		if ord(char) >= 0x20 and ord(char) != 0x7F or char == "\t":
 			return True
 	return False
 
@@ -619,9 +642,12 @@ def ispunctuation(char):
 	else:
 		return False
 
-def dump(buff):
+def dump(buff, withColor=True):
 	""" Dump buffer """
-	string = "\x1B[7m "
+	if withColor:
+		string = "\x1B[7m"
+	else:
+		string = ""
 	if type(buff) == type(b"") or type(buff) == type(bytearray()):
 		for i in buff:
 			if isascii(chr(i)):
@@ -634,8 +660,58 @@ def dump(buff):
 				string += i
 			else:
 				string += "\\x%02x"%ord(i)
-	string += " \x1B[m"
+	if withColor:
+		string += "\x1B[m"
 	return string
+
+def dumpFile(filename, width=16):
+	""" Dump a file in hexadecimal """
+	width = 16
+	offset = 0
+	file = open(filename, "rb")
+	data = b' '
+	while len(data) != 0:
+		line = io.BytesIO()
+		line.write(b'%08X  ' % offset)
+		data = file.read(width)
+		dumpLine (data, line, width)
+		offset += width
+		line.write(b'\n')
+		print(line.getvalue().decode("utf8"), end="")
+		
+	file.close()
+
+def dumpLine (data, line = None, width = 0):
+	""" Dump a data data in hexadecimal on one line """
+	size = len(data)
+	fill = 0
+	
+	# Calculation of the filling length
+	if width > size:
+		fill = width-size
+
+	# Displaying values in hex
+	for i in data:
+		line.write(b'%02X ' % i)
+		
+	# Filling of vacuum according to the size of the dump
+	line.write(b'   '*fill)
+	
+	# Display of ASCII codes
+	line.write(b' |')
+	
+	for i in data:
+		if i >= 0x20 and  i <= 0x7F:
+			line.write(chr(i).encode("utf8"))
+		else:
+			line.write(b'.')
+
+	# Filling of vacuum according to the size of the dump
+	line.write(b' '*fill)
+	
+	# End of data ascii
+	line.write(b'|')
+
 
 def makedir(directory, recursive=False):
 	""" Make directory recursively """

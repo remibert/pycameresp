@@ -172,7 +172,7 @@ class ImageMotion:
 			mask = useful.tobytes(self.config.mask)
 			if not b"/" in mask:
 				mask = b""
-			errorLight = useful.getFx(self.config.sensitivity, useful.getLinear(100,8,1,128))
+			errorLight = useful.getFx(self.config.sensitivity, useful.getLinear(100,10,1,90))
 			self.motion.configure(\
 				{
 					"mask":mask,

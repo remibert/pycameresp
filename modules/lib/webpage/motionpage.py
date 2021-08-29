@@ -153,7 +153,7 @@ async def motion(request, response, args):
 		Streaming.getHtml(request, SnapConfig.get().width, SnapConfig.get().height), 
 		zoneMasking(config, disabled), Br(),
 		Slider(text=lang.detects_a_movement,          name=b"differencesDetection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differencesDetection,         disabled=disabled),
-		Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"1",  max=b"100", step=b"1",  value=b"%d"%config.sensitivity,         disabled=disabled),
+		Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),
 		Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),Br(),
 		Switch(text=lang.suspends_motion_detection,                name=b"suspendOnPresence", checked=config.suspendOnPresence, disabled=disabled),Br(),
 		submit)

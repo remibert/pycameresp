@@ -488,13 +488,25 @@ def help():
 		for line in lines.split("\n"):
 			count = printPart(line, width, height, count)
 			if count == None:
-				return 
+				return
+
+def eval_(string):
+	""" Evaluate content of string """
+	print(eval(string))
+
+def exec_(string):
+	""" Execute content of string """
+	exec(string)
 
 shell_exited = False
 def exit():
 	""" Exit shell command """
 	global shell_exited
 	shell_exited = True
+
+def dump_(filename):
+	""" Dump file content """
+	useful.dumpFile(filename)
 
 def parseCommandLine(commandLine):
 	""" Parse command line """
@@ -716,6 +728,9 @@ shellCommands = \
 	"df"       :[df       ,"mountpoint"],
 	"ip2host"  :[ip2host  ,"ipaddress"],
 	"host2ip"  :[host2ip  ,"hostname"],
+	"eval"     :[eval_    ,"string"],
+	"exec"     :[exec_    ,"string"],
+	"dump"     :[dump_    ,"filename"],
 }
 
 if __name__ == "__main__":
