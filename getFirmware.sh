@@ -72,7 +72,7 @@ echo "************"
 cd $ROOT
 git clone https://github.com/espressif/esp-homekit-sdk.git
 cd esp-homekit-sdk
-git checkout 389189abd7c1965d70eb3ddc7a19a8f0313f1fc8
+git checkout c62f64dea6669547182e932dfded0a3a912a1951
 git submodule update --init --recursive
 
 cd $ESPIDF/components

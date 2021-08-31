@@ -122,7 +122,7 @@ class Server:
 		build = info.build.replace("/","-")
 		build = build.replace("  ","_")
 		build = build.replace(":","-")
-		useful.syslog("PyCam version '%s'"%build)
+		useful.syslog("Software version '%s'"%build)
 
 		from server.periodic import periodicTask
 		loop.create_task(periodicTask())

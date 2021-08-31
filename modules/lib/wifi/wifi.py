@@ -70,9 +70,11 @@ class Wifi:
 	@staticmethod
 	def wanConnected():
 		""" Set wan have establish dialog with external server """
-		Wifi.context.lanProblem = 0
-		Wifi.context.wanProblem = 0
-		if Wifi.getState() == WIFI_CONNECTED:
+		Wifi.lanConnected(False)
+		if Wifi.context.wanProblem > 0:
+			useful.syslog("Wan connected")
+			Wifi.context.wanProblem = 0
+		if Wifi.getState() in [WIFI_CONNECTED, LAN_CONNECTED]:
 			Wifi.setState(WAN_CONNECTED)
 
 	@staticmethod
@@ -83,11 +85,14 @@ class Wifi:
 			useful.syslog("Wan problem %d detected"%Wifi.context.wanProblem)
 
 	@staticmethod
-	def lanConnected():
+	def lanConnected(changeState=True):
 		""" Indicates that lan connection detected """
-		Wifi.context.lanProblem = 0
-		if Wifi.getState() in [WIFI_CONNECTED]:
-			Wifi.setState(LAN_CONNECTED)
+		if Wifi.context.lanProblem > 0:
+			useful.syslog("Lan connected")
+			Wifi.context.lanProblem = 0
+		if changeState:
+			if Wifi.getState() == WIFI_CONNECTED:
+				Wifi.setState(LAN_CONNECTED)
 
 	@staticmethod
 	def lanDisconnected():

@@ -34,6 +34,7 @@ The commands are :
 """
 import sys
 sys.path.append("lib")
+import io
 import os
 import uos
 import machine
@@ -506,30 +507,49 @@ def exit():
 
 def dump_(filename):
 	""" Dump file content """
-	useful.dumpFile(filename)
+	height, width = useful.getScreenSize()
+	width = 16
+	offset = 0
+	file = open(filename, "rb")
+	data = b' '
+	count = 1
+	while True:
+		line = io.BytesIO()
+		line.write(b'%08X  ' % offset)
+		data = file.read(width)
+		if len(data) <= 0:
+			break
+		useful.dumpLine (data, line, width)
+		offset += width
+		count = printPart(line.getvalue().decode("utf8"), width, height, count)
+		if count == None:
+			break
 
 def parseCommandLine(commandLine):
 	""" Parse command line """
 	commands = []
 	args = []
-	quote = False
+	quote = None
 	arg = ""
 	for char in commandLine:
 		if char == '"' or char == "'":
-			if quote:
-				args.append(arg)
-				arg = ""
-				quote = False
+			if quote is not None:
+				if quote == char:
+					args.append(arg)
+					arg = ""
+					quote = None
+				else:
+					arg += char
 			else:
-				quote = True
+				quote = char
 		elif char == " ":
-			if quote == True:
+			if quote is not None:
 				arg += char
 			else:
 				args.append(arg)
 				arg = ""
 		elif char == ";":
-			if quote == True:
+			if quote is not None:
 				arg += char
 			else:
 				if len(arg) > 0:

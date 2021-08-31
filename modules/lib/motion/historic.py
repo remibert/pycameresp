@@ -277,7 +277,7 @@ class Historic:
 		""" Internal periodic task """
 		from server.server import Server
 		if useful.ismicropython():
-			await Server.waitResume(599)
+			await Server.waitResume(307)
 		else:
 			await Server.waitResume(7)
 		if Historic.motionInProgress[0] == False:

@@ -214,14 +214,15 @@ class Camera:
 					retry -= 1
 					time.sleep(0.5)
 			total = Camera.success[0] + Camera.failed[0]
-			if (total % 5000) == 0:
+			STAT_CAMERA=5000
+			if (total % STAT_CAMERA) == 0:
 				if Camera.success[0] != 0:
-					newFailed = ((Camera.newFailed[0]*100)/Camera.success[0])
-					failed    = ((Camera.failed[0]*100)/Camera.success[0])
+					newFailed = 100.-((Camera.newFailed[0]*100)/STAT_CAMERA)
+					failed    = 100.-((Camera.failed[0]*100)/total)
 				else:
 					newFailed = 0.
 					failed    = 0.
-				useful.syslog("Camera failed : Last %-3.1f%%, All %-3.1f%% on %d"%(newFailed, failed, total))
+				useful.syslog("Camera stat : last %-3.1f%%, total %-3.1f%% success on %d"%(newFailed, failed, total))
 				Camera.newFailed[0] = 0
 		return result
 

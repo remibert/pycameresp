@@ -231,9 +231,9 @@ class View:
 
 	def showLine(self, currentLine, screenLine, selectionStart, selectionEnd):
 		""" Show one line """
-		self.moveCursor(screenLine, 0)
-		self.write("\x1B[K")
-		if currentLine < self.text.getCountLines() and currentLine >= 0:
+		lineToDisplay = "\x1B[%d;1f\x1B[K"%(screenLine+1)
+		countLine = self.text.getCountLines()
+		if currentLine < countLine and currentLine >= 0:
 			line = self.text.getTabLine(currentLine)
 			partLine = line[self.column:self.column+self.width]
 			# If the line selected
@@ -283,9 +283,9 @@ class View:
 						partLine = "\x1B[7m" + partLine + "\x1B[m"
 				else:
 					partLine = ""
-				self.write(partLine)
+				self.write(lineToDisplay + partLine)
 			else:
-				self.write(partLine.rstrip())
+				self.write(lineToDisplay + partLine.rstrip())
 
 	def refreshLine(self, selectionStart, selectionEnd):
 		""" Refresh line """
@@ -381,8 +381,10 @@ class View:
 		if type(all_) == type([]):
 			lineStart, lineEnd = all_
 			all_ = False
+		countLine = self.text.getCountLines()
+		maxLine = self.line + self.height
 		# Refresh all lines visible
-		while currentLine < self.text.getCountLines() and currentLine <= self.line + self.height:
+		while currentLine < countLine and currentLine <= maxLine:
 			# If the line is in selection or all must be refreshed
 			if lineStart <= currentLine <= lineEnd or all_:
 				self.showLine(currentLine, screenLine, selectionStart, selectionEnd)
@@ -424,9 +426,13 @@ class View:
 
 	def moveCursor(self, screenLine=None, screenColumn=None):
 		""" Move the cursor in the view """
+		self.write(self.getMoveCursor(screenLine, screenColumn))
+
+	def getMoveCursor(self, screenLine=None, screenColumn=None):
+		""" Move the cursor in the view """
 		if screenLine == None and screenColumn == None:
 			screenLine, screenColumn = self.getScreenPosition()
-		self.write("\x1B[%d;%df"%(screenLine+1,screenColumn+1))
+		return "\x1B[%d;%df"%(screenLine+1,screenColumn+1)
 
 	def getScreenSize(self):
 		""" Get the screen size """
@@ -482,15 +488,22 @@ class Text:
 		if "\t" in line:
 			tabCursorColumn   = 0
 			column = 0
-			for char in line:
-				if column == cursorColumn:
-					break
-				if char == "\t":
+			lenLine = len(line)
+			while column < cursorColumn: 
+				if line[column] == "\t":
 					pos = tabCursorColumn%self.tabSize
 					tabCursorColumn += self.tabSize-pos
+					column          += 1
 				else:
-					tabCursorColumn += 1
-				column += 1
+					tab = line.find("\t",column)
+					if tab > 0:
+						partSize = tab - column
+					else:
+						partSize = lenLine - column
+					if column + partSize > cursorColumn:
+						partSize = cursorColumn - column
+					tabCursorColumn += partSize
+					column          += partSize
 			return tabCursorColumn
 		else:
 			return cursorColumn
@@ -498,26 +511,29 @@ class Text:
 	def getTabLine(self, currentLine = None):
 		""" Get the tabuled line """
 		line = self.lines[currentLine]
-		tabLine = ""
-		tabCursorColumn   = 0
-		lenLine = len(line)
-		column = 0
-		while column < lenLine: 
-			char = line[column]
-			if char == "\t":
-				pos = tabCursorColumn%self.tabSize
-				tabCursorColumn += self.tabSize-pos
-				tabLine         += " "*(self.tabSize-pos)
-				column          += 1
-			else:
-				tab = line.find("\t",column)
-				if tab > 0:
-					part = line[column:tab]
+		if "\t" in line:
+			tabLine = ""
+			tabCursorColumn   = 0
+			lenLine = len(line)
+			column = 0
+			while column < lenLine: 
+				char = line[column]
+				if char == "\t":
+					pos = tabCursorColumn%self.tabSize
+					tabCursorColumn += self.tabSize-pos
+					tabLine         += " "*(self.tabSize-pos)
+					column          += 1
 				else:
-					part = line[column:]
-				tabCursorColumn += len(part)
-				tabLine         += part
-				column          += len(part)
+					tab = line.find("\t",column)
+					if tab > 0:
+						part = line[column:tab]
+					else:
+						part = line[column:]
+					tabCursorColumn += len(part)
+					tabLine         += part
+					column          += len(part)
+		else:
+			tabLine = line
 		return tabLine
 
 	def getTabCursorColumn(self):
@@ -853,12 +869,12 @@ class Text:
 	def arrowUp(self, keys):
 		""" Manage arrow up key """
 		self.hideSelection()
-		self.changeLine(-len(keys))
+		self.changeLine(-1)
 	
 	def arrowDown(self, keys):
 		""" Manage arrow down key """
 		self.hideSelection()
-		self.changeLine(len(keys))
+		self.changeLine(1)
 
 	def arrowLeft(self, keys):
 		""" Manage arrow left key """
@@ -873,12 +889,12 @@ class Text:
 	def selectUp(self, keys):
 		""" Manage select up key """
 		self.openSelection()
-		self.changeLine(-len(keys))
+		self.changeLine(-1)
 	
 	def selectDown(self, keys):
 		""" Manage select down key """
 		self.openSelection()
-		self.changeLine(len(keys))
+		self.changeLine(1)
 
 	def selectLeft(self, keys):
 		""" Manage select left key """
@@ -1660,8 +1676,8 @@ class Editor:
 					break
 				elif keys[0] in EXECUTE:
 					break
-				else:
-					print(useful.dump(keys[0]))
+				# else:
+					# print(useful.dump(keys[0]))
 		self.edit.view.cls()
 		self.edit.view.setRefreshAll()
 		self.isRefreshHeader = True

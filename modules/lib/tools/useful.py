@@ -82,6 +82,7 @@ if ismicropython():
 		return False
 
 	def getch(raw = True, duration=100000000, interchar=0.01):
+		""" Wait a key pressed on keyboard and return it """
 		key = b""
 		WatchDog.feed()
 		while 1:
@@ -104,12 +105,14 @@ if ismicropython():
 		return key
 
 	def kbhit(duration=0.01):
+		""" Indicates if a key is pressed or not """
 		r,w,e = select.select([sys.stdin],[],[],duration)
 		if r != []:
 			return True
 		return False
 
 	def kbflush(duration=0.1):
+		""" Flush all keys not yet read """
 		while 1:
 			r,w,e = select.select([sys.stdin],[],[],duration)
 			if r != []:
@@ -119,22 +122,27 @@ if ismicropython():
 		
 else:
 	def getch(raw = True, duration=100000000, interchar=0.01):
+		""" Wait a key pressed on keyboard and return it """
 		return readKeyboard(duration, raw, getChar)
 
 	def kbhit(duration=0.001):
+		""" Indicates if a key is pressed or not """
 		return readKeyboard(duration, True, testChar)
 
 	def getChar(stdins):
+		""" Get character """
 		if stdins != []:
 			return stdins[0].read()
 		return None
 
 	def testChar(stdins):
+		""" Test a character """
 		if stdins != []:
 			return True
 		return False
 
 	def readKeyboard(duration=0.001, raw=True, callback=None):
+		""" Read keyboard on os/x, linux or windows"""
 		import termios, fcntl
 		import tty
 		fd = sys.stdin.fileno()
@@ -163,8 +171,7 @@ else:
 		return result
 
 	def kbflush(duration=0.5):
-		pass
-
+		""" Flush all keys not yet read """
 
 try:
 	# pylint: disable=no-name-in-module
@@ -664,23 +671,6 @@ def dump(buff, withColor=True):
 		string += "\x1B[m"
 	return string
 
-def dumpFile(filename, width=16):
-	""" Dump a file in hexadecimal """
-	width = 16
-	offset = 0
-	file = open(filename, "rb")
-	data = b' '
-	while len(data) != 0:
-		line = io.BytesIO()
-		line.write(b'%08X  ' % offset)
-		data = file.read(width)
-		dumpLine (data, line, width)
-		offset += width
-		line.write(b'\n')
-		print(line.getvalue().decode("utf8"), end="")
-		
-	file.close()
-
 def dumpLine (data, line = None, width = 0):
 	""" Dump a data data in hexadecimal on one line """
 	size = len(data)
@@ -701,7 +691,7 @@ def dumpLine (data, line = None, width = 0):
 	line.write(b' |')
 	
 	for i in data:
-		if i >= 0x20 and  i <= 0x7F:
+		if i >= 0x20 and  i < 0x7F:
 			line.write(chr(i).encode("utf8"))
 		else:
 			line.write(b'.')
