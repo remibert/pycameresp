@@ -153,6 +153,16 @@ class Bufferedio:
 		""" Constructor """
 		self.buffered = BytesIO()
 		
+		if Bufferedio.isEnoughMemory():
+			self.part = part
+		else:
+			self.part = None
+		
+		self.streamio = streamio
+
+	@staticmethod
+	def isEnoughMemory():
+		""" Indicate if it has enough memory """
 		if Bufferedio.memorysize[0] == None:
 			import gc
 			try:
@@ -162,10 +172,8 @@ class Bufferedio:
 				Bufferedio.memorysize[0]  = 256*1024
 
 		if Bufferedio.memorysize[0] < 200*1024:
-			self.part = None
-		else:
-			self.part = part
-		self.streamio = streamio
+			return False
+		return True
 	
 	async def read(self):
 		""" Read data from the stream """

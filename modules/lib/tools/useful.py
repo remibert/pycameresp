@@ -81,7 +81,7 @@ if ismicropython():
 					return True
 		return False
 
-	def getch(raw = True, duration=100000000, interchar=0.01):
+	def getch(raw = True, duration=100000000, interchar=0.05):
 		""" Wait a key pressed on keyboard and return it """
 		key = b""
 		WatchDog.feed()

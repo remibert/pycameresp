@@ -3,8 +3,8 @@
 
 # POUR DES RAISONS DE PERFORMANCE DU SERVEUR WEB, SEUL LES CHAINES BINAIRES SONT SUPPORTEES : b"..."
 reboot_after_many                       =b"Reboot apr\xC3\xA9s plusieurs plantages : \n%s"
-login_success_detected                  =b"Connexion r\xC3\xA9ussie d\xC3\xA9tect\xC3\xA9"
-login_failed_detected                   =b"Connexion refus\xC3\xA9e d\xC3\xA9tect\xC3\xA9"
+login_success_detected                  =b"Connexion r\xC3\xA9ussie d\xC3\xA9tect\xC3\xA9e"
+login_failed_detected                   =b"Connexion refus\xC3\xA9e d\xC3\xA9tect\xC3\xA9e"
 presence_of_s                           =b"Pr\xC3\xA9sence de %s"
 empty_house                             =b"Maison vide"
 presence_detection_on                   =b"D\xC3\xA9tection pr\xC3\xA9sence activ\xC3\xA9e"

@@ -391,7 +391,10 @@ class ContentFile:
 					if found == False:
 						result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.contentType))
 					found = True
-					step = 1440*10
+					if server.stream.Bufferedio.isEnoughMemory():
+						step = 1440*10
+					else:
+						step = 512
 					buf = bytearray(step)
 					f.seek(0,2)
 					size = f.tell()

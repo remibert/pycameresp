@@ -229,9 +229,12 @@ class View:
 		""" Indicates that all lines must be refreshed """
 		self.isRefreshAll = True
 
-	def showLine(self, currentLine, screenLine, selectionStart, selectionEnd):
+	def showLine(self, currentLine, screenLine, selectionStart, selectionEnd, quick=False):
 		""" Show one line """
-		lineToDisplay = "\x1B[%d;1f\x1B[K"%(screenLine+1)
+		if quick:
+			lineToDisplay = ""
+		else:
+			lineToDisplay = "\x1B[%d;1f\x1B[K"%(screenLine+1)
 		countLine = self.text.getCountLines()
 		if currentLine < countLine and currentLine >= 0:
 			line = self.text.getTabLine(currentLine)
@@ -383,20 +386,26 @@ class View:
 			all_ = False
 		countLine = self.text.getCountLines()
 		maxLine = self.line + self.height
-		# Refresh all lines visible
-		while currentLine < countLine and currentLine <= maxLine:
-			# If the line is in selection or all must be refreshed
-			if lineStart <= currentLine <= lineEnd or all_:
-				self.showLine(currentLine, screenLine, selectionStart, selectionEnd)
-			screenLine  += 1
-			currentLine += 1
-		if all_ == True:
+		if all_:
 			# Erase the rest of the screen with empty line (used when the text is shorter than the screen)
-			while currentLine <= self.line + self.height:
-				self.moveCursor(screenLine, 0)
-				self.write("\x1B[K")
+			self.moveCursor(screenLine, 0)
+			self.write("\x1B[J")
+			# Refresh all lines visible
+			while currentLine < countLine and currentLine <= maxLine:
+				self.showLine(currentLine, screenLine, selectionStart, selectionEnd, True)
 				screenLine  += 1
 				currentLine += 1
+				if (currentLine < countLine and currentLine <= maxLine):
+					self.write("\n\r")
+		else:
+			# Refresh all lines visible
+			while currentLine < countLine and currentLine <= maxLine:
+				# If the line is in selection or all must be refreshed
+				if lineStart <= currentLine <= lineEnd or all_:
+					self.showLine(currentLine, screenLine, selectionStart, selectionEnd)
+				screenLine  += 1
+				currentLine += 1
+
 		# If selection present
 		if selectionStart != None:
 			# Save current selection
@@ -1166,7 +1175,6 @@ class Text:
 						self.cursorColumn = len(start) + len(selection[-1])
 					
 			self.moveCursor(self.cursorLine, self.cursorColumn)
-			# self.view.setRefreshAll()
 
 	def moveCursor(self, line, column):
 		""" Move the cursor """
