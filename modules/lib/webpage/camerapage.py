@@ -13,7 +13,7 @@ import uasyncio
 
 cameraConfig = CameraConfig()
 
-@HttpServer.addRoute(b'/camera', title=lang.camera, index=240)
+@HttpServer.addRoute(b'/camera', menu=lang.menu_motion, item=lang.item_camera)
 async def cameraPage(request, response, args):
 	""" Camera streaming page """
 	framesizes = []

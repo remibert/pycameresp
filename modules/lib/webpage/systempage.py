@@ -8,7 +8,7 @@ from htmltemplate      import *
 from webpage.mainpage  import mainFrame
 from tools             import useful,lang
 
-@HttpServer.addRoute(b'/system', title=lang.system, index=1000)
+@HttpServer.addRoute(b'/system', menu=lang.menu_system, item=lang.item_system)
 async def systemPage(request, response, args):
 	""" Function define the web page to manage system of the board """
 	page = mainFrame(request, response, args, lang.system_management_s%Station.getHostname(),

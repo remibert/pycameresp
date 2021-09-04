@@ -25,7 +25,7 @@ class MotionConfig(jsonconfig.JsonConfig):
 		self.differencesDetection = 4
 
 		# Sensitivity in percent (100% = max sensitivity, 0% = min sensitivity)
-		self.sensitivity=85
+		self.sensitivity=80
 
 		# Max images in motion historic
 		self.maxMotionImages=10
@@ -172,7 +172,7 @@ class ImageMotion:
 			mask = useful.tobytes(self.config.mask)
 			if not b"/" in mask:
 				mask = b""
-			errorLight = useful.getFx(self.config.sensitivity, useful.getLinear(100,10,1,90))
+			errorLight = useful.getFx(self.config.sensitivity, useful.getLinear(100,8,0,64))
 			self.motion.configure(\
 				{
 					"mask":mask,

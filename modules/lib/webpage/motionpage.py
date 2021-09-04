@@ -131,7 +131,7 @@ def zoneMasking(config, disabled):
 """%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
 	return result
 
-@HttpServer.addRoute(b'/motion', title=lang.motion, index=200, available=useful.iscamera())
+@HttpServer.addRoute(b'/motion', menu=lang.menu_motion, item=lang.item_motion, available=useful.iscamera())
 async def motion(request, response, args):
 	""" Motion configuration page """
 	zoneConfig.framesize  = b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height)

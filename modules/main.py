@@ -30,8 +30,8 @@ def pageLoader():
 	from server.httpserver import HttpServer
 
 	try:
-		# Welcome page (can be suppressed)
-		from welcome import welcomePage
+		# Sample page (can be suppressed)
+		from sample import samplePage
 	except ImportError as err:
 		pass
 

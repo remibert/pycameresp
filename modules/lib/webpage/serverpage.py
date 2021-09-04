@@ -8,7 +8,7 @@ from tools.useful      import *
 from server.server     import ServerConfig
 from tools import lang
 
-@HttpServer.addRoute(b'/server', title=lang.server, index=80)
+@HttpServer.addRoute(b'/server', menu=lang.menu_network, item=lang.item_server)
 async def server(request, response, args):
 	""" Function define the web page to configure the start of servers """
 	config = ServerConfig()

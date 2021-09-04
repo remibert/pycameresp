@@ -59,10 +59,11 @@ class HttpServer:
 			if useful.tobytes(url[-1]) == ord(b"*"):
 				HttpServer.wildroutes.append([useful.tobytes(url),(function, kwargs)])
 			else:
+				kwargs["index"] = len(HttpServer.menus)
 				HttpServer.routes[useful.tobytes(url)] = (function, kwargs)
 			if kwargs.get("available", True):
-				if "index" in kwargs and "title" in kwargs:
-					HttpServer.menus.append([int(kwargs["index"]), useful.tobytes(url), kwargs["title"]])
+				if "item" in kwargs and "menu" in kwargs:
+					HttpServer.menus.append([kwargs["menu"], kwargs["item"],len(HttpServer.menus), useful.tobytes(url)])
 					HttpServer.menus.sort()
 			return function
 		return addRoute

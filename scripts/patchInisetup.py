@@ -1,7 +1,7 @@
 
 filesToAdd = [
 	("","modules/main.py"),
-	("","modules/welcome.py"),
+	("","modules/sample.py"),
 ]
 
 if __name__ == "__main__":

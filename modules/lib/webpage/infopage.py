@@ -11,7 +11,7 @@ from webpage.mainpage  import mainFrame
 from tools             import useful, lang
 
 
-@HttpServer.addRoute(b'/', title=lang.information, index=20)
+@HttpServer.addRoute(b'/', menu=lang.menu_system, item=lang.item_information)
 async def index(request, response, args):
 	""" Function define the web page to display all informations of the board """
 	try:

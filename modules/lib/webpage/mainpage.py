@@ -8,21 +8,6 @@ from server.server   import Server
 from wifi.station import Station
 from tools import lang
 
-styleNav = b"""  height: 100%;
-  width: 140px;
-  position: fixed;
-  z-index: 1;
-  top: 0;
-  left: 0;
-  overflow-x: hidden;
-  background-color: #F4F4F4;
-  padding-left:2px;
-  padding-right:2px;
-  padding-top:2px;
-"""
-styleContent = b""" 
-  margin-left: 150px;
-"""
 def mainPage(request, response, args, content=None):
 	""" Function define the main web page with menu, it check also the login password """
 
@@ -46,15 +31,22 @@ def mainPage(request, response, args, content=None):
 	page = PasswordPage.login(request, response, 15*60)
 
 	if page == None:
-		menus = HttpServer.getMenus()
-		tabs = []
-		for menu in menus:
-			index, href, title_ = menu
-			tabs.append(TabItem(text=title_ , href=href, active=(active==index)))
-		page = Page([stylesheet, \
-					Div(Tab(tabs), style=styleNav),\
-					Div(content,   style=styleContent)\
-					], title=title)
+		menuItems = []
+		menus = []
+		menuBar = []
+		previousMenu = None
+		for menu,  item , index, href in HttpServer.getMenus():
+			menuItem = MenuItem(text=item, href=href, active=(active==index))
+
+			if previousMenu != menu:
+				if previousMenu is not None:
+					menuBar.append(Menu(menuItems, text=previousMenu))
+				menuItems = [menuItem]
+				previousMenu = menu
+			else:
+				menuItems.append(menuItem)
+		menuBar.append(Menu(menuItems, text=previousMenu))
+		page = Page([stylesheet, MenuBar(menuBar), content], title=title)
 	else:
 		page = Page(page + [stylesheet], title=lang.login)
 	Server.slowDown()

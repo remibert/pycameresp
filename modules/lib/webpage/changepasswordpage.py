@@ -7,7 +7,7 @@ from webpage.mainpage  import *
 from tools             import lang
 
 
-@HttpServer.addRoute(b'/changepassword', title=lang.password, index=100)
+@HttpServer.addRoute(b'/changepassword', menu=lang.menu_system, item=lang.item_password)
 async def changePassword(request, response, args):
 	""" Function define the web page to change the user and password """
 	page = mainFrame(request, response, args, lang.change_password, PasswordPage.change(request, response))

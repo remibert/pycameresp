@@ -6,7 +6,7 @@ from htmltemplate      import *
 from webpage.mainpage  import mainFrame, manageDefaultButton
 from tools             import BatteryConfig,lang
 
-@HttpServer.addRoute(b'/battery', title=lang.battery, index=160)
+@HttpServer.addRoute(b'/battery', menu=lang.menu_system, item=lang.item_battery)
 async def battery(request, response, args):
 	""" Battery configuration web page """
 	config = BatteryConfig()

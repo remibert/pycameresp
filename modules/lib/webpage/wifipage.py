@@ -49,7 +49,7 @@ def selectNetwork(increase=0, reparse=False):
 		useful.syslog(err)
 	return currentNetwork
 
-@HttpServer.addRoute(b'/wifi', title=lang.wifi, index=40)
+@HttpServer.addRoute(b'/wifi', menu=lang.menu_network, item=lang.item_wifi)
 async def wifiConfig(request, response, args):
 	""" Page to configure the wifi station """
 	global currentNetworks, currentConfig, currentNetwork
@@ -155,7 +155,7 @@ async def wifiConfig(request, response, args):
 		submit)
 	await response.sendPage(page)
 
-@HttpServer.addRoute(b'/accesspoint', title=lang.access_point, index=60)
+@HttpServer.addRoute(b'/accesspoint', menu=lang.menu_network, item=lang.item_access_point)
 async def accessPoint(request, response, args):
 	""" Page to configure the access point """
 	config = wifi.AccessPointConfig()

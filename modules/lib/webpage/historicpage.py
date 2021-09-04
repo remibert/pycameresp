@@ -9,7 +9,7 @@ from motion            import Historic
 from tools             import useful, lang
 from video             import Camera
 
-@HttpServer.addRoute(b'/historic', title=lang.historic, index=220, available=useful.iscamera())
+@HttpServer.addRoute(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera())
 async def historic(request, response, args):
 	""" Historic motion detection page """
 	await Historic.getRoot()
