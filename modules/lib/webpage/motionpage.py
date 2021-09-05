@@ -131,17 +131,14 @@ def zoneMasking(config, disabled):
 """%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
 	return result
 
-@HttpServer.addRoute(b'/motion', menu=lang.menu_motion, item=lang.item_motion, available=useful.iscamera())
+@HttpServer.addRoute(b'/motionconfig', menu=lang.menu_motion, item=lang.item_motion, available=useful.iscamera())
 async def motion(request, response, args):
 	""" Motion configuration page """
 	zoneConfig.framesize  = b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height)
 	zoneConfig.quality = 30
 	Streaming.setConfig(zoneConfig)
  
-	# Read motion config and keep it
-	backupConfig = MotionConfig()
-	backupConfig.load()
-
+	# Read motion config 
 	config = MotionConfig()
 
 	# Keep activated status
@@ -157,4 +154,21 @@ async def motion(request, response, args):
 		Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),Br(),
 		Switch(text=lang.suspends_motion_detection,                name=b"suspendOnPresence", checked=config.suspendOnPresence, disabled=disabled),Br(),
 		submit)
+	await response.sendPage(page)
+
+@HttpServer.addRoute(b'/motion', menu=lang.menu_motion, item=lang.item_command, available=useful.iscamera())
+async def motionCommand(request, response, args):
+	""" Motion command page """
+	# Read motion config 
+	config = MotionConfig()
+	config.load()
+	command = request.params.get(b"action",b"none") 
+	if command == b"on":
+		config.activated = True
+		config.save()
+	elif command == b"off":
+		config.activated = False
+		config.save()
+	page = mainFrame(request, response, args, lang.motion_command,
+		Submit(text=lang.motion_stop if config.activated else lang.motion_start,  name=b"action", value=b"off" if config.activated else b"on" ))
 	await response.sendPage(page)
