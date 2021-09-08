@@ -1,7 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Class used to manage a username and a password """
-from tools import useful,jsonconfig
+from tools import useful,jsonconfig,encryption
 
 EMPTY_PASSWORD = b"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" # empty password
 
@@ -40,7 +40,7 @@ class User:
 		if User.instance.user == b"":
 			return True
 		elif user == User.instance.user:
-			if useful.getHash(password) == User.instance.password:
+			if encryption.gethash(password) == User.instance.password:
 				if log == True:
 					User.loginState[0] = True
 				return True
@@ -82,7 +82,7 @@ class User:
 					User.instance.password = EMPTY_PASSWORD
 				else:
 					User.instance.user     = user
-					User.instance.password = useful.getHash(newPassword)
+					User.instance.password = encryption.gethash(newPassword)
 				User.instance.save()
 				return True
 			else:

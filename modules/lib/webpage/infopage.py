@@ -8,7 +8,7 @@ import esp
 from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import mainFrame
-from tools             import useful, lang
+from tools             import useful, lang, builddate
 
 
 @HttpServer.addRoute(b'/', menu=lang.menu_system, item=lang.item_information)
@@ -50,14 +50,15 @@ async def index(request, response, args):
 	date = useful.dateToBytes()
 
 	page = mainFrame(request, response, args, lang.device_informations,
-		Edit(text=lang.date,             value=date,      disabled=True),
-		Edit(text=lang.uptime,           value=uptime,    disabled=True),
-		Edit(text=lang.platform,         value=platform,  disabled=True),
-		Edit(text=lang.frequency,        value=frequency, disabled=True),
-		Edit(text=lang.memory_free,      value=memFree,   disabled=True),
-		Edit(text=lang.memory_allocated, value=memAlloc,  disabled=True),
-		Edit(text=lang.memory_total,     value=memTotal,  disabled=True),
-		Edit(text=lang.flash_user,       value=flashUser, disabled=True),
-		Edit(text=lang.flash_size,       value=flashSize, disabled=True))
+		Edit(text=lang.date,             value=date,           disabled=True),
+		Edit(text=lang.build_date,       value=builddate.date, disabled=True),
+		Edit(text=lang.uptime,           value=uptime,         disabled=True),
+		Edit(text=lang.platform,         value=platform,       disabled=True),
+		Edit(text=lang.frequency,        value=frequency,      disabled=True),
+		Edit(text=lang.memory_free,      value=memFree,        disabled=True),
+		Edit(text=lang.memory_allocated, value=memAlloc,       disabled=True),
+		Edit(text=lang.memory_total,     value=memTotal,       disabled=True),
+		Edit(text=lang.flash_user,       value=flashUser,      disabled=True),
+		Edit(text=lang.flash_size,       value=flashSize,      disabled=True))
 
 	await response.sendPage(page)

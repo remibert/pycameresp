@@ -6,7 +6,7 @@ from server.server     import Server
 from wifi.station      import Station
 from htmltemplate      import *
 from webpage.mainpage  import mainFrame
-from tools             import useful,lang
+from tools             import useful,lang,archiver
 
 @HttpServer.addRoute(b'/system', menu=lang.menu_system, item=lang.item_system)
 async def systemPage(request, response, args):
@@ -38,7 +38,7 @@ async def importConfig(request, response, args):
 async def exportConfig(request, response, args):
 	""" Export all configuration """
 	Server.slowDown()
-	useful.exportFiles("config.cfg", path="./config",pattern="*.json", recursive=False)
+	archiver.exportFiles("config.cfg", path="./config",pattern="*.json", recursive=False)
 	await response.sendFile(b"config.cfg", headers=request.headers)
 	useful.remove("config.cfg")
 
@@ -53,7 +53,7 @@ async def importFileSystem(request, response, args):
 async def exportFileSystem(request, response, args):
 	""" Export file system """
 	Server.slowDown()
-	useful.exportFiles("fileSystem.cfs", path="./",pattern="*.*", recursive=True)
+	archiver.exportFiles("fileSystem.cfs", path="./",pattern="*.*", recursive=True)
 	await response.sendFile(b"fileSystem.cfs", headers=request.headers)
 	useful.remove("fileSystem.cfs")
 

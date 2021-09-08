@@ -10,6 +10,7 @@ sys.path.append("sample")
 import uasyncio
 import machine
 from tools.battery import Battery
+from tools.awake import Awake
 from tools import useful
 
 machine.freq(240000000)
@@ -18,7 +19,7 @@ machine.freq(240000000)
 Battery.protect()
 
 # Can only be done once at boot before start the camera and sd card
-isPinWakeUp = Battery.isPinWakeUp()
+pinWakeUp = Awake.isPinWakeUp()
 
 # Html pages loader
 def pageLoader():
@@ -53,7 +54,7 @@ server.init(loop=loop, pageLoader=pageLoader, preload=False, httpPort=80)
 if useful.iscamera():
 	# Start motion detection (only used with ESP32CAM)
 	import motion 
-	motion.start(loop, isPinWakeUp)
+	motion.start(loop, pinWakeUp)
 
 from shell.shell import asyncShell
 loop.create_task(asyncShell())

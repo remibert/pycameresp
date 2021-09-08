@@ -2,14 +2,14 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Periodic task, wifi management, get wanIp, synchronize time """
 from server.server import ServerConfig, Server
-from tools import useful,battery, lang
+from tools import battery, lang, awake, tasking
 import wifi
 import uasyncio
 
 async def periodicTask():
 	""" Periodic task """
 	periodic = Periodic()
-	await useful.taskMonitoring(periodic.task)
+	await tasking.taskMonitoring(periodic.task)
 
 class Periodic:
 	""" Class to manage periodic task """
@@ -18,7 +18,7 @@ class Periodic:
 		self.serverConfig = ServerConfig()
 		self.serverConfig.load()
 		self.getLoginState = None
-		useful.WatchDog.start(useful.SHORT_WATCH_DOG)
+		tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
 
 	async def checkLogin(self):
 		""" Inform that login detected """
@@ -44,7 +44,7 @@ class Periodic:
 		""" Periodic task method """
 		pollingId = 0
 		
-		useful.WatchDog.start(useful.SHORT_WATCH_DOG)
+		tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
 		while True:
 			# Reload server config if changed
 			if pollingId % 5 == 0:
@@ -58,9 +58,12 @@ class Periodic:
 			await Server.manage(pollingId)
 
 			# Manage awake duration
-			battery.Battery.manageAwake(wifi.Wifi.isWanConnected())
+			awake.Awake.manage()
+
+			# Manage battery level
+			battery.Battery.manage(wifi.Wifi.isWanConnected())
 
 			# Reset watch dog
-			useful.WatchDog.feed()
+			tasking.WatchDog.feed()
 			await uasyncio.sleep(1)
 			pollingId += 1

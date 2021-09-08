@@ -3,7 +3,6 @@
 """ Manage the battery """
 from tools import jsonconfig, useful
 import machine
-import esp32
 
 class BatteryConfig(jsonconfig.JsonConfig):
 	""" Battery configuration """
@@ -12,16 +11,10 @@ class BatteryConfig(jsonconfig.JsonConfig):
 		jsonconfig.JsonConfig.__init__(self)
 
 		# Battery monitoring
-		self.monitoring = False # Monitoring status
+		self.activated = False # Monitoring status
 		self.levelGpio    = 12  # Monitoring GPIO
 		self.fullBattery  = 188 # 4.2V mesured with resistor 100k + 47k
 		self.emptyBattery = 158 # 3.6V mesured with resistor 100k + 47k
-
-		# GPIO wake up
-		self.wakeUp = False  # Wake up on GPIO status
-		self.wakeUpGpio = 13 # Wake up GPIO number
-		self.awakeDuration = 120 # Awake duration in seconds
-		self.sleepDuration = 3600*24*365 # Sleep duration in seconds
 
 		# Force deep sleep if to many successive brown out reset detected
 		self.brownoutDetection = True
@@ -31,8 +24,7 @@ class Battery:
 	""" Manage the battery information """
 	config = None
 	level = [-2]
-	awakeCounter = [0] # Decrease each second
-	refreshCounter = [0]
+	refresh = [0]
 
 	@staticmethod
 	def init():
@@ -44,7 +36,6 @@ class Battery:
 			if Battery.config.load() == False:
 				# Write default config
 				Battery.config.save()
-		Battery.keepAwake()
 
 	@staticmethod
 	def getLevel():
@@ -87,7 +78,7 @@ class Battery:
 	def isActivated():
 		""" Indicates if the battery management activated """
 		Battery.init()
-		return Battery.config.monitoring
+		return Battery.config.activated
 
 	@staticmethod
 	def calcPercent(x, config):
@@ -103,40 +94,11 @@ class Battery:
 		return y
 
 	@staticmethod
-	def setPinWakeUp():
-		""" Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector. """
-		Battery.init()
-		try:
-			if Battery.config.wakeUpGpio != 0:
-				wake1 = machine.Pin(Battery.config.wakeUpGpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
-				esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-				useful.syslog("Pin wake up on %d"%Battery.config.wakeUpGpio)
-			else:
-				useful.syslog("Pin wake up disabled")
-			return True
-		except Exception as err:
-			useful.syslog(err,"Cannot set wake up")
-		return False
-
-	@staticmethod
-	def isPinWakeUp():
-		""" Indicates that the machine wake up on pin modification (Only available at start) """
-		Battery.init()
-		if Battery.config.wakeUp:
-			try:
-				pin = machine.Pin(Battery.config.wakeUpGpio, machine.Pin.IN, machine.Pin.PULL_UP)
-				return True if pin.value() == 1 else False
-			except:
-				return False
-		else:
-			return False
-
-	@staticmethod
 	def protect():
 		""" Protect the battery """
 		Battery.init()
 		Battery.keepResetCause()
-		if Battery.manageLevel() or Battery.manageBrownout():
+		if Battery.manageLevel() or Battery.isTooManyBrownout():
 			useful.syslog("Sleep infinite")
 			machine.deepsleep()
 
@@ -145,7 +107,7 @@ class Battery:
 		""" Checks if the battery level is sufficient. 
 			If the battery is too low, we enter indefinite deep sleep to protect the battery """
 		deepsleep = False
-		if Battery.config.monitoring:
+		if Battery.config.activated:
 			# Can only be done once at boot before start the camera and sd card
 			batteryLevel = Battery.getLevel()
 
@@ -177,7 +139,7 @@ class Battery:
 		useful.syslog("%s reset"%causes)
 
 	@staticmethod
-	def manageBrownout():
+	def isTooManyBrownout():
 		""" Checks the number of brownout reset """
 		deepsleep = False
 
@@ -201,31 +163,15 @@ class Battery:
 		return deepsleep
 
 	@staticmethod
-	def keepAwake():
-		""" Keep awake  """
-		if Battery.config.wakeUp:
-			Battery.awakeCounter[0] = Battery.config.awakeDuration
-
-	@staticmethod
-	def manageAwake(resetBrownout=False):
-		""" Manage the awake duration """
-		if Battery.refreshCounter[0] % 10 == 0:
+	def manage(resetBrownout=False):
+		""" Manage the battery level duration """
+		if Battery.refresh[0] % 10 == 0:
 			if Battery.config.isChanged():
 				Battery.config.load()
-		Battery.refreshCounter[0] += 1
+		Battery.refresh[0] += 1
 
 		if resetBrownout:
 			if Battery.config.brownoutDetection:
 				if Battery.config.brownoutCount > 0:
 					Battery.config.brownoutCount = 0
 					Battery.config.save()
-
-		if Battery.config.wakeUp:
-			Battery.awakeCounter[0] -= 1
-			if Battery.awakeCounter[0] <= 0:
-
-				useful.syslog("Sleep %d s"%Battery.config.sleepDuration)
-
-				# Set the wake up on PIR detection
-				Battery.setPinWakeUp()
-				machine.deepsleep(Battery.config.sleepDuration*1000)

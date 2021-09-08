@@ -15,6 +15,7 @@ class CameraConfig(jsonconfig.JsonConfig):
 	def __init__(self):
 		""" Constructor """
 		jsonconfig.JsonConfig.__init__(self)
+		self.activated  = True
 		self.framesize  = b"640x480"
 		self.pixformat  = b"JPEG"
 		self.quality    = 25
@@ -136,26 +137,31 @@ class Camera:
 	success = [0]
 	failed  = [0]
 	newFailed = [0]
+	config = None
 
 	@staticmethod
 	def open():
 		""" Open the camera """
-		result = True
-		if Camera.opened == False:
-			for i in range(10):
-				res = camera.init()
-				if res == False:
-					print("Camera not initialized")
-					camera.deinit()
-					time.sleep(0.5)
+		Camera.getConfig()
+		if Camera.isActivated():
+			result = True
+			if Camera.opened == False:
+				for i in range(10):
+					res = camera.init()
+					if res == False:
+						print("Camera not initialized")
+						camera.deinit()
+						time.sleep(0.5)
+					else:
+						break
 				else:
-					break
-			else:
-				result = False
+					result = False
 
-			if result:
-				# Photo on 800x600, motion detection / 8 (100x75), each square detection 8x8 (12.5 x 9.375)
-				Camera.opened = True
+				if result:
+					# Photo on 800x600, motion detection / 8 (100x75), each square detection 8x8 (12.5 x 9.375)
+					Camera.opened = True
+		else:
+			result = False
 		return result
 
 	@staticmethod
@@ -370,3 +376,25 @@ class Camera:
 			Camera.saturation(config.saturation)
 			Camera.hmirror   (config.hmirror)
 			Camera.vflip     (config.vflip)
+
+	@staticmethod
+	def getConfig():
+		""" Reload configuration if it changed """
+		if Camera.config == None:
+			Camera.config = CameraConfig()
+			if Camera.config.load() == False:
+				Camera.config.save()
+		else:
+			if Camera.config.isChanged():
+				Camera.config.load()
+		return Camera.config
+
+	@staticmethod
+	def isActivated():
+		""" Indicates if the camera is configured to be activated """
+		if Camera.config == None:
+			Camera.getConfig()
+		if Camera.config != None:
+			return Camera.config.activated
+		else:
+			return False

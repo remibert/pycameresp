@@ -7,7 +7,7 @@ from webpage.mainpage  import mainFrame, manageDefaultButton
 from server.pushover   import *
 from tools             import lang
 
-@HttpServer.addRoute(b'/pushover', menu=lang.menu_network, item=lang.item_notification)
+@HttpServer.addRoute(b'/pushover', menu=lang.menu_server, item=lang.item_notification)
 async def pushover(request, response, args):
 	""" Function define the web page to configure the pushover notifications """
 	config = PushOverConfig()

@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Presence detection (determine if an occupant is present in the house) """
 import time
-from tools import useful, jsonconfig, lang
+from tools import useful, jsonconfig, lang, tasking
 import wifi
 from server.ping import asyncPing
 from server.notifier import Notifier
@@ -151,4 +151,4 @@ class Presence:
 async def detectPresence():
 	""" Detect the presence of occupants of the housing and automatically suspend the detection (ping the ip of occupants smartphones) """
 	Presence.init()
-	await useful.taskMonitoring(Presence.task)
+	await tasking.taskMonitoring(Presence.task)

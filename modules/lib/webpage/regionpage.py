@@ -6,7 +6,7 @@ from htmltemplate      import *
 from webpage.mainpage  import mainFrame, manageDefaultButton
 from tools             import useful,lang
 
-@HttpServer.addRoute(b'/region', menu=lang.menu_system, item=lang.item_region)
+@HttpServer.addRoute(b'/region', menu=lang.menu_account, item=lang.item_region)
 async def regionPage(request, response, args):
 	""" Function define the web page to manage lang and time """
 	config = lang.RegionConfig()

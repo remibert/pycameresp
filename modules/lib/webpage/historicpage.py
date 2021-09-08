@@ -9,7 +9,7 @@ from motion            import Historic
 from tools             import useful, lang
 from video             import Camera
 
-@HttpServer.addRoute(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera())
+@HttpServer.addRoute(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera() and Camera.isActivated())
 async def historic(request, response, args):
 	""" Historic motion detection page """
 	await Historic.getRoot()
@@ -397,7 +397,7 @@ async def historic(request, response, args):
 	page = mainFrame(request, response, args,lang.last_motion_detections,pageContent)
 	await response.sendPage(page)
 
-@HttpServer.addRoute(b'/historic/historic.json', available=useful.iscamera())
+@HttpServer.addRoute(b'/historic/historic.json', available=useful.iscamera() and Camera.isActivated())
 async def historicJson(request, response, args):
 	""" Send historic json file """
 	Server.slowDown()
@@ -406,7 +406,7 @@ async def historicJson(request, response, args):
 	else:
 		await response.sendBuffer(b"historic.json", b"[]")
 
-@HttpServer.addRoute(b'/historic/images/.*', available=useful.iscamera())
+@HttpServer.addRoute(b'/historic/images/.*', available=useful.iscamera() and Camera.isActivated())
 async def historicImage(request, response, args):
 	""" Send historic image """
 	Server.slowDown()
@@ -422,7 +422,7 @@ async def historicImage(request, response, args):
 			await Historic.release()
 			await Camera.unreserve(Historic)
 
-@HttpServer.addRoute(b'/historic/download/.*', available=useful.iscamera())
+@HttpServer.addRoute(b'/historic/download/.*', available=useful.iscamera() and Camera.isActivated())
 async def downloadImage(request, response, args):
 	""" Download historic image """
 	Server.slowDown()

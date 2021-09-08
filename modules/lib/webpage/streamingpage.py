@@ -5,7 +5,7 @@ from server.httpserver  import HttpServer
 from server.server      import Server
 from htmltemplate       import *
 from server.httprequest import *
-from tools              import useful
+from tools              import useful, tasking
 from video              import Camera
 import uasyncio
 
@@ -69,14 +69,14 @@ class Streaming:
 		if Streaming.inactivity[0]:
 			Streaming.inactivity[0].stop()
 			Streaming.inactivity[0] = None
-		Streaming.inactivity[0] = useful.Inactivity(Streaming.inactivityTimeout, duration=useful.LONG_WATCH_DOG, timerId=1)
+		Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivityTimeout, duration=tasking.LONG_WATCH_DOG, timerId=1)
 
 	@staticmethod
 	def getStreamingId():
 		""" Return the current streaming id """
 		return Streaming.streamingId[0]
 
-@HttpServer.addRoute(b'/camera/start', available=useful.iscamera())
+@HttpServer.addRoute(b'/camera/start', available=useful.iscamera() and Camera.isActivated())
 async def cameraStartStreaming(request, response, args):
 	""" Start video streaming """
 	Server.slowDown()

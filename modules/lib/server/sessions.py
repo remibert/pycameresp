@@ -3,7 +3,7 @@
 """ Class used to store http connection sessions, it is useful if you define 
 an user and password, on your site """
 
-from tools import useful
+from tools import useful, encryption
 import time
 
 class Sessions:
@@ -13,7 +13,7 @@ class Sessions:
 	@staticmethod
 	def create(duration):
 		""" Create new session """
-		session = useful.getHash(useful.dateToBytes())
+		session = encryption.gethash(useful.dateToBytes())
 		Sessions.sessions.append((session, time.time() + duration))
 		return session
 

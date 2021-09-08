@@ -4,7 +4,7 @@
 import uos
 import re
 import uasyncio
-from tools import useful
+from tools import useful, sdcard, tasking
 import json
 
 MAX_DISPLAYED = 100
@@ -35,8 +35,8 @@ class Historic:
 	@staticmethod
 	async def getRoot():
 		""" Get the root path of sdcard and mount it """
-		if useful.SdCard.mount():
-			return useful.SdCard.getMountpoint()
+		if sdcard.SdCard.mount():
+			return sdcard.SdCard.getMountpoint()
 		return None
 
 	@staticmethod
@@ -51,8 +51,8 @@ class Historic:
 				name = useful.tostrings(name) 
 				jsonInfo = useful.tobytes(json.dumps(info))
 				item = Historic.createItem(root + "/" + path + "/" + name +".json", info)
-				res1 = useful.SdCard.save(path, name + ".jpg" , image)
-				res2 = useful.SdCard.save(path, name + ".json", json.dumps(item))
+				res1 = sdcard.SdCard.save(path, name + ".jpg" , image)
+				res2 = sdcard.SdCard.save(path, name + ".json", json.dumps(item))
 				Historic.addItem(item)
 				result = res1 and res2
 			except Exception as err:
@@ -255,7 +255,7 @@ class Historic:
 		root = await Historic.getRoot()
 		if root:
 			# If not enough space available on sdcard
-			if (useful.SdCard.getFreeSize() * 10000// useful.SdCard.getMaxSize() <= 5) or force:
+			if (sdcard.SdCard.getFreeSize() * 10000// sdcard.SdCard.getMaxSize() <= 5) or force:
 				useful.syslog("Start cleanup sd card")
 				olders = await Historic.scanDirectories(MAX_REMOVED, True)
 				previous = ""
@@ -281,7 +281,7 @@ class Historic:
 		else:
 			await Server.waitResume(7)
 		if Historic.motionInProgress[0] == False:
-			if useful.SdCard.isMounted():
+			if sdcard.SdCard.isMounted():
 				await Historic.extract()
 				await Historic.removeOlder()
 			else:
@@ -291,7 +291,7 @@ class Historic:
 	@staticmethod
 	async def periodicTask():
 		""" Execute periodic traitment """
-		await useful.taskMonitoring(Historic.periodic)
+		await tasking.taskMonitoring(Historic.periodic)
 
 	@staticmethod
 	async def test():

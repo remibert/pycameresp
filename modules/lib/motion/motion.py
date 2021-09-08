@@ -5,11 +5,12 @@ import sys
 import uasyncio
 import video
 from gc import collect
-from tools import useful, jsonconfig, battery, lang
+from tools import useful, jsonconfig, lang, linearfunction, tasking
 from server.notifier import Notifier
 from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
+from video.video     import Camera
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
@@ -172,7 +173,7 @@ class ImageMotion:
 			mask = useful.tobytes(self.config.mask)
 			if not b"/" in mask:
 				mask = b""
-			errorLight = useful.getFx(self.config.sensitivity, useful.getLinear(100,8,0,64))
+			errorLight = linearfunction.getFx(self.config.sensitivity, linearfunction.getLinear(100,8,0,64))
 			self.motion.configure(\
 				{
 					"mask":mask,
@@ -450,9 +451,6 @@ class Detection:
 		self.motionConfig      = MotionConfig()
 		if self.motionConfig.load() == False:
 			self.motionConfig.save()
-		self.batteryConfig = battery.BatteryConfig()
-		if self.batteryConfig.load() == False:
-			self.batteryConfig.save()
 
 	def refreshConfig(self):
 		""" Refresh the configuration : it can be changed by web page """
@@ -467,11 +465,7 @@ class Detection:
 
 	async def run(self):
 		""" Main asynchronous task """
-		await useful.taskMonitoring(self.detect)
-
-	def inactivityTimeout(self, timer):
-		""" Inactivity timeout """
-		useful.reboot("Automatic reboot after inactivity in motion")
+		await tasking.taskMonitoring(self.detect)
 	
 	async def detect(self):
 		""" Detect motion """
@@ -512,6 +506,10 @@ class Detection:
 				else:
 					await Notifier.notify(lang.motion_detection_off)
 			self.activated = result
+		if Camera.isActivated():
+			result = True
+		else:
+			result = False
 		if result == False:
 			# Motion capture disabled
 			await uasyncio.sleep_ms(500)

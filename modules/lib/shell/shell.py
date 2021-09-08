@@ -38,10 +38,7 @@ import io
 import os
 import uos
 import machine
-try:
-	from tools import useful
-except:
-	import useful
+from tools import useful, sdcard, tasking
 
 def cd(directory = "/"):
 	""" Change directory """
@@ -90,8 +87,8 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 			d = parts[0]
 		if "/" in directories:
 			directories.remove("/")
-		if useful.SdCard.getMountpoint() in directories:
-			directories.remove(useful.SdCard.getMountpoint())
+		if sdcard.SdCard.getMountpoint() in directories:
+			directories.remove(sdcard.SdCard.getMountpoint())
 		for d in directories:
 			if useful.exists(d) and d != ".":
 				removedir(d, force=force, quiet=quiet, simulate=simulate)
@@ -653,7 +650,7 @@ def shell():
 		try:
 			commandLine = ""
 			commandLine = input("%s=> "%os.getcwd())
-			useful.WatchDog.feed()
+			tasking.WatchDog.feed()
 		except EOFError:
 			print("")
 			break
@@ -689,7 +686,7 @@ async def asyncShell():
 				await Server.waitAllSuspended()
 
 				# Extend watch dog duration
-				useful.WatchDog.start(useful.LONG_WATCH_DOG*2)
+				tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
 
 				# Get the size of screen
 				useful.refreshScreenSize()
@@ -705,7 +702,7 @@ async def asyncShell():
 				uos.chdir("/")
 
 				# Resume watch dog duration
-				useful.WatchDog.start(useful.SHORT_WATCH_DOG)
+				tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
 
 				# Resume server
 				Server.resume()

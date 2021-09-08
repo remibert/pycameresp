@@ -1,6 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-from tools import jsonconfig,useful,info,lang
+from tools import jsonconfig,useful,builddate,lang, tasking
+from video.video import Camera
 import wifi
 import uasyncio
 import time
@@ -108,7 +109,7 @@ class Server:
 				if i % 6 == 0:
 					print("Wait all servers suspended...")
 				await uasyncio.sleep(0.5)
-				useful.WatchDog.feed()
+				tasking.WatchDog.feed()
 
 	@staticmethod
 	def init(loop=None, pageLoader=None, preload=False, httpPort=80):
@@ -119,10 +120,7 @@ class Server:
 		False the load of page is done a the first http connection (Takes time on first connection) """
 		Server.context = ServerContext(loop, pageLoader, preload, httpPort)
 		useful.syslog(useful.sysinfo(display=False))
-		build = info.build.replace("/","-")
-		build = build.replace("  ","_")
-		build = build.replace(":","-")
-		useful.syslog("Software version '%s'"%build)
+		useful.syslog("Firmware build date '%s'"%useful.tostrings(builddate.date))
 
 		from server.periodic import periodicTask
 		loop.create_task(periodicTask())
@@ -237,7 +235,7 @@ class Server:
 					server.httpserver.start(loop=Server.context.loop, loader=Server.context.pageLoader, preload=Server.context.preload, port=Server.context.httpPort, name="httpServer")
 
 					# If camera present
-					if useful.iscamera():
+					if useful.iscamera() and Camera.isActivated():
 						# Load and start streaming http server
 						server.httpserver.start(loop=Server.context.loop, loader=Server.context.pageLoader, preload=Server.context.preload, port=Server.context.httpPort +1, name="StreamingServer")
 

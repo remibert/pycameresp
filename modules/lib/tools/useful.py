@@ -6,7 +6,6 @@ import os
 import io
 import time
 import select
-import hashlib
 try:
 	import machine
 except:
@@ -19,10 +18,6 @@ try:
 	import uos
 except:
 	pass
-from binascii import hexlify, b2a_base64, a2b_base64
-
-LONG_WATCH_DOG=15*60*1000
-SHORT_WATCH_DOG=5*60*1000
 
 def ismicropython():
 	""" Indicates if the python is micropython """
@@ -31,6 +26,7 @@ def ismicropython():
 	return False
 
 if ismicropython():
+	from tools import tasking
 	def getLengthUtf8(key):
 		""" Get the length utf8 string """
 		if len(key) > 0:
@@ -84,7 +80,7 @@ if ismicropython():
 	def getch(raw = True, duration=100000000, interchar=0.05):
 		""" Wait a key pressed on keyboard and return it """
 		key = b""
-		WatchDog.feed()
+		tasking.WatchDog.feed()
 		while 1:
 			if len(key) == 0:
 				delay = duration
@@ -578,12 +574,6 @@ def prefix(files):
 	except IndexError:
 		return ""
 
-def getHash(password):
-	""" Get the hash associated to the password """
-	hash_ = hashlib.sha256()
-	hash_.update(password)
-	return hexlify(hash_.digest())
-
 def now():
 	""" Get time now """
 	return time.localtime()
@@ -701,7 +691,6 @@ def dumpLine (data, line = None, width = 0):
 	
 	# End of data ascii
 	line.write(b'|')
-
 
 def makedir(directory, recursive=False):
 	""" Make directory recursively """
@@ -831,126 +820,6 @@ def scandir(path, pattern, recursive, displayer=None):
 		syslog(err)
 	return directories, filenames
 
-class SdCard:
-	opened = [False]
-	mountpoint = [""]
-
-	@staticmethod
-	def getMaxSize():
-		""" Return the maximal size of sdcard """
-		if SdCard.isMounted():
-			status = uos.statvfs(SdCard.getMountpoint())
-			return status[1]*status[2]
-		else:
-			return 0
-
-	@staticmethod
-	def getFreeSize():
-		""" Return the free size of sdcard """
-		if SdCard.isMounted():
-			status = uos.statvfs(SdCard.getMountpoint())
-			return status[0]*status[3]
-		else:
-			return 0
-
-	@staticmethod
-	def isMounted():
-		return SdCard.opened[0]
-
-	@staticmethod
-	def getMountpoint():
-		return SdCard.mountpoint[0]
-
-	@staticmethod
-	def mount(mountpoint = "/sd"):
-		result = False
-		if SdCard.isMounted() == False and mountpoint != "/" and mountpoint != "":
-			if ismicropython():
-				try:
-					# If the sdcard not already mounted
-					if uos.statvfs("/") == uos.statvfs(mountpoint):
-						uos.mount(machine.SDCard(), mountpoint)
-						SdCard.mountpoint[0] = mountpoint
-						SdCard.opened[0]= True
-						result = True
-				except Exception as err:
-					syslog("Cannot mount %s"%mountpoint)
-			else:
-				SdCard.mountpoint[0] = mountpoint[1:]
-				SdCard.opened[0] = True
-				result = True
-		elif SdCard.isMounted():
-			if ismicropython():
-				if mountpoint == SdCard.getMountpoint():
-					result = True
-			else:
-				result = True
-		return result
-
-	@staticmethod
-	def createFile(directory, filename, mode="w"):
-		""" Create file with directory """
-		result = None
-		filepath = directory + "/" + filename
-		directories = [directory]
-		direct = directory
-		while 1:
-			parts = split(direct)
-
-			if parts[1] == "" or parts[0] == "":
-				break
-			directories.append(parts[0])
-			direct = parts[0]
-
-		if "/" in directories:
-			directories.remove("/")
-		if SdCard.mountpoint[0] in directories:
-			directories.remove(SdCard.mountpoint[0])
-
-		newdirs = []
-		for l in range(len(directories)):
-			part = directories[:l]
-			part.reverse()
-			newdirs.append(part)
-		directories.reverse()
-		newdirs.append(directories)
-
-		for directories in newdirs:
-			for direct in directories:
-				try:
-					uos.mkdir(direct)
-				except OSError as err:
-					if err.args[0] not in [2,17]:
-						syslog(err)
-						break
-			try:
-				result = open(filepath,mode)
-				break
-			except OSError as err:
-				if err.args[0] not in [2,17]:
-					syslog(err)
-					break
-
-		return result
-
-	@staticmethod
-	def save(directory, filename, data):
-		""" Save file on sd card """
-		result = False
-		if SdCard.isMounted():
-			file = None
-			try:
-				file = SdCard.createFile(SdCard.getMountpoint() + "/" + directory, filename, "w")
-				file.write(data)
-				file.close()
-				result = True
-			except Exception as err:
-				syslog(err, "Cannot save %s/%s/%s"%(SdCard.getMountpoint(), directory, filename))
-			finally:
-				if file is not None:
-					file.close()
-		return result
-
 def remove(filename):
 	""" Remove file existing """
 	try:    uos.remove(filename)
@@ -993,252 +862,3 @@ def reboot(message="Reboot"):
 	except:
 		pass
 	machine.deepsleep(1000)
-
-class WatchDog:
-	""" Watch dog timer """
-	watchdog = None
-	@staticmethod
-	def start(timeout=LONG_WATCH_DOG):
-		""" Start watch dog """
-		WatchDog.watchdog  = machine.WDT(0, timeout)
-
-	@staticmethod
-	def feed():
-		""" Feed the WDT """
-		if WatchDog.watchdog:
-			WatchDog.watchdog.feed()
-
-class Inactivity:
-	""" Class to manage inactivity timer """
-	def __init__(self, callback, duration=LONG_WATCH_DOG, timerId=-1):
-		""" Inactivity timer constructor """
-		self.timer = machine.Timer(timerId)
-		self.duration = duration
-		self.callback = callback
-		self.timerId = timerId
-		self.start()
-
-	def __del__(self):
-		""" Destructor """
-		self.stop()
-
-	def start(self):
-		""" Restart inactivity timer """
-		self.timer.init(period=self.duration, mode=machine.Timer.ONE_SHOT, callback=self.callback)
-
-	def stop(self):
-		""" Stop timer """
-		self.timer.deinit()
-
-	def restart(self):
-		""" Restart timer """
-		self.stop()
-		self.start()
-
-async def taskMonitoring(task):
-	""" Check if task crash, log message and reboot if it too frequent """
-	import uasyncio
-	retry = 0
-	lastError = ""
-
-	while retry < 40:
-		try:
-			while True:
-				if await task():
-					retry = 0
-
-		except Exception as err:
-			lastError = syslog(err, "Task error")
-			retry += 1
-			await uasyncio.sleep_ms(6000)
-		syslog("Task retry %d"%retry)
-	syslog("Too many task error reboot")
-
-	from server.server import ServerConfig
-	from server.notifier import Notifier
-
-	config = ServerConfig()
-	config.load()
-	if config.notify:
-		from tools import lang
-		await Notifier.notify(lang.reboot_after_many%tobytes(lastError))
-	reboot()
-
-HEADER_FILE=b"## PYCAMERESP ##\r\n"
-def exportFiles(exportFilename, path="./config",pattern="*.json", recursive=False):
-	""" Exports many file into only one file """
-	result = True
-
-	print("Export %s"%exportFilename)
-	remove(exportFilename)
-
-	# Scan directory with pattern
-	dirs, files = scandir(path=path, pattern=pattern, recursive=recursive)
-	
-	try:
-		# Open out file
-		out = open(exportFilename,"wb")
- 
-		# Write type of file
-		out.write(HEADER_FILE)
-
-		# For all files found
-		for filename in files:
-			# All files except .tmp and sdcard
-			if filename[-4:] != ".tmp" and filename[:4] != "/sd/" and filename[5:] != "./sd/":
-				# Write file header
-				size = filesize(filename)
-				out.write(b"# %d:%s\r\n"%(size, tobytes(filename)))
-
-				print("  Export '%s' size=%d"%(filename, size))
-				try:
-					# Write file
-					content = open(filename,"rb")
-					while size > 0:
-						data = content.read(2048)
-						out.write(data)
-						size -= len(data)
-
-					# Write end of file
-					out.write(b"\r\n\r\n")
-				except Exception as err:
-					syslog(err)
-					result = False
-					break
-				finally:
-					content.close()
-	except Exception as err:
-		syslog(err)
-		result = False
-	finally:
-		print("Export %s"%("success" if result else "failed"))
-		out.close()
-	return result
-
-def importFiles(importFilename, simulated=False):
-	""" Import files and write all files """
-	result = True
-	print("Import %s"%importFilename)
-	try:
-		readSize = filesize(importFilename)
-		imported = open(importFilename,"rb")
-		if not ismicropython():
-			simulated = True
-
-		# Read the type of file
-		if imported.read(len(HEADER_FILE)) != HEADER_FILE:
-			result = False
-		else:
-			while imported.tell() < readSize:
-				# Read the start of file
-				comment = imported.read(2)
-				if comment != b"# ":
-					result = False
-					break
-
-				# Read the file size
-				size = b""
-				while True:
-					char = imported.read(1)
-					if char == b":":
-						break
-					elif not char in b"0123456789":
-						result = False
-						break
-					size += char
-				if result == False:
-					break
-				size = eval(size)
-
-				# Read filename
-				filename = b""
-				while True:
-					char = imported.read(1)
-					if char == b"\r":
-						break
-					filename += char
-				filename = tostrings(filename)
-				char = imported.read(1)
-				if char != b"\n":
-					result = False
-					break
-
-				# Read the file
-				print("  Import '%s' size=%d"%(filename, size))
-				
-				try:
-					if simulated == False:
-						content = open(filename,"wb")
-					while size > 0:
-						data = imported.read(size if size < 2048 else 2048)
-						if simulated == False:
-							content.write(data)
-						size -= len(data)
-				except Exception as err:
-					syslog(err)
-					result = False
-				finally:
-					if simulated == False:
-						content.close()
-				
-				# Read the end of file
-				if imported.read(4) != b"\r\n\r\n":
-					result = False
-					break
-	except Exception as err:
-		syslog(err)
-		result = False
-	finally:
-		print("Import %s"%("success" if result else "failed"))
-		imported.close()
-	remove(importFilename)
-	return result
-
-def getLinear(x1, y1, x2, y2, offset=1000):
-	""" Return a and b for ax+b of two points x1,y1 and x2,y2 """
-	# If two points distincts
-	if x1 != x2:
-		# Compute the slope of line
-		a = (((y1 - y2)) *offset) // (x1 - x2)
-		b = y1*offset - a*x1
-	else:
-		a = 0
-		b = 0
-	return a,b,offset
-
-def getFx(x, linear):
-	""" Return the y value of function x """
-	a,b,offset = linear
-	y = ((a * x) + b)//offset
-	return y
-
-def getFy(y, linear):
-	""" Return the x value of function y """
-	a,b,offset = linear
-	x = ((y*offset) -b)//a
-	return x
-
-Aes_ = None
-def Aes(key, mode):
-	""" AES object loaded on demand """
-	global Aes_
-	if Aes_ is None:
-		import cryptolib
-		Aes_ = cryptolib.aes
-	if len(key) % 16 != 0:
-		key = (key*16)[:16]
-	return  Aes_(tobytes(key), mode)
-
-def encrypt(buffer, key):
-	""" AES encryption of buffer """
-	data = b2a_base64(buffer)
-	data = data.rstrip()
-	if len(data) % 16 != 0:
-		data = data + b"="*(16-len(data)%16)
-	return Aes(key,1).encrypt(tobytes(data))
-
-def decrypt(buffer, key):
-	""" AES decryption of buffer """
-	data = Aes(key, 1).decrypt(buffer)
-	data = a2b_base64(tobytes(data))
-	return data

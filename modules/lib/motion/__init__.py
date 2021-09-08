@@ -3,10 +3,11 @@
 """ Class to manage motion detection with ESP32CAM """
 from motion.motion import *
 from motion.historic import *
+from video.video import Camera
 from tools import useful
 
 def start(loop=None, pirDetection=False):
 	""" Start the asynchronous motion detection and presence detection """
-	if useful.iscamera():
+	if useful.iscamera() and Camera.isActivated():
 		loop.create_task(detectMotion(pirDetection))
 		loop.create_task(Historic.periodicTask())
