@@ -10,7 +10,6 @@ from tools import lang
 
 def mainPage(request, response, args, content=None):
 	""" Function define the main web page with menu, it check also the login password """
-
 	try:
 		title  = args["title"]
 	except:
@@ -19,13 +18,23 @@ def mainPage(request, response, args, content=None):
 		active = args["index"]
 	except:
 		active = 0
-
 	# On wifi station, the external style cheet is added
 	if Station.isIpOnInterface(request.remoteaddr):
 		# stylesheet = StylesheetDefault()
 		stylesheet = Stylesheet()
+		MenuClass     = Menu
+		MenuItemClass = MenuItem
+		MenuBarClass  = MenuBar
 	else:
 		stylesheet = StylesheetDefault()
+		MenuClass     = Menu_
+		MenuItemClass = MenuItem_
+		MenuBarClass  = MenuBar_
+
+	# stylesheet = None
+	# MenuClass     = Menu_
+	# MenuItemClass = MenuItem_
+	# MenuBarClass  = MenuBar_
 
 	# Create main page if logged
 	page = PasswordPage.login(request, response, 15*60)
@@ -36,17 +45,23 @@ def mainPage(request, response, args, content=None):
 		menuBar = []
 		previousMenu = None
 		for menu,  item , index, href in HttpServer.getMenus():
-			menuItem = MenuItem(text=item, href=href, active=(active==index))
+			menuItem = MenuItemClass(text=item, href=href, active=(active==index))
 
 			if previousMenu != menu:
 				if previousMenu is not None:
-					menuBar.append(Menu(menuItems, text=previousMenu))
+					menuBar.append(MenuClass(menuItems, text=previousMenu))
 				menuItems = [menuItem]
 				previousMenu = menu
 			else:
 				menuItems.append(menuItem)
-		menuBar.append(Menu(menuItems, text=previousMenu))
-		page = Page([stylesheet, MenuBar(menuBar), content], title=title)
+		menuBar.append(MenuClass(menuItems, text=previousMenu))
+		page = Page(
+				Container(
+					Card(
+						Form([stylesheet, Br(), MenuBarClass(menuBar), content])
+					, class_=b"shadow", style=b"margin:1em")
+				)
+				, title=title)
 	else:
 		page = Page(page + [stylesheet], title=lang.login)
 	Server.slowDown()
@@ -54,7 +69,7 @@ def mainPage(request, response, args, content=None):
 
 def mainFrame(request, response, args, titleFrame, *content):
 	""" Function define the main frame into the main page with menu, it check also the login password """
-	internal = [Container([Card([Form([Title3(text=titleFrame, style=b"padding-top:0.5em;padding-bottom:0.5em;"),content,])], class_=b"shadow")], style=b"margin-top:1em")]
+	internal = [Title3(text=titleFrame, style=b"padding-top:0.5em;padding-bottom:0.5em;"),content]
 	return mainPage(request, response, args, content=internal)
 
 def manageDefaultButton(request, config, callback=None, onclick=b""):

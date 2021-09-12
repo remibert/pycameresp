@@ -27,7 +27,7 @@ class PasswordPage:
 	@staticmethod
 	def loginPage(alert=None):
 		""" Login password page """
-		return PasswordPage.getDialog([Edit(text=lang.user, name=b"loginuser"),Edit(text=lang.password, type=b"password", name=b"loginpassword")], lang.login, alert)
+		return PasswordPage.getDialog([Edit(text=lang.user, name=b"loginuser"),Edit(text=lang.password, type=b"password", name=b"loginpassword")], lang.login, alert, True)
 
 	@staticmethod
 	def changePage(alert=None):
@@ -46,10 +46,13 @@ class PasswordPage:
 		return PasswordPage.getDialog(part, lang.modify_password, alert)
 
 	@staticmethod
-	def getDialog(content, submit ,alert = None):
+	def getDialog(content, submit ,alert = None, modal=False):
 		""" Common dialog of login password page """
-		if alert != None: alert = AlertError(text=alert), Br()
-		return [alert,Form([content, Submit(text=submit)], method=b"post")]
+		if alert != None: alert = AlertError(text=alert)
+		dialog = [alert, Form([content, Submit(text=submit)], method=b"post")]
+		if modal:
+			dialog = Modal(dialog)
+		return [dialog]
 
 	@staticmethod
 	def login(request, response, duration):

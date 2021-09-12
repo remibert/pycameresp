@@ -11,30 +11,25 @@ import uasyncio
 import machine
 from tools.battery import Battery
 from tools.awake import Awake
-from tools import useful
+from tools.useful import iscamera, syslog, reboot
 
+# Force high frequency of esp32
 machine.freq(240000000)
 
 # Check the battery level and force deepsleep is to low
 Battery.protect()
 
-# Can only be done once at boot before start the camera and sd card
+# Can only be done once at boot before start of the camera and sd card
 pinWakeUp = Awake.isPinWakeUp()
 
 # Html pages loader
-def pageLoader():
-	# The html pages only loaded when the connection of http server is done
-	# This reduces memory consumption if the server is not used
+def htmlPageLoader():
 	# pylint: disable=unused-import
 	# pylint: disable=redefined-outer-name
-	import webpage
-	from server.httpserver import HttpServer
 
-	try:
-		# Sample page (can be suppressed)
-		from sample import samplePage
-	except ImportError as err:
-		pass
+	# The html pages only loaded when the connection of http server is done
+	# This reduces memory consumption if the server is not used
+	import webpage
 
 	try:
 		# Sample page (can be suppressed)
@@ -45,17 +40,17 @@ def pageLoader():
 # Create asyncio loop
 loop = uasyncio.get_event_loop()
 
-# Start all server (Http, Ftp, Telnet) and start wifi manager
-# If you set the last parameter to True it preloads the pages of the http server at startup
+# Start all servers Http, Ftp, Telnet and wifi manager
 import server 
-server.init(loop=loop, pageLoader=pageLoader, preload=False, httpPort=80)
+server.init(loop=loop, pageLoader=htmlPageLoader)
 
 # If camera is available (required specific firmware)
-if useful.iscamera():
-	# Start motion detection (only used with ESP32CAM)
+if iscamera():
+	# Start motion detection (can be only used with ESP32CAM)
 	import motion 
 	motion.start(loop, pinWakeUp)
 
+# Add shell asynchronous task (press any key to get shell prompt)
 from shell.shell import asyncShell
 loop.create_task(asyncShell())
 
@@ -63,7 +58,7 @@ try:
 	# Run asyncio for ever
 	loop.run_forever()
 except KeyboardInterrupt:
-	useful.syslog("Control C in main")
+	syslog("Control C in main")
 except Exception as err:
-	useful.syslog(err)
-	useful.reboot("Crash in main")
+	syslog(err)
+	reboot("Crash in main")

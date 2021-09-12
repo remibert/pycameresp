@@ -214,23 +214,41 @@
 		<!--Dropdown:end-->
 
 		<!--MenuBar:begin-->
-		<div class="btn-group%(class_)s" style="%(style)s" id="%(id)s">
+		<nav class="navbar navbar-expand-sm bg-light navbar-light" style="background-color: #e3f2fd;">
+			<ul class="navbar-nav" style="%(style)s" id="%(id)s">
 			%(content)s
 			<!--Menu:begin-->
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" %(disabled)s>%(text)s</a>
+					<div class="dropdown-menu">
+						%(content)s
+						<!--MenuItem:begin-->
+						<a class="dropdown-item %(active)s %(class_)s" style="%(style)s margin-right: 2px;" id="%(id)s" href="%(href)s" %(disabled)s>%(text)s</a>
+						<!--MenuItem:end-->
+					</div>
+				</li>
+			<!--Menu:end-->
+			</ul>
+		</nav>
+		<!--MenuBar:end-->
+
+		<!--MenuBar_:begin-->
+		<div class="btn-group%(class_)s" style="%(style)s" id="%(id)s">
+			%(content)s
+			<!--Menu_:begin-->
 			<div class="dropdown %(active)s %(class_)s" style="%(style)s" id="%(id)s" >
 				<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" %(disabled)s>%(text)s</button>
 				<div class="dropdown-menu">
 				%(content)s
-				<!--MenuItem:begin-->
+				<!--MenuItem_:begin-->
 				<a class="dropdown-item %(active)s %(class_)s" style="%(style)s margin-right: 2px;" id="%(id)s" href="%(href)s" %(disabled)s>%(text)s</a>
-				<!--MenuItem:end-->
+				<!--MenuItem_:end-->
 				</div>
 			</div>
-			<!--Menu:end-->
+			<!--Menu_:end-->
 		</div>
-		<!--MenuBar:end-->
-
-
+		<!--MenuBar_:end-->
+		
 		<!--ComboBox:begin-->
 		<label >%(text)s</label>
 		<input list="%(id)s" class="form-control %(class_)s" style="%(style)s" pattern="%(pattern)s" placeholder="%(placeholder)s" value="%(value)s" name="%(name)s" %(disabled)s>
@@ -341,7 +359,16 @@
 			}
 		</script>
 		<!--SwitchCmd:end-->
-
+		
+		<!--Modal:begin-->
+		<div class="modal-dialog modal-dialog-centered %(class_)s" style="align-items:center;min-height:100vh; %(style)s" id="%(id)s">
+			<div class="modal-content shadow-lg p-3 mb-5 bg-white rounded">
+				<div class="modal-body" style="padding:10px 10px;">
+					%(content)s
+				</div>
+			</div>
+		</div>
+		<!--Modal:end-->
 	</body>
 </html>
 <!--Page:end-->

@@ -155,3 +155,20 @@ async def motion(request, response, args):
 		Switch(text=lang.suspends_motion_detection,                name=b"suspendOnPresence", checked=config.suspendOnPresence, disabled=disabled),Br(),
 		submit)
 	await response.sendPage(page)
+
+@HttpServer.addRoute(b'/motion/onoff', menu=lang.menu_motion, item=lang.item_motion_onoff, available=useful.iscamera() and Camera.isActivated())
+async def motionOnOff(request, response, args):
+	""" Motion command page """
+	config = MotionConfig()
+	config.load()
+	command = request.params.get(b"action",b"none") 
+	if command == b"on":
+		config.activated = True
+		config.save()
+	elif command == b"off":
+		config.activated = False
+		config.save()
+
+	page = mainFrame(request, response, args, lang.motion_onoff,
+		Submit(text=lang.motion_off if config.activated else lang.motion_on,  name=b"action", value=b"off" if config.activated else b"on" ))
+	await response.sendPage(page)
