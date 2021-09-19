@@ -243,7 +243,7 @@ On a standard micropython firmware, copy all the files of the modules directory 
 into the flash memory of the board.
 
 # Library documentation
-[See python module documentation](http://htmlpreview.github.com/?https://github.com/remibert/pycameresp/blob/main/doc/lib/index.html)
+[See python module documentation](http://htmlpreview.github.io/?https://github.com/remibert/pycameresp/blob/main/doc/lib/index.html)
 
 # Homekit
 
