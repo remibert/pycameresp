@@ -30,17 +30,17 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Classes used to manage the wifi access point &#34;&#34;&#34;
-import sys
-from tools import jsonconfig
-from tools import useful
+from tools import jsonconfig,useful
+from wifi.hostname import Hostname
 
-class AccessPointConfig:
+class AccessPointConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Access point configuration class &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.activated = True
-                self.wifipassword  = b&#34;Micropython&#34;
-                self.ssid          = b&#34;Micropython&#34;
+                jsonconfig.JsonConfig.__init__(self)
+                self.activated = False
+                self.wifipassword  = b&#34;&#34;
+                self.ssid          = b&#34;&#34;
                 self.authmode      = b&#34;WPA2-PSK&#34;
                 self.ipaddress     = b&#34;192.168.3.1&#34;
                 self.netmask       = b&#34;255.255.255.0&#34;
@@ -63,21 +63,6 @@ class AccessPointConfig:
                 result +=&#34;   Activated  :%s\n&#34;%useful.tostrings(self.activated)
                 return result
 
-        def save(self, file = None):
-                &#34;&#34;&#34; Save access point configuration &#34;&#34;&#34;
-                result = jsonconfig.save(self, file)
-                return result
-
-        def update(self, params):
-                &#34;&#34;&#34; Update access point configuration &#34;&#34;&#34;
-                result = jsonconfig.update(self, params)
-                return result
-
-        def load(self, file = None):
-                &#34;&#34;&#34; Load access point configuration &#34;&#34;&#34;
-                result = jsonconfig.load(self, file)
-                return result
-
 class AccessPoint:
         &#34;&#34;&#34; Class to manage access point &#34;&#34;&#34;
         config = None
@@ -87,7 +72,6 @@ class AccessPoint:
         def open(ssid=None, password=None, authmode=None):
                 &#34;&#34;&#34; Open access point &#34;&#34;&#34;
                 from wifi import AUTHMODE
-                from time import sleep
                 if ssid     != None: AccessPoint.config.ssid         = useful.tobytes(ssid)
                 if password != None: AccessPoint.config.wifipassword = useful.tobytes(password)
                 if authmode != None: AccessPoint.config.authmode     = useful.tobytes(authmode)
@@ -102,6 +86,21 @@ class AccessPoint:
                         essid    = useful.tostrings(AccessPoint.config.ssid),
                         password = useful.tostrings(AccessPoint.config.wifipassword),
                         authmode = authmode)
+  
+        @staticmethod
+        def reloadConfig():
+                &#34;&#34;&#34; Reload configuration if it changed &#34;&#34;&#34;
+                if AccessPoint.config == None:
+                        AccessPoint.config = AccessPointConfig()
+                        if AccessPoint.config.load() == False:
+                                AccessPoint.config.ssid          = b&#34;esp%05d&#34;%Hostname.getNumber()
+                                AccessPoint.config.wifipassword  = b&#34;Pycam_%05d&#34;%Hostname.getNumber()
+                                AccessPoint.config.save()
+                                useful.syslog(&#34;Access point not initialized&#34;)
+                else:
+                        if AccessPoint.config.isChanged():
+                                AccessPoint.config.load()
+                return AccessPoint.config
 
         @staticmethod
         def close():
@@ -114,6 +113,12 @@ class AccessPoint:
                 if AccessPoint.wlan == None:
                         return False
                 return AccessPoint.wlan.active()
+
+        @staticmethod
+        def isActivated():
+                &#34;&#34;&#34; Indicates if the access point is configured to be activated &#34;&#34;&#34;
+                AccessPoint.reloadConfig()
+                return AccessPoint.config.activated
 
         @staticmethod
         def getInfo():
@@ -150,23 +155,18 @@ class AccessPoint:
                                         useful.tostrings(AccessPoint.config.gateway),
                                         useful.tostrings(AccessPoint.config.dns)))
                 except Exception as err:
-                        print(&#34;Cannot configure wifi AccessPoint %s&#34;%useful.exception(err))
+                        useful.syslog(err, msg=&#34;Cannot configure wifi AccessPoint&#34;)
 
         @staticmethod
-        def start(force):
+        def start(force=False):
                 &#34;&#34;&#34; Start the access point according to the configuration. Force is used to skip configuration activation flag &#34;&#34;&#34;
                 result = False
                 if AccessPoint.isActive() == False:
-                        config = AccessPointConfig()
+                        AccessPoint.reloadConfig()
 
-                        if not config.load():
-                                config.activated    = True
-                                config.save()
-                
-                        if config.activated or force:
-                                print(&#34;Start AccessPoint&#34;)
+                        if AccessPoint.config.activated or force:
+                                useful.syslog(&#34;Start AccessPoint&#34;)
                                 from network import WLAN, AP_IF
-                                AccessPoint.config = config
                                 AccessPoint.wlan = WLAN(AP_IF)
                                 AccessPoint.configure()
                                 AccessPoint.open()
@@ -174,7 +174,7 @@ class AccessPoint:
                                 print(repr(AccessPoint.config))
                                 result = True
                         else:
-                                print(&#34;AccessPoint disabled&#34;)
+                                useful.syslog(&#34;AccessPoint disabled&#34;)
                 else:
                         print(&#34;%s already opened&#34;%AccessPoint.__class__.__name__)
                         print(repr(AccessPoint.config))
@@ -185,6 +185,7 @@ class AccessPoint:
         def stop():
                 &#34;&#34;&#34; Stop access point &#34;&#34;&#34;
                 if AccessPoint.isActive():
+                        useful.syslog(&#34;AccessPoint stopped&#34;)
                         AccessPoint.close()
 
         @staticmethod
@@ -223,7 +224,6 @@ class AccessPoint:
         def open(ssid=None, password=None, authmode=None):
                 &#34;&#34;&#34; Open access point &#34;&#34;&#34;
                 from wifi import AUTHMODE
-                from time import sleep
                 if ssid     != None: AccessPoint.config.ssid         = useful.tobytes(ssid)
                 if password != None: AccessPoint.config.wifipassword = useful.tobytes(password)
                 if authmode != None: AccessPoint.config.authmode     = useful.tobytes(authmode)
@@ -238,6 +238,21 @@ class AccessPoint:
                         essid    = useful.tostrings(AccessPoint.config.ssid),
                         password = useful.tostrings(AccessPoint.config.wifipassword),
                         authmode = authmode)
+  
+        @staticmethod
+        def reloadConfig():
+                &#34;&#34;&#34; Reload configuration if it changed &#34;&#34;&#34;
+                if AccessPoint.config == None:
+                        AccessPoint.config = AccessPointConfig()
+                        if AccessPoint.config.load() == False:
+                                AccessPoint.config.ssid          = b&#34;esp%05d&#34;%Hostname.getNumber()
+                                AccessPoint.config.wifipassword  = b&#34;Pycam_%05d&#34;%Hostname.getNumber()
+                                AccessPoint.config.save()
+                                useful.syslog(&#34;Access point not initialized&#34;)
+                else:
+                        if AccessPoint.config.isChanged():
+                                AccessPoint.config.load()
+                return AccessPoint.config
 
         @staticmethod
         def close():
@@ -250,6 +265,12 @@ class AccessPoint:
                 if AccessPoint.wlan == None:
                         return False
                 return AccessPoint.wlan.active()
+
+        @staticmethod
+        def isActivated():
+                &#34;&#34;&#34; Indicates if the access point is configured to be activated &#34;&#34;&#34;
+                AccessPoint.reloadConfig()
+                return AccessPoint.config.activated
 
         @staticmethod
         def getInfo():
@@ -286,23 +307,18 @@ class AccessPoint:
                                         useful.tostrings(AccessPoint.config.gateway),
                                         useful.tostrings(AccessPoint.config.dns)))
                 except Exception as err:
-                        print(&#34;Cannot configure wifi AccessPoint %s&#34;%useful.exception(err))
+                        useful.syslog(err, msg=&#34;Cannot configure wifi AccessPoint&#34;)
 
         @staticmethod
-        def start(force):
+        def start(force=False):
                 &#34;&#34;&#34; Start the access point according to the configuration. Force is used to skip configuration activation flag &#34;&#34;&#34;
                 result = False
                 if AccessPoint.isActive() == False:
-                        config = AccessPointConfig()
+                        AccessPoint.reloadConfig()
 
-                        if not config.load():
-                                config.activated    = True
-                                config.save()
-                
-                        if config.activated or force:
-                                print(&#34;Start AccessPoint&#34;)
+                        if AccessPoint.config.activated or force:
+                                useful.syslog(&#34;Start AccessPoint&#34;)
                                 from network import WLAN, AP_IF
-                                AccessPoint.config = config
                                 AccessPoint.wlan = WLAN(AP_IF)
                                 AccessPoint.configure()
                                 AccessPoint.open()
@@ -310,7 +326,7 @@ class AccessPoint:
                                 print(repr(AccessPoint.config))
                                 result = True
                         else:
-                                print(&#34;AccessPoint disabled&#34;)
+                                useful.syslog(&#34;AccessPoint disabled&#34;)
                 else:
                         print(&#34;%s already opened&#34;%AccessPoint.__class__.__name__)
                         print(repr(AccessPoint.config))
@@ -321,6 +337,7 @@ class AccessPoint:
         def stop():
                 &#34;&#34;&#34; Stop access point &#34;&#34;&#34;
                 if AccessPoint.isActive():
+                        useful.syslog(&#34;AccessPoint stopped&#34;)
                         AccessPoint.close()
 
         @staticmethod
@@ -397,7 +414,7 @@ def configure(ipaddress = None, netmask = None, gateway = None, dns = None):
                                 useful.tostrings(AccessPoint.config.gateway),
                                 useful.tostrings(AccessPoint.config.dns)))
         except Exception as err:
-                print(&#34;Cannot configure wifi AccessPoint %s&#34;%useful.exception(err))</code></pre>
+                useful.syslog(err, msg=&#34;Cannot configure wifi AccessPoint&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.wifi.accesspoint.AccessPoint.getInfo"><code class="name flex">
@@ -414,6 +431,22 @@ def getInfo():
         if AccessPoint.wlan != None and AccessPoint.wlan.active():
                 return AccessPoint.wlan.ifconfig()
         return None</code></pre>
+</details>
+</dd>
+<dt id="lib.wifi.accesspoint.AccessPoint.isActivated"><code class="name flex">
+<span>def <span class="ident">isActivated</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the access point is configured to be activated</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def isActivated():
+        &#34;&#34;&#34; Indicates if the access point is configured to be activated &#34;&#34;&#34;
+        AccessPoint.reloadConfig()
+        return AccessPoint.config.activated</code></pre>
 </details>
 </dd>
 <dt id="lib.wifi.accesspoint.AccessPoint.isActive"><code class="name flex">
@@ -464,7 +497,6 @@ def isIpOnInterface(ipAddr):
 def open(ssid=None, password=None, authmode=None):
         &#34;&#34;&#34; Open access point &#34;&#34;&#34;
         from wifi import AUTHMODE
-        from time import sleep
         if ssid     != None: AccessPoint.config.ssid         = useful.tobytes(ssid)
         if password != None: AccessPoint.config.wifipassword = useful.tobytes(password)
         if authmode != None: AccessPoint.config.authmode     = useful.tobytes(authmode)
@@ -481,8 +513,33 @@ def open(ssid=None, password=None, authmode=None):
                 authmode = authmode)</code></pre>
 </details>
 </dd>
+<dt id="lib.wifi.accesspoint.AccessPoint.reloadConfig"><code class="name flex">
+<span>def <span class="ident">reloadConfig</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reload configuration if it changed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def reloadConfig():
+        &#34;&#34;&#34; Reload configuration if it changed &#34;&#34;&#34;
+        if AccessPoint.config == None:
+                AccessPoint.config = AccessPointConfig()
+                if AccessPoint.config.load() == False:
+                        AccessPoint.config.ssid          = b&#34;esp%05d&#34;%Hostname.getNumber()
+                        AccessPoint.config.wifipassword  = b&#34;Pycam_%05d&#34;%Hostname.getNumber()
+                        AccessPoint.config.save()
+                        useful.syslog(&#34;Access point not initialized&#34;)
+        else:
+                if AccessPoint.config.isChanged():
+                        AccessPoint.config.load()
+        return AccessPoint.config</code></pre>
+</details>
+</dd>
 <dt id="lib.wifi.accesspoint.AccessPoint.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>force)</span>
+<span>def <span class="ident">start</span></span>(<span>force=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Start the access point according to the configuration. Force is used to skip configuration activation flag</p></div>
@@ -491,20 +548,15 @@ def open(ssid=None, password=None, authmode=None):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def start(force):
+def start(force=False):
         &#34;&#34;&#34; Start the access point according to the configuration. Force is used to skip configuration activation flag &#34;&#34;&#34;
         result = False
         if AccessPoint.isActive() == False:
-                config = AccessPointConfig()
+                AccessPoint.reloadConfig()
 
-                if not config.load():
-                        config.activated    = True
-                        config.save()
-        
-                if config.activated or force:
-                        print(&#34;Start AccessPoint&#34;)
+                if AccessPoint.config.activated or force:
+                        useful.syslog(&#34;Start AccessPoint&#34;)
                         from network import WLAN, AP_IF
-                        AccessPoint.config = config
                         AccessPoint.wlan = WLAN(AP_IF)
                         AccessPoint.configure()
                         AccessPoint.open()
@@ -512,7 +564,7 @@ def start(force):
                         print(repr(AccessPoint.config))
                         result = True
                 else:
-                        print(&#34;AccessPoint disabled&#34;)
+                        useful.syslog(&#34;AccessPoint disabled&#34;)
         else:
                 print(&#34;%s already opened&#34;%AccessPoint.__class__.__name__)
                 print(repr(AccessPoint.config))
@@ -533,6 +585,7 @@ def start(force):
 def stop():
         &#34;&#34;&#34; Stop access point &#34;&#34;&#34;
         if AccessPoint.isActive():
+                useful.syslog(&#34;AccessPoint stopped&#34;)
                 AccessPoint.close()</code></pre>
 </details>
 </dd>
@@ -548,13 +601,14 @@ def stop():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AccessPointConfig:
+<pre><code class="python">class AccessPointConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Access point configuration class &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.activated = True
-                self.wifipassword  = b&#34;Micropython&#34;
-                self.ssid          = b&#34;Micropython&#34;
+                jsonconfig.JsonConfig.__init__(self)
+                self.activated = False
+                self.wifipassword  = b&#34;&#34;
+                self.ssid          = b&#34;&#34;
                 self.authmode      = b&#34;WPA2-PSK&#34;
                 self.ipaddress     = b&#34;192.168.3.1&#34;
                 self.netmask       = b&#34;255.255.255.0&#34;
@@ -575,71 +629,12 @@ def stop():
                 result +=&#34;   Password   :%s\n&#34;%useful.tostrings(self.wifipassword)
                 result +=&#34;   Authmode   :%s\n&#34;%useful.tostrings(self.authmode)
                 result +=&#34;   Activated  :%s\n&#34;%useful.tostrings(self.activated)
-                return result
-
-        def save(self, file = None):
-                &#34;&#34;&#34; Save access point configuration &#34;&#34;&#34;
-                result = jsonconfig.save(self, file)
-                return result
-
-        def update(self, params):
-                &#34;&#34;&#34; Update access point configuration &#34;&#34;&#34;
-                result = jsonconfig.update(self, params)
-                return result
-
-        def load(self, file = None):
-                &#34;&#34;&#34; Load access point configuration &#34;&#34;&#34;
-                result = jsonconfig.load(self, file)
                 return result</code></pre>
 </details>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.wifi.accesspoint.AccessPointConfig.load"><code class="name flex">
-<span>def <span class="ident">load</span></span>(<span>self, file=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Load access point configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def load(self, file = None):
-        &#34;&#34;&#34; Load access point configuration &#34;&#34;&#34;
-        result = jsonconfig.load(self, file)
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.wifi.accesspoint.AccessPointConfig.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, file=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Save access point configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def save(self, file = None):
-        &#34;&#34;&#34; Save access point configuration &#34;&#34;&#34;
-        result = jsonconfig.save(self, file)
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.wifi.accesspoint.AccessPointConfig.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>self, params)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Update access point configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def update(self, params):
-        &#34;&#34;&#34; Update access point configuration &#34;&#34;&#34;
-        result = jsonconfig.update(self, params)
-        return result</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>tools.jsonconfig.JsonConfig</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -664,9 +659,11 @@ def stop():
 <li><code><a title="lib.wifi.accesspoint.AccessPoint.config" href="#lib.wifi.accesspoint.AccessPoint.config">config</a></code></li>
 <li><code><a title="lib.wifi.accesspoint.AccessPoint.configure" href="#lib.wifi.accesspoint.AccessPoint.configure">configure</a></code></li>
 <li><code><a title="lib.wifi.accesspoint.AccessPoint.getInfo" href="#lib.wifi.accesspoint.AccessPoint.getInfo">getInfo</a></code></li>
+<li><code><a title="lib.wifi.accesspoint.AccessPoint.isActivated" href="#lib.wifi.accesspoint.AccessPoint.isActivated">isActivated</a></code></li>
 <li><code><a title="lib.wifi.accesspoint.AccessPoint.isActive" href="#lib.wifi.accesspoint.AccessPoint.isActive">isActive</a></code></li>
 <li><code><a title="lib.wifi.accesspoint.AccessPoint.isIpOnInterface" href="#lib.wifi.accesspoint.AccessPoint.isIpOnInterface">isIpOnInterface</a></code></li>
 <li><code><a title="lib.wifi.accesspoint.AccessPoint.open" href="#lib.wifi.accesspoint.AccessPoint.open">open</a></code></li>
+<li><code><a title="lib.wifi.accesspoint.AccessPoint.reloadConfig" href="#lib.wifi.accesspoint.AccessPoint.reloadConfig">reloadConfig</a></code></li>
 <li><code><a title="lib.wifi.accesspoint.AccessPoint.start" href="#lib.wifi.accesspoint.AccessPoint.start">start</a></code></li>
 <li><code><a title="lib.wifi.accesspoint.AccessPoint.stop" href="#lib.wifi.accesspoint.AccessPoint.stop">stop</a></code></li>
 <li><code><a title="lib.wifi.accesspoint.AccessPoint.wlan" href="#lib.wifi.accesspoint.AccessPoint.wlan">wlan</a></code></li>
@@ -674,11 +671,6 @@ def stop():
 </li>
 <li>
 <h4><code><a title="lib.wifi.accesspoint.AccessPointConfig" href="#lib.wifi.accesspoint.AccessPointConfig">AccessPointConfig</a></code></h4>
-<ul class="">
-<li><code><a title="lib.wifi.accesspoint.AccessPointConfig.load" href="#lib.wifi.accesspoint.AccessPointConfig.load">load</a></code></li>
-<li><code><a title="lib.wifi.accesspoint.AccessPointConfig.save" href="#lib.wifi.accesspoint.AccessPointConfig.save">save</a></code></li>
-<li><code><a title="lib.wifi.accesspoint.AccessPointConfig.update" href="#lib.wifi.accesspoint.AccessPointConfig.update">update</a></code></li>
-</ul>
 </li>
 </ul>
 </li>

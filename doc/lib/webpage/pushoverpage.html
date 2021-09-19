@@ -31,51 +31,32 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to configure the pushover notifications &#34;&#34;&#34;
 from server.httpserver import HttpServer
-from htmltemplate import *
-from webpage import *
-from server.pushover import *
+from htmltemplate      import *
+from webpage.mainpage  import mainFrame, manageDefaultButton
+from server.pushover   import *
+from tools             import lang
 
-@HttpServer.addRoute(b&#39;/pushover&#39;, title=b&#34;Pushover&#34;, index=15)
+@HttpServer.addRoute(b&#39;/pushover&#39;, menu=lang.menu_server, item=lang.item_notification)
 async def pushover(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the pushover notifications &#34;&#34;&#34;
         config = PushOverConfig()
-        config.load()
-
-        action = request.params.get(b&#34;modify&#34;,b&#34;none&#34;)
-        if   action == b&#34;none&#34;  : disabled = True
-        elif action == b&#34;modify&#34;: disabled = False 
-        elif action == b&#34;save&#34;  : 
-                disabled = True
-                del request.params[b&#34;modify&#34;]
-                config.update(request.params)
-                config.save()
-                await asyncNotify(token=config.token, user=config.user, message = b&#34;Pushover notification %s&#34;%(b&#34;enabled&#34; if config.activated else b&#34;disabled&#34;))
-
+        disabled, action, submit = manageDefaultButton(request, config)
+        if action == b&#34;save&#34;:
+                if config.activated:
+                        msg = lang.pushover_on
+                else:
+                        msg = lang.pushover_off
+                await asyncNotify(token=config.token, user=config.user, message = msg)
         if disabled:
-                submit = Submit(text=b&#34;Modify&#34;)
-                value = b&#39;modify&#39;
+                typ = b&#34;password&#34;
         else:
-                submit = Submit(text=b&#34;Save&#34;)
-                value = b&#39;save&#39;
-
-        page = mainPage(
-                content=[Br(),Container([\
-                                        Card([\
-                                                Form([\
-                                                        Br(),
-                                                        Title3(text=b&#34;Notification configuration&#34;),
-                                                        Br(),
-                                                        Switch(text=b&#34;Activated&#34;, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                                                        Edit(text=b&#34;User&#34;,  name=b&#34;user&#34;,  placeholder=b&#34;Enter pushover user&#34;,  type=b&#34;password&#34;, value=config.user,  disabled=disabled),
-                                                        Edit(text=b&#34;Token&#34;, name=b&#34;token&#34;, placeholder=b&#34;Enter pushover token&#34;, type=b&#34;password&#34;, value=config.token, disabled=disabled),
-                                                        Input (text=b&#34;modify&#34; , name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),
-                                                        submit,
-                                                ]),
-                                        ])
-                                        ,Br()
-                                        ,Link(href=b&#34;https://pushover.net&#34;, text=b&#34;See pushover website&#34;),
-                                ])
-                        ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
+                typ = b&#34;&#34;
+        page = mainFrame(request, response, args,lang.notification_configuration,
+                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
+                Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
+                Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
+                submit,
+                Br(), Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website))
 
         await response.sendPage(page)</code></pre>
 </details>
@@ -96,47 +77,27 @@ async def pushover(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/pushover&#39;, title=b&#34;Pushover&#34;, index=15)
+<pre><code class="python">@HttpServer.addRoute(b&#39;/pushover&#39;, menu=lang.menu_server, item=lang.item_notification)
 async def pushover(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the pushover notifications &#34;&#34;&#34;
         config = PushOverConfig()
-        config.load()
-
-        action = request.params.get(b&#34;modify&#34;,b&#34;none&#34;)
-        if   action == b&#34;none&#34;  : disabled = True
-        elif action == b&#34;modify&#34;: disabled = False 
-        elif action == b&#34;save&#34;  : 
-                disabled = True
-                del request.params[b&#34;modify&#34;]
-                config.update(request.params)
-                config.save()
-                await asyncNotify(token=config.token, user=config.user, message = b&#34;Pushover notification %s&#34;%(b&#34;enabled&#34; if config.activated else b&#34;disabled&#34;))
-
+        disabled, action, submit = manageDefaultButton(request, config)
+        if action == b&#34;save&#34;:
+                if config.activated:
+                        msg = lang.pushover_on
+                else:
+                        msg = lang.pushover_off
+                await asyncNotify(token=config.token, user=config.user, message = msg)
         if disabled:
-                submit = Submit(text=b&#34;Modify&#34;)
-                value = b&#39;modify&#39;
+                typ = b&#34;password&#34;
         else:
-                submit = Submit(text=b&#34;Save&#34;)
-                value = b&#39;save&#39;
-
-        page = mainPage(
-                content=[Br(),Container([\
-                                        Card([\
-                                                Form([\
-                                                        Br(),
-                                                        Title3(text=b&#34;Notification configuration&#34;),
-                                                        Br(),
-                                                        Switch(text=b&#34;Activated&#34;, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                                                        Edit(text=b&#34;User&#34;,  name=b&#34;user&#34;,  placeholder=b&#34;Enter pushover user&#34;,  type=b&#34;password&#34;, value=config.user,  disabled=disabled),
-                                                        Edit(text=b&#34;Token&#34;, name=b&#34;token&#34;, placeholder=b&#34;Enter pushover token&#34;, type=b&#34;password&#34;, value=config.token, disabled=disabled),
-                                                        Input (text=b&#34;modify&#34; , name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),
-                                                        submit,
-                                                ]),
-                                        ])
-                                        ,Br()
-                                        ,Link(href=b&#34;https://pushover.net&#34;, text=b&#34;See pushover website&#34;),
-                                ])
-                        ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
+                typ = b&#34;&#34;
+        page = mainFrame(request, response, args,lang.notification_configuration,
+                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
+                Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
+                Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
+                submit,
+                Br(), Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website))
 
         await response.sendPage(page)</code></pre>
 </details>

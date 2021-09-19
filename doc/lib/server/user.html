@@ -30,37 +30,24 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Class used to manage a username and a password &#34;&#34;&#34;
-from tools import useful,jsonconfig
+from tools import useful,jsonconfig,encryption
 
 EMPTY_PASSWORD = b&#34;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&#34; # empty password
 
-class UserConfig:
+class UserConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; User configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                jsonconfig.JsonConfig.__init__(self)
+                self.user = b&#34;&#34;
+                self.password = EMPTY_PASSWORD
                 if self.load() == False:
-                        self.user = b&#34;&#34;
-                        self.password = EMPTY_PASSWORD
                         self.save()
-
-        def save(self, file = None):
-                &#34;&#34;&#34; Save user configuration &#34;&#34;&#34;
-                result = jsonconfig.save(self, file)
-                return result
-
-        def update(self, params):
-                &#34;&#34;&#34; Update user configuration &#34;&#34;&#34;
-                result = jsonconfig.update(self, params)
-                return result
-
-        def load(self, file = None):
-                &#34;&#34;&#34; Load user configuration &#34;&#34;&#34;
-                result = jsonconfig.load(self, file)
-                return result
 
 class User:
         &#34;&#34;&#34; Singleton class to manage the user. Only one user can be defined &#34;&#34;&#34;
         instance = None
+        loginState = [None]
 
         @staticmethod
         def init():
@@ -69,14 +56,35 @@ class User:
                         User.instance = UserConfig()
 
         @staticmethod
-        def check(user, password):
+        def getLoginState():
+                &#34;&#34;&#34; Indicates if login success or failed detected &#34;&#34;&#34;
+                result = User.loginState[0]
+                User.loginState[0] = None
+                return result
+
+        @staticmethod
+        def check(user, password, log=True):
                 &#34;&#34;&#34; Check the user and password &#34;&#34;&#34;
                 User.init()
+
+                user = user.lower()
+
                 if User.instance.user == b&#34;&#34;:
                         return True
                 elif user == User.instance.user:
-                        if useful.getHash(password) == User.instance.password:
+                        if encryption.gethash(password) == User.instance.password:
+                                if log == True:
+                                        User.loginState[0] = True
                                 return True
+                        else:
+                                if log == True:
+                                        User.loginState[0] = False
+                                        useful.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%useful.tostrings(user))
+                else:
+                        if user != b&#34;&#34;:
+                                if log == True:
+                                        User.loginState[0] = False
+                                        useful.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%useful.tostrings(user))
                 return False
 
         @staticmethod
@@ -98,6 +106,7 @@ class User:
         def change(user, currentPassword, newPassword, reNewPassword):
                 &#34;&#34;&#34; Change the user and password, check if the password is correct before to do this &#34;&#34;&#34;
                 User.init()
+                user = user.lower()
 
                 if User.check(user, currentPassword):
                         if newPassword == reNewPassword:
@@ -106,7 +115,7 @@ class User:
                                         User.instance.password = EMPTY_PASSWORD
                                 else:
                                         User.instance.user     = user
-                                        User.instance.password = useful.getHash(newPassword)
+                                        User.instance.password = encryption.gethash(newPassword)
                                 User.instance.save()
                                 return True
                         else:
@@ -135,6 +144,7 @@ class User:
 <pre><code class="python">class User:
         &#34;&#34;&#34; Singleton class to manage the user. Only one user can be defined &#34;&#34;&#34;
         instance = None
+        loginState = [None]
 
         @staticmethod
         def init():
@@ -143,14 +153,35 @@ class User:
                         User.instance = UserConfig()
 
         @staticmethod
-        def check(user, password):
+        def getLoginState():
+                &#34;&#34;&#34; Indicates if login success or failed detected &#34;&#34;&#34;
+                result = User.loginState[0]
+                User.loginState[0] = None
+                return result
+
+        @staticmethod
+        def check(user, password, log=True):
                 &#34;&#34;&#34; Check the user and password &#34;&#34;&#34;
                 User.init()
+
+                user = user.lower()
+
                 if User.instance.user == b&#34;&#34;:
                         return True
                 elif user == User.instance.user:
-                        if useful.getHash(password) == User.instance.password:
+                        if encryption.gethash(password) == User.instance.password:
+                                if log == True:
+                                        User.loginState[0] = True
                                 return True
+                        else:
+                                if log == True:
+                                        User.loginState[0] = False
+                                        useful.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%useful.tostrings(user))
+                else:
+                        if user != b&#34;&#34;:
+                                if log == True:
+                                        User.loginState[0] = False
+                                        useful.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%useful.tostrings(user))
                 return False
 
         @staticmethod
@@ -172,6 +203,7 @@ class User:
         def change(user, currentPassword, newPassword, reNewPassword):
                 &#34;&#34;&#34; Change the user and password, check if the password is correct before to do this &#34;&#34;&#34;
                 User.init()
+                user = user.lower()
 
                 if User.check(user, currentPassword):
                         if newPassword == reNewPassword:
@@ -180,7 +212,7 @@ class User:
                                         User.instance.password = EMPTY_PASSWORD
                                 else:
                                         User.instance.user     = user
-                                        User.instance.password = useful.getHash(newPassword)
+                                        User.instance.password = encryption.gethash(newPassword)
                                 User.instance.save()
                                 return True
                         else:
@@ -190,6 +222,10 @@ class User:
 <h3>Class variables</h3>
 <dl>
 <dt id="lib.server.user.User.instance"><code class="name">var <span class="ident">instance</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.user.User.loginState"><code class="name">var <span class="ident">loginState</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -209,6 +245,7 @@ class User:
 def change(user, currentPassword, newPassword, reNewPassword):
         &#34;&#34;&#34; Change the user and password, check if the password is correct before to do this &#34;&#34;&#34;
         User.init()
+        user = user.lower()
 
         if User.check(user, currentPassword):
                 if newPassword == reNewPassword:
@@ -217,7 +254,7 @@ def change(user, currentPassword, newPassword, reNewPassword):
                                 User.instance.password = EMPTY_PASSWORD
                         else:
                                 User.instance.user     = user
-                                User.instance.password = useful.getHash(newPassword)
+                                User.instance.password = encryption.gethash(newPassword)
                         User.instance.save()
                         return True
                 else:
@@ -226,7 +263,7 @@ def change(user, currentPassword, newPassword, reNewPassword):
 </details>
 </dd>
 <dt id="lib.server.user.User.check"><code class="name flex">
-<span>def <span class="ident">check</span></span>(<span>user, password)</span>
+<span>def <span class="ident">check</span></span>(<span>user, password, log=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check the user and password</p></div>
@@ -235,15 +272,46 @@ def change(user, currentPassword, newPassword, reNewPassword):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def check(user, password):
+def check(user, password, log=True):
         &#34;&#34;&#34; Check the user and password &#34;&#34;&#34;
         User.init()
+
+        user = user.lower()
+
         if User.instance.user == b&#34;&#34;:
                 return True
         elif user == User.instance.user:
-                if useful.getHash(password) == User.instance.password:
+                if encryption.gethash(password) == User.instance.password:
+                        if log == True:
+                                User.loginState[0] = True
                         return True
+                else:
+                        if log == True:
+                                User.loginState[0] = False
+                                useful.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%useful.tostrings(user))
+        else:
+                if user != b&#34;&#34;:
+                        if log == True:
+                                User.loginState[0] = False
+                                useful.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%useful.tostrings(user))
         return False</code></pre>
+</details>
+</dd>
+<dt id="lib.server.user.User.getLoginState"><code class="name flex">
+<span>def <span class="ident">getLoginState</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if login success or failed detected</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def getLoginState():
+        &#34;&#34;&#34; Indicates if login success or failed detected &#34;&#34;&#34;
+        result = User.loginState[0]
+        User.loginState[0] = None
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.server.user.User.getUser"><code class="name flex">
@@ -309,78 +377,20 @@ def isEmpty():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class UserConfig:
+<pre><code class="python">class UserConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; User configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                jsonconfig.JsonConfig.__init__(self)
+                self.user = b&#34;&#34;
+                self.password = EMPTY_PASSWORD
                 if self.load() == False:
-                        self.user = b&#34;&#34;
-                        self.password = EMPTY_PASSWORD
-                        self.save()
-
-        def save(self, file = None):
-                &#34;&#34;&#34; Save user configuration &#34;&#34;&#34;
-                result = jsonconfig.save(self, file)
-                return result
-
-        def update(self, params):
-                &#34;&#34;&#34; Update user configuration &#34;&#34;&#34;
-                result = jsonconfig.update(self, params)
-                return result
-
-        def load(self, file = None):
-                &#34;&#34;&#34; Load user configuration &#34;&#34;&#34;
-                result = jsonconfig.load(self, file)
-                return result</code></pre>
+                        self.save()</code></pre>
 </details>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.server.user.UserConfig.load"><code class="name flex">
-<span>def <span class="ident">load</span></span>(<span>self, file=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Load user configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def load(self, file = None):
-        &#34;&#34;&#34; Load user configuration &#34;&#34;&#34;
-        result = jsonconfig.load(self, file)
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.server.user.UserConfig.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, file=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Save user configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def save(self, file = None):
-        &#34;&#34;&#34; Save user configuration &#34;&#34;&#34;
-        result = jsonconfig.save(self, file)
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.server.user.UserConfig.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>self, params)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Update user configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def update(self, params):
-        &#34;&#34;&#34; Update user configuration &#34;&#34;&#34;
-        result = jsonconfig.update(self, params)
-        return result</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>tools.jsonconfig.JsonConfig</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -403,19 +413,16 @@ def isEmpty():
 <ul class="two-column">
 <li><code><a title="lib.server.user.User.change" href="#lib.server.user.User.change">change</a></code></li>
 <li><code><a title="lib.server.user.User.check" href="#lib.server.user.User.check">check</a></code></li>
+<li><code><a title="lib.server.user.User.getLoginState" href="#lib.server.user.User.getLoginState">getLoginState</a></code></li>
 <li><code><a title="lib.server.user.User.getUser" href="#lib.server.user.User.getUser">getUser</a></code></li>
 <li><code><a title="lib.server.user.User.init" href="#lib.server.user.User.init">init</a></code></li>
 <li><code><a title="lib.server.user.User.instance" href="#lib.server.user.User.instance">instance</a></code></li>
 <li><code><a title="lib.server.user.User.isEmpty" href="#lib.server.user.User.isEmpty">isEmpty</a></code></li>
+<li><code><a title="lib.server.user.User.loginState" href="#lib.server.user.User.loginState">loginState</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="lib.server.user.UserConfig" href="#lib.server.user.UserConfig">UserConfig</a></code></h4>
-<ul class="">
-<li><code><a title="lib.server.user.UserConfig.load" href="#lib.server.user.UserConfig.load">load</a></code></li>
-<li><code><a title="lib.server.user.UserConfig.save" href="#lib.server.user.UserConfig.save">save</a></code></li>
-<li><code><a title="lib.server.user.UserConfig.update" href="#lib.server.user.UserConfig.update">update</a></code></li>
-</ul>
 </li>
 </ul>
 </li>

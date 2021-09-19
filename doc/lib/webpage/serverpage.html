@@ -31,52 +31,25 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to configure the start of servers &#34;&#34;&#34;
 from server.httpserver import HttpServer
-from htmltemplate import *
-from webpage import *
-from tools.useful import *
-from server import *
+from htmltemplate      import *
+from webpage.mainpage  import mainFrame, manageDefaultButton
+from tools.useful      import *
+from server.server     import ServerConfig
+from tools import lang
 
-def configureServerPage(config=None,disabled=False,title=b&#34;&#34;, active=0,request=None,response=None):
-        &#34;&#34;&#34; Content of server page &#34;&#34;&#34;
-        if disabled:
-                submit = Submit(text=b&#34;Modify&#34;)
-                value = b&#39;modify&#39;
-        else:
-                submit = Submit(text=b&#34;Save&#34;)
-                value = b&#39;save&#39;
-        page = mainPage(
-                content=[Br(),Container([\
-                        Card([\
-                                Form([\
-                                        Br(),
-                                        Title3(text=b&#34;Servers configuration&#34;),
-                                        Br(),
-                                        Switch(text=b&#34;Ftp&#34;   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),
-                                        Switch(text=b&#34;Http&#34;  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),
-                                        Switch(text=b&#34;Telnet&#34;, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),
-                                        Switch(text=b&#34;Ntp&#34;   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),
-                                        Edit  (text=b&#34;UTC offset&#34; , name=b&#34;offsettime&#34;,       pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=b&#34;Offset time to add to UTC&#34;,        value=b&#34;%d&#34;%config.offsettime,       disabled=disabled),
-                                        Switch(text=b&#34;Daylight saving time&#34;   , name=b&#34;dst&#34;   , checked=config.dst,    disabled=disabled),
-                                        Input (text=b&#34;modify&#34;, name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),
-                                        submit,])])])
-                        ], title=title, active=active, request=request, response=response)
-        return page
-
-@HttpServer.addRoute(b&#39;/server&#39;, title=b&#34;Server&#34;, index=13)
+@HttpServer.addRoute(b&#39;/server&#39;, menu=lang.menu_server, item=lang.item_server)
 async def server(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the start of servers &#34;&#34;&#34;
         config = ServerConfig()
-        config.load()
-        action = request.params.get(b&#34;modify&#34;,b&#34;none&#34;)
-        if   action == b&#34;none&#34;  : disabled = True
-        elif action == b&#34;modify&#34;: disabled = False 
-        elif action == b&#34;save&#34;  : 
-                disabled = True
-                del request.params[b&#34;modify&#34;]
-                config.update(request.params)
-                config.save()
-
-        page = configureServerPage(config=config, disabled=disabled, title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
+        disabled, action, submit = manageDefaultButton(request, config)
+        page = mainFrame(request, response, args,lang.servers_configuration,
+                Switch(text=lang.ftp   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),Br(),
+                Switch(text=lang.http  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),Br(),
+                Switch(text=lang.telnet, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),Br(),
+                Switch(text=lang.time_synchronization   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),Br(),
+                Switch(text=lang.wan_ip   , name=b&#34;wanip&#34;   , checked=config.wanip,    disabled=disabled),Br(),
+                Switch(text=lang.notification_reboot_user, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
+                submit)
         await response.sendPage(page)</code></pre>
 </details>
 </section>
@@ -87,42 +60,6 @@ async def server(request, response, args):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.webpage.serverpage.configureServerPage"><code class="name flex">
-<span>def <span class="ident">configureServerPage</span></span>(<span>config=None, disabled=False, title=b'', active=0, request=None, response=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Content of server page</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def configureServerPage(config=None,disabled=False,title=b&#34;&#34;, active=0,request=None,response=None):
-        &#34;&#34;&#34; Content of server page &#34;&#34;&#34;
-        if disabled:
-                submit = Submit(text=b&#34;Modify&#34;)
-                value = b&#39;modify&#39;
-        else:
-                submit = Submit(text=b&#34;Save&#34;)
-                value = b&#39;save&#39;
-        page = mainPage(
-                content=[Br(),Container([\
-                        Card([\
-                                Form([\
-                                        Br(),
-                                        Title3(text=b&#34;Servers configuration&#34;),
-                                        Br(),
-                                        Switch(text=b&#34;Ftp&#34;   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),
-                                        Switch(text=b&#34;Http&#34;  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),
-                                        Switch(text=b&#34;Telnet&#34;, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),
-                                        Switch(text=b&#34;Ntp&#34;   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),
-                                        Edit  (text=b&#34;UTC offset&#34; , name=b&#34;offsettime&#34;,       pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=b&#34;Offset time to add to UTC&#34;,        value=b&#34;%d&#34;%config.offsettime,       disabled=disabled),
-                                        Switch(text=b&#34;Daylight saving time&#34;   , name=b&#34;dst&#34;   , checked=config.dst,    disabled=disabled),
-                                        Input (text=b&#34;modify&#34;, name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),
-                                        submit,])])])
-                        ], title=title, active=active, request=request, response=response)
-        return page</code></pre>
-</details>
-</dd>
 <dt id="lib.webpage.serverpage.server"><code class="name flex">
 <span>async def <span class="ident">server</span></span>(<span>request, response, args)</span>
 </code></dt>
@@ -132,21 +69,19 @@ async def server(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/server&#39;, title=b&#34;Server&#34;, index=13)
+<pre><code class="python">@HttpServer.addRoute(b&#39;/server&#39;, menu=lang.menu_server, item=lang.item_server)
 async def server(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the start of servers &#34;&#34;&#34;
         config = ServerConfig()
-        config.load()
-        action = request.params.get(b&#34;modify&#34;,b&#34;none&#34;)
-        if   action == b&#34;none&#34;  : disabled = True
-        elif action == b&#34;modify&#34;: disabled = False 
-        elif action == b&#34;save&#34;  : 
-                disabled = True
-                del request.params[b&#34;modify&#34;]
-                config.update(request.params)
-                config.save()
-
-        page = configureServerPage(config=config, disabled=disabled, title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
+        disabled, action, submit = manageDefaultButton(request, config)
+        page = mainFrame(request, response, args,lang.servers_configuration,
+                Switch(text=lang.ftp   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),Br(),
+                Switch(text=lang.http  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),Br(),
+                Switch(text=lang.telnet, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),Br(),
+                Switch(text=lang.time_synchronization   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),Br(),
+                Switch(text=lang.wan_ip   , name=b&#34;wanip&#34;   , checked=config.wanip,    disabled=disabled),Br(),
+                Switch(text=lang.notification_reboot_user, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
+                submit)
         await response.sendPage(page)</code></pre>
 </details>
 </dd>
@@ -168,7 +103,6 @@ async def server(request, response, args):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.webpage.serverpage.configureServerPage" href="#lib.webpage.serverpage.configureServerPage">configureServerPage</a></code></li>
 <li><code><a title="lib.webpage.serverpage.server" href="#lib.webpage.serverpage.server">server</a></code></li>
 </ul>
 </li>

@@ -24,7 +24,7 @@ async def systemPage(request, response, args):
 		ExportFile(text=lang.export, path=b"/system/exportSyslog", filename=b"Syslog_%s.log"%Station.getHostname()),
 
 		Br(), Br(),Label(text=lang.reboot_device),Br(),
-		ButtonCmd(text=lang.reboot,path=b"/system/reboot",confirm=b"Confirm reboot", name=b"reboot"))
+		ButtonCmd(text=lang.reboot,path=b"/system/reboot",confirm=lang.confirm_reboot, name=b"reboot"))
 	await response.sendPage(page)
 
 @HttpServer.addRoute(b'/system/importConfig')

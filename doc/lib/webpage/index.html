@@ -30,25 +30,33 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; All web pages defined here &#34;&#34;&#34;
-from tools.useful import log, iscamera
-from webpage.passwordpage import *
-from webpage.mainpage import *
+from tools.useful               import log, iscamera
+from webpage.passwordpage       import *
+from webpage.mainpage           import *
 from webpage.changepasswordpage import *
-from webpage.infopage import *
-from webpage.pushoverpage import *
-from webpage.serverpage import *
-from webpage.wifipage import *
+from webpage.infopage           import *
+from webpage.pushoverpage       import *
+from webpage.serverpage         import *
+from webpage.wifipage           import *
+from webpage.regionpage         import *
 if iscamera():
-        from webpage.motionpage import *
-        from webpage.camerapage import *
-from webpage.presencepage import *
-from webpage.batterypage import *
-from webpage.systempage import *</code></pre>
+        from webpage.motionpage     import *
+        from webpage.streamingpage  import *
+        from webpage.camerapage     import *
+        from webpage.historicpage   import *
+from webpage.presencepage       import *
+from webpage.batterypage        import *
+from webpage.awakepage          import *
+from webpage.systempage         import *</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="lib.webpage.awakepage" href="awakepage.html">lib.webpage.awakepage</a></code></dt>
+<dd>
+<div class="desc"><p>Function define the web page to configure the awake</p></div>
+</dd>
 <dt><code class="name"><a title="lib.webpage.batterypage" href="batterypage.html">lib.webpage.batterypage</a></code></dt>
 <dd>
 <div class="desc"><p>Function define the web page to configure the battery level detection</p></div>
@@ -61,6 +69,10 @@ from webpage.systempage import *</code></pre>
 <dd>
 <div class="desc"><p>Function define the web page to change the user and password</p></div>
 </dd>
+<dt><code class="name"><a title="lib.webpage.historicpage" href="historicpage.html">lib.webpage.historicpage</a></code></dt>
+<dd>
+<div class="desc"><p>Function define the web page to view recent motion detection</p></div>
+</dd>
 <dt><code class="name"><a title="lib.webpage.infopage" href="infopage.html">lib.webpage.infopage</a></code></dt>
 <dd>
 <div class="desc"><p>Function define the web page to display all informations of the board</p></div>
@@ -71,7 +83,7 @@ from webpage.systempage import *</code></pre>
 </dd>
 <dt><code class="name"><a title="lib.webpage.motionpage" href="motionpage.html">lib.webpage.motionpage</a></code></dt>
 <dd>
-<div class="desc"><p>Function define the web page to configure the motion detection</p></div>
+<div class="desc"><p>Function define the web page to see the camera streaming</p></div>
 </dd>
 <dt><code class="name"><a title="lib.webpage.passwordpage" href="passwordpage.html">lib.webpage.passwordpage</a></code></dt>
 <dd>
@@ -85,9 +97,17 @@ from webpage.systempage import *</code></pre>
 <dd>
 <div class="desc"><p>Function define the web page to configure the pushover notifications</p></div>
 </dd>
+<dt><code class="name"><a title="lib.webpage.regionpage" href="regionpage.html">lib.webpage.regionpage</a></code></dt>
+<dd>
+<div class="desc"><p>Function define the date time and language</p></div>
+</dd>
 <dt><code class="name"><a title="lib.webpage.serverpage" href="serverpage.html">lib.webpage.serverpage</a></code></dt>
 <dd>
 <div class="desc"><p>Function define the web page to configure the start of servers</p></div>
+</dd>
+<dt><code class="name"><a title="lib.webpage.streamingpage" href="streamingpage.html">lib.webpage.streamingpage</a></code></dt>
+<dd>
+<div class="desc"><p>Function define the web page to see the camera streaming</p></div>
 </dd>
 <dt><code class="name"><a title="lib.webpage.systempage" href="systempage.html">lib.webpage.systempage</a></code></dt>
 <dd>
@@ -119,16 +139,20 @@ from webpage.systempage import *</code></pre>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="lib.webpage.awakepage" href="awakepage.html">lib.webpage.awakepage</a></code></li>
 <li><code><a title="lib.webpage.batterypage" href="batterypage.html">lib.webpage.batterypage</a></code></li>
 <li><code><a title="lib.webpage.camerapage" href="camerapage.html">lib.webpage.camerapage</a></code></li>
 <li><code><a title="lib.webpage.changepasswordpage" href="changepasswordpage.html">lib.webpage.changepasswordpage</a></code></li>
+<li><code><a title="lib.webpage.historicpage" href="historicpage.html">lib.webpage.historicpage</a></code></li>
 <li><code><a title="lib.webpage.infopage" href="infopage.html">lib.webpage.infopage</a></code></li>
 <li><code><a title="lib.webpage.mainpage" href="mainpage.html">lib.webpage.mainpage</a></code></li>
 <li><code><a title="lib.webpage.motionpage" href="motionpage.html">lib.webpage.motionpage</a></code></li>
 <li><code><a title="lib.webpage.passwordpage" href="passwordpage.html">lib.webpage.passwordpage</a></code></li>
 <li><code><a title="lib.webpage.presencepage" href="presencepage.html">lib.webpage.presencepage</a></code></li>
 <li><code><a title="lib.webpage.pushoverpage" href="pushoverpage.html">lib.webpage.pushoverpage</a></code></li>
+<li><code><a title="lib.webpage.regionpage" href="regionpage.html">lib.webpage.regionpage</a></code></li>
 <li><code><a title="lib.webpage.serverpage" href="serverpage.html">lib.webpage.serverpage</a></code></li>
+<li><code><a title="lib.webpage.streamingpage" href="streamingpage.html">lib.webpage.streamingpage</a></code></li>
 <li><code><a title="lib.webpage.systempage" href="systempage.html">lib.webpage.systempage</a></code></li>
 <li><code><a title="lib.webpage.wifipage" href="wifipage.html">lib.webpage.wifipage</a></code></li>
 </ul>

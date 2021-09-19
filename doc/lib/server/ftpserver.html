@@ -45,9 +45,7 @@ It takes a little while the first time you connect, but limits memory consumptio
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True.
 &#34;&#34;&#34;
 import uasyncio
-import sys
 from tools import useful
-from server import waitResume
 
 class Ftp:
         &#34;&#34;&#34; Ftp main class &#34;&#34;&#34;
@@ -57,19 +55,18 @@ class Ftp:
                 if preload:
                         self.preload()
                 else:
-                        print(&#34;Ftp waiting on %d&#34;%self.port)
+                        useful.syslog(&#34;Ftp waiting on %d&#34;%self.port)
 
         def preload(self):
                 &#34;&#34;&#34; Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) &#34;&#34;&#34;
                 if self.serverClass == None:
-                        print(&#34;Ftp load server&#34;)
+                        useful.syslog(&#34;Ftp load server&#34;)
                         from server.ftpservercore import FtpServerCore
                         self.serverClass = FtpServerCore
-                        print(&#34;Ftp ready on %d&#34;%self.port)
+                        useful.syslog(&#34;Ftp ready on %d&#34;%self.port)
         
         async def onConnection(self, reader, writer):
                 &#34;&#34;&#34; Asynchronous connection detected &#34;&#34;&#34;
-                await waitResume()
                 try:
                         # Preload ftp core class
                         self.preload()
@@ -84,7 +81,7 @@ class Ftp:
                         server.close()
                         del server
                 except Exception as err:
-                        print(useful.exception(err))
+                        useful.syslog(err)
 
 def start(loop=None, port=21, preload=False):
         &#34;&#34;&#34; Start the ftp server with asyncio loop.
@@ -189,19 +186,18 @@ preload : True = preload the server at the start, False = load the server at the
                 if preload:
                         self.preload()
                 else:
-                        print(&#34;Ftp waiting on %d&#34;%self.port)
+                        useful.syslog(&#34;Ftp waiting on %d&#34;%self.port)
 
         def preload(self):
                 &#34;&#34;&#34; Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) &#34;&#34;&#34;
                 if self.serverClass == None:
-                        print(&#34;Ftp load server&#34;)
+                        useful.syslog(&#34;Ftp load server&#34;)
                         from server.ftpservercore import FtpServerCore
                         self.serverClass = FtpServerCore
-                        print(&#34;Ftp ready on %d&#34;%self.port)
+                        useful.syslog(&#34;Ftp ready on %d&#34;%self.port)
         
         async def onConnection(self, reader, writer):
                 &#34;&#34;&#34; Asynchronous connection detected &#34;&#34;&#34;
-                await waitResume()
                 try:
                         # Preload ftp core class
                         self.preload()
@@ -216,7 +212,7 @@ preload : True = preload the server at the start, False = load the server at the
                         server.close()
                         del server
                 except Exception as err:
-                        print(useful.exception(err))</code></pre>
+                        useful.syslog(err)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -231,7 +227,6 @@ preload : True = preload the server at the start, False = load the server at the
 </summary>
 <pre><code class="python">async def onConnection(self, reader, writer):
         &#34;&#34;&#34; Asynchronous connection detected &#34;&#34;&#34;
-        await waitResume()
         try:
                 # Preload ftp core class
                 self.preload()
@@ -246,7 +241,7 @@ preload : True = preload the server at the start, False = load the server at the
                 server.close()
                 del server
         except Exception as err:
-                print(useful.exception(err))</code></pre>
+                useful.syslog(err)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.ftpserver.Ftp.preload"><code class="name flex">
@@ -261,10 +256,10 @@ preload : True = preload the server at the start, False = load the server at the
 <pre><code class="python">def preload(self):
         &#34;&#34;&#34; Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) &#34;&#34;&#34;
         if self.serverClass == None:
-                print(&#34;Ftp load server&#34;)
+                useful.syslog(&#34;Ftp load server&#34;)
                 from server.ftpservercore import FtpServerCore
                 self.serverClass = FtpServerCore
-                print(&#34;Ftp ready on %d&#34;%self.port)</code></pre>
+                useful.syslog(&#34;Ftp ready on %d&#34;%self.port)</code></pre>
 </details>
 </dd>
 </dl>

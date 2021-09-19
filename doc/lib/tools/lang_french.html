@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.tools.lang_french API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.tools.lang_french</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+
+# POUR DES RAISONS DE PERFORMANCE DU SERVEUR WEB, SEUL LES CHAINES BINAIRES SONT SUPPORTEES : b&#34;...&#34;
+menu_system                             =b&#34;   Syst\xC3\xA8me&#34;
+item_information                        =b&#34;   Information&#34;
+item_system                             =b&#34; Maintenance&#34;
+item_battery                            =b&#34;Batterie&#34;
+item_wakeup                             =b&#34;R\xC3\xA9veil&#34;
+
+menu_account                            =b&#34;   Compte&#34;
+item_region                             =b&#34;  R\xC3\xA9gion&#34;
+item_password                           =b&#34; Utilisateur&#34;
+item_logout                             =b&#34;D\xC3\xA9connexion&#34;
+
+menu_network                            =b&#34;  R\xC3\xA9seau&#34;
+item_wifi                               =b&#34;    Wifi&#34;
+item_access_point                       =b&#34;   Point d&#39;acc\xC3\xA8s&#34;
+
+menu_server                             =b&#34;  Serveur&#34;
+item_presence                           =b&#34;Pr\xC3\xA9sence&#34;
+item_server                             =b&#34;Configuration&#34;
+item_notification                       =b&#34;Notification&#34;
+
+menu_motion                             =b&#34; Motion&#34;
+item_motion                             =b&#34;   Configuration&#34;
+item_historic                           =b&#34; Historique&#34;
+item_motion_onoff                       =b&#34;Marche/Arr\xC3\xAAt&#34;
+
+menu_camera                             =b&#34; Cam\xC3\xA9ra&#34;
+item_camera                             =b&#34;Flux vid\xC3\xA9o&#34;
+item_onoff                              =b&#34;Marche/Arr\xC3\xAAt&#34;
+
+reboot_after_many                       =b&#34;Reboot apr\xC3\xA9s plusieurs plantages : \n%s&#34;
+login_success_detected                  =b&#34;Connexion r\xC3\xA9ussie d\xC3\xA9tect\xC3\xA9e&#34;
+login_failed_detected                   =b&#34;Connexion refus\xC3\xA9e d\xC3\xA9tect\xC3\xA9e&#34;
+presence_of_s                           =b&#34;Pr\xC3\xA9sence de %s&#34;
+empty_house                             =b&#34;Maison vide&#34;
+presence_detection_on                   =b&#34;D\xC3\xA9tection pr\xC3\xA9sence activ\xC3\xA9e&#34;
+presence_detection_off                  =b&#34;D\xC3\xA9tection pr\xC3\xA9sence d\xC3\xA9sactiv\xC3\xA9e&#34;
+failed_to_save                          =b&#34;\xC3\x89chec de l&#39;enregistrement sur la carte SD&#34;
+motion_detected                         =b&#34;Mouvement d\xC3\xA9tect\xC3\xA9 \xC3\xA0&#34;
+motion_detection_on                     =b&#34;D\xC3\xA9tection de mouvement activ\xC3\xA9e&#34;
+motion_detection_off                    =b&#34;D\xC3\xA9tection de mouvement d\xC3\xA9sactiv\xC3\xA9e&#34;
+motion_detection_suspended              =b&#34;D\xC3\xA9tection de mouvement suspendue&#34;
+motion_detection_configuration          =b&#34;Configuration d\xC3\xA9tection mouvement&#34;
+motion_onoff                            =b&#34;D\xC3\xA9tection de mouvement marche/arr\xC3\xAAt&#34;
+motion_on                               =b&#34;D\xC3\xA9marrer&#34;
+motion_off                              =b&#34;Arr\xC3\xAAter&#34;
+camera_onoff                            =b&#34;Cam\xC3\xA9ra marche/arr\xC3\xAAt&#34;
+camera_on                               =b&#34;D\xC3\xA9marrer&#34;
+camera_off                              =b&#34;Arr\xC3\xAAter&#34;
+activated                               =b&#34;Activer&#34;
+detects_a_movement                      =b&#34;D\xC3\xA9tecter un mouvement si le nombre de carr\xC3\xA9s diff\xC3\xA9rents entre deux images est \xC3\xA9gal ou plus grand que&#34;
+motion_detection_sensitivity            =b&#34;R\xC3\xA9gler la sensibilit\xC3\xA9 \xC3\xA0 la d\xC3\xA9tection de mouvement&#34;
+notification                            =b&#34;Notifier&#34;
+suspends_motion_detection               =b&#34;Suspendre la d\xC3\xA9tection de mouvement en pr\xC3\xA9sence d&#39;occupants&#34;
+pushover_on                             =b&#34;Notification pushover activ\xC3\xA9e&#34;
+pushover_off                            =b&#34;Notification pushover d\xC3\xA9sactiv\xC3\xA9e&#34;
+notification_configuration              =b&#34;Configuration notification&#34;
+pushover_user                           =b&#34;Utilisateur&#34;
+enter_pushover_user                     =b&#34;Entrer l&#39;utilisateur pushover&#34;
+pushover_token                          =b&#34;Jeton&#34;
+enter_pushover_token                    =b&#34;Entrer le token pushover&#34;
+see_pushover_website                    =b&#34;Voir le site web pushover&#34;
+historic_not_available                  =b&#34;Pas encore disponible, attendre 5 minutes&#34;
+last_motion_detections                  =b&#34;Derni\xC3\xA8res d\xC3\xA9tections de mouvement&#34;
+convert_ip_address                      =b&#34;Convertir les adresses ip en noms DNS&#34;
+smartphone_d                            =b&#34;Smartphone %d&#34;
+enter_ip_address_or_dns                 =b&#34;Entrer une adresse ip ou un nom DNS&#34;
+presence_detection_configuration        =b&#34;Configuration de la d\xC3\xA9tection de pr\xC3\xA9sence&#34;
+battery_management                      =b&#34;Gestion batterie&#34;
+gpio_wake_up                            =b&#34;Gestion du r\xC3\xA9veil&#34;
+gpio_used_wake_up                       =b&#34;GPIO utilis\xC3\xA9 pour r\xC3\xA9veiller le produit&#34;
+gpio_connected_to_pir                   =b&#34;GPIO connect\xC3\xA9 \xC3\xA0 un d\xC3\xA9tecteur infrarouge de mouvement (PIR)&#34;
+awake_duration_in                       =b&#34;Dur\xC3\xA9e d&#39;\xC3\xA9veil en secondes&#34;
+duration_awake                          =b&#34;Dur\xC3\xA9e en secondes dans lequel le produit va rester \xC3\xA9veill\xC3\xA9&#34;
+sleep_duration_in                       =b&#34;Dur\xC3\xA9e de sommeil en secondes&#34;
+duration_sleep                          =b&#34;Dur\xC3\xA9e en secondes dans lequel le produit va rest\xC3\xA9 endormi&#34;
+battery_monitoring                      =b&#34;Gestion du niveau batterie&#34;
+gpio_used_battery                       =b&#34;GPIO utilis\xC3\xA9 pour mesurer le niveau de la batterie&#34;
+gpio_connected_to_battery               =b&#34;GPIO connect\xC3\xA9 au niveau batterie&#34;
+gpio_value_for_full                     =b&#34;Valeur GPIO pour 100%&#34;
+gpio_adc_value_full                     =b&#34;Valeur ADC GPIO pour une batterie pleine (4.2V)&#34;
+gpio_value_for_empty                    =b&#34;Valeur GPIO pour 0%&#34;
+gpio_adc_value_empty                    =b&#34;Valeur ADC GPIO pour une batterie vide (3.6V)&#34;
+force_a_deep                            =b&#34;Forcer un sommeil profond apr\xC3\xA9s plusieurs resets dues \xC3\xA0 un d\xC3\xA9faut d&#39;alimentation&#34;
+ip_address                              =b&#34;Adresse IP&#34;
+enter_ip_address                        =b&#34;Entrer une adresse ip&#34;
+netmask                                 =b&#34;Masque de sous r\xC3\xA9seau&#34;
+enter_netmask                           =b&#34;Entrer le masque de sous r\xC3\xA9seau&#34;
+gateway                                 =b&#34;Passerelle&#34;
+enter_gateway                           =b&#34;Entrer la passerelle&#34;
+dns                                     =b&#34;DNS&#34;
+enter_dns                               =b&#34;Entrer le DNS&#34;
+wifi                                    =b&#34;Wifi&#34;
+wifi_default                            =b&#34;Wifi (d\xC3\xA9faut)&#34;
+save                                    =b&#34;Sauver&#34;
+lt                                      =b&#34;&amp;lt;-&#34;
+gt                                      =b&#34;-&amp;gt;&#34;
+forget                                  =b&#34;Oublier&#34;
+set_default                             =b&#34;Mettre par d\xC3\xA9faut&#34;
+modify                                  =b&#34;Modifier&#34;
+days                                    =b&#34;jours&#34;
+wifi_configuration                      =b&#34;Configuration wifi&#34;
+hostname                                =b&#34;Nom du produit&#34;
+hostname_not_available                  =b&#34;Nom du produit, disponible uniquement avec ip dynamique&#34;
+fallback_to_the                         =b&#34;D\xC3\xA9marrer automatiquement le point d&#39;acc\xC3\xA8s quand le wifi n&#39;est pas joignable&#34;
+ssid                                    =b&#34;SSID&#34;
+enter_ssid                              =b&#34;Entrer le SSID&#34;
+password                                =b&#34;Mot de passe&#34;
+user                                    =b&#34;Utilisateur&#34;
+enter_password                          =b&#34;Entrer le mot de passe&#34;
+dynamic_ip                              =b&#34;IP dynamique&#34;
+access_point_configuration              =b&#34;Configuration point d&#39;acc\xC3\xA8s&#34;
+authentication_mode                     =b&#34;Mode d&#39;authentification&#34;
+static_ip                               =b&#34;Adresse IP statique&#34;
+servers_configuration                   =b&#34;Configuration serveurs&#34;
+ftp                                     =b&#34;Ftp&#34;
+http                                    =b&#39;Http&#39;
+telnet                                  =b&#34;Telnet&#34;
+time_synchronization                    =b&#34;Synchronization horloge (NTP)&#34;
+wan_ip                                  =b&#34;Wan IP&#34;
+utc_offset                              =b&#34;D\xC3\xA9calage heure GMT&#34;
+offset_time_to                          =b&#34;D\xC3\xA9calage en heures par rapport \xC3\xA0 l&#39;heure GMT&#34;
+daylight_saving_time                    =b&#34;Heure d&#39;\xC3\xA9t\xC3\xA9&#34;
+taken_into_account                      =b&#34;Les valeurs seront pris en compte au prochain red\xC3\xA9marrage du produit&#34;
+notification_reboot_user                =b&#34;Notification (red\xC3\xA9marrage, modification utilisateur...)&#34;
+device_informations                     =b&#34;Informations produit&#34;
+unavailable                             =b&#34;Non disponible&#34;
+date                                    =b&#34;Date&#34;
+uptime                                  =b&#34;Dur\xC3\xA9e de fonctionnement&#34;
+platform                                =b&#34;Platforme&#34;
+frequency                               =b&#34;Fr\xC3\xA9quence&#34;
+build_date                              =b&#34;Date de g\xC3\xA9n\xC3\xA9ration du firmware&#34;
+memory_free                             =b&#34;M\xC3\xA9moire libre&#34;
+memory_allocated                        =b&#34;M\xC3\xA9moire allou\xC3\xA9e&#34;
+memory_total                            =b&#34;M\xC3\xA9moire totale&#34;
+flash_user                              =b&#34;Taille flash utilisateur&#34;
+flash_size                              =b&#34;Taille flash totale&#34;
+change_password                         =b&#34;Utilisateur et mot de passe&#34;
+logout                                  =b&#34;D\xC3\xA9connexion&#34;
+modify_password                         =b&#34;Modifier mot de passe&#34;
+region_configuration                    =b&#34;Configuration r\xC3\xA9gion&#34;
+language                                =b&#34;Langue&#34;
+system_management_s                     =b&#34;Gestion syst\xC3\xA8me %s&#34;
+configuration                           =b&#34;Configuration&#34;
+import_                                 =b&#34;Importer&#34;
+configuration_imported                  =b&#34;Configuration import\xC3\xA9e&#34;
+export                                  =b&#34;Exporter&#34;
+file_system                             =b&#34;Syst\xC3\xA8me de fichiers&#34;
+import_in_progress                      =b&#34;Import en cours, attendre quelques minutes le red\xC3\xA9marrage automatique&#34;
+confirm_reboot                          =b&#34;Confirmer red\xC3\xA9marrage&#34;
+syslog                                  =b&#34;Traces syst\xC3\xA8me&#34;
+reboot_device                           =b&#34;Red\xC3\xA9marrer le produit&#34;
+reboot                                  =b&#34;Red\xC3\xA9marrer&#34;
+password_changed                        =b&#34;Mot de passe chang\xC3\xA9&#34;
+passwords_not_equals                    =b&#34;Mot de passe diff\xC3\xA9rents&#34;
+wrong_user_or                           =b&#34;Mauvais utilisateur ou mot de passe&#34;
+create_user_name                        =b&#34;Cr\xC3\xA9er un nom d&#39;utilisateur&#34;
+enter_user_name                         =b&#34;Entrer un nom d&#39;utilisateur&#34;
+current_password                        =b&#34;Mot de passe actuel&#34;
+new_password                            =b&#34;Entrer le nouveau mot de passe&#34;
+repeat_new_password                     =b&#34;Rep\xC3\xA9ter le nouveau mot de passe&#34;
+login                                   =b&#34;Connecter&#34;
+camera                                  =b&#34;Cam\xC3\xA9ra&#34;
+resolution                              =b&#34;R\xC3\xA9solution&#34;
+quality                                 =b&#34;Qualit\xC3\xA9&#34;
+brightness                              =b&#34;Luminosit\xC3\xA9&#34;
+contrast                                =b&#34;Contraste&#34;
+saturation                              =b&#34;Saturation&#34;
+hmirror                                 =b&#34;Mirroir horizontal&#34;
+vflip                                   =b&#34;Rotation verticale&#34;</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.tools" href="index.html">lib.tools</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

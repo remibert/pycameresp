@@ -37,6 +37,9 @@ class User:
 	def check(user, password, log=True):
 		""" Check the user and password """
 		User.init()
+
+		user = user.lower()
+
 		if User.instance.user == b"":
 			return True
 		elif user == User.instance.user:
@@ -74,6 +77,7 @@ class User:
 	def change(user, currentPassword, newPassword, reNewPassword):
 		""" Change the user and password, check if the password is correct before to do this """
 		User.init()
+		user = user.lower()
 
 		if User.check(user, currentPassword):
 			if newPassword == reNewPassword:

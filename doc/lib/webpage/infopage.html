@@ -30,71 +30,65 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to display all informations of the board &#34;&#34;&#34;
-from server.httpserver import HttpServer
-from htmltemplate import *
-from webpage import *
-from tools import useful
-from tools.useful import log
 import sys
 import gc
+import machine
+import esp
+from server.httpserver import HttpServer
+from htmltemplate      import *
+from webpage.mainpage  import mainFrame
+from tools             import useful, lang, builddate
 
-try:
-        import machine
-        import esp
-except:
-        pass
 
-@HttpServer.addRoute(b&#39;/&#39;, title=b&#34;Information&#34;, index=10)
+@HttpServer.addRoute(b&#39;/&#39;, menu=lang.menu_system, item=lang.item_information)
 async def index(request, response, args):
         &#34;&#34;&#34; Function define the web page to display all informations of the board &#34;&#34;&#34;
         try:
+                # pylint: disable=no-member
                 allocated = gc.mem_alloc()
                 freed     = gc.mem_free()
                 memAlloc = useful.sizeToBytes(allocated)
                 memFree  = useful.sizeToBytes(freed)
                 memTotal = useful.sizeToBytes(allocated + freed)
         except:
-                memAlloc = b&#34;Unvailable&#34;
-                memFree  = b&#34;Unvailable&#34;
-                memTotal = b&#34;Unvailable&#34;
+                memAlloc = lang.unavailable
+                memFree  = lang.unavailable
+                memTotal = lang.unavailable
         try:
                 flashUser = useful.sizeToBytes(esp.flash_user_start())
                 flashSize = useful.sizeToBytes(esp.flash_size())
         except:
-                flashUser = b&#34;Unavailable&#34;
-                flashSize = b&#34;Unavailable&#34;
+                flashUser = lang.unavailable
+                flashSize = lang.unavailable
 
         try:
                 frequency = b&#34;%d&#34;%(machine.freq()//1000000)
         except:
-                frequency = b&#34;Unvailable&#34;
+                frequency = lang.unavailable
 
         try:
                 platform = useful.tobytes(sys.platform)
         except:
-                platform = b&#34;Unavailable&#34;
+                platform = lang.unavailable
+  
+        try:
+                uptime = useful.tobytes(useful.uptime(lang.days))
+        except:
+                uptime = b&#34;&#34;
 
         date = useful.dateToBytes()
 
-        page = mainPage(
-                content=[Br(),Container([\
-                                        Card([\
-                                                Form([\
-                                                        Br(),
-                                                        Title3(text=b&#34;Device informations&#34;),
-                                                        Br(),
-                                                        Edit(text=b&#34;Date&#34;,             value=date,      disabled=True),
-                                                        Edit(text=b&#34;Platform&#34;,         value=platform,  disabled=True),
-                                                        Edit(text=b&#34;Frequency&#34;,        value=frequency, disabled=True),
-                                                        Edit(text=b&#34;Memory free&#34;,      value=memFree,   disabled=True),
-                                                        Edit(text=b&#34;Memory allocated&#34;, value=memAlloc,  disabled=True),
-                                                        Edit(text=b&#34;Memory total&#34;,     value=memTotal,  disabled=True),
-                                                        Edit(text=b&#34;Flash user&#34;,       value=flashUser, disabled=True),
-                                                        Edit(text=b&#34;Flash size&#34;,       value=flashSize, disabled=True),
-                                                ])
-                                        ])
-                                ])
-                        ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
+        page = mainFrame(request, response, args, lang.device_informations,
+                Edit(text=lang.date,             value=date,           disabled=True),
+                Edit(text=lang.build_date,       value=builddate.date, disabled=True),
+                Edit(text=lang.uptime,           value=uptime,         disabled=True),
+                Edit(text=lang.platform,         value=platform,       disabled=True),
+                Edit(text=lang.frequency,        value=frequency,      disabled=True),
+                Edit(text=lang.memory_free,      value=memFree,        disabled=True),
+                Edit(text=lang.memory_allocated, value=memAlloc,       disabled=True),
+                Edit(text=lang.memory_total,     value=memTotal,       disabled=True),
+                Edit(text=lang.flash_user,       value=flashUser,      disabled=True),
+                Edit(text=lang.flash_size,       value=flashSize,      disabled=True))
 
         await response.sendPage(page)</code></pre>
 </details>
@@ -115,57 +109,55 @@ async def index(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/&#39;, title=b&#34;Information&#34;, index=10)
+<pre><code class="python">@HttpServer.addRoute(b&#39;/&#39;, menu=lang.menu_system, item=lang.item_information)
 async def index(request, response, args):
         &#34;&#34;&#34; Function define the web page to display all informations of the board &#34;&#34;&#34;
         try:
+                # pylint: disable=no-member
                 allocated = gc.mem_alloc()
                 freed     = gc.mem_free()
                 memAlloc = useful.sizeToBytes(allocated)
                 memFree  = useful.sizeToBytes(freed)
                 memTotal = useful.sizeToBytes(allocated + freed)
         except:
-                memAlloc = b&#34;Unvailable&#34;
-                memFree  = b&#34;Unvailable&#34;
-                memTotal = b&#34;Unvailable&#34;
+                memAlloc = lang.unavailable
+                memFree  = lang.unavailable
+                memTotal = lang.unavailable
         try:
                 flashUser = useful.sizeToBytes(esp.flash_user_start())
                 flashSize = useful.sizeToBytes(esp.flash_size())
         except:
-                flashUser = b&#34;Unavailable&#34;
-                flashSize = b&#34;Unavailable&#34;
+                flashUser = lang.unavailable
+                flashSize = lang.unavailable
 
         try:
                 frequency = b&#34;%d&#34;%(machine.freq()//1000000)
         except:
-                frequency = b&#34;Unvailable&#34;
+                frequency = lang.unavailable
 
         try:
                 platform = useful.tobytes(sys.platform)
         except:
-                platform = b&#34;Unavailable&#34;
+                platform = lang.unavailable
+  
+        try:
+                uptime = useful.tobytes(useful.uptime(lang.days))
+        except:
+                uptime = b&#34;&#34;
 
         date = useful.dateToBytes()
 
-        page = mainPage(
-                content=[Br(),Container([\
-                                        Card([\
-                                                Form([\
-                                                        Br(),
-                                                        Title3(text=b&#34;Device informations&#34;),
-                                                        Br(),
-                                                        Edit(text=b&#34;Date&#34;,             value=date,      disabled=True),
-                                                        Edit(text=b&#34;Platform&#34;,         value=platform,  disabled=True),
-                                                        Edit(text=b&#34;Frequency&#34;,        value=frequency, disabled=True),
-                                                        Edit(text=b&#34;Memory free&#34;,      value=memFree,   disabled=True),
-                                                        Edit(text=b&#34;Memory allocated&#34;, value=memAlloc,  disabled=True),
-                                                        Edit(text=b&#34;Memory total&#34;,     value=memTotal,  disabled=True),
-                                                        Edit(text=b&#34;Flash user&#34;,       value=flashUser, disabled=True),
-                                                        Edit(text=b&#34;Flash size&#34;,       value=flashSize, disabled=True),
-                                                ])
-                                        ])
-                                ])
-                        ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
+        page = mainFrame(request, response, args, lang.device_informations,
+                Edit(text=lang.date,             value=date,           disabled=True),
+                Edit(text=lang.build_date,       value=builddate.date, disabled=True),
+                Edit(text=lang.uptime,           value=uptime,         disabled=True),
+                Edit(text=lang.platform,         value=platform,       disabled=True),
+                Edit(text=lang.frequency,        value=frequency,      disabled=True),
+                Edit(text=lang.memory_free,      value=memFree,        disabled=True),
+                Edit(text=lang.memory_allocated, value=memAlloc,       disabled=True),
+                Edit(text=lang.memory_total,     value=memTotal,       disabled=True),
+                Edit(text=lang.flash_user,       value=flashUser,      disabled=True),
+                Edit(text=lang.flash_size,       value=flashSize,      disabled=True))
 
         await response.sendPage(page)</code></pre>
 </details>

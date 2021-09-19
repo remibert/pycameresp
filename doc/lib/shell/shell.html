@@ -46,7 +46,8 @@ The commands are :
 - ls
 : list file
 - date
-: get the system date
+: get the system date or synchronize with Ntp
+- setdate : set date and time
 - df
 : display free disk space
 - find
@@ -95,7 +96,8 @@ The commands are :
 - cp      : copy file
 - rm      : remove file
 - ls      : list file
-- date    : get the system date
+- date    : get the system date or synchronize with Ntp
+- setdate : set date and time
 - df      : display free disk space
 - find    : find a file
 - run     : run a script
@@ -116,19 +118,11 @@ The commands are :
 &#34;&#34;&#34;
 import sys
 sys.path.append(&#34;lib&#34;)
+import io
 import os
 import uos
-import server
-
-try:
-        from tools import useful
-except:
-        import useful
-
-try:
-        from tools import fnmatch
-except:
-        from fnmatch import fnmatch
+import machine
+from tools import useful, sdcard, tasking
 
 def cd(directory = &#34;/&#34;):
         &#34;&#34;&#34; Change directory &#34;&#34;&#34;
@@ -153,6 +147,8 @@ def mkdir(directory, recursive=False, quiet=False):
 def removedir(directory, force=False, quiet=False, simulate=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         try:
+                if useful.exists(directory+&#34;/.DS_Store&#34;):
+                        rmfile(directory+&#34;/.DS_Store&#34;, quiet, force, simulate)
                 if (useful.ismicropython() or force) and simulate == False:
                         uos.rmdir(directory)
                 if quiet == False:
@@ -173,7 +169,10 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
                                 break
                         directories.append(parts[0])
                         d = parts[0]
-
+                if &#34;/&#34; in directories:
+                        directories.remove(&#34;/&#34;)
+                if sdcard.SdCard.getMountpoint() in directories:
+                        directories.remove(sdcard.SdCard.getMountpoint())
                 for d in directories:
                         if useful.exists(d) and d != &#34;.&#34;:
                                 removedir(d, force=force, quiet=quiet, simulate=simulate)
@@ -285,40 +284,37 @@ class LsDisplayer:
                 self.path = path
                 self.showdir = showdir
 
+        def purgePath(self, path):
+                &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
+                if path != &#34;/&#34; and self.path != &#34;/&#34;:
+                        path = path.replace(self.path,&#34;&#34;)
+                if len(path) &gt;= 2 and path[:2] == &#34;./&#34;:
+                        path = path[2:]
+                path = path.lstrip(&#34;/&#34;)
+                return path
+
         def show(self, path):
                 &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
                 fileinfo = useful.fileinfo(path)
-                date = fileinfo[8]
+                date_ = fileinfo[8]
                 size = fileinfo[6]
 
                 # If directory
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
-                                if path != &#34;/&#34;:
-                                        path = path.replace(self.path,&#34;&#34;)
-                                path = path.lstrip(&#34;./&#34;)
                                 if self.long:
-                                        message = &#34;%s %s [%s]&#34;%(useful.dateToString(date),&#34; &#34;*7,path)
+                                        message = &#34;%s %s [%s]&#34;%(useful.dateToString(date_),&#34; &#34;*7,self.purgePath(path))
                                 else:
-                                        message = &#34;[%s]&#34;%path
-                                dir = True
+                                        message = &#34;[%s]&#34;%self.purgePath(path)
                                 self.count = printPart(message, self.width, self.height, self.count)
                 else:
                         if self.long:
                                 fileinfo = useful.fileinfo(path)
-                                date = fileinfo[8]
+                                date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                if path.find(self.path) == 0:
-                                        path = path[len(self.path):]
-                                path = path.lstrip(&#34;./&#34;)
-                                path = path.lstrip(&#34;/&#34;)
-                                message = &#34;%s %s %s&#34;%(useful.dateToString(date),useful.sizeToString(size),path)
+                                message = &#34;%s %s %s&#34;%(useful.dateToString(date_),useful.sizeToString(size),self.purgePath(path))
                         else:
-                                if path.find(self.path) == 0:
-                                        path = path[len(self.path):]
-                                path = path.lstrip(&#34;./&#34;)
-                                path = path.lstrip(&#34;/&#34;)
-                                message = path
+                                message = self.purgePath(path)
                         self.count = printPart(message, self.width, self.height, self.count)
 
 def ls(file=&#34;&#34;, recursive=False, long=False):
@@ -342,7 +338,7 @@ def find(file):
 
 def printPart(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
-        if count &gt;= height:
+        if count != None and count &gt;= height:
                 print(message,end=&#34;&#34;)
                 key = useful.getch()
                 count = 1
@@ -350,7 +346,10 @@ def printPart(message, width, height, count):
                         return None
                 print(&#34;\n&#34;, end=&#34;&#34;)
         else:
-                count += 1
+                if count == None:
+                        count = 1
+                else:
+                        count += 1
                 print(message)
         return count
 
@@ -403,12 +402,25 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 
 def ping(host):
         &#34;&#34;&#34; Ping host &#34;&#34;&#34;
-        server.ping(host, count=4, timeout=1)
+        from server.ping import ping as ping_
+        ping_(host, count=4, timeout=1)
+
+def ip2host(ipaddress):
+        &#34;&#34;&#34; Convert ip to hostname &#34;&#34;&#34;
+        import wifi
+        _, _, _, dns = wifi.Station.getInfo()
+        from server.dnsclient import resolveHostname
+        print(resolveHostname(dns, ipaddress))
+
+def host2ip(hostname):
+        &#34;&#34;&#34; Convert hostname to ip &#34;&#34;&#34;
+        import wifi
+        _, _, _, dns = wifi.Station.getInfo()
+        from server.dnsclient import resolveIpAddress
+        print(resolveIpAddress(dns, hostname))
 
 def mountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Mount command &#34;&#34;&#34;
-        import uos
-        import machine
         try:
                 uos.mount(machine.SDCard(), mountpoint)
                 print(&#34;Sd mounted on &#39;%s&#39;&#34;%mountpoint)
@@ -417,7 +429,6 @@ def mountsd(mountpoint=&#34;/sd&#34;):
 
 def umountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Umount command &#34;&#34;&#34;
-        import uos
         try:
                 uos.umount(mountpoint)
                 print(&#34;Sd umounted from &#39;%s&#39;&#34;%mountpoint)
@@ -426,25 +437,59 @@ def umountsd(mountpoint=&#34;/sd&#34;):
 
 def date(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
-        from server.timesetting import setdate
+        from server.timesetting import setDate
         if update:
                 if noDst:
                         dst = False
                 else:
                         dst = True
-                setdate(offsetUTC, dst)
+                setDate(offsetUTC, dst)
         print(useful.dateToString())
         del sys.modules[&#34;server.timesetting&#34;]
 
+def setdate(datetime=&#34;&#34;):
+        &#34;&#34;&#34; Set date and time &#34;&#34;&#34;
+        import re
+        date_=re.compile(&#34;[/: ]&#34;)
+        failed = False
+        try:
+                spls = date_.split(datetime)
+
+                lst = []
+                if len(spls) &gt; 1:
+                        for spl in spls:
+                                if len(spl) &gt; 0:
+                                        try:
+                                                r = spl.lstrip(&#34;0&#34;)
+                                                if len(r) == 0:
+                                                        lst.append(0)
+                                                else:
+                                                        lst.append(eval(r))
+                                        except:
+                                                failed = True
+                                                break
+                        if len(lst) == 6:
+                                # pylint: disable=unbalanced-tuple-unpacking
+                                year,month,day,hour,minute,second = lst
+                                machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
+                        else:
+                                failed = True
+                else:
+                        failed = True
+        except Exception as err:
+                failed = True
+                useful.syslog(err)
+
+        if failed == True:
+                print(&#39;Expected format &#34;YYYY/MM/DD hh:mm:ss&#34;&#39;)
+
 def reboot():
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
-        import machine
-        machine.reset()
+        useful.reboot(&#34;Reboot device&#34;)
 
-def deepsleep():
+def deepsleep(seconds=60):
         &#34;&#34;&#34; Deep sleep command &#34;&#34;&#34;
-        import machine 
-        machine.deepsleep()
+        machine.deepsleep(int(seconds)*1000)
 
 editClass = None
 def edit(file):
@@ -489,6 +534,10 @@ def gc():
         from gc import collect
         collect()
 
+def uptime():
+        &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
+        print(useful.uptime())
+
 def man(command):
         &#34;&#34;&#34; Man command &#34;&#34;&#34;
         print(manOne(command))
@@ -508,6 +557,7 @@ def manOne(commandName):
                 result = &#34;Unknown command &#39;%s&#39;&#34;%commandName
         return result
 
+# pylint: disable=redefined-builtin
 def help():
         &#34;&#34;&#34; Help command &#34;&#34;&#34;
         height, width = useful.getScreenSize()
@@ -520,35 +570,67 @@ def help():
                 for line in lines.split(&#34;\n&#34;):
                         count = printPart(line, width, height, count)
                         if count == None:
-                                return 
+                                return
 
+def eval_(string):
+        &#34;&#34;&#34; Evaluate content of string &#34;&#34;&#34;
+        print(eval(string))
+
+def exec_(string):
+        &#34;&#34;&#34; Execute content of string &#34;&#34;&#34;
+        exec(string)
+
+shell_exited = False
 def exit():
         &#34;&#34;&#34; Exit shell command &#34;&#34;&#34;
         global shell_exited
         shell_exited = True
 
+def dump_(filename):
+        &#34;&#34;&#34; Dump file content &#34;&#34;&#34;
+        height, width = useful.getScreenSize()
+        width = 16
+        offset = 0
+        file = open(filename, &#34;rb&#34;)
+        data = b&#39; &#39;
+        count = 1
+        while True:
+                line = io.BytesIO()
+                line.write(b&#39;%08X  &#39; % offset)
+                data = file.read(width)
+                if len(data) &lt;= 0:
+                        break
+                useful.dumpLine (data, line, width)
+                offset += width
+                count = printPart(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
+                if count == None:
+                        break
+
 def parseCommandLine(commandLine):
         &#34;&#34;&#34; Parse command line &#34;&#34;&#34;
         commands = []
         args = []
-        quote = False
+        quote = None
         arg = &#34;&#34;
         for char in commandLine:
                 if char == &#39;&#34;&#39; or char == &#34;&#39;&#34;:
-                        if quote:
-                                args.append(arg)
-                                arg = &#34;&#34;
-                                quote = False
+                        if quote is not None:
+                                if quote == char:
+                                        args.append(arg)
+                                        arg = &#34;&#34;
+                                        quote = None
+                                else:
+                                        arg += char
                         else:
-                                quote = True
+                                quote = char
                 elif char == &#34; &#34;:
-                        if quote == True:
+                        if quote is not None:
                                 arg += char
                         else:
                                 args.append(arg)
                                 arg = &#34;&#34;
                 elif char == &#34;;&#34;:
-                        if quote == True:
+                        if quote is not None:
                                 arg += char
                         else:
                                 if len(arg) &gt; 0:
@@ -566,6 +648,10 @@ def parseCommandLine(commandLine):
         for command in commands:
                 execCommand(command)
 
+def cls():
+        &#34;&#34;&#34; Clear screen &#34;&#34;&#34;
+        print(&#34;\x1B[2J\x1B[0;0f&#34;, end=&#34;&#34;)
+
 def getCommand(commandName):
         &#34;&#34;&#34; Get a command callback according to the command name &#34;&#34;&#34;
         try:
@@ -580,6 +666,7 @@ def getCommand(commandName):
                         if type(item) == type((0,)):
                                 commandFlags.append(item)
         except  Exception as err:
+                # pylint: disable=raise-missing-from
                 raise Exception(&#34;Command not found &#39;%s&#39;&#34;%commandName)
         return commandName, commandFunction, commandParams, commandFlags
 
@@ -620,34 +707,91 @@ def execCommand(args):
                                                                 flags[commandParams[paramsCount]] = arg
                                                                 paramsCount += 1
         except Exception as err:
-                # print(useful.exception(err))
+                # print(useful.syslog(err))
                 print(err)
                 return
         try:
                 if commandName.strip() != &#34;&#34;:
                         commandFunction(**flags)
         except TypeError as err:
-                print(&#34;Missing parameters for &#39;%s&#39;&#34;%commandName)
-                print(useful.exception(err))
+                useful.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%commandName)
         except KeyboardInterrupt:
-                print(&#34;Canceled&#34;)
+                print(&#34; [Canceled]&#34;)
         except Exception as err:
-                print(useful.exception(err))
+                useful.syslog(err)
+
+def temperature():
+        &#34;&#34;&#34; Get the internal temperature &#34;&#34;&#34;
+        celcius, farenheit = useful.temperature()
+        print(&#34;%.2f°C, %d°F&#34;%(celcius, farenheit))
 
 def shell():
         &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
         global shell_exited
-        server.suspend()
+
         shell_exited = False
         while shell_exited == False:
                 try:
+                        commandLine = &#34;&#34;
                         commandLine = input(&#34;%s=&gt; &#34;%os.getcwd())
+                        tasking.WatchDog.feed()
                 except EOFError:
                         print(&#34;&#34;)
                         break
-                parseCommandLine(commandLine)
-        server.resume()
+                except KeyboardInterrupt:
+                        print(&#34;Ctr-C detected, use &#39;exit&#39; to restart server or &#39;quit&#39; to get python prompt&#34;)
 
+                if commandLine.strip() == &#34;quit&#34;:
+                        raise KeyboardInterrupt()
+                parseCommandLine(commandLine)
+
+async def asyncShell():
+        &#34;&#34;&#34; Asynchronous shell &#34;&#34;&#34;
+        import uasyncio
+        from server.server import Server
+
+        if useful.ismicropython():
+                polling1 = 2
+                polling2 = 0.01
+        else:
+                polling1 = 0.1
+                polling2 = 0.5
+        while 1:
+                # If key pressed
+                if useful.kbhit(polling2):
+                        character = useful.getch()[0]
+
+                        # Check if character is correct to start shell
+                        if not ord(character) in [0,0xA]:
+                                # Ask to suspend server during shell
+                                Server.suspend()
+
+                                # Wait all server suspended
+                                await Server.waitAllSuspended()
+
+                                # Extend watch dog duration
+                                tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
+
+                                # Get the size of screen
+                                useful.refreshScreenSize()
+
+                                # Start shell
+                                print(&#34;&#34;)
+                                useful.syslog(&#34;&lt;&#34;*10+&#34; Enter shell &#34; +&#34;&gt;&#34;*10)
+                                shell()
+                                print(&#34;&#34;)
+                                useful.syslog(&#34;&lt;&#34;*10+&#34; Exit  shell &#34; +&#34;&gt;&#34;*10)
+
+                                # Restore default path
+                                uos.chdir(&#34;/&#34;)
+
+                                # Resume watch dog duration
+                                tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
+
+                                # Resume server
+                                Server.resume()
+                else:
+                        await uasyncio.sleep(polling1)
 
 
 shellCommands = \
@@ -655,6 +799,7 @@ shellCommands = \
         &#34;cd&#34;       :[cd       ,&#34;directory&#34;],
         &#34;pwd&#34;      :[pwd      ],
         &#34;cat&#34;      :[cat      ,&#34;file&#34;],
+        &#34;cls&#34;      :[cls      ],
         &#34;mkdir&#34;    :[mkdir    ,&#34;directory&#34;,            (&#34;-r&#34;,&#34;recursive&#34;,True)],
         &#34;mv&#34;       :[mv       ,&#34;source&#34;,&#34;destination&#34;],
         &#34;rmdir&#34;    :[rmdir    ,&#34;directory&#34;,            (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-f&#34;,&#34;force&#34;,True),(&#34;-q&#34;,&#34;quiet&#34;,True),(&#34;-s&#34;,&#34;simulate&#34;,True)],
@@ -662,6 +807,8 @@ shellCommands = \
         &#34;rm&#34;       :[rm       ,&#34;file&#34;,                 (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-f&#34;,&#34;force&#34;,True),(&#34;-s&#34;,&#34;simulate&#34;,True)],
         &#34;ls&#34;       :[ls       ,&#34;file&#34;,                 (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-l&#34;,&#34;long&#34;,True)],
         &#34;date&#34;     :[date     ,&#34;offsetUTC&#34; ,           (&#34;-u&#34;,&#34;update&#34;,True),   (&#34;-n&#34;,&#34;noDst&#34;,True)],
+        &#34;setdate&#34;  :[setdate  ,&#34;datetime&#34;],
+        &#34;uptime&#34;   :[uptime   ],
         &#34;find&#34;     :[find     ,&#34;file&#34;],
         &#34;run&#34;      :[useful.import_  ,&#34;filename&#34;],
         &#34;edit&#34;     :[edit     ,&#34;file&#34;],
@@ -670,15 +817,21 @@ shellCommands = \
         &#34;grep&#34;     :[grep     ,&#34;text&#34;,&#34;file&#34;,          (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-i&#34;,&#34;ignorecase&#34;,True),(&#34;-e&#34;,&#34;regexp&#34;,True)],
         &#34;mount&#34;    :[mountsd  ,&#34;mountpoint&#34;],
         &#34;umount&#34;   :[umountsd ,&#34;mountpoint&#34;],
+        &#34;temperature&#34;:[temperature],
         &#34;meminfo&#34;  :[useful.meminfo  ],
         &#34;flashinfo&#34;:[useful.flashinfo],
         &#34;sysinfo&#34;  :[useful.sysinfo  ],
-        &#34;deepsleep&#34;:[deepsleep],
+        &#34;deepsleep&#34;:[deepsleep,&#34;seconds&#34;],
         &#34;ping&#34;     :[ping      ,&#34;host&#34;],
         &#34;reboot&#34;   :[reboot   ],
         &#34;help&#34;     :[help     ],
         &#34;man&#34;      :[man      ,&#34;command&#34;],
         &#34;df&#34;       :[df       ,&#34;mountpoint&#34;],
+        &#34;ip2host&#34;  :[ip2host  ,&#34;ipaddress&#34;],
+        &#34;host2ip&#34;  :[host2ip  ,&#34;hostname&#34;],
+        &#34;eval&#34;     :[eval_    ,&#34;string&#34;],
+        &#34;exec&#34;     :[exec_    ,&#34;string&#34;],
+        &#34;dump&#34;     :[dump_    ,&#34;filename&#34;],
 }
 
 if __name__ == &#34;__main__&#34;:
@@ -692,6 +845,64 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="lib.shell.shell.asyncShell"><code class="name flex">
+<span>async def <span class="ident">asyncShell</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Asynchronous shell</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def asyncShell():
+        &#34;&#34;&#34; Asynchronous shell &#34;&#34;&#34;
+        import uasyncio
+        from server.server import Server
+
+        if useful.ismicropython():
+                polling1 = 2
+                polling2 = 0.01
+        else:
+                polling1 = 0.1
+                polling2 = 0.5
+        while 1:
+                # If key pressed
+                if useful.kbhit(polling2):
+                        character = useful.getch()[0]
+
+                        # Check if character is correct to start shell
+                        if not ord(character) in [0,0xA]:
+                                # Ask to suspend server during shell
+                                Server.suspend()
+
+                                # Wait all server suspended
+                                await Server.waitAllSuspended()
+
+                                # Extend watch dog duration
+                                tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
+
+                                # Get the size of screen
+                                useful.refreshScreenSize()
+
+                                # Start shell
+                                print(&#34;&#34;)
+                                useful.syslog(&#34;&lt;&#34;*10+&#34; Enter shell &#34; +&#34;&gt;&#34;*10)
+                                shell()
+                                print(&#34;&#34;)
+                                useful.syslog(&#34;&lt;&#34;*10+&#34; Exit  shell &#34; +&#34;&gt;&#34;*10)
+
+                                # Restore default path
+                                uos.chdir(&#34;/&#34;)
+
+                                # Resume watch dog duration
+                                tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
+
+                                # Resume server
+                                Server.resume()
+                else:
+                        await uasyncio.sleep(polling1)</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.shell.cat"><code class="name flex">
 <span>def <span class="ident">cat</span></span>(<span>file)</span>
 </code></dt>
@@ -735,6 +946,20 @@ if __name__ == &#34;__main__&#34;:
                 uos.chdir(directory)
         except:
                 print(&#34;No such file or directory &#39;%s&#39;&#34;%directory)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.cls"><code class="name flex">
+<span>def <span class="ident">cls</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Clear screen</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cls():
+        &#34;&#34;&#34; Clear screen &#34;&#34;&#34;
+        print(&#34;\x1B[2J\x1B[0;0f&#34;, end=&#34;&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.copyfile"><code class="name flex">
@@ -812,19 +1037,19 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def date(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
-        from server.timesetting import setdate
+        from server.timesetting import setDate
         if update:
                 if noDst:
                         dst = False
                 else:
                         dst = True
-                setdate(offsetUTC, dst)
+                setDate(offsetUTC, dst)
         print(useful.dateToString())
         del sys.modules[&#34;server.timesetting&#34;]</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.deepsleep"><code class="name flex">
-<span>def <span class="ident">deepsleep</span></span>(<span>)</span>
+<span>def <span class="ident">deepsleep</span></span>(<span>seconds=60)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Deep sleep command</p></div>
@@ -832,10 +1057,9 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def deepsleep():
+<pre><code class="python">def deepsleep(seconds=60):
         &#34;&#34;&#34; Deep sleep command &#34;&#34;&#34;
-        import machine 
-        machine.deepsleep()</code></pre>
+        machine.deepsleep(int(seconds)*1000)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.df"><code class="name flex">
@@ -854,6 +1078,36 @@ if __name__ == &#34;__main__&#34;:
         totalSize = status[1]*status[2]
         print(&#34;Filesystem     Free   Capacity   Used&#34;)
         print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, useful.sizeToString(freeSize,8),useful.sizeToString(totalSize,), totalSize/freeSize))</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.dump_"><code class="name flex">
+<span>def <span class="ident">dump_</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Dump file content</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dump_(filename):
+        &#34;&#34;&#34; Dump file content &#34;&#34;&#34;
+        height, width = useful.getScreenSize()
+        width = 16
+        offset = 0
+        file = open(filename, &#34;rb&#34;)
+        data = b&#39; &#39;
+        count = 1
+        while True:
+                line = io.BytesIO()
+                line.write(b&#39;%08X  &#39; % offset)
+                data = file.read(width)
+                if len(data) &lt;= 0:
+                        break
+                useful.dumpLine (data, line, width)
+                offset += width
+                count = printPart(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
+                if count == None:
+                        break</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.edit"><code class="name flex">
@@ -875,6 +1129,20 @@ if __name__ == &#34;__main__&#34;:
                         from editor import Editor
                 editClass = Editor
         editClass(file)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.eval_"><code class="name flex">
+<span>def <span class="ident">eval_</span></span>(<span>string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Evaluate content of string</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def eval_(string):
+        &#34;&#34;&#34; Evaluate content of string &#34;&#34;&#34;
+        print(eval(string))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.execCommand"><code class="name flex">
@@ -923,19 +1191,32 @@ if __name__ == &#34;__main__&#34;:
                                                                 flags[commandParams[paramsCount]] = arg
                                                                 paramsCount += 1
         except Exception as err:
-                # print(useful.exception(err))
+                # print(useful.syslog(err))
                 print(err)
                 return
         try:
                 if commandName.strip() != &#34;&#34;:
                         commandFunction(**flags)
         except TypeError as err:
-                print(&#34;Missing parameters for &#39;%s&#39;&#34;%commandName)
-                print(useful.exception(err))
+                useful.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%commandName)
         except KeyboardInterrupt:
-                print(&#34;Canceled&#34;)
+                print(&#34; [Canceled]&#34;)
         except Exception as err:
-                print(useful.exception(err))</code></pre>
+                useful.syslog(err)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.exec_"><code class="name flex">
+<span>def <span class="ident">exec_</span></span>(<span>string)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Execute content of string</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exec_(string):
+        &#34;&#34;&#34; Execute content of string &#34;&#34;&#34;
+        exec(string)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.exit"><code class="name flex">
@@ -1008,6 +1289,7 @@ if __name__ == &#34;__main__&#34;:
                         if type(item) == type((0,)):
                                 commandFlags.append(item)
         except  Exception as err:
+                # pylint: disable=raise-missing-from
                 raise Exception(&#34;Command not found &#39;%s&#39;&#34;%commandName)
         return commandName, commandFunction, commandParams, commandFlags</code></pre>
 </details>
@@ -1090,7 +1372,41 @@ if __name__ == &#34;__main__&#34;:
                 for line in lines.split(&#34;\n&#34;):
                         count = printPart(line, width, height, count)
                         if count == None:
-                                return </code></pre>
+                                return</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.host2ip"><code class="name flex">
+<span>def <span class="ident">host2ip</span></span>(<span>hostname)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert hostname to ip</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def host2ip(hostname):
+        &#34;&#34;&#34; Convert hostname to ip &#34;&#34;&#34;
+        import wifi
+        _, _, _, dns = wifi.Station.getInfo()
+        from server.dnsclient import resolveIpAddress
+        print(resolveIpAddress(dns, hostname))</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.ip2host"><code class="name flex">
+<span>def <span class="ident">ip2host</span></span>(<span>ipaddress)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert ip to hostname</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ip2host(ipaddress):
+        &#34;&#34;&#34; Convert ip to hostname &#34;&#34;&#34;
+        import wifi
+        _, _, _, dns = wifi.Station.getInfo()
+        from server.dnsclient import resolveHostname
+        print(resolveHostname(dns, ipaddress))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.ls"><code class="name flex">
@@ -1184,8 +1500,6 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def mountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Mount command &#34;&#34;&#34;
-        import uos
-        import machine
         try:
                 uos.mount(machine.SDCard(), mountpoint)
                 print(&#34;Sd mounted on &#39;%s&#39;&#34;%mountpoint)
@@ -1223,24 +1537,27 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Parse command line &#34;&#34;&#34;
         commands = []
         args = []
-        quote = False
+        quote = None
         arg = &#34;&#34;
         for char in commandLine:
                 if char == &#39;&#34;&#39; or char == &#34;&#39;&#34;:
-                        if quote:
-                                args.append(arg)
-                                arg = &#34;&#34;
-                                quote = False
+                        if quote is not None:
+                                if quote == char:
+                                        args.append(arg)
+                                        arg = &#34;&#34;
+                                        quote = None
+                                else:
+                                        arg += char
                         else:
-                                quote = True
+                                quote = char
                 elif char == &#34; &#34;:
-                        if quote == True:
+                        if quote is not None:
                                 arg += char
                         else:
                                 args.append(arg)
                                 arg = &#34;&#34;
                 elif char == &#34;;&#34;:
-                        if quote == True:
+                        if quote is not None:
                                 arg += char
                         else:
                                 if len(arg) &gt; 0:
@@ -1270,7 +1587,8 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def ping(host):
         &#34;&#34;&#34; Ping host &#34;&#34;&#34;
-        server.ping(host, count=4, timeout=1)</code></pre>
+        from server.ping import ping as ping_
+        ping_(host, count=4, timeout=1)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.printPart"><code class="name flex">
@@ -1284,7 +1602,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def printPart(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
-        if count &gt;= height:
+        if count != None and count &gt;= height:
                 print(message,end=&#34;&#34;)
                 key = useful.getch()
                 count = 1
@@ -1292,7 +1610,10 @@ if __name__ == &#34;__main__&#34;:
                         return None
                 print(&#34;\n&#34;, end=&#34;&#34;)
         else:
-                count += 1
+                if count == None:
+                        count = 1
+                else:
+                        count += 1
                 print(message)
         return count</code></pre>
 </details>
@@ -1322,8 +1643,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def reboot():
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
-        import machine
-        machine.reset()</code></pre>
+        useful.reboot(&#34;Reboot device&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.removedir"><code class="name flex">
@@ -1338,6 +1658,8 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def removedir(directory, force=False, quiet=False, simulate=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         try:
+                if useful.exists(directory+&#34;/.DS_Store&#34;):
+                        rmfile(directory+&#34;/.DS_Store&#34;, quiet, force, simulate)
                 if (useful.ismicropython() or force) and simulate == False:
                         uos.rmdir(directory)
                 if quiet == False:
@@ -1414,7 +1736,10 @@ if __name__ == &#34;__main__&#34;:
                                 break
                         directories.append(parts[0])
                         d = parts[0]
-
+                if &#34;/&#34; in directories:
+                        directories.remove(&#34;/&#34;)
+                if sdcard.SdCard.getMountpoint() in directories:
+                        directories.remove(sdcard.SdCard.getMountpoint())
                 for d in directories:
                         if useful.exists(d) and d != &#34;.&#34;:
                                 removedir(d, force=force, quiet=quiet, simulate=simulate)</code></pre>
@@ -1440,6 +1765,52 @@ if __name__ == &#34;__main__&#34;:
                 print(&#34;rm &#39;%s&#39; not removed&#34;%(filename))</code></pre>
 </details>
 </dd>
+<dt id="lib.shell.shell.setdate"><code class="name flex">
+<span>def <span class="ident">setdate</span></span>(<span>datetime='')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set date and time</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setdate(datetime=&#34;&#34;):
+        &#34;&#34;&#34; Set date and time &#34;&#34;&#34;
+        import re
+        date_=re.compile(&#34;[/: ]&#34;)
+        failed = False
+        try:
+                spls = date_.split(datetime)
+
+                lst = []
+                if len(spls) &gt; 1:
+                        for spl in spls:
+                                if len(spl) &gt; 0:
+                                        try:
+                                                r = spl.lstrip(&#34;0&#34;)
+                                                if len(r) == 0:
+                                                        lst.append(0)
+                                                else:
+                                                        lst.append(eval(r))
+                                        except:
+                                                failed = True
+                                                break
+                        if len(lst) == 6:
+                                # pylint: disable=unbalanced-tuple-unpacking
+                                year,month,day,hour,minute,second = lst
+                                machine.RTC().datetime((year, month, day, 0, hour, minute, second, 0))
+                        else:
+                                failed = True
+                else:
+                        failed = True
+        except Exception as err:
+                failed = True
+                useful.syslog(err)
+
+        if failed == True:
+                print(&#39;Expected format &#34;YYYY/MM/DD hh:mm:ss&#34;&#39;)</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.shell.shell"><code class="name flex">
 <span>def <span class="ident">shell</span></span>(<span>)</span>
 </code></dt>
@@ -1452,16 +1823,37 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def shell():
         &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
         global shell_exited
-        server.suspend()
+
         shell_exited = False
         while shell_exited == False:
                 try:
+                        commandLine = &#34;&#34;
                         commandLine = input(&#34;%s=&gt; &#34;%os.getcwd())
+                        tasking.WatchDog.feed()
                 except EOFError:
                         print(&#34;&#34;)
                         break
-                parseCommandLine(commandLine)
-        server.resume()</code></pre>
+                except KeyboardInterrupt:
+                        print(&#34;Ctr-C detected, use &#39;exit&#39; to restart server or &#39;quit&#39; to get python prompt&#34;)
+
+                if commandLine.strip() == &#34;quit&#34;:
+                        raise KeyboardInterrupt()
+                parseCommandLine(commandLine)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.temperature"><code class="name flex">
+<span>def <span class="ident">temperature</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the internal temperature</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def temperature():
+        &#34;&#34;&#34; Get the internal temperature &#34;&#34;&#34;
+        celcius, farenheit = useful.temperature()
+        print(&#34;%.2f°C, %d°F&#34;%(celcius, farenheit))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.umountsd"><code class="name flex">
@@ -1475,12 +1867,25 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def umountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Umount command &#34;&#34;&#34;
-        import uos
         try:
                 uos.umount(mountpoint)
                 print(&#34;Sd umounted from &#39;%s&#39;&#34;%mountpoint)
         except:
                 print(&#34;Cannot umount sd from &#39;%s&#39;&#34;%mountpoint)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.uptime"><code class="name flex">
+<span>def <span class="ident">uptime</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Tell how long the system has been running</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def uptime():
+        &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
+        print(useful.uptime())</code></pre>
 </details>
 </dd>
 </dl>
@@ -1509,44 +1914,60 @@ if __name__ == &#34;__main__&#34;:
                 self.path = path
                 self.showdir = showdir
 
+        def purgePath(self, path):
+                &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
+                if path != &#34;/&#34; and self.path != &#34;/&#34;:
+                        path = path.replace(self.path,&#34;&#34;)
+                if len(path) &gt;= 2 and path[:2] == &#34;./&#34;:
+                        path = path[2:]
+                path = path.lstrip(&#34;/&#34;)
+                return path
+
         def show(self, path):
                 &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
                 fileinfo = useful.fileinfo(path)
-                date = fileinfo[8]
+                date_ = fileinfo[8]
                 size = fileinfo[6]
 
                 # If directory
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
-                                if path != &#34;/&#34;:
-                                        path = path.replace(self.path,&#34;&#34;)
-                                path = path.lstrip(&#34;./&#34;)
                                 if self.long:
-                                        message = &#34;%s %s [%s]&#34;%(useful.dateToString(date),&#34; &#34;*7,path)
+                                        message = &#34;%s %s [%s]&#34;%(useful.dateToString(date_),&#34; &#34;*7,self.purgePath(path))
                                 else:
-                                        message = &#34;[%s]&#34;%path
-                                dir = True
+                                        message = &#34;[%s]&#34;%self.purgePath(path)
                                 self.count = printPart(message, self.width, self.height, self.count)
                 else:
                         if self.long:
                                 fileinfo = useful.fileinfo(path)
-                                date = fileinfo[8]
+                                date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                if path.find(self.path) == 0:
-                                        path = path[len(self.path):]
-                                path = path.lstrip(&#34;./&#34;)
-                                path = path.lstrip(&#34;/&#34;)
-                                message = &#34;%s %s %s&#34;%(useful.dateToString(date),useful.sizeToString(size),path)
+                                message = &#34;%s %s %s&#34;%(useful.dateToString(date_),useful.sizeToString(size),self.purgePath(path))
                         else:
-                                if path.find(self.path) == 0:
-                                        path = path[len(self.path):]
-                                path = path.lstrip(&#34;./&#34;)
-                                path = path.lstrip(&#34;/&#34;)
-                                message = path
+                                message = self.purgePath(path)
                         self.count = printPart(message, self.width, self.height, self.count)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
+<dt id="lib.shell.shell.LsDisplayer.purgePath"><code class="name flex">
+<span>def <span class="ident">purgePath</span></span>(<span>self, path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Purge the path for the display</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def purgePath(self, path):
+        &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
+        if path != &#34;/&#34; and self.path != &#34;/&#34;:
+                path = path.replace(self.path,&#34;&#34;)
+        if len(path) &gt;= 2 and path[:2] == &#34;./&#34;:
+                path = path[2:]
+        path = path.lstrip(&#34;/&#34;)
+        return path</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.shell.LsDisplayer.show"><code class="name flex">
 <span>def <span class="ident">show</span></span>(<span>self, path)</span>
 </code></dt>
@@ -1559,37 +1980,25 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def show(self, path):
         &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
         fileinfo = useful.fileinfo(path)
-        date = fileinfo[8]
+        date_ = fileinfo[8]
         size = fileinfo[6]
 
         # If directory
         if fileinfo[0] &amp; 0x4000 == 0x4000:
                 if self.showdir:
-                        if path != &#34;/&#34;:
-                                path = path.replace(self.path,&#34;&#34;)
-                        path = path.lstrip(&#34;./&#34;)
                         if self.long:
-                                message = &#34;%s %s [%s]&#34;%(useful.dateToString(date),&#34; &#34;*7,path)
+                                message = &#34;%s %s [%s]&#34;%(useful.dateToString(date_),&#34; &#34;*7,self.purgePath(path))
                         else:
-                                message = &#34;[%s]&#34;%path
-                        dir = True
+                                message = &#34;[%s]&#34;%self.purgePath(path)
                         self.count = printPart(message, self.width, self.height, self.count)
         else:
                 if self.long:
                         fileinfo = useful.fileinfo(path)
-                        date = fileinfo[8]
+                        date_ = fileinfo[8]
                         size = fileinfo[6]
-                        if path.find(self.path) == 0:
-                                path = path[len(self.path):]
-                        path = path.lstrip(&#34;./&#34;)
-                        path = path.lstrip(&#34;/&#34;)
-                        message = &#34;%s %s %s&#34;%(useful.dateToString(date),useful.sizeToString(size),path)
+                        message = &#34;%s %s %s&#34;%(useful.dateToString(date_),useful.sizeToString(size),self.purgePath(path))
                 else:
-                        if path.find(self.path) == 0:
-                                path = path[len(self.path):]
-                        path = path.lstrip(&#34;./&#34;)
-                        path = path.lstrip(&#34;/&#34;)
-                        message = path
+                        message = self.purgePath(path)
                 self.count = printPart(message, self.width, self.height, self.count)</code></pre>
 </details>
 </dd>
@@ -1611,21 +2020,28 @@ if __name__ == &#34;__main__&#34;:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
+<li><code><a title="lib.shell.shell.asyncShell" href="#lib.shell.shell.asyncShell">asyncShell</a></code></li>
 <li><code><a title="lib.shell.shell.cat" href="#lib.shell.shell.cat">cat</a></code></li>
 <li><code><a title="lib.shell.shell.cd" href="#lib.shell.shell.cd">cd</a></code></li>
+<li><code><a title="lib.shell.shell.cls" href="#lib.shell.shell.cls">cls</a></code></li>
 <li><code><a title="lib.shell.shell.copyfile" href="#lib.shell.shell.copyfile">copyfile</a></code></li>
 <li><code><a title="lib.shell.shell.cp" href="#lib.shell.shell.cp">cp</a></code></li>
 <li><code><a title="lib.shell.shell.date" href="#lib.shell.shell.date">date</a></code></li>
 <li><code><a title="lib.shell.shell.deepsleep" href="#lib.shell.shell.deepsleep">deepsleep</a></code></li>
 <li><code><a title="lib.shell.shell.df" href="#lib.shell.shell.df">df</a></code></li>
+<li><code><a title="lib.shell.shell.dump_" href="#lib.shell.shell.dump_">dump_</a></code></li>
 <li><code><a title="lib.shell.shell.edit" href="#lib.shell.shell.edit">edit</a></code></li>
+<li><code><a title="lib.shell.shell.eval_" href="#lib.shell.shell.eval_">eval_</a></code></li>
 <li><code><a title="lib.shell.shell.execCommand" href="#lib.shell.shell.execCommand">execCommand</a></code></li>
+<li><code><a title="lib.shell.shell.exec_" href="#lib.shell.shell.exec_">exec_</a></code></li>
 <li><code><a title="lib.shell.shell.exit" href="#lib.shell.shell.exit">exit</a></code></li>
 <li><code><a title="lib.shell.shell.find" href="#lib.shell.shell.find">find</a></code></li>
 <li><code><a title="lib.shell.shell.gc" href="#lib.shell.shell.gc">gc</a></code></li>
 <li><code><a title="lib.shell.shell.getCommand" href="#lib.shell.shell.getCommand">getCommand</a></code></li>
 <li><code><a title="lib.shell.shell.grep" href="#lib.shell.shell.grep">grep</a></code></li>
 <li><code><a title="lib.shell.shell.help" href="#lib.shell.shell.help">help</a></code></li>
+<li><code><a title="lib.shell.shell.host2ip" href="#lib.shell.shell.host2ip">host2ip</a></code></li>
+<li><code><a title="lib.shell.shell.ip2host" href="#lib.shell.shell.ip2host">ip2host</a></code></li>
 <li><code><a title="lib.shell.shell.ls" href="#lib.shell.shell.ls">ls</a></code></li>
 <li><code><a title="lib.shell.shell.man" href="#lib.shell.shell.man">man</a></code></li>
 <li><code><a title="lib.shell.shell.manOne" href="#lib.shell.shell.manOne">manOne</a></code></li>
@@ -1641,8 +2057,11 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.rm" href="#lib.shell.shell.rm">rm</a></code></li>
 <li><code><a title="lib.shell.shell.rmdir" href="#lib.shell.shell.rmdir">rmdir</a></code></li>
 <li><code><a title="lib.shell.shell.rmfile" href="#lib.shell.shell.rmfile">rmfile</a></code></li>
+<li><code><a title="lib.shell.shell.setdate" href="#lib.shell.shell.setdate">setdate</a></code></li>
 <li><code><a title="lib.shell.shell.shell" href="#lib.shell.shell.shell">shell</a></code></li>
+<li><code><a title="lib.shell.shell.temperature" href="#lib.shell.shell.temperature">temperature</a></code></li>
 <li><code><a title="lib.shell.shell.umountsd" href="#lib.shell.shell.umountsd">umountsd</a></code></li>
+<li><code><a title="lib.shell.shell.uptime" href="#lib.shell.shell.uptime">uptime</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -1650,6 +2069,7 @@ if __name__ == &#34;__main__&#34;:
 <li>
 <h4><code><a title="lib.shell.shell.LsDisplayer" href="#lib.shell.shell.LsDisplayer">LsDisplayer</a></code></h4>
 <ul class="">
+<li><code><a title="lib.shell.shell.LsDisplayer.purgePath" href="#lib.shell.shell.LsDisplayer.purgePath">purgePath</a></code></li>
 <li><code><a title="lib.shell.shell.LsDisplayer.show" href="#lib.shell.shell.LsDisplayer.show">show</a></code></li>
 </ul>
 </li>

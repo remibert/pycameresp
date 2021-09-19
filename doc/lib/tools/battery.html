@@ -30,42 +30,30 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Manage the battery &#34;&#34;&#34;
-from tools import jsonconfig
-from tools import useful
-try: import machine
-except: pass
-try:import esp32
-except:pass
+from tools import jsonconfig, useful
+import machine
 
-class BatteryConfig:
+class BatteryConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Battery configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.activated = False
-                self.levelGpio  = 12
-                self.wakeUpGpio = 13
-                self.fullBattery  = 191 # 4.2V mesured with resistor 100k + 47k
-                self.emptyBattery = 161 # 3.6V mesured with resistor 100k + 47k
+                jsonconfig.JsonConfig.__init__(self)
 
-        def save(self, file = None):
-                &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
-                result = jsonconfig.save(self, file)
-                return result
+                # Battery monitoring
+                self.activated = False # Monitoring status
+                self.levelGpio    = 12  # Monitoring GPIO
+                self.fullBattery  = 188 # 4.2V mesured with resistor 100k + 47k
+                self.emptyBattery = 158 # 3.6V mesured with resistor 100k + 47k
 
-        def update(self, params):
-                &#34;&#34;&#34; Update configuration &#34;&#34;&#34;
-                result = jsonconfig.update(self, params)
-                return result
-
-        def load(self, file = None):
-                &#34;&#34;&#34; Load configuration &#34;&#34;&#34;
-                result = jsonconfig.load(self, file)
-                return result
+                # Force deep sleep if to many successive brown out reset detected
+                self.brownoutDetection = True
+                self.brownoutCount = 0
 
 class Battery:
+        &#34;&#34;&#34; Manage the battery information &#34;&#34;&#34;
         config = None
         level = [-2]
-        &#34;&#34;&#34; Manage the battery information &#34;&#34;&#34;
+        refresh = [0]
 
         @staticmethod
         def init():
@@ -97,16 +85,21 @@ class Battery:
                                 val = 0
                                 for i in range(count):
                                         val += adc.read()
-                                level = Battery.calcPercent(val/count, Battery.config)
-                                if level &lt; 0.:
-                                        level = 0
-                                elif level &gt; 100.:
-                                        level = 100
+                                # If battery level pin not connected
+                                if val &lt; (Battery.config.emptyBattery * count) // 2:
+                                        level = -1
                                 else:
-                                        level = int(level)
-                                print(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
-                        except:
-                                print(&#34;Cannot read battery status&#34;)
+                                        # Compute battery level
+                                        level = Battery.calcPercent(val/count, Battery.config)
+                                        if level &lt; 0.:
+                                                level = 0
+                                        elif level &gt; 100.:
+                                                level = 100
+                                        else:
+                                                level = int(level)
+                                useful.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
+                        except Exception as err:
+                                useful.syslog(err,&#34;Cannot read battery status&#34;)
                         Battery.level[0] = level
                 return Battery.level[0]
 
@@ -130,85 +123,87 @@ class Battery:
                 return y
 
         @staticmethod
-        def setPinWakeUp():
-                &#34;&#34;&#34; Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector. &#34;&#34;&#34;
-                Battery.init()
-                try:
-                        wake1 = machine.Pin(Battery.config.wakeUpGpio, mode = machine.Pin.IN)
-                        esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                        return True
-                except Exception as err:
-                        print(&#34;Cannot set wake up&#34;)
-                return False
-
-        @staticmethod
-        def isPinWakeUp():
-                &#34;&#34;&#34; Indicates that the machine wake up on pin modification (Only available at start) &#34;&#34;&#34;
-                Battery.init()
-                try:
-                        pin = machine.Pin(Battery.config.wakeUpGpio, machine.Pin.IN, machine.Pin.PULL_UP)
-                        return True if pin.value() == 1 else False
-                except:
-                        return False
-
-        @staticmethod
         def protect():
-                &#34;&#34;&#34; Checks if the battery level is sufficient, and checks the number of brownout reset. 
-                        If the battery is too low, we enter indefinite deep sleep to protect the battery &#34;&#34;&#34;
-                # Can only be done once at boot before start the camera and sd card
-                batteryLevel = Battery.getLevel()
-
-                # If the battery is too low
-                if batteryLevel &gt; 5:
-                        batteryProtect = False
-                # If the battery level can&#39;t be read
-                elif batteryLevel &lt; 0:
-                        # If the reset is due to insufficient battery
-                        if machine.reset_cause() == machine.BROWNOUT_RESET:
-                                batteryProtect = True
-                        else:
-                                batteryProtect = False
-                else:
-                        batteryProtect = True
-
-                brownoutCounter = 0
-                # If the reset can probably due to insufficient battery
-                if machine.reset_cause() == machine.BROWNOUT_RESET:
-                        try:
-                                file = open(&#34;brownout.txt&#34;,&#34;r&#34;)
-                                val = file.read()
-                                brownoutCounter = int(val) + 1
-                        except Exception as err:
-                                print(useful.exception(err))
-
-                try:
-                        file = open(&#34;brownout.txt&#34;,&#34;w&#34;)
-                        file.write(&#34;%d&#34;%brownoutCounter)
-                        file.flush()
-                        file.close()
-                except Exception as err:
-                        print(useful.exception(err))
-
-                # If the battery level seems sufficient
-                if batteryProtect == False:
-                        # if the number of consecutive brownout resets is too high
-                        if brownoutCounter &gt; 10:
-                                # Battery too low, save the battery status
-                                file = open(&#34;battery.txt&#34;,&#34;w&#34;)
-                                file.write(&#34;Too many brownout reset with battery level at %d %%&#34;%batteryLevel)
-                                file.flush()
-                                file.close()
-                                batteryProtect = True
-
-                # Case the battery has not enough current and must be protected
-                if batteryProtect:
-                        print(&#34;#####################################&#34;)
-                        print(&#34;# DEEP SLEEP TO PROTECT THE BATTERY #&#34;)
-                        print(&#34;#####################################&#34;)
+                &#34;&#34;&#34; Protect the battery &#34;&#34;&#34;
+                Battery.init()
+                Battery.keepResetCause()
+                if Battery.manageLevel() or Battery.isTooManyBrownout():
+                        useful.syslog(&#34;Sleep infinite&#34;)
                         machine.deepsleep()
-                else:
-                        # Set the wake up on PIR detection
-                        Battery.setPinWakeUp()</code></pre>
+
+        @staticmethod
+        def manageLevel():
+                &#34;&#34;&#34; Checks if the battery level is sufficient. 
+                        If the battery is too low, we enter indefinite deep sleep to protect the battery &#34;&#34;&#34;
+                deepsleep = False
+                if Battery.config.activated:
+                        # Can only be done once at boot before start the camera and sd card
+                        batteryLevel = Battery.getLevel()
+
+                        # If the battery is too low
+                        if batteryLevel &gt; 5 or batteryLevel &lt; 0:
+                                batteryProtect = False
+                        else:
+                                batteryProtect = True
+
+                        # Case the battery has not enough current and must be protected
+                        if batteryProtect:
+                                deepsleep = True
+                                useful.syslog(&#34;Battery too low %d %%&#34;%batteryLevel)
+                return deepsleep
+
+        @staticmethod
+        def keepResetCause():
+                &#34;&#34;&#34; Keep reset cause &#34;&#34;&#34;
+                causes = {
+                        machine.PWRON_RESET     : &#34;Power on&#34;,
+                        machine.HARD_RESET      : &#34;Hard&#34;,
+                        machine.WDT_RESET       : &#34;Watch dog&#34;,
+                        machine.DEEPSLEEP_RESET : &#34;Deep sleep&#34;,
+                        machine.SOFT_RESET      : &#34;Soft&#34;,
+                        machine.BROWNOUT_RESET  : &#34;Brownout&#34;,
+                }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
+                useful.syslog(&#34; &#34;)
+                useful.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
+                useful.syslog(&#34;%s reset&#34;%causes)
+
+        @staticmethod
+        def isTooManyBrownout():
+                &#34;&#34;&#34; Checks the number of brownout reset &#34;&#34;&#34;
+                deepsleep = False
+
+                if Battery.config.isChanged():
+                        Battery.config.load()
+
+                if Battery.config.brownoutDetection:
+                        # If the reset can probably due to insufficient battery
+                        if machine.reset_cause() == machine.BROWNOUT_RESET:
+                                Battery.config.brownoutCount += 1
+                        else:
+                                Battery.config.brownoutCount = 0
+
+                        Battery.config.save()
+
+                        # if the number of consecutive brownout resets is too high
+                        if Battery.config.brownoutCount &gt; 32:
+                                # Battery too low, save the battery status
+                                useful.syslog(&#34;Too many successive brownout reset&#34;)
+                                deepsleep = True
+                return deepsleep
+
+        @staticmethod
+        def manage(resetBrownout=False):
+                &#34;&#34;&#34; Manage the battery level duration &#34;&#34;&#34;
+                if Battery.refresh[0] % 10 == 0:
+                        if Battery.config.isChanged():
+                                Battery.config.load()
+                Battery.refresh[0] += 1
+
+                if resetBrownout:
+                        if Battery.config.brownoutDetection:
+                                if Battery.config.brownoutCount &gt; 0:
+                                        Battery.config.brownoutCount = 0
+                                        Battery.config.save()</code></pre>
 </details>
 </section>
 <section>
@@ -224,15 +219,16 @@ class Battery:
 <span>class <span class="ident">Battery</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Manage the battery information</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Battery:
+        &#34;&#34;&#34; Manage the battery information &#34;&#34;&#34;
         config = None
         level = [-2]
-        &#34;&#34;&#34; Manage the battery information &#34;&#34;&#34;
+        refresh = [0]
 
         @staticmethod
         def init():
@@ -264,16 +260,21 @@ class Battery:
                                 val = 0
                                 for i in range(count):
                                         val += adc.read()
-                                level = Battery.calcPercent(val/count, Battery.config)
-                                if level &lt; 0.:
-                                        level = 0
-                                elif level &gt; 100.:
-                                        level = 100
+                                # If battery level pin not connected
+                                if val &lt; (Battery.config.emptyBattery * count) // 2:
+                                        level = -1
                                 else:
-                                        level = int(level)
-                                print(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
-                        except:
-                                print(&#34;Cannot read battery status&#34;)
+                                        # Compute battery level
+                                        level = Battery.calcPercent(val/count, Battery.config)
+                                        if level &lt; 0.:
+                                                level = 0
+                                        elif level &gt; 100.:
+                                                level = 100
+                                        else:
+                                                level = int(level)
+                                useful.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
+                        except Exception as err:
+                                useful.syslog(err,&#34;Cannot read battery status&#34;)
                         Battery.level[0] = level
                 return Battery.level[0]
 
@@ -297,85 +298,87 @@ class Battery:
                 return y
 
         @staticmethod
-        def setPinWakeUp():
-                &#34;&#34;&#34; Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector. &#34;&#34;&#34;
-                Battery.init()
-                try:
-                        wake1 = machine.Pin(Battery.config.wakeUpGpio, mode = machine.Pin.IN)
-                        esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                        return True
-                except Exception as err:
-                        print(&#34;Cannot set wake up&#34;)
-                return False
-
-        @staticmethod
-        def isPinWakeUp():
-                &#34;&#34;&#34; Indicates that the machine wake up on pin modification (Only available at start) &#34;&#34;&#34;
-                Battery.init()
-                try:
-                        pin = machine.Pin(Battery.config.wakeUpGpio, machine.Pin.IN, machine.Pin.PULL_UP)
-                        return True if pin.value() == 1 else False
-                except:
-                        return False
-
-        @staticmethod
         def protect():
-                &#34;&#34;&#34; Checks if the battery level is sufficient, and checks the number of brownout reset. 
-                        If the battery is too low, we enter indefinite deep sleep to protect the battery &#34;&#34;&#34;
-                # Can only be done once at boot before start the camera and sd card
-                batteryLevel = Battery.getLevel()
-
-                # If the battery is too low
-                if batteryLevel &gt; 5:
-                        batteryProtect = False
-                # If the battery level can&#39;t be read
-                elif batteryLevel &lt; 0:
-                        # If the reset is due to insufficient battery
-                        if machine.reset_cause() == machine.BROWNOUT_RESET:
-                                batteryProtect = True
-                        else:
-                                batteryProtect = False
-                else:
-                        batteryProtect = True
-
-                brownoutCounter = 0
-                # If the reset can probably due to insufficient battery
-                if machine.reset_cause() == machine.BROWNOUT_RESET:
-                        try:
-                                file = open(&#34;brownout.txt&#34;,&#34;r&#34;)
-                                val = file.read()
-                                brownoutCounter = int(val) + 1
-                        except Exception as err:
-                                print(useful.exception(err))
-
-                try:
-                        file = open(&#34;brownout.txt&#34;,&#34;w&#34;)
-                        file.write(&#34;%d&#34;%brownoutCounter)
-                        file.flush()
-                        file.close()
-                except Exception as err:
-                        print(useful.exception(err))
-
-                # If the battery level seems sufficient
-                if batteryProtect == False:
-                        # if the number of consecutive brownout resets is too high
-                        if brownoutCounter &gt; 10:
-                                # Battery too low, save the battery status
-                                file = open(&#34;battery.txt&#34;,&#34;w&#34;)
-                                file.write(&#34;Too many brownout reset with battery level at %d %%&#34;%batteryLevel)
-                                file.flush()
-                                file.close()
-                                batteryProtect = True
-
-                # Case the battery has not enough current and must be protected
-                if batteryProtect:
-                        print(&#34;#####################################&#34;)
-                        print(&#34;# DEEP SLEEP TO PROTECT THE BATTERY #&#34;)
-                        print(&#34;#####################################&#34;)
+                &#34;&#34;&#34; Protect the battery &#34;&#34;&#34;
+                Battery.init()
+                Battery.keepResetCause()
+                if Battery.manageLevel() or Battery.isTooManyBrownout():
+                        useful.syslog(&#34;Sleep infinite&#34;)
                         machine.deepsleep()
-                else:
-                        # Set the wake up on PIR detection
-                        Battery.setPinWakeUp()</code></pre>
+
+        @staticmethod
+        def manageLevel():
+                &#34;&#34;&#34; Checks if the battery level is sufficient. 
+                        If the battery is too low, we enter indefinite deep sleep to protect the battery &#34;&#34;&#34;
+                deepsleep = False
+                if Battery.config.activated:
+                        # Can only be done once at boot before start the camera and sd card
+                        batteryLevel = Battery.getLevel()
+
+                        # If the battery is too low
+                        if batteryLevel &gt; 5 or batteryLevel &lt; 0:
+                                batteryProtect = False
+                        else:
+                                batteryProtect = True
+
+                        # Case the battery has not enough current and must be protected
+                        if batteryProtect:
+                                deepsleep = True
+                                useful.syslog(&#34;Battery too low %d %%&#34;%batteryLevel)
+                return deepsleep
+
+        @staticmethod
+        def keepResetCause():
+                &#34;&#34;&#34; Keep reset cause &#34;&#34;&#34;
+                causes = {
+                        machine.PWRON_RESET     : &#34;Power on&#34;,
+                        machine.HARD_RESET      : &#34;Hard&#34;,
+                        machine.WDT_RESET       : &#34;Watch dog&#34;,
+                        machine.DEEPSLEEP_RESET : &#34;Deep sleep&#34;,
+                        machine.SOFT_RESET      : &#34;Soft&#34;,
+                        machine.BROWNOUT_RESET  : &#34;Brownout&#34;,
+                }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
+                useful.syslog(&#34; &#34;)
+                useful.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
+                useful.syslog(&#34;%s reset&#34;%causes)
+
+        @staticmethod
+        def isTooManyBrownout():
+                &#34;&#34;&#34; Checks the number of brownout reset &#34;&#34;&#34;
+                deepsleep = False
+
+                if Battery.config.isChanged():
+                        Battery.config.load()
+
+                if Battery.config.brownoutDetection:
+                        # If the reset can probably due to insufficient battery
+                        if machine.reset_cause() == machine.BROWNOUT_RESET:
+                                Battery.config.brownoutCount += 1
+                        else:
+                                Battery.config.brownoutCount = 0
+
+                        Battery.config.save()
+
+                        # if the number of consecutive brownout resets is too high
+                        if Battery.config.brownoutCount &gt; 32:
+                                # Battery too low, save the battery status
+                                useful.syslog(&#34;Too many successive brownout reset&#34;)
+                                deepsleep = True
+                return deepsleep
+
+        @staticmethod
+        def manage(resetBrownout=False):
+                &#34;&#34;&#34; Manage the battery level duration &#34;&#34;&#34;
+                if Battery.refresh[0] % 10 == 0:
+                        if Battery.config.isChanged():
+                                Battery.config.load()
+                Battery.refresh[0] += 1
+
+                if resetBrownout:
+                        if Battery.config.brownoutDetection:
+                                if Battery.config.brownoutCount &gt; 0:
+                                        Battery.config.brownoutCount = 0
+                                        Battery.config.save()</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -385,7 +388,11 @@ class Battery:
 </dd>
 <dt id="lib.tools.battery.Battery.level"><code class="name">var <span class="ident">level</span></code></dt>
 <dd>
-<div class="desc"><p>Manage the battery information</p></div>
+<div class="desc"></div>
+</dd>
+<dt id="lib.tools.battery.Battery.refresh"><code class="name">var <span class="ident">refresh</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Static methods</h3>
@@ -445,16 +452,21 @@ def getLevel():
                         val = 0
                         for i in range(count):
                                 val += adc.read()
-                        level = Battery.calcPercent(val/count, Battery.config)
-                        if level &lt; 0.:
-                                level = 0
-                        elif level &gt; 100.:
-                                level = 100
+                        # If battery level pin not connected
+                        if val &lt; (Battery.config.emptyBattery * count) // 2:
+                                level = -1
                         else:
-                                level = int(level)
-                        print(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
-                except:
-                        print(&#34;Cannot read battery status&#34;)
+                                # Compute battery level
+                                level = Battery.calcPercent(val/count, Battery.config)
+                                if level &lt; 0.:
+                                        level = 0
+                                elif level &gt; 100.:
+                                        level = 100
+                                else:
+                                        level = int(level)
+                        useful.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
+                except Exception as err:
+                        useful.syslog(err,&#34;Cannot read battery status&#34;)
                 Battery.level[0] = level
         return Battery.level[0]</code></pre>
 </details>
@@ -496,116 +508,138 @@ def isActivated():
         return Battery.config.activated</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.battery.Battery.isPinWakeUp"><code class="name flex">
-<span>def <span class="ident">isPinWakeUp</span></span>(<span>)</span>
+<dt id="lib.tools.battery.Battery.isTooManyBrownout"><code class="name flex">
+<span>def <span class="ident">isTooManyBrownout</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Indicates that the machine wake up on pin modification (Only available at start)</p></div>
+<div class="desc"><p>Checks the number of brownout reset</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isPinWakeUp():
-        &#34;&#34;&#34; Indicates that the machine wake up on pin modification (Only available at start) &#34;&#34;&#34;
-        Battery.init()
-        try:
-                pin = machine.Pin(Battery.config.wakeUpGpio, machine.Pin.IN, machine.Pin.PULL_UP)
-                return True if pin.value() == 1 else False
-        except:
-                return False</code></pre>
+def isTooManyBrownout():
+        &#34;&#34;&#34; Checks the number of brownout reset &#34;&#34;&#34;
+        deepsleep = False
+
+        if Battery.config.isChanged():
+                Battery.config.load()
+
+        if Battery.config.brownoutDetection:
+                # If the reset can probably due to insufficient battery
+                if machine.reset_cause() == machine.BROWNOUT_RESET:
+                        Battery.config.brownoutCount += 1
+                else:
+                        Battery.config.brownoutCount = 0
+
+                Battery.config.save()
+
+                # if the number of consecutive brownout resets is too high
+                if Battery.config.brownoutCount &gt; 32:
+                        # Battery too low, save the battery status
+                        useful.syslog(&#34;Too many successive brownout reset&#34;)
+                        deepsleep = True
+        return deepsleep</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.battery.Battery.protect"><code class="name flex">
-<span>def <span class="ident">protect</span></span>(<span>)</span>
+<dt id="lib.tools.battery.Battery.keepResetCause"><code class="name flex">
+<span>def <span class="ident">keepResetCause</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Checks if the battery level is sufficient, and checks the number of brownout reset.
+<div class="desc"><p>Keep reset cause</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def keepResetCause():
+        &#34;&#34;&#34; Keep reset cause &#34;&#34;&#34;
+        causes = {
+                machine.PWRON_RESET     : &#34;Power on&#34;,
+                machine.HARD_RESET      : &#34;Hard&#34;,
+                machine.WDT_RESET       : &#34;Watch dog&#34;,
+                machine.DEEPSLEEP_RESET : &#34;Deep sleep&#34;,
+                machine.SOFT_RESET      : &#34;Soft&#34;,
+                machine.BROWNOUT_RESET  : &#34;Brownout&#34;,
+        }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
+        useful.syslog(&#34; &#34;)
+        useful.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
+        useful.syslog(&#34;%s reset&#34;%causes)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.battery.Battery.manage"><code class="name flex">
+<span>def <span class="ident">manage</span></span>(<span>resetBrownout=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage the battery level duration</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def manage(resetBrownout=False):
+        &#34;&#34;&#34; Manage the battery level duration &#34;&#34;&#34;
+        if Battery.refresh[0] % 10 == 0:
+                if Battery.config.isChanged():
+                        Battery.config.load()
+        Battery.refresh[0] += 1
+
+        if resetBrownout:
+                if Battery.config.brownoutDetection:
+                        if Battery.config.brownoutCount &gt; 0:
+                                Battery.config.brownoutCount = 0
+                                Battery.config.save()</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.battery.Battery.manageLevel"><code class="name flex">
+<span>def <span class="ident">manageLevel</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks if the battery level is sufficient.
 If the battery is too low, we enter indefinite deep sleep to protect the battery</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def protect():
-        &#34;&#34;&#34; Checks if the battery level is sufficient, and checks the number of brownout reset. 
+def manageLevel():
+        &#34;&#34;&#34; Checks if the battery level is sufficient. 
                 If the battery is too low, we enter indefinite deep sleep to protect the battery &#34;&#34;&#34;
-        # Can only be done once at boot before start the camera and sd card
-        batteryLevel = Battery.getLevel()
+        deepsleep = False
+        if Battery.config.activated:
+                # Can only be done once at boot before start the camera and sd card
+                batteryLevel = Battery.getLevel()
 
-        # If the battery is too low
-        if batteryLevel &gt; 5:
-                batteryProtect = False
-        # If the battery level can&#39;t be read
-        elif batteryLevel &lt; 0:
-                # If the reset is due to insufficient battery
-                if machine.reset_cause() == machine.BROWNOUT_RESET:
-                        batteryProtect = True
-                else:
+                # If the battery is too low
+                if batteryLevel &gt; 5 or batteryLevel &lt; 0:
                         batteryProtect = False
-        else:
-                batteryProtect = True
-
-        brownoutCounter = 0
-        # If the reset can probably due to insufficient battery
-        if machine.reset_cause() == machine.BROWNOUT_RESET:
-                try:
-                        file = open(&#34;brownout.txt&#34;,&#34;r&#34;)
-                        val = file.read()
-                        brownoutCounter = int(val) + 1
-                except Exception as err:
-                        print(useful.exception(err))
-
-        try:
-                file = open(&#34;brownout.txt&#34;,&#34;w&#34;)
-                file.write(&#34;%d&#34;%brownoutCounter)
-                file.flush()
-                file.close()
-        except Exception as err:
-                print(useful.exception(err))
-
-        # If the battery level seems sufficient
-        if batteryProtect == False:
-                # if the number of consecutive brownout resets is too high
-                if brownoutCounter &gt; 10:
-                        # Battery too low, save the battery status
-                        file = open(&#34;battery.txt&#34;,&#34;w&#34;)
-                        file.write(&#34;Too many brownout reset with battery level at %d %%&#34;%batteryLevel)
-                        file.flush()
-                        file.close()
+                else:
                         batteryProtect = True
 
-        # Case the battery has not enough current and must be protected
-        if batteryProtect:
-                print(&#34;#####################################&#34;)
-                print(&#34;# DEEP SLEEP TO PROTECT THE BATTERY #&#34;)
-                print(&#34;#####################################&#34;)
-                machine.deepsleep()
-        else:
-                # Set the wake up on PIR detection
-                Battery.setPinWakeUp()</code></pre>
+                # Case the battery has not enough current and must be protected
+                if batteryProtect:
+                        deepsleep = True
+                        useful.syslog(&#34;Battery too low %d %%&#34;%batteryLevel)
+        return deepsleep</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.battery.Battery.setPinWakeUp"><code class="name flex">
-<span>def <span class="ident">setPinWakeUp</span></span>(<span>)</span>
+<dt id="lib.tools.battery.Battery.protect"><code class="name flex">
+<span>def <span class="ident">protect</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector.</p></div>
+<div class="desc"><p>Protect the battery</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def setPinWakeUp():
-        &#34;&#34;&#34; Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector. &#34;&#34;&#34;
+def protect():
+        &#34;&#34;&#34; Protect the battery &#34;&#34;&#34;
         Battery.init()
-        try:
-                wake1 = machine.Pin(Battery.config.wakeUpGpio, mode = machine.Pin.IN)
-                esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                return True
-        except Exception as err:
-                print(&#34;Cannot set wake up&#34;)
-        return False</code></pre>
+        Battery.keepResetCause()
+        if Battery.manageLevel() or Battery.isTooManyBrownout():
+                useful.syslog(&#34;Sleep infinite&#34;)
+                machine.deepsleep()</code></pre>
 </details>
 </dd>
 </dl>
@@ -620,79 +654,26 @@ def setPinWakeUp():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BatteryConfig:
+<pre><code class="python">class BatteryConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Battery configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.activated = False
-                self.levelGpio  = 12
-                self.wakeUpGpio = 13
-                self.fullBattery  = 191 # 4.2V mesured with resistor 100k + 47k
-                self.emptyBattery = 161 # 3.6V mesured with resistor 100k + 47k
+                jsonconfig.JsonConfig.__init__(self)
 
-        def save(self, file = None):
-                &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
-                result = jsonconfig.save(self, file)
-                return result
+                # Battery monitoring
+                self.activated = False # Monitoring status
+                self.levelGpio    = 12  # Monitoring GPIO
+                self.fullBattery  = 188 # 4.2V mesured with resistor 100k + 47k
+                self.emptyBattery = 158 # 3.6V mesured with resistor 100k + 47k
 
-        def update(self, params):
-                &#34;&#34;&#34; Update configuration &#34;&#34;&#34;
-                result = jsonconfig.update(self, params)
-                return result
-
-        def load(self, file = None):
-                &#34;&#34;&#34; Load configuration &#34;&#34;&#34;
-                result = jsonconfig.load(self, file)
-                return result</code></pre>
+                # Force deep sleep if to many successive brown out reset detected
+                self.brownoutDetection = True
+                self.brownoutCount = 0</code></pre>
 </details>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.tools.battery.BatteryConfig.load"><code class="name flex">
-<span>def <span class="ident">load</span></span>(<span>self, file=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Load configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def load(self, file = None):
-        &#34;&#34;&#34; Load configuration &#34;&#34;&#34;
-        result = jsonconfig.load(self, file)
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.tools.battery.BatteryConfig.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, file=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Save configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def save(self, file = None):
-        &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
-        result = jsonconfig.save(self, file)
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.tools.battery.BatteryConfig.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>self, params)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Update configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def update(self, params):
-        &#34;&#34;&#34; Update configuration &#34;&#34;&#34;
-        result = jsonconfig.update(self, params)
-        return result</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>tools.jsonconfig.JsonConfig</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -718,19 +699,17 @@ def setPinWakeUp():
 <li><code><a title="lib.tools.battery.Battery.getLevel" href="#lib.tools.battery.Battery.getLevel">getLevel</a></code></li>
 <li><code><a title="lib.tools.battery.Battery.init" href="#lib.tools.battery.Battery.init">init</a></code></li>
 <li><code><a title="lib.tools.battery.Battery.isActivated" href="#lib.tools.battery.Battery.isActivated">isActivated</a></code></li>
-<li><code><a title="lib.tools.battery.Battery.isPinWakeUp" href="#lib.tools.battery.Battery.isPinWakeUp">isPinWakeUp</a></code></li>
+<li><code><a title="lib.tools.battery.Battery.isTooManyBrownout" href="#lib.tools.battery.Battery.isTooManyBrownout">isTooManyBrownout</a></code></li>
+<li><code><a title="lib.tools.battery.Battery.keepResetCause" href="#lib.tools.battery.Battery.keepResetCause">keepResetCause</a></code></li>
 <li><code><a title="lib.tools.battery.Battery.level" href="#lib.tools.battery.Battery.level">level</a></code></li>
+<li><code><a title="lib.tools.battery.Battery.manage" href="#lib.tools.battery.Battery.manage">manage</a></code></li>
+<li><code><a title="lib.tools.battery.Battery.manageLevel" href="#lib.tools.battery.Battery.manageLevel">manageLevel</a></code></li>
 <li><code><a title="lib.tools.battery.Battery.protect" href="#lib.tools.battery.Battery.protect">protect</a></code></li>
-<li><code><a title="lib.tools.battery.Battery.setPinWakeUp" href="#lib.tools.battery.Battery.setPinWakeUp">setPinWakeUp</a></code></li>
+<li><code><a title="lib.tools.battery.Battery.refresh" href="#lib.tools.battery.Battery.refresh">refresh</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="lib.tools.battery.BatteryConfig" href="#lib.tools.battery.BatteryConfig">BatteryConfig</a></code></h4>
-<ul class="">
-<li><code><a title="lib.tools.battery.BatteryConfig.load" href="#lib.tools.battery.BatteryConfig.load">load</a></code></li>
-<li><code><a title="lib.tools.battery.BatteryConfig.save" href="#lib.tools.battery.BatteryConfig.save">save</a></code></li>
-<li><code><a title="lib.tools.battery.BatteryConfig.update" href="#lib.tools.battery.BatteryConfig.update">update</a></code></li>
-</ul>
 </li>
 </ul>
 </li>

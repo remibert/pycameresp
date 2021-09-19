@@ -36,3 +36,10 @@ class Sessions:
 		for sessionId, expiration in Sessions.sessions:
 			if expiration < currentTime:
 				Sessions.sessions.remove((sessionId, expiration))
+
+	@staticmethod
+	def remove(sessionIdRemove):
+		""" Remove session """
+		for sessionId, expiration in Sessions.sessions:
+			if sessionId == sessionIdRemove:
+				Sessions.sessions.remove((sessionId, expiration))

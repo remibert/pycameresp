@@ -31,49 +31,25 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to configure the battery level detection &#34;&#34;&#34;
 from server.httpserver import HttpServer
-from htmltemplate import *
-from webpage import *
-from tools import BatteryConfig
+from htmltemplate      import *
+from webpage.mainpage  import mainFrame, manageDefaultButton
+from tools             import BatteryConfig,lang
 
-@HttpServer.addRoute(b&#39;/battery&#39;, title=b&#34;Battery&#34;, index=19)
+@HttpServer.addRoute(b&#39;/battery&#39;, menu=lang.menu_system, item=lang.item_battery)
 async def battery(request, response, args):
         &#34;&#34;&#34; Battery configuration web page &#34;&#34;&#34;
         config = BatteryConfig()
-        if config.load() == False:
-                config.save()
-        action = request.params.get(b&#34;modify&#34;,b&#34;none&#34;)
-        if   action == b&#34;none&#34;  : disabled = True
-        elif action == b&#34;modify&#34;: disabled = False 
-        elif action == b&#34;save&#34;  : 
-                disabled = True
-                del request.params[b&#34;modify&#34;]
-                config.update(request.params)
-                config.save()
+        disabled, action, submit = manageDefaultButton(request, config)
 
-        if disabled:
-                submit = Submit(text=b&#34;Modify&#34;)
-                value = b&#39;modify&#39;
-        else:
-                submit = AlertWarning(text=b&#34;On battery servers and motion detection disabled&#34;), Submit(text=b&#34;Save&#34;)
-                value = b&#39;save&#39;
-
-        page = mainPage(
-                content=[Br(), Container([\
-                                        Card([\
-                                                Form([\
-                                                        Br(), Title3(text=b&#34;Battery management&#34;), Br(),
-                                                        Switch(text=b&#34;Activated&#34;,              name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                                                        Edit(text=b&#34;Battery level GPIO&#34;,       name=b&#34;levelGpio&#34;,            placeholder=b&#34;GPIO connect to battery level&#34;,                   pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.levelGpio,    disabled=disabled),
-                                                        Edit(text=b&#34;Battery 100% GPIO value&#34;,  name=b&#34;fullBattery&#34;,          placeholder=b&#34;GPIO ADC value for battery full (4.2V)&#34;,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.fullBattery,  disabled=disabled),
-                                                        Edit(text=b&#34;Battery 0% GPIO value&#34;,    name=b&#34;emptyBattery&#34;,         placeholder=b&#34;GPIO ADC value for battery empty (3.6V)&#34;,         pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.emptyBattery, disabled=disabled),
-                                                        Edit(text=b&#34;Wakeup GPIO&#34;,              name=b&#34;wakeUpGpio&#34;,           placeholder=b&#34;GPIO connected to passive infrared sensor (PIR)&#34;, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wakeUpGpio,   disabled=disabled),
-                                                        Input (text=b&#34;modify&#34; ,                name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),
-                                                        submit,
-                                                ]),
-                                        ])
-                                ])
-                        ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
-
+        page = mainFrame(request, response, args, lang.battery_management, 
+                Switch(text=lang.activated,          name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
+                Edit(text=lang.gpio_used_battery,    name=b&#34;levelGpio&#34;,            placeholder=lang.gpio_connected_to_battery,    pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.levelGpio,    disabled=disabled),
+                Edit(text=lang.gpio_value_for_full,  name=b&#34;fullBattery&#34;,          placeholder=lang.gpio_adc_value_full,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.fullBattery,  disabled=disabled),
+                Edit(text=lang.gpio_value_for_empty, name=b&#34;emptyBattery&#34;,         placeholder=lang.gpio_adc_value_empty,         pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.emptyBattery, disabled=disabled),
+                Br(),
+                Switch(text=lang.force_a_deep,       name=b&#34;brownoutDetection&#34;, checked=config.brownoutDetection, disabled=disabled), 
+                Br(),
+                submit)
         await response.sendPage(page)</code></pre>
 </details>
 </section>
@@ -93,45 +69,21 @@ async def battery(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/battery&#39;, title=b&#34;Battery&#34;, index=19)
+<pre><code class="python">@HttpServer.addRoute(b&#39;/battery&#39;, menu=lang.menu_system, item=lang.item_battery)
 async def battery(request, response, args):
         &#34;&#34;&#34; Battery configuration web page &#34;&#34;&#34;
         config = BatteryConfig()
-        if config.load() == False:
-                config.save()
-        action = request.params.get(b&#34;modify&#34;,b&#34;none&#34;)
-        if   action == b&#34;none&#34;  : disabled = True
-        elif action == b&#34;modify&#34;: disabled = False 
-        elif action == b&#34;save&#34;  : 
-                disabled = True
-                del request.params[b&#34;modify&#34;]
-                config.update(request.params)
-                config.save()
+        disabled, action, submit = manageDefaultButton(request, config)
 
-        if disabled:
-                submit = Submit(text=b&#34;Modify&#34;)
-                value = b&#39;modify&#39;
-        else:
-                submit = AlertWarning(text=b&#34;On battery servers and motion detection disabled&#34;), Submit(text=b&#34;Save&#34;)
-                value = b&#39;save&#39;
-
-        page = mainPage(
-                content=[Br(), Container([\
-                                        Card([\
-                                                Form([\
-                                                        Br(), Title3(text=b&#34;Battery management&#34;), Br(),
-                                                        Switch(text=b&#34;Activated&#34;,              name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                                                        Edit(text=b&#34;Battery level GPIO&#34;,       name=b&#34;levelGpio&#34;,            placeholder=b&#34;GPIO connect to battery level&#34;,                   pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.levelGpio,    disabled=disabled),
-                                                        Edit(text=b&#34;Battery 100% GPIO value&#34;,  name=b&#34;fullBattery&#34;,          placeholder=b&#34;GPIO ADC value for battery full (4.2V)&#34;,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.fullBattery,  disabled=disabled),
-                                                        Edit(text=b&#34;Battery 0% GPIO value&#34;,    name=b&#34;emptyBattery&#34;,         placeholder=b&#34;GPIO ADC value for battery empty (3.6V)&#34;,         pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.emptyBattery, disabled=disabled),
-                                                        Edit(text=b&#34;Wakeup GPIO&#34;,              name=b&#34;wakeUpGpio&#34;,           placeholder=b&#34;GPIO connected to passive infrared sensor (PIR)&#34;, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wakeUpGpio,   disabled=disabled),
-                                                        Input (text=b&#34;modify&#34; ,                name=b&#34;modify&#34;, type=b&#34;hidden&#34;, value=value),
-                                                        submit,
-                                                ]),
-                                        ])
-                                ])
-                        ], title=args[&#34;title&#34;], active=args[&#34;index&#34;], request=request, response=response)
-
+        page = mainFrame(request, response, args, lang.battery_management, 
+                Switch(text=lang.activated,          name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
+                Edit(text=lang.gpio_used_battery,    name=b&#34;levelGpio&#34;,            placeholder=lang.gpio_connected_to_battery,    pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.levelGpio,    disabled=disabled),
+                Edit(text=lang.gpio_value_for_full,  name=b&#34;fullBattery&#34;,          placeholder=lang.gpio_adc_value_full,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.fullBattery,  disabled=disabled),
+                Edit(text=lang.gpio_value_for_empty, name=b&#34;emptyBattery&#34;,         placeholder=lang.gpio_adc_value_empty,         pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.emptyBattery, disabled=disabled),
+                Br(),
+                Switch(text=lang.force_a_deep,       name=b&#34;brownoutDetection&#34;, checked=config.brownoutDetection, disabled=disabled), 
+                Br(),
+                submit)
         await response.sendPage(page)</code></pre>
 </details>
 </dd>

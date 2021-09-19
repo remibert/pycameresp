@@ -29,18 +29,10 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 # DNS spec https://www2.cs.duke.edu/courses/fall16/compsci356/DNS/DNS-primer.pdf
-try:
-        # Micropython import
-        import ustruct
-        import urandom
-        import usocket
-        import ure
-except:
-        # Python3 import
-        import socket as usocket
-        import struct as ustruct
-        import random as urandom
-        import re     as ure
+import struct
+import random
+import socket
+import re
 
 class DnsHeader:
         &#34;&#34;&#34; DNS packet header &#34;&#34;&#34;
@@ -56,12 +48,12 @@ class DnsHeader:
 
         def serialize(self):
                 &#34;&#34;&#34; Serialize DNS header &#34;&#34;&#34;
-                return ustruct.pack(self.format, self.ident, self.flag, self.query, self.answer, self.autority, self.additional)
+                return struct.pack(self.format, self.ident, self.flag, self.query, self.answer, self.autority, self.additional)
 
         def unserialize(self, data):
                 &#34;&#34;&#34; Unserialize DNS header &#34;&#34;&#34;
-                length = ustruct.calcsize(self.format)
-                self.ident, self.flag, self.query, self.answer, self.autority, self.additional = ustruct.unpack(self.format, data[:length])
+                length = struct.calcsize(self.format)
+                self.ident, self.flag, self.query, self.answer, self.autority, self.additional = struct.unpack(self.format, data[:length])
                 return length
 
         def __repr__(self):
@@ -73,7 +65,7 @@ class DnsHeader:
                 result = &#34;&#34;
                 spl = splitIpAddress(name)
                 # Ip address detected
-                if len(spl) &gt; 1:
+                if type(spl) == type([]):
                         spl.reverse()
                         spl.append(&#34;in-addr&#34;)
                         spl.append(&#34;arpa&#34;)
@@ -118,15 +110,15 @@ class DnsQuery:
                 &#34;&#34;&#34; Serialize query &#34;&#34;&#34;
                 data = self.header.serialize()
                 data += self.header.encodeName(self.name).encode(&#34;latin-1&#34;) 
-                data += ustruct.pack(self.format,self.qtype, self.qclass)
+                data += struct.pack(self.format,self.qtype, self.qclass)
                 return data
                 
         def unserialize(self, data):
                 &#34;&#34;&#34; Unserialize query &#34;&#34;&#34;
                 pos = self.header.unserialize(data)
                 self.name, pos = self.header.decodeName(data, pos)
-                self.qtype, self.qclass = ustruct.unpack(self.format, data[pos:pos+ustruct.calcsize(self.format)])
-                return pos + ustruct.calcsize(self.format)
+                self.qtype, self.qclass = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
+                return pos + struct.calcsize(self.format)
 
         def __repr__(self):
                 &#34;&#34;&#34; Display result &#34;&#34;&#34;
@@ -148,8 +140,8 @@ class DnsAnswer:
         def unserialize(self, data):
                 &#34;&#34;&#34; Unserialize answer &#34;&#34;&#34;
                 pos = self.query.unserialize(data)
-                self.info, self.atype, self.aclass, self.timetolive, self.length = ustruct.unpack(self.format, data[pos:pos+ustruct.calcsize(self.format)])
-                pos += ustruct.calcsize(self.format)
+                self.info, self.atype, self.aclass, self.timetolive, self.length = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
+                pos += struct.calcsize(self.format)
                 if self.atype == 1:
                         self.name = &#34;%d.%d.%d.%d&#34;%(data[pos],data[pos+1],data[pos+2],data[pos+3])
                 else:
@@ -162,7 +154,7 @@ class DnsAnswer:
 def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
         &#34;&#34;&#34; Exchange DNS query and wait answer &#34;&#34;&#34;
         result = None
-        sock = usocket.socket(usocket.AF_INET, usocket.SOCK_DGRAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
                 sock.settimeout(1)
                 query = dnsQuery.serialize()
@@ -179,13 +171,13 @@ def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
         
         return result
 
-def getHostname(dnsIp, ipAddress):
-        &#34;&#34;&#34; Get hostname with ip address &#34;&#34;&#34;
-        return dnsExchange(dnsIp, DnsQuery(DnsHeader(urandom.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())
+def resolveHostname(dnsIp, ipAddress):
+        &#34;&#34;&#34; Resolve hostname with ip address &#34;&#34;&#34;
+        return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())
 
-def getIpAddress(dnsIp, hostname):
-        &#34;&#34;&#34; Get ip address with hostname &#34;&#34;&#34;
-        return dnsExchange(dnsIp, DnsQuery(DnsHeader(urandom.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())
+def resolveIpAddress(dnsIp, hostname):
+        &#34;&#34;&#34; Resolve ip address with hostname &#34;&#34;&#34;
+        return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())
 
 def splitIpAddress(url):
         &#34;&#34;&#34; Split ip address &#34;&#34;&#34;
@@ -197,17 +189,17 @@ def splitIpAddress(url):
 def isIpAddress(url):
         &#34;&#34;&#34; Indicates if the url is an ip address &#34;&#34;&#34;
         # Ip address detected
-        if ure.match(&#34;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)&#34;, url):
+        if re.match(r&#34;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)&#34;, url):
                 return True
         return False
 
 def main():
         ROUTER = &#34;192.168.1.1&#34;
-        print(getHostname(ROUTER,&#34;192.168.1.51&#34;))
-        print(getHostname(ROUTER,ROUTER))
-        print(getIpAddress(ROUTER,&#34;iphoneremi.home&#34;))
-        ip   = getIpAddress(ROUTER,&#34;google.fr&#34;)
-        ip2  = getIpAddress(ROUTER, getHostname (ROUTER,ip))
+        print(resolveHostname(ROUTER,&#34;192.168.1.51&#34;))
+        print(resolveHostname(ROUTER,ROUTER))
+        print(resolveIpAddress(ROUTER,&#34;iphoneremi.home&#34;))
+        ip   = resolveIpAddress(ROUTER,&#34;google.fr&#34;)
+        ip2  = resolveIpAddress(ROUTER, resolveHostname (ROUTER,ip))
         if ip != ip2: raise Exception(&#34;Test failed&#34;)
 
 
@@ -233,7 +225,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <pre><code class="python">def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
         &#34;&#34;&#34; Exchange DNS query and wait answer &#34;&#34;&#34;
         result = None
-        sock = usocket.socket(usocket.AF_INET, usocket.SOCK_DGRAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
                 sock.settimeout(1)
                 query = dnsQuery.serialize()
@@ -251,34 +243,6 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         return result</code></pre>
 </details>
 </dd>
-<dt id="lib.server.dnsclient.getHostname"><code class="name flex">
-<span>def <span class="ident">getHostname</span></span>(<span>dnsIp, ipAddress)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get hostname with ip address</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def getHostname(dnsIp, ipAddress):
-        &#34;&#34;&#34; Get hostname with ip address &#34;&#34;&#34;
-        return dnsExchange(dnsIp, DnsQuery(DnsHeader(urandom.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())</code></pre>
-</details>
-</dd>
-<dt id="lib.server.dnsclient.getIpAddress"><code class="name flex">
-<span>def <span class="ident">getIpAddress</span></span>(<span>dnsIp, hostname)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get ip address with hostname</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def getIpAddress(dnsIp, hostname):
-        &#34;&#34;&#34; Get ip address with hostname &#34;&#34;&#34;
-        return dnsExchange(dnsIp, DnsQuery(DnsHeader(urandom.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())</code></pre>
-</details>
-</dd>
 <dt id="lib.server.dnsclient.isIpAddress"><code class="name flex">
 <span>def <span class="ident">isIpAddress</span></span>(<span>url)</span>
 </code></dt>
@@ -291,7 +255,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <pre><code class="python">def isIpAddress(url):
         &#34;&#34;&#34; Indicates if the url is an ip address &#34;&#34;&#34;
         # Ip address detected
-        if ure.match(&#34;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)&#34;, url):
+        if re.match(r&#34;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)&#34;, url):
                 return True
         return False</code></pre>
 </details>
@@ -307,12 +271,40 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 </summary>
 <pre><code class="python">def main():
         ROUTER = &#34;192.168.1.1&#34;
-        print(getHostname(ROUTER,&#34;192.168.1.51&#34;))
-        print(getHostname(ROUTER,ROUTER))
-        print(getIpAddress(ROUTER,&#34;iphoneremi.home&#34;))
-        ip   = getIpAddress(ROUTER,&#34;google.fr&#34;)
-        ip2  = getIpAddress(ROUTER, getHostname (ROUTER,ip))
+        print(resolveHostname(ROUTER,&#34;192.168.1.51&#34;))
+        print(resolveHostname(ROUTER,ROUTER))
+        print(resolveIpAddress(ROUTER,&#34;iphoneremi.home&#34;))
+        ip   = resolveIpAddress(ROUTER,&#34;google.fr&#34;)
+        ip2  = resolveIpAddress(ROUTER, resolveHostname (ROUTER,ip))
         if ip != ip2: raise Exception(&#34;Test failed&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.dnsclient.resolveHostname"><code class="name flex">
+<span>def <span class="ident">resolveHostname</span></span>(<span>dnsIp, ipAddress)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Resolve hostname with ip address</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def resolveHostname(dnsIp, ipAddress):
+        &#34;&#34;&#34; Resolve hostname with ip address &#34;&#34;&#34;
+        return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())</code></pre>
+</details>
+</dd>
+<dt id="lib.server.dnsclient.resolveIpAddress"><code class="name flex">
+<span>def <span class="ident">resolveIpAddress</span></span>(<span>dnsIp, hostname)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Resolve ip address with hostname</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def resolveIpAddress(dnsIp, hostname):
+        &#34;&#34;&#34; Resolve ip address with hostname &#34;&#34;&#34;
+        return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())</code></pre>
 </details>
 </dd>
 <dt id="lib.server.dnsclient.splitIpAddress"><code class="name flex">
@@ -363,8 +355,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         def unserialize(self, data):
                 &#34;&#34;&#34; Unserialize answer &#34;&#34;&#34;
                 pos = self.query.unserialize(data)
-                self.info, self.atype, self.aclass, self.timetolive, self.length = ustruct.unpack(self.format, data[pos:pos+ustruct.calcsize(self.format)])
-                pos += ustruct.calcsize(self.format)
+                self.info, self.atype, self.aclass, self.timetolive, self.length = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
+                pos += struct.calcsize(self.format)
                 if self.atype == 1:
                         self.name = &#34;%d.%d.%d.%d&#34;%(data[pos],data[pos+1],data[pos+2],data[pos+3])
                 else:
@@ -388,8 +380,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <pre><code class="python">def unserialize(self, data):
         &#34;&#34;&#34; Unserialize answer &#34;&#34;&#34;
         pos = self.query.unserialize(data)
-        self.info, self.atype, self.aclass, self.timetolive, self.length = ustruct.unpack(self.format, data[pos:pos+ustruct.calcsize(self.format)])
-        pos += ustruct.calcsize(self.format)
+        self.info, self.atype, self.aclass, self.timetolive, self.length = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
+        pos += struct.calcsize(self.format)
         if self.atype == 1:
                 self.name = &#34;%d.%d.%d.%d&#34;%(data[pos],data[pos+1],data[pos+2],data[pos+3])
         else:
@@ -423,12 +415,12 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 
         def serialize(self):
                 &#34;&#34;&#34; Serialize DNS header &#34;&#34;&#34;
-                return ustruct.pack(self.format, self.ident, self.flag, self.query, self.answer, self.autority, self.additional)
+                return struct.pack(self.format, self.ident, self.flag, self.query, self.answer, self.autority, self.additional)
 
         def unserialize(self, data):
                 &#34;&#34;&#34; Unserialize DNS header &#34;&#34;&#34;
-                length = ustruct.calcsize(self.format)
-                self.ident, self.flag, self.query, self.answer, self.autority, self.additional = ustruct.unpack(self.format, data[:length])
+                length = struct.calcsize(self.format)
+                self.ident, self.flag, self.query, self.answer, self.autority, self.additional = struct.unpack(self.format, data[:length])
                 return length
 
         def __repr__(self):
@@ -440,7 +432,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
                 result = &#34;&#34;
                 spl = splitIpAddress(name)
                 # Ip address detected
-                if len(spl) &gt; 1:
+                if type(spl) == type([]):
                         spl.reverse()
                         spl.append(&#34;in-addr&#34;)
                         spl.append(&#34;arpa&#34;)
@@ -516,7 +508,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         result = &#34;&#34;
         spl = splitIpAddress(name)
         # Ip address detected
-        if len(spl) &gt; 1:
+        if type(spl) == type([]):
                 spl.reverse()
                 spl.append(&#34;in-addr&#34;)
                 spl.append(&#34;arpa&#34;)
@@ -540,7 +532,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 </summary>
 <pre><code class="python">def serialize(self):
         &#34;&#34;&#34; Serialize DNS header &#34;&#34;&#34;
-        return ustruct.pack(self.format, self.ident, self.flag, self.query, self.answer, self.autority, self.additional)</code></pre>
+        return struct.pack(self.format, self.ident, self.flag, self.query, self.answer, self.autority, self.additional)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.dnsclient.DnsHeader.unserialize"><code class="name flex">
@@ -554,8 +546,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 </summary>
 <pre><code class="python">def unserialize(self, data):
         &#34;&#34;&#34; Unserialize DNS header &#34;&#34;&#34;
-        length = ustruct.calcsize(self.format)
-        self.ident, self.flag, self.query, self.answer, self.autority, self.additional = ustruct.unpack(self.format, data[:length])
+        length = struct.calcsize(self.format)
+        self.ident, self.flag, self.query, self.answer, self.autority, self.additional = struct.unpack(self.format, data[:length])
         return length</code></pre>
 </details>
 </dd>
@@ -586,15 +578,15 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
                 &#34;&#34;&#34; Serialize query &#34;&#34;&#34;
                 data = self.header.serialize()
                 data += self.header.encodeName(self.name).encode(&#34;latin-1&#34;) 
-                data += ustruct.pack(self.format,self.qtype, self.qclass)
+                data += struct.pack(self.format,self.qtype, self.qclass)
                 return data
                 
         def unserialize(self, data):
                 &#34;&#34;&#34; Unserialize query &#34;&#34;&#34;
                 pos = self.header.unserialize(data)
                 self.name, pos = self.header.decodeName(data, pos)
-                self.qtype, self.qclass = ustruct.unpack(self.format, data[pos:pos+ustruct.calcsize(self.format)])
-                return pos + ustruct.calcsize(self.format)
+                self.qtype, self.qclass = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
+                return pos + struct.calcsize(self.format)
 
         def __repr__(self):
                 &#34;&#34;&#34; Display result &#34;&#34;&#34;
@@ -615,7 +607,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         &#34;&#34;&#34; Serialize query &#34;&#34;&#34;
         data = self.header.serialize()
         data += self.header.encodeName(self.name).encode(&#34;latin-1&#34;) 
-        data += ustruct.pack(self.format,self.qtype, self.qclass)
+        data += struct.pack(self.format,self.qtype, self.qclass)
         return data</code></pre>
 </details>
 </dd>
@@ -632,8 +624,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         &#34;&#34;&#34; Unserialize query &#34;&#34;&#34;
         pos = self.header.unserialize(data)
         self.name, pos = self.header.decodeName(data, pos)
-        self.qtype, self.qclass = ustruct.unpack(self.format, data[pos:pos+ustruct.calcsize(self.format)])
-        return pos + ustruct.calcsize(self.format)</code></pre>
+        self.qtype, self.qclass = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
+        return pos + struct.calcsize(self.format)</code></pre>
 </details>
 </dd>
 </dl>
@@ -655,10 +647,10 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
 <li><code><a title="lib.server.dnsclient.dnsExchange" href="#lib.server.dnsclient.dnsExchange">dnsExchange</a></code></li>
-<li><code><a title="lib.server.dnsclient.getHostname" href="#lib.server.dnsclient.getHostname">getHostname</a></code></li>
-<li><code><a title="lib.server.dnsclient.getIpAddress" href="#lib.server.dnsclient.getIpAddress">getIpAddress</a></code></li>
 <li><code><a title="lib.server.dnsclient.isIpAddress" href="#lib.server.dnsclient.isIpAddress">isIpAddress</a></code></li>
 <li><code><a title="lib.server.dnsclient.main" href="#lib.server.dnsclient.main">main</a></code></li>
+<li><code><a title="lib.server.dnsclient.resolveHostname" href="#lib.server.dnsclient.resolveHostname">resolveHostname</a></code></li>
+<li><code><a title="lib.server.dnsclient.resolveIpAddress" href="#lib.server.dnsclient.resolveIpAddress">resolveIpAddress</a></code></li>
 <li><code><a title="lib.server.dnsclient.splitIpAddress" href="#lib.server.dnsclient.splitIpAddress">splitIpAddress</a></code></li>
 </ul>
 </li>

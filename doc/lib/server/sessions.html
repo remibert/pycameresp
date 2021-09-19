@@ -34,7 +34,7 @@ an user and password, on your site</p>
 &#34;&#34;&#34; Class used to store http connection sessions, it is useful if you define 
 an user and password, on your site &#34;&#34;&#34;
 
-from tools import useful
+from tools import useful, encryption
 import time
 
 class Sessions:
@@ -44,7 +44,7 @@ class Sessions:
         @staticmethod
         def create(duration):
                 &#34;&#34;&#34; Create new session &#34;&#34;&#34;
-                session = useful.getHash(useful.dateToBytes())
+                session = encryption.gethash(useful.dateToBytes())
                 Sessions.sessions.append((session, time.time() + duration))
                 return session
 
@@ -66,6 +66,13 @@ class Sessions:
                 currentTime = time.time()
                 for sessionId, expiration in Sessions.sessions:
                         if expiration &lt; currentTime:
+                                Sessions.sessions.remove((sessionId, expiration))
+
+        @staticmethod
+        def remove(sessionIdRemove):
+                &#34;&#34;&#34; Remove session &#34;&#34;&#34;
+                for sessionId, expiration in Sessions.sessions:
+                        if sessionId == sessionIdRemove:
                                 Sessions.sessions.remove((sessionId, expiration))</code></pre>
 </details>
 </section>
@@ -94,7 +101,7 @@ class Sessions:
         @staticmethod
         def create(duration):
                 &#34;&#34;&#34; Create new session &#34;&#34;&#34;
-                session = useful.getHash(useful.dateToBytes())
+                session = encryption.gethash(useful.dateToBytes())
                 Sessions.sessions.append((session, time.time() + duration))
                 return session
 
@@ -116,6 +123,13 @@ class Sessions:
                 currentTime = time.time()
                 for sessionId, expiration in Sessions.sessions:
                         if expiration &lt; currentTime:
+                                Sessions.sessions.remove((sessionId, expiration))
+
+        @staticmethod
+        def remove(sessionIdRemove):
+                &#34;&#34;&#34; Remove session &#34;&#34;&#34;
+                for sessionId, expiration in Sessions.sessions:
+                        if sessionId == sessionIdRemove:
                                 Sessions.sessions.remove((sessionId, expiration))</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -161,7 +175,7 @@ def check(session):
 <pre><code class="python">@staticmethod
 def create(duration):
         &#34;&#34;&#34; Create new session &#34;&#34;&#34;
-        session = useful.getHash(useful.dateToBytes())
+        session = encryption.gethash(useful.dateToBytes())
         Sessions.sessions.append((session, time.time() + duration))
         return session</code></pre>
 </details>
@@ -181,6 +195,23 @@ def purge():
         currentTime = time.time()
         for sessionId, expiration in Sessions.sessions:
                 if expiration &lt; currentTime:
+                        Sessions.sessions.remove((sessionId, expiration))</code></pre>
+</details>
+</dd>
+<dt id="lib.server.sessions.Sessions.remove"><code class="name flex">
+<span>def <span class="ident">remove</span></span>(<span>sessionIdRemove)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove session</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def remove(sessionIdRemove):
+        &#34;&#34;&#34; Remove session &#34;&#34;&#34;
+        for sessionId, expiration in Sessions.sessions:
+                if sessionId == sessionIdRemove:
                         Sessions.sessions.remove((sessionId, expiration))</code></pre>
 </details>
 </dd>
@@ -208,6 +239,7 @@ def purge():
 <li><code><a title="lib.server.sessions.Sessions.check" href="#lib.server.sessions.Sessions.check">check</a></code></li>
 <li><code><a title="lib.server.sessions.Sessions.create" href="#lib.server.sessions.Sessions.create">create</a></code></li>
 <li><code><a title="lib.server.sessions.Sessions.purge" href="#lib.server.sessions.Sessions.purge">purge</a></code></li>
+<li><code><a title="lib.server.sessions.Sessions.remove" href="#lib.server.sessions.Sessions.remove">remove</a></code></li>
 <li><code><a title="lib.server.sessions.Sessions.sessions" href="#lib.server.sessions.Sessions.sessions">sessions</a></code></li>
 </ul>
 </li>

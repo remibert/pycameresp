@@ -56,14 +56,23 @@ class HttpServerCore:
                 response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
                 try:
                         await request.receive()
+                        # print(request.path)
                         function, args = HttpServer.searchRoute(request)
                         if function == None:
                                 await response.sendError(status=b&#34;404&#34;, content=b&#34;Page not found&#34;)
                         else:
                                 await function(request, response, args)
+                except OSError as err:
+                        # If ECONNRESET or ENOTCONN
+                        if err.args[0] == 104 or err.args[0] == 128:
+                                # Ignore error
+                                pass
+                        else:
+                                await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
                 except Exception as err:
-                        await response.sendError(status=b&#34;404&#34;, content=useful.htmlException(err))
-                await stream.close()</code></pre>
+                        await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                finally:
+                        await stream.close()</code></pre>
 </details>
 </section>
 <section>
@@ -103,14 +112,23 @@ if the server not used, it not consum memory </p>
                 response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
                 try:
                         await request.receive()
+                        # print(request.path)
                         function, args = HttpServer.searchRoute(request)
                         if function == None:
                                 await response.sendError(status=b&#34;404&#34;, content=b&#34;Page not found&#34;)
                         else:
                                 await function(request, response, args)
+                except OSError as err:
+                        # If ECONNRESET or ENOTCONN
+                        if err.args[0] == 104 or err.args[0] == 128:
+                                # Ignore error
+                                pass
+                        else:
+                                await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
                 except Exception as err:
-                        await response.sendError(status=b&#34;404&#34;, content=useful.htmlException(err))
-                await stream.close()</code></pre>
+                        await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                finally:
+                        await stream.close()</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -131,14 +149,23 @@ if the server not used, it not consum memory </p>
         response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
         try:
                 await request.receive()
+                # print(request.path)
                 function, args = HttpServer.searchRoute(request)
                 if function == None:
                         await response.sendError(status=b&#34;404&#34;, content=b&#34;Page not found&#34;)
                 else:
                         await function(request, response, args)
+        except OSError as err:
+                # If ECONNRESET or ENOTCONN
+                if err.args[0] == 104 or err.args[0] == 128:
+                        # Ignore error
+                        pass
+                else:
+                        await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
         except Exception as err:
-                await response.sendError(status=b&#34;404&#34;, content=useful.htmlException(err))
-        await stream.close()</code></pre>
+                await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+        finally:
+                await stream.close()</code></pre>
 </details>
 </dd>
 </dl>

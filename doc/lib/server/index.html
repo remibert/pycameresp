@@ -36,116 +36,15 @@ Class to manage session, user password, stream.</p>
 &#34;&#34;&#34; Class for servers FTP, HTTP, Telnet.
 Class to dialog with NTP, PushOver. 
 Class to manage session, user password, stream.&#34;&#34;&#34;
-from server import *
-from server.sessions import *
-from server.user import *
-from server.pushover import *
-from server.wanip import *
-from server.ping import *
-from server.dnsclient import *
-from server.timesetting import *
-from tools import jsonconfig
-from tools import useful
-import uasyncio
 
-
-class ServerConfig:
-        &#34;&#34;&#34; Servers configuration &#34;&#34;&#34;
-        def __init__(self):
-                self.ntp = True
-                self.ftp = True
-                self.http = True
-                self.telnet = True
-                self.offsettime = 1
-                self.dst = True
-
-        def save(self, file = None):
-                &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
-                result = jsonconfig.save(self, file)
-                return result
-
-        def update(self, params):
-                &#34;&#34;&#34; Update configuration &#34;&#34;&#34;
-                result = jsonconfig.update(self, params)
-                return result
-
-        def load(self, file = None):
-                &#34;&#34;&#34; Load configuration &#34;&#34;&#34;
-                result = jsonconfig.load(self, file)
-                return result
-
-def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
-        &#34;&#34;&#34; Start all servers
+def init(loop=None, pageLoader=None, preload=False, httpPort=80):
+        &#34;&#34;&#34; Init servers
         loop : asyncio loop
         pageLoader : callback to load html page
         preload : True force the load of page at the start, 
         False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
-        from tools import useful
-        import wifi
-        
-        # If wifi started
-        if wifi.start():
-                from server import ServerConfig
-                config = ServerConfig()
-                if config.load() == False:
-                        config.save()
-
-                # If ntp synchronisation activated
-                if config.ntp:
-                        # Load and start ntp synchronisation
-                        loop.create_task(periodic())
-
-                # If telnet activated
-                if config.telnet and withoutServer == False:
-                        # Load and start telnet
-                        import server.telnet
-                        server.telnet.start()
-
-                # If ftp activated
-                if config.ftp and withoutServer == False:
-                        # Load and start ftp server
-                        import server.ftpserver
-                        server.ftpserver.start(loop=loop, preload=preload)
-
-                # If http activated
-                if config.http and withoutServer == False:
-                        # Load and start http server
-                        import server.httpserver
-                        server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort, name=&#34;httpServer&#34;)
-
-                        # If camera present
-                        if useful.iscamera():
-                                # Load and start streaming http server
-                                server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort +1, name=&#34;StreamingServer&#34;)
-        
-        # Display system informations
-        useful.sysinfo()
-
-
-async def periodic():
-        &#34;&#34;&#34; Periodic traitment update time, get wanip &#34;&#34;&#34;
-        while True:
-                config = server.ServerConfig()
-                config.load()
-                if config.ntp:
-                        setdate(config.offsettime, dst=config.dst, display=True)
-                await uasyncio.sleep(3600)
-
-
-_suspended = [False]
-def suspend():
-        &#34;&#34;&#34; Suspend the asyncio task of servers &#34;&#34;&#34;
-        _suspended[0] = True
-
-def resume():
-        &#34;&#34;&#34; Resume the asyncio task of servers &#34;&#34;&#34;
-        _suspended[0] = False
-
-async def waitResume():
-        &#34;&#34;&#34; Wait the resume of task servers &#34;&#34;&#34;
-        if _suspended[0]:
-                while _suspended[0]:
-                        await uasyncio.sleep(1)</code></pre>
+        from server.server import Server
+        Server.init(loop, pageLoader, preload, httpPort)</code></pre>
 </details>
 </section>
 <section>
@@ -181,14 +80,30 @@ The core of the server is in the other …</p></div>
 <dd>
 <div class="desc"><p>Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then if the server not used, it not consum memory</p></div>
 </dd>
+<dt><code class="name"><a title="lib.server.notifier" href="notifier.html">lib.server.notifier</a></code></dt>
+<dd>
+<div class="desc"><p>Class used to manage a list of notifier, and postpone notification if wifi station not yet connected</p></div>
+</dd>
+<dt><code class="name"><a title="lib.server.periodic" href="periodic.html">lib.server.periodic</a></code></dt>
+<dd>
+<div class="desc"><p>Periodic task, wifi management, get wanIp, synchronize time</p></div>
+</dd>
 <dt><code class="name"><a title="lib.server.ping" href="ping.html">lib.server.ping</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="lib.server.presence" href="presence.html">lib.server.presence</a></code></dt>
+<dd>
+<div class="desc"><p>Presence detection (determine if an occupant is present in the house)</p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.pushover" href="pushover.html">lib.server.pushover</a></code></dt>
 <dd>
 <div class="desc"><p>These classes are used to send notifications to smartphones, via the pushover application.
 See <a href="https://www.pushover.net">https://www.pushover.net</a></p></div>
+</dd>
+<dt><code class="name"><a title="lib.server.server" href="server.html">lib.server.server</a></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="lib.server.sessions" href="sessions.html">lib.server.sessions</a></code></dt>
 <dd>
@@ -213,7 +128,7 @@ an user and password, on your site</p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.wanip" href="wanip.html">lib.server.wanip</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get the wan ip address</p></div>
 </dd>
 </dl>
 </section>
@@ -222,44 +137,11 @@ an user and password, on your site</p></div>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.server.periodic"><code class="name flex">
-<span>async def <span class="ident">periodic</span></span>(<span>)</span>
+<dt id="lib.server.init"><code class="name flex">
+<span>def <span class="ident">init</span></span>(<span>loop=None, pageLoader=None, preload=False, httpPort=80)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Periodic traitment update time, get wanip</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def periodic():
-        &#34;&#34;&#34; Periodic traitment update time, get wanip &#34;&#34;&#34;
-        while True:
-                config = server.ServerConfig()
-                config.load()
-                if config.ntp:
-                        setdate(config.offsettime, dst=config.dst, display=True)
-                await uasyncio.sleep(3600)</code></pre>
-</details>
-</dd>
-<dt id="lib.server.resume"><code class="name flex">
-<span>def <span class="ident">resume</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Resume the asyncio task of servers</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def resume():
-        &#34;&#34;&#34; Resume the asyncio task of servers &#34;&#34;&#34;
-        _suspended[0] = False</code></pre>
-</details>
-</dd>
-<dt id="lib.server.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Start all servers
+<div class="desc"><p>Init servers
 loop : asyncio loop
 pageLoader : callback to load html page
 preload : True force the load of page at the start,
@@ -268,173 +150,19 @@ False the load of page is done a the first http connection (Takes time on first 
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start(loop=None, pageLoader=None, preload=False, withoutServer=False, httpPort=80):
-        &#34;&#34;&#34; Start all servers
+<pre><code class="python">def init(loop=None, pageLoader=None, preload=False, httpPort=80):
+        &#34;&#34;&#34; Init servers
         loop : asyncio loop
         pageLoader : callback to load html page
         preload : True force the load of page at the start, 
         False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
-        from tools import useful
-        import wifi
-        
-        # If wifi started
-        if wifi.start():
-                from server import ServerConfig
-                config = ServerConfig()
-                if config.load() == False:
-                        config.save()
-
-                # If ntp synchronisation activated
-                if config.ntp:
-                        # Load and start ntp synchronisation
-                        loop.create_task(periodic())
-
-                # If telnet activated
-                if config.telnet and withoutServer == False:
-                        # Load and start telnet
-                        import server.telnet
-                        server.telnet.start()
-
-                # If ftp activated
-                if config.ftp and withoutServer == False:
-                        # Load and start ftp server
-                        import server.ftpserver
-                        server.ftpserver.start(loop=loop, preload=preload)
-
-                # If http activated
-                if config.http and withoutServer == False:
-                        # Load and start http server
-                        import server.httpserver
-                        server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort, name=&#34;httpServer&#34;)
-
-                        # If camera present
-                        if useful.iscamera():
-                                # Load and start streaming http server
-                                server.httpserver.start(loop=loop, loader=pageLoader, preload=preload, port=httpPort +1, name=&#34;StreamingServer&#34;)
-        
-        # Display system informations
-        useful.sysinfo()</code></pre>
-</details>
-</dd>
-<dt id="lib.server.suspend"><code class="name flex">
-<span>def <span class="ident">suspend</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Suspend the asyncio task of servers</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def suspend():
-        &#34;&#34;&#34; Suspend the asyncio task of servers &#34;&#34;&#34;
-        _suspended[0] = True</code></pre>
-</details>
-</dd>
-<dt id="lib.server.waitResume"><code class="name flex">
-<span>async def <span class="ident">waitResume</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Wait the resume of task servers</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def waitResume():
-        &#34;&#34;&#34; Wait the resume of task servers &#34;&#34;&#34;
-        if _suspended[0]:
-                while _suspended[0]:
-                        await uasyncio.sleep(1)</code></pre>
+        from server.server import Server
+        Server.init(loop, pageLoader, preload, httpPort)</code></pre>
 </details>
 </dd>
 </dl>
 </section>
 <section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="lib.server.ServerConfig"><code class="flex name class">
-<span>class <span class="ident">ServerConfig</span></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Servers configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class ServerConfig:
-        &#34;&#34;&#34; Servers configuration &#34;&#34;&#34;
-        def __init__(self):
-                self.ntp = True
-                self.ftp = True
-                self.http = True
-                self.telnet = True
-                self.offsettime = 1
-                self.dst = True
-
-        def save(self, file = None):
-                &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
-                result = jsonconfig.save(self, file)
-                return result
-
-        def update(self, params):
-                &#34;&#34;&#34; Update configuration &#34;&#34;&#34;
-                result = jsonconfig.update(self, params)
-                return result
-
-        def load(self, file = None):
-                &#34;&#34;&#34; Load configuration &#34;&#34;&#34;
-                result = jsonconfig.load(self, file)
-                return result</code></pre>
-</details>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.server.ServerConfig.load"><code class="name flex">
-<span>def <span class="ident">load</span></span>(<span>self, file=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Load configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def load(self, file = None):
-        &#34;&#34;&#34; Load configuration &#34;&#34;&#34;
-        result = jsonconfig.load(self, file)
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.server.ServerConfig.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, file=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Save configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def save(self, file = None):
-        &#34;&#34;&#34; Save configuration &#34;&#34;&#34;
-        result = jsonconfig.save(self, file)
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.server.ServerConfig.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>self, params)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Update configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def update(self, params):
-        &#34;&#34;&#34; Update configuration &#34;&#34;&#34;
-        result = jsonconfig.update(self, params)
-        return result</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -456,8 +184,12 @@ False the load of page is done a the first http connection (Takes time on first 
 <li><code><a title="lib.server.httprequest" href="httprequest.html">lib.server.httprequest</a></code></li>
 <li><code><a title="lib.server.httpserver" href="httpserver.html">lib.server.httpserver</a></code></li>
 <li><code><a title="lib.server.httpservercore" href="httpservercore.html">lib.server.httpservercore</a></code></li>
+<li><code><a title="lib.server.notifier" href="notifier.html">lib.server.notifier</a></code></li>
+<li><code><a title="lib.server.periodic" href="periodic.html">lib.server.periodic</a></code></li>
 <li><code><a title="lib.server.ping" href="ping.html">lib.server.ping</a></code></li>
+<li><code><a title="lib.server.presence" href="presence.html">lib.server.presence</a></code></li>
 <li><code><a title="lib.server.pushover" href="pushover.html">lib.server.pushover</a></code></li>
+<li><code><a title="lib.server.server" href="server.html">lib.server.server</a></code></li>
 <li><code><a title="lib.server.sessions" href="sessions.html">lib.server.sessions</a></code></li>
 <li><code><a title="lib.server.stream" href="stream.html">lib.server.stream</a></code></li>
 <li><code><a title="lib.server.telnet" href="telnet.html">lib.server.telnet</a></code></li>
@@ -468,23 +200,7 @@ False the load of page is done a the first http connection (Takes time on first 
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.server.periodic" href="#lib.server.periodic">periodic</a></code></li>
-<li><code><a title="lib.server.resume" href="#lib.server.resume">resume</a></code></li>
-<li><code><a title="lib.server.start" href="#lib.server.start">start</a></code></li>
-<li><code><a title="lib.server.suspend" href="#lib.server.suspend">suspend</a></code></li>
-<li><code><a title="lib.server.waitResume" href="#lib.server.waitResume">waitResume</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="lib.server.ServerConfig" href="#lib.server.ServerConfig">ServerConfig</a></code></h4>
-<ul class="">
-<li><code><a title="lib.server.ServerConfig.load" href="#lib.server.ServerConfig.load">load</a></code></li>
-<li><code><a title="lib.server.ServerConfig.save" href="#lib.server.ServerConfig.save">save</a></code></li>
-<li><code><a title="lib.server.ServerConfig.update" href="#lib.server.ServerConfig.update">update</a></code></li>
-</ul>
-</li>
+<li><code><a title="lib.server.init" href="#lib.server.init">init</a></code></li>
 </ul>
 </li>
 </ul>

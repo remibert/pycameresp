@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.webpage.streamingpage API documentation</title>
+<meta name="description" content="Function define the web page to see the camera streaming" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.webpage.streamingpage</code></h1>
+</header>
+<section id="section-intro">
+<p>Function define the web page to see the camera streaming</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+&#34;&#34;&#34; Function define the web page to see the camera streaming &#34;&#34;&#34;
+from server.httpserver  import HttpServer
+from server.server      import Server
+from htmltemplate       import *
+from server.httprequest import *
+from tools              import useful, tasking
+from video              import Camera
+import uasyncio
+
+class Streaming:
+        &#34;&#34;&#34; Management class of video streaming of the camera via an html page &#34;&#34;&#34;
+        streamingId = [0]
+        inactivity = [None]
+        config = [None]
+        durty = [False]
+
+        @staticmethod
+        def setConfig(config):
+                &#34;&#34;&#34; Set current configuration &#34;&#34;&#34;
+                Streaming.config[0] = config
+                Streaming.durty[0] = True
+
+        @staticmethod
+        def getConfig():
+                &#34;&#34;&#34; Get current configuration &#34;&#34;&#34;
+                return Streaming.config[0]
+
+        @staticmethod
+        def isDurty():
+                &#34;&#34;&#34; Indicates if the configuration changed &#34;&#34;&#34;
+                return Streaming.durty[0]
+
+        @staticmethod
+        def resetDurty():
+                &#34;&#34;&#34; Reset the configuration changed flag &#34;&#34;&#34;
+                Streaming.durty[0] = False
+
+        @staticmethod
+        def getHtml(request, width=None, height=None):
+                &#34;&#34;&#34; Return streaming html part with javascript code &#34;&#34;&#34;
+                Streaming.activity()
+                Streaming.streamingId[0] += id(request)
+                if width != None and height != None:
+                        size = b&#39;width=&#34;%d&#34; height=&#34;%d&#34;&#39;%(width, height)
+                else:
+                        size = b&#34;&#34;
+                return Tag(b&#34;&#34;&#34;
+                &lt;p&gt;
+                        &lt;div style=&#34;position: relative;&#34;&gt;
+                                &lt;img id=&#34;video-stream&#34; src=&#34;&#34; %s/&gt;
+                                &lt;table id=&#34;zoneMasking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
+                        &lt;/div&gt;
+                &lt;/p&gt;
+                &lt;script&gt;
+                        var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
+                        document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start?streamingid=%d`;
+                &lt;/script&gt;&#34;&#34;&#34;%(size, request.port+1,Streaming.streamingId[0]))
+
+        @staticmethod
+        def inactivityTimeout(timer):
+                &#34;&#34;&#34; Suspend video streaming after delay &#34;&#34;&#34;
+                Streaming.streamingId[0] += 1
+
+        @staticmethod
+        def activity():
+                &#34;&#34;&#34; User activity detected &#34;&#34;&#34;
+                if Streaming.inactivity[0]:
+                        Streaming.inactivity[0].stop()
+                        Streaming.inactivity[0] = None
+                Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivityTimeout, duration=tasking.LONG_WATCH_DOG, timerId=1)
+
+        @staticmethod
+        def getStreamingId():
+                &#34;&#34;&#34; Return the current streaming id &#34;&#34;&#34;
+                return Streaming.streamingId[0]
+
+@HttpServer.addRoute(b&#39;/camera/start&#39;, available=useful.iscamera() and Camera.isActivated())
+async def cameraStartStreaming(request, response, args):
+        &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
+        Server.slowDown()
+        if request.name != &#34;StreamingServer&#34;:
+                return 
+
+        try:
+                writer = None
+                currentStreamingId = int(request.params[b&#34;streamingid&#34;])
+                reserved = await Camera.reserve(request, timeout=20, suspension=30)
+                print(&#34;Start streaming %d&#34;%currentStreamingId)
+                if reserved:
+                        Camera.open()
+
+                        response.setStatus(b&#34;200&#34;)
+                        response.setHeader(b&#34;Content-Type&#34;               ,b&#34;multipart/x-mixed-replace&#34;)
+                        response.setHeader(b&#34;Transfer-Encoding&#34;          ,b&#34;chunked&#34;)
+                        response.setHeader(b&#34;Access-Control-Allow-Origin&#34;,b&#34;*&#34;)
+
+                        await response.serialize(response.streamio)
+                        writer = response.streamio
+                        identifier = b&#34;\r\n%x\r\n\r\n--%s\r\n\r\n&#34;%(len(response.identifier) + 6, response.identifier)
+                        frame = b&#39;%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n&#39;
+
+                        if useful.ismicropython():
+                                micropython = True
+                        else:
+                                micropython = False
+
+                        if Streaming.isDurty():
+                                Camera.configure(Streaming.getConfig())
+                                Streaming.resetDurty()
+
+                        image = Camera.capture()
+                        length = len(image)
+                        try:
+                                await writer.write(frame%(b&#34;&#34;, length, length))
+                                await writer.write(image)
+                        except:
+                                currentStreamingId = 0
+
+                        while currentStreamingId == Streaming.getStreamingId():
+                                if Streaming.isDurty():
+                                        Camera.configure(Streaming.getConfig())
+                                        Streaming.resetDurty()
+                                image = Camera.capture()
+                                length = len(image)
+                                try:
+                                        await writer.write(frame%(identifier, length, length))
+                                        await writer.write(image)
+                                except:
+                                        break
+                                if micropython == False:
+                                        await uasyncio.sleep(0.1)
+        except Exception as err:
+                useful.syslog(err)
+        finally:
+                if reserved:
+                        print(&#34;End streaming %d&#34;%currentStreamingId)
+                        await Camera.unreserve(request)
+                if writer:
+                        await writer.close()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.webpage.streamingpage.cameraStartStreaming"><code class="name flex">
+<span>async def <span class="ident">cameraStartStreaming</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start video streaming</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.addRoute(b&#39;/camera/start&#39;, available=useful.iscamera() and Camera.isActivated())
+async def cameraStartStreaming(request, response, args):
+        &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
+        Server.slowDown()
+        if request.name != &#34;StreamingServer&#34;:
+                return 
+
+        try:
+                writer = None
+                currentStreamingId = int(request.params[b&#34;streamingid&#34;])
+                reserved = await Camera.reserve(request, timeout=20, suspension=30)
+                print(&#34;Start streaming %d&#34;%currentStreamingId)
+                if reserved:
+                        Camera.open()
+
+                        response.setStatus(b&#34;200&#34;)
+                        response.setHeader(b&#34;Content-Type&#34;               ,b&#34;multipart/x-mixed-replace&#34;)
+                        response.setHeader(b&#34;Transfer-Encoding&#34;          ,b&#34;chunked&#34;)
+                        response.setHeader(b&#34;Access-Control-Allow-Origin&#34;,b&#34;*&#34;)
+
+                        await response.serialize(response.streamio)
+                        writer = response.streamio
+                        identifier = b&#34;\r\n%x\r\n\r\n--%s\r\n\r\n&#34;%(len(response.identifier) + 6, response.identifier)
+                        frame = b&#39;%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n&#39;
+
+                        if useful.ismicropython():
+                                micropython = True
+                        else:
+                                micropython = False
+
+                        if Streaming.isDurty():
+                                Camera.configure(Streaming.getConfig())
+                                Streaming.resetDurty()
+
+                        image = Camera.capture()
+                        length = len(image)
+                        try:
+                                await writer.write(frame%(b&#34;&#34;, length, length))
+                                await writer.write(image)
+                        except:
+                                currentStreamingId = 0
+
+                        while currentStreamingId == Streaming.getStreamingId():
+                                if Streaming.isDurty():
+                                        Camera.configure(Streaming.getConfig())
+                                        Streaming.resetDurty()
+                                image = Camera.capture()
+                                length = len(image)
+                                try:
+                                        await writer.write(frame%(identifier, length, length))
+                                        await writer.write(image)
+                                except:
+                                        break
+                                if micropython == False:
+                                        await uasyncio.sleep(0.1)
+        except Exception as err:
+                useful.syslog(err)
+        finally:
+                if reserved:
+                        print(&#34;End streaming %d&#34;%currentStreamingId)
+                        await Camera.unreserve(request)
+                if writer:
+                        await writer.close()</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.webpage.streamingpage.Streaming"><code class="flex name class">
+<span>class <span class="ident">Streaming</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Management class of video streaming of the camera via an html page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Streaming:
+        &#34;&#34;&#34; Management class of video streaming of the camera via an html page &#34;&#34;&#34;
+        streamingId = [0]
+        inactivity = [None]
+        config = [None]
+        durty = [False]
+
+        @staticmethod
+        def setConfig(config):
+                &#34;&#34;&#34; Set current configuration &#34;&#34;&#34;
+                Streaming.config[0] = config
+                Streaming.durty[0] = True
+
+        @staticmethod
+        def getConfig():
+                &#34;&#34;&#34; Get current configuration &#34;&#34;&#34;
+                return Streaming.config[0]
+
+        @staticmethod
+        def isDurty():
+                &#34;&#34;&#34; Indicates if the configuration changed &#34;&#34;&#34;
+                return Streaming.durty[0]
+
+        @staticmethod
+        def resetDurty():
+                &#34;&#34;&#34; Reset the configuration changed flag &#34;&#34;&#34;
+                Streaming.durty[0] = False
+
+        @staticmethod
+        def getHtml(request, width=None, height=None):
+                &#34;&#34;&#34; Return streaming html part with javascript code &#34;&#34;&#34;
+                Streaming.activity()
+                Streaming.streamingId[0] += id(request)
+                if width != None and height != None:
+                        size = b&#39;width=&#34;%d&#34; height=&#34;%d&#34;&#39;%(width, height)
+                else:
+                        size = b&#34;&#34;
+                return Tag(b&#34;&#34;&#34;
+                &lt;p&gt;
+                        &lt;div style=&#34;position: relative;&#34;&gt;
+                                &lt;img id=&#34;video-stream&#34; src=&#34;&#34; %s/&gt;
+                                &lt;table id=&#34;zoneMasking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
+                        &lt;/div&gt;
+                &lt;/p&gt;
+                &lt;script&gt;
+                        var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
+                        document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start?streamingid=%d`;
+                &lt;/script&gt;&#34;&#34;&#34;%(size, request.port+1,Streaming.streamingId[0]))
+
+        @staticmethod
+        def inactivityTimeout(timer):
+                &#34;&#34;&#34; Suspend video streaming after delay &#34;&#34;&#34;
+                Streaming.streamingId[0] += 1
+
+        @staticmethod
+        def activity():
+                &#34;&#34;&#34; User activity detected &#34;&#34;&#34;
+                if Streaming.inactivity[0]:
+                        Streaming.inactivity[0].stop()
+                        Streaming.inactivity[0] = None
+                Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivityTimeout, duration=tasking.LONG_WATCH_DOG, timerId=1)
+
+        @staticmethod
+        def getStreamingId():
+                &#34;&#34;&#34; Return the current streaming id &#34;&#34;&#34;
+                return Streaming.streamingId[0]</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.webpage.streamingpage.Streaming.config"><code class="name">var <span class="ident">config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.durty"><code class="name">var <span class="ident">durty</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.inactivity"><code class="name">var <span class="ident">inactivity</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.streamingId"><code class="name">var <span class="ident">streamingId</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.webpage.streamingpage.Streaming.activity"><code class="name flex">
+<span>def <span class="ident">activity</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>User activity detected</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def activity():
+        &#34;&#34;&#34; User activity detected &#34;&#34;&#34;
+        if Streaming.inactivity[0]:
+                Streaming.inactivity[0].stop()
+                Streaming.inactivity[0] = None
+        Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivityTimeout, duration=tasking.LONG_WATCH_DOG, timerId=1)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.getConfig"><code class="name flex">
+<span>def <span class="ident">getConfig</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get current configuration</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def getConfig():
+        &#34;&#34;&#34; Get current configuration &#34;&#34;&#34;
+        return Streaming.config[0]</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.getHtml"><code class="name flex">
+<span>def <span class="ident">getHtml</span></span>(<span>request, width=None, height=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return streaming html part with javascript code</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def getHtml(request, width=None, height=None):
+        &#34;&#34;&#34; Return streaming html part with javascript code &#34;&#34;&#34;
+        Streaming.activity()
+        Streaming.streamingId[0] += id(request)
+        if width != None and height != None:
+                size = b&#39;width=&#34;%d&#34; height=&#34;%d&#34;&#39;%(width, height)
+        else:
+                size = b&#34;&#34;
+        return Tag(b&#34;&#34;&#34;
+        &lt;p&gt;
+                &lt;div style=&#34;position: relative;&#34;&gt;
+                        &lt;img id=&#34;video-stream&#34; src=&#34;&#34; %s/&gt;
+                        &lt;table id=&#34;zoneMasking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
+                &lt;/div&gt;
+        &lt;/p&gt;
+        &lt;script&gt;
+                var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
+                document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start?streamingid=%d`;
+        &lt;/script&gt;&#34;&#34;&#34;%(size, request.port+1,Streaming.streamingId[0]))</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.getStreamingId"><code class="name flex">
+<span>def <span class="ident">getStreamingId</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the current streaming id</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def getStreamingId():
+        &#34;&#34;&#34; Return the current streaming id &#34;&#34;&#34;
+        return Streaming.streamingId[0]</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.inactivityTimeout"><code class="name flex">
+<span>def <span class="ident">inactivityTimeout</span></span>(<span>timer)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Suspend video streaming after delay</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def inactivityTimeout(timer):
+        &#34;&#34;&#34; Suspend video streaming after delay &#34;&#34;&#34;
+        Streaming.streamingId[0] += 1</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.isDurty"><code class="name flex">
+<span>def <span class="ident">isDurty</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the configuration changed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def isDurty():
+        &#34;&#34;&#34; Indicates if the configuration changed &#34;&#34;&#34;
+        return Streaming.durty[0]</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.resetDurty"><code class="name flex">
+<span>def <span class="ident">resetDurty</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reset the configuration changed flag</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def resetDurty():
+        &#34;&#34;&#34; Reset the configuration changed flag &#34;&#34;&#34;
+        Streaming.durty[0] = False</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.streamingpage.Streaming.setConfig"><code class="name flex">
+<span>def <span class="ident">setConfig</span></span>(<span>config)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set current configuration</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def setConfig(config):
+        &#34;&#34;&#34; Set current configuration &#34;&#34;&#34;
+        Streaming.config[0] = config
+        Streaming.durty[0] = True</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.webpage" href="index.html">lib.webpage</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.webpage.streamingpage.cameraStartStreaming" href="#lib.webpage.streamingpage.cameraStartStreaming">cameraStartStreaming</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.webpage.streamingpage.Streaming" href="#lib.webpage.streamingpage.Streaming">Streaming</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.webpage.streamingpage.Streaming.activity" href="#lib.webpage.streamingpage.Streaming.activity">activity</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.config" href="#lib.webpage.streamingpage.Streaming.config">config</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.durty" href="#lib.webpage.streamingpage.Streaming.durty">durty</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.getConfig" href="#lib.webpage.streamingpage.Streaming.getConfig">getConfig</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.getHtml" href="#lib.webpage.streamingpage.Streaming.getHtml">getHtml</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.getStreamingId" href="#lib.webpage.streamingpage.Streaming.getStreamingId">getStreamingId</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.inactivity" href="#lib.webpage.streamingpage.Streaming.inactivity">inactivity</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.inactivityTimeout" href="#lib.webpage.streamingpage.Streaming.inactivityTimeout">inactivityTimeout</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.isDurty" href="#lib.webpage.streamingpage.Streaming.isDurty">isDurty</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.resetDurty" href="#lib.webpage.streamingpage.Streaming.resetDurty">resetDurty</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.setConfig" href="#lib.webpage.streamingpage.Streaming.setConfig">setConfig</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.streamingId" href="#lib.webpage.streamingpage.Streaming.streamingId">streamingId</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

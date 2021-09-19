@@ -38,45 +38,37 @@
 #    https://github.com/olavmrk/python-ping/blob/master/ping.py
 #    @data: bytes
 
-try:
-        import utime
-        import uselect
-        import uctypes
-        import usocket
-        import ustruct
-        import urandom
-        import usocket
-        import uasyncio
-except:
-        import time   as utime
-        import select as uselect
-        import ctypes as uctypes
-        import socket as usocket
-        import struct as ustruct
-        import random as urandom
-        import asyncio as uasyncio
+import time
+import uselect
+import struct
+import random
+import socket
+import uasyncio
+import wifi
 
 def ticks_us():
         &#34;&#34;&#34; Get tick in microseconds &#34;&#34;&#34;
         try:
-                return utime.ticks_us()
+                # pylint: disable=no-member
+                return time.ticks_us()
         except:
-                return utime.time_ns()//1000
+                return time.time_ns()//1000
 
 class Packet:
         &#34;&#34;&#34; Create ICMP packet for ping &#34;&#34;&#34;
         ECHO_REQUEST = 8
         ECHO_REPLY   = 0
-        def __init__(self, type, code, sequence, size = 64):
+        def __init__(self, typ, code, sequence, size = 64):
                 &#34;&#34;&#34; Constructor of ICMP packet for ping &#34;&#34;&#34;
                 self.format = b&#34;&gt;BBHHHQ&#34;
-                self.type       = type #B
+                self.type       = typ #B
                 self.code       = code #B
                 self.checksum   = 0 #H
-                self.identifier = urandom.randint(0, 65535) #H
+                self.identifier = random.randint(0, 65535) #H
                 self.sequence   = sequence   #H
                 self.timestamp  = ticks_us() #Q
                 self.size       = size
+                self.ttl = None
 
         def computeChecksum(self, data):
                 &#34;&#34;&#34; Compute the checksum of packet &#34;&#34;&#34;
@@ -101,13 +93,13 @@ class Packet:
         def unserialize(self, resp):
                 &#34;&#34;&#34; Unserialize packet &#34;&#34;&#34;
                 data = resp[20:]
-                data = data[0:ustruct.calcsize(self.format)]
-                self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = ustruct.unpack(self.format, data)
-                self.ttl = ustruct.unpack(&#34;!B&#34;,resp[8:9])[0]
+                data = data[0:struct.calcsize(self.format)]
+                self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = struct.unpack(self.format, data)
+                self.ttl = struct.unpack(&#34;!B&#34;,resp[8:9])[0]
         
         def __getBuffer(self):
                 &#34;&#34;&#34; Create the serialized buffer of data &#34;&#34;&#34;
-                data = ustruct.pack(self.format, self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
+                data = struct.pack(self.format, self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
                 padding = b&#34;.&#34;*(self.size-len(data))
                 return data + padding
                 
@@ -130,13 +122,6 @@ class Packet:
                         &#34;sequence   : %d\n&#34;\
                         &#34;timestamp  : %d&#34;%(self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
 
-def getAddressIp(hostname):
-        &#34;&#34;&#34; Return the address ip of the hostname &#34;&#34;&#34;
-        try:
-                return usocket.getaddrinfo(hostname, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
-        except:
-                return None
-
 async def select(rlist, wlist, xlist, timeout=0):
         &#34;&#34;&#34; Asynchronous select &#34;&#34;&#34;
         while 1:
@@ -147,14 +132,22 @@ async def select(rlist, wlist, xlist, timeout=0):
                         if timeout &lt;= 0:
                                 return [],[],[]
                         else:
-                                timeout -= 0.1
-                                await uasyncio.sleep(0.1)
+                                timeout -= 0.25
+                                await uasyncio.sleep(0.25)
 
 class Ping:
         &#34;&#34;&#34; Class used to ping host &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.sock = None
+                self.ttl = None
+                self.host = None
+                self.packetsTransmitted = 0
+                self.packetsReceived = 0
+                self.addr = None
+                self.request = None
+                self.quiet = None
+                self.response = None
         
         def open(self, host):
                 &#34;&#34;&#34; Open connection to host &#34;&#34;&#34;
@@ -164,9 +157,9 @@ class Ping:
                 try:
                         result = True
                         self.close()
-                        self.sock = usocket.socket(usocket.AF_INET, usocket.SOCK_RAW, 1)
+                        self.sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, 1)
                         self.sock.setblocking(0)
-                        self.addr = usocket.getaddrinfo(self.host, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+                        self.addr = socket.getaddrinfo(self.host, 1, socket.SOCK_DGRAM, socket.AF_INET)[0][-1][0]
                         self.sock.connect((self.addr, 1))
                         if self.quiet == False: print(&#34;PING %s (%s)&#34;%(self.host, self.addr))
                 except:
@@ -191,7 +184,7 @@ class Ping:
                 &#34;&#34;&#34; Receive and decode ICMP packet &#34;&#34;&#34;
                 result = False
                 if sock:
-                        resp = self.sock.recv(4096)
+                        resp = self.sock.recv(256)
                         self.response = Packet(Packet.ECHO_REPLY, 0, seq)
                         
                         self.response.unserialize(resp)
@@ -215,7 +208,7 @@ class Ping:
                                 else:
                                         socks, _, _ = uselect.select([self.sock], [], [], timeout)
                                         if self.receive(seq, socks):
-                                                utime.sleep(timeout)
+                                                time.sleep(timeout)
                         self.showResult()
                 else:
                         result = None
@@ -253,13 +246,19 @@ class Ping:
 
 async def asyncPing(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Asynchronous ping of host &#34;&#34;&#34;
-        ping_ = Ping()
-        return await ping_.asyncPing(host, count, timeout, quiet)
+        if wifi.Station.isActive():
+                ping_ = Ping()
+                return await ping_.asyncPing(host, count, timeout, quiet)
+        else:
+                return (0,0,None)
 
 def ping(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Ping of host &#34;&#34;&#34;
-        ping_ = Ping()
-        return ping_.ping(host, count, timeout, quiet)</code></pre>
+        if wifi.Station.isActive():
+                ping_ = Ping()
+                return ping_.ping(host, count, timeout, quiet)
+        else:
+                return (0,0,None)</code></pre>
 </details>
 </section>
 <section>
@@ -280,25 +279,11 @@ def ping(host, count=4, timeout=1, quiet=False):
 </summary>
 <pre><code class="python">async def asyncPing(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Asynchronous ping of host &#34;&#34;&#34;
-        ping_ = Ping()
-        return await ping_.asyncPing(host, count, timeout, quiet)</code></pre>
-</details>
-</dd>
-<dt id="lib.server.ping.getAddressIp"><code class="name flex">
-<span>def <span class="ident">getAddressIp</span></span>(<span>hostname)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the address ip of the hostname</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def getAddressIp(hostname):
-        &#34;&#34;&#34; Return the address ip of the hostname &#34;&#34;&#34;
-        try:
-                return usocket.getaddrinfo(hostname, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
-        except:
-                return None</code></pre>
+        if wifi.Station.isActive():
+                ping_ = Ping()
+                return await ping_.asyncPing(host, count, timeout, quiet)
+        else:
+                return (0,0,None)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.ping.ping"><code class="name flex">
@@ -312,8 +297,11 @@ def ping(host, count=4, timeout=1, quiet=False):
 </summary>
 <pre><code class="python">def ping(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Ping of host &#34;&#34;&#34;
-        ping_ = Ping()
-        return ping_.ping(host, count, timeout, quiet)</code></pre>
+        if wifi.Station.isActive():
+                ping_ = Ping()
+                return ping_.ping(host, count, timeout, quiet)
+        else:
+                return (0,0,None)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.ping.select"><code class="name flex">
@@ -335,8 +323,8 @@ def ping(host, count=4, timeout=1, quiet=False):
                         if timeout &lt;= 0:
                                 return [],[],[]
                         else:
-                                timeout -= 0.1
-                                await uasyncio.sleep(0.1)</code></pre>
+                                timeout -= 0.25
+                                await uasyncio.sleep(0.25)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.ping.ticks_us"><code class="name flex">
@@ -351,9 +339,10 @@ def ping(host, count=4, timeout=1, quiet=False):
 <pre><code class="python">def ticks_us():
         &#34;&#34;&#34; Get tick in microseconds &#34;&#34;&#34;
         try:
-                return utime.ticks_us()
+                # pylint: disable=no-member
+                return time.ticks_us()
         except:
-                return utime.time_ns()//1000</code></pre>
+                return time.time_ns()//1000</code></pre>
 </details>
 </dd>
 </dl>
@@ -363,7 +352,7 @@ def ping(host, count=4, timeout=1, quiet=False):
 <dl>
 <dt id="lib.server.ping.Packet"><code class="flex name class">
 <span>class <span class="ident">Packet</span></span>
-<span>(</span><span>type, code, sequence, size=64)</span>
+<span>(</span><span>typ, code, sequence, size=64)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create ICMP packet for ping </p>
@@ -376,16 +365,17 @@ def ping(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Create ICMP packet for ping &#34;&#34;&#34;
         ECHO_REQUEST = 8
         ECHO_REPLY   = 0
-        def __init__(self, type, code, sequence, size = 64):
+        def __init__(self, typ, code, sequence, size = 64):
                 &#34;&#34;&#34; Constructor of ICMP packet for ping &#34;&#34;&#34;
                 self.format = b&#34;&gt;BBHHHQ&#34;
-                self.type       = type #B
+                self.type       = typ #B
                 self.code       = code #B
                 self.checksum   = 0 #H
-                self.identifier = urandom.randint(0, 65535) #H
+                self.identifier = random.randint(0, 65535) #H
                 self.sequence   = sequence   #H
                 self.timestamp  = ticks_us() #Q
                 self.size       = size
+                self.ttl = None
 
         def computeChecksum(self, data):
                 &#34;&#34;&#34; Compute the checksum of packet &#34;&#34;&#34;
@@ -410,13 +400,13 @@ def ping(host, count=4, timeout=1, quiet=False):
         def unserialize(self, resp):
                 &#34;&#34;&#34; Unserialize packet &#34;&#34;&#34;
                 data = resp[20:]
-                data = data[0:ustruct.calcsize(self.format)]
-                self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = ustruct.unpack(self.format, data)
-                self.ttl = ustruct.unpack(&#34;!B&#34;,resp[8:9])[0]
+                data = data[0:struct.calcsize(self.format)]
+                self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = struct.unpack(self.format, data)
+                self.ttl = struct.unpack(&#34;!B&#34;,resp[8:9])[0]
         
         def __getBuffer(self):
                 &#34;&#34;&#34; Create the serialized buffer of data &#34;&#34;&#34;
-                data = ustruct.pack(self.format, self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
+                data = struct.pack(self.format, self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
                 padding = b&#34;.&#34;*(self.size-len(data))
                 return data + padding
                 
@@ -534,9 +524,9 @@ def ping(host, count=4, timeout=1, quiet=False):
 <pre><code class="python">def unserialize(self, resp):
         &#34;&#34;&#34; Unserialize packet &#34;&#34;&#34;
         data = resp[20:]
-        data = data[0:ustruct.calcsize(self.format)]
-        self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = ustruct.unpack(self.format, data)
-        self.ttl = ustruct.unpack(&#34;!B&#34;,resp[8:9])[0]</code></pre>
+        data = data[0:struct.calcsize(self.format)]
+        self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = struct.unpack(self.format, data)
+        self.ttl = struct.unpack(&#34;!B&#34;,resp[8:9])[0]</code></pre>
 </details>
 </dd>
 </dl>
@@ -556,6 +546,14 @@ def ping(host, count=4, timeout=1, quiet=False):
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.sock = None
+                self.ttl = None
+                self.host = None
+                self.packetsTransmitted = 0
+                self.packetsReceived = 0
+                self.addr = None
+                self.request = None
+                self.quiet = None
+                self.response = None
         
         def open(self, host):
                 &#34;&#34;&#34; Open connection to host &#34;&#34;&#34;
@@ -565,9 +563,9 @@ def ping(host, count=4, timeout=1, quiet=False):
                 try:
                         result = True
                         self.close()
-                        self.sock = usocket.socket(usocket.AF_INET, usocket.SOCK_RAW, 1)
+                        self.sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, 1)
                         self.sock.setblocking(0)
-                        self.addr = usocket.getaddrinfo(self.host, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+                        self.addr = socket.getaddrinfo(self.host, 1, socket.SOCK_DGRAM, socket.AF_INET)[0][-1][0]
                         self.sock.connect((self.addr, 1))
                         if self.quiet == False: print(&#34;PING %s (%s)&#34;%(self.host, self.addr))
                 except:
@@ -592,7 +590,7 @@ def ping(host, count=4, timeout=1, quiet=False):
                 &#34;&#34;&#34; Receive and decode ICMP packet &#34;&#34;&#34;
                 result = False
                 if sock:
-                        resp = self.sock.recv(4096)
+                        resp = self.sock.recv(256)
                         self.response = Packet(Packet.ECHO_REPLY, 0, seq)
                         
                         self.response.unserialize(resp)
@@ -616,7 +614,7 @@ def ping(host, count=4, timeout=1, quiet=False):
                                 else:
                                         socks, _, _ = uselect.select([self.sock], [], [], timeout)
                                         if self.receive(seq, socks):
-                                                utime.sleep(timeout)
+                                                time.sleep(timeout)
                         self.showResult()
                 else:
                         result = None
@@ -716,9 +714,9 @@ def ping(host, count=4, timeout=1, quiet=False):
         try:
                 result = True
                 self.close()
-                self.sock = usocket.socket(usocket.AF_INET, usocket.SOCK_RAW, 1)
+                self.sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, 1)
                 self.sock.setblocking(0)
-                self.addr = usocket.getaddrinfo(self.host, 1, usocket.SOCK_DGRAM, usocket.AF_INET)[0][-1][0]
+                self.addr = socket.getaddrinfo(self.host, 1, socket.SOCK_DGRAM, socket.AF_INET)[0][-1][0]
                 self.sock.connect((self.addr, 1))
                 if self.quiet == False: print(&#34;PING %s (%s)&#34;%(self.host, self.addr))
         except:
@@ -749,7 +747,7 @@ def ping(host, count=4, timeout=1, quiet=False):
                         else:
                                 socks, _, _ = uselect.select([self.sock], [], [], timeout)
                                 if self.receive(seq, socks):
-                                        utime.sleep(timeout)
+                                        time.sleep(timeout)
                 self.showResult()
         else:
                 result = None
@@ -770,7 +768,7 @@ def ping(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Receive and decode ICMP packet &#34;&#34;&#34;
         result = False
         if sock:
-                resp = self.sock.recv(4096)
+                resp = self.sock.recv(256)
                 self.response = Packet(Packet.ECHO_REPLY, 0, seq)
                 
                 self.response.unserialize(resp)
@@ -838,7 +836,6 @@ def ping(host, count=4, timeout=1, quiet=False):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="lib.server.ping.asyncPing" href="#lib.server.ping.asyncPing">asyncPing</a></code></li>
-<li><code><a title="lib.server.ping.getAddressIp" href="#lib.server.ping.getAddressIp">getAddressIp</a></code></li>
 <li><code><a title="lib.server.ping.ping" href="#lib.server.ping.ping">ping</a></code></li>
 <li><code><a title="lib.server.ping.select" href="#lib.server.ping.select">select</a></code></li>
 <li><code><a title="lib.server.ping.ticks_us" href="#lib.server.ping.ticks_us">ticks_us</a></code></li>

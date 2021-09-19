@@ -31,7 +31,6 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Base class of html templates &#34;&#34;&#34;
 from tools import useful
-from tools.useful import log
 
 class Template:
         &#34;&#34;&#34; Base class of html templates &#34;&#34;&#34;
@@ -56,6 +55,7 @@ class Template:
         async def write(self, file):
                 &#34;&#34;&#34; Write to the file stream the html template (parse also all children) &#34;&#34;&#34;
                 try:
+                        # pylint: disable=no-member
                         await file.write(self.getBegin(self))
                         for child in self.children:
                                 if isinstance(child, Template):
@@ -114,6 +114,7 @@ class Template:
         async def write(self, file):
                 &#34;&#34;&#34; Write to the file stream the html template (parse also all children) &#34;&#34;&#34;
                 try:
+                        # pylint: disable=no-member
                         await file.write(self.getBegin(self))
                         for child in self.children:
                                 if isinstance(child, Template):
@@ -161,6 +162,7 @@ class Template:
 <pre><code class="python">async def write(self, file):
         &#34;&#34;&#34; Write to the file stream the html template (parse also all children) &#34;&#34;&#34;
         try:
+                # pylint: disable=no-member
                 await file.write(self.getBegin(self))
                 for child in self.children:
                         if isinstance(child, Template):

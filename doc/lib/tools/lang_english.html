@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.tools.lang_english API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.tools.lang_english</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+
+# FOR WEB SERVER PERFORMANCE REASONS, ONLY BINARY STRINGS ARE SUPPORTED : b&#34;...&#34;
+menu_system                             =b&#34;   System&#34;
+item_information                        =b&#34;   Information&#34;
+item_system                             =b&#34; Maintenance&#34;
+item_battery                            =b&#34;Battery&#34;
+item_wakeup                             =b&#34;Wake up&#34;
+
+menu_account                            =b&#34;   Account&#34;
+item_region                             =b&#34;  Region&#34;
+item_password                           =b&#34; User/password&#34;
+item_logout                             =b&#34;Logout&#34;
+
+menu_network                            =b&#34;  Network&#34;
+item_wifi                               =b&#34;    Wifi&#34;
+item_access_point                       =b&#34;   Access point&#34;
+
+menu_server                             =b&#34;  Server&#34;
+item_presence                           =b&#34;Presence&#34;
+item_server                             =b&#34;Configuration&#34;
+item_notification                       =b&#34;Notification&#34;
+
+menu_motion                             =b&#34; Motion&#34;
+item_motion                             =b&#34;  Configuration&#34;
+item_historic                           =b&#34; Historic&#34;
+item_motion_onoff                       =b&#34;On/Off&#34;
+
+menu_camera                             =b&#34; Camera&#34;
+item_camera                             =b&#34;Video stream&#34;
+item_onoff                              =b&#34;On/Off&#34;
+
+reboot_after_many                       =b&#34;Reboot after many crash : \n%s&#34;
+login_success_detected                  =b&#34;Login success detected&#34;
+login_failed_detected                   =b&#34;Login failed detected&#34;
+presence_of_s                           =b&#34;Presence of %s&#34;
+empty_house                             =b&#34;Empty house&#34;
+presence_detection_on                   =b&#34;Presence detection on&#34;
+presence_detection_off                  =b&#34;Presence detection off&#34;
+failed_to_save                          =b&#34;Failed to save on sd card&#34;
+motion_detected                         =b&#34;Motion detected at&#34;
+motion_detection_on                     =b&#34;Motion detection on&#34;
+motion_detection_off                    =b&#34;Motion detection off&#34;
+motion_detection_suspended              =b&#34;Motion detection suspended&#34;
+motion_detection_configuration          =b&#34;Motion detection configuration&#34;
+motion_onoff                            =b&#34;Motion detection on/off&#34;
+motion_on                               =b&#34;Start&#34;
+motion_off                              =b&#34;Stop&#34;
+camera_onoff                            =b&#34;Camera on/off&#34;
+camera_on                               =b&#34;Start&#34;
+camera_off                              =b&#34;Stop&#34;
+activated                               =b&#34;Activated&#34;
+detects_a_movement                      =b&#34;Detects a movement if a number of different squares on two successive images is greater than or equal to&#34;
+motion_detection_sensitivity            =b&#34;Motion detection sensitivity&#34;
+notification                            =b&#34;Notification&#34;
+suspends_motion_detection               =b&#34;Suspends motion detection on the presence of an occupant&#34;
+pushover_on                             =b&#34;Pushover notification on&#34;
+pushover_off                            =b&#34;Pushover notification off&#34;
+notification_configuration              =b&#34;Notification configuration&#34;
+pushover_user                           =b&#34;User&#34;
+enter_pushover_user                     =b&#34;Enter pushover user&#34;
+pushover_token                          =b&#34;Token&#34;
+enter_pushover_token                    =b&#34;Enter pushover token&#34;
+see_pushover_website                    =b&#34;See pushover website&#34;
+historic_not_available                  =b&#34;Not yet available, retry again in 5 minutes&#34;
+last_motion_detections                  =b&#34;Last motion detections&#34;
+convert_ip_address                      =b&#34;Convert ip address into DNS name&#34;
+smartphone_d                            =b&#34;Smartphone %d&#34;
+enter_ip_address_or_dns                 =b&#34;Enter ip address or dns name&#34;
+presence_detection_configuration        =b&#34;Presence detection configuration&#34;
+battery_management                      =b&#34;Battery management&#34;
+gpio_wake_up                            =b&#34;GPIO wake up&#34;
+gpio_used_wake_up                       =b&#34;GPIO used to wake up&#34;
+gpio_connected_to_pir                   =b&#34;GPIO connected to passive infrared sensor (PIR)&#34;
+awake_duration_in                       =b&#34;Awake duration in seconds&#34;
+duration_awake                          =b&#34;Duration in seconds it stays awake&#34;
+sleep_duration_in                       =b&#34;Sleep duration in seconds&#34;
+duration_sleep                          =b&#34;Duration in seconds to sleep&#34;
+battery_monitoring                      =b&#34;Battery monitoring&#34;
+gpio_used_battery                       =b&#34;GPIO used to get battery level&#34;
+gpio_connected_to_battery               =b&#34;GPIO connect to battery level&#34;
+gpio_value_for_full                     =b&#34;GPIO value for 100%&#34;
+gpio_adc_value_full                     =b&#34;GPIO ADC value for battery full (4.2V)&#34;
+gpio_value_for_empty                    =b&#34;GPIO value for 0%&#34;
+gpio_adc_value_empty                    =b&#34;GPIO ADC value for battery empty (3.6V)&#34;
+force_a_deep                            =b&#34;Force a deep sleep if several resets due to a power failure&#34;
+ip_address                              =b&#34;Ip address&#34;
+enter_ip_address                        =b&#34;Enter ip address&#34;
+netmask                                 =b&#34;Netmask&#34;
+enter_netmask                           =b&#34;Enter netmask&#34;
+gateway                                 =b&#34;Gateway&#34;
+enter_gateway                           =b&#34;Enter gateway&#34;
+dns                                     =b&#34;DNS&#34;
+enter_dns                               =b&#34;Enter DNS&#34;
+wifi                                    =b&#34;Wifi&#34;
+wifi_default                            =b&#34;Wifi (default)&#34;
+save                                    =b&#34;Save&#34;
+lt                                      =b&#34;&amp;lt;-&#34;
+gt                                      =b&#34;-&amp;gt;&#34;
+forget                                  =b&#34;Forget&#34;
+set_default                             =b&#34;Set Default&#34;
+modify                                  =b&#34;Modify&#34;
+days                                    =b&#34;days&#34;
+wifi_configuration                      =b&#34;Wifi configuration&#34;
+hostname                                =b&#34;Hostname&#34;
+hostname_not_available                  =b&#34;Hostname not available with static IP&#34;
+fallback_to_the                         =b&#34;Automatic start of access point when the wifi is not reachable&#34;
+ssid                                    =b&#34;SSID&#34;
+enter_ssid                              =b&#34;Enter SSID&#34;
+password                                =b&#34;Password&#34;
+user                                    =b&#34;User&#34;
+enter_password                          =b&#34;Enter password&#34;
+dynamic_ip                              =b&#34;Dynamic IP&#34;
+access_point_configuration              =b&#34;Access point configuration&#34;
+authentication_mode                     =b&#34;Authentication mode&#34;
+static_ip                               =b&#34;Static IP&#34;
+servers_configuration                   =b&#34;Servers configuration&#34;
+ftp                                     =b&#34;Ftp&#34;
+http                                    =b&#39;Http&#39;
+telnet                                  =b&#34;Telnet&#34;
+time_synchronization                    =b&#34;Time synchronization&#34;
+wan_ip                                  =b&#34;Wan ip&#34;
+utc_offset                              =b&#34;UTC offset&#34;
+offset_time_to                          =b&#34;Offset time to add to UTC&#34;
+daylight_saving_time                    =b&#34;Daylight saving time&#34;
+taken_into_account                      =b&#34;The values will be taken into account the next time the product is restarted&#34;
+notification_reboot_user                =b&#34;Notification (Reboot, User login...)&#34;
+device_informations                     =b&#34;Device informations&#34;
+unavailable                             =b&#34;Unavailable&#34;
+date                                    =b&#34;Date&#34;
+uptime                                  =b&#34;Uptime&#34;
+platform                                =b&#34;Platform&#34;
+frequency                               =b&#34;Frequency&#34;
+build_date                              =b&#34;Firmware build date&#34;
+memory_free                             =b&#34;Memory free&#34;
+memory_allocated                        =b&#34;Memory allocated&#34;
+memory_total                            =b&#34;Memory total&#34;
+flash_user                              =b&#34;Flash user&#34;
+flash_size                              =b&#34;Flash size&#34;
+change_password                         =b&#34;Change password&#34;
+logout                                  =b&#34;Logout&#34;
+modify_password                         =b&#34;Modify password&#34;
+region_configuration                    =b&#34;Region configuration&#34;
+language                                =b&#34;Language&#34;
+system_management_s                     =b&#34;System management %s&#34;
+configuration                           =b&#34;Configuration&#34;
+import_                                 =b&#34;Import&#34;
+configuration_imported                  =b&#34;Configuration imported&#34;
+export                                  =b&#34;Export&#34;
+file_system                             =b&#34;File system&#34;
+import_in_progress                      =b&#34;Import in progress, wait a few minutes the automatic reboot&#34;
+syslog                                  =b&#34;Syslog&#34;
+reboot_device                           =b&#34;Reboot device&#34;
+reboot                                  =b&#34;Reboot&#34;
+confirm_reboot                          =b&#34;Confirm reboot&#34;
+password_changed                        =b&#34;Password changed&#34;
+passwords_not_equals                    =b&#34;Passwords not equals&#34;
+wrong_user_or                           =b&#34;Wrong user or password&#34;
+create_user_name                        =b&#34;Create user name&#34;
+enter_user_name                         =b&#34;Enter user name&#34;
+current_password                        =b&#34;Current password&#34;
+new_password                            =b&#34;New password&#34;
+repeat_new_password                     =b&#34;Repeat new password&#34;
+login                                   =b&#34;Login&#34;
+camera                                  =b&#34;Camera&#34;
+resolution                              =b&#34;Resolution&#34;
+quality                                 =b&#34;Quality&#34;
+brightness                              =b&#34;Brightness&#34;
+contrast                                =b&#34;Contrast&#34;
+saturation                              =b&#34;Saturation&#34;
+hmirror                                 =b&#34;Horizontal mirror&#34;
+vflip                                   =b&#34;Vertical flip&#34;</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.tools" href="index.html">lib.tools</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

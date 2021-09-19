@@ -80,8 +80,9 @@ def findall(pattern, text):
         return result, beginTag, endTag, beginFormat, endFormat
 
 def parse(force=False):
-        &#34;&#34;&#34; Parse the www/template.html and creates the content of file lib/htmltemplate/htmlclasses.py &#34;&#34;&#34;
+        &#34;&#34;&#34; Parse the www/template.html and createsthe content of file lib/htmltemplate/htmlclasses.py &#34;&#34;&#34;
         from htmltemplate import WWW_DIR, TEMPLATE_FILE, TEMPLATE_PY
+        # pylint: disable=duplicate-string-formatting-argument
         print(&#34;Parse html template&#34;)
         lines = open(WWW_DIR+TEMPLATE_FILE).readlines()
         pyClassFile = open(TEMPLATE_PY,&#34;w&#34;)
@@ -98,9 +99,7 @@ def parse(force=False):
                                 if classname != stack[-1][0]:
                                         raise SyntaxError()
                                 classname, text, comment = stack.pop()
-                                if classname == &#34;Tab&#34;:
-                                        classname = classname
-                                attributes, beginTag, endTag, beginFormat, endFormat = findall(&#39;\%\([A-Za-z_0-9]*\)s&#39;,text)
+                                attributes, beginTag, endTag, beginFormat, endFormat = findall(r&#39;\%\([A-Za-z_0-9]*\)s&#39;,text)
 
                                 print(&#34;Html template update %s&#34;%classname)
                                 classattributes = set()
@@ -228,14 +227,15 @@ def parse(force=False):
 <span>def <span class="ident">parse</span></span>(<span>force=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Parse the www/template.html and creates the content of file lib/htmltemplate/htmlclasses.py</p></div>
+<div class="desc"><p>Parse the www/template.html and createsthe content of file lib/htmltemplate/htmlclasses.py</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def parse(force=False):
-        &#34;&#34;&#34; Parse the www/template.html and creates the content of file lib/htmltemplate/htmlclasses.py &#34;&#34;&#34;
+        &#34;&#34;&#34; Parse the www/template.html and createsthe content of file lib/htmltemplate/htmlclasses.py &#34;&#34;&#34;
         from htmltemplate import WWW_DIR, TEMPLATE_FILE, TEMPLATE_PY
+        # pylint: disable=duplicate-string-formatting-argument
         print(&#34;Parse html template&#34;)
         lines = open(WWW_DIR+TEMPLATE_FILE).readlines()
         pyClassFile = open(TEMPLATE_PY,&#34;w&#34;)
@@ -252,9 +252,7 @@ def parse(force=False):
                                 if classname != stack[-1][0]:
                                         raise SyntaxError()
                                 classname, text, comment = stack.pop()
-                                if classname == &#34;Tab&#34;:
-                                        classname = classname
-                                attributes, beginTag, endTag, beginFormat, endFormat = findall(&#39;\%\([A-Za-z_0-9]*\)s&#39;,text)
+                                attributes, beginTag, endTag, beginFormat, endFormat = findall(r&#39;\%\([A-Za-z_0-9]*\)s&#39;,text)
 
                                 print(&#34;Html template update %s&#34;%classname)
                                 classattributes = set()

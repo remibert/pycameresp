@@ -492,26 +492,36 @@ class Detection:
 	async def isActivated(self):
 		""" Indicates if the motion detection is activated according to configuration or presence """
 		result = False
+
+		# If motion activated
 		if self.motionConfig.activated:
+			# If motion must be suspended on presence
 			if self.motionConfig.suspendOnPresence:
+				# If home is empty
 				if Presence.isDetected() == False:
 					result = True
 			else:
 				result = True
-			
+		
+		# If state of motion changed
 		if self.activated != result:
+			# If notification enabled
 			if self.motionConfig.notify:
 				if result:
 					await Notifier.notify(lang.motion_detection_on)
 				else:
 					await Notifier.notify(lang.motion_detection_off)
 			self.activated = result
-		if Camera.isActivated():
+
+		# If camera activated and motion activated
+		if Camera.isActivated() and result:
 			result = True
 		else:
 			result = False
+
+		# If motion disabled
 		if result == False:
-			# Motion capture disabled
+			# Wait moment before next loop
 			await uasyncio.sleep_ms(500)
 		return result
 

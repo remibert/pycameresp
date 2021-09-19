@@ -1,0 +1,1176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.motion.historic API documentation</title>
+<meta name="description" content="Manage the motion detection history file" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.motion.historic</code></h1>
+</header>
+<section id="section-intro">
+<p>Manage the motion detection history file</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+&#34;&#34;&#34; Manage the motion detection history file &#34;&#34;&#34;
+import uos
+import re
+import uasyncio
+from tools import useful, sdcard, tasking
+import json
+
+MAX_DISPLAYED = 100
+MAX_REMOVED   = 100
+
+class Historic:
+        &#34;&#34;&#34; Manage the motion detection history file &#34;&#34;&#34;
+        motionInProgress  = [False]
+        historic = []
+        firstExtract = [False]
+        lock = uasyncio.Lock()
+
+        @staticmethod
+        async def acquire():
+                &#34;&#34;&#34; Lock historic &#34;&#34;&#34;
+                await Historic.lock.acquire()
+
+        @staticmethod
+        async def release():
+                &#34;&#34;&#34; Release historic &#34;&#34;&#34;
+                Historic.lock.release()
+
+        @staticmethod
+        async def locked():
+                &#34;&#34;&#34; Indicates if historic is locked &#34;&#34;&#34;
+                return Historic.lock.locked()
+
+        @staticmethod
+        async def getRoot():
+                &#34;&#34;&#34; Get the root path of sdcard and mount it &#34;&#34;&#34;
+                if sdcard.SdCard.mount():
+                        return sdcard.SdCard.getMountpoint()
+                return None
+
+        @staticmethod
+        async def addMotion(path, name, image, info):
+                &#34;&#34;&#34; Add motion detection in the historic &#34;&#34;&#34;
+                root = await Historic.getRoot()
+                result = False
+                if root:
+                        try:
+                                await Historic.acquire()
+                                path = useful.tostrings(path)
+                                name = useful.tostrings(name) 
+                                jsonInfo = useful.tobytes(json.dumps(info))
+                                item = Historic.createItem(root + &#34;/&#34; + path + &#34;/&#34; + name +&#34;.json&#34;, info)
+                                res1 = sdcard.SdCard.save(path, name + &#34;.jpg&#34; , image)
+                                res2 = sdcard.SdCard.save(path, name + &#34;.json&#34;, json.dumps(item))
+                                Historic.addItem(item)
+                                result = res1 and res2
+                        except Exception as err:
+                                useful.syslog(err)
+                        finally:
+                                await Historic.release()
+                return result
+
+        @staticmethod
+        def createItem(filename, info):
+                &#34;&#34;&#34; Create historic item &#34;&#34;&#34;
+                name = useful.splitext(filename)[0] + &#34;.jpg&#34;
+                result = None
+                shapes = []
+                if &#34;shapes&#34; in info:
+                        for shape in info[&#34;shapes&#34;]:
+                                shapes.append([shape[&#34;size&#34;],shape[&#34;x&#34;],shape[&#34;y&#34;],shape[&#34;width&#34;],shape[&#34;height&#34;]])
+
+                if &#34;geometry&#34; in info:
+                        # Add json file to the historic
+                        result = [name, info[&#34;geometry&#34;][&#34;width&#34;],info[&#34;geometry&#34;][&#34;height&#34;], shapes, info[&#34;diff&#34;][&#34;diffs&#34;], info[&#34;diff&#34;][&#34;squarex&#34;], info[&#34;diff&#34;][&#34;squarey&#34;]]
+                return result
+
+        @staticmethod
+        def addItem(item):
+                &#34;&#34;&#34; Add item in the historic &#34;&#34;&#34;
+                if item is not None:
+                        if not useful.ismicropython():
+                                # Remove the &#34;/&#34; before filename
+                                item [0] = item[0][1:]
+                        # Add json file to the historic
+                        Historic.historic.insert(0,item)
+
+        @staticmethod
+        async def build(motions):
+                &#34;&#34;&#34; Parse the all motions files to build historic &#34;&#34;&#34;
+                root = await Historic.getRoot()
+                if root:
+                        count = 0
+                        try:
+                                await Historic.acquire()
+                                Historic.historic.clear()
+
+                                # For all motions
+                                for motion in motions:
+                                        path = root + &#34;/&#34; + motion
+
+                                        try:
+                                                # Parse json file
+                                                file = None
+                                                file = open(motion, &#34;rb&#34;)
+                                                Historic.addItem(json.load(file))
+                                        except Exception as err:
+                                                useful.syslog(err)
+                                        finally:
+                                                if file:
+                                                        file.close()
+                                        await uasyncio.sleep_ms(3)
+                        except Exception as err:
+                                useful.syslog(err)
+                        finally:
+                                await Historic.release()
+
+        @staticmethod
+        async def getJson():
+                &#34;&#34;&#34; Read the historic from disk &#34;&#34;&#34;
+                root = await Historic.getRoot()
+                result = b&#34;&#34;
+                if root:
+                        try:
+                                await Historic.acquire()
+                                Historic.historic.sort()
+                                Historic.historic.reverse()
+                                while len(Historic.historic) &gt; MAX_DISPLAYED:
+                                        del Historic.historic[-1]
+                                result = useful.tobytes(json.dumps(Historic.historic))
+                        except Exception as err:
+                                useful.syslog(err)
+                        finally:
+                                await Historic.release()
+                return result
+
+        @staticmethod
+        async def extract():
+                &#34;&#34;&#34; Extract motion historic &#34;&#34;&#34;
+                # If this is the fisrt update (parse all directory)
+                if  Historic.firstExtract[0] == False:
+                        Historic.firstExtract[0] = True
+                        try:
+                                useful.syslog(&#34;Start historic creation&#34;)
+                                # Scan sd card and get more recent motions
+                                motions = await Historic.scanDirectories(MAX_DISPLAYED, False)
+
+                                # Build historic file
+                                files = await Historic.build(motions)
+                                useful.syslog(&#34;End   historic creation&#34;)
+                        except Exception as err:
+                                useful.syslog(err)
+
+        @staticmethod
+        async def scanDir(path, pattern, older=True, directory=True):
+                &#34;&#34;&#34; Scan directory &#34;&#34;&#34;
+                result = []
+                count = 0
+                for fileinfo in uos.ilistdir(path):
+                        name = fileinfo[0]
+                        typ  = fileinfo[1]
+                        if directory:
+                                if typ &amp; 0xF000 == 0x4000:
+                                        if re.match(pattern, name):
+                                                result.append(name)
+                        else:
+                                if typ &amp; 0xF000 != 0x4000:
+                                        if re.match(pattern, name):
+                                                result.append(name)
+                        count += 1
+                        if count &gt; 10:
+                                count = 0
+                                await uasyncio.sleep_ms(5)
+                result.sort()
+                if older == False:
+                        result.reverse()
+                return result
+
+        @staticmethod
+        async def scanDirectories(quantity=10, older=True):
+                &#34;&#34;&#34; Get the list of older or older directories in the sd card &#34;&#34;&#34;
+                motions = []
+                root = await Historic.getRoot()
+                if root:
+                        try:
+                                await Historic.acquire()
+                                years = await Historic.scanDir(root, r&#34;\d\d\d\d&#34;, older)
+                                for year in years:
+                                        pathYear = root + &#34;/&#34; + year
+                                        months = await Historic.scanDir(pathYear, r&#34;\d\d&#34;, older)
+                                        for month in months:
+                                                pathMonth = pathYear + &#34;/&#34; + month
+                                                days = await Historic.scanDir(pathMonth, r&#34;\d\d&#34;, older)
+                                                for day in days:
+                                                        pathDay = pathMonth + &#34;/&#34; + day
+                                                        hours = await Historic.scanDir(pathDay, r&#34;\d\dh\d\d&#34;, older)
+                                                        for hour in hours:
+                                                                pathHour = pathDay + &#34;/&#34; + hour
+                                                                if older:
+                                                                        extension = &#34;jpg&#34;
+                                                                else:
+                                                                        extension = &#34;json&#34;
+                                                                detections = await Historic.scanDir(pathHour, r&#34;\d\d.*\.&#34;+extension, older, directory=False)
+                                                                for detection in detections:
+                                                                        motions.append(pathHour + &#34;/&#34; + detection)
+                                                                if len(motions) &gt; quantity:
+                                                                        motions.sort()
+                                                                        if older == False:
+                                                                                motions.reverse()
+                                                                        return motions
+                                motions.sort()
+                                if older == False:
+                                        motions.reverse()
+                        except Exception as err:
+                                useful.syslog(err)
+                        finally:
+                                await Historic.release()
+                return motions
+
+        @staticmethod
+        def setMotionState(state):
+                &#34;&#34;&#34; Indicates if motion is actually in detection &#34;&#34;&#34;
+                Historic.motionInProgress[0] = state
+
+        @staticmethod
+        async def removeFiles(directory, simulate=False):
+                &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
+                import shell
+                notEmpty = False
+                force = True
+                if useful.exists(directory):
+                        # Parse all directories in sdcard
+                        for fileinfo in uos.ilistdir(directory):
+                                filename = fileinfo[0]
+                                typ      = fileinfo[1]
+                                print(filename)
+                                # If file found
+                                if typ &amp; 0xF000 != 0x4000:
+                                        shell.rmfile(directory + &#34;/&#34; + filename, simulate=simulate, force=force)
+                                else:
+                                        await Historic.removeFiles(directory + &#34;/&#34; + filename)
+                                        notEmpty = True
+                        
+                        if notEmpty:
+                                shell.rm(directory, recursive=True, simulate=simulate, force=force)
+                        else:
+                                shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
+                else:
+                        print(&#34;Directory not existing &#39;%s&#39;&#34;%directory)
+
+        @staticmethod
+        async def removeOlder(force=False):
+                &#34;&#34;&#34; Remove older files to make space &#34;&#34;&#34;
+                root = await Historic.getRoot()
+                if root:
+                        # If not enough space available on sdcard
+                        if (sdcard.SdCard.getFreeSize() * 10000// sdcard.SdCard.getMaxSize() &lt;= 5) or force:
+                                useful.syslog(&#34;Start cleanup sd card&#34;)
+                                olders = await Historic.scanDirectories(MAX_REMOVED, True)
+                                previous = &#34;&#34;
+                                for motion in olders:
+                                        try:
+                                                await Historic.acquire()
+                                                directory = useful.split(motion)[0]
+                                                if previous != directory:
+                                                        await Historic.removeFiles(directory)
+                                                        previous = directory
+                                        except Exception as err:
+                                                useful.syslog(err)
+                                        finally:
+                                                await Historic.release()
+                                useful.syslog(&#34;End cleanup sd card&#34;)
+
+        @staticmethod 
+        async def periodic():
+                &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
+                from server.server import Server
+                if useful.ismicropython():
+                        await Server.waitResume(307)
+                else:
+                        await Server.waitResume(7)
+                if Historic.motionInProgress[0] == False:
+                        if sdcard.SdCard.isMounted():
+                                await Historic.extract()
+                                await Historic.removeOlder()
+                        else:
+                                await Historic.getRoot()
+                return True
+
+        @staticmethod
+        async def periodicTask():
+                &#34;&#34;&#34; Execute periodic traitment &#34;&#34;&#34;
+                await tasking.taskMonitoring(Historic.periodic)
+
+        @staticmethod
+        async def test():
+                &#34;&#34;&#34; Test historic &#34;&#34;&#34;
+                await Historic.extract()
+                await Historic.removeOlder(True)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.motion.historic.Historic"><code class="flex name class">
+<span>class <span class="ident">Historic</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage the motion detection history file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Historic:
+        &#34;&#34;&#34; Manage the motion detection history file &#34;&#34;&#34;
+        motionInProgress  = [False]
+        historic = []
+        firstExtract = [False]
+        lock = uasyncio.Lock()
+
+        @staticmethod
+        async def acquire():
+                &#34;&#34;&#34; Lock historic &#34;&#34;&#34;
+                await Historic.lock.acquire()
+
+        @staticmethod
+        async def release():
+                &#34;&#34;&#34; Release historic &#34;&#34;&#34;
+                Historic.lock.release()
+
+        @staticmethod
+        async def locked():
+                &#34;&#34;&#34; Indicates if historic is locked &#34;&#34;&#34;
+                return Historic.lock.locked()
+
+        @staticmethod
+        async def getRoot():
+                &#34;&#34;&#34; Get the root path of sdcard and mount it &#34;&#34;&#34;
+                if sdcard.SdCard.mount():
+                        return sdcard.SdCard.getMountpoint()
+                return None
+
+        @staticmethod
+        async def addMotion(path, name, image, info):
+                &#34;&#34;&#34; Add motion detection in the historic &#34;&#34;&#34;
+                root = await Historic.getRoot()
+                result = False
+                if root:
+                        try:
+                                await Historic.acquire()
+                                path = useful.tostrings(path)
+                                name = useful.tostrings(name) 
+                                jsonInfo = useful.tobytes(json.dumps(info))
+                                item = Historic.createItem(root + &#34;/&#34; + path + &#34;/&#34; + name +&#34;.json&#34;, info)
+                                res1 = sdcard.SdCard.save(path, name + &#34;.jpg&#34; , image)
+                                res2 = sdcard.SdCard.save(path, name + &#34;.json&#34;, json.dumps(item))
+                                Historic.addItem(item)
+                                result = res1 and res2
+                        except Exception as err:
+                                useful.syslog(err)
+                        finally:
+                                await Historic.release()
+                return result
+
+        @staticmethod
+        def createItem(filename, info):
+                &#34;&#34;&#34; Create historic item &#34;&#34;&#34;
+                name = useful.splitext(filename)[0] + &#34;.jpg&#34;
+                result = None
+                shapes = []
+                if &#34;shapes&#34; in info:
+                        for shape in info[&#34;shapes&#34;]:
+                                shapes.append([shape[&#34;size&#34;],shape[&#34;x&#34;],shape[&#34;y&#34;],shape[&#34;width&#34;],shape[&#34;height&#34;]])
+
+                if &#34;geometry&#34; in info:
+                        # Add json file to the historic
+                        result = [name, info[&#34;geometry&#34;][&#34;width&#34;],info[&#34;geometry&#34;][&#34;height&#34;], shapes, info[&#34;diff&#34;][&#34;diffs&#34;], info[&#34;diff&#34;][&#34;squarex&#34;], info[&#34;diff&#34;][&#34;squarey&#34;]]
+                return result
+
+        @staticmethod
+        def addItem(item):
+                &#34;&#34;&#34; Add item in the historic &#34;&#34;&#34;
+                if item is not None:
+                        if not useful.ismicropython():
+                                # Remove the &#34;/&#34; before filename
+                                item [0] = item[0][1:]
+                        # Add json file to the historic
+                        Historic.historic.insert(0,item)
+
+        @staticmethod
+        async def build(motions):
+                &#34;&#34;&#34; Parse the all motions files to build historic &#34;&#34;&#34;
+                root = await Historic.getRoot()
+                if root:
+                        count = 0
+                        try:
+                                await Historic.acquire()
+                                Historic.historic.clear()
+
+                                # For all motions
+                                for motion in motions:
+                                        path = root + &#34;/&#34; + motion
+
+                                        try:
+                                                # Parse json file
+                                                file = None
+                                                file = open(motion, &#34;rb&#34;)
+                                                Historic.addItem(json.load(file))
+                                        except Exception as err:
+                                                useful.syslog(err)
+                                        finally:
+                                                if file:
+                                                        file.close()
+                                        await uasyncio.sleep_ms(3)
+                        except Exception as err:
+                                useful.syslog(err)
+                        finally:
+                                await Historic.release()
+
+        @staticmethod
+        async def getJson():
+                &#34;&#34;&#34; Read the historic from disk &#34;&#34;&#34;
+                root = await Historic.getRoot()
+                result = b&#34;&#34;
+                if root:
+                        try:
+                                await Historic.acquire()
+                                Historic.historic.sort()
+                                Historic.historic.reverse()
+                                while len(Historic.historic) &gt; MAX_DISPLAYED:
+                                        del Historic.historic[-1]
+                                result = useful.tobytes(json.dumps(Historic.historic))
+                        except Exception as err:
+                                useful.syslog(err)
+                        finally:
+                                await Historic.release()
+                return result
+
+        @staticmethod
+        async def extract():
+                &#34;&#34;&#34; Extract motion historic &#34;&#34;&#34;
+                # If this is the fisrt update (parse all directory)
+                if  Historic.firstExtract[0] == False:
+                        Historic.firstExtract[0] = True
+                        try:
+                                useful.syslog(&#34;Start historic creation&#34;)
+                                # Scan sd card and get more recent motions
+                                motions = await Historic.scanDirectories(MAX_DISPLAYED, False)
+
+                                # Build historic file
+                                files = await Historic.build(motions)
+                                useful.syslog(&#34;End   historic creation&#34;)
+                        except Exception as err:
+                                useful.syslog(err)
+
+        @staticmethod
+        async def scanDir(path, pattern, older=True, directory=True):
+                &#34;&#34;&#34; Scan directory &#34;&#34;&#34;
+                result = []
+                count = 0
+                for fileinfo in uos.ilistdir(path):
+                        name = fileinfo[0]
+                        typ  = fileinfo[1]
+                        if directory:
+                                if typ &amp; 0xF000 == 0x4000:
+                                        if re.match(pattern, name):
+                                                result.append(name)
+                        else:
+                                if typ &amp; 0xF000 != 0x4000:
+                                        if re.match(pattern, name):
+                                                result.append(name)
+                        count += 1
+                        if count &gt; 10:
+                                count = 0
+                                await uasyncio.sleep_ms(5)
+                result.sort()
+                if older == False:
+                        result.reverse()
+                return result
+
+        @staticmethod
+        async def scanDirectories(quantity=10, older=True):
+                &#34;&#34;&#34; Get the list of older or older directories in the sd card &#34;&#34;&#34;
+                motions = []
+                root = await Historic.getRoot()
+                if root:
+                        try:
+                                await Historic.acquire()
+                                years = await Historic.scanDir(root, r&#34;\d\d\d\d&#34;, older)
+                                for year in years:
+                                        pathYear = root + &#34;/&#34; + year
+                                        months = await Historic.scanDir(pathYear, r&#34;\d\d&#34;, older)
+                                        for month in months:
+                                                pathMonth = pathYear + &#34;/&#34; + month
+                                                days = await Historic.scanDir(pathMonth, r&#34;\d\d&#34;, older)
+                                                for day in days:
+                                                        pathDay = pathMonth + &#34;/&#34; + day
+                                                        hours = await Historic.scanDir(pathDay, r&#34;\d\dh\d\d&#34;, older)
+                                                        for hour in hours:
+                                                                pathHour = pathDay + &#34;/&#34; + hour
+                                                                if older:
+                                                                        extension = &#34;jpg&#34;
+                                                                else:
+                                                                        extension = &#34;json&#34;
+                                                                detections = await Historic.scanDir(pathHour, r&#34;\d\d.*\.&#34;+extension, older, directory=False)
+                                                                for detection in detections:
+                                                                        motions.append(pathHour + &#34;/&#34; + detection)
+                                                                if len(motions) &gt; quantity:
+                                                                        motions.sort()
+                                                                        if older == False:
+                                                                                motions.reverse()
+                                                                        return motions
+                                motions.sort()
+                                if older == False:
+                                        motions.reverse()
+                        except Exception as err:
+                                useful.syslog(err)
+                        finally:
+                                await Historic.release()
+                return motions
+
+        @staticmethod
+        def setMotionState(state):
+                &#34;&#34;&#34; Indicates if motion is actually in detection &#34;&#34;&#34;
+                Historic.motionInProgress[0] = state
+
+        @staticmethod
+        async def removeFiles(directory, simulate=False):
+                &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
+                import shell
+                notEmpty = False
+                force = True
+                if useful.exists(directory):
+                        # Parse all directories in sdcard
+                        for fileinfo in uos.ilistdir(directory):
+                                filename = fileinfo[0]
+                                typ      = fileinfo[1]
+                                print(filename)
+                                # If file found
+                                if typ &amp; 0xF000 != 0x4000:
+                                        shell.rmfile(directory + &#34;/&#34; + filename, simulate=simulate, force=force)
+                                else:
+                                        await Historic.removeFiles(directory + &#34;/&#34; + filename)
+                                        notEmpty = True
+                        
+                        if notEmpty:
+                                shell.rm(directory, recursive=True, simulate=simulate, force=force)
+                        else:
+                                shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
+                else:
+                        print(&#34;Directory not existing &#39;%s&#39;&#34;%directory)
+
+        @staticmethod
+        async def removeOlder(force=False):
+                &#34;&#34;&#34; Remove older files to make space &#34;&#34;&#34;
+                root = await Historic.getRoot()
+                if root:
+                        # If not enough space available on sdcard
+                        if (sdcard.SdCard.getFreeSize() * 10000// sdcard.SdCard.getMaxSize() &lt;= 5) or force:
+                                useful.syslog(&#34;Start cleanup sd card&#34;)
+                                olders = await Historic.scanDirectories(MAX_REMOVED, True)
+                                previous = &#34;&#34;
+                                for motion in olders:
+                                        try:
+                                                await Historic.acquire()
+                                                directory = useful.split(motion)[0]
+                                                if previous != directory:
+                                                        await Historic.removeFiles(directory)
+                                                        previous = directory
+                                        except Exception as err:
+                                                useful.syslog(err)
+                                        finally:
+                                                await Historic.release()
+                                useful.syslog(&#34;End cleanup sd card&#34;)
+
+        @staticmethod 
+        async def periodic():
+                &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
+                from server.server import Server
+                if useful.ismicropython():
+                        await Server.waitResume(307)
+                else:
+                        await Server.waitResume(7)
+                if Historic.motionInProgress[0] == False:
+                        if sdcard.SdCard.isMounted():
+                                await Historic.extract()
+                                await Historic.removeOlder()
+                        else:
+                                await Historic.getRoot()
+                return True
+
+        @staticmethod
+        async def periodicTask():
+                &#34;&#34;&#34; Execute periodic traitment &#34;&#34;&#34;
+                await tasking.taskMonitoring(Historic.periodic)
+
+        @staticmethod
+        async def test():
+                &#34;&#34;&#34; Test historic &#34;&#34;&#34;
+                await Historic.extract()
+                await Historic.removeOlder(True)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.motion.historic.Historic.firstExtract"><code class="name">var <span class="ident">firstExtract</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.motion.historic.Historic.historic"><code class="name">var <span class="ident">historic</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.motion.historic.Historic.lock"><code class="name">var <span class="ident">lock</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.motion.historic.Historic.motionInProgress"><code class="name">var <span class="ident">motionInProgress</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.motion.historic.Historic.acquire"><code class="name flex">
+<span>async def <span class="ident">acquire</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Lock historic</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def acquire():
+        &#34;&#34;&#34; Lock historic &#34;&#34;&#34;
+        await Historic.lock.acquire()</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.addItem"><code class="name flex">
+<span>def <span class="ident">addItem</span></span>(<span>item)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add item in the historic</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def addItem(item):
+        &#34;&#34;&#34; Add item in the historic &#34;&#34;&#34;
+        if item is not None:
+                if not useful.ismicropython():
+                        # Remove the &#34;/&#34; before filename
+                        item [0] = item[0][1:]
+                # Add json file to the historic
+                Historic.historic.insert(0,item)</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.addMotion"><code class="name flex">
+<span>async def <span class="ident">addMotion</span></span>(<span>path, name, image, info)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add motion detection in the historic</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def addMotion(path, name, image, info):
+        &#34;&#34;&#34; Add motion detection in the historic &#34;&#34;&#34;
+        root = await Historic.getRoot()
+        result = False
+        if root:
+                try:
+                        await Historic.acquire()
+                        path = useful.tostrings(path)
+                        name = useful.tostrings(name) 
+                        jsonInfo = useful.tobytes(json.dumps(info))
+                        item = Historic.createItem(root + &#34;/&#34; + path + &#34;/&#34; + name +&#34;.json&#34;, info)
+                        res1 = sdcard.SdCard.save(path, name + &#34;.jpg&#34; , image)
+                        res2 = sdcard.SdCard.save(path, name + &#34;.json&#34;, json.dumps(item))
+                        Historic.addItem(item)
+                        result = res1 and res2
+                except Exception as err:
+                        useful.syslog(err)
+                finally:
+                        await Historic.release()
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.build"><code class="name flex">
+<span>async def <span class="ident">build</span></span>(<span>motions)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse the all motions files to build historic</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def build(motions):
+        &#34;&#34;&#34; Parse the all motions files to build historic &#34;&#34;&#34;
+        root = await Historic.getRoot()
+        if root:
+                count = 0
+                try:
+                        await Historic.acquire()
+                        Historic.historic.clear()
+
+                        # For all motions
+                        for motion in motions:
+                                path = root + &#34;/&#34; + motion
+
+                                try:
+                                        # Parse json file
+                                        file = None
+                                        file = open(motion, &#34;rb&#34;)
+                                        Historic.addItem(json.load(file))
+                                except Exception as err:
+                                        useful.syslog(err)
+                                finally:
+                                        if file:
+                                                file.close()
+                                await uasyncio.sleep_ms(3)
+                except Exception as err:
+                        useful.syslog(err)
+                finally:
+                        await Historic.release()</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.createItem"><code class="name flex">
+<span>def <span class="ident">createItem</span></span>(<span>filename, info)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create historic item</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def createItem(filename, info):
+        &#34;&#34;&#34; Create historic item &#34;&#34;&#34;
+        name = useful.splitext(filename)[0] + &#34;.jpg&#34;
+        result = None
+        shapes = []
+        if &#34;shapes&#34; in info:
+                for shape in info[&#34;shapes&#34;]:
+                        shapes.append([shape[&#34;size&#34;],shape[&#34;x&#34;],shape[&#34;y&#34;],shape[&#34;width&#34;],shape[&#34;height&#34;]])
+
+        if &#34;geometry&#34; in info:
+                # Add json file to the historic
+                result = [name, info[&#34;geometry&#34;][&#34;width&#34;],info[&#34;geometry&#34;][&#34;height&#34;], shapes, info[&#34;diff&#34;][&#34;diffs&#34;], info[&#34;diff&#34;][&#34;squarex&#34;], info[&#34;diff&#34;][&#34;squarey&#34;]]
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.extract"><code class="name flex">
+<span>async def <span class="ident">extract</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extract motion historic</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def extract():
+        &#34;&#34;&#34; Extract motion historic &#34;&#34;&#34;
+        # If this is the fisrt update (parse all directory)
+        if  Historic.firstExtract[0] == False:
+                Historic.firstExtract[0] = True
+                try:
+                        useful.syslog(&#34;Start historic creation&#34;)
+                        # Scan sd card and get more recent motions
+                        motions = await Historic.scanDirectories(MAX_DISPLAYED, False)
+
+                        # Build historic file
+                        files = await Historic.build(motions)
+                        useful.syslog(&#34;End   historic creation&#34;)
+                except Exception as err:
+                        useful.syslog(err)</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.getJson"><code class="name flex">
+<span>async def <span class="ident">getJson</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read the historic from disk</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def getJson():
+        &#34;&#34;&#34; Read the historic from disk &#34;&#34;&#34;
+        root = await Historic.getRoot()
+        result = b&#34;&#34;
+        if root:
+                try:
+                        await Historic.acquire()
+                        Historic.historic.sort()
+                        Historic.historic.reverse()
+                        while len(Historic.historic) &gt; MAX_DISPLAYED:
+                                del Historic.historic[-1]
+                        result = useful.tobytes(json.dumps(Historic.historic))
+                except Exception as err:
+                        useful.syslog(err)
+                finally:
+                        await Historic.release()
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.getRoot"><code class="name flex">
+<span>async def <span class="ident">getRoot</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the root path of sdcard and mount it</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def getRoot():
+        &#34;&#34;&#34; Get the root path of sdcard and mount it &#34;&#34;&#34;
+        if sdcard.SdCard.mount():
+                return sdcard.SdCard.getMountpoint()
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.locked"><code class="name flex">
+<span>async def <span class="ident">locked</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if historic is locked</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def locked():
+        &#34;&#34;&#34; Indicates if historic is locked &#34;&#34;&#34;
+        return Historic.lock.locked()</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.periodic"><code class="name flex">
+<span>async def <span class="ident">periodic</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Internal periodic task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod 
+async def periodic():
+        &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
+        from server.server import Server
+        if useful.ismicropython():
+                await Server.waitResume(307)
+        else:
+                await Server.waitResume(7)
+        if Historic.motionInProgress[0] == False:
+                if sdcard.SdCard.isMounted():
+                        await Historic.extract()
+                        await Historic.removeOlder()
+                else:
+                        await Historic.getRoot()
+        return True</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.periodicTask"><code class="name flex">
+<span>async def <span class="ident">periodicTask</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Execute periodic traitment</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def periodicTask():
+        &#34;&#34;&#34; Execute periodic traitment &#34;&#34;&#34;
+        await tasking.taskMonitoring(Historic.periodic)</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.release"><code class="name flex">
+<span>async def <span class="ident">release</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Release historic</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def release():
+        &#34;&#34;&#34; Release historic &#34;&#34;&#34;
+        Historic.lock.release()</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.removeFiles"><code class="name flex">
+<span>async def <span class="ident">removeFiles</span></span>(<span>directory, simulate=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove all files in the directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def removeFiles(directory, simulate=False):
+        &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
+        import shell
+        notEmpty = False
+        force = True
+        if useful.exists(directory):
+                # Parse all directories in sdcard
+                for fileinfo in uos.ilistdir(directory):
+                        filename = fileinfo[0]
+                        typ      = fileinfo[1]
+                        print(filename)
+                        # If file found
+                        if typ &amp; 0xF000 != 0x4000:
+                                shell.rmfile(directory + &#34;/&#34; + filename, simulate=simulate, force=force)
+                        else:
+                                await Historic.removeFiles(directory + &#34;/&#34; + filename)
+                                notEmpty = True
+                
+                if notEmpty:
+                        shell.rm(directory, recursive=True, simulate=simulate, force=force)
+                else:
+                        shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
+        else:
+                print(&#34;Directory not existing &#39;%s&#39;&#34;%directory)</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.removeOlder"><code class="name flex">
+<span>async def <span class="ident">removeOlder</span></span>(<span>force=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove older files to make space</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def removeOlder(force=False):
+        &#34;&#34;&#34; Remove older files to make space &#34;&#34;&#34;
+        root = await Historic.getRoot()
+        if root:
+                # If not enough space available on sdcard
+                if (sdcard.SdCard.getFreeSize() * 10000// sdcard.SdCard.getMaxSize() &lt;= 5) or force:
+                        useful.syslog(&#34;Start cleanup sd card&#34;)
+                        olders = await Historic.scanDirectories(MAX_REMOVED, True)
+                        previous = &#34;&#34;
+                        for motion in olders:
+                                try:
+                                        await Historic.acquire()
+                                        directory = useful.split(motion)[0]
+                                        if previous != directory:
+                                                await Historic.removeFiles(directory)
+                                                previous = directory
+                                except Exception as err:
+                                        useful.syslog(err)
+                                finally:
+                                        await Historic.release()
+                        useful.syslog(&#34;End cleanup sd card&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.scanDir"><code class="name flex">
+<span>async def <span class="ident">scanDir</span></span>(<span>path, pattern, older=True, directory=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Scan directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def scanDir(path, pattern, older=True, directory=True):
+        &#34;&#34;&#34; Scan directory &#34;&#34;&#34;
+        result = []
+        count = 0
+        for fileinfo in uos.ilistdir(path):
+                name = fileinfo[0]
+                typ  = fileinfo[1]
+                if directory:
+                        if typ &amp; 0xF000 == 0x4000:
+                                if re.match(pattern, name):
+                                        result.append(name)
+                else:
+                        if typ &amp; 0xF000 != 0x4000:
+                                if re.match(pattern, name):
+                                        result.append(name)
+                count += 1
+                if count &gt; 10:
+                        count = 0
+                        await uasyncio.sleep_ms(5)
+        result.sort()
+        if older == False:
+                result.reverse()
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.scanDirectories"><code class="name flex">
+<span>async def <span class="ident">scanDirectories</span></span>(<span>quantity=10, older=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the list of older or older directories in the sd card</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def scanDirectories(quantity=10, older=True):
+        &#34;&#34;&#34; Get the list of older or older directories in the sd card &#34;&#34;&#34;
+        motions = []
+        root = await Historic.getRoot()
+        if root:
+                try:
+                        await Historic.acquire()
+                        years = await Historic.scanDir(root, r&#34;\d\d\d\d&#34;, older)
+                        for year in years:
+                                pathYear = root + &#34;/&#34; + year
+                                months = await Historic.scanDir(pathYear, r&#34;\d\d&#34;, older)
+                                for month in months:
+                                        pathMonth = pathYear + &#34;/&#34; + month
+                                        days = await Historic.scanDir(pathMonth, r&#34;\d\d&#34;, older)
+                                        for day in days:
+                                                pathDay = pathMonth + &#34;/&#34; + day
+                                                hours = await Historic.scanDir(pathDay, r&#34;\d\dh\d\d&#34;, older)
+                                                for hour in hours:
+                                                        pathHour = pathDay + &#34;/&#34; + hour
+                                                        if older:
+                                                                extension = &#34;jpg&#34;
+                                                        else:
+                                                                extension = &#34;json&#34;
+                                                        detections = await Historic.scanDir(pathHour, r&#34;\d\d.*\.&#34;+extension, older, directory=False)
+                                                        for detection in detections:
+                                                                motions.append(pathHour + &#34;/&#34; + detection)
+                                                        if len(motions) &gt; quantity:
+                                                                motions.sort()
+                                                                if older == False:
+                                                                        motions.reverse()
+                                                                return motions
+                        motions.sort()
+                        if older == False:
+                                motions.reverse()
+                except Exception as err:
+                        useful.syslog(err)
+                finally:
+                        await Historic.release()
+        return motions</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.setMotionState"><code class="name flex">
+<span>def <span class="ident">setMotionState</span></span>(<span>state)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if motion is actually in detection</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def setMotionState(state):
+        &#34;&#34;&#34; Indicates if motion is actually in detection &#34;&#34;&#34;
+        Historic.motionInProgress[0] = state</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.historic.Historic.test"><code class="name flex">
+<span>async def <span class="ident">test</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test historic</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def test():
+        &#34;&#34;&#34; Test historic &#34;&#34;&#34;
+        await Historic.extract()
+        await Historic.removeOlder(True)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.motion" href="index.html">lib.motion</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.motion.historic.Historic" href="#lib.motion.historic.Historic">Historic</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.motion.historic.Historic.acquire" href="#lib.motion.historic.Historic.acquire">acquire</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.addItem" href="#lib.motion.historic.Historic.addItem">addItem</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.addMotion" href="#lib.motion.historic.Historic.addMotion">addMotion</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.build" href="#lib.motion.historic.Historic.build">build</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.createItem" href="#lib.motion.historic.Historic.createItem">createItem</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.extract" href="#lib.motion.historic.Historic.extract">extract</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.firstExtract" href="#lib.motion.historic.Historic.firstExtract">firstExtract</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.getJson" href="#lib.motion.historic.Historic.getJson">getJson</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.getRoot" href="#lib.motion.historic.Historic.getRoot">getRoot</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.historic" href="#lib.motion.historic.Historic.historic">historic</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.lock" href="#lib.motion.historic.Historic.lock">lock</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.locked" href="#lib.motion.historic.Historic.locked">locked</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.motionInProgress" href="#lib.motion.historic.Historic.motionInProgress">motionInProgress</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.periodic" href="#lib.motion.historic.Historic.periodic">periodic</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.periodicTask" href="#lib.motion.historic.Historic.periodicTask">periodicTask</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.release" href="#lib.motion.historic.Historic.release">release</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.removeFiles" href="#lib.motion.historic.Historic.removeFiles">removeFiles</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.removeOlder" href="#lib.motion.historic.Historic.removeOlder">removeOlder</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.scanDir" href="#lib.motion.historic.Historic.scanDir">scanDir</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.scanDirectories" href="#lib.motion.historic.Historic.scanDirectories">scanDirectories</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.setMotionState" href="#lib.motion.historic.Historic.setMotionState">setMotionState</a></code></li>
+<li><code><a title="lib.motion.historic.Historic.test" href="#lib.motion.historic.Historic.test">test</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

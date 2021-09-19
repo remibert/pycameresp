@@ -25,9 +25,9 @@ class PasswordPage:
 			return PasswordPage.changePage()
 
 	@staticmethod
-	def loginPage(alert=None):
+	def loginPage(alert=None, action=b""):
 		""" Login password page """
-		return PasswordPage.getDialog([Edit(text=lang.user, name=b"loginuser"),Edit(text=lang.password, type=b"password", name=b"loginpassword")], lang.login, alert, True)
+		return PasswordPage.getDialog([Edit(text=lang.user, name=b"loginuser"),Edit(text=lang.password, type=b"password", name=b"loginpassword")], lang.login, alert=alert, modal=True, action=action)
 
 	@staticmethod
 	def changePage(alert=None):
@@ -46,10 +46,10 @@ class PasswordPage:
 		return PasswordPage.getDialog(part, lang.modify_password, alert)
 
 	@staticmethod
-	def getDialog(content, submit ,alert = None, modal=False):
+	def getDialog(content, submit ,alert = None, modal=False, action=b""):
 		""" Common dialog of login password page """
 		if alert != None: alert = AlertError(text=alert)
-		dialog = [alert, Form([content, Submit(text=submit)], method=b"post")]
+		dialog = [alert, Form([content, Submit(text=submit)], method=b"post", action=action)]
 		if modal:
 			dialog = Modal(dialog)
 		return [dialog]
@@ -62,5 +62,12 @@ class PasswordPage:
 			if User.check(request.params.get(b"loginuser",b""), request.params.get(b"loginpassword",b"")):
 				response.setCookie(b"session",Sessions.create(duration),duration)
 			else:
-				return PasswordPage.loginPage(None if request.params.get(b"loginpassword",None) == None else b"Wrong user or password")
+				return PasswordPage.loginPage(None if request.params.get(b"loginpassword",None) == None else lang.wrong_user_or, action=b"/")
 		return None
+
+	@staticmethod
+	def logout(request, response):
+		""" Logout page """
+		User.init()
+		Sessions.remove(request.getCookie(b"session"))
+		return PasswordPage.loginPage()

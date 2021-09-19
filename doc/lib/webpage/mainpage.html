@@ -33,47 +33,95 @@
 from htmltemplate import *
 from webpage.passwordpage import PasswordPage
 from server.httpserver import HttpServer
+from server.server   import Server
 from wifi.station import Station
+from tools import lang
 
-styleNav = b&#34;&#34;&#34;  height: 100%;
-  width: 150px;
-  position: fixed;
-  z-index: 1;
-  top: 0;
-  left: 0;
-  overflow-x: hidden;
-  background-color: #EFEFEF;
-  padding-left:5px;
-  padding-right:5px;
-&#34;&#34;&#34;
-styleContent = b&#34;&#34;&#34; 
-  margin-left: 150px;
-&#34;&#34;&#34;
-def mainPage(title=&#34;&#34;, active=0, content=None, request=None, response=None):
+def mainPage(request, response, args, content=None):
         &#34;&#34;&#34; Function define the main web page with menu, it check also the login password &#34;&#34;&#34;
+        try:
+                title  = args[&#34;title&#34;]
+        except:
+                title = b&#34;&#34;
+        try:
+                active = args[&#34;index&#34;]
+        except:
+                active = 0
         # On wifi station, the external style cheet is added
         if Station.isIpOnInterface(request.remoteaddr):
                 # stylesheet = StylesheetDefault()
                 stylesheet = Stylesheet()
+                MenuClass     = Menu
+                MenuItemClass = MenuItem
+                MenuBarClass  = MenuBar
         else:
                 stylesheet = StylesheetDefault()
+                MenuClass     = Menu_
+                MenuItemClass = MenuItem_
+                MenuBarClass  = MenuBar_
+
+        # stylesheet = None
+        # MenuClass     = Menu_
+        # MenuItemClass = MenuItem_
+        # MenuBarClass  = MenuBar_
 
         # Create main page if logged
         page = PasswordPage.login(request, response, 15*60)
 
         if page == None:
-                menus = HttpServer.getMenus()
-                tabs = []
-                for menu in menus:
-                        index, href, title_ = menu
-                        tabs.append(TabItem(text=title_ , href=href, active=(active==index)))
-                page = Page([stylesheet, \
-                                        Div(Tab(tabs), style=styleNav),\
-                                        Div(content,   style=styleContent)\
-                                        ], title=title)
+                menuItems = []
+                menus = []
+                menuBar = []
+                previousMenu = None
+                for menu,  item , index, href in HttpServer.getMenus():
+                        menuItem = MenuItemClass(text=item, href=href, active=(active==index))
+
+                        if previousMenu != menu:
+                                if previousMenu is not None:
+                                        menuBar.append(MenuClass(menuItems, text=previousMenu))
+                                menuItems = [menuItem]
+                                previousMenu = menu
+                        else:
+                                menuItems.append(menuItem)
+                menuBar.append(MenuClass(menuItems, text=previousMenu))
+                page = Page(
+                                Container(
+                                        Card(
+                                                Form([stylesheet, Br(), MenuBarClass(menuBar), content])
+                                        , class_=b&#34;shadow&#34;, style=b&#34;margin:1em&#34;)
+                                )
+                                , title=title)
         else:
-                page = Page(page + [stylesheet], title=b&#34;Login&#34;)
-        return page</code></pre>
+                page = Page(page + [stylesheet], title=lang.login)
+        Server.slowDown()
+        return page
+
+def mainFrame(request, response, args, titleFrame, *content):
+        &#34;&#34;&#34; Function define the main frame into the main page with menu, it check also the login password &#34;&#34;&#34;
+        internal = [Title3(text=titleFrame, style=b&#34;padding-top:0.5em;padding-bottom:0.5em;&#34;),content]
+        return mainPage(request, response, args, content=internal)
+
+def manageDefaultButton(request, config, callback=None, onclick=b&#34;&#34;):
+        &#34;&#34;&#34; Manage the &#39;modify&#39; and &#39;save&#39; button on the page &#34;&#34;&#34;
+        if config.load() == False:
+                config.save()
+        action = request.params.get(b&#34;action&#34;,b&#34;none&#34;)
+        disabled = False
+        if   action == b&#34;none&#34;:
+                disabled = True
+        elif action == b&#34;modify&#34;:
+                disabled = False 
+        elif action == b&#34;save&#34;:
+                disabled = True
+                config.update(request.params)
+                if callback:
+                        callback(request, config)
+                config.save()
+        if disabled:
+                submit = Submit(text=lang.modify, name=b&#34;action&#34;, value=b&#34;modify&#34;)
+        else:
+                submit = Submit(text=lang.save, name=b&#34;action&#34;, value=b&#34;save&#34;, onclick=onclick)
+        return disabled, action, submit</code></pre>
 </details>
 </section>
 <section>
@@ -83,8 +131,23 @@ def mainPage(title=&#34;&#34;, active=0, content=None, request=None, response=No
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="lib.webpage.mainpage.mainFrame"><code class="name flex">
+<span>def <span class="ident">mainFrame</span></span>(<span>request, response, args, titleFrame, *content)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Function define the main frame into the main page with menu, it check also the login password</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mainFrame(request, response, args, titleFrame, *content):
+        &#34;&#34;&#34; Function define the main frame into the main page with menu, it check also the login password &#34;&#34;&#34;
+        internal = [Title3(text=titleFrame, style=b&#34;padding-top:0.5em;padding-bottom:0.5em;&#34;),content]
+        return mainPage(request, response, args, content=internal)</code></pre>
+</details>
+</dd>
 <dt id="lib.webpage.mainpage.mainPage"><code class="name flex">
-<span>def <span class="ident">mainPage</span></span>(<span>title='', active=0, content=None, request=None, response=None)</span>
+<span>def <span class="ident">mainPage</span></span>(<span>request, response, args, content=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function define the main web page with menu, it check also the login password</p></div>
@@ -92,31 +155,96 @@ def mainPage(title=&#34;&#34;, active=0, content=None, request=None, response=No
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def mainPage(title=&#34;&#34;, active=0, content=None, request=None, response=None):
+<pre><code class="python">def mainPage(request, response, args, content=None):
         &#34;&#34;&#34; Function define the main web page with menu, it check also the login password &#34;&#34;&#34;
+        try:
+                title  = args[&#34;title&#34;]
+        except:
+                title = b&#34;&#34;
+        try:
+                active = args[&#34;index&#34;]
+        except:
+                active = 0
         # On wifi station, the external style cheet is added
         if Station.isIpOnInterface(request.remoteaddr):
                 # stylesheet = StylesheetDefault()
                 stylesheet = Stylesheet()
+                MenuClass     = Menu
+                MenuItemClass = MenuItem
+                MenuBarClass  = MenuBar
         else:
                 stylesheet = StylesheetDefault()
+                MenuClass     = Menu_
+                MenuItemClass = MenuItem_
+                MenuBarClass  = MenuBar_
+
+        # stylesheet = None
+        # MenuClass     = Menu_
+        # MenuItemClass = MenuItem_
+        # MenuBarClass  = MenuBar_
 
         # Create main page if logged
         page = PasswordPage.login(request, response, 15*60)
 
         if page == None:
-                menus = HttpServer.getMenus()
-                tabs = []
-                for menu in menus:
-                        index, href, title_ = menu
-                        tabs.append(TabItem(text=title_ , href=href, active=(active==index)))
-                page = Page([stylesheet, \
-                                        Div(Tab(tabs), style=styleNav),\
-                                        Div(content,   style=styleContent)\
-                                        ], title=title)
+                menuItems = []
+                menus = []
+                menuBar = []
+                previousMenu = None
+                for menu,  item , index, href in HttpServer.getMenus():
+                        menuItem = MenuItemClass(text=item, href=href, active=(active==index))
+
+                        if previousMenu != menu:
+                                if previousMenu is not None:
+                                        menuBar.append(MenuClass(menuItems, text=previousMenu))
+                                menuItems = [menuItem]
+                                previousMenu = menu
+                        else:
+                                menuItems.append(menuItem)
+                menuBar.append(MenuClass(menuItems, text=previousMenu))
+                page = Page(
+                                Container(
+                                        Card(
+                                                Form([stylesheet, Br(), MenuBarClass(menuBar), content])
+                                        , class_=b&#34;shadow&#34;, style=b&#34;margin:1em&#34;)
+                                )
+                                , title=title)
         else:
-                page = Page(page + [stylesheet], title=b&#34;Login&#34;)
+                page = Page(page + [stylesheet], title=lang.login)
+        Server.slowDown()
         return page</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.mainpage.manageDefaultButton"><code class="name flex">
+<span>def <span class="ident">manageDefaultButton</span></span>(<span>request, config, callback=None, onclick=b'')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage the 'modify' and 'save' button on the page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def manageDefaultButton(request, config, callback=None, onclick=b&#34;&#34;):
+        &#34;&#34;&#34; Manage the &#39;modify&#39; and &#39;save&#39; button on the page &#34;&#34;&#34;
+        if config.load() == False:
+                config.save()
+        action = request.params.get(b&#34;action&#34;,b&#34;none&#34;)
+        disabled = False
+        if   action == b&#34;none&#34;:
+                disabled = True
+        elif action == b&#34;modify&#34;:
+                disabled = False 
+        elif action == b&#34;save&#34;:
+                disabled = True
+                config.update(request.params)
+                if callback:
+                        callback(request, config)
+                config.save()
+        if disabled:
+                submit = Submit(text=lang.modify, name=b&#34;action&#34;, value=b&#34;modify&#34;)
+        else:
+                submit = Submit(text=lang.save, name=b&#34;action&#34;, value=b&#34;save&#34;, onclick=onclick)
+        return disabled, action, submit</code></pre>
 </details>
 </dd>
 </dl>
@@ -137,7 +265,9 @@ def mainPage(title=&#34;&#34;, active=0, content=None, request=None, response=No
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="lib.webpage.mainpage.mainFrame" href="#lib.webpage.mainpage.mainFrame">mainFrame</a></code></li>
 <li><code><a title="lib.webpage.mainpage.mainPage" href="#lib.webpage.mainpage.mainPage">mainPage</a></code></li>
+<li><code><a title="lib.webpage.mainpage.manageDefaultButton" href="#lib.webpage.mainpage.manageDefaultButton">manageDefaultButton</a></code></li>
 </ul>
 </li>
 </ul>
