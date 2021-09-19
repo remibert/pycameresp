@@ -48,6 +48,11 @@ class Pin:
 	def value(self, val=0):
 		return val
 
+	def on(self):
+		pass
+
+	def off(self):
+		pass
 class Timer:
 	ONE_SHOT = 0
 	PERIODIC = 1

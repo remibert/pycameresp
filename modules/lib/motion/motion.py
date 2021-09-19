@@ -40,6 +40,9 @@ class MotionConfig(jsonconfig.JsonConfig):
 		# Number of images before camera stabilization
 		self.stabilizationCamera=8
 
+		# Turn on the led flash when the light goes down
+		self.lightCompensation = True
+
 		# Notify motion
 		self.notify = True
 
@@ -222,6 +225,7 @@ class Motion:
 		self.mustRefreshConfig = True
 		self.quality = 15
 		self.previousQuality = 0
+		self.flashLevel = 0
 
 	def __del__(self):
 		""" Destructor """
@@ -254,6 +258,7 @@ class Motion:
 		video.Camera.saturation(0)
 		video.Camera.hmirror(0)
 		video.Camera.vflip(0)
+		video.Camera.flash(self.flashLevel)
 
 		detected, changePolling = self.detect(False)
 		if detected == False:
@@ -280,7 +285,32 @@ class Motion:
 				# Destroy image
 				self.deinitImage(image)
 
-		image = ImageMotion(video.Camera.motion(), self.config)
+		motion = video.Camera.motion()
+
+		# Light can be compensed with flash led
+		if self.config.lightCompensation:
+			# If it has enough light
+			if motion.getLight() >= 32:
+				# If flash led working
+				if self.flashLevel >= 2:
+					# Reduce light of flash led
+					self.flashLevel -= 2
+					video.Camera.flash(self.flashLevel)
+			# If it has not enough light
+			if motion.getLight() <= 24:
+				# If flash to low
+				if self.flashLevel <= 192:
+					# Increase the light of flash led
+					self.flashLevel += 2
+					video.Camera.flash(self.flashLevel)
+		else:
+			# If flash led working and compensation disabled
+			if self.flashLevel > 0:
+				# Stop flash led
+				self.flashLevel = 0
+				video.Camera.flash(self.flashLevel)
+
+		image = ImageMotion(motion, self.config)
 		if self.mustRefreshConfig:
 			image.refreshConfig()
 			self.mustRefreshConfig = False

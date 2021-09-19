@@ -464,6 +464,50 @@ STATIC mp_obj_t camera_motion_detect()
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_motion_detect_obj, camera_motion_detect);
 
+// Switch on or off the flash led
+STATIC mp_obj_t camera_flash(mp_obj_t level_in)
+{
+	if (mp_obj_is_int(level_in))
+	{
+		int level = mp_obj_get_int(level_in);
+		periph_module_enable(PERIPH_LEDC_MODULE);
+
+		// Set up timer
+		ledc_timer_config_t flash_led_timer = 
+		{
+			// Set timer resolution
+			.duty_resolution = LEDC_TIMER_8_BIT,
+
+			// Set timer frequency (high frequency to avoid whistling)
+			.freq_hz = 20000, 
+			.speed_mode = LEDC_LOW_SPEED_MODE,
+			.timer_num = LEDC_TIMER_3,
+		};
+		ledc_timer_config(&flash_led_timer); // Set up GPIO PIN 
+
+		if (level > 256)
+		{
+			level = 256;
+		}
+
+		ledc_channel_config_t channel_config = 
+		{
+			.channel    = LEDC_CHANNEL_7,           // Select available channel
+			.duty       = level,                    // Set the level of flash
+			.gpio_num   = 4,                        // Flash led gpio
+			.speed_mode = LEDC_LOW_SPEED_MODE,
+			.timer_sel  = LEDC_TIMER_3
+		};
+		ledc_channel_config(&channel_config);
+	}
+	else
+	{
+		mp_raise_TypeError(MP_ERROR_TEXT("Bad flash level parameters"));
+	}
+
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_flash_obj, camera_flash);
 #endif
 
 // input buffer
@@ -737,6 +781,27 @@ STATIC mp_obj_t Motion_getSize(mp_obj_t self_in)
 	return res;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getSize_obj, Motion_getSize);
+
+// getLight method
+STATIC mp_obj_t Motion_getLight(mp_obj_t self_in)
+{
+	Motion_t *motion = self_in;
+	mp_obj_t res = mp_const_none;
+	if (motion)
+	{
+		long meanLight = 0;
+		int i;
+		for (i = 0; i < motion->diffMax; i++)
+		{
+			meanLight += motion->lights[i];
+		}
+		meanLight /= motion->diffMax;
+		
+		res = mp_obj_new_int(meanLight);
+	}
+	return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getLight_obj, Motion_getLight);
 
 // Push coordinates
 void Motion_push(Motion_t * motion, int x, int y)
@@ -1233,6 +1298,7 @@ STATIC const mp_rom_map_elem_t Motion_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_configure),          MP_ROM_PTR(&Motion_configure_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_getImage),           MP_ROM_PTR(&Motion_getImage_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_getSize),            MP_ROM_PTR(&Motion_getSize_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_getLight),           MP_ROM_PTR(&Motion_getLight_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Motion_locals_dict, Motion_locals_dict_table);
 
@@ -1254,6 +1320,7 @@ STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR_deinit             ), MP_ROM_PTR(&camera_deinit_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_capture            ), MP_ROM_PTR(&camera_capture_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_motion             ), MP_ROM_PTR(&camera_motion_detect_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_flash              ), MP_ROM_PTR(&camera_flash_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_decode             ), MP_ROM_PTR(&camera_decode_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_pixformat          ), MP_ROM_PTR(&camera_pixformat_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_aec_value          ), MP_ROM_PTR(&camera_aec_value_obj) },

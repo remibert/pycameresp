@@ -153,6 +153,7 @@ async def motion(request, response, args):
 		Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),
 		Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),Br(),
 		Switch(text=lang.suspends_motion_detection,                name=b"suspendOnPresence", checked=config.suspendOnPresence, disabled=disabled),Br(),
+		Switch(text=lang.turn_on_flash,                            name=b"lightCompensation", checked=config.lightCompensation, disabled=disabled),Br(),
 		submit)
 	await response.sendPage(page)
 

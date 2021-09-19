@@ -410,7 +410,7 @@ async def historicJson(request, response, args):
 async def historicImage(request, response, args):
 	""" Send historic image """
 	Server.slowDown()
-	reserved = await Camera.reserve(Historic, timeout=5, suspension=30)
+	reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
 	try:
 		if reserved:
 			await Historic.acquire()
@@ -426,7 +426,7 @@ async def historicImage(request, response, args):
 async def downloadImage(request, response, args):
 	""" Download historic image """
 	Server.slowDown()
-	reserved = await Camera.reserve(Historic, timeout=5, suspension=30)
+	reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
 	try:
 		if reserved:
 			await Historic.acquire()

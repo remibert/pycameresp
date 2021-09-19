@@ -24,6 +24,7 @@ class CameraConfig(jsonconfig.JsonConfig):
 		self.saturation = 0
 		self.hmirror    = False
 		self.vflip      = False
+		self.flashLevel = 0
 
 class Motion:
 	""" Class motion detection returned by the detect function """
@@ -149,7 +150,7 @@ class Camera:
 				for i in range(10):
 					res = camera.init()
 					if res == False:
-						print("Camera not initialized")
+						# print("Camera not initialized")
 						camera.deinit()
 						time.sleep(0.5)
 					else:
@@ -198,6 +199,11 @@ class Camera:
 		""" Get the motion informations. 
 		This contains a jpeg image, with matrices of the different color RGB """
 		return Camera.retry(camera.motion)
+
+	@staticmethod
+	def flash(level=0):
+		""" Start or stop the flash """
+		camera.flash(level)
 
 	@staticmethod
 	def retry(callback):
@@ -268,10 +274,10 @@ class Camera:
 		if resolution == b"HQVGA" or resolution == b"240x176"   :val = camera.FRAMESIZE_HQVGA
 		if resolution == b"QQVGA" or resolution == b"160x120"   :val = camera.FRAMESIZE_QQVGA
 		if Camera.opened and val != None:
-			print("Framesize %s"%useful.tostrings(resolution))
+			# print("Framesize %s"%useful.tostrings(resolution))
 			camera.framesize(val)
-		else:
-			print("Framesize not set")
+		# else:
+			# print("Framesize not set")
 
 	@staticmethod
 	def pixformat(format_):
@@ -287,10 +293,10 @@ class Camera:
 		if format_ == b"RGB444"    : val=camera.PIXFORMAT_RGB444
 		if format_ == b"RGB555"    : val=camera.PIXFORMAT_RGB555
 		if Camera.opened and val != None:
-			print("Pixformat %s"%useful.tostrings(format_))
+			# print("Pixformat %s"%useful.tostrings(format_))
 			camera.pixformat(val)
-		else:
-			print("Pixformat not set")
+		# else:
+			# print("Pixformat not set")
 	
 	@staticmethod
 	def quality(val=None, modified=True):
@@ -376,6 +382,7 @@ class Camera:
 			Camera.saturation(config.saturation)
 			Camera.hmirror   (config.hmirror)
 			Camera.vflip     (config.vflip)
+			Camera.flash     (config.flashLevel)
 
 	@staticmethod
 	def getConfig():

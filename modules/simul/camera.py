@@ -136,6 +136,9 @@ class Motion:
 	def getSize(self):
 		return self.size
 
+	def getLight(self):
+		return 128
+
 def motion():
 	return Motion(None)
 
@@ -303,3 +306,6 @@ def colorbar      (val=None):
 
 def isavailable():
 	return True
+
+def flash(level):
+	pass

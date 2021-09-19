@@ -43,7 +43,7 @@ Below is the list of features supported by the software
 	- Adding reset cause Brownout
 	- Embedding all scripts of this software (Faster loading times, reduce RAM footprint)
 
-- Micropython ESP32CAM firmware specifities :
+- Micropython ESP32CAM firmware specificities :
 	- Full camera support by micropython
 	- Motion detection
 	- Presence detection

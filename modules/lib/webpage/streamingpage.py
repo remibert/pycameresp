@@ -86,8 +86,8 @@ async def cameraStartStreaming(request, response, args):
 	try:
 		writer = None
 		currentStreamingId = int(request.params[b"streamingid"])
-		reserved = await Camera.reserve(request, timeout=20, suspension=30)
-		print("Start streaming %d"%currentStreamingId)
+		reserved = await Camera.reserve(request, timeout=20, suspension=15)
+		# print("Start streaming %d"%currentStreamingId)
 		if reserved:
 			Camera.open()
 
@@ -135,7 +135,7 @@ async def cameraStartStreaming(request, response, args):
 		useful.syslog(err)
 	finally:
 		if reserved:
-			print("End streaming %d"%currentStreamingId)
+			# print("End streaming %d"%currentStreamingId)
 			await Camera.unreserve(request)
 		if writer:
 			await writer.close()

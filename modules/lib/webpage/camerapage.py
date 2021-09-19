@@ -22,13 +22,14 @@ async def cameraPage(request, response, args):
 		framesizes.append(Option(value=size, text=size, selected= True if config.framesize == size else False))
 	page = mainFrame(request, response, args, lang.camera,
 				Streaming.getHtml(request),
-				ComboCmd(framesizes, text=lang.resolution, path=b"camera/configure", name=b"framesize"),
-				SliderCmd(           text=lang.quality   , path=b"camera/configure", name=b"quality",    min=b"10", max=b"63", step=b"1", value=b"%d"%config.quality),
-				SliderCmd(           text=lang.brightness, path=b"camera/configure", name=b"brightness", min=b"-2", max=b"2" , step=b"1", value=b"%d"%config.brightness),
-				SliderCmd(           text=lang.contrast  , path=b"camera/configure", name=b"contrast"  , min=b"-2", max=b"2" , step=b"1", value=b"%d"%config.contrast),
-				SliderCmd(           text=lang.saturation, path=b"camera/configure", name=b"saturation", min=b"-2", max=b"2" , step=b"1", value=b"%d"%config.saturation),
-				SwitchCmd(           text=lang.hmirror   , path=b"camera/configure", name=b"hmirror"   , checked=config.hmirror),
-				SwitchCmd(           text=lang.vflip     , path=b"camera/configure", name=b"vflip"     , checked=config.vflip))
+				ComboCmd(framesizes, text=lang.resolution,  path=b"camera/configure", name=b"framesize"),
+				SliderCmd(           text=lang.quality   ,  path=b"camera/configure", name=b"quality",    min=b"10", max=b"63",  step=b"1", value=b"%d"%config.quality),
+				SliderCmd(           text=lang.brightness,  path=b"camera/configure", name=b"brightness", min=b"-2", max=b"2" ,  step=b"1", value=b"%d"%config.brightness),
+				SliderCmd(           text=lang.contrast  ,  path=b"camera/configure", name=b"contrast"  , min=b"-2", max=b"2" ,  step=b"1", value=b"%d"%config.contrast),
+				SliderCmd(           text=lang.saturation,  path=b"camera/configure", name=b"saturation", min=b"-2", max=b"2" ,  step=b"1", value=b"%d"%config.saturation),
+				SliderCmd(           text=lang.flash_level, path=b"camera/configure", name=b"flashLevel", min=b"0" , max=b"256", step=b"1", value=b"%d"%config.flashLevel),
+				SwitchCmd(           text=lang.hmirror   ,  path=b"camera/configure", name=b"hmirror"   , checked=config.hmirror),
+				SwitchCmd(           text=lang.vflip     ,  path=b"camera/configure", name=b"vflip"     , checked=config.vflip))
 	await response.sendPage(page)
 
 @HttpServer.addRoute(b'/camera/configure')
