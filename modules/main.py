@@ -1,5 +1,8 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+""" Main pycameresp module """
+# pylint:disable=wrong-import-position
+# pylint:disable=wrong-import-order
 import sys
 try:
 	import uasyncio
@@ -20,10 +23,10 @@ machine.freq(240000000)
 Battery.protect()
 
 # Can only be done once at boot before start of the camera and sd card
-pinWakeUp = Awake.isPinWakeUp()
+pinWakeUp = Awake.is_pin_wake_up()
 
-# Html pages loader
-def htmlPageLoader():
+def html_page_loader():
+	""" Html pages loader """
 	# pylint: disable=unused-import
 	# pylint: disable=redefined-outer-name
 
@@ -41,18 +44,18 @@ def htmlPageLoader():
 loop = uasyncio.get_event_loop()
 
 # Start all servers Http, Ftp, Telnet and wifi manager
-import server 
-server.init(loop=loop, pageLoader=htmlPageLoader)
+import server
+server.init(loop=loop, page_loader=html_page_loader)
 
 # If camera is available (required specific firmware)
 if iscamera():
 	# Start motion detection (can be only used with ESP32CAM)
-	import motion 
+	import motion
 	motion.start(loop, pinWakeUp)
 
 # Add shell asynchronous task (press any key to get shell prompt)
-from shell.shell import asyncShell
-loop.create_task(asyncShell())
+from shell.shell import async_shell
+loop.create_task(async_shell())
 
 try:
 	# Run asyncio for ever

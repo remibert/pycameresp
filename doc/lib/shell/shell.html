@@ -171,8 +171,8 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
                         d = parts[0]
                 if &#34;/&#34; in directories:
                         directories.remove(&#34;/&#34;)
-                if sdcard.SdCard.getMountpoint() in directories:
-                        directories.remove(sdcard.SdCard.getMountpoint())
+                if sdcard.SdCard.get_mountpoint() in directories:
+                        directories.remove(sdcard.SdCard.get_mountpoint())
                 for d in directories:
                         if useful.exists(d) and d != &#34;.&#34;:
                                 removedir(d, force=force, quiet=quiet, simulate=simulate)
@@ -278,13 +278,13 @@ class LsDisplayer:
         &#34;&#34;&#34; Ls displayer class &#34;&#34;&#34;
         def __init__(self, path, showdir, long):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.height, self.width = useful.getScreenSize()
+                self.height, self.width = useful.get_screen_size()
                 self.count = 1
                 self.long = long
                 self.path = path
                 self.showdir = showdir
 
-        def purgePath(self, path):
+        def purge_path(self, path):
                 &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
                 if path != &#34;/&#34; and self.path != &#34;/&#34;:
                         path = path.replace(self.path,&#34;&#34;)
@@ -303,19 +303,19 @@ class LsDisplayer:
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
                                 if self.long:
-                                        message = &#34;%s %s [%s]&#34;%(useful.dateToString(date_),&#34; &#34;*7,self.purgePath(path))
+                                        message = &#34;%s %s [%s]&#34;%(useful.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
                                 else:
-                                        message = &#34;[%s]&#34;%self.purgePath(path)
-                                self.count = printPart(message, self.width, self.height, self.count)
+                                        message = &#34;[%s]&#34;%self.purge_path(path)
+                                self.count = print_part(message, self.width, self.height, self.count)
                 else:
                         if self.long:
                                 fileinfo = useful.fileinfo(path)
                                 date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                message = &#34;%s %s %s&#34;%(useful.dateToString(date_),useful.sizeToString(size),self.purgePath(path))
+                                message = &#34;%s %s %s&#34;%(useful.date_to_string(date_),useful.size_to_string(size),self.purge_path(path))
                         else:
-                                message = self.purgePath(path)
-                        self.count = printPart(message, self.width, self.height, self.count)
+                                message = self.purge_path(path)
+                        self.count = print_part(message, self.width, self.height, self.count)
 
 def ls(file=&#34;&#34;, recursive=False, long=False):
         &#34;&#34;&#34; List command &#34;&#34;&#34;
@@ -336,7 +336,7 @@ def find(file):
         for filename in filenames:
                 print(filename)
 
-def printPart(message, width, height, count):
+def print_part(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
         if count != None and count &gt;= height:
                 print(message,end=&#34;&#34;)
@@ -378,7 +378,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
                                                 line = line.replace(&#34;\t&#34;,&#34;    &#34;)
                                                 message = &#34;%s:%d:%s&#34;%(filename, lineNumber, line)
                                                 message = message.rstrip()[:width]
-                                                count = printPart(message, width, height, count)
+                                                count = print_part(message, width, height, count)
                                                 if count == None:
                                                         print(&#34;&#34;)
                                                         return None
@@ -393,7 +393,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
                 path, pattern = useful.split(file)
                 directories, filenames = useful.scandir(path, pattern, recursive)
 
-        height, width = useful.getScreenSize()
+        height, width = useful.get_screen_size()
         count = 1
         for filename in filenames:
                 count = __grep(text, filename, ignorecase, regexp, width, height, count)
@@ -405,19 +405,19 @@ def ping(host):
         from server.ping import ping as ping_
         ping_(host, count=4, timeout=1)
 
-def ip2host(ipaddress):
+def ip2host(ip_address):
         &#34;&#34;&#34; Convert ip to hostname &#34;&#34;&#34;
         import wifi
-        _, _, _, dns = wifi.Station.getInfo()
-        from server.dnsclient import resolveHostname
-        print(resolveHostname(dns, ipaddress))
+        _, _, _, dns = wifi.Station.get_info()
+        from server.dnsclient import resolve_hostname
+        print(resolve_hostname(dns, ip_address))
 
 def host2ip(hostname):
         &#34;&#34;&#34; Convert hostname to ip &#34;&#34;&#34;
         import wifi
-        _, _, _, dns = wifi.Station.getInfo()
-        from server.dnsclient import resolveIpAddress
-        print(resolveIpAddress(dns, hostname))
+        _, _, _, dns = wifi.Station.get_info()
+        from server.dnsclient import resolve_ip_address
+        print(resolve_ip_address(dns, hostname))
 
 def mountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Mount command &#34;&#34;&#34;
@@ -437,14 +437,14 @@ def umountsd(mountpoint=&#34;/sd&#34;):
 
 def date(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
-        from server.timesetting import setDate
+        from server.timesetting import set_date
         if update:
                 if noDst:
                         dst = False
                 else:
                         dst = True
-                setDate(offsetUTC, dst)
-        print(useful.dateToString())
+                set_date(offsetUTC, dst)
+        print(useful.date_to_string())
         del sys.modules[&#34;server.timesetting&#34;]
 
 def setdate(datetime=&#34;&#34;):
@@ -491,30 +491,30 @@ def deepsleep(seconds=60):
         &#34;&#34;&#34; Deep sleep command &#34;&#34;&#34;
         machine.deepsleep(int(seconds)*1000)
 
-editClass = None
+edit_class = None
 def edit(file):
         &#34;&#34;&#34; Edit command &#34;&#34;&#34;
-        global editClass
-        if editClass == None:
+        global edit_class
+        if edit_class == None:
                 try:
                         from shell.editor import Editor
                 except:
                         from editor import Editor
-                editClass = Editor
-        editClass(file)
+                edit_class = Editor
+        edit_class(file)
 
 def cat(file):
         &#34;&#34;&#34; Cat command &#34;&#34;&#34;
         try:
                 f = open(file, &#34;r&#34;)
-                height, width = useful.getScreenSize()
+                height, width = useful.get_screen_size()
                 count = 1
                 while 1:
                         line = f.readline()
                         if not line:
                                 break
                         message = line.replace(&#34;\t&#34;,&#34;    &#34;).rstrip()[:width]
-                        count = printPart(message, width, height, count)
+                        count = print_part(message, width, height, count)
                         if count == None:
                                 break
                 f.close()
@@ -527,7 +527,7 @@ def df(mountpoint = &#34;/&#34;):
         freeSize  = status[0]*status[3]
         totalSize = status[1]*status[2]
         print(&#34;Filesystem     Free   Capacity   Used&#34;)
-        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, useful.sizeToString(freeSize,8),useful.sizeToString(totalSize,), totalSize/freeSize))
+        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, useful.size_to_string(freeSize,8),useful.size_to_string(totalSize,), totalSize/freeSize))
 
 def gc():
         &#34;&#34;&#34; Garbage collector command &#34;&#34;&#34;
@@ -540,35 +540,35 @@ def uptime():
 
 def man(command):
         &#34;&#34;&#34; Man command &#34;&#34;&#34;
-        print(manOne(command))
+        print(man_one(command))
 
-def manOne(commandName):
+def man_one(command_name):
         &#34;&#34;&#34; Manual of one command &#34;&#34;&#34;
         try:
-                commandName, commandFunction, commandParams, commandFlags = getCommand(commandName)
-                text = &#34;  &#34; + commandName + &#34; &#34;
-                for param in commandParams:
+                command_name, command_function, command_params, command_flags = get_command(command_name)
+                text = &#34;  &#34; + command_name + &#34; &#34;
+                for param in command_params:
                         text += param + &#34; &#34;
                 text += &#34;\n&#34;
-                for flag,flagName,val in commandFlags:
+                for flag,flagName,val in command_flags:
                         text += &#34;    %s : %s\n&#34;%(flag,flagName)
                 result = text[:-1]
         except:
-                result = &#34;Unknown command &#39;%s&#39;&#34;%commandName
+                result = &#34;Unknown command &#39;%s&#39;&#34;%command_name
         return result
 
 # pylint: disable=redefined-builtin
 def help():
         &#34;&#34;&#34; Help command &#34;&#34;&#34;
-        height, width = useful.getScreenSize()
+        height, width = useful.get_screen_size()
         count = 1
-        cmds = list(shellCommands.keys())
+        cmds = list(shell_commands.keys())
         cmds.sort()
         for command in cmds:
-                lines = manOne(command)
+                lines = man_one(command)
                 lines = &#34;-&#34;*30+&#34;\n&#34; + lines
                 for line in lines.split(&#34;\n&#34;):
-                        count = printPart(line, width, height, count)
+                        count = print_part(line, width, height, count)
                         if count == None:
                                 return
 
@@ -587,8 +587,8 @@ def exit():
         shell_exited = True
 
 def dump_(filename):
-        &#34;&#34;&#34; Dump file content &#34;&#34;&#34;
-        height, width = useful.getScreenSize()
+        &#34;&#34;&#34; dump file content &#34;&#34;&#34;
+        height, width = useful.get_screen_size()
         width = 16
         offset = 0
         file = open(filename, &#34;rb&#34;)
@@ -600,13 +600,13 @@ def dump_(filename):
                 data = file.read(width)
                 if len(data) &lt;= 0:
                         break
-                useful.dumpLine (data, line, width)
+                useful.dump_line (data, line, width)
                 offset += width
-                count = printPart(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
+                count = print_part(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
                 if count == None:
                         break
 
-def parseCommandLine(commandLine):
+def parse_command_line(commandLine):
         &#34;&#34;&#34; Parse command line &#34;&#34;&#34;
         commands = []
         args = []
@@ -646,36 +646,36 @@ def parseCommandLine(commandLine):
                 commands.append(args)
 
         for command in commands:
-                execCommand(command)
+                exec_command(command)
 
 def cls():
-        &#34;&#34;&#34; Clear screen &#34;&#34;&#34;
+        &#34;&#34;&#34; clear screen &#34;&#34;&#34;
         print(&#34;\x1B[2J\x1B[0;0f&#34;, end=&#34;&#34;)
 
-def getCommand(commandName):
+def get_command(command_name):
         &#34;&#34;&#34; Get a command callback according to the command name &#34;&#34;&#34;
         try:
-                global shellCommands
-                command = shellCommands[commandName]
-                commandFunction = command[0]
-                commandParams = []
-                commandFlags  = []
+                global shell_commands
+                command = shell_commands[command_name]
+                command_function = command[0]
+                command_params = []
+                command_flags  = []
                 for item in command[1:]:
                         if type(item) == type(&#34;&#34;):
-                                commandParams.append(item)
+                                command_params.append(item)
                         if type(item) == type((0,)):
-                                commandFlags.append(item)
+                                command_flags.append(item)
         except  Exception as err:
                 # pylint: disable=raise-missing-from
-                raise Exception(&#34;Command not found &#39;%s&#39;&#34;%commandName)
-        return commandName, commandFunction, commandParams, commandFlags
+                raise Exception(&#34;Command not found &#39;%s&#39;&#34;%command_name)
+        return command_name, command_function, command_params, command_flags
 
-def execCommand(args):
+def exec_command(args):
         &#34;&#34;&#34; Execute command &#34;&#34;&#34;
-        commandName = &#34;&#34;
-        commandFunction = None
-        commandParams = []
-        commandFlags = []
+        command_name = &#34;&#34;
+        command_function = None
+        command_params = []
+        command_flags = []
         try:
                 if len(args) &gt;= 1:
                         paramsCount = 0
@@ -683,38 +683,38 @@ def execCommand(args):
                         for arg in args:
                                 arg = arg.strip()
                                 if len(arg) &gt; 0:
-                                        if commandName == &#34;&#34;:
-                                                commandName, commandFunction, commandParams, commandFlags = getCommand(arg)
+                                        if command_name == &#34;&#34;:
+                                                command_name, command_function, command_params, command_flags = get_command(arg)
                                         else:
                                                 if len(arg) &gt;= 2 and arg[:2] == &#34;--&#34;:
-                                                        for commandFlag in commandFlags:
+                                                        for commandFlag in command_flags:
                                                                 if arg.strip()[2:] == commandFlag[1].strip():
                                                                         flags[commandFlag[1]] = commandFlag[2]
                                                                         break
                                                         else:
                                                                 raise Exception(&#34;Illegal option &#39;%s&#39; for&#34;%arg)
                                                 elif arg[0] == &#34;-&#34;:
-                                                        for commandFlag in commandFlags:
+                                                        for commandFlag in command_flags:
                                                                 if arg.strip() == commandFlag[0].strip():
                                                                         flags[commandFlag[1]] = commandFlag[2]
                                                                         break
                                                         else:
                                                                 raise Exception(&#34;Illegal option &#39;%s&#39; for&#34;%arg)
                                                 else:
-                                                        if paramsCount &gt;= len(commandParams):
+                                                        if paramsCount &gt;= len(command_params):
                                                                 raise Exception(&#34;Too many parameters for&#34;)
                                                         else:
-                                                                flags[commandParams[paramsCount]] = arg
+                                                                flags[command_params[paramsCount]] = arg
                                                                 paramsCount += 1
         except Exception as err:
                 # print(useful.syslog(err))
                 print(err)
                 return
         try:
-                if commandName.strip() != &#34;&#34;:
-                        commandFunction(**flags)
+                if command_name.strip() != &#34;&#34;:
+                        command_function(**flags)
         except TypeError as err:
-                useful.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%commandName)
+                useful.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%command_name)
         except KeyboardInterrupt:
                 print(&#34; [Canceled]&#34;)
         except Exception as err:
@@ -743,9 +743,9 @@ def shell():
 
                 if commandLine.strip() == &#34;quit&#34;:
                         raise KeyboardInterrupt()
-                parseCommandLine(commandLine)
+                parse_command_line(commandLine)
 
-async def asyncShell():
+async def async_shell():
         &#34;&#34;&#34; Asynchronous shell &#34;&#34;&#34;
         import uasyncio
         from server.server import Server
@@ -767,13 +767,13 @@ async def asyncShell():
                                 Server.suspend()
 
                                 # Wait all server suspended
-                                await Server.waitAllSuspended()
+                                await Server.wait_all_suspended()
 
                                 # Extend watch dog duration
                                 tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
 
                                 # Get the size of screen
-                                useful.refreshScreenSize()
+                                useful.refresh_screen_size()
 
                                 # Start shell
                                 print(&#34;&#34;)
@@ -794,7 +794,7 @@ async def asyncShell():
                         await uasyncio.sleep(polling1)
 
 
-shellCommands = \
+shell_commands = \
 {
         &#34;cd&#34;       :[cd       ,&#34;directory&#34;],
         &#34;pwd&#34;      :[pwd      ],
@@ -827,7 +827,7 @@ shellCommands = \
         &#34;help&#34;     :[help     ],
         &#34;man&#34;      :[man      ,&#34;command&#34;],
         &#34;df&#34;       :[df       ,&#34;mountpoint&#34;],
-        &#34;ip2host&#34;  :[ip2host  ,&#34;ipaddress&#34;],
+        &#34;ip2host&#34;  :[ip2host  ,&#34;ip_address&#34;],
         &#34;host2ip&#34;  :[host2ip  ,&#34;hostname&#34;],
         &#34;eval&#34;     :[eval_    ,&#34;string&#34;],
         &#34;exec&#34;     :[exec_    ,&#34;string&#34;],
@@ -845,8 +845,8 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.shell.shell.asyncShell"><code class="name flex">
-<span>async def <span class="ident">asyncShell</span></span>(<span>)</span>
+<dt id="lib.shell.shell.async_shell"><code class="name flex">
+<span>async def <span class="ident">async_shell</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Asynchronous shell</p></div>
@@ -854,7 +854,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def asyncShell():
+<pre><code class="python">async def async_shell():
         &#34;&#34;&#34; Asynchronous shell &#34;&#34;&#34;
         import uasyncio
         from server.server import Server
@@ -876,13 +876,13 @@ if __name__ == &#34;__main__&#34;:
                                 Server.suspend()
 
                                 # Wait all server suspended
-                                await Server.waitAllSuspended()
+                                await Server.wait_all_suspended()
 
                                 # Extend watch dog duration
                                 tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
 
                                 # Get the size of screen
-                                useful.refreshScreenSize()
+                                useful.refresh_screen_size()
 
                                 # Start shell
                                 print(&#34;&#34;)
@@ -916,14 +916,14 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Cat command &#34;&#34;&#34;
         try:
                 f = open(file, &#34;r&#34;)
-                height, width = useful.getScreenSize()
+                height, width = useful.get_screen_size()
                 count = 1
                 while 1:
                         line = f.readline()
                         if not line:
                                 break
                         message = line.replace(&#34;\t&#34;,&#34;    &#34;).rstrip()[:width]
-                        count = printPart(message, width, height, count)
+                        count = print_part(message, width, height, count)
                         if count == None:
                                 break
                 f.close()
@@ -952,13 +952,13 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">cls</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Clear screen</p></div>
+<div class="desc"><p>clear screen</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def cls():
-        &#34;&#34;&#34; Clear screen &#34;&#34;&#34;
+        &#34;&#34;&#34; clear screen &#34;&#34;&#34;
         print(&#34;\x1B[2J\x1B[0;0f&#34;, end=&#34;&#34;)</code></pre>
 </details>
 </dd>
@@ -1037,14 +1037,14 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def date(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
-        from server.timesetting import setDate
+        from server.timesetting import set_date
         if update:
                 if noDst:
                         dst = False
                 else:
                         dst = True
-                setDate(offsetUTC, dst)
-        print(useful.dateToString())
+                set_date(offsetUTC, dst)
+        print(useful.date_to_string())
         del sys.modules[&#34;server.timesetting&#34;]</code></pre>
 </details>
 </dd>
@@ -1077,21 +1077,21 @@ if __name__ == &#34;__main__&#34;:
         freeSize  = status[0]*status[3]
         totalSize = status[1]*status[2]
         print(&#34;Filesystem     Free   Capacity   Used&#34;)
-        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, useful.sizeToString(freeSize,8),useful.sizeToString(totalSize,), totalSize/freeSize))</code></pre>
+        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, useful.size_to_string(freeSize,8),useful.size_to_string(totalSize,), totalSize/freeSize))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.dump_"><code class="name flex">
 <span>def <span class="ident">dump_</span></span>(<span>filename)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Dump file content</p></div>
+<div class="desc"><p>dump file content</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def dump_(filename):
-        &#34;&#34;&#34; Dump file content &#34;&#34;&#34;
-        height, width = useful.getScreenSize()
+        &#34;&#34;&#34; dump file content &#34;&#34;&#34;
+        height, width = useful.get_screen_size()
         width = 16
         offset = 0
         file = open(filename, &#34;rb&#34;)
@@ -1103,9 +1103,9 @@ if __name__ == &#34;__main__&#34;:
                 data = file.read(width)
                 if len(data) &lt;= 0:
                         break
-                useful.dumpLine (data, line, width)
+                useful.dump_line (data, line, width)
                 offset += width
-                count = printPart(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
+                count = print_part(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
                 if count == None:
                         break</code></pre>
 </details>
@@ -1121,14 +1121,14 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def edit(file):
         &#34;&#34;&#34; Edit command &#34;&#34;&#34;
-        global editClass
-        if editClass == None:
+        global edit_class
+        if edit_class == None:
                 try:
                         from shell.editor import Editor
                 except:
                         from editor import Editor
-                editClass = Editor
-        editClass(file)</code></pre>
+                edit_class = Editor
+        edit_class(file)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.eval_"><code class="name flex">
@@ -1145,66 +1145,6 @@ if __name__ == &#34;__main__&#34;:
         print(eval(string))</code></pre>
 </details>
 </dd>
-<dt id="lib.shell.shell.execCommand"><code class="name flex">
-<span>def <span class="ident">execCommand</span></span>(<span>args)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Execute command</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def execCommand(args):
-        &#34;&#34;&#34; Execute command &#34;&#34;&#34;
-        commandName = &#34;&#34;
-        commandFunction = None
-        commandParams = []
-        commandFlags = []
-        try:
-                if len(args) &gt;= 1:
-                        paramsCount = 0
-                        flags   = {}
-                        for arg in args:
-                                arg = arg.strip()
-                                if len(arg) &gt; 0:
-                                        if commandName == &#34;&#34;:
-                                                commandName, commandFunction, commandParams, commandFlags = getCommand(arg)
-                                        else:
-                                                if len(arg) &gt;= 2 and arg[:2] == &#34;--&#34;:
-                                                        for commandFlag in commandFlags:
-                                                                if arg.strip()[2:] == commandFlag[1].strip():
-                                                                        flags[commandFlag[1]] = commandFlag[2]
-                                                                        break
-                                                        else:
-                                                                raise Exception(&#34;Illegal option &#39;%s&#39; for&#34;%arg)
-                                                elif arg[0] == &#34;-&#34;:
-                                                        for commandFlag in commandFlags:
-                                                                if arg.strip() == commandFlag[0].strip():
-                                                                        flags[commandFlag[1]] = commandFlag[2]
-                                                                        break
-                                                        else:
-                                                                raise Exception(&#34;Illegal option &#39;%s&#39; for&#34;%arg)
-                                                else:
-                                                        if paramsCount &gt;= len(commandParams):
-                                                                raise Exception(&#34;Too many parameters for&#34;)
-                                                        else:
-                                                                flags[commandParams[paramsCount]] = arg
-                                                                paramsCount += 1
-        except Exception as err:
-                # print(useful.syslog(err))
-                print(err)
-                return
-        try:
-                if commandName.strip() != &#34;&#34;:
-                        commandFunction(**flags)
-        except TypeError as err:
-                useful.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%commandName)
-        except KeyboardInterrupt:
-                print(&#34; [Canceled]&#34;)
-        except Exception as err:
-                useful.syslog(err)</code></pre>
-</details>
-</dd>
 <dt id="lib.shell.shell.exec_"><code class="name flex">
 <span>def <span class="ident">exec_</span></span>(<span>string)</span>
 </code></dt>
@@ -1217,6 +1157,66 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def exec_(string):
         &#34;&#34;&#34; Execute content of string &#34;&#34;&#34;
         exec(string)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.exec_command"><code class="name flex">
+<span>def <span class="ident">exec_command</span></span>(<span>args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Execute command</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exec_command(args):
+        &#34;&#34;&#34; Execute command &#34;&#34;&#34;
+        command_name = &#34;&#34;
+        command_function = None
+        command_params = []
+        command_flags = []
+        try:
+                if len(args) &gt;= 1:
+                        paramsCount = 0
+                        flags   = {}
+                        for arg in args:
+                                arg = arg.strip()
+                                if len(arg) &gt; 0:
+                                        if command_name == &#34;&#34;:
+                                                command_name, command_function, command_params, command_flags = get_command(arg)
+                                        else:
+                                                if len(arg) &gt;= 2 and arg[:2] == &#34;--&#34;:
+                                                        for commandFlag in command_flags:
+                                                                if arg.strip()[2:] == commandFlag[1].strip():
+                                                                        flags[commandFlag[1]] = commandFlag[2]
+                                                                        break
+                                                        else:
+                                                                raise Exception(&#34;Illegal option &#39;%s&#39; for&#34;%arg)
+                                                elif arg[0] == &#34;-&#34;:
+                                                        for commandFlag in command_flags:
+                                                                if arg.strip() == commandFlag[0].strip():
+                                                                        flags[commandFlag[1]] = commandFlag[2]
+                                                                        break
+                                                        else:
+                                                                raise Exception(&#34;Illegal option &#39;%s&#39; for&#34;%arg)
+                                                else:
+                                                        if paramsCount &gt;= len(command_params):
+                                                                raise Exception(&#34;Too many parameters for&#34;)
+                                                        else:
+                                                                flags[command_params[paramsCount]] = arg
+                                                                paramsCount += 1
+        except Exception as err:
+                # print(useful.syslog(err))
+                print(err)
+                return
+        try:
+                if command_name.strip() != &#34;&#34;:
+                        command_function(**flags)
+        except TypeError as err:
+                useful.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%command_name)
+        except KeyboardInterrupt:
+                print(&#34; [Canceled]&#34;)
+        except Exception as err:
+                useful.syslog(err)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.exit"><code class="name flex">
@@ -1266,8 +1266,8 @@ if __name__ == &#34;__main__&#34;:
         collect()</code></pre>
 </details>
 </dd>
-<dt id="lib.shell.shell.getCommand"><code class="name flex">
-<span>def <span class="ident">getCommand</span></span>(<span>commandName)</span>
+<dt id="lib.shell.shell.get_command"><code class="name flex">
+<span>def <span class="ident">get_command</span></span>(<span>command_name)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a command callback according to the command name</p></div>
@@ -1275,23 +1275,23 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getCommand(commandName):
+<pre><code class="python">def get_command(command_name):
         &#34;&#34;&#34; Get a command callback according to the command name &#34;&#34;&#34;
         try:
-                global shellCommands
-                command = shellCommands[commandName]
-                commandFunction = command[0]
-                commandParams = []
-                commandFlags  = []
+                global shell_commands
+                command = shell_commands[command_name]
+                command_function = command[0]
+                command_params = []
+                command_flags  = []
                 for item in command[1:]:
                         if type(item) == type(&#34;&#34;):
-                                commandParams.append(item)
+                                command_params.append(item)
                         if type(item) == type((0,)):
-                                commandFlags.append(item)
+                                command_flags.append(item)
         except  Exception as err:
                 # pylint: disable=raise-missing-from
-                raise Exception(&#34;Command not found &#39;%s&#39;&#34;%commandName)
-        return commandName, commandFunction, commandParams, commandFlags</code></pre>
+                raise Exception(&#34;Command not found &#39;%s&#39;&#34;%command_name)
+        return command_name, command_function, command_params, command_flags</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.grep"><code class="name flex">
@@ -1328,7 +1328,7 @@ if __name__ == &#34;__main__&#34;:
                                                 line = line.replace(&#34;\t&#34;,&#34;    &#34;)
                                                 message = &#34;%s:%d:%s&#34;%(filename, lineNumber, line)
                                                 message = message.rstrip()[:width]
-                                                count = printPart(message, width, height, count)
+                                                count = print_part(message, width, height, count)
                                                 if count == None:
                                                         print(&#34;&#34;)
                                                         return None
@@ -1343,7 +1343,7 @@ if __name__ == &#34;__main__&#34;:
                 path, pattern = useful.split(file)
                 directories, filenames = useful.scandir(path, pattern, recursive)
 
-        height, width = useful.getScreenSize()
+        height, width = useful.get_screen_size()
         count = 1
         for filename in filenames:
                 count = __grep(text, filename, ignorecase, regexp, width, height, count)
@@ -1362,15 +1362,15 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def help():
         &#34;&#34;&#34; Help command &#34;&#34;&#34;
-        height, width = useful.getScreenSize()
+        height, width = useful.get_screen_size()
         count = 1
-        cmds = list(shellCommands.keys())
+        cmds = list(shell_commands.keys())
         cmds.sort()
         for command in cmds:
-                lines = manOne(command)
+                lines = man_one(command)
                 lines = &#34;-&#34;*30+&#34;\n&#34; + lines
                 for line in lines.split(&#34;\n&#34;):
-                        count = printPart(line, width, height, count)
+                        count = print_part(line, width, height, count)
                         if count == None:
                                 return</code></pre>
 </details>
@@ -1387,13 +1387,13 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def host2ip(hostname):
         &#34;&#34;&#34; Convert hostname to ip &#34;&#34;&#34;
         import wifi
-        _, _, _, dns = wifi.Station.getInfo()
-        from server.dnsclient import resolveIpAddress
-        print(resolveIpAddress(dns, hostname))</code></pre>
+        _, _, _, dns = wifi.Station.get_info()
+        from server.dnsclient import resolve_ip_address
+        print(resolve_ip_address(dns, hostname))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.ip2host"><code class="name flex">
-<span>def <span class="ident">ip2host</span></span>(<span>ipaddress)</span>
+<span>def <span class="ident">ip2host</span></span>(<span>ip_address)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert ip to hostname</p></div>
@@ -1401,12 +1401,12 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def ip2host(ipaddress):
+<pre><code class="python">def ip2host(ip_address):
         &#34;&#34;&#34; Convert ip to hostname &#34;&#34;&#34;
         import wifi
-        _, _, _, dns = wifi.Station.getInfo()
-        from server.dnsclient import resolveHostname
-        print(resolveHostname(dns, ipaddress))</code></pre>
+        _, _, _, dns = wifi.Station.get_info()
+        from server.dnsclient import resolve_hostname
+        print(resolve_hostname(dns, ip_address))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.ls"><code class="name flex">
@@ -1442,11 +1442,11 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def man(command):
         &#34;&#34;&#34; Man command &#34;&#34;&#34;
-        print(manOne(command))</code></pre>
+        print(man_one(command))</code></pre>
 </details>
 </dd>
-<dt id="lib.shell.shell.manOne"><code class="name flex">
-<span>def <span class="ident">manOne</span></span>(<span>commandName)</span>
+<dt id="lib.shell.shell.man_one"><code class="name flex">
+<span>def <span class="ident">man_one</span></span>(<span>command_name)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manual of one command</p></div>
@@ -1454,19 +1454,19 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def manOne(commandName):
+<pre><code class="python">def man_one(command_name):
         &#34;&#34;&#34; Manual of one command &#34;&#34;&#34;
         try:
-                commandName, commandFunction, commandParams, commandFlags = getCommand(commandName)
-                text = &#34;  &#34; + commandName + &#34; &#34;
-                for param in commandParams:
+                command_name, command_function, command_params, command_flags = get_command(command_name)
+                text = &#34;  &#34; + command_name + &#34; &#34;
+                for param in command_params:
                         text += param + &#34; &#34;
                 text += &#34;\n&#34;
-                for flag,flagName,val in commandFlags:
+                for flag,flagName,val in command_flags:
                         text += &#34;    %s : %s\n&#34;%(flag,flagName)
                 result = text[:-1]
         except:
-                result = &#34;Unknown command &#39;%s&#39;&#34;%commandName
+                result = &#34;Unknown command &#39;%s&#39;&#34;%command_name
         return result</code></pre>
 </details>
 </dd>
@@ -1524,8 +1524,8 @@ if __name__ == &#34;__main__&#34;:
                 print(&#34;Cannot mv &#39;%s&#39;-&gt;&#39;%s&#39;&#34;%(source,destination))</code></pre>
 </details>
 </dd>
-<dt id="lib.shell.shell.parseCommandLine"><code class="name flex">
-<span>def <span class="ident">parseCommandLine</span></span>(<span>commandLine)</span>
+<dt id="lib.shell.shell.parse_command_line"><code class="name flex">
+<span>def <span class="ident">parse_command_line</span></span>(<span>commandLine)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse command line</p></div>
@@ -1533,7 +1533,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def parseCommandLine(commandLine):
+<pre><code class="python">def parse_command_line(commandLine):
         &#34;&#34;&#34; Parse command line &#34;&#34;&#34;
         commands = []
         args = []
@@ -1573,7 +1573,7 @@ if __name__ == &#34;__main__&#34;:
                 commands.append(args)
 
         for command in commands:
-                execCommand(command)</code></pre>
+                exec_command(command)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.ping"><code class="name flex">
@@ -1591,8 +1591,8 @@ if __name__ == &#34;__main__&#34;:
         ping_(host, count=4, timeout=1)</code></pre>
 </details>
 </dd>
-<dt id="lib.shell.shell.printPart"><code class="name flex">
-<span>def <span class="ident">printPart</span></span>(<span>message, width, height, count)</span>
+<dt id="lib.shell.shell.print_part"><code class="name flex">
+<span>def <span class="ident">print_part</span></span>(<span>message, width, height, count)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Print a part of text</p></div>
@@ -1600,7 +1600,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def printPart(message, width, height, count):
+<pre><code class="python">def print_part(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
         if count != None and count &gt;= height:
                 print(message,end=&#34;&#34;)
@@ -1738,8 +1738,8 @@ if __name__ == &#34;__main__&#34;:
                         d = parts[0]
                 if &#34;/&#34; in directories:
                         directories.remove(&#34;/&#34;)
-                if sdcard.SdCard.getMountpoint() in directories:
-                        directories.remove(sdcard.SdCard.getMountpoint())
+                if sdcard.SdCard.get_mountpoint() in directories:
+                        directories.remove(sdcard.SdCard.get_mountpoint())
                 for d in directories:
                         if useful.exists(d) and d != &#34;.&#34;:
                                 removedir(d, force=force, quiet=quiet, simulate=simulate)</code></pre>
@@ -1838,7 +1838,7 @@ if __name__ == &#34;__main__&#34;:
 
                 if commandLine.strip() == &#34;quit&#34;:
                         raise KeyboardInterrupt()
-                parseCommandLine(commandLine)</code></pre>
+                parse_command_line(commandLine)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.temperature"><code class="name flex">
@@ -1908,13 +1908,13 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Ls displayer class &#34;&#34;&#34;
         def __init__(self, path, showdir, long):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.height, self.width = useful.getScreenSize()
+                self.height, self.width = useful.get_screen_size()
                 self.count = 1
                 self.long = long
                 self.path = path
                 self.showdir = showdir
 
-        def purgePath(self, path):
+        def purge_path(self, path):
                 &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
                 if path != &#34;/&#34; and self.path != &#34;/&#34;:
                         path = path.replace(self.path,&#34;&#34;)
@@ -1933,24 +1933,24 @@ if __name__ == &#34;__main__&#34;:
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
                                 if self.long:
-                                        message = &#34;%s %s [%s]&#34;%(useful.dateToString(date_),&#34; &#34;*7,self.purgePath(path))
+                                        message = &#34;%s %s [%s]&#34;%(useful.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
                                 else:
-                                        message = &#34;[%s]&#34;%self.purgePath(path)
-                                self.count = printPart(message, self.width, self.height, self.count)
+                                        message = &#34;[%s]&#34;%self.purge_path(path)
+                                self.count = print_part(message, self.width, self.height, self.count)
                 else:
                         if self.long:
                                 fileinfo = useful.fileinfo(path)
                                 date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                message = &#34;%s %s %s&#34;%(useful.dateToString(date_),useful.sizeToString(size),self.purgePath(path))
+                                message = &#34;%s %s %s&#34;%(useful.date_to_string(date_),useful.size_to_string(size),self.purge_path(path))
                         else:
-                                message = self.purgePath(path)
-                        self.count = printPart(message, self.width, self.height, self.count)</code></pre>
+                                message = self.purge_path(path)
+                        self.count = print_part(message, self.width, self.height, self.count)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.shell.shell.LsDisplayer.purgePath"><code class="name flex">
-<span>def <span class="ident">purgePath</span></span>(<span>self, path)</span>
+<dt id="lib.shell.shell.LsDisplayer.purge_path"><code class="name flex">
+<span>def <span class="ident">purge_path</span></span>(<span>self, path)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Purge the path for the display</p></div>
@@ -1958,7 +1958,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def purgePath(self, path):
+<pre><code class="python">def purge_path(self, path):
         &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
         if path != &#34;/&#34; and self.path != &#34;/&#34;:
                 path = path.replace(self.path,&#34;&#34;)
@@ -1987,19 +1987,19 @@ if __name__ == &#34;__main__&#34;:
         if fileinfo[0] &amp; 0x4000 == 0x4000:
                 if self.showdir:
                         if self.long:
-                                message = &#34;%s %s [%s]&#34;%(useful.dateToString(date_),&#34; &#34;*7,self.purgePath(path))
+                                message = &#34;%s %s [%s]&#34;%(useful.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
                         else:
-                                message = &#34;[%s]&#34;%self.purgePath(path)
-                        self.count = printPart(message, self.width, self.height, self.count)
+                                message = &#34;[%s]&#34;%self.purge_path(path)
+                        self.count = print_part(message, self.width, self.height, self.count)
         else:
                 if self.long:
                         fileinfo = useful.fileinfo(path)
                         date_ = fileinfo[8]
                         size = fileinfo[6]
-                        message = &#34;%s %s %s&#34;%(useful.dateToString(date_),useful.sizeToString(size),self.purgePath(path))
+                        message = &#34;%s %s %s&#34;%(useful.date_to_string(date_),useful.size_to_string(size),self.purge_path(path))
                 else:
-                        message = self.purgePath(path)
-                self.count = printPart(message, self.width, self.height, self.count)</code></pre>
+                        message = self.purge_path(path)
+                self.count = print_part(message, self.width, self.height, self.count)</code></pre>
 </details>
 </dd>
 </dl>
@@ -2020,7 +2020,7 @@ if __name__ == &#34;__main__&#34;:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
-<li><code><a title="lib.shell.shell.asyncShell" href="#lib.shell.shell.asyncShell">asyncShell</a></code></li>
+<li><code><a title="lib.shell.shell.async_shell" href="#lib.shell.shell.async_shell">async_shell</a></code></li>
 <li><code><a title="lib.shell.shell.cat" href="#lib.shell.shell.cat">cat</a></code></li>
 <li><code><a title="lib.shell.shell.cd" href="#lib.shell.shell.cd">cd</a></code></li>
 <li><code><a title="lib.shell.shell.cls" href="#lib.shell.shell.cls">cls</a></code></li>
@@ -2032,25 +2032,25 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.dump_" href="#lib.shell.shell.dump_">dump_</a></code></li>
 <li><code><a title="lib.shell.shell.edit" href="#lib.shell.shell.edit">edit</a></code></li>
 <li><code><a title="lib.shell.shell.eval_" href="#lib.shell.shell.eval_">eval_</a></code></li>
-<li><code><a title="lib.shell.shell.execCommand" href="#lib.shell.shell.execCommand">execCommand</a></code></li>
 <li><code><a title="lib.shell.shell.exec_" href="#lib.shell.shell.exec_">exec_</a></code></li>
+<li><code><a title="lib.shell.shell.exec_command" href="#lib.shell.shell.exec_command">exec_command</a></code></li>
 <li><code><a title="lib.shell.shell.exit" href="#lib.shell.shell.exit">exit</a></code></li>
 <li><code><a title="lib.shell.shell.find" href="#lib.shell.shell.find">find</a></code></li>
 <li><code><a title="lib.shell.shell.gc" href="#lib.shell.shell.gc">gc</a></code></li>
-<li><code><a title="lib.shell.shell.getCommand" href="#lib.shell.shell.getCommand">getCommand</a></code></li>
+<li><code><a title="lib.shell.shell.get_command" href="#lib.shell.shell.get_command">get_command</a></code></li>
 <li><code><a title="lib.shell.shell.grep" href="#lib.shell.shell.grep">grep</a></code></li>
 <li><code><a title="lib.shell.shell.help" href="#lib.shell.shell.help">help</a></code></li>
 <li><code><a title="lib.shell.shell.host2ip" href="#lib.shell.shell.host2ip">host2ip</a></code></li>
 <li><code><a title="lib.shell.shell.ip2host" href="#lib.shell.shell.ip2host">ip2host</a></code></li>
 <li><code><a title="lib.shell.shell.ls" href="#lib.shell.shell.ls">ls</a></code></li>
 <li><code><a title="lib.shell.shell.man" href="#lib.shell.shell.man">man</a></code></li>
-<li><code><a title="lib.shell.shell.manOne" href="#lib.shell.shell.manOne">manOne</a></code></li>
+<li><code><a title="lib.shell.shell.man_one" href="#lib.shell.shell.man_one">man_one</a></code></li>
 <li><code><a title="lib.shell.shell.mkdir" href="#lib.shell.shell.mkdir">mkdir</a></code></li>
 <li><code><a title="lib.shell.shell.mountsd" href="#lib.shell.shell.mountsd">mountsd</a></code></li>
 <li><code><a title="lib.shell.shell.mv" href="#lib.shell.shell.mv">mv</a></code></li>
-<li><code><a title="lib.shell.shell.parseCommandLine" href="#lib.shell.shell.parseCommandLine">parseCommandLine</a></code></li>
+<li><code><a title="lib.shell.shell.parse_command_line" href="#lib.shell.shell.parse_command_line">parse_command_line</a></code></li>
 <li><code><a title="lib.shell.shell.ping" href="#lib.shell.shell.ping">ping</a></code></li>
-<li><code><a title="lib.shell.shell.printPart" href="#lib.shell.shell.printPart">printPart</a></code></li>
+<li><code><a title="lib.shell.shell.print_part" href="#lib.shell.shell.print_part">print_part</a></code></li>
 <li><code><a title="lib.shell.shell.pwd" href="#lib.shell.shell.pwd">pwd</a></code></li>
 <li><code><a title="lib.shell.shell.reboot" href="#lib.shell.shell.reboot">reboot</a></code></li>
 <li><code><a title="lib.shell.shell.removedir" href="#lib.shell.shell.removedir">removedir</a></code></li>
@@ -2069,7 +2069,7 @@ if __name__ == &#34;__main__&#34;:
 <li>
 <h4><code><a title="lib.shell.shell.LsDisplayer" href="#lib.shell.shell.LsDisplayer">LsDisplayer</a></code></h4>
 <ul class="">
-<li><code><a title="lib.shell.shell.LsDisplayer.purgePath" href="#lib.shell.shell.LsDisplayer.purgePath">purgePath</a></code></li>
+<li><code><a title="lib.shell.shell.LsDisplayer.purge_path" href="#lib.shell.shell.LsDisplayer.purge_path">purge_path</a></code></li>
 <li><code><a title="lib.shell.shell.LsDisplayer.show" href="#lib.shell.shell.LsDisplayer.show">show</a></code></li>
 </ul>
 </li>

@@ -4,20 +4,20 @@
 from tools import useful
 
 HEADER_FILE=b"## PYCAMERESP ##\r\n"
-def exportFiles(exportFilename, path="./config",pattern="*.json", recursive=False):
+def export_files(export_filename, path="./config",pattern="*.json", recursive=False):
 	""" Exports many file into only one file """
 	result = True
 
-	print("Export %s"%exportFilename)
-	useful.remove(exportFilename)
+	print("Export %s"%export_filename)
+	useful.remove(export_filename)
 
 	# Scan directory with pattern
 	dirs, files = useful.scandir(path=path, pattern=pattern, recursive=recursive)
-	
+
 	try:
 		# Open out file
-		out = open(exportFilename,"wb")
- 
+		out = open(export_filename,"wb")
+
 		# Write type of file
 		out.write(HEADER_FILE)
 
@@ -54,13 +54,13 @@ def exportFiles(exportFilename, path="./config",pattern="*.json", recursive=Fals
 		out.close()
 	return result
 
-def importFiles(importFilename, simulated=False):
+def import_files(import_filename, simulated=False):
 	""" Import files and write all files """
 	result = True
-	print("Import %s"%importFilename)
+	print("Import %s"%import_filename)
 	try:
-		readSize = useful.filesize(importFilename)
-		imported = open(importFilename,"rb")
+		readSize = useful.filesize(import_filename)
+		imported = open(import_filename,"rb")
 		if not useful.ismicropython():
 			simulated = True
 
@@ -85,7 +85,7 @@ def importFiles(importFilename, simulated=False):
 						result = False
 						break
 					size += char
-				if result == False:
+				if result is False:
 					break
 				size = eval(size)
 
@@ -104,22 +104,22 @@ def importFiles(importFilename, simulated=False):
 
 				# Read the file
 				print("  Import '%s' size=%d"%(filename, size))
-				
+
 				try:
-					if simulated == False:
+					if simulated is False:
 						content = open(filename,"wb")
 					while size > 0:
 						data = imported.read(size if size < 2048 else 2048)
-						if simulated == False:
+						if simulated is False:
 							content.write(data)
 						size -= len(data)
 				except Exception as err:
 					useful.syslog(err)
 					result = False
 				finally:
-					if simulated == False:
+					if simulated is False:
 						content.close()
-				
+
 				# Read the end of file
 				if imported.read(4) != b"\r\n\r\n":
 					result = False
@@ -130,5 +130,5 @@ def importFiles(importFilename, simulated=False):
 	finally:
 		print("Import %s"%("success" if result else "failed"))
 		imported.close()
-	useful.remove(importFilename)
+	useful.remove(import_filename)
 	return result

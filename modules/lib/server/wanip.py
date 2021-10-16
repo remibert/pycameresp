@@ -14,17 +14,17 @@ async def request(host, port, path):
 		reader,writer = await uasyncio.open_connection(useful.tostrings(host), port)
 		streamio = Stream(reader, writer)
 		req = HttpRequest(None)
-		req.setPath(path)
-		req.setHeader(b"HOST",b"ESP32")
-		req.setMethod(b"GET")
-		req.setHeader(b"User-Agent",b"ESP32")
-		req.setHeader(b"Accept-Encoding",b"gzip, deflate")
-		req.setHeader(b"Connection",b"keep-alive")
+		req.set_path(path)
+		req.set_header(b"HOST",b"ESP32")
+		req.set_method(b"GET")
+		req.set_header(b"User-Agent",b"ESP32")
+		req.set_header(b"Accept-Encoding",b"gzip, deflate")
+		req.set_header(b"Connection",b"keep-alive")
 		await req.send(streamio)
 		response = HttpResponse(streamio)
 		await response.receive(streamio)
 		if response.status == b"200":
-			result = response.getContent()
+			result = response.get_content()
 	except Exception as err:
 		useful.syslog(err)
 	finally:
@@ -32,7 +32,7 @@ async def request(host, port, path):
 			await streamio.close()
 	return result
 
-async def getWanIpAsync():
+async def get_wan_ip_async():
 	""" Get the wan ip address with asynchronous method """
 	resp = await request("ip4only.me",80,b"/api/")
 	if resp:
@@ -40,4 +40,3 @@ async def getWanIpAsync():
 		if len(spl) > 1:
 			return spl[1].decode("utf-8")
 	return None
-

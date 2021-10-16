@@ -31,11 +31,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Presence detection (determine if an occupant is present in the house) &#34;&#34;&#34;
 import time
-from tools import useful, jsonconfig, lang, tasking
 import wifi
-from server.ping import asyncPing
+from server.ping import async_ping
 from server.notifier import Notifier
 from server.server import Server
+from tools import useful, jsonconfig, lang, tasking
 
 class PresenceConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Configuration class of presence detection &#34;&#34;&#34;
@@ -64,12 +64,12 @@ class Presence:
         detected = [False]
 
         @staticmethod
-        def isDetected():
+        def is_detected():
                 &#34;&#34;&#34; Indicates if presence detected &#34;&#34;&#34;
                 return Presence.detected[0]
 
         @staticmethod
-        def setDetection(state):
+        def set_detection(state):
                 &#34;&#34;&#34; Force presence detection &#34;&#34;&#34;
                 Presence.detected[0] = state
 
@@ -79,7 +79,6 @@ class Presence:
                 Presence.readConfig = 0.
                 Presence.pollingDuration = Presence.FAST_POLLING
                 Presence.config = PresenceConfig()
-                
                 Presence.activated = None
                 Presence.lastTime = 0
                 Presence.lastDnsTime = 0
@@ -92,22 +91,22 @@ class Presence:
                 # If configuration must be read
                 if Presence.config:
                         if Presence.configRefreshCounter % 7 == 0:
-                                if Presence.config.isChanged():
-                                        if Presence.config.load() == False:
+                                if Presence.config.is_changed():
+                                        if Presence.config.load() is False:
                                                 Presence.config.save()
-                                        useful.syslog(&#34;Change presence config %s&#34;%Presence.config.toString(), display=False)
+                                        useful.syslog(&#34;Change presence config %s&#34;%Presence.config.to_string(), display=False)
                         Presence.configRefreshCounter += 1
 
-                if Presence.config.activated == True and wifi.Wifi.isLanAvailable():
+                if Presence.config.activated is True and wifi.Wifi.is_lan_available():
                         if Presence.lastDnsTime + Presence.DNS_POLLING &lt; time.time():
                                 Presence.lastDnsTime = time.time()
-                                sent,received,success = await asyncPing(wifi.Wifi.getDns(), count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
+                                sent,received,success = await async_ping(wifi.Wifi.get_dns(), count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
 
                                 if received == 0:
-                                        wifi.Wifi.lanDisconnected()
+                                        wifi.Wifi.lan_disconnected()
                                 else:
-                                        wifi.Wifi.lanConnected()
-                if Presence.config.activated == True and wifi.Wifi.isLanAvailable():
+                                        wifi.Wifi.lan_connected()
+                if Presence.config.activated is True and wifi.Wifi.is_lan_available():
                         presents = []
                         currentDetected = None
                         smartphoneInList = False
@@ -118,14 +117,14 @@ class Presence:
                                         smartphoneInList = True
 
                                         # Ping smartphone
-                                        sent,received,success = await asyncPing(smartphone, count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
-                                
+                                        sent,received,success = await async_ping(smartphone, count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
+
                                         # If a response received from smartphone
                                         if received &gt; 0:
                                                 presents.append(smartphone)
                                                 Presence.lastTime = time.time()
                                                 currentDetected = True
-                                                wifi.Wifi.lanConnected()
+                                                wifi.Wifi.lan_connected()
 
                         # If no smartphones detected during a very long time
                         if Presence.lastTime + Presence.ABSENCE_TIMEOUT &lt; time.time():
@@ -133,27 +132,27 @@ class Presence:
                                 currentDetected = False
 
                         # If smartphone detected
-                        if currentDetected == True:
+                        if currentDetected is True:
                                 # If no smartphone previously detected
-                                if Presence.isDetected() != currentDetected:
+                                if Presence.is_detected() != currentDetected:
                                         # Notify the house is not empty
                                         msg = b&#34;&#34;
                                         for present in presents:
                                                 msg += b&#34;%s &#34;%present
                                         if Presence.config.notify:
                                                 await Notifier.notify(lang.presence_of_s%(msg))
-                                        Presence.setDetection(True)
+                                        Presence.set_detection(True)
                         # If no smartphone detected
-                        elif currentDetected == False:
+                        elif currentDetected is False:
                                 # If smartphone previously detected
-                                if Presence.isDetected() != currentDetected:
+                                if Presence.is_detected() != currentDetected:
                                         # Notify the house in empty
                                         if Presence.config.notify:
                                                 await Notifier.notify(lang.empty_house)
-                                        Presence.setDetection(False)
+                                        Presence.set_detection(False)
 
                         # If all smartphones not responded during a long time
-                        if Presence.lastTime + Presence.NO_ANSWER_TIMEOUT &lt; time.time() and smartphoneInList == True:
+                        if Presence.lastTime + Presence.NO_ANSWER_TIMEOUT &lt; time.time() and smartphoneInList is True:
                                 # Set fast polling rate
                                 Presence.pollingDuration = Presence.FAST_POLLING
                         else:
@@ -161,7 +160,7 @@ class Presence:
                                 Presence.pollingDuration = Presence.SLOW_POLLING
                 else:
                         Presence.pollingDuration = Presence.SLOW_POLLING
-                        Presence.setDetection(False)
+                        Presence.set_detection(False)
 
                 # If the presence detection change
                 if Presence.activated != Presence.config.activated:
@@ -174,13 +173,13 @@ class Presence:
                         Presence.activated = Presence.config.activated
 
                 # Wait before new ping
-                await Server.waitResume(Presence.pollingDuration)
+                await Server.wait_resume(Presence.pollingDuration)
                 return True
 
-async def detectPresence():
+async def detect_presence():
         &#34;&#34;&#34; Detect the presence of occupants of the housing and automatically suspend the detection (ping the ip of occupants smartphones) &#34;&#34;&#34;
         Presence.init()
-        await tasking.taskMonitoring(Presence.task)</code></pre>
+        await tasking.task_monitoring(Presence.task)</code></pre>
 </details>
 </section>
 <section>
@@ -190,8 +189,8 @@ async def detectPresence():
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.server.presence.detectPresence"><code class="name flex">
-<span>async def <span class="ident">detectPresence</span></span>(<span>)</span>
+<dt id="lib.server.presence.detect_presence"><code class="name flex">
+<span>async def <span class="ident">detect_presence</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Detect the presence of occupants of the housing and automatically suspend the detection (ping the ip of occupants smartphones)</p></div>
@@ -199,10 +198,10 @@ async def detectPresence():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def detectPresence():
+<pre><code class="python">async def detect_presence():
         &#34;&#34;&#34; Detect the presence of occupants of the housing and automatically suspend the detection (ping the ip of occupants smartphones) &#34;&#34;&#34;
         Presence.init()
-        await tasking.taskMonitoring(Presence.task)</code></pre>
+        await tasking.task_monitoring(Presence.task)</code></pre>
 </details>
 </dd>
 </dl>
@@ -233,12 +232,12 @@ async def detectPresence():
         detected = [False]
 
         @staticmethod
-        def isDetected():
+        def is_detected():
                 &#34;&#34;&#34; Indicates if presence detected &#34;&#34;&#34;
                 return Presence.detected[0]
 
         @staticmethod
-        def setDetection(state):
+        def set_detection(state):
                 &#34;&#34;&#34; Force presence detection &#34;&#34;&#34;
                 Presence.detected[0] = state
 
@@ -248,7 +247,6 @@ async def detectPresence():
                 Presence.readConfig = 0.
                 Presence.pollingDuration = Presence.FAST_POLLING
                 Presence.config = PresenceConfig()
-                
                 Presence.activated = None
                 Presence.lastTime = 0
                 Presence.lastDnsTime = 0
@@ -261,22 +259,22 @@ async def detectPresence():
                 # If configuration must be read
                 if Presence.config:
                         if Presence.configRefreshCounter % 7 == 0:
-                                if Presence.config.isChanged():
-                                        if Presence.config.load() == False:
+                                if Presence.config.is_changed():
+                                        if Presence.config.load() is False:
                                                 Presence.config.save()
-                                        useful.syslog(&#34;Change presence config %s&#34;%Presence.config.toString(), display=False)
+                                        useful.syslog(&#34;Change presence config %s&#34;%Presence.config.to_string(), display=False)
                         Presence.configRefreshCounter += 1
 
-                if Presence.config.activated == True and wifi.Wifi.isLanAvailable():
+                if Presence.config.activated is True and wifi.Wifi.is_lan_available():
                         if Presence.lastDnsTime + Presence.DNS_POLLING &lt; time.time():
                                 Presence.lastDnsTime = time.time()
-                                sent,received,success = await asyncPing(wifi.Wifi.getDns(), count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
+                                sent,received,success = await async_ping(wifi.Wifi.get_dns(), count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
 
                                 if received == 0:
-                                        wifi.Wifi.lanDisconnected()
+                                        wifi.Wifi.lan_disconnected()
                                 else:
-                                        wifi.Wifi.lanConnected()
-                if Presence.config.activated == True and wifi.Wifi.isLanAvailable():
+                                        wifi.Wifi.lan_connected()
+                if Presence.config.activated is True and wifi.Wifi.is_lan_available():
                         presents = []
                         currentDetected = None
                         smartphoneInList = False
@@ -287,14 +285,14 @@ async def detectPresence():
                                         smartphoneInList = True
 
                                         # Ping smartphone
-                                        sent,received,success = await asyncPing(smartphone, count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
-                                
+                                        sent,received,success = await async_ping(smartphone, count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
+
                                         # If a response received from smartphone
                                         if received &gt; 0:
                                                 presents.append(smartphone)
                                                 Presence.lastTime = time.time()
                                                 currentDetected = True
-                                                wifi.Wifi.lanConnected()
+                                                wifi.Wifi.lan_connected()
 
                         # If no smartphones detected during a very long time
                         if Presence.lastTime + Presence.ABSENCE_TIMEOUT &lt; time.time():
@@ -302,27 +300,27 @@ async def detectPresence():
                                 currentDetected = False
 
                         # If smartphone detected
-                        if currentDetected == True:
+                        if currentDetected is True:
                                 # If no smartphone previously detected
-                                if Presence.isDetected() != currentDetected:
+                                if Presence.is_detected() != currentDetected:
                                         # Notify the house is not empty
                                         msg = b&#34;&#34;
                                         for present in presents:
                                                 msg += b&#34;%s &#34;%present
                                         if Presence.config.notify:
                                                 await Notifier.notify(lang.presence_of_s%(msg))
-                                        Presence.setDetection(True)
+                                        Presence.set_detection(True)
                         # If no smartphone detected
-                        elif currentDetected == False:
+                        elif currentDetected is False:
                                 # If smartphone previously detected
-                                if Presence.isDetected() != currentDetected:
+                                if Presence.is_detected() != currentDetected:
                                         # Notify the house in empty
                                         if Presence.config.notify:
                                                 await Notifier.notify(lang.empty_house)
-                                        Presence.setDetection(False)
+                                        Presence.set_detection(False)
 
                         # If all smartphones not responded during a long time
-                        if Presence.lastTime + Presence.NO_ANSWER_TIMEOUT &lt; time.time() and smartphoneInList == True:
+                        if Presence.lastTime + Presence.NO_ANSWER_TIMEOUT &lt; time.time() and smartphoneInList is True:
                                 # Set fast polling rate
                                 Presence.pollingDuration = Presence.FAST_POLLING
                         else:
@@ -330,7 +328,7 @@ async def detectPresence():
                                 Presence.pollingDuration = Presence.SLOW_POLLING
                 else:
                         Presence.pollingDuration = Presence.SLOW_POLLING
-                        Presence.setDetection(False)
+                        Presence.set_detection(False)
 
                 # If the presence detection change
                 if Presence.activated != Presence.config.activated:
@@ -343,7 +341,7 @@ async def detectPresence():
                         Presence.activated = Presence.config.activated
 
                 # Wait before new ping
-                await Server.waitResume(Presence.pollingDuration)
+                await Server.wait_resume(Presence.pollingDuration)
                 return True</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -398,7 +396,6 @@ def init():
         Presence.readConfig = 0.
         Presence.pollingDuration = Presence.FAST_POLLING
         Presence.config = PresenceConfig()
-        
         Presence.activated = None
         Presence.lastTime = 0
         Presence.lastDnsTime = 0
@@ -406,8 +403,8 @@ def init():
         Presence.configRefreshCounter = 0</code></pre>
 </details>
 </dd>
-<dt id="lib.server.presence.Presence.isDetected"><code class="name flex">
-<span>def <span class="ident">isDetected</span></span>(<span>)</span>
+<dt id="lib.server.presence.Presence.is_detected"><code class="name flex">
+<span>def <span class="ident">is_detected</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if presence detected</p></div>
@@ -416,13 +413,13 @@ def init():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isDetected():
+def is_detected():
         &#34;&#34;&#34; Indicates if presence detected &#34;&#34;&#34;
         return Presence.detected[0]</code></pre>
 </details>
 </dd>
-<dt id="lib.server.presence.Presence.setDetection"><code class="name flex">
-<span>def <span class="ident">setDetection</span></span>(<span>state)</span>
+<dt id="lib.server.presence.Presence.set_detection"><code class="name flex">
+<span>def <span class="ident">set_detection</span></span>(<span>state)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Force presence detection</p></div>
@@ -431,7 +428,7 @@ def isDetected():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def setDetection(state):
+def set_detection(state):
         &#34;&#34;&#34; Force presence detection &#34;&#34;&#34;
         Presence.detected[0] = state</code></pre>
 </details>
@@ -451,22 +448,22 @@ async def task():
         # If configuration must be read
         if Presence.config:
                 if Presence.configRefreshCounter % 7 == 0:
-                        if Presence.config.isChanged():
-                                if Presence.config.load() == False:
+                        if Presence.config.is_changed():
+                                if Presence.config.load() is False:
                                         Presence.config.save()
-                                useful.syslog(&#34;Change presence config %s&#34;%Presence.config.toString(), display=False)
+                                useful.syslog(&#34;Change presence config %s&#34;%Presence.config.to_string(), display=False)
                 Presence.configRefreshCounter += 1
 
-        if Presence.config.activated == True and wifi.Wifi.isLanAvailable():
+        if Presence.config.activated is True and wifi.Wifi.is_lan_available():
                 if Presence.lastDnsTime + Presence.DNS_POLLING &lt; time.time():
                         Presence.lastDnsTime = time.time()
-                        sent,received,success = await asyncPing(wifi.Wifi.getDns(), count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
+                        sent,received,success = await async_ping(wifi.Wifi.get_dns(), count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
 
                         if received == 0:
-                                wifi.Wifi.lanDisconnected()
+                                wifi.Wifi.lan_disconnected()
                         else:
-                                wifi.Wifi.lanConnected()
-        if Presence.config.activated == True and wifi.Wifi.isLanAvailable():
+                                wifi.Wifi.lan_connected()
+        if Presence.config.activated is True and wifi.Wifi.is_lan_available():
                 presents = []
                 currentDetected = None
                 smartphoneInList = False
@@ -477,14 +474,14 @@ async def task():
                                 smartphoneInList = True
 
                                 # Ping smartphone
-                                sent,received,success = await asyncPing(smartphone, count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
-                        
+                                sent,received,success = await async_ping(smartphone, count=Presence.PING_COUNT, timeout=Presence.PING_TIMEOUT, quiet=True)
+
                                 # If a response received from smartphone
                                 if received &gt; 0:
                                         presents.append(smartphone)
                                         Presence.lastTime = time.time()
                                         currentDetected = True
-                                        wifi.Wifi.lanConnected()
+                                        wifi.Wifi.lan_connected()
 
                 # If no smartphones detected during a very long time
                 if Presence.lastTime + Presence.ABSENCE_TIMEOUT &lt; time.time():
@@ -492,27 +489,27 @@ async def task():
                         currentDetected = False
 
                 # If smartphone detected
-                if currentDetected == True:
+                if currentDetected is True:
                         # If no smartphone previously detected
-                        if Presence.isDetected() != currentDetected:
+                        if Presence.is_detected() != currentDetected:
                                 # Notify the house is not empty
                                 msg = b&#34;&#34;
                                 for present in presents:
                                         msg += b&#34;%s &#34;%present
                                 if Presence.config.notify:
                                         await Notifier.notify(lang.presence_of_s%(msg))
-                                Presence.setDetection(True)
+                                Presence.set_detection(True)
                 # If no smartphone detected
-                elif currentDetected == False:
+                elif currentDetected is False:
                         # If smartphone previously detected
-                        if Presence.isDetected() != currentDetected:
+                        if Presence.is_detected() != currentDetected:
                                 # Notify the house in empty
                                 if Presence.config.notify:
                                         await Notifier.notify(lang.empty_house)
-                                Presence.setDetection(False)
+                                Presence.set_detection(False)
 
                 # If all smartphones not responded during a long time
-                if Presence.lastTime + Presence.NO_ANSWER_TIMEOUT &lt; time.time() and smartphoneInList == True:
+                if Presence.lastTime + Presence.NO_ANSWER_TIMEOUT &lt; time.time() and smartphoneInList is True:
                         # Set fast polling rate
                         Presence.pollingDuration = Presence.FAST_POLLING
                 else:
@@ -520,7 +517,7 @@ async def task():
                         Presence.pollingDuration = Presence.SLOW_POLLING
         else:
                 Presence.pollingDuration = Presence.SLOW_POLLING
-                Presence.setDetection(False)
+                Presence.set_detection(False)
 
         # If the presence detection change
         if Presence.activated != Presence.config.activated:
@@ -533,7 +530,7 @@ async def task():
                 Presence.activated = Presence.config.activated
 
         # Wait before new ping
-        await Server.waitResume(Presence.pollingDuration)
+        await Server.wait_resume(Presence.pollingDuration)
         return True</code></pre>
 </details>
 </dd>
@@ -583,7 +580,7 @@ async def task():
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.server.presence.detectPresence" href="#lib.server.presence.detectPresence">detectPresence</a></code></li>
+<li><code><a title="lib.server.presence.detect_presence" href="#lib.server.presence.detect_presence">detect_presence</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -600,8 +597,8 @@ async def task():
 <li><code><a title="lib.server.presence.Presence.SLOW_POLLING" href="#lib.server.presence.Presence.SLOW_POLLING">SLOW_POLLING</a></code></li>
 <li><code><a title="lib.server.presence.Presence.detected" href="#lib.server.presence.Presence.detected">detected</a></code></li>
 <li><code><a title="lib.server.presence.Presence.init" href="#lib.server.presence.Presence.init">init</a></code></li>
-<li><code><a title="lib.server.presence.Presence.isDetected" href="#lib.server.presence.Presence.isDetected">isDetected</a></code></li>
-<li><code><a title="lib.server.presence.Presence.setDetection" href="#lib.server.presence.Presence.setDetection">setDetection</a></code></li>
+<li><code><a title="lib.server.presence.Presence.is_detected" href="#lib.server.presence.Presence.is_detected">is_detected</a></code></li>
+<li><code><a title="lib.server.presence.Presence.set_detection" href="#lib.server.presence.Presence.set_detection">set_detection</a></code></li>
 <li><code><a title="lib.server.presence.Presence.task" href="#lib.server.presence.Presence.task">task</a></code></li>
 </ul>
 </li>

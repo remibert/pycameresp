@@ -47,6 +47,9 @@ try:
         import uos
 except:
         pass
+# pylint:disable=ungrouped-imports
+# pylint:disable=consider-using-enumerate
+from tools.tasking import WatchDog
 
 def ismicropython():
         &#34;&#34;&#34; Indicates if the python is micropython &#34;&#34;&#34;
@@ -55,8 +58,7 @@ def ismicropython():
         return False
 
 if ismicropython():
-        from tools import tasking
-        def getLengthUtf8(key):
+        def get_length_utf8(key):
                 &#34;&#34;&#34; Get the length utf8 string &#34;&#34;&#34;
                 if len(key) &gt; 0:
                         char = key[0]
@@ -71,8 +73,8 @@ if ismicropython():
                         return 1
                 else:
                         return 0
-                        
-        def isKeyEnded(key):
+
+        def is_key_ended(key):
                 &#34;&#34;&#34; Indicates if the key completly entered &#34;&#34;&#34;
                 if len(key) == 0:
                         return False
@@ -81,7 +83,7 @@ if ismicropython():
                         if len(key) == 1:
                                 if char == 0x1B:
                                         return False
-                                elif getLengthUtf8(key) == len(key):
+                                elif get_length_utf8(key) == len(key):
                                         return True
                         elif len(key) == 2:
                                 if key[0] == b&#34;\x1B&#34; and key[1] == b&#34;\x1B&#34;:
@@ -93,7 +95,7 @@ if ismicropython():
                                                 return False
                                         else:
                                                 return True
-                                elif getLengthUtf8(key) == len(key):
+                                elif get_length_utf8(key) == len(key):
                                         return True
                         else:
                                 if key[-1] &gt;= ord(&#34;A&#34;) and key[-1] &lt;= ord(&#34;Z&#34;):
@@ -102,21 +104,21 @@ if ismicropython():
                                         return True
                                 elif key[-1] == b&#34;~&#34;:
                                         return True
-                                elif key[0] != b&#34;\x1B&#34; and getLengthUtf8(key) == len(key):
+                                elif key[0] != b&#34;\x1B&#34; and get_length_utf8(key) == len(key):
                                         return True
                 return False
 
         def getch(raw = True, duration=100000000, interchar=0.05):
                 &#34;&#34;&#34; Wait a key pressed on keyboard and return it &#34;&#34;&#34;
                 key = b&#34;&#34;
-                tasking.WatchDog.feed()
+                WatchDog.feed()
                 while 1:
                         if len(key) == 0:
                                 delay = duration
                         else:
                                 delay = interchar
                         keyPressed = kbhit(delay)
-                        if isKeyEnded(key):
+                        if is_key_ended(key):
                                 break
                         if keyPressed:
                                 key += sys.stdin.buffer.read(1)
@@ -144,32 +146,32 @@ if ismicropython():
                                 sys.stdin.buffer.read(1)
                         else:
                                 break
-                
 else:
         def getch(raw = True, duration=100000000, interchar=0.01):
                 &#34;&#34;&#34; Wait a key pressed on keyboard and return it &#34;&#34;&#34;
-                return readKeyboard(duration, raw, getChar)
+                return read_keyboard(duration, raw, get_char)
 
         def kbhit(duration=0.001):
                 &#34;&#34;&#34; Indicates if a key is pressed or not &#34;&#34;&#34;
-                return readKeyboard(duration, True, testChar)
+                return read_keyboard(duration, True, test_char)
 
-        def getChar(stdins):
+        def get_char(stdins):
                 &#34;&#34;&#34; Get character &#34;&#34;&#34;
                 if stdins != []:
                         return stdins[0].read()
                 return None
 
-        def testChar(stdins):
+        def test_char(stdins):
                 &#34;&#34;&#34; Test a character &#34;&#34;&#34;
                 if stdins != []:
                         return True
                 return False
 
-        def readKeyboard(duration=0.001, raw=True, callback=None):
+        def read_keyboard(duration=0.001, raw=True, callback=None):
                 &#34;&#34;&#34; Read keyboard on os/x, linux or windows&#34;&#34;&#34;
-                import termios, fcntl
                 import tty
+                import termios
+                import fcntl
                 fd = sys.stdin.fileno()
                 oldattr = termios.tcgetattr(fd)
                 oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
@@ -203,12 +205,14 @@ try:
 
         from time import ticks_ms
         def ticks():
+                &#34;&#34;&#34; Count tick elapsed from start &#34;&#34;&#34;
                 return ticks_ms()
 except:
         def ticks():
+                &#34;&#34;&#34; Count tick elapsed from start &#34;&#34;&#34;
                 return (int)(time.time() * 1000)
 
-def ticksToString():
+def ticks_to_string():
         &#34;&#34;&#34; Create a string with tick in seconds &#34;&#34;&#34;
         tick = ticks()
         return &#34;%d.%03d s&#34;%(tick/1000, tick%1000)
@@ -220,44 +224,44 @@ def log(msg):
         global previousTime
         if previousTime == 0:
                 previousTime = current
-        if msg != None:
+        if msg is not None:
                 print(&#34;%03d.%03d:%s&#34;%((current-previousTime)/1000, (current-previousTime)%1000, msg))
         previousTime = ticks()
 
-def dateToString(date = None):
+def date_to_string(date = None):
         &#34;&#34;&#34; Get a string with the current date &#34;&#34;&#34;
-        return dateToBytes(date).decode(&#34;utf8&#34;)
+        return date_to_bytes(date).decode(&#34;utf8&#34;)
 
-def dateToBytes(date = None):
+def date_to_bytes(date = None):
         &#34;&#34;&#34; Get a bytes with the current date &#34;&#34;&#34;
         year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
         return b&#34;%04d/%02d/%02d  %02d:%02d:%02d&#34;%(year,month,day,hour,minute,second)
 
-def dateMsToString():
+def date_ms_to_string():
         &#34;&#34;&#34; Get a string with the current date with ms &#34;&#34;&#34;
         ms = (time.time_ns() // 1000000)%1000
         year,month,day,hour,minute,second,weekday,yearday = time.localtime(None)[:8]
         return &#34;%04d/%02d/%02d %02d:%02d:%02d.%03d&#34;%(year,month,day,hour,minute,second,ms)
 
-def dateToFilename(date = None):
+def date_to_filename(date = None):
         &#34;&#34;&#34; Get a filename with a date &#34;&#34;&#34;
-        filename = dateToString(date)
+        filename = date_to_string(date)
         filename = filename.replace(&#34;  &#34;,&#34; &#34;)
         filename = filename.replace(&#34; &#34;,&#34;_&#34;)
         filename = filename.replace(&#34;/&#34;,&#34;-&#34;)
         filename = filename.replace(&#34;:&#34;,&#34;-&#34;)
         return filename
 
-def dateToPath(date=None):
+def date_to_path(date=None):
         &#34;&#34;&#34; Get a path with year/month/day/hour &#34;&#34;&#34;
         year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
         return b&#34;%04d/%02d/%02d/%02dh%02d&#34;%(year,month,day,hour,minute)
 
-def sizeToString(size, largeur=6):
+def size_to_string(size, largeur=6):
         &#34;&#34;&#34; Convert a size in a string with k, m, g, t...&#34;&#34;&#34;
-        return sizeToBytes(size, largeur).decode(&#34;utf8&#34;)
+        return size_to_bytes(size, largeur).decode(&#34;utf8&#34;)
 
-def sizeToBytes(size, largeur=6):
+def size_to_bytes(size, largeur=6):
         &#34;&#34;&#34; Convert a size in a bytes with k, m, g, t...&#34;&#34;&#34;
         if size &gt; 1073741824*1024:
                 return  b&#34;%*.2fT&#34;%(largeur, size / (1073741824.*1024.))
@@ -277,7 +281,7 @@ def meminfo(display=True):
                 # pylint: disable=no-member
                 alloc = gc.mem_alloc()
                 free  = gc.mem_free()
-                result = b&#34;Mem alloc=%s free=%s total=%s&#34;%(sizeToBytes(alloc, 1), sizeToBytes(free, 1), sizeToBytes(alloc+free, 1))
+                result = b&#34;Mem alloc=%s free=%s total=%s&#34;%(size_to_bytes(alloc, 1), size_to_bytes(free, 1), size_to_bytes(alloc+free, 1))
                 if display:
                         print(tostrings(result))
                 else:
@@ -289,7 +293,7 @@ def flashinfo(display=True):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
         try:
                 import esp
-                result = b&#34;Flash user=%s size=%s&#34;%(sizeToBytes(esp.flash_user_start(), 1), sizeToBytes(esp.flash_size(), 1))
+                result = b&#34;Flash user=%s size=%s&#34;%(size_to_bytes(esp.flash_user_start(), 1), size_to_bytes(esp.flash_size(), 1))
                 if display:
                         print(tostrings(result))
                 else:
@@ -300,7 +304,7 @@ def flashinfo(display=True):
 def sysinfo(display=True, text=&#34;&#34;):
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
         try:
-                result = b&#34;%s%s %dMhz, %s, %s, %s&#34;%(text, sys.platform, machine.freq()//1000000, dateToBytes(), meminfo(False), flashinfo(False))
+                result = b&#34;%s%s %dMhz, %s, %s, %s&#34;%(text, sys.platform, machine.freq()//1000000, date_to_bytes(), meminfo(False), flashinfo(False))
                 if display:
                         print(tostrings(result))
                 else:
@@ -350,7 +354,7 @@ def import_(filename):
                 pass
         try:
                 exec(&#34;import %s&#34;%moduleName)
-                
+
                 for fct in dir(sys.modules[moduleName]):
                         if fct == &#34;main&#34;:
                                 print(&#34;Start main function&#34;)
@@ -504,11 +508,11 @@ def syslog(err, msg=&#34;&#34;, display=True):
                 logFile = open(filename,&#34;a&#34;)
 
         result = &#34;%s%s&#34;%(tostrings(msg),tostrings(err))
-        logFile.write(dateMsToString() + &#34; %s\n&#34;%(result))
+        logFile.write(date_ms_to_string() + &#34; %s\n&#34;%(result))
         logFile.close()
         return result
 
-def htmlException(err):
+def html_exception(err):
         &#34;&#34;&#34; Return the content of exception into an html bytes &#34;&#34;&#34;
         text = exception(err)
         text = text.replace(&#34;\n    &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;)
@@ -531,7 +535,7 @@ def blink(duration=10):
 
 screenSize = None
 
-def refreshScreenSize():
+def refresh_screen_size():
         &#34;&#34;&#34; Refresh the screen size &#34;&#34;&#34;
         global screenSize
         try:
@@ -559,24 +563,24 @@ def refreshScreenSize():
         kbflush()
         return result
 
-def getScreenSize():
+def get_screen_size():
         &#34;&#34;&#34; Get the VT100 screen size &#34;&#34;&#34;
         global screenSize
-        if screenSize != None:
+        if screenSize is not None:
                 return screenSize
         else:
-                return refreshScreenSize()
+                return refresh_screen_size()
 
 def prefix(files):
         &#34;&#34;&#34; Get the common prefix of all files &#34;&#34;&#34;
         # Initializes counters
         counters = []
-        
+
         # For all files
         for file in files:
                 # Split the file name into a piece
                 paths = file.split(&#34;/&#34;)
-                
+
                 # For each piece
                 for i in range(0,len(paths)):
                         try:
@@ -589,7 +593,7 @@ def prefix(files):
                         except:
                                 # Adds a new level of depth
                                 counters.append({paths[i] : 1})
-        
+
         # Constructs the prefix of the list of files
         try:
                 result = &#34;&#34;
@@ -607,11 +611,11 @@ def now():
         &#34;&#34;&#34; Get time now &#34;&#34;&#34;
         return time.localtime()
 
-def computeHash(string):
-        &#34;&#34;&#34; Compute hash 
-        &gt;&gt;&gt; print(computeHash(&#34;1234&#34;))
+def compute_hash(string):
+        &#34;&#34;&#34; Compute hash
+        &gt;&gt;&gt; print(compute_hash(&#34;1234&#34;))
         49307
-        &gt;&gt;&gt; print(computeHash(b&#34;1234&#34;))
+        &gt;&gt;&gt; print(compute_hash(b&#34;1234&#34;))
         49307
         &#34;&#34;&#34;
         string = tostrings(string)
@@ -669,7 +673,7 @@ def ispunctuation(char):
                 return False
 
 def dump(buff, withColor=True):
-        &#34;&#34;&#34; Dump buffer &#34;&#34;&#34;
+        &#34;&#34;&#34; dump buffer &#34;&#34;&#34;
         if withColor:
                 string = &#34;\x1B[7m&#34;
         else:
@@ -690,11 +694,11 @@ def dump(buff, withColor=True):
                 string += &#34;\x1B[m&#34;
         return string
 
-def dumpLine (data, line = None, width = 0):
-        &#34;&#34;&#34; Dump a data data in hexadecimal on one line &#34;&#34;&#34;
+def dump_line (data, line = None, width = 0):
+        &#34;&#34;&#34; dump a data data in hexadecimal on one line &#34;&#34;&#34;
         size = len(data)
         fill = 0
-        
+
         # Calculation of the filling length
         if width &gt; size:
                 fill = width-size
@@ -702,13 +706,13 @@ def dumpLine (data, line = None, width = 0):
         # Displaying values in hex
         for i in data:
                 line.write(b&#39;%02X &#39; % i)
-                
+
         # Filling of vacuum according to the size of the dump
         line.write(b&#39;   &#39;*fill)
-        
+
         # Display of ASCII codes
         line.write(b&#39; |&#39;)
-        
+
         for i in data:
                 if i &gt;= 0x20 and  i &lt; 0x7F:
                         line.write(chr(i).encode(&#34;utf8&#34;))
@@ -717,13 +721,13 @@ def dumpLine (data, line = None, width = 0):
 
         # Filling of vacuum according to the size of the dump
         line.write(b&#39; &#39;*fill)
-        
+
         # End of data ascii
         line.write(b&#39;|&#39;)
 
 def makedir(directory, recursive=False):
         &#34;&#34;&#34; Make directory recursively &#34;&#34;&#34;
-        if recursive == False:
+        if recursive is False:
                 os.mkdir(directory)
         else:
                 directories = [directory]
@@ -758,7 +762,7 @@ def tobytes(datas, encoding=&#34;utf8&#34;):
                 for key, value in datas.items():
                         result[tobytes(key,encoding)] = tobytes(value, encoding)
         return result
-        
+
 def tostrings(datas, encoding=&#34;utf8&#34;):
         &#34;&#34;&#34; Convert data to strings &#34;&#34;&#34;
         result = datas
@@ -822,7 +826,7 @@ def scandir(path, pattern, recursive, displayer=None):
         if path == &#34;&#34;:
                 path = &#34;.&#34;
         try:
-                if path != None and pattern != None:
+                if path is not None and pattern is not None:
                         for file in os.listdir(path):
                                 if path != &#34;&#34;:
                                         filename = path + &#34;/&#34; + file
@@ -851,15 +855,19 @@ def scandir(path, pattern, recursive, displayer=None):
 
 def remove(filename):
         &#34;&#34;&#34; Remove file existing &#34;&#34;&#34;
-        try:    uos.remove(filename)
-        except: pass 
+        try:
+                uos.remove(filename)
+        except:
+                pass
 
 def rename(old, new):
         &#34;&#34;&#34; Rename file &#34;&#34;&#34;
         if exists(new):
                 remove(new)
-        try: uos.rename(old, new)
-        except: pass
+        try:
+                uos.rename(old, new)
+        except:
+                pass
 
 def uptime(text=&#34;days&#34;):
         &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
@@ -880,10 +888,10 @@ def reboot(message=&#34;Reboot&#34;):
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
         syslog(message)
         from tools.lang import RegionConfig
-        regionConfig = RegionConfig()
-        if regionConfig.load():
-                regionConfig.currentTime = time.time() + 8
-                regionConfig.save()
+        region_config = RegionConfig()
+        if region_config.load():
+                region_config.current_time = time.time() + 8
+                region_config.save()
         try:
                 if ismicropython():
                         import camera
@@ -983,25 +991,25 @@ def reboot(message=&#34;Reboot&#34;):
                 print(&#34;Blink&#34;)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.computeHash"><code class="name flex">
-<span>def <span class="ident">computeHash</span></span>(<span>string)</span>
+<dt id="lib.tools.useful.compute_hash"><code class="name flex">
+<span>def <span class="ident">compute_hash</span></span>(<span>string)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Compute hash </p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; print(computeHash(&quot;1234&quot;))
+<div class="desc"><p>Compute hash</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; print(compute_hash(&quot;1234&quot;))
 49307
-&gt;&gt;&gt; print(computeHash(b&quot;1234&quot;))
+&gt;&gt;&gt; print(compute_hash(b&quot;1234&quot;))
 49307
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def computeHash(string):
-        &#34;&#34;&#34; Compute hash 
-        &gt;&gt;&gt; print(computeHash(&#34;1234&#34;))
+<pre><code class="python">def compute_hash(string):
+        &#34;&#34;&#34; Compute hash
+        &gt;&gt;&gt; print(compute_hash(&#34;1234&#34;))
         49307
-        &gt;&gt;&gt; print(computeHash(b&#34;1234&#34;))
+        &gt;&gt;&gt; print(compute_hash(b&#34;1234&#34;))
         49307
         &#34;&#34;&#34;
         string = tostrings(string)
@@ -1011,8 +1019,8 @@ def reboot(message=&#34;Reboot&#34;):
         return hash_ % 65536</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.dateMsToString"><code class="name flex">
-<span>def <span class="ident">dateMsToString</span></span>(<span>)</span>
+<dt id="lib.tools.useful.date_ms_to_string"><code class="name flex">
+<span>def <span class="ident">date_ms_to_string</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a string with the current date with ms</p></div>
@@ -1020,15 +1028,15 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dateMsToString():
+<pre><code class="python">def date_ms_to_string():
         &#34;&#34;&#34; Get a string with the current date with ms &#34;&#34;&#34;
         ms = (time.time_ns() // 1000000)%1000
         year,month,day,hour,minute,second,weekday,yearday = time.localtime(None)[:8]
         return &#34;%04d/%02d/%02d %02d:%02d:%02d.%03d&#34;%(year,month,day,hour,minute,second,ms)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.dateToBytes"><code class="name flex">
-<span>def <span class="ident">dateToBytes</span></span>(<span>date=None)</span>
+<dt id="lib.tools.useful.date_to_bytes"><code class="name flex">
+<span>def <span class="ident">date_to_bytes</span></span>(<span>date=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a bytes with the current date</p></div>
@@ -1036,14 +1044,14 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dateToBytes(date = None):
+<pre><code class="python">def date_to_bytes(date = None):
         &#34;&#34;&#34; Get a bytes with the current date &#34;&#34;&#34;
         year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
         return b&#34;%04d/%02d/%02d  %02d:%02d:%02d&#34;%(year,month,day,hour,minute,second)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.dateToFilename"><code class="name flex">
-<span>def <span class="ident">dateToFilename</span></span>(<span>date=None)</span>
+<dt id="lib.tools.useful.date_to_filename"><code class="name flex">
+<span>def <span class="ident">date_to_filename</span></span>(<span>date=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a filename with a date</p></div>
@@ -1051,9 +1059,9 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dateToFilename(date = None):
+<pre><code class="python">def date_to_filename(date = None):
         &#34;&#34;&#34; Get a filename with a date &#34;&#34;&#34;
-        filename = dateToString(date)
+        filename = date_to_string(date)
         filename = filename.replace(&#34;  &#34;,&#34; &#34;)
         filename = filename.replace(&#34; &#34;,&#34;_&#34;)
         filename = filename.replace(&#34;/&#34;,&#34;-&#34;)
@@ -1061,8 +1069,8 @@ def reboot(message=&#34;Reboot&#34;):
         return filename</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.dateToPath"><code class="name flex">
-<span>def <span class="ident">dateToPath</span></span>(<span>date=None)</span>
+<dt id="lib.tools.useful.date_to_path"><code class="name flex">
+<span>def <span class="ident">date_to_path</span></span>(<span>date=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a path with year/month/day/hour</p></div>
@@ -1070,14 +1078,14 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dateToPath(date=None):
+<pre><code class="python">def date_to_path(date=None):
         &#34;&#34;&#34; Get a path with year/month/day/hour &#34;&#34;&#34;
         year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
         return b&#34;%04d/%02d/%02d/%02dh%02d&#34;%(year,month,day,hour,minute)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.dateToString"><code class="name flex">
-<span>def <span class="ident">dateToString</span></span>(<span>date=None)</span>
+<dt id="lib.tools.useful.date_to_string"><code class="name flex">
+<span>def <span class="ident">date_to_string</span></span>(<span>date=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a string with the current date</p></div>
@@ -1085,22 +1093,22 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dateToString(date = None):
+<pre><code class="python">def date_to_string(date = None):
         &#34;&#34;&#34; Get a string with the current date &#34;&#34;&#34;
-        return dateToBytes(date).decode(&#34;utf8&#34;)</code></pre>
+        return date_to_bytes(date).decode(&#34;utf8&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.dump"><code class="name flex">
 <span>def <span class="ident">dump</span></span>(<span>buff, withColor=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Dump buffer</p></div>
+<div class="desc"><p>dump buffer</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def dump(buff, withColor=True):
-        &#34;&#34;&#34; Dump buffer &#34;&#34;&#34;
+        &#34;&#34;&#34; dump buffer &#34;&#34;&#34;
         if withColor:
                 string = &#34;\x1B[7m&#34;
         else:
@@ -1122,20 +1130,20 @@ def reboot(message=&#34;Reboot&#34;):
         return string</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.dumpLine"><code class="name flex">
-<span>def <span class="ident">dumpLine</span></span>(<span>data, line=None, width=0)</span>
+<dt id="lib.tools.useful.dump_line"><code class="name flex">
+<span>def <span class="ident">dump_line</span></span>(<span>data, line=None, width=0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Dump a data data in hexadecimal on one line</p></div>
+<div class="desc"><p>dump a data data in hexadecimal on one line</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dumpLine (data, line = None, width = 0):
-        &#34;&#34;&#34; Dump a data data in hexadecimal on one line &#34;&#34;&#34;
+<pre><code class="python">def dump_line (data, line = None, width = 0):
+        &#34;&#34;&#34; dump a data data in hexadecimal on one line &#34;&#34;&#34;
         size = len(data)
         fill = 0
-        
+
         # Calculation of the filling length
         if width &gt; size:
                 fill = width-size
@@ -1143,13 +1151,13 @@ def reboot(message=&#34;Reboot&#34;):
         # Displaying values in hex
         for i in data:
                 line.write(b&#39;%02X &#39; % i)
-                
+
         # Filling of vacuum according to the size of the dump
         line.write(b&#39;   &#39;*fill)
-        
+
         # Display of ASCII codes
         line.write(b&#39; |&#39;)
-        
+
         for i in data:
                 if i &gt;= 0x20 and  i &lt; 0x7F:
                         line.write(chr(i).encode(&#34;utf8&#34;))
@@ -1158,7 +1166,7 @@ def reboot(message=&#34;Reboot&#34;):
 
         # Filling of vacuum according to the size of the dump
         line.write(b&#39; &#39;*fill)
-        
+
         # End of data ascii
         line.write(b&#39;|&#39;)</code></pre>
 </details>
@@ -1273,7 +1281,7 @@ def reboot(message=&#34;Reboot&#34;):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
         try:
                 import esp
-                result = b&#34;Flash user=%s size=%s&#34;%(sizeToBytes(esp.flash_user_start(), 1), sizeToBytes(esp.flash_size(), 1))
+                result = b&#34;Flash user=%s size=%s&#34;%(size_to_bytes(esp.flash_user_start(), 1), size_to_bytes(esp.flash_size(), 1))
                 if display:
                         print(tostrings(result))
                 else:
@@ -1282,8 +1290,8 @@ def reboot(message=&#34;Reboot&#34;):
                 return b&#34;Flash unavailable&#34;</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.getChar"><code class="name flex">
-<span>def <span class="ident">getChar</span></span>(<span>stdins)</span>
+<dt id="lib.tools.useful.get_char"><code class="name flex">
+<span>def <span class="ident">get_char</span></span>(<span>stdins)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get character</p></div>
@@ -1291,15 +1299,15 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getChar(stdins):
+<pre><code class="python">def get_char(stdins):
         &#34;&#34;&#34; Get character &#34;&#34;&#34;
         if stdins != []:
                 return stdins[0].read()
         return None</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.getScreenSize"><code class="name flex">
-<span>def <span class="ident">getScreenSize</span></span>(<span>)</span>
+<dt id="lib.tools.useful.get_screen_size"><code class="name flex">
+<span>def <span class="ident">get_screen_size</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the VT100 screen size</p></div>
@@ -1307,13 +1315,13 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getScreenSize():
+<pre><code class="python">def get_screen_size():
         &#34;&#34;&#34; Get the VT100 screen size &#34;&#34;&#34;
         global screenSize
-        if screenSize != None:
+        if screenSize is not None:
                 return screenSize
         else:
-                return refreshScreenSize()</code></pre>
+                return refresh_screen_size()</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.getch"><code class="name flex">
@@ -1327,11 +1335,11 @@ def reboot(message=&#34;Reboot&#34;):
 </summary>
 <pre><code class="python">def getch(raw = True, duration=100000000, interchar=0.01):
         &#34;&#34;&#34; Wait a key pressed on keyboard and return it &#34;&#34;&#34;
-        return readKeyboard(duration, raw, getChar)</code></pre>
+        return read_keyboard(duration, raw, get_char)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.htmlException"><code class="name flex">
-<span>def <span class="ident">htmlException</span></span>(<span>err)</span>
+<dt id="lib.tools.useful.html_exception"><code class="name flex">
+<span>def <span class="ident">html_exception</span></span>(<span>err)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the content of exception into an html bytes</p></div>
@@ -1339,7 +1347,7 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def htmlException(err):
+<pre><code class="python">def html_exception(err):
         &#34;&#34;&#34; Return the content of exception into an html bytes &#34;&#34;&#34;
         text = exception(err)
         text = text.replace(&#34;\n    &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;)
@@ -1371,7 +1379,7 @@ def reboot(message=&#34;Reboot&#34;):
                 pass
         try:
                 exec(&#34;import %s&#34;%moduleName)
-                
+
                 for fct in dir(sys.modules[moduleName]):
                         if fct == &#34;main&#34;:
                                 print(&#34;Start main function&#34;)
@@ -1637,7 +1645,7 @@ def reboot(message=&#34;Reboot&#34;):
 </summary>
 <pre><code class="python">def kbhit(duration=0.001):
         &#34;&#34;&#34; Indicates if a key is pressed or not &#34;&#34;&#34;
-        return readKeyboard(duration, True, testChar)</code></pre>
+        return read_keyboard(duration, True, test_char)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.log"><code class="name flex">
@@ -1655,7 +1663,7 @@ def reboot(message=&#34;Reboot&#34;):
         global previousTime
         if previousTime == 0:
                 previousTime = current
-        if msg != None:
+        if msg is not None:
                 print(&#34;%03d.%03d:%s&#34;%((current-previousTime)/1000, (current-previousTime)%1000, msg))
         previousTime = ticks()</code></pre>
 </details>
@@ -1671,7 +1679,7 @@ def reboot(message=&#34;Reboot&#34;):
 </summary>
 <pre><code class="python">def makedir(directory, recursive=False):
         &#34;&#34;&#34; Make directory recursively &#34;&#34;&#34;
-        if recursive == False:
+        if recursive is False:
                 os.mkdir(directory)
         else:
                 directories = [directory]
@@ -1704,7 +1712,7 @@ def reboot(message=&#34;Reboot&#34;):
                 # pylint: disable=no-member
                 alloc = gc.mem_alloc()
                 free  = gc.mem_free()
-                result = b&#34;Mem alloc=%s free=%s total=%s&#34;%(sizeToBytes(alloc, 1), sizeToBytes(free, 1), sizeToBytes(alloc+free, 1))
+                result = b&#34;Mem alloc=%s free=%s total=%s&#34;%(size_to_bytes(alloc, 1), size_to_bytes(free, 1), size_to_bytes(alloc+free, 1))
                 if display:
                         print(tostrings(result))
                 else:
@@ -1740,12 +1748,12 @@ def reboot(message=&#34;Reboot&#34;):
         &#34;&#34;&#34; Get the common prefix of all files &#34;&#34;&#34;
         # Initializes counters
         counters = []
-        
+
         # For all files
         for file in files:
                 # Split the file name into a piece
                 paths = file.split(&#34;/&#34;)
-                
+
                 # For each piece
                 for i in range(0,len(paths)):
                         try:
@@ -1758,7 +1766,7 @@ def reboot(message=&#34;Reboot&#34;):
                         except:
                                 # Adds a new level of depth
                                 counters.append({paths[i] : 1})
-        
+
         # Constructs the prefix of the list of files
         try:
                 result = &#34;&#34;
@@ -1773,8 +1781,8 @@ def reboot(message=&#34;Reboot&#34;):
                 return &#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.readKeyboard"><code class="name flex">
-<span>def <span class="ident">readKeyboard</span></span>(<span>duration=0.001, raw=True, callback=None)</span>
+<dt id="lib.tools.useful.read_keyboard"><code class="name flex">
+<span>def <span class="ident">read_keyboard</span></span>(<span>duration=0.001, raw=True, callback=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read keyboard on os/x, linux or windows</p></div>
@@ -1782,10 +1790,11 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def readKeyboard(duration=0.001, raw=True, callback=None):
+<pre><code class="python">def read_keyboard(duration=0.001, raw=True, callback=None):
         &#34;&#34;&#34; Read keyboard on os/x, linux or windows&#34;&#34;&#34;
-        import termios, fcntl
         import tty
+        import termios
+        import fcntl
         fd = sys.stdin.fileno()
         oldattr = termios.tcgetattr(fd)
         oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
@@ -1825,10 +1834,10 @@ def reboot(message=&#34;Reboot&#34;):
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
         syslog(message)
         from tools.lang import RegionConfig
-        regionConfig = RegionConfig()
-        if regionConfig.load():
-                regionConfig.currentTime = time.time() + 8
-                regionConfig.save()
+        region_config = RegionConfig()
+        if region_config.load():
+                region_config.current_time = time.time() + 8
+                region_config.save()
         try:
                 if ismicropython():
                         import camera
@@ -1838,8 +1847,8 @@ def reboot(message=&#34;Reboot&#34;):
         machine.deepsleep(1000)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.refreshScreenSize"><code class="name flex">
-<span>def <span class="ident">refreshScreenSize</span></span>(<span>)</span>
+<dt id="lib.tools.useful.refresh_screen_size"><code class="name flex">
+<span>def <span class="ident">refresh_screen_size</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Refresh the screen size</p></div>
@@ -1847,7 +1856,7 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def refreshScreenSize():
+<pre><code class="python">def refresh_screen_size():
         &#34;&#34;&#34; Refresh the screen size &#34;&#34;&#34;
         global screenSize
         try:
@@ -1887,8 +1896,10 @@ def reboot(message=&#34;Reboot&#34;):
 </summary>
 <pre><code class="python">def remove(filename):
         &#34;&#34;&#34; Remove file existing &#34;&#34;&#34;
-        try:    uos.remove(filename)
-        except: pass </code></pre>
+        try:
+                uos.remove(filename)
+        except:
+                pass</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.rename"><code class="name flex">
@@ -1904,8 +1915,10 @@ def reboot(message=&#34;Reboot&#34;):
         &#34;&#34;&#34; Rename file &#34;&#34;&#34;
         if exists(new):
                 remove(new)
-        try: uos.rename(old, new)
-        except: pass</code></pre>
+        try:
+                uos.rename(old, new)
+        except:
+                pass</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.scandir"><code class="name flex">
@@ -1924,7 +1937,7 @@ def reboot(message=&#34;Reboot&#34;):
         if path == &#34;&#34;:
                 path = &#34;.&#34;
         try:
-                if path != None and pattern != None:
+                if path is not None and pattern is not None:
                         for file in os.listdir(path):
                                 if path != &#34;&#34;:
                                         filename = path + &#34;/&#34; + file
@@ -1952,8 +1965,8 @@ def reboot(message=&#34;Reboot&#34;):
         return directories, filenames</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.sizeToBytes"><code class="name flex">
-<span>def <span class="ident">sizeToBytes</span></span>(<span>size, largeur=6)</span>
+<dt id="lib.tools.useful.size_to_bytes"><code class="name flex">
+<span>def <span class="ident">size_to_bytes</span></span>(<span>size, largeur=6)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert a size in a bytes with k, m, g, t&hellip;</p></div>
@@ -1961,7 +1974,7 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sizeToBytes(size, largeur=6):
+<pre><code class="python">def size_to_bytes(size, largeur=6):
         &#34;&#34;&#34; Convert a size in a bytes with k, m, g, t...&#34;&#34;&#34;
         if size &gt; 1073741824*1024:
                 return  b&#34;%*.2fT&#34;%(largeur, size / (1073741824.*1024.))
@@ -1975,8 +1988,8 @@ def reboot(message=&#34;Reboot&#34;):
                 return b&#34;%*dB&#34;%(largeur, size)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.sizeToString"><code class="name flex">
-<span>def <span class="ident">sizeToString</span></span>(<span>size, largeur=6)</span>
+<dt id="lib.tools.useful.size_to_string"><code class="name flex">
+<span>def <span class="ident">size_to_string</span></span>(<span>size, largeur=6)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert a size in a string with k, m, g, t&hellip;</p></div>
@@ -1984,9 +1997,9 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sizeToString(size, largeur=6):
+<pre><code class="python">def size_to_string(size, largeur=6):
         &#34;&#34;&#34; Convert a size in a string with k, m, g, t...&#34;&#34;&#34;
-        return sizeToBytes(size, largeur).decode(&#34;utf8&#34;)</code></pre>
+        return size_to_bytes(size, largeur).decode(&#34;utf8&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.useful.split"><code class="name flex">
@@ -2049,7 +2062,7 @@ def reboot(message=&#34;Reboot&#34;):
 <pre><code class="python">def sysinfo(display=True, text=&#34;&#34;):
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
         try:
-                result = b&#34;%s%s %dMhz, %s, %s, %s&#34;%(text, sys.platform, machine.freq()//1000000, dateToBytes(), meminfo(False), flashinfo(False))
+                result = b&#34;%s%s %dMhz, %s, %s, %s&#34;%(text, sys.platform, machine.freq()//1000000, date_to_bytes(), meminfo(False), flashinfo(False))
                 if display:
                         print(tostrings(result))
                 else:
@@ -2094,7 +2107,7 @@ def reboot(message=&#34;Reboot&#34;):
                 logFile = open(filename,&#34;a&#34;)
 
         result = &#34;%s%s&#34;%(tostrings(msg),tostrings(err))
-        logFile.write(dateMsToString() + &#34; %s\n&#34;%(result))
+        logFile.write(date_ms_to_string() + &#34; %s\n&#34;%(result))
         logFile.close()
         return result</code></pre>
 </details>
@@ -2119,8 +2132,8 @@ def reboot(message=&#34;Reboot&#34;):
                 return (0,0)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.testChar"><code class="name flex">
-<span>def <span class="ident">testChar</span></span>(<span>stdins)</span>
+<dt id="lib.tools.useful.test_char"><code class="name flex">
+<span>def <span class="ident">test_char</span></span>(<span>stdins)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Test a character</p></div>
@@ -2128,7 +2141,7 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def testChar(stdins):
+<pre><code class="python">def test_char(stdins):
         &#34;&#34;&#34; Test a character &#34;&#34;&#34;
         if stdins != []:
                 return True
@@ -2139,17 +2152,18 @@ def reboot(message=&#34;Reboot&#34;):
 <span>def <span class="ident">ticks</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Count tick elapsed from start</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def ticks():
+        &#34;&#34;&#34; Count tick elapsed from start &#34;&#34;&#34;
         return (int)(time.time() * 1000)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.useful.ticksToString"><code class="name flex">
-<span>def <span class="ident">ticksToString</span></span>(<span>)</span>
+<dt id="lib.tools.useful.ticks_to_string"><code class="name flex">
+<span>def <span class="ident">ticks_to_string</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create a string with tick in seconds</p></div>
@@ -2157,7 +2171,7 @@ def reboot(message=&#34;Reboot&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def ticksToString():
+<pre><code class="python">def ticks_to_string():
         &#34;&#34;&#34; Create a string with tick in seconds &#34;&#34;&#34;
         tick = ticks()
         return &#34;%d.%03d s&#34;%(tick/1000, tick%1000)</code></pre>
@@ -2287,24 +2301,24 @@ def reboot(message=&#34;Reboot&#34;):
 <li><code><a title="lib.tools.useful.abspath" href="#lib.tools.useful.abspath">abspath</a></code></li>
 <li><code><a title="lib.tools.useful.abspathbytes" href="#lib.tools.useful.abspathbytes">abspathbytes</a></code></li>
 <li><code><a title="lib.tools.useful.blink" href="#lib.tools.useful.blink">blink</a></code></li>
-<li><code><a title="lib.tools.useful.computeHash" href="#lib.tools.useful.computeHash">computeHash</a></code></li>
-<li><code><a title="lib.tools.useful.dateMsToString" href="#lib.tools.useful.dateMsToString">dateMsToString</a></code></li>
-<li><code><a title="lib.tools.useful.dateToBytes" href="#lib.tools.useful.dateToBytes">dateToBytes</a></code></li>
-<li><code><a title="lib.tools.useful.dateToFilename" href="#lib.tools.useful.dateToFilename">dateToFilename</a></code></li>
-<li><code><a title="lib.tools.useful.dateToPath" href="#lib.tools.useful.dateToPath">dateToPath</a></code></li>
-<li><code><a title="lib.tools.useful.dateToString" href="#lib.tools.useful.dateToString">dateToString</a></code></li>
+<li><code><a title="lib.tools.useful.compute_hash" href="#lib.tools.useful.compute_hash">compute_hash</a></code></li>
+<li><code><a title="lib.tools.useful.date_ms_to_string" href="#lib.tools.useful.date_ms_to_string">date_ms_to_string</a></code></li>
+<li><code><a title="lib.tools.useful.date_to_bytes" href="#lib.tools.useful.date_to_bytes">date_to_bytes</a></code></li>
+<li><code><a title="lib.tools.useful.date_to_filename" href="#lib.tools.useful.date_to_filename">date_to_filename</a></code></li>
+<li><code><a title="lib.tools.useful.date_to_path" href="#lib.tools.useful.date_to_path">date_to_path</a></code></li>
+<li><code><a title="lib.tools.useful.date_to_string" href="#lib.tools.useful.date_to_string">date_to_string</a></code></li>
 <li><code><a title="lib.tools.useful.dump" href="#lib.tools.useful.dump">dump</a></code></li>
-<li><code><a title="lib.tools.useful.dumpLine" href="#lib.tools.useful.dumpLine">dumpLine</a></code></li>
+<li><code><a title="lib.tools.useful.dump_line" href="#lib.tools.useful.dump_line">dump_line</a></code></li>
 <li><code><a title="lib.tools.useful.exception" href="#lib.tools.useful.exception">exception</a></code></li>
 <li><code><a title="lib.tools.useful.exists" href="#lib.tools.useful.exists">exists</a></code></li>
 <li><code><a title="lib.tools.useful.fileinfo" href="#lib.tools.useful.fileinfo">fileinfo</a></code></li>
 <li><code><a title="lib.tools.useful.filesize" href="#lib.tools.useful.filesize">filesize</a></code></li>
 <li><code><a title="lib.tools.useful.filetime" href="#lib.tools.useful.filetime">filetime</a></code></li>
 <li><code><a title="lib.tools.useful.flashinfo" href="#lib.tools.useful.flashinfo">flashinfo</a></code></li>
-<li><code><a title="lib.tools.useful.getChar" href="#lib.tools.useful.getChar">getChar</a></code></li>
-<li><code><a title="lib.tools.useful.getScreenSize" href="#lib.tools.useful.getScreenSize">getScreenSize</a></code></li>
+<li><code><a title="lib.tools.useful.get_char" href="#lib.tools.useful.get_char">get_char</a></code></li>
+<li><code><a title="lib.tools.useful.get_screen_size" href="#lib.tools.useful.get_screen_size">get_screen_size</a></code></li>
 <li><code><a title="lib.tools.useful.getch" href="#lib.tools.useful.getch">getch</a></code></li>
-<li><code><a title="lib.tools.useful.htmlException" href="#lib.tools.useful.htmlException">htmlException</a></code></li>
+<li><code><a title="lib.tools.useful.html_exception" href="#lib.tools.useful.html_exception">html_exception</a></code></li>
 <li><code><a title="lib.tools.useful.import_" href="#lib.tools.useful.import_">import_</a></code></li>
 <li><code><a title="lib.tools.useful.iptoint" href="#lib.tools.useful.iptoint">iptoint</a></code></li>
 <li><code><a title="lib.tools.useful.isalpha" href="#lib.tools.useful.isalpha">isalpha</a></code></li>
@@ -2326,22 +2340,22 @@ def reboot(message=&#34;Reboot&#34;):
 <li><code><a title="lib.tools.useful.meminfo" href="#lib.tools.useful.meminfo">meminfo</a></code></li>
 <li><code><a title="lib.tools.useful.now" href="#lib.tools.useful.now">now</a></code></li>
 <li><code><a title="lib.tools.useful.prefix" href="#lib.tools.useful.prefix">prefix</a></code></li>
-<li><code><a title="lib.tools.useful.readKeyboard" href="#lib.tools.useful.readKeyboard">readKeyboard</a></code></li>
+<li><code><a title="lib.tools.useful.read_keyboard" href="#lib.tools.useful.read_keyboard">read_keyboard</a></code></li>
 <li><code><a title="lib.tools.useful.reboot" href="#lib.tools.useful.reboot">reboot</a></code></li>
-<li><code><a title="lib.tools.useful.refreshScreenSize" href="#lib.tools.useful.refreshScreenSize">refreshScreenSize</a></code></li>
+<li><code><a title="lib.tools.useful.refresh_screen_size" href="#lib.tools.useful.refresh_screen_size">refresh_screen_size</a></code></li>
 <li><code><a title="lib.tools.useful.remove" href="#lib.tools.useful.remove">remove</a></code></li>
 <li><code><a title="lib.tools.useful.rename" href="#lib.tools.useful.rename">rename</a></code></li>
 <li><code><a title="lib.tools.useful.scandir" href="#lib.tools.useful.scandir">scandir</a></code></li>
-<li><code><a title="lib.tools.useful.sizeToBytes" href="#lib.tools.useful.sizeToBytes">sizeToBytes</a></code></li>
-<li><code><a title="lib.tools.useful.sizeToString" href="#lib.tools.useful.sizeToString">sizeToString</a></code></li>
+<li><code><a title="lib.tools.useful.size_to_bytes" href="#lib.tools.useful.size_to_bytes">size_to_bytes</a></code></li>
+<li><code><a title="lib.tools.useful.size_to_string" href="#lib.tools.useful.size_to_string">size_to_string</a></code></li>
 <li><code><a title="lib.tools.useful.split" href="#lib.tools.useful.split">split</a></code></li>
 <li><code><a title="lib.tools.useful.splitext" href="#lib.tools.useful.splitext">splitext</a></code></li>
 <li><code><a title="lib.tools.useful.sysinfo" href="#lib.tools.useful.sysinfo">sysinfo</a></code></li>
 <li><code><a title="lib.tools.useful.syslog" href="#lib.tools.useful.syslog">syslog</a></code></li>
 <li><code><a title="lib.tools.useful.temperature" href="#lib.tools.useful.temperature">temperature</a></code></li>
-<li><code><a title="lib.tools.useful.testChar" href="#lib.tools.useful.testChar">testChar</a></code></li>
+<li><code><a title="lib.tools.useful.test_char" href="#lib.tools.useful.test_char">test_char</a></code></li>
 <li><code><a title="lib.tools.useful.ticks" href="#lib.tools.useful.ticks">ticks</a></code></li>
-<li><code><a title="lib.tools.useful.ticksToString" href="#lib.tools.useful.ticksToString">ticksToString</a></code></li>
+<li><code><a title="lib.tools.useful.ticks_to_string" href="#lib.tools.useful.ticks_to_string">ticks_to_string</a></code></li>
 <li><code><a title="lib.tools.useful.tobytes" href="#lib.tools.useful.tobytes">tobytes</a></code></li>
 <li><code><a title="lib.tools.useful.tofilename" href="#lib.tools.useful.tofilename">tofilename</a></code></li>
 <li><code><a title="lib.tools.useful.tostrings" href="#lib.tools.useful.tostrings">tostrings</a></code></li>

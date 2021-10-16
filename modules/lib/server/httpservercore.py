@@ -8,8 +8,8 @@ Http server core, it instanciated only if a connection is done to the asynchrono
 """
 from server.httpserver import HttpServer
 from server.httprequest import HttpRequest, HttpResponse
-from tools import useful
 from server.stream import Stream
+from tools import useful
 
 class HttpServerCore:
 	""" Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
@@ -19,7 +19,7 @@ class HttpServerCore:
 		self.port = port
 		self.name = name
 
-	async def onConnection(self, reader, writer):
+	async def on_connection(self, reader, writer):
 		""" Asynchronous connection call back """
 		remoteaddr = writer.get_extra_info('peername')[0]
 		stream    = Stream(reader, writer)
@@ -28,9 +28,9 @@ class HttpServerCore:
 		try:
 			await request.receive()
 			# print(request.path)
-			function, args = HttpServer.searchRoute(request)
-			if function == None:
-				await response.sendError(status=b"404", content=b"Page not found")
+			function, args = HttpServer.search_route(request)
+			if function is None:
+				await response.send_error(status=b"404", content=b"Page not found")
 			else:
 				await function(request, response, args)
 		except OSError as err:
@@ -39,8 +39,8 @@ class HttpServerCore:
 				# Ignore error
 				pass
 			else:
-				await response.sendError(status=b"404", content=useful.tobytes(useful.exception(err)))
+				await response.send_error(status=b"404", content=useful.tobytes(useful.exception(err)))
 		except Exception as err:
-			await response.sendError(status=b"404", content=useful.tobytes(useful.exception(err)))
+			await response.send_error(status=b"404", content=useful.tobytes(useful.exception(err)))
 		finally:
 			await stream.close()

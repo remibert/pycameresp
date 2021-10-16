@@ -45,8 +45,6 @@
 		"${workspaceFolder}/modules/lib/shell"
 	],
 	"python.linting.pylintArgs": [
-		"--disable=C",
-		"--disable=R",
 		"--disable=bad-indentation",
 		"--disable=unused-argument",
 		"--disable=invalid-name",
@@ -64,5 +62,5 @@
 		"--disable=exec-used"],
 	"python.envFile": "${workspaceFolder}/.env",
 	"python.linting.pylintUseMinimalCheckers": true,
-	"python.linting.enabled": true,
+	"python.linting.enabled": true
 }

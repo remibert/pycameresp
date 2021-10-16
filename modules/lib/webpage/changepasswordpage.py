@@ -7,17 +7,17 @@ from htmltemplate      import *
 from webpage.mainpage  import *
 from tools             import lang
 
-@HttpServer.addRoute(b'/changepassword', menu=lang.menu_account, item=lang.item_password)
-async def changePassword(request, response, args):
+@HttpServer.add_route(b'/changepassword', menu=lang.menu_account, item=lang.item_password)
+async def change_password(request, response, args):
 	""" Function define the web page to change the user and password """
-	page = mainFrame(request, response, args, lang.change_password, PasswordPage.change(request, response))
-	await response.sendPage(page)
+	page = main_frame(request, response, args, lang.change_password, PasswordPage.change(request, response))
+	await response.send_page(page)
 
-@HttpServer.addRoute(b'/logout', menu=lang.menu_account, item=lang.item_logout)
+@HttpServer.add_route(b'/logout', menu=lang.menu_account, item=lang.item_logout)
 async def logout(request, response, args):
 	""" Function to close account """
-	if not User.isEmpty():
-		page = mainFrame(request, response, args, lang.logout, PasswordPage.logout(request,response))
+	if not User.is_empty():
+		page = main_frame(request, response, args, lang.logout, PasswordPage.logout(request,response))
 	else:
-		page = mainFrame(request, response, args, lang.logout, None)
-	await response.sendPage(page)
+		page = main_frame(request, response, args, lang.logout, None)
+	await response.send_page(page)

@@ -31,18 +31,18 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Classes used to manage the wifi station &#34;&#34;&#34;
 import time
-from tools import jsonconfig,useful
 from wifi.hostname import Hostname
 import uasyncio
+from tools import jsonconfig,useful
 
 class NetworkConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Wifi station configuration class &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 jsonconfig.JsonConfig.__init__(self)
-                self.wifipassword  = b&#34;&#34;
+                self.wifi_password  = b&#34;&#34;
                 self.ssid          = b&#34;&#34;
-                self.ipaddress     = b&#34;&#34;
+                self.ip_address     = b&#34;&#34;
                 self.netmask       = b&#34;&#34;
                 self.gateway       = b&#34;&#34;
                 self.dns           = b&#34;&#34;
@@ -51,36 +51,36 @@ class NetworkConfig(jsonconfig.JsonConfig):
         def __repr__(self):
                 &#34;&#34;&#34; Display the content of wifi station &#34;&#34;&#34;
                 # Get network address
-                ipaddress, netmask, gateway, dns = Station.wlan.ifconfig()
+                ip_address, netmask, gateway, dns = Station.wlan.ifconfig()
 
                 result = &#34;%s:\n&#34;%self.__class__.__name__
-                result +=&#34;   Ip address :%s\n&#34;%ipaddress
+                result +=&#34;   Ip address :%s\n&#34;%ip_address
                 result +=&#34;   Netmask    :%s\n&#34;%netmask
                 result +=&#34;   Gateway    :%s\n&#34;%gateway
                 result +=&#34;   Dns        :%s\n&#34;%dns
                 result +=&#34;   Ssid       :%s\n&#34;%useful.tostrings(self.ssid)
-                # result +=&#34;   Password   :%s\n&#34;%useful.tostrings(self.wifipassword)
+                # result +=&#34;   Password   :%s\n&#34;%useful.tostrings(self.wifi_password)
                 return result
 
         def save(self, file = None):
                 &#34;&#34;&#34; Save wifi configuration &#34;&#34;&#34;
-                result = jsonconfig.JsonConfig.save(self, file=file, partFilename=self.ssid)
+                result = jsonconfig.JsonConfig.save(self, file=file, part_filename=self.ssid)
                 return result
 
-        def listKnown(self):
+        def list_known(self):
                 &#34;&#34;&#34; List all configuration files &#34;&#34;&#34;
-                return jsonconfig.JsonConfig.listAll(self)
+                return jsonconfig.JsonConfig.list_all(self)
 
         def forget(self):
                 &#34;&#34;&#34; Forget configuration &#34;&#34;&#34;
-                return jsonconfig.JsonConfig.forget(self, partFilename=self.ssid)
+                return jsonconfig.JsonConfig.forget(self, part_filename=self.ssid)
 
 class StationConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Wifi station configuration class &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 jsonconfig.JsonConfig.__init__(self)
-                self.hostname      = b&#34;esp%05d&#34;%Hostname.getNumber()
+                self.hostname      = b&#34;esp%05d&#34;%Hostname.get_number()
                 self.activated     = True
                 self.fallback      = True
                 self.default       = b&#34;&#34;
@@ -98,9 +98,9 @@ class Station:
         wlan    = None
         config  = None
         network = None
-        otherNetworks = []
-        knownNetworks = []
-        lastScan = [0]
+        other_networks = []
+        known_network = []
+        last_scan = [0]
 
         @staticmethod
         def init():
@@ -117,14 +117,14 @@ class Station:
                 if not Station.wlan.isconnected():
                         Station.wlan.active(True)
                         Station.configure(network)
-                        Station.wlan.connect(useful.tobytes(network.ssid), useful.tobytes(network.wifipassword))
+                        Station.wlan.connect(useful.tobytes(network.ssid), useful.tobytes(network.wifi_password))
                         retry = 0
                         while not Station.wlan.isconnected() and retry &lt; maxRetry:
                                 await uasyncio.sleep(1)
                                 useful.syslog (&#34;   %-2d/%d wait connection to %s&#34;%(retry+1, maxRetry, useful.tostrings(network.ssid)))
                                 retry += 1
 
-                        if Station.wlan.isconnected() == False:
+                        if Station.wlan.isconnected() is False:
                                 Station.wlan.active(False)
                         else:
                                 result = True
@@ -139,18 +139,18 @@ class Station:
                 if Station.wlan.isconnected():
                         Station.wlan.disconnect()
                         Station.wlan.active(False)
-        
+
         @staticmethod
-        def isActive():
+        def is_active():
                 &#34;&#34;&#34; Indicates if the wifi is active &#34;&#34;&#34;
-                if Station.wlan == None:
+                if Station.wlan is None:
                         return False
                 return Station.wlan.active()
 
         @staticmethod
-        def isFallback():
+        def is_fallback():
                 &#34;&#34;&#34; Indicates if the access point must be started when wifi not reachable &#34;&#34;&#34;
-                Station.reloadConfig()
+                Station.reload_config()
                 return Station.config.fallback
 
         @staticmethod
@@ -158,16 +158,16 @@ class Station:
                 &#34;&#34;&#34; Configure the wifi &#34;&#34;&#34;
                 Station.init()
                 # If ip is dynamic
-                if  network.dynamic   == True:
-                        if len(Station.getHostname()) &gt; 0:
-                                Station.wlan.config(dhcp_hostname= useful.tostrings(Station.getHostname()))
+                if  network.dynamic   is True:
+                        if len(Station.get_hostname()) &gt; 0:
+                                Station.wlan.config(dhcp_hostname= useful.tostrings(Station.get_hostname()))
                 else:
                         try:
-                                Station.wlan.ifconfig((useful.tostrings(network.ipaddress),useful.tostrings(network.netmask),useful.tostrings(network.gateway),useful.tostrings(network.dns)))
+                                Station.wlan.ifconfig((useful.tostrings(network.ip_address),useful.tostrings(network.netmask),useful.tostrings(network.gateway),useful.tostrings(network.dns)))
                         except Exception as err:
                                 useful.syslog(err, msg=&#34;Cannot configure wifi station&#34;)
                 try:
-                        network.ipaddress = useful.tobytes(Station.wlan.ifconfig()[0])
+                        network.ip_address = useful.tobytes(Station.wlan.ifconfig()[0])
                         network.netmask   = useful.tobytes(Station.wlan.ifconfig()[1])
                         network.gateway   = useful.tobytes(Station.wlan.ifconfig()[2])
                         network.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
@@ -175,21 +175,21 @@ class Station:
                         useful.syslog(err, msg=&#34;Cannot get ip station&#34;)
 
         @staticmethod
-        def reloadConfig():
+        def reload_config():
                 &#34;&#34;&#34; Reload configuration if it changed &#34;&#34;&#34;
-                if Station.config == None:
+                if Station.config is None:
                         Station.config = StationConfig()
                         Station.network = NetworkConfig()
-                        if Station.config.load() == False:
+                        if Station.config.load() is False:
                                 Station.config.save()
                                 useful.syslog(&#34;Wifi not initialized&#34;)
                 else:
-                        if Station.config.isChanged():
+                        if Station.config.is_changed():
                                 Station.config.load()
                 return Station.config
 
         @staticmethod
-        def isConnected():
+        def is_connected():
                 &#34;&#34;&#34; Indicates if the wifi is connected &#34;&#34;&#34;
                 if Station.wlan:
                         return Station.wlan.isconnected()
@@ -199,40 +199,40 @@ class Station:
         def scan():
                 &#34;&#34;&#34; Scan other networks &#34;&#34;&#34;
                 Station.init()
-                if Station.lastScan[0] + 120 &lt; time.time() or len(Station.otherNetworks) == 0:
-                        Station.otherNetworks = []
+                if Station.last_scan[0] + 120 &lt; time.time() or len(Station.other_networks) == 0:
+                        Station.other_networks = []
                         Station.wlan.active(True)
                         try:
-                                otherNetworks = Station.wlan.scan()
-                                for ssid, bssid, channel, rssi, authmode, hidden in sorted(otherNetworks, key=lambda x: x[3], reverse=True):
+                                other_networks = Station.wlan.scan()
+                                for ssid, bssid, channel, rssi, authmode, hidden in sorted(other_networks, key=lambda x: x[3], reverse=True):
                                         useful.syslog(&#34;Network detected %s&#34;%useful.tostrings(ssid))
-                                        Station.otherNetworks.append((ssid, channel, authmode))
-                                Station.lastScan[0] = time.time()
+                                        Station.other_networks.append((ssid, channel, authmode))
+                                Station.last_scan[0] = time.time()
                         except Exception as err:
                                 useful.syslog(&#34;No network found&#34;)
 
-                return Station.otherNetworks
+                return Station.other_networks
 
         @staticmethod
-        def isActivated():
+        def is_activated():
                 &#34;&#34;&#34; Indicates if the wifi station is configured to be activated &#34;&#34;&#34;
-                Station.reloadConfig()
-                if Station.config != None:
+                Station.reload_config()
+                if Station.config is not None:
                         return Station.config.activated
                 else:
                         return False
 
         @staticmethod
-        async def selectNetwork(networkName, maxRetry):
+        async def select_network(networkName, maxRetry):
                 &#34;&#34;&#34; Select the network and try to connect &#34;&#34;&#34;
-                Station.reloadConfig()
+                Station.reload_config()
                 if networkName != b&#34;&#34;:
                         # Load default network
-                        if Station.network.load(partFilename=networkName):
+                        if Station.network.load(part_filename=networkName):
                                 useful.syslog(&#34;Try to connect to %s&#34;%useful.tostrings(Station.network.ssid))
 
                                 # If the connection failed
-                                if await Station.connect(Station.network, maxRetry) == True:
+                                if await Station.connect(Station.network, maxRetry) is True:
                                         useful.syslog(&#34;Connected to %s&#34;%useful.tostrings(Station.network.ssid))
                                         print(repr(Station.config) + repr(Station.network))
                                         Station.config.default = networkName
@@ -241,35 +241,35 @@ class Station:
                 return False
 
         @staticmethod
-        async def scanNetworks(maxRetry):
+        async def scan_networks(maxRetry):
                 &#34;&#34;&#34; Scan networks known &#34;&#34;&#34;
                 result = False
                 # Scan other networks
                 if len(Station.scan()) &gt; 0:
                         # List known networks
-                        Station.knownNetworks = Station.network.listKnown()
+                        Station.known_network = Station.network.list_known()
 
                         # For all known networks
-                        for networkName in Station.knownNetworks:
+                        for networkName in Station.known_network:
                                 # If the network not already tested
                                 if networkName != Station.config.default:
-                                        result = await Station.selectNetwork(networkName, maxRetry)
-                                        if result == True:
+                                        result = await Station.select_network(networkName, maxRetry)
+                                        if result is True:
                                                 break
                 return result
 
         @staticmethod
-        async def chooseNetwork(force=False, maxRetry=15):
+        async def choose_network(force=False, maxRetry=15):
                 &#34;&#34;&#34; Choose network within reach &#34;&#34;&#34;
                 result = False
-                Station.reloadConfig()
+                Station.reload_config()
 
                 # Load wifi configuration
                 if Station.config.load():
                         if Station.config.activated or force:
-                                result = await Station.selectNetwork(Station.config.default, maxRetry)
-                                if result == False:
-                                        result = await Station.scanNetworks(maxRetry)
+                                result = await Station.select_network(Station.config.default, maxRetry)
+                                if result is False:
+                                        result = await Station.scan_networks(maxRetry)
                         else:
                                 useful.syslog(&#34;Wifi disabled&#34;)
                 else:
@@ -282,9 +282,9 @@ class Station:
                 &#34;&#34;&#34; Start the wifi according to the configuration. Force is used to skip configuration activation flag &#34;&#34;&#34;
                 result = False
                 Station.init()
-                if Station.isActive() == False:
+                if Station.is_active() is False:
                         useful.syslog(&#34;Start wifi&#34;)
-                        if await Station.chooseNetwork(force, maxRetry) == True:
+                        if await Station.choose_network(force, maxRetry) is True:
                                 result = True
                 else:
                         if Station.wlan.isconnected():
@@ -307,15 +307,15 @@ class Station:
                         Station.wlan = None
 
         @staticmethod
-        def isIpOnInterface(ipAddr):
+        def is_ip_on_interface(ipAddr):
                 &#34;&#34;&#34; Indicates if the address ip is connected to wifi station &#34;&#34;&#34;
-                ipInterface = Station.getInfo()
+                ipInterface = Station.get_info()
                 if ipInterface != (&#34;&#34;,&#34;&#34;,&#34;&#34;,&#34;&#34;):
                         return useful.issameinterface(useful.tostrings(ipAddr), ipInterface[0], ipInterface[1])
                 return False
 
         @staticmethod
-        def getInfo():
+        def get_info():
                 &#34;&#34;&#34; Returns the connection informations &#34;&#34;&#34;
                 if Station.wlan:
                         if Station.wlan.isconnected():
@@ -323,9 +323,9 @@ class Station:
                 return (&#34;&#34;,&#34;&#34;,&#34;&#34;,&#34;&#34;)
 
         @staticmethod
-        def getHostname():
+        def get_hostname():
                 &#34;&#34;&#34; Returns the host name &#34;&#34;&#34;
-                Station.reloadConfig()
+                Station.reload_config()
                 return Station.config.hostname</code></pre>
 </details>
 </section>
@@ -353,9 +353,9 @@ class Station:
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 jsonconfig.JsonConfig.__init__(self)
-                self.wifipassword  = b&#34;&#34;
+                self.wifi_password  = b&#34;&#34;
                 self.ssid          = b&#34;&#34;
-                self.ipaddress     = b&#34;&#34;
+                self.ip_address     = b&#34;&#34;
                 self.netmask       = b&#34;&#34;
                 self.gateway       = b&#34;&#34;
                 self.dns           = b&#34;&#34;
@@ -364,29 +364,29 @@ class Station:
         def __repr__(self):
                 &#34;&#34;&#34; Display the content of wifi station &#34;&#34;&#34;
                 # Get network address
-                ipaddress, netmask, gateway, dns = Station.wlan.ifconfig()
+                ip_address, netmask, gateway, dns = Station.wlan.ifconfig()
 
                 result = &#34;%s:\n&#34;%self.__class__.__name__
-                result +=&#34;   Ip address :%s\n&#34;%ipaddress
+                result +=&#34;   Ip address :%s\n&#34;%ip_address
                 result +=&#34;   Netmask    :%s\n&#34;%netmask
                 result +=&#34;   Gateway    :%s\n&#34;%gateway
                 result +=&#34;   Dns        :%s\n&#34;%dns
                 result +=&#34;   Ssid       :%s\n&#34;%useful.tostrings(self.ssid)
-                # result +=&#34;   Password   :%s\n&#34;%useful.tostrings(self.wifipassword)
+                # result +=&#34;   Password   :%s\n&#34;%useful.tostrings(self.wifi_password)
                 return result
 
         def save(self, file = None):
                 &#34;&#34;&#34; Save wifi configuration &#34;&#34;&#34;
-                result = jsonconfig.JsonConfig.save(self, file=file, partFilename=self.ssid)
+                result = jsonconfig.JsonConfig.save(self, file=file, part_filename=self.ssid)
                 return result
 
-        def listKnown(self):
+        def list_known(self):
                 &#34;&#34;&#34; List all configuration files &#34;&#34;&#34;
-                return jsonconfig.JsonConfig.listAll(self)
+                return jsonconfig.JsonConfig.list_all(self)
 
         def forget(self):
                 &#34;&#34;&#34; Forget configuration &#34;&#34;&#34;
-                return jsonconfig.JsonConfig.forget(self, partFilename=self.ssid)</code></pre>
+                return jsonconfig.JsonConfig.forget(self, part_filename=self.ssid)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -405,11 +405,11 @@ class Station:
 </summary>
 <pre><code class="python">def forget(self):
         &#34;&#34;&#34; Forget configuration &#34;&#34;&#34;
-        return jsonconfig.JsonConfig.forget(self, partFilename=self.ssid)</code></pre>
+        return jsonconfig.JsonConfig.forget(self, part_filename=self.ssid)</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.NetworkConfig.listKnown"><code class="name flex">
-<span>def <span class="ident">listKnown</span></span>(<span>self)</span>
+<dt id="lib.wifi.station.NetworkConfig.list_known"><code class="name flex">
+<span>def <span class="ident">list_known</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>List all configuration files</p></div>
@@ -417,9 +417,9 @@ class Station:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def listKnown(self):
+<pre><code class="python">def list_known(self):
         &#34;&#34;&#34; List all configuration files &#34;&#34;&#34;
-        return jsonconfig.JsonConfig.listAll(self)</code></pre>
+        return jsonconfig.JsonConfig.list_all(self)</code></pre>
 </details>
 </dd>
 <dt id="lib.wifi.station.NetworkConfig.save"><code class="name flex">
@@ -433,7 +433,7 @@ class Station:
 </summary>
 <pre><code class="python">def save(self, file = None):
         &#34;&#34;&#34; Save wifi configuration &#34;&#34;&#34;
-        result = jsonconfig.JsonConfig.save(self, file=file, partFilename=self.ssid)
+        result = jsonconfig.JsonConfig.save(self, file=file, part_filename=self.ssid)
         return result</code></pre>
 </details>
 </dd>
@@ -453,9 +453,9 @@ class Station:
         wlan    = None
         config  = None
         network = None
-        otherNetworks = []
-        knownNetworks = []
-        lastScan = [0]
+        other_networks = []
+        known_network = []
+        last_scan = [0]
 
         @staticmethod
         def init():
@@ -472,14 +472,14 @@ class Station:
                 if not Station.wlan.isconnected():
                         Station.wlan.active(True)
                         Station.configure(network)
-                        Station.wlan.connect(useful.tobytes(network.ssid), useful.tobytes(network.wifipassword))
+                        Station.wlan.connect(useful.tobytes(network.ssid), useful.tobytes(network.wifi_password))
                         retry = 0
                         while not Station.wlan.isconnected() and retry &lt; maxRetry:
                                 await uasyncio.sleep(1)
                                 useful.syslog (&#34;   %-2d/%d wait connection to %s&#34;%(retry+1, maxRetry, useful.tostrings(network.ssid)))
                                 retry += 1
 
-                        if Station.wlan.isconnected() == False:
+                        if Station.wlan.isconnected() is False:
                                 Station.wlan.active(False)
                         else:
                                 result = True
@@ -494,18 +494,18 @@ class Station:
                 if Station.wlan.isconnected():
                         Station.wlan.disconnect()
                         Station.wlan.active(False)
-        
+
         @staticmethod
-        def isActive():
+        def is_active():
                 &#34;&#34;&#34; Indicates if the wifi is active &#34;&#34;&#34;
-                if Station.wlan == None:
+                if Station.wlan is None:
                         return False
                 return Station.wlan.active()
 
         @staticmethod
-        def isFallback():
+        def is_fallback():
                 &#34;&#34;&#34; Indicates if the access point must be started when wifi not reachable &#34;&#34;&#34;
-                Station.reloadConfig()
+                Station.reload_config()
                 return Station.config.fallback
 
         @staticmethod
@@ -513,16 +513,16 @@ class Station:
                 &#34;&#34;&#34; Configure the wifi &#34;&#34;&#34;
                 Station.init()
                 # If ip is dynamic
-                if  network.dynamic   == True:
-                        if len(Station.getHostname()) &gt; 0:
-                                Station.wlan.config(dhcp_hostname= useful.tostrings(Station.getHostname()))
+                if  network.dynamic   is True:
+                        if len(Station.get_hostname()) &gt; 0:
+                                Station.wlan.config(dhcp_hostname= useful.tostrings(Station.get_hostname()))
                 else:
                         try:
-                                Station.wlan.ifconfig((useful.tostrings(network.ipaddress),useful.tostrings(network.netmask),useful.tostrings(network.gateway),useful.tostrings(network.dns)))
+                                Station.wlan.ifconfig((useful.tostrings(network.ip_address),useful.tostrings(network.netmask),useful.tostrings(network.gateway),useful.tostrings(network.dns)))
                         except Exception as err:
                                 useful.syslog(err, msg=&#34;Cannot configure wifi station&#34;)
                 try:
-                        network.ipaddress = useful.tobytes(Station.wlan.ifconfig()[0])
+                        network.ip_address = useful.tobytes(Station.wlan.ifconfig()[0])
                         network.netmask   = useful.tobytes(Station.wlan.ifconfig()[1])
                         network.gateway   = useful.tobytes(Station.wlan.ifconfig()[2])
                         network.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
@@ -530,21 +530,21 @@ class Station:
                         useful.syslog(err, msg=&#34;Cannot get ip station&#34;)
 
         @staticmethod
-        def reloadConfig():
+        def reload_config():
                 &#34;&#34;&#34; Reload configuration if it changed &#34;&#34;&#34;
-                if Station.config == None:
+                if Station.config is None:
                         Station.config = StationConfig()
                         Station.network = NetworkConfig()
-                        if Station.config.load() == False:
+                        if Station.config.load() is False:
                                 Station.config.save()
                                 useful.syslog(&#34;Wifi not initialized&#34;)
                 else:
-                        if Station.config.isChanged():
+                        if Station.config.is_changed():
                                 Station.config.load()
                 return Station.config
 
         @staticmethod
-        def isConnected():
+        def is_connected():
                 &#34;&#34;&#34; Indicates if the wifi is connected &#34;&#34;&#34;
                 if Station.wlan:
                         return Station.wlan.isconnected()
@@ -554,40 +554,40 @@ class Station:
         def scan():
                 &#34;&#34;&#34; Scan other networks &#34;&#34;&#34;
                 Station.init()
-                if Station.lastScan[0] + 120 &lt; time.time() or len(Station.otherNetworks) == 0:
-                        Station.otherNetworks = []
+                if Station.last_scan[0] + 120 &lt; time.time() or len(Station.other_networks) == 0:
+                        Station.other_networks = []
                         Station.wlan.active(True)
                         try:
-                                otherNetworks = Station.wlan.scan()
-                                for ssid, bssid, channel, rssi, authmode, hidden in sorted(otherNetworks, key=lambda x: x[3], reverse=True):
+                                other_networks = Station.wlan.scan()
+                                for ssid, bssid, channel, rssi, authmode, hidden in sorted(other_networks, key=lambda x: x[3], reverse=True):
                                         useful.syslog(&#34;Network detected %s&#34;%useful.tostrings(ssid))
-                                        Station.otherNetworks.append((ssid, channel, authmode))
-                                Station.lastScan[0] = time.time()
+                                        Station.other_networks.append((ssid, channel, authmode))
+                                Station.last_scan[0] = time.time()
                         except Exception as err:
                                 useful.syslog(&#34;No network found&#34;)
 
-                return Station.otherNetworks
+                return Station.other_networks
 
         @staticmethod
-        def isActivated():
+        def is_activated():
                 &#34;&#34;&#34; Indicates if the wifi station is configured to be activated &#34;&#34;&#34;
-                Station.reloadConfig()
-                if Station.config != None:
+                Station.reload_config()
+                if Station.config is not None:
                         return Station.config.activated
                 else:
                         return False
 
         @staticmethod
-        async def selectNetwork(networkName, maxRetry):
+        async def select_network(networkName, maxRetry):
                 &#34;&#34;&#34; Select the network and try to connect &#34;&#34;&#34;
-                Station.reloadConfig()
+                Station.reload_config()
                 if networkName != b&#34;&#34;:
                         # Load default network
-                        if Station.network.load(partFilename=networkName):
+                        if Station.network.load(part_filename=networkName):
                                 useful.syslog(&#34;Try to connect to %s&#34;%useful.tostrings(Station.network.ssid))
 
                                 # If the connection failed
-                                if await Station.connect(Station.network, maxRetry) == True:
+                                if await Station.connect(Station.network, maxRetry) is True:
                                         useful.syslog(&#34;Connected to %s&#34;%useful.tostrings(Station.network.ssid))
                                         print(repr(Station.config) + repr(Station.network))
                                         Station.config.default = networkName
@@ -596,35 +596,35 @@ class Station:
                 return False
 
         @staticmethod
-        async def scanNetworks(maxRetry):
+        async def scan_networks(maxRetry):
                 &#34;&#34;&#34; Scan networks known &#34;&#34;&#34;
                 result = False
                 # Scan other networks
                 if len(Station.scan()) &gt; 0:
                         # List known networks
-                        Station.knownNetworks = Station.network.listKnown()
+                        Station.known_network = Station.network.list_known()
 
                         # For all known networks
-                        for networkName in Station.knownNetworks:
+                        for networkName in Station.known_network:
                                 # If the network not already tested
                                 if networkName != Station.config.default:
-                                        result = await Station.selectNetwork(networkName, maxRetry)
-                                        if result == True:
+                                        result = await Station.select_network(networkName, maxRetry)
+                                        if result is True:
                                                 break
                 return result
 
         @staticmethod
-        async def chooseNetwork(force=False, maxRetry=15):
+        async def choose_network(force=False, maxRetry=15):
                 &#34;&#34;&#34; Choose network within reach &#34;&#34;&#34;
                 result = False
-                Station.reloadConfig()
+                Station.reload_config()
 
                 # Load wifi configuration
                 if Station.config.load():
                         if Station.config.activated or force:
-                                result = await Station.selectNetwork(Station.config.default, maxRetry)
-                                if result == False:
-                                        result = await Station.scanNetworks(maxRetry)
+                                result = await Station.select_network(Station.config.default, maxRetry)
+                                if result is False:
+                                        result = await Station.scan_networks(maxRetry)
                         else:
                                 useful.syslog(&#34;Wifi disabled&#34;)
                 else:
@@ -637,9 +637,9 @@ class Station:
                 &#34;&#34;&#34; Start the wifi according to the configuration. Force is used to skip configuration activation flag &#34;&#34;&#34;
                 result = False
                 Station.init()
-                if Station.isActive() == False:
+                if Station.is_active() is False:
                         useful.syslog(&#34;Start wifi&#34;)
-                        if await Station.chooseNetwork(force, maxRetry) == True:
+                        if await Station.choose_network(force, maxRetry) is True:
                                 result = True
                 else:
                         if Station.wlan.isconnected():
@@ -662,15 +662,15 @@ class Station:
                         Station.wlan = None
 
         @staticmethod
-        def isIpOnInterface(ipAddr):
+        def is_ip_on_interface(ipAddr):
                 &#34;&#34;&#34; Indicates if the address ip is connected to wifi station &#34;&#34;&#34;
-                ipInterface = Station.getInfo()
+                ipInterface = Station.get_info()
                 if ipInterface != (&#34;&#34;,&#34;&#34;,&#34;&#34;,&#34;&#34;):
                         return useful.issameinterface(useful.tostrings(ipAddr), ipInterface[0], ipInterface[1])
                 return False
 
         @staticmethod
-        def getInfo():
+        def get_info():
                 &#34;&#34;&#34; Returns the connection informations &#34;&#34;&#34;
                 if Station.wlan:
                         if Station.wlan.isconnected():
@@ -678,9 +678,9 @@ class Station:
                 return (&#34;&#34;,&#34;&#34;,&#34;&#34;,&#34;&#34;)
 
         @staticmethod
-        def getHostname():
+        def get_hostname():
                 &#34;&#34;&#34; Returns the host name &#34;&#34;&#34;
-                Station.reloadConfig()
+                Station.reload_config()
                 return Station.config.hostname</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -689,11 +689,11 @@ class Station:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="lib.wifi.station.Station.knownNetworks"><code class="name">var <span class="ident">knownNetworks</span></code></dt>
+<dt id="lib.wifi.station.Station.known_network"><code class="name">var <span class="ident">known_network</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="lib.wifi.station.Station.lastScan"><code class="name">var <span class="ident">lastScan</span></code></dt>
+<dt id="lib.wifi.station.Station.last_scan"><code class="name">var <span class="ident">last_scan</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -701,7 +701,7 @@ class Station:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="lib.wifi.station.Station.otherNetworks"><code class="name">var <span class="ident">otherNetworks</span></code></dt>
+<dt id="lib.wifi.station.Station.other_networks"><code class="name">var <span class="ident">other_networks</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -712,8 +712,8 @@ class Station:
 </dl>
 <h3>Static methods</h3>
 <dl>
-<dt id="lib.wifi.station.Station.chooseNetwork"><code class="name flex">
-<span>async def <span class="ident">chooseNetwork</span></span>(<span>force=False, maxRetry=15)</span>
+<dt id="lib.wifi.station.Station.choose_network"><code class="name flex">
+<span>async def <span class="ident">choose_network</span></span>(<span>force=False, maxRetry=15)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Choose network within reach</p></div>
@@ -722,17 +722,17 @@ class Station:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def chooseNetwork(force=False, maxRetry=15):
+async def choose_network(force=False, maxRetry=15):
         &#34;&#34;&#34; Choose network within reach &#34;&#34;&#34;
         result = False
-        Station.reloadConfig()
+        Station.reload_config()
 
         # Load wifi configuration
         if Station.config.load():
                 if Station.config.activated or force:
-                        result = await Station.selectNetwork(Station.config.default, maxRetry)
-                        if result == False:
-                                result = await Station.scanNetworks(maxRetry)
+                        result = await Station.select_network(Station.config.default, maxRetry)
+                        if result is False:
+                                result = await Station.scan_networks(maxRetry)
                 else:
                         useful.syslog(&#34;Wifi disabled&#34;)
         else:
@@ -755,16 +755,16 @@ def configure(network):
         &#34;&#34;&#34; Configure the wifi &#34;&#34;&#34;
         Station.init()
         # If ip is dynamic
-        if  network.dynamic   == True:
-                if len(Station.getHostname()) &gt; 0:
-                        Station.wlan.config(dhcp_hostname= useful.tostrings(Station.getHostname()))
+        if  network.dynamic   is True:
+                if len(Station.get_hostname()) &gt; 0:
+                        Station.wlan.config(dhcp_hostname= useful.tostrings(Station.get_hostname()))
         else:
                 try:
-                        Station.wlan.ifconfig((useful.tostrings(network.ipaddress),useful.tostrings(network.netmask),useful.tostrings(network.gateway),useful.tostrings(network.dns)))
+                        Station.wlan.ifconfig((useful.tostrings(network.ip_address),useful.tostrings(network.netmask),useful.tostrings(network.gateway),useful.tostrings(network.dns)))
                 except Exception as err:
                         useful.syslog(err, msg=&#34;Cannot configure wifi station&#34;)
         try:
-                network.ipaddress = useful.tobytes(Station.wlan.ifconfig()[0])
+                network.ip_address = useful.tobytes(Station.wlan.ifconfig()[0])
                 network.netmask   = useful.tobytes(Station.wlan.ifconfig()[1])
                 network.gateway   = useful.tobytes(Station.wlan.ifconfig()[2])
                 network.dns       = useful.tobytes(Station.wlan.ifconfig()[3])
@@ -789,14 +789,14 @@ async def connect(network, maxRetry=15):
         if not Station.wlan.isconnected():
                 Station.wlan.active(True)
                 Station.configure(network)
-                Station.wlan.connect(useful.tobytes(network.ssid), useful.tobytes(network.wifipassword))
+                Station.wlan.connect(useful.tobytes(network.ssid), useful.tobytes(network.wifi_password))
                 retry = 0
                 while not Station.wlan.isconnected() and retry &lt; maxRetry:
                         await uasyncio.sleep(1)
                         useful.syslog (&#34;   %-2d/%d wait connection to %s&#34;%(retry+1, maxRetry, useful.tostrings(network.ssid)))
                         retry += 1
 
-                if Station.wlan.isconnected() == False:
+                if Station.wlan.isconnected() is False:
                         Station.wlan.active(False)
                 else:
                         result = True
@@ -823,8 +823,8 @@ def disconnect():
                 Station.wlan.active(False)</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.getHostname"><code class="name flex">
-<span>def <span class="ident">getHostname</span></span>(<span>)</span>
+<dt id="lib.wifi.station.Station.get_hostname"><code class="name flex">
+<span>def <span class="ident">get_hostname</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns the host name</p></div>
@@ -833,14 +833,14 @@ def disconnect():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def getHostname():
+def get_hostname():
         &#34;&#34;&#34; Returns the host name &#34;&#34;&#34;
-        Station.reloadConfig()
+        Station.reload_config()
         return Station.config.hostname</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.getInfo"><code class="name flex">
-<span>def <span class="ident">getInfo</span></span>(<span>)</span>
+<dt id="lib.wifi.station.Station.get_info"><code class="name flex">
+<span>def <span class="ident">get_info</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Returns the connection informations</p></div>
@@ -849,7 +849,7 @@ def getHostname():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def getInfo():
+def get_info():
         &#34;&#34;&#34; Returns the connection informations &#34;&#34;&#34;
         if Station.wlan:
                 if Station.wlan.isconnected():
@@ -874,8 +874,8 @@ def init():
                 Station.wlan = WLAN(STA_IF)</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.isActivated"><code class="name flex">
-<span>def <span class="ident">isActivated</span></span>(<span>)</span>
+<dt id="lib.wifi.station.Station.is_activated"><code class="name flex">
+<span>def <span class="ident">is_activated</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the wifi station is configured to be activated</p></div>
@@ -884,17 +884,17 @@ def init():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isActivated():
+def is_activated():
         &#34;&#34;&#34; Indicates if the wifi station is configured to be activated &#34;&#34;&#34;
-        Station.reloadConfig()
-        if Station.config != None:
+        Station.reload_config()
+        if Station.config is not None:
                 return Station.config.activated
         else:
                 return False</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.isActive"><code class="name flex">
-<span>def <span class="ident">isActive</span></span>(<span>)</span>
+<dt id="lib.wifi.station.Station.is_active"><code class="name flex">
+<span>def <span class="ident">is_active</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the wifi is active</p></div>
@@ -903,15 +903,15 @@ def isActivated():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isActive():
+def is_active():
         &#34;&#34;&#34; Indicates if the wifi is active &#34;&#34;&#34;
-        if Station.wlan == None:
+        if Station.wlan is None:
                 return False
         return Station.wlan.active()</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.isConnected"><code class="name flex">
-<span>def <span class="ident">isConnected</span></span>(<span>)</span>
+<dt id="lib.wifi.station.Station.is_connected"><code class="name flex">
+<span>def <span class="ident">is_connected</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the wifi is connected</p></div>
@@ -920,15 +920,15 @@ def isActive():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isConnected():
+def is_connected():
         &#34;&#34;&#34; Indicates if the wifi is connected &#34;&#34;&#34;
         if Station.wlan:
                 return Station.wlan.isconnected()
         return False</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.isFallback"><code class="name flex">
-<span>def <span class="ident">isFallback</span></span>(<span>)</span>
+<dt id="lib.wifi.station.Station.is_fallback"><code class="name flex">
+<span>def <span class="ident">is_fallback</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the access point must be started when wifi not reachable</p></div>
@@ -937,14 +937,14 @@ def isConnected():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isFallback():
+def is_fallback():
         &#34;&#34;&#34; Indicates if the access point must be started when wifi not reachable &#34;&#34;&#34;
-        Station.reloadConfig()
+        Station.reload_config()
         return Station.config.fallback</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.isIpOnInterface"><code class="name flex">
-<span>def <span class="ident">isIpOnInterface</span></span>(<span>ipAddr)</span>
+<dt id="lib.wifi.station.Station.is_ip_on_interface"><code class="name flex">
+<span>def <span class="ident">is_ip_on_interface</span></span>(<span>ipAddr)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the address ip is connected to wifi station</p></div>
@@ -953,16 +953,16 @@ def isFallback():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isIpOnInterface(ipAddr):
+def is_ip_on_interface(ipAddr):
         &#34;&#34;&#34; Indicates if the address ip is connected to wifi station &#34;&#34;&#34;
-        ipInterface = Station.getInfo()
+        ipInterface = Station.get_info()
         if ipInterface != (&#34;&#34;,&#34;&#34;,&#34;&#34;,&#34;&#34;):
                 return useful.issameinterface(useful.tostrings(ipAddr), ipInterface[0], ipInterface[1])
         return False</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.reloadConfig"><code class="name flex">
-<span>def <span class="ident">reloadConfig</span></span>(<span>)</span>
+<dt id="lib.wifi.station.Station.reload_config"><code class="name flex">
+<span>def <span class="ident">reload_config</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reload configuration if it changed</p></div>
@@ -971,16 +971,16 @@ def isIpOnInterface(ipAddr):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def reloadConfig():
+def reload_config():
         &#34;&#34;&#34; Reload configuration if it changed &#34;&#34;&#34;
-        if Station.config == None:
+        if Station.config is None:
                 Station.config = StationConfig()
                 Station.network = NetworkConfig()
-                if Station.config.load() == False:
+                if Station.config.load() is False:
                         Station.config.save()
                         useful.syslog(&#34;Wifi not initialized&#34;)
         else:
-                if Station.config.isChanged():
+                if Station.config.is_changed():
                         Station.config.load()
         return Station.config</code></pre>
 </details>
@@ -998,23 +998,23 @@ def reloadConfig():
 def scan():
         &#34;&#34;&#34; Scan other networks &#34;&#34;&#34;
         Station.init()
-        if Station.lastScan[0] + 120 &lt; time.time() or len(Station.otherNetworks) == 0:
-                Station.otherNetworks = []
+        if Station.last_scan[0] + 120 &lt; time.time() or len(Station.other_networks) == 0:
+                Station.other_networks = []
                 Station.wlan.active(True)
                 try:
-                        otherNetworks = Station.wlan.scan()
-                        for ssid, bssid, channel, rssi, authmode, hidden in sorted(otherNetworks, key=lambda x: x[3], reverse=True):
+                        other_networks = Station.wlan.scan()
+                        for ssid, bssid, channel, rssi, authmode, hidden in sorted(other_networks, key=lambda x: x[3], reverse=True):
                                 useful.syslog(&#34;Network detected %s&#34;%useful.tostrings(ssid))
-                                Station.otherNetworks.append((ssid, channel, authmode))
-                        Station.lastScan[0] = time.time()
+                                Station.other_networks.append((ssid, channel, authmode))
+                        Station.last_scan[0] = time.time()
                 except Exception as err:
                         useful.syslog(&#34;No network found&#34;)
 
-        return Station.otherNetworks</code></pre>
+        return Station.other_networks</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.scanNetworks"><code class="name flex">
-<span>async def <span class="ident">scanNetworks</span></span>(<span>maxRetry)</span>
+<dt id="lib.wifi.station.Station.scan_networks"><code class="name flex">
+<span>async def <span class="ident">scan_networks</span></span>(<span>maxRetry)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scan networks known</p></div>
@@ -1023,26 +1023,26 @@ def scan():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def scanNetworks(maxRetry):
+async def scan_networks(maxRetry):
         &#34;&#34;&#34; Scan networks known &#34;&#34;&#34;
         result = False
         # Scan other networks
         if len(Station.scan()) &gt; 0:
                 # List known networks
-                Station.knownNetworks = Station.network.listKnown()
+                Station.known_network = Station.network.list_known()
 
                 # For all known networks
-                for networkName in Station.knownNetworks:
+                for networkName in Station.known_network:
                         # If the network not already tested
                         if networkName != Station.config.default:
-                                result = await Station.selectNetwork(networkName, maxRetry)
-                                if result == True:
+                                result = await Station.select_network(networkName, maxRetry)
+                                if result is True:
                                         break
         return result</code></pre>
 </details>
 </dd>
-<dt id="lib.wifi.station.Station.selectNetwork"><code class="name flex">
-<span>async def <span class="ident">selectNetwork</span></span>(<span>networkName, maxRetry)</span>
+<dt id="lib.wifi.station.Station.select_network"><code class="name flex">
+<span>async def <span class="ident">select_network</span></span>(<span>networkName, maxRetry)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Select the network and try to connect</p></div>
@@ -1051,16 +1051,16 @@ async def scanNetworks(maxRetry):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def selectNetwork(networkName, maxRetry):
+async def select_network(networkName, maxRetry):
         &#34;&#34;&#34; Select the network and try to connect &#34;&#34;&#34;
-        Station.reloadConfig()
+        Station.reload_config()
         if networkName != b&#34;&#34;:
                 # Load default network
-                if Station.network.load(partFilename=networkName):
+                if Station.network.load(part_filename=networkName):
                         useful.syslog(&#34;Try to connect to %s&#34;%useful.tostrings(Station.network.ssid))
 
                         # If the connection failed
-                        if await Station.connect(Station.network, maxRetry) == True:
+                        if await Station.connect(Station.network, maxRetry) is True:
                                 useful.syslog(&#34;Connected to %s&#34;%useful.tostrings(Station.network.ssid))
                                 print(repr(Station.config) + repr(Station.network))
                                 Station.config.default = networkName
@@ -1083,9 +1083,9 @@ async def start(force=False, maxRetry=15):
         &#34;&#34;&#34; Start the wifi according to the configuration. Force is used to skip configuration activation flag &#34;&#34;&#34;
         result = False
         Station.init()
-        if Station.isActive() == False:
+        if Station.is_active() is False:
                 useful.syslog(&#34;Start wifi&#34;)
-                if await Station.chooseNetwork(force, maxRetry) == True:
+                if await Station.choose_network(force, maxRetry) is True:
                         result = True
         else:
                 if Station.wlan.isconnected():
@@ -1135,7 +1135,7 @@ def stop():
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 jsonconfig.JsonConfig.__init__(self)
-                self.hostname      = b&#34;esp%05d&#34;%Hostname.getNumber()
+                self.hostname      = b&#34;esp%05d&#34;%Hostname.get_number()
                 self.activated     = True
                 self.fallback      = True
                 self.default       = b&#34;&#34;
@@ -1173,34 +1173,34 @@ def stop():
 <h4><code><a title="lib.wifi.station.NetworkConfig" href="#lib.wifi.station.NetworkConfig">NetworkConfig</a></code></h4>
 <ul class="">
 <li><code><a title="lib.wifi.station.NetworkConfig.forget" href="#lib.wifi.station.NetworkConfig.forget">forget</a></code></li>
-<li><code><a title="lib.wifi.station.NetworkConfig.listKnown" href="#lib.wifi.station.NetworkConfig.listKnown">listKnown</a></code></li>
+<li><code><a title="lib.wifi.station.NetworkConfig.list_known" href="#lib.wifi.station.NetworkConfig.list_known">list_known</a></code></li>
 <li><code><a title="lib.wifi.station.NetworkConfig.save" href="#lib.wifi.station.NetworkConfig.save">save</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="lib.wifi.station.Station" href="#lib.wifi.station.Station">Station</a></code></h4>
 <ul class="two-column">
-<li><code><a title="lib.wifi.station.Station.chooseNetwork" href="#lib.wifi.station.Station.chooseNetwork">chooseNetwork</a></code></li>
+<li><code><a title="lib.wifi.station.Station.choose_network" href="#lib.wifi.station.Station.choose_network">choose_network</a></code></li>
 <li><code><a title="lib.wifi.station.Station.config" href="#lib.wifi.station.Station.config">config</a></code></li>
 <li><code><a title="lib.wifi.station.Station.configure" href="#lib.wifi.station.Station.configure">configure</a></code></li>
 <li><code><a title="lib.wifi.station.Station.connect" href="#lib.wifi.station.Station.connect">connect</a></code></li>
 <li><code><a title="lib.wifi.station.Station.disconnect" href="#lib.wifi.station.Station.disconnect">disconnect</a></code></li>
-<li><code><a title="lib.wifi.station.Station.getHostname" href="#lib.wifi.station.Station.getHostname">getHostname</a></code></li>
-<li><code><a title="lib.wifi.station.Station.getInfo" href="#lib.wifi.station.Station.getInfo">getInfo</a></code></li>
+<li><code><a title="lib.wifi.station.Station.get_hostname" href="#lib.wifi.station.Station.get_hostname">get_hostname</a></code></li>
+<li><code><a title="lib.wifi.station.Station.get_info" href="#lib.wifi.station.Station.get_info">get_info</a></code></li>
 <li><code><a title="lib.wifi.station.Station.init" href="#lib.wifi.station.Station.init">init</a></code></li>
-<li><code><a title="lib.wifi.station.Station.isActivated" href="#lib.wifi.station.Station.isActivated">isActivated</a></code></li>
-<li><code><a title="lib.wifi.station.Station.isActive" href="#lib.wifi.station.Station.isActive">isActive</a></code></li>
-<li><code><a title="lib.wifi.station.Station.isConnected" href="#lib.wifi.station.Station.isConnected">isConnected</a></code></li>
-<li><code><a title="lib.wifi.station.Station.isFallback" href="#lib.wifi.station.Station.isFallback">isFallback</a></code></li>
-<li><code><a title="lib.wifi.station.Station.isIpOnInterface" href="#lib.wifi.station.Station.isIpOnInterface">isIpOnInterface</a></code></li>
-<li><code><a title="lib.wifi.station.Station.knownNetworks" href="#lib.wifi.station.Station.knownNetworks">knownNetworks</a></code></li>
-<li><code><a title="lib.wifi.station.Station.lastScan" href="#lib.wifi.station.Station.lastScan">lastScan</a></code></li>
+<li><code><a title="lib.wifi.station.Station.is_activated" href="#lib.wifi.station.Station.is_activated">is_activated</a></code></li>
+<li><code><a title="lib.wifi.station.Station.is_active" href="#lib.wifi.station.Station.is_active">is_active</a></code></li>
+<li><code><a title="lib.wifi.station.Station.is_connected" href="#lib.wifi.station.Station.is_connected">is_connected</a></code></li>
+<li><code><a title="lib.wifi.station.Station.is_fallback" href="#lib.wifi.station.Station.is_fallback">is_fallback</a></code></li>
+<li><code><a title="lib.wifi.station.Station.is_ip_on_interface" href="#lib.wifi.station.Station.is_ip_on_interface">is_ip_on_interface</a></code></li>
+<li><code><a title="lib.wifi.station.Station.known_network" href="#lib.wifi.station.Station.known_network">known_network</a></code></li>
+<li><code><a title="lib.wifi.station.Station.last_scan" href="#lib.wifi.station.Station.last_scan">last_scan</a></code></li>
 <li><code><a title="lib.wifi.station.Station.network" href="#lib.wifi.station.Station.network">network</a></code></li>
-<li><code><a title="lib.wifi.station.Station.otherNetworks" href="#lib.wifi.station.Station.otherNetworks">otherNetworks</a></code></li>
-<li><code><a title="lib.wifi.station.Station.reloadConfig" href="#lib.wifi.station.Station.reloadConfig">reloadConfig</a></code></li>
+<li><code><a title="lib.wifi.station.Station.other_networks" href="#lib.wifi.station.Station.other_networks">other_networks</a></code></li>
+<li><code><a title="lib.wifi.station.Station.reload_config" href="#lib.wifi.station.Station.reload_config">reload_config</a></code></li>
 <li><code><a title="lib.wifi.station.Station.scan" href="#lib.wifi.station.Station.scan">scan</a></code></li>
-<li><code><a title="lib.wifi.station.Station.scanNetworks" href="#lib.wifi.station.Station.scanNetworks">scanNetworks</a></code></li>
-<li><code><a title="lib.wifi.station.Station.selectNetwork" href="#lib.wifi.station.Station.selectNetwork">selectNetwork</a></code></li>
+<li><code><a title="lib.wifi.station.Station.scan_networks" href="#lib.wifi.station.Station.scan_networks">scan_networks</a></code></li>
+<li><code><a title="lib.wifi.station.Station.select_network" href="#lib.wifi.station.Station.select_network">select_network</a></code></li>
 <li><code><a title="lib.wifi.station.Station.start" href="#lib.wifi.station.Station.start">start</a></code></li>
 <li><code><a title="lib.wifi.station.Station.stop" href="#lib.wifi.station.Station.stop">stop</a></code></li>
 <li><code><a title="lib.wifi.station.Station.wlan" href="#lib.wifi.station.Station.wlan">wlan</a></code></li>

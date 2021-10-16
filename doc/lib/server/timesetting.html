@@ -32,7 +32,7 @@
 &#34;&#34;&#34; Function which sets the internal clock of the card based on an ntp server &#34;&#34;&#34;
 import time
 from tools import useful
-def getNtpTime():
+def get_ntp_time():
         &#34;&#34;&#34; Return the time from a NTP server &#34;&#34;&#34;
         try:
                 import socket
@@ -54,7 +54,7 @@ def getNtpTime():
         except:
                 return 0
 
-def setTime(currenttime):
+def set_time(currenttime):
         &#34;&#34;&#34; Change the current time &#34;&#34;&#34;
         try:
                 newtime = time.localtime(currenttime)
@@ -65,7 +65,7 @@ def setTime(currenttime):
         except Exception as exc:
                 useful.syslog(&#34;Cannot set time &#39;%s&#39;&#34;%exc)
 
-def calcLocalTime(currenttime, offsetTime=+1, dst=True):
+def calc_local_time(currenttime, offsetTime=+1, dst=True):
         &#34;&#34;&#34; Calculate the local time &#34;&#34;&#34;
         year,month,day,hour,minute,second,weekday,yearday = time.localtime(currenttime)[:8]
         startDST = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
@@ -74,21 +74,21 @@ def calcLocalTime(currenttime, offsetTime=+1, dst=True):
                 now = time.mktime((year,month,day,hour,minute,second,weekday,yearday))
         except:
                 now = time.mktime((year,month,day,hour,minute,second,weekday,yearday,0))
-                
+
         if dst and now &gt; startDST and now &lt; endDST : # we are before last sunday of october
                 return now+(offsetTime*3600)+3600 # DST: UTC+dst*H + 1
         else:
                 return now+(offsetTime*3600) # EST: UTC+dst*H
 
-def setDate(offsetTime=+1, dst=True, display=False):
+def set_date(offsetTime=+1, dst=True, display=False):
         &#34;&#34;&#34; Set the date &#34;&#34;&#34;
-        currenttime = getNtpTime()
+        currenttime = get_ntp_time()
         if currenttime &gt; 0:
-                currenttime = calcLocalTime(currenttime, offsetTime, dst)
+                currenttime = calc_local_time(currenttime, offsetTime, dst)
                 if currenttime &gt; 0:
-                        setTime(currenttime)
+                        set_time(currenttime)
                         if display:
-                                useful.syslog(&#34;Date updated : %s&#34;%(useful.dateToString()))
+                                useful.syslog(&#34;Date updated : %s&#34;%(useful.date_to_string()))
                         return currenttime
         return 0</code></pre>
 </details>
@@ -100,8 +100,8 @@ def setDate(offsetTime=+1, dst=True, display=False):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.server.timesetting.calcLocalTime"><code class="name flex">
-<span>def <span class="ident">calcLocalTime</span></span>(<span>currenttime, offsetTime=1, dst=True)</span>
+<dt id="lib.server.timesetting.calc_local_time"><code class="name flex">
+<span>def <span class="ident">calc_local_time</span></span>(<span>currenttime, offsetTime=1, dst=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Calculate the local time</p></div>
@@ -109,7 +109,7 @@ def setDate(offsetTime=+1, dst=True, display=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def calcLocalTime(currenttime, offsetTime=+1, dst=True):
+<pre><code class="python">def calc_local_time(currenttime, offsetTime=+1, dst=True):
         &#34;&#34;&#34; Calculate the local time &#34;&#34;&#34;
         year,month,day,hour,minute,second,weekday,yearday = time.localtime(currenttime)[:8]
         startDST = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
@@ -118,15 +118,15 @@ def setDate(offsetTime=+1, dst=True, display=False):
                 now = time.mktime((year,month,day,hour,minute,second,weekday,yearday))
         except:
                 now = time.mktime((year,month,day,hour,minute,second,weekday,yearday,0))
-                
+
         if dst and now &gt; startDST and now &lt; endDST : # we are before last sunday of october
                 return now+(offsetTime*3600)+3600 # DST: UTC+dst*H + 1
         else:
                 return now+(offsetTime*3600) # EST: UTC+dst*H</code></pre>
 </details>
 </dd>
-<dt id="lib.server.timesetting.getNtpTime"><code class="name flex">
-<span>def <span class="ident">getNtpTime</span></span>(<span>)</span>
+<dt id="lib.server.timesetting.get_ntp_time"><code class="name flex">
+<span>def <span class="ident">get_ntp_time</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the time from a NTP server</p></div>
@@ -134,7 +134,7 @@ def setDate(offsetTime=+1, dst=True, display=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getNtpTime():
+<pre><code class="python">def get_ntp_time():
         &#34;&#34;&#34; Return the time from a NTP server &#34;&#34;&#34;
         try:
                 import socket
@@ -157,8 +157,8 @@ def setDate(offsetTime=+1, dst=True, display=False):
                 return 0</code></pre>
 </details>
 </dd>
-<dt id="lib.server.timesetting.setDate"><code class="name flex">
-<span>def <span class="ident">setDate</span></span>(<span>offsetTime=1, dst=True, display=False)</span>
+<dt id="lib.server.timesetting.set_date"><code class="name flex">
+<span>def <span class="ident">set_date</span></span>(<span>offsetTime=1, dst=True, display=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set the date</p></div>
@@ -166,21 +166,21 @@ def setDate(offsetTime=+1, dst=True, display=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setDate(offsetTime=+1, dst=True, display=False):
+<pre><code class="python">def set_date(offsetTime=+1, dst=True, display=False):
         &#34;&#34;&#34; Set the date &#34;&#34;&#34;
-        currenttime = getNtpTime()
+        currenttime = get_ntp_time()
         if currenttime &gt; 0:
-                currenttime = calcLocalTime(currenttime, offsetTime, dst)
+                currenttime = calc_local_time(currenttime, offsetTime, dst)
                 if currenttime &gt; 0:
-                        setTime(currenttime)
+                        set_time(currenttime)
                         if display:
-                                useful.syslog(&#34;Date updated : %s&#34;%(useful.dateToString()))
+                                useful.syslog(&#34;Date updated : %s&#34;%(useful.date_to_string()))
                         return currenttime
         return 0</code></pre>
 </details>
 </dd>
-<dt id="lib.server.timesetting.setTime"><code class="name flex">
-<span>def <span class="ident">setTime</span></span>(<span>currenttime)</span>
+<dt id="lib.server.timesetting.set_time"><code class="name flex">
+<span>def <span class="ident">set_time</span></span>(<span>currenttime)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Change the current time</p></div>
@@ -188,7 +188,7 @@ def setDate(offsetTime=+1, dst=True, display=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setTime(currenttime):
+<pre><code class="python">def set_time(currenttime):
         &#34;&#34;&#34; Change the current time &#34;&#34;&#34;
         try:
                 newtime = time.localtime(currenttime)
@@ -218,10 +218,10 @@ def setDate(offsetTime=+1, dst=True, display=False):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.server.timesetting.calcLocalTime" href="#lib.server.timesetting.calcLocalTime">calcLocalTime</a></code></li>
-<li><code><a title="lib.server.timesetting.getNtpTime" href="#lib.server.timesetting.getNtpTime">getNtpTime</a></code></li>
-<li><code><a title="lib.server.timesetting.setDate" href="#lib.server.timesetting.setDate">setDate</a></code></li>
-<li><code><a title="lib.server.timesetting.setTime" href="#lib.server.timesetting.setTime">setTime</a></code></li>
+<li><code><a title="lib.server.timesetting.calc_local_time" href="#lib.server.timesetting.calc_local_time">calc_local_time</a></code></li>
+<li><code><a title="lib.server.timesetting.get_ntp_time" href="#lib.server.timesetting.get_ntp_time">get_ntp_time</a></code></li>
+<li><code><a title="lib.server.timesetting.set_date" href="#lib.server.timesetting.set_date">set_date</a></code></li>
+<li><code><a title="lib.server.timesetting.set_time" href="#lib.server.timesetting.set_time">set_time</a></code></li>
 </ul>
 </li>
 </ul>

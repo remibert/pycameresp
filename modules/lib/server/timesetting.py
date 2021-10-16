@@ -3,7 +3,7 @@
 """ Function which sets the internal clock of the card based on an ntp server """
 import time
 from tools import useful
-def getNtpTime():
+def get_ntp_time():
 	""" Return the time from a NTP server """
 	try:
 		import socket
@@ -25,7 +25,7 @@ def getNtpTime():
 	except:
 		return 0
 
-def setTime(currenttime):
+def set_time(currenttime):
 	""" Change the current time """
 	try:
 		newtime = time.localtime(currenttime)
@@ -36,7 +36,7 @@ def setTime(currenttime):
 	except Exception as exc:
 		useful.syslog("Cannot set time '%s'"%exc)
 
-def calcLocalTime(currenttime, offsetTime=+1, dst=True):
+def calc_local_time(currenttime, offsetTime=+1, dst=True):
 	""" Calculate the local time """
 	year,month,day,hour,minute,second,weekday,yearday = time.localtime(currenttime)[:8]
 	startDST = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
@@ -45,22 +45,20 @@ def calcLocalTime(currenttime, offsetTime=+1, dst=True):
 		now = time.mktime((year,month,day,hour,minute,second,weekday,yearday))
 	except:
 		now = time.mktime((year,month,day,hour,minute,second,weekday,yearday,0))
-		
+
 	if dst and now > startDST and now < endDST : # we are before last sunday of october
 		return now+(offsetTime*3600)+3600 # DST: UTC+dst*H + 1
 	else:
 		return now+(offsetTime*3600) # EST: UTC+dst*H
 
-def setDate(offsetTime=+1, dst=True, display=False):
+def set_date(offsetTime=+1, dst=True, display=False):
 	""" Set the date """
-	currenttime = getNtpTime()
+	currenttime = get_ntp_time()
 	if currenttime > 0:
-		currenttime = calcLocalTime(currenttime, offsetTime, dst)
+		currenttime = calc_local_time(currenttime, offsetTime, dst)
 		if currenttime > 0:
-			setTime(currenttime)
+			set_time(currenttime)
 			if display:
-				useful.syslog("Date updated : %s"%(useful.dateToString()))
+				useful.syslog("Date updated : %s"%(useful.date_to_string()))
 			return currenttime
 	return 0
-
-

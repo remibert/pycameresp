@@ -23,12 +23,12 @@ class WatchDog:
 
 class Inactivity:
 	""" Class to manage inactivity timer """
-	def __init__(self, callback, duration=LONG_WATCH_DOG, timerId=-1):
+	def __init__(self, callback, duration=LONG_WATCH_DOG, timer_id=-1):
 		""" Inactivity timer constructor """
-		self.timer = machine.Timer(timerId)
+		self.timer = machine.Timer(timer_id)
 		self.duration = duration
 		self.callback = callback
-		self.timerId = timerId
+		self.timer_id = timer_id
 		self.start()
 
 	def __del__(self):
@@ -48,7 +48,7 @@ class Inactivity:
 		self.stop()
 		self.start()
 
-async def taskMonitoring(task):
+async def task_monitoring(task):
 	""" Check if task crash, log message and reboot if it too frequent """
 	import uasyncio
 	retry = 0
@@ -76,4 +76,3 @@ async def taskMonitoring(task):
 		from tools import lang
 		await Notifier.notify(lang.reboot_after_many%useful.tobytes(lastError))
 	useful.reboot()
-

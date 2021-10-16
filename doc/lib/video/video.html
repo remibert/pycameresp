@@ -36,12 +36,13 @@ as well as a lot of adjustment on the camera, not available on the other firmwar
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Class to manage the camera of the ESP32CAM.
-This requires the modified firmware. 
-I added in the firmware the possibility of detecting movements, 
+This requires the modified firmware.
+I added in the firmware the possibility of detecting movements,
 as well as a lot of adjustment on the camera, not available on the other firmware that manages the esp32cam.
 &#34;&#34;&#34;
-import camera
+# pylint: disable=multiple-statements
 import time
+import camera
 import uasyncio
 from tools import useful,jsonconfig
 
@@ -59,6 +60,7 @@ class CameraConfig(jsonconfig.JsonConfig):
                 self.saturation = 0
                 self.hmirror    = False
                 self.vflip      = False
+                self.flash_level = 0
 
 class Motion:
         &#34;&#34;&#34; Class motion detection returned by the detect function &#34;&#34;&#34;
@@ -82,9 +84,9 @@ class Motion:
                 &#34;&#34;&#34; Configure the motion detection &#34;&#34;&#34;
                 self.motion.configure(param)
 
-        def getImage(self):
+        def get_image(self):
                 &#34;&#34;&#34; Return the jpeg buffer of motion &#34;&#34;&#34;
-                return self.motion.getImage()
+                return self.motion.get_image()
 
 class Reservation:
         &#34;&#34;&#34; Manage the camera reservation &#34;&#34;&#34;
@@ -98,7 +100,7 @@ class Reservation:
         async def reserve(self, object_, timeout=0, suspension=None):
                 &#34;&#34;&#34; Wait the ressource and reserve &#34;&#34;&#34;
                 result = False
-                # Wait 
+                # Wait
                 while True:
                         result = await self.acquire(object_, suspension)
                         if result:
@@ -117,9 +119,9 @@ class Reservation:
                 identifier = id(object_)
                 try:
                         # If not reserved
-                        if self.identifier == None:
+                        if self.identifier is None:
                                 # If suspension not required
-                                if suspension == None:
+                                if suspension is None:
                                         # If previous suspension ended
                                         if self.suspended &lt;= 0:
                                                 # Reserve
@@ -177,14 +179,14 @@ class Camera:
         @staticmethod
         def open():
                 &#34;&#34;&#34; Open the camera &#34;&#34;&#34;
-                Camera.getConfig()
-                if Camera.isActivated():
+                Camera.get_config()
+                if Camera.is_activated():
                         result = True
-                        if Camera.opened == False:
+                        if Camera.opened is False:
                                 for i in range(10):
                                         res = camera.init()
-                                        if res == False:
-                                                print(&#34;Camera not initialized&#34;)
+                                        if res is False:
+                                                # print(&#34;Camera not initialized&#34;)
                                                 camera.deinit()
                                                 time.sleep(0.5)
                                         else:
@@ -200,12 +202,12 @@ class Camera:
                 return result
 
         @staticmethod
-        def getStat():
+        def get_stat():
                 &#34;&#34;&#34; Statistic &#34;&#34;&#34;
                 return Camera.success[0], Camera.failed[0]
 
         @staticmethod
-        def resetStat():
+        def reset_stat():
                 &#34;&#34;&#34; Reset statistic &#34;&#34;&#34;
                 Camera.success[0] = 0
                 Camera.failed [0] = 0
@@ -214,12 +216,12 @@ class Camera:
         @staticmethod
         def close():
                 &#34;&#34;&#34; Close the camera &#34;&#34;&#34;
-                if Camera.opened == True:
+                if Camera.opened is True:
                         camera.deinit()
                         Camera.opened = False
 
         @staticmethod
-        def isOpened():
+        def is_opened():
                 &#34;&#34;&#34; Indicates if the camera opened &#34;&#34;&#34;
                 return Camera.opened
 
@@ -230,9 +232,14 @@ class Camera:
 
         @staticmethod
         def motion():
-                &#34;&#34;&#34; Get the motion informations. 
+                &#34;&#34;&#34; Get the motion informations.
                 This contains a jpeg image, with matrices of the different color RGB &#34;&#34;&#34;
                 return Camera.retry(camera.motion)
+
+        @staticmethod
+        def flash(level=0):
+                &#34;&#34;&#34; Start or stop the flash &#34;&#34;&#34;
+                camera.flash(level)
 
         @staticmethod
         def retry(callback):
@@ -279,12 +286,12 @@ class Camera:
                 return await Camera.reservation.unreserve(object_)
 
         @staticmethod
-        def isModified():
+        def is_modified():
                 &#34;&#34;&#34; Indicates that the camera configuration has been changed &#34;&#34;&#34;
                 return Camera.modified[0]
 
         @staticmethod
-        def clearModified():
+        def clear_modified():
                 &#34;&#34;&#34; Reset the indicator of configuration modification &#34;&#34;&#34;
                 Camera.modified[0] = False
 
@@ -302,11 +309,11 @@ class Camera:
                 if resolution == b&#34;QVGA&#34;  or resolution == b&#34;320x240&#34;   :val = camera.FRAMESIZE_QVGA
                 if resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
                 if resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
-                if Camera.opened and val != None:
-                        print(&#34;Framesize %s&#34;%useful.tostrings(resolution))
+                if Camera.opened and val is not None:
+                        # print(&#34;Framesize %s&#34;%useful.tostrings(resolution))
                         camera.framesize(val)
-                else:
-                        print(&#34;Framesize not set&#34;)
+                # else:
+                        # print(&#34;Framesize not set&#34;)
 
         @staticmethod
         def pixformat(format_):
@@ -321,12 +328,12 @@ class Camera:
                 if format_ == b&#34;RAW&#34;       : val=camera.PIXFORMAT_RAW
                 if format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
                 if format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
-                if Camera.opened and val != None:
-                        print(&#34;Pixformat %s&#34;%useful.tostrings(format_))
+                if Camera.opened and val is not None:
+                        # print(&#34;Pixformat %s&#34;%useful.tostrings(format_))
                         camera.pixformat(val)
-                else:
-                        print(&#34;Pixformat not set&#34;)
-        
+                # else:
+                        # print(&#34;Pixformat not set&#34;)
+
         @staticmethod
         def quality(val=None, modified=True):
                 &#34;&#34;&#34; Configure the compression &#34;&#34;&#34;
@@ -411,25 +418,26 @@ class Camera:
                         Camera.saturation(config.saturation)
                         Camera.hmirror   (config.hmirror)
                         Camera.vflip     (config.vflip)
+                        Camera.flash     (config.flash_level)
 
         @staticmethod
-        def getConfig():
+        def get_config():
                 &#34;&#34;&#34; Reload configuration if it changed &#34;&#34;&#34;
-                if Camera.config == None:
+                if Camera.config is None:
                         Camera.config = CameraConfig()
-                        if Camera.config.load() == False:
+                        if Camera.config.load() is False:
                                 Camera.config.save()
                 else:
-                        if Camera.config.isChanged():
+                        if Camera.config.is_changed():
                                 Camera.config.load()
                 return Camera.config
 
         @staticmethod
-        def isActivated():
+        def is_activated():
                 &#34;&#34;&#34; Indicates if the camera is configured to be activated &#34;&#34;&#34;
-                if Camera.config == None:
-                        Camera.getConfig()
-                if Camera.config != None:
+                if Camera.config is None:
+                        Camera.get_config()
+                if Camera.config is not None:
                         return Camera.config.activated
                 else:
                         return False</code></pre>
@@ -467,14 +475,14 @@ class Camera:
         @staticmethod
         def open():
                 &#34;&#34;&#34; Open the camera &#34;&#34;&#34;
-                Camera.getConfig()
-                if Camera.isActivated():
+                Camera.get_config()
+                if Camera.is_activated():
                         result = True
-                        if Camera.opened == False:
+                        if Camera.opened is False:
                                 for i in range(10):
                                         res = camera.init()
-                                        if res == False:
-                                                print(&#34;Camera not initialized&#34;)
+                                        if res is False:
+                                                # print(&#34;Camera not initialized&#34;)
                                                 camera.deinit()
                                                 time.sleep(0.5)
                                         else:
@@ -490,12 +498,12 @@ class Camera:
                 return result
 
         @staticmethod
-        def getStat():
+        def get_stat():
                 &#34;&#34;&#34; Statistic &#34;&#34;&#34;
                 return Camera.success[0], Camera.failed[0]
 
         @staticmethod
-        def resetStat():
+        def reset_stat():
                 &#34;&#34;&#34; Reset statistic &#34;&#34;&#34;
                 Camera.success[0] = 0
                 Camera.failed [0] = 0
@@ -504,12 +512,12 @@ class Camera:
         @staticmethod
         def close():
                 &#34;&#34;&#34; Close the camera &#34;&#34;&#34;
-                if Camera.opened == True:
+                if Camera.opened is True:
                         camera.deinit()
                         Camera.opened = False
 
         @staticmethod
-        def isOpened():
+        def is_opened():
                 &#34;&#34;&#34; Indicates if the camera opened &#34;&#34;&#34;
                 return Camera.opened
 
@@ -520,9 +528,14 @@ class Camera:
 
         @staticmethod
         def motion():
-                &#34;&#34;&#34; Get the motion informations. 
+                &#34;&#34;&#34; Get the motion informations.
                 This contains a jpeg image, with matrices of the different color RGB &#34;&#34;&#34;
                 return Camera.retry(camera.motion)
+
+        @staticmethod
+        def flash(level=0):
+                &#34;&#34;&#34; Start or stop the flash &#34;&#34;&#34;
+                camera.flash(level)
 
         @staticmethod
         def retry(callback):
@@ -569,12 +582,12 @@ class Camera:
                 return await Camera.reservation.unreserve(object_)
 
         @staticmethod
-        def isModified():
+        def is_modified():
                 &#34;&#34;&#34; Indicates that the camera configuration has been changed &#34;&#34;&#34;
                 return Camera.modified[0]
 
         @staticmethod
-        def clearModified():
+        def clear_modified():
                 &#34;&#34;&#34; Reset the indicator of configuration modification &#34;&#34;&#34;
                 Camera.modified[0] = False
 
@@ -592,11 +605,11 @@ class Camera:
                 if resolution == b&#34;QVGA&#34;  or resolution == b&#34;320x240&#34;   :val = camera.FRAMESIZE_QVGA
                 if resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
                 if resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
-                if Camera.opened and val != None:
-                        print(&#34;Framesize %s&#34;%useful.tostrings(resolution))
+                if Camera.opened and val is not None:
+                        # print(&#34;Framesize %s&#34;%useful.tostrings(resolution))
                         camera.framesize(val)
-                else:
-                        print(&#34;Framesize not set&#34;)
+                # else:
+                        # print(&#34;Framesize not set&#34;)
 
         @staticmethod
         def pixformat(format_):
@@ -611,12 +624,12 @@ class Camera:
                 if format_ == b&#34;RAW&#34;       : val=camera.PIXFORMAT_RAW
                 if format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
                 if format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
-                if Camera.opened and val != None:
-                        print(&#34;Pixformat %s&#34;%useful.tostrings(format_))
+                if Camera.opened and val is not None:
+                        # print(&#34;Pixformat %s&#34;%useful.tostrings(format_))
                         camera.pixformat(val)
-                else:
-                        print(&#34;Pixformat not set&#34;)
-        
+                # else:
+                        # print(&#34;Pixformat not set&#34;)
+
         @staticmethod
         def quality(val=None, modified=True):
                 &#34;&#34;&#34; Configure the compression &#34;&#34;&#34;
@@ -701,25 +714,26 @@ class Camera:
                         Camera.saturation(config.saturation)
                         Camera.hmirror   (config.hmirror)
                         Camera.vflip     (config.vflip)
+                        Camera.flash     (config.flash_level)
 
         @staticmethod
-        def getConfig():
+        def get_config():
                 &#34;&#34;&#34; Reload configuration if it changed &#34;&#34;&#34;
-                if Camera.config == None:
+                if Camera.config is None:
                         Camera.config = CameraConfig()
-                        if Camera.config.load() == False:
+                        if Camera.config.load() is False:
                                 Camera.config.save()
                 else:
-                        if Camera.config.isChanged():
+                        if Camera.config.is_changed():
                                 Camera.config.load()
                 return Camera.config
 
         @staticmethod
-        def isActivated():
+        def is_activated():
                 &#34;&#34;&#34; Indicates if the camera is configured to be activated &#34;&#34;&#34;
-                if Camera.config == None:
-                        Camera.getConfig()
-                if Camera.config != None:
+                if Camera.config is None:
+                        Camera.get_config()
+                if Camera.config is not None:
                         return Camera.config.activated
                 else:
                         return False</code></pre>
@@ -798,8 +812,8 @@ def capture():
         return Camera.retry(camera.capture)</code></pre>
 </details>
 </dd>
-<dt id="lib.video.video.Camera.clearModified"><code class="name flex">
-<span>def <span class="ident">clearModified</span></span>(<span>)</span>
+<dt id="lib.video.video.Camera.clear_modified"><code class="name flex">
+<span>def <span class="ident">clear_modified</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reset the indicator of configuration modification</p></div>
@@ -808,7 +822,7 @@ def capture():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def clearModified():
+def clear_modified():
         &#34;&#34;&#34; Reset the indicator of configuration modification &#34;&#34;&#34;
         Camera.modified[0] = False</code></pre>
 </details>
@@ -825,7 +839,7 @@ def clearModified():
 <pre><code class="python">@staticmethod
 def close():
         &#34;&#34;&#34; Close the camera &#34;&#34;&#34;
-        if Camera.opened == True:
+        if Camera.opened is True:
                 camera.deinit()
                 Camera.opened = False</code></pre>
 </details>
@@ -850,7 +864,8 @@ def configure(config):
                 Camera.contrast  (config.contrast)
                 Camera.saturation(config.saturation)
                 Camera.hmirror   (config.hmirror)
-                Camera.vflip     (config.vflip)</code></pre>
+                Camera.vflip     (config.vflip)
+                Camera.flash     (config.flash_level)</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.contrast"><code class="name flex">
@@ -873,6 +888,21 @@ def contrast(val=None):
                 else:
                         return val
         return None</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Camera.flash"><code class="name flex">
+<span>def <span class="ident">flash</span></span>(<span>level=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start or stop the flash</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def flash(level=0):
+        &#34;&#34;&#34; Start or stop the flash &#34;&#34;&#34;
+        camera.flash(level)</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.framesize"><code class="name flex">
@@ -898,15 +928,15 @@ def framesize(resolution):
         if resolution == b&#34;QVGA&#34;  or resolution == b&#34;320x240&#34;   :val = camera.FRAMESIZE_QVGA
         if resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
         if resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
-        if Camera.opened and val != None:
-                print(&#34;Framesize %s&#34;%useful.tostrings(resolution))
+        if Camera.opened and val is not None:
+                # print(&#34;Framesize %s&#34;%useful.tostrings(resolution))
                 camera.framesize(val)
-        else:
-                print(&#34;Framesize not set&#34;)</code></pre>
+        # else:
+                # print(&#34;Framesize not set&#34;)</code></pre>
 </details>
 </dd>
-<dt id="lib.video.video.Camera.getConfig"><code class="name flex">
-<span>def <span class="ident">getConfig</span></span>(<span>)</span>
+<dt id="lib.video.video.Camera.get_config"><code class="name flex">
+<span>def <span class="ident">get_config</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reload configuration if it changed</p></div>
@@ -915,20 +945,20 @@ def framesize(resolution):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def getConfig():
+def get_config():
         &#34;&#34;&#34; Reload configuration if it changed &#34;&#34;&#34;
-        if Camera.config == None:
+        if Camera.config is None:
                 Camera.config = CameraConfig()
-                if Camera.config.load() == False:
+                if Camera.config.load() is False:
                         Camera.config.save()
         else:
-                if Camera.config.isChanged():
+                if Camera.config.is_changed():
                         Camera.config.load()
         return Camera.config</code></pre>
 </details>
 </dd>
-<dt id="lib.video.video.Camera.getStat"><code class="name flex">
-<span>def <span class="ident">getStat</span></span>(<span>)</span>
+<dt id="lib.video.video.Camera.get_stat"><code class="name flex">
+<span>def <span class="ident">get_stat</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Statistic</p></div>
@@ -937,7 +967,7 @@ def getConfig():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def getStat():
+def get_stat():
         &#34;&#34;&#34; Statistic &#34;&#34;&#34;
         return Camera.success[0], Camera.failed[0]</code></pre>
 </details>
@@ -961,8 +991,8 @@ def hmirror(val=None):
         return None</code></pre>
 </details>
 </dd>
-<dt id="lib.video.video.Camera.isActivated"><code class="name flex">
-<span>def <span class="ident">isActivated</span></span>(<span>)</span>
+<dt id="lib.video.video.Camera.is_activated"><code class="name flex">
+<span>def <span class="ident">is_activated</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the camera is configured to be activated</p></div>
@@ -971,18 +1001,18 @@ def hmirror(val=None):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isActivated():
+def is_activated():
         &#34;&#34;&#34; Indicates if the camera is configured to be activated &#34;&#34;&#34;
-        if Camera.config == None:
-                Camera.getConfig()
-        if Camera.config != None:
+        if Camera.config is None:
+                Camera.get_config()
+        if Camera.config is not None:
                 return Camera.config.activated
         else:
                 return False</code></pre>
 </details>
 </dd>
-<dt id="lib.video.video.Camera.isModified"><code class="name flex">
-<span>def <span class="ident">isModified</span></span>(<span>)</span>
+<dt id="lib.video.video.Camera.is_modified"><code class="name flex">
+<span>def <span class="ident">is_modified</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates that the camera configuration has been changed</p></div>
@@ -991,13 +1021,13 @@ def isActivated():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isModified():
+def is_modified():
         &#34;&#34;&#34; Indicates that the camera configuration has been changed &#34;&#34;&#34;
         return Camera.modified[0]</code></pre>
 </details>
 </dd>
-<dt id="lib.video.video.Camera.isOpened"><code class="name flex">
-<span>def <span class="ident">isOpened</span></span>(<span>)</span>
+<dt id="lib.video.video.Camera.is_opened"><code class="name flex">
+<span>def <span class="ident">is_opened</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the camera opened</p></div>
@@ -1006,7 +1036,7 @@ def isModified():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isOpened():
+def is_opened():
         &#34;&#34;&#34; Indicates if the camera opened &#34;&#34;&#34;
         return Camera.opened</code></pre>
 </details>
@@ -1023,7 +1053,7 @@ This contains a jpeg image, with matrices of the different color RGB</p></div>
 </summary>
 <pre><code class="python">@staticmethod
 def motion():
-        &#34;&#34;&#34; Get the motion informations. 
+        &#34;&#34;&#34; Get the motion informations.
         This contains a jpeg image, with matrices of the different color RGB &#34;&#34;&#34;
         return Camera.retry(camera.motion)</code></pre>
 </details>
@@ -1040,14 +1070,14 @@ def motion():
 <pre><code class="python">@staticmethod
 def open():
         &#34;&#34;&#34; Open the camera &#34;&#34;&#34;
-        Camera.getConfig()
-        if Camera.isActivated():
+        Camera.get_config()
+        if Camera.is_activated():
                 result = True
-                if Camera.opened == False:
+                if Camera.opened is False:
                         for i in range(10):
                                 res = camera.init()
-                                if res == False:
-                                        print(&#34;Camera not initialized&#34;)
+                                if res is False:
+                                        # print(&#34;Camera not initialized&#34;)
                                         camera.deinit()
                                         time.sleep(0.5)
                                 else:
@@ -1085,11 +1115,11 @@ def pixformat(format_):
         if format_ == b&#34;RAW&#34;       : val=camera.PIXFORMAT_RAW
         if format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
         if format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
-        if Camera.opened and val != None:
-                print(&#34;Pixformat %s&#34;%useful.tostrings(format_))
+        if Camera.opened and val is not None:
+                # print(&#34;Pixformat %s&#34;%useful.tostrings(format_))
                 camera.pixformat(val)
-        else:
-                print(&#34;Pixformat not set&#34;)</code></pre>
+        # else:
+                # print(&#34;Pixformat not set&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.quality"><code class="name flex">
@@ -1128,8 +1158,8 @@ async def reserve(object_, timeout=0, suspension=None):
         return await Camera.reservation.reserve(object_, timeout, suspension)</code></pre>
 </details>
 </dd>
-<dt id="lib.video.video.Camera.resetStat"><code class="name flex">
-<span>def <span class="ident">resetStat</span></span>(<span>)</span>
+<dt id="lib.video.video.Camera.reset_stat"><code class="name flex">
+<span>def <span class="ident">reset_stat</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Reset statistic</p></div>
@@ -1138,7 +1168,7 @@ async def reserve(object_, timeout=0, suspension=None):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def resetStat():
+def reset_stat():
         &#34;&#34;&#34; Reset statistic &#34;&#34;&#34;
         Camera.success[0] = 0
         Camera.failed [0] = 0
@@ -1288,7 +1318,8 @@ def vflip(val=None):
                 self.contrast   = 0
                 self.saturation = 0
                 self.hmirror    = False
-                self.vflip      = False</code></pre>
+                self.vflip      = False
+                self.flash_level = 0</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1328,9 +1359,9 @@ def vflip(val=None):
                 &#34;&#34;&#34; Configure the motion detection &#34;&#34;&#34;
                 self.motion.configure(param)
 
-        def getImage(self):
+        def get_image(self):
                 &#34;&#34;&#34; Return the jpeg buffer of motion &#34;&#34;&#34;
-                return self.motion.getImage()</code></pre>
+                return self.motion.get_image()</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -1390,8 +1421,8 @@ def vflip(val=None):
         return self.motion.extract()</code></pre>
 </details>
 </dd>
-<dt id="lib.video.video.Motion.getImage"><code class="name flex">
-<span>def <span class="ident">getImage</span></span>(<span>self)</span>
+<dt id="lib.video.video.Motion.get_image"><code class="name flex">
+<span>def <span class="ident">get_image</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the jpeg buffer of motion</p></div>
@@ -1399,9 +1430,9 @@ def vflip(val=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getImage(self):
+<pre><code class="python">def get_image(self):
         &#34;&#34;&#34; Return the jpeg buffer of motion &#34;&#34;&#34;
-        return self.motion.getImage()</code></pre>
+        return self.motion.get_image()</code></pre>
 </details>
 </dd>
 </dl>
@@ -1428,7 +1459,7 @@ def vflip(val=None):
         async def reserve(self, object_, timeout=0, suspension=None):
                 &#34;&#34;&#34; Wait the ressource and reserve &#34;&#34;&#34;
                 result = False
-                # Wait 
+                # Wait
                 while True:
                         result = await self.acquire(object_, suspension)
                         if result:
@@ -1447,9 +1478,9 @@ def vflip(val=None):
                 identifier = id(object_)
                 try:
                         # If not reserved
-                        if self.identifier == None:
+                        if self.identifier is None:
                                 # If suspension not required
-                                if suspension == None:
+                                if suspension is None:
                                         # If previous suspension ended
                                         if self.suspended &lt;= 0:
                                                 # Reserve
@@ -1513,9 +1544,9 @@ to the web page. It stop the motion detection during this phase</p></div>
         identifier = id(object_)
         try:
                 # If not reserved
-                if self.identifier == None:
+                if self.identifier is None:
                         # If suspension not required
-                        if suspension == None:
+                        if suspension is None:
                                 # If previous suspension ended
                                 if self.suspended &lt;= 0:
                                         # Reserve
@@ -1555,7 +1586,7 @@ to the web page. It stop the motion detection during this phase</p></div>
 <pre><code class="python">async def reserve(self, object_, timeout=0, suspension=None):
         &#34;&#34;&#34; Wait the ressource and reserve &#34;&#34;&#34;
         result = False
-        # Wait 
+        # Wait
         while True:
                 result = await self.acquire(object_, suspension)
                 if result:
@@ -1617,19 +1648,20 @@ to the web page. It stop the motion detection during this phase</p></div>
 <ul class="two-column">
 <li><code><a title="lib.video.video.Camera.brightness" href="#lib.video.video.Camera.brightness">brightness</a></code></li>
 <li><code><a title="lib.video.video.Camera.capture" href="#lib.video.video.Camera.capture">capture</a></code></li>
-<li><code><a title="lib.video.video.Camera.clearModified" href="#lib.video.video.Camera.clearModified">clearModified</a></code></li>
+<li><code><a title="lib.video.video.Camera.clear_modified" href="#lib.video.video.Camera.clear_modified">clear_modified</a></code></li>
 <li><code><a title="lib.video.video.Camera.close" href="#lib.video.video.Camera.close">close</a></code></li>
 <li><code><a title="lib.video.video.Camera.config" href="#lib.video.video.Camera.config">config</a></code></li>
 <li><code><a title="lib.video.video.Camera.configure" href="#lib.video.video.Camera.configure">configure</a></code></li>
 <li><code><a title="lib.video.video.Camera.contrast" href="#lib.video.video.Camera.contrast">contrast</a></code></li>
 <li><code><a title="lib.video.video.Camera.failed" href="#lib.video.video.Camera.failed">failed</a></code></li>
+<li><code><a title="lib.video.video.Camera.flash" href="#lib.video.video.Camera.flash">flash</a></code></li>
 <li><code><a title="lib.video.video.Camera.framesize" href="#lib.video.video.Camera.framesize">framesize</a></code></li>
-<li><code><a title="lib.video.video.Camera.getConfig" href="#lib.video.video.Camera.getConfig">getConfig</a></code></li>
-<li><code><a title="lib.video.video.Camera.getStat" href="#lib.video.video.Camera.getStat">getStat</a></code></li>
+<li><code><a title="lib.video.video.Camera.get_config" href="#lib.video.video.Camera.get_config">get_config</a></code></li>
+<li><code><a title="lib.video.video.Camera.get_stat" href="#lib.video.video.Camera.get_stat">get_stat</a></code></li>
 <li><code><a title="lib.video.video.Camera.hmirror" href="#lib.video.video.Camera.hmirror">hmirror</a></code></li>
-<li><code><a title="lib.video.video.Camera.isActivated" href="#lib.video.video.Camera.isActivated">isActivated</a></code></li>
-<li><code><a title="lib.video.video.Camera.isModified" href="#lib.video.video.Camera.isModified">isModified</a></code></li>
-<li><code><a title="lib.video.video.Camera.isOpened" href="#lib.video.video.Camera.isOpened">isOpened</a></code></li>
+<li><code><a title="lib.video.video.Camera.is_activated" href="#lib.video.video.Camera.is_activated">is_activated</a></code></li>
+<li><code><a title="lib.video.video.Camera.is_modified" href="#lib.video.video.Camera.is_modified">is_modified</a></code></li>
+<li><code><a title="lib.video.video.Camera.is_opened" href="#lib.video.video.Camera.is_opened">is_opened</a></code></li>
 <li><code><a title="lib.video.video.Camera.lock" href="#lib.video.video.Camera.lock">lock</a></code></li>
 <li><code><a title="lib.video.video.Camera.modified" href="#lib.video.video.Camera.modified">modified</a></code></li>
 <li><code><a title="lib.video.video.Camera.motion" href="#lib.video.video.Camera.motion">motion</a></code></li>
@@ -1640,7 +1672,7 @@ to the web page. It stop the motion detection during this phase</p></div>
 <li><code><a title="lib.video.video.Camera.quality" href="#lib.video.video.Camera.quality">quality</a></code></li>
 <li><code><a title="lib.video.video.Camera.reservation" href="#lib.video.video.Camera.reservation">reservation</a></code></li>
 <li><code><a title="lib.video.video.Camera.reserve" href="#lib.video.video.Camera.reserve">reserve</a></code></li>
-<li><code><a title="lib.video.video.Camera.resetStat" href="#lib.video.video.Camera.resetStat">resetStat</a></code></li>
+<li><code><a title="lib.video.video.Camera.reset_stat" href="#lib.video.video.Camera.reset_stat">reset_stat</a></code></li>
 <li><code><a title="lib.video.video.Camera.retry" href="#lib.video.video.Camera.retry">retry</a></code></li>
 <li><code><a title="lib.video.video.Camera.saturation" href="#lib.video.video.Camera.saturation">saturation</a></code></li>
 <li><code><a title="lib.video.video.Camera.sharpness" href="#lib.video.video.Camera.sharpness">sharpness</a></code></li>
@@ -1659,7 +1691,7 @@ to the web page. It stop the motion detection during this phase</p></div>
 <li><code><a title="lib.video.video.Motion.configure" href="#lib.video.video.Motion.configure">configure</a></code></li>
 <li><code><a title="lib.video.video.Motion.deinit" href="#lib.video.video.Motion.deinit">deinit</a></code></li>
 <li><code><a title="lib.video.video.Motion.extract" href="#lib.video.video.Motion.extract">extract</a></code></li>
-<li><code><a title="lib.video.video.Motion.getImage" href="#lib.video.video.Motion.getImage">getImage</a></code></li>
+<li><code><a title="lib.video.video.Motion.get_image" href="#lib.video.video.Motion.get_image">get_image</a></code></li>
 </ul>
 </li>
 <li>

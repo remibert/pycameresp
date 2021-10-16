@@ -32,25 +32,25 @@
 &#34;&#34;&#34; Function define the web page to configure the battery level detection &#34;&#34;&#34;
 from server.httpserver import HttpServer
 from htmltemplate      import *
-from webpage.mainpage  import mainFrame, manageDefaultButton
+from webpage.mainpage  import main_frame, manage_default_button
 from tools             import BatteryConfig,lang
 
-@HttpServer.addRoute(b&#39;/battery&#39;, menu=lang.menu_system, item=lang.item_battery)
+@HttpServer.add_route(b&#39;/battery&#39;, menu=lang.menu_system, item=lang.item_battery)
 async def battery(request, response, args):
         &#34;&#34;&#34; Battery configuration web page &#34;&#34;&#34;
         config = BatteryConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
+        disabled, action, submit = manage_default_button(request, config)
 
-        page = mainFrame(request, response, args, lang.battery_management, 
+        page = main_frame(request, response, args, lang.battery_management,
                 Switch(text=lang.activated,          name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.gpio_used_battery,    name=b&#34;levelGpio&#34;,            placeholder=lang.gpio_connected_to_battery,    pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.levelGpio,    disabled=disabled),
-                Edit(text=lang.gpio_value_for_full,  name=b&#34;fullBattery&#34;,          placeholder=lang.gpio_adc_value_full,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.fullBattery,  disabled=disabled),
-                Edit(text=lang.gpio_value_for_empty, name=b&#34;emptyBattery&#34;,         placeholder=lang.gpio_adc_value_empty,         pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.emptyBattery, disabled=disabled),
+                Edit(text=lang.gpio_used_battery,    name=b&#34;level_gpio&#34;,            placeholder=lang.gpio_connected_to_battery,    pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.level_gpio,    disabled=disabled),
+                Edit(text=lang.gpio_value_for_full,  name=b&#34;full_battery&#34;,          placeholder=lang.gpio_adc_value_full,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.full_battery,  disabled=disabled),
+                Edit(text=lang.gpio_value_for_empty, name=b&#34;empty_battery&#34;,         placeholder=lang.gpio_adc_value_empty,         pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.empty_battery, disabled=disabled),
                 Br(),
-                Switch(text=lang.force_a_deep,       name=b&#34;brownoutDetection&#34;, checked=config.brownoutDetection, disabled=disabled), 
+                Switch(text=lang.force_a_deep,       name=b&#34;brownout_detection&#34;, checked=config.brownout_detection, disabled=disabled),
                 Br(),
                 submit)
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </section>
 <section>
@@ -69,22 +69,22 @@ async def battery(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/battery&#39;, menu=lang.menu_system, item=lang.item_battery)
+<pre><code class="python">@HttpServer.add_route(b&#39;/battery&#39;, menu=lang.menu_system, item=lang.item_battery)
 async def battery(request, response, args):
         &#34;&#34;&#34; Battery configuration web page &#34;&#34;&#34;
         config = BatteryConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
+        disabled, action, submit = manage_default_button(request, config)
 
-        page = mainFrame(request, response, args, lang.battery_management, 
+        page = main_frame(request, response, args, lang.battery_management,
                 Switch(text=lang.activated,          name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.gpio_used_battery,    name=b&#34;levelGpio&#34;,            placeholder=lang.gpio_connected_to_battery,    pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.levelGpio,    disabled=disabled),
-                Edit(text=lang.gpio_value_for_full,  name=b&#34;fullBattery&#34;,          placeholder=lang.gpio_adc_value_full,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.fullBattery,  disabled=disabled),
-                Edit(text=lang.gpio_value_for_empty, name=b&#34;emptyBattery&#34;,         placeholder=lang.gpio_adc_value_empty,         pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.emptyBattery, disabled=disabled),
+                Edit(text=lang.gpio_used_battery,    name=b&#34;level_gpio&#34;,            placeholder=lang.gpio_connected_to_battery,    pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.level_gpio,    disabled=disabled),
+                Edit(text=lang.gpio_value_for_full,  name=b&#34;full_battery&#34;,          placeholder=lang.gpio_adc_value_full,          pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.full_battery,  disabled=disabled),
+                Edit(text=lang.gpio_value_for_empty, name=b&#34;empty_battery&#34;,         placeholder=lang.gpio_adc_value_empty,         pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.empty_battery, disabled=disabled),
                 Br(),
-                Switch(text=lang.force_a_deep,       name=b&#34;brownoutDetection&#34;, checked=config.brownoutDetection, disabled=disabled), 
+                Switch(text=lang.force_a_deep,       name=b&#34;brownout_detection&#34;, checked=config.brownout_detection, disabled=disabled),
                 Br(),
                 submit)
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </dd>
 </dl>

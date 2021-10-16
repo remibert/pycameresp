@@ -3,23 +3,23 @@
 from __future__ import print_function, absolute_import, unicode_literals
 from  io import StringIO, BytesIO
 
-def isPython2():
+def is_python2():
 	from sys import version_info
 	if version_info.major >= 3:
 		return False
 	return True
 
-def isPython3():
+def is_python3():
 	from sys import version_info
 	if version_info.major >= 3:
 		return True
 	return False
 
-def toChar(integer):
+def to_char(integer):
 	""" Convert integer into charactere 
-	>>> ord(toChar(1))
+	>>> ord(to_char(1))
 	1
-	>>> ord(toChar(0x80))
+	>>> ord(to_char(0x80))
 	128
 	"""
 	if integer >= 0x80:
@@ -27,40 +27,40 @@ def toChar(integer):
 	else:
 		return chr(integer)
 
-def toBytes(data):
+def to_bytes(data):
 	""" Convert data into bytes latin-1 
-	>>> print(toString(toBytes("abcde")))
+	>>> print(to_string(to_bytes("abcde")))
 	abcde
 	"""
-	if isBytes(data):
+	if is_bytes(data):
 		return data
 	else:
 		return data.encode("latin-1")
 
-def toString(data):
+def to_string(data):
 	""" Convert bytes into string
 	>>> s = ""
-	>>> for ch in range(256): s += toChar(ch)
-	>>> b = toBytes(s)
-	>>> isBytes(b)
+	>>> for ch in range(256): s += to_char(ch)
+	>>> b = to_bytes(s)
+	>>> is_bytes(b)
 	True
-	>>> ss = toString(b)
+	>>> ss = to_string(b)
 	>>> for i in range(256):
 	...    if ord(s[i]) != ord(s[i]):
 	...       print("Err in %d"%i)
 	"""
-	if isString(data):
+	if is_string(data):
 		return data
 	else:
 		return data.decode("latin-1")
 
-def isString(data):
+def is_string(data):
 	""" Indicates if the data is a string
-	>>> isString("str")
+	>>> is_string("str")
 	True
-	>>> isString(u"jjj")
+	>>> is_string(u"jjj")
 	True
-	>>> isString(12)
+	>>> is_string(12)
 	False
 	"""
 	try:
@@ -72,13 +72,13 @@ def isString(data):
 			return True
 	return False
 
-def isBytes(data):
+def is_bytes(data):
 	""" Indicates if the data is a string
-	>>> isBytes(b"str")
+	>>> is_bytes(b"str")
 	True
-	>>> isBytes(u"jjj")
+	>>> is_bytes(u"jjj")
 	False
-	>>> isString(12)
+	>>> is_string(12)
 	False
 	"""
 	try:
@@ -90,13 +90,13 @@ def isBytes(data):
 			return True
 	return False
 
-def isInteger(data):
+def is_integer(data):
 	""" Indicates if the data is an integer
-	>>> isInteger("str")
+	>>> is_integer("str")
 	False
-	>>> isInteger(u"jjj")
+	>>> is_integer(u"jjj")
 	False
-	>>> isInteger(12)
+	>>> is_integer(12)
 	True
 	"""
 	try:
@@ -108,13 +108,13 @@ def isInteger(data):
 			return True
 	return False
 
-def isTuple(data):
+def is_tuple(data):
 	""" Indicates if the data is a tuple 
-	>>> isTuple((0,0))
+	>>> is_tuple((0,0))
 	True
-	>>> isTuple([])
+	>>> is_tuple([])
 	False
-	>>> isTuple({})
+	>>> is_tuple({})
 	False
 	"""
 	try:
@@ -126,13 +126,13 @@ def isTuple(data):
 			return True
 	return False
 
-def isList(data):
+def is_list(data):
 	""" Indicates if the data is a list
-	>>> isList((0,0))
+	>>> is_list((0,0))
 	False
-	>>> isList([])
+	>>> is_list([])
 	True
-	>>> isList({})
+	>>> is_list({})
 	False
 	"""
 	try:
@@ -144,13 +144,13 @@ def isList(data):
 			return True
 	return False
 
-def isDict(data):
+def is_dict(data):
 	""" Indicates if the data is a list
-	>>> isDict((0,0))
+	>>> is_dict((0,0))
 	False
-	>>> isDict([])
+	>>> is_dict([])
 	False
-	>>> isDict({})
+	>>> is_dict({})
 	True
 	"""
 	try:
@@ -162,14 +162,14 @@ def isDict(data):
 			return True
 	return False
 
-def toInteger(data):
+def to_integer(data):
 	""" Convert character into integer"""
-	if isInteger(data):
+	if is_integer(data):
 		return data
 	else:
 		return ord(data)
 
-def adaptPath(path):
+def adapt_path(path):
 	from sys import platform
 	if platform != "win32":
 		return path.replace("\\","/")
@@ -206,20 +206,20 @@ def indent(node, file = None, deep = 0):
 		output = file
 	
 	indentType = "    "
-	if isList(node):
+	if is_list(node):
 		output.write("%s[\n"%(indentType*deep))
 		for item in node:
 			indent(item, output, deep + 1)
 		output.write("%s]\n"%(indentType*deep))
-	elif isTuple(node):
+	elif is_tuple(node):
 		output.write("%s(\n"%(indentType*deep))
 		for item in node:
 			indent(item, output, deep + 1)
 		output.write("%s)\n"%(indentType*deep))
-	elif isDict(node):
+	elif is_dict(node):
 		output.write("%s{\n"%(indentType*deep))
 		for key, value in node.items():
-			if isTuple(value) or isList(value) or isDict(value):
+			if is_tuple(value) or is_list(value) or is_dict(value):
 				output.write('%s"%s":\n'%(indentType*(deep+1), key))
 				indent(value, output, deep+1)
 			else:
@@ -233,11 +233,11 @@ def indent(node, file = None, deep = 0):
 	else:
 		return None
 
-def strToDec(string):
+def str_to_dec(string):
 	""" Convert a string into decimal value 
-	>>> print (strToDec("123"))
+	>>> print (str_to_dec("123"))
 	123
-	>>> print (strToDec("0123"))
+	>>> print (str_to_dec("0123"))
 	123"""
 	string = string.lstrip("0")
 	if len(string) == 0:
@@ -249,7 +249,7 @@ def makedir (directory):
 	""" Create directory """
 	from os import makedirs
 	from os.path import exists
-	directory = adaptPath(directory)
+	directory = adapt_path(directory)
 	if directory != "" and not exists(directory):
 		for i in range(10,0,-1): # Insiste!
 			try:
@@ -269,16 +269,16 @@ class CommandLauncher:
 		self.lines = []
 		self.aborted = False
 
-	def executeOne(self, command, output = None, encoding = None, inactivityDuration = None):
-		from useful     import adaptPath
+	def execute_one(self, command, output = None, encoding = None, inactivityDuration = None):
+		from useful     import adapt_path
 		from subprocess import Popen, PIPE
 		from sys        import platform
 		from threading  import Timer
 
-		command = adaptPath(command)
+		command = adapt_path(command)
 
 		if inactivityDuration != None:
-			inactivityTimer = Timer(inactivityDuration, self.inactivityTimeout)
+			inactivityTimer = Timer(inactivityDuration, self.inactivity_timeout)
 			inactivityTimer.start()
 		else:
 			inactivityTimer = None
@@ -289,7 +289,7 @@ class CommandLauncher:
 			else:
 				encoding = "utf-8"
 		
-		def __writeOutput(message, output):
+		def __write_output(message, output):
 			if (output):
 				if type(output) == type(True):
 					if output == True:
@@ -299,7 +299,7 @@ class CommandLauncher:
 					output.flush()
 		
 		self.lines.append("> %s"%command)
-		__writeOutput("> %s"%command, output)
+		__write_output("> %s"%command, output)
 
 		try:
 			timerStarted = 0
@@ -314,7 +314,7 @@ class CommandLauncher:
 				# Restart the inactivity timer for a group line (avoid cpu load)
 				if timerStarted > 20:
 					inactivityTimer.cancel()
-					inactivityTimer = Timer(inactivityDuration, self.inactivityTimeout)
+					inactivityTimer = Timer(inactivityDuration, self.inactivity_timeout)
 					inactivityTimer.start()
 					timerStarted = 0
 
@@ -333,24 +333,24 @@ class CommandLauncher:
 					# Add lines in output list
 					self.lines.append(line[:-1])
 				if len(line) > 0:
-					__writeOutput(line, output)
+					__write_output(line, output)
 		finally:
 			self.process = None
 			if inactivityTimer:
 				inactivityTimer.cancel()
 
-	def inactivityTimeout(self):
+	def inactivity_timeout(self):
 		if self.process != None:
 			print("!~ Inactivity timeout, process killed")
 			self.process.kill()
 
-	def executeMany(self, commands, output=True, encoding=None, inactivityDuration=None, thread=False):
+	def execute_many(self, commands, output=True, encoding=None, inactivityDuration=None, thread=False):
 		import threading
-		from useful import isString
-		if isString(commands):
+		from useful import is_string
+		if is_string(commands):
 			commands = [commands]
 		if thread == True:
-			threading.Thread(target = self.executeThread, kwargs={
+			threading.Thread(target = self.execute_thread, kwargs={
 				"commands"          : commands,
 				"output"            : output,
 				"encoding"          : encoding, 
@@ -358,10 +358,10 @@ class CommandLauncher:
 				}).start()
 			return None
 		else:
-			self.executeThread(commands, output, encoding, inactivityDuration)
+			self.execute_thread(commands, output, encoding, inactivityDuration)
 			return self.lines
 
-	def executeThread(self, commands, output, encoding, inactivityDuration):
+	def execute_thread(self, commands, output, encoding, inactivityDuration):
 		if self.running == False:
 			self.running = True
 			self.aborted = False
@@ -372,7 +372,7 @@ class CommandLauncher:
 				for command in commandBlock.split("\n"):
 					if self.aborted == True:
 						break
-					self.executeOne(command, output, encoding, inactivityDuration)
+					self.execute_one(command, output, encoding, inactivityDuration)
 			if self.aborted:
 				print ("=== ABORTED ===\n")
 			self.running = False
@@ -391,21 +391,21 @@ def execute(commands, output = None, encoding = None, inactivityDuration = None,
 	>>> len(res) > 10
 	True"""
 	process = CommandLauncher()
-	return process.executeMany(commands, output, encoding, inactivityDuration, thread)
+	return process.execute_many(commands, output, encoding, inactivityDuration, thread)
 
 def execute2(command, output = None, encoding=None):
 	execute(command, output, encoding)
 
-def getFileModifTime(filename):
+def get_file_modif_time(filename):
 	""" Gets the modification time of file 
 	>>> makedir("testunit")
 	>>> r=open("testunit/toto.txt","w").write("Hello") 
-	>>> getFileModifTime("testunit/toto.txt") > 0
+	>>> get_file_modif_time("testunit/toto.txt") > 0
 	True
 	>>> import os
 	>>> os.remove("testunit/toto.txt")
 	"""
-	filename = adaptPath(filename)
+	filename = adapt_path(filename)
 	from os import stat
 	try:
 		result = stat(filename).st_mtime
@@ -413,50 +413,50 @@ def getFileModifTime(filename):
 		result = 0
 	return result
 
-def getFileSize(filename):
+def get_file_size(filename):
 	""" Gets the size of file
 	>>> makedir("testunit")
 	>>> r=open("testunit/toto.txt","w").write("Hello")
-	>>> getFileSize("testunit/toto.txt") == 5
+	>>> get_file_size("testunit/toto.txt") == 5
 	True
 	>>> import os
 	>>> os.remove("testunit/toto.txt")
 	"""
-	filename = adaptPath(filename)
+	filename = adapt_path(filename)
 	from os import stat
-	from stat import ST_SIZE
-	return stat(filename)[ST_SIZE]
+	from stat import ST_size
+	return stat(filename)[ST_size]
 
-def delDoublon(values):
+def del_doublon(values):
 	""" delete duplicated data in list 
 	>>> a = [1,2,2,3,3,4,4,4,5,5,6]
-	>>> delDoublon(a)
+	>>> del_doublon(a)
 	[1, 2, 3, 4, 5, 6]"""
 	return list(set(values))
 
-def getUsername():
+def get_username():
 	from os import environ
 	return environ["USERNAME"]
 
-def copyFile(source, target):
+def copy_file(source, target):
 	""" Copy file 
 	>>> makedir("testunit")
 	>>> r=open("testunit/toto_.txt", "w").write("PRout") 
-	>>> copyFile("testunit/toto_.txt","testunit/titi.txt")
-	>>> int(getFileModifTime("testunit/titi.txt")) == int(getFileModifTime("testunit/toto_.txt"))
+	>>> copy_file("testunit/toto_.txt","testunit/titi.txt")
+	>>> int(get_file_modif_time("testunit/titi.txt")) == int(get_file_modif_time("testunit/toto_.txt"))
 	True
-	>>> getFileModifTime("testunit/titi.txt") > 0
+	>>> get_file_modif_time("testunit/titi.txt") > 0
 	True
-	>>> copyFile("testunit/toto_.txt","testunit/titi.txt")
+	>>> copy_file("testunit/toto_.txt","testunit/titi.txt")
 	>>> import os
 	>>> os.remove("testunit/titi.txt")
 	>>> os.remove("testunit/toto_.txt")
 	"""
 	from shutil import copyfile, copystat, copymode
 	from os.path import split
-	source = adaptPath(source)
-	target = adaptPath(target)
-	if int(getFileModifTime(source)) != int(getFileModifTime(target)):
+	source = adapt_path(source)
+	target = adapt_path(target)
+	if int(get_file_modif_time(source)) != int(get_file_modif_time(target)):
 		makedir(split(target)[0])
 		copyfile(source, target)
 		copystat(source, target)
@@ -464,19 +464,19 @@ def copyFile(source, target):
 	#~ else:
 		#~ print ("%s not copied"%(target))
 
-def copyFiles(sourceDir, destinationDir, patterns):
+def copy_files(sourceDir, destinationDir, patterns):
 	""" Copy files
-	removeDir("testunit")
+	remove_dir("testunit")
 	makedir("testunit/Test123")
 	r=open("testunit/Test123/123.txt","w").write("123")
-	copyFiles("testunit/Test123","testunit/Test456","*.*")
-	removeDir("testunit/Test456")
+	copy_files("testunit/Test123","testunit/Test456","*.*")
+	remove_dir("testunit/Test456")
 	"""
 	from glob import glob
 	from os.path import join, abspath, exists, isfile
 	import shutil
-	sourceDir      = adaptPath(sourceDir)
-	destinationDir = adaptPath(destinationDir)
+	sourceDir      = adapt_path(sourceDir)
+	destinationDir = adapt_path(destinationDir)
 	
 	if exists(abspath(sourceDir)) == False:
 		print ('! "%s" directory not existing'%sourceDir)
@@ -490,13 +490,13 @@ def copyFiles(sourceDir, destinationDir, patterns):
 				except IOError:
 					print ("! Failed copy '%s' -> '%s'" %(filename, destinationDir))
 
-def removeDir(directory):
+def remove_dir(directory):
 	""" Remove directory and its content """
 	import shutil
 	import os
 	from time import sleep
 	from os.path import exists
-	directory      = adaptPath(directory)
+	directory      = adapt_path(directory)
 	while exists(directory):
 		try:
 			shutil.rmtree(directory,0,lambda function,directory,dummy: (os.chmod(directory, 0o777),os.remove(directory)))
@@ -505,22 +505,22 @@ def removeDir(directory):
 		if exists(directory):
 			sleep(1)
 
-def deleteFiles(directory, patterns):
+def delete_files(directory, patterns):
 	""" Delete files 
 	>>> makedir("testunit/Test123")
 	>>> r=open("testunit/Test123/123.txt","w").write("123")
 	>>> r=open("testunit/Test123/123.tot","w").write("123")
 	>>> makedir("testunit/Test123/456")
 	>>> r=open("testunit/Test123/456/456.txt","w").write("456")
-	>>> deleteFiles("testunit/Test123","*.burp")
-	>>> getFileModifTime("testunit/Test123/123.txt") > 0
+	>>> delete_files("testunit/Test123","*.burp")
+	>>> get_file_modif_time("testunit/Test123/123.txt") > 0
 	True
-	>>> getFileModifTime("testunit/Test123/123.tot") > 0
+	>>> get_file_modif_time("testunit/Test123/123.tot") > 0
 	True
-	>>> deleteFiles("testunit/Test123",["*.tot"])
-	>>> getFileModifTime("testunit/Test123/123.txt") > 0
+	>>> delete_files("testunit/Test123",["*.tot"])
+	>>> get_file_modif_time("testunit/Test123/123.txt") > 0
 	True
-	>>> getFileModifTime("testunit/Test123/123.tot") > 0
+	>>> get_file_modif_time("testunit/Test123/123.tot") > 0
 	False
 
 	>>> makedir("testunit/Test123")
@@ -528,21 +528,21 @@ def deleteFiles(directory, patterns):
 	>>> r=open("testunit/Test123/123.tot","w").write("123")
 	>>> makedir("testunit/Test123/456")
 	>>> r=open("testunit/Test123/456/456.txt","w").write("456")
-	>>> deleteFiles("testunit/Test123",["*.tot","*.txt"])
-	>>> getFileModifTime("testunit/Test123/123.txt") > 0
+	>>> delete_files("testunit/Test123",["*.tot","*.txt"])
+	>>> get_file_modif_time("testunit/Test123/123.txt") > 0
 	False
-	>>> getFileModifTime("testunit/Test123/123.tot") > 0
+	>>> get_file_modif_time("testunit/Test123/123.tot") > 0
 	False
-	>>> removeDir("testunit/Test123")
+	>>> remove_dir("testunit/Test123")
 	"""
 	from glob import glob
 	from os.path import join
 	from os import remove
-	directory      = adaptPath(directory)
-	if isString(patterns):
+	directory      = adapt_path(directory)
+	if is_string(patterns):
 		patterns = [patterns]
 	for pattern in patterns:
-		for filename in glob(join(normalizePath(directory), pattern)):
+		for filename in glob(join(normalize_path(directory), pattern)):
 			try:
 				remove(filename)
 			except OSError:
@@ -559,7 +559,7 @@ def compare(file1, file2):
 	>>> r.close()
 	>>> compare("testunit/1234.txt","testunit/4567.txt")
 	True
-	>>> copyFile("testunit/1234.txt","testunit/4567.txt")
+	>>> copy_file("testunit/1234.txt","testunit/4567.txt")
 	>>> compare("testunit/1234.txt","testunit/4567.txt")
 	True
 	>>> r=open("testunit/4567.txt","w")
@@ -567,18 +567,18 @@ def compare(file1, file2):
 	>>> r.close()
 	>>> compare("testunit/1234.txt","testunit/4567.txt")
 	False
-	>>> deleteFiles(".",["testunit/1234.txt","testunit/4567.txt"])
+	>>> delete_files(".",["testunit/1234.txt","testunit/4567.txt"])
 	"""
 	from os.path import exists
 	result = False
 	
-	file1      = adaptPath(file1)
-	file2      = adaptPath(file2)
+	file1      = adapt_path(file1)
+	file2      = adapt_path(file2)
 	
 	# If two files existing
 	if exists(file1) and exists(file2):
 		# If the date and size equal
-		if getFileSize(file1) == getFileSize(file2):
+		if get_file_size(file1) == get_file_size(file2):
 			try:
 				# Read the content of first file
 				content1 = open(file1, "rb").read()
@@ -594,18 +594,18 @@ def compare(file1, file2):
 				pass
 	return result
 
-def updateFile(filename, content):
+def update_file(filename, content):
 	""" Update a file with content 
 	>>> makedir("testunit")
 	>>> r=open("testunit/toto.txt","w").write("prout")
-	>>> print(updateFile("testunit/toto.txt","burp"))
+	>>> print(update_file("testunit/toto.txt","burp"))
 	burp
-	>>> print(updateFile("testunit/toto.txt","burp"))
+	>>> print(update_file("testunit/toto.txt","burp"))
 	burp
 	>>> import os
 	>>> os.remove("testunit/toto.txt")
 	"""
-	filename      = adaptPath(filename)
+	filename      = adapt_path(filename)
 	if filename != None:
 		try:
 			oldContent = open(filename, "r").read()
@@ -617,66 +617,66 @@ def updateFile(filename, content):
 			file.close()
 	return content
 
-def getDirectory(path):
+def get_directory(path):
 	""" Gets directory name
-	>>> r = getDirectory("testunit/Test123/123.txt")
+	>>> r = get_directory("testunit/Test123/123.txt")
 	>>> r in ('testunit/Test123','testunit\Test123')
 	True
 	"""
 	from os.path import split
-	path = normalizePath(path)
+	path = normalize_path(path)
 	return split(path)[0]
 
-def getFilename(path):
+def get_filename(path):
 	""" Gets file name
-	>>> print(getFilename("testunit/Test123/123.txt"))
+	>>> print(get_filename("testunit/Test123/123.txt"))
 	123.txt
 	"""
 	from os.path import split
-	path = normalizePath(path)
+	path = normalize_path(path)
 	return split(path)[1]
 
-def getExtension(path):
+def get_extension(path):
 	""" Gets extension of file
-	>>> print(getExtension("testunit/Test123/123.txt"))
+	>>> print(get_extension("testunit/Test123/123.txt"))
 	.txt
 	"""
 	from os.path import splitext
 	return splitext(path)[1]
 
-def getName(path):
+def get_name(path):
 	""" Gets name of file without extension
-	>>> print(getName("testunit/Test123/123.txt"))
+	>>> print(get_name("testunit/Test123/123.txt"))
 	123
 	"""
 	from os.path import split, splitext
-	path = normalizePath(path)
+	path = normalize_path(path)
 	return splitext(split(path)[1])[0]
 
-def getDirectoryFilename(path):
+def get_directory_filename(path):
 	""" Gets complet path and filename without extension 
-	>>> getDirectoryFilename("testunit/Test123/123/TOTO.txt") in ['testunit/Test123/123/TOTO','testunit\\\\Test123\\\\123\\\\TOTO']
+	>>> get_directory_filename("testunit/Test123/123/TOTO.txt") in ['testunit/Test123/123/TOTO','testunit\\\\Test123\\\\123\\\\TOTO']
 	True
 	"""
 	from os.path import splitext
-	path = normalizePath(path)
+	path = normalize_path(path)
 	return splitext(path)[0]
 
-def getScriptPath(*p):
+def get_script_path(*p):
 	""" Gets the path of the script
-	>>> path = getScriptPath("./useful.py")
-	>>> getName(path) == "useful"
+	>>> path = get_script_path("./useful.py")
+	>>> get_name(path) == "useful"
 	True
-	>>> len(getDirectory(path)) > 0
+	>>> len(get_directory(path)) > 0
 	True
 	"""
 	from os.path import abspath, dirname, join
-	result = normalizePath(abspath(dirname(__file__)))
+	result = normalize_path(abspath(dirname(__file__)))
 	if len(p) > 0:
-		return normalizePath(join(result, *p))
+		return normalize_path(join(result, *p))
 	return result
 
-def getCurrentPath(*p):
+def get_current_path(*p):
 	""" Gets the current path """
 	from os.path import join
 	from os import getcwd
@@ -685,26 +685,26 @@ def getCurrentPath(*p):
 		return join(result, *p)
 	return result
 
-def getAbsPath(*p):
+def get_abs_path(*p):
 	"""Gets absolute path
 	>>> r=open("testunit/toto.txt","w").write("Hello")
-	>>> len(getAbsPath("dir","testunit/toto.txt")) > 10
+	>>> len(get_abs_path("dir","testunit/toto.txt")) > 10
 	True
 	>>> import os
 	>>> os.remove("testunit/toto.txt")
 	"""
 	from os.path import abspath, join
 	if len(p) >= 1:
-		return normalizePath(join(abspath(p[0]), *p))
+		return normalize_path(join(abspath(p[0]), *p))
 	return ""
 
-def getRecentFile(*p):
+def get_recent_file(*p):
 	""" Gets more recent file in the file list
 	>>> from time import sleep
 	>>> r=open("testunit/One.txt","w").write("One")
 	>>> sleep(1)
 	>>> r=open("testunit/Two.txt","w").write("two")
-	>>> getRecentFile("./testunit/","*.txt") in ['./testunit/Two.txt', '.\\\\testunit\\\\Two.txt', './testunit\\\\Two.txt']
+	>>> get_recent_file("./testunit/","*.txt") in ['./testunit/Two.txt', '.\\\\testunit\\\\Two.txt', './testunit\\\\Two.txt']
 	True
 	>>> import os
 	>>> os.remove("testunit/One.txt")
@@ -723,11 +723,11 @@ def getRecentFile(*p):
 				result = file
 	return result
 
-def normalizeList(lst):
+def normalize_list(lst):
 	from os import sep
 	result = []
 	
-	if isString(lst):
+	if is_string(lst):
 		lst = [lst]
 	
 	for item in lst:
@@ -735,17 +735,17 @@ def normalizeList(lst):
 			tmp = item.replace("\\",sep)
 		else:
 			tmp = item.replace("/",sep)
-		result.append(adaptPath(tmp))
+		result.append(adapt_path(tmp))
 	return result
 
-def scanAll(directory, includes = ["*"], excludes = []):
+def scan_all(directory, includes = ["*"], excludes = []):
 	""" Parse a directory and returns the list of files and directories """
 	from os import walk
 	from os.path import join
 	
-	excludes = normalizeList(excludes)
-	includes = normalizeList(includes)
-	directory = adaptPath(directory)
+	excludes = normalize_list(excludes)
+	includes = normalize_list(includes)
+	directory = adapt_path(directory)
 	
 	def add(filename, includes, excludes, lst):
 		from fnmatch import fnmatchcase
@@ -786,10 +786,10 @@ def scanAll(directory, includes = ["*"], excludes = []):
 		if adding:
 			lst.append(filename)
 	
-	if   isString(includes)      : includes = [includes]
+	if   is_string(includes)      : includes = [includes]
 	elif type(includes) == type(None): includes = []
 		
-	if   isString(excludes)      : excludes = [excludes]
+	if   is_string(excludes)      : excludes = [excludes]
 	elif type(excludes) == type(None): excludes = []
 	
 	files = []
@@ -804,19 +804,19 @@ def scanAll(directory, includes = ["*"], excludes = []):
 	all_ = directories + files
 	return all_, files, directories
 
-def scanFiles(directory, includes = ["*"], excludes = []):
+def scan_files(directory, includes = ["*"], excludes = []):
 	""" List files
-	>>> scanFiles("..","Con*.py","Color*.py")[0] in (u'..\\\\rbtools\\\\Console.py',"../rbtools/Console.py")
+	>>> scan_files("..","Con*.py","Color*.py")[0] in (u'..\\\\rbtools\\\\Console.py',"../rbtools/Console.py")
 	True
 	"""
-	return scanAll(directory, includes, excludes)[1]
+	return scan_all(directory, includes, excludes)[1]
 
-def scanDirectories(directory, includes = ["*"], excludes = []):
+def scan_directories(directory, includes = ["*"], excludes = []):
 	""" List directories
-	>>> len(scanDirectories("../application")) > 10
+	>>> len(scan_directories("../application")) > 10
 	True
 	"""
-	return scanAll(directory, includes, excludes)[2]
+	return scan_all(directory, includes, excludes)[2]
 
 def prefix(files):
 	""" Gives the common prefix of a file set 
@@ -831,7 +831,7 @@ def prefix(files):
 	
 	# For all files
 	for file in files:
-		file = normalizePath(file)
+		file = normalize_path(file)
 		
 		# Split the file name into a piece
 		paths = file.split(sep)
@@ -863,30 +863,30 @@ def prefix(files):
 	except IndexError:
 		return ""
 
-def zipDir(nameOrFile, directory, includes = ["*"], excludes = [], display = False, renames = None):
+def zip_dir(nameOrFile, directory, includes = ["*"], excludes = [], display = False, renames = None):
 	""" Unflat the directory 
 	>>> makedir("testunit")
-	>>> zipDir("testunit/zip.zip","./rbtools","Co*.py","Color*.py",True)
+	>>> zip_dir("testunit/zip.zip","./rbtools","Co*.py","Color*.py",True)
 	testunit/zip.zip ./rbtools Co*.py Color*.py
-	>>> removeDir("testunit")
+	>>> remove_dir("testunit")
 	"""
 	from zipfile import ZipFile, ZIP_DEFLATED 
 	from os.path import commonprefix, split, relpath, splitext
 
 	previousDir = ""
 	previousExt = []
-	if display and isString(nameOrFile):
+	if display and is_string(nameOrFile):
 		print (nameOrFile, directory, includes, excludes)
 
 	# Search all files according patterns
-	all_ = scanAll(directory, includes, excludes)[0]
+	all_ = scan_all(directory, includes, excludes)[0]
 
 	# If the output filename detected
-	if isString(nameOrFile):
+	if is_string(nameOrFile):
 		if split(nameOrFile)[0] != "":
 			makedir(split(nameOrFile)[0])
 
-	prefix = split(normalizePath(commonprefix(all_)))[0]
+	prefix = split(normalize_path(commonprefix(all_)))[0]
 	
 	# Create archive file
 	archive = ZipFile(nameOrFile,"w", ZIP_DEFLATED)
@@ -924,7 +924,7 @@ def zipDir(nameOrFile, directory, includes = ["*"], excludes = [], display = Fal
 		except OSError:
 			print ('! Cannot add file "%s" in the archive'%source)
 	
-	if not isString(nameOrFile):
+	if not is_string(nameOrFile):
 		return nameOrFile.getvalue()
 	else:
 		return None
@@ -967,9 +967,9 @@ def relatif (path, root = None):
 	True
 """
 	from os import sep, getcwd
-	path = normalizePath(path)
+	path = normalize_path(path)
 	if root != None:
-		root =normalizePath(root)
+		root =normalize_path(root)
 	# If the path is empty
 	if len(path) == 0:
 		return ""
@@ -1013,9 +1013,9 @@ def relatif (path, root = None):
 	else:
 		return ""
 
-def filenameSplit (p):
+def filename_split (p):
 	""" Split filename 
-	>>> print("('%s', '%s', '%s', '%s')"%filenameSplit("/toto/titi/tutu.tata"))
+	>>> print("('%s', '%s', '%s', '%s')"%filename_split("/toto/titi/tutu.tata"))
 	('', '/toto/titi', 'tutu', '.tata')
 	"""
 	from os.path import split as splitPath, splitdrive, splitext
@@ -1030,23 +1030,23 @@ def filenameSplit (p):
 	name,ext = splitext(splt[1])
 	return disk,dir_,name,ext
 
-def convertFilename (pattern, name):
+def convert_filename (pattern, name):
 	""" Convert filename according to the pattern specified 
-	>>> convertFilename ("*","toto")      == "toto"
+	>>> convert_filename ("*","toto")      == "toto"
 	True
-	>>> convertFilename ("?a*","toto")    == "tato"
+	>>> convert_filename ("?a*","toto")    == "tato"
 	True
-	>>> convertFilename ("?a?","toto")    == "tat"
+	>>> convert_filename ("?a?","toto")    == "tat"
 	True
-	>>> convertFilename ("i??","toto")    == "iot"
+	>>> convert_filename ("i??","toto")    == "iot"
 	True
-	>>> convertFilename ("*","toto")      == "toto"
+	>>> convert_filename ("*","toto")      == "toto"
 	True
-	>>> convertFilename ("?i?*","uuuuuu") == "uiuuuu"
+	>>> convert_filename ("?i?*","uuuuuu") == "uiuuuu"
 	True
-	>>> convertFilename ("toto","huhu")   == "toto"
+	>>> convert_filename ("toto","huhu")   == "toto"
 	True
-	>>> convertFilename ("t","huhu")      == "t"
+	>>> convert_filename ("t","huhu")      == "t"
 	True
 	"""
 	result = ""
@@ -1079,41 +1079,41 @@ def convertFilename (pattern, name):
 				j += 1
 	return result
 
-def convertPath (source, target, filename):
+def convert_path (source, target, filename):
 	""" Convert source path into target path 
-	>>> convertPath ("/Remi/Source/Python/Application/*.*","tutu/titi/*.*","Remi/Source/Python/Application/path/lkjlk/Modem.old") in ["tutu/titi/path/lkjlk/Modem.old", 'tutu\\\\titi\\\\path\\\\lkjlk\\\\Modem.old']
+	>>> convert_path ("/Remi/Source/Python/Application/*.*","tutu/titi/*.*","Remi/Source/Python/Application/path/lkjlk/Modem.old") in ["tutu/titi/path/lkjlk/Modem.old", 'tutu\\\\titi\\\\path\\\\lkjlk\\\\Modem.old']
 	True
-	>>> convertPath ("/Remi/Source/Python/Application/*.ui","/titi/tutu/*.bu","/Remi/Source/Python/Application/TraceOut/UserInterface/frmTraceOut.ui") in ["/titi/tutu/TraceOut/UserInterface/frmTraceOut.bu", '\\\\titi\\\\tutu\\\\TraceOut\\\\UserInterface\\\\frmTraceOut.bu']
+	>>> convert_path ("/Remi/Source/Python/Application/*.ui","/titi/tutu/*.bu","/Remi/Source/Python/Application/TraceOut/UserInterface/frmTraceOut.ui") in ["/titi/tutu/TraceOut/UserInterface/frmTraceOut.bu", '\\\\titi\\\\tutu\\\\TraceOut\\\\UserInterface\\\\frmTraceOut.bu']
 	True
-	>>> convertPath ("/Remi/Source/Python/Application/*.ui","/titi/tutu/*.bu","/Remi/Source/Python/Application/TraceOut/UserInterface/frmTraceOut.ui") in ["/titi/tutu/TraceOut/UserInterface/frmTraceOut.bu", "\\\\titi\\\\tutu\\\\TraceOut\\\\UserInterface\\\\frmTraceOut.bu"]
+	>>> convert_path ("/Remi/Source/Python/Application/*.ui","/titi/tutu/*.bu","/Remi/Source/Python/Application/TraceOut/UserInterface/frmTraceOut.ui") in ["/titi/tutu/TraceOut/UserInterface/frmTraceOut.bu", "\\\\titi\\\\tutu\\\\TraceOut\\\\UserInterface\\\\frmTraceOut.bu"]
 	True
-	>>> convertPath ("/Remi/Source/Python/Application/*.ui","titi/tutu/*.bu","/Remi/Source/Python/Application/TraceOut/UserInterface/frmTraceOut.ui") in ["titi/tutu/TraceOut/UserInterface/frmTraceOut.bu", "titi\\\\tutu\\\\TraceOut\\\\UserInterface\\\\frmTraceOut.bu"]
+	>>> convert_path ("/Remi/Source/Python/Application/*.ui","titi/tutu/*.bu","/Remi/Source/Python/Application/TraceOut/UserInterface/frmTraceOut.ui") in ["titi/tutu/TraceOut/UserInterface/frmTraceOut.bu", "titi\\\\tutu\\\\TraceOut\\\\UserInterface\\\\frmTraceOut.bu"]
 	True
 	"""
 	from os.path import join as joinPath
 	from os import sep
 
 	# Get the source path informations
-	dirSrc = filenameSplit (source)[1]
+	dirSrc = filename_split (source)[1]
 
 	# Get the target path informations
-	diskDst, dirDst, nameDst, extDst = filenameSplit (target)
+	diskDst, dirDst, nameDst, extDst = filename_split (target)
 
 	# Get the current file informations
-	dummy, dirFil, nameFil, extFil = filenameSplit (filename)
+	dummy, dirFil, nameFil, extFil = filename_split (filename)
 
 	# Build the target path
-	dir_ = normalizePath(dirDst + sep + dirFil[len(dirSrc):len(dirSrc) + len(dirFil)-len(dirSrc)])
+	dir_ = normalize_path(dirDst + sep + dirFil[len(dirSrc):len(dirSrc) + len(dirFil)-len(dirSrc)])
 
 	# Add the target filename
-	name =  convertFilename (nameDst,nameFil)
+	name =  convert_filename (nameDst,nameFil)
 
 	# Add the target extension
-	ext = convertFilename (extDst,extFil)
+	ext = convert_filename (extDst,extFil)
 
 	return diskDst + joinPath(dir_, name + ext)
 
-def replaceInFile (remplacements, source, destination, replaceInReadOnly = 0, confirm = None):
+def replace_in_file (remplacements, source, destination, replaceInReadOnly = 0, confirm = None):
 	""" Performs string replacements in a file 
 		Replacements: tuple list [("search", "replace with"), (...)]
 		Source: name of the source file
@@ -1123,8 +1123,8 @@ def replaceInFile (remplacements, source, destination, replaceInReadOnly = 0, co
 	from os.path import isdir, exists, split as splitPath
 	from os import access, W_OK, chmod
 
-	source      = adaptPath(source)
-	destination = adaptPath(destination)
+	source      = adapt_path(source)
+	destination = adapt_path(destination)
 	
 	# If it is not a file
 	if isdir (source) or isdir (destination):
@@ -1193,7 +1193,7 @@ def replaceInFile (remplacements, source, destination, replaceInReadOnly = 0, co
 		try:   copy2(source, destination)
 		except IOError:print ("Cannot copy %s->%s"%(source, destination))
 
-def multiLineReplaceInFile (replaces, source, destination):
+def multi_line_replace_in_file (replaces, source, destination):
 	""" Performs string replaces in a file
 		replaces: tuple list [("search", "replaces with"), (...)]
 		source: name of the source file
@@ -1202,8 +1202,8 @@ def multiLineReplaceInFile (replaces, source, destination):
 	from os.path import isdir
 	from os import chmod, rename, remove
 
-	source      = adaptPath(source)
-	destination = adaptPath(destination)
+	source      = adapt_path(source)
+	destination = adapt_path(destination)
 	
 	# If it is not a file
 	if isdir (source) or isdir (destination):
@@ -1212,7 +1212,7 @@ def multiLineReplaceInFile (replaces, source, destination):
 	# Reading the contents of the file and creating a list of lines
 	content = open(source,"rb").read()
 
-	if isBytes(content):
+	if is_bytes(content):
 		content = content.decode("latin-1")
 		bytesDetected = True
 	else:
@@ -1253,14 +1253,14 @@ def multiLineReplaceInFile (replaces, source, destination):
 	# Opens and saves the lines of the target file 
 	open(destination,"wb").write(content)
 
-def buildReplaceList (remplacements, sourcePath, includes, excludes = [], destinationPath = None, replaceFilename = True):
+def build_replace_list (remplacements, sourcePath, includes, excludes = [], destinationPath = None, replaceFilename = True):
 	""" Constructs a file replacement list """
 	from os import sep
 
 	destinations = []
 
 	# Analyzes the directories
-	sources = scanAll(normalizePath(sourcePath), includes, excludes)[0]
+	sources = scan_all(normalize_path(sourcePath), includes, excludes)[0]
 
 	# If the destination directory is not defined
 	if destinationPath == None:
@@ -1271,7 +1271,7 @@ def buildReplaceList (remplacements, sourcePath, includes, excludes = [], destin
 		# Creation de la liste des fichiers de destination
 		for source in sources:
 			# Gets the destination directory name
-			destination = normalizePath(destinationPath + sep + source[len (sourcePath):])
+			destination = normalize_path(destinationPath + sep + source[len (sourcePath):])
 
 			# If file names are to be replaced
 			if replaceFilename:
@@ -1281,7 +1281,7 @@ def buildReplaceList (remplacements, sourcePath, includes, excludes = [], destin
 					destination = destination.replace(i[0], i[1])
 
 			# Adding the directory to the list
-			destinations.append (normalizePath(destination))
+			destinations.append (normalize_path(destination))
 	return sources, destinations
 
 def multiFilesReplacements(
@@ -1317,28 +1317,28 @@ def multiFilesReplacements(
 	>>> print(data)
 	Hello prout
 	Bonjour prout
-	>>> removeDir("testunit/dest")
+	>>> remove_dir("testunit/dest")
 	>>> multiFilesReplacements(("totototoeuh\\nBonjour","prout"),"testunit/source","testunit/source","tototot*.t*","*.text",False,True)
 	>>> f = open("testunit/source/totototoeuh.txt","r")
 	>>> data = f.read()
 	>>> f.close()
 	>>> print(data)
 	Hello prout totototoeuh
-	>>> removeDir("testunit")
+	>>> remove_dir("testunit")
 	"""
 	from os.path import isdir, exists
 	
 	# If this is not a replacement list
-	if not isTuple(replacements) and not isList(replacements):
+	if not is_tuple(replacements) and not is_list(replacements):
 		return
 	# If the list contains elements
 	if len(replacements) > 0:
 		# If this is a string list
-		if isString(replacements[0]):
+		if is_string(replacements[0]):
 			# Turns the string list into a pair list
 			replacements = [replacements]
 	# Constructs the destination list of files 
-	sources, destinations = buildReplaceList(replacements, sourcePath, includes, excludes, destinationPath, replaceFilename)
+	sources, destinations = build_replace_list(replacements, sourcePath, includes, excludes, destinationPath, replaceFilename)
 
 	# Creating the destination directory
 	if not exists(destinationPath) :
@@ -1357,24 +1357,24 @@ def multiFilesReplacements(
 		# If the replacement is multiline
 		if multiLineReplacement:
 			# Replaces in file
-			multiLineReplaceInFile  (replacements, source, destination)
+			multi_line_replace_in_file  (replacements, source, destination)
 		else:
 			# Replaces in file
-			replaceInFile (replacements, source, destination)
+			replace_in_file (replacements, source, destination)
 
-def copyDir(src, dst, includes, excludes = []):
+def copy_dir(src, dst, includes, excludes = []):
 	""" Copies one tree to another """
 	multiFilesReplacements([], dst, src, includes, excludes)
 
 ENCRYPTED_EXTENSION = "CIP"
 
-def getFilesList(pattern):
+def get_files_list(pattern):
 	""" Get the list of files
-	>>> len(getFilesList("./usef*.py")) >= 1
+	>>> len(get_files_list("./usef*.py")) >= 1
 	True
-	>>> len(getFilesList("./usef*.py;./tkfon*.py")) >= 2
+	>>> len(get_files_list("./usef*.py;./tkfon*.py")) >= 2
 	True
-	>>> len(getFilesList("../application")) > 10
+	>>> len(get_files_list("../application")) > 10
 	True
 	"""
 	from os.path import isdir, isfile, split
@@ -1391,7 +1391,7 @@ def getFilesList(pattern):
 		# If directory detected
 		if isdir(pattern):
 			# Add all files from the directory
-			result += scanAll(pattern, ["*"], [])[0]
+			result += scan_all(pattern, ["*"], [])[0]
 		# If file detected
 		elif isfile(pattern):
 			# Add the file
@@ -1402,7 +1402,7 @@ def getFilesList(pattern):
 			directory, file = split(pattern)
 			
 			# Search all files
-			result += scanAll(directory, [file], [])[0]
+			result += scan_all(directory, [file], [])[0]
 			
 	# Return the list without duplicated files
 	return list(set(result))
@@ -1440,10 +1440,10 @@ def encrypt(content, key):
 		from Crypto.Cipher import AES
 		from Crypto        import Random
 
-	if not isPython2():
-		if isString(content):
+	if not is_python2():
+		if is_string(content):
 			content = content.encode("latin-1")
-		if isString(key):
+		if is_string(key):
 			key = key.encode("latin-1")
 
 	content = pad(content)
@@ -1472,10 +1472,10 @@ def decrypt(ciphertext, key):
 	except ImportError:
 		from Crypto.Cipher import AES
 
-	if not isPython2():
-		if isString(ciphertext):
+	if not is_python2():
+		if is_string(ciphertext):
 			ciphertext = ciphertext.encode("latin-1")
-		if isString(key):
+		if is_string(key):
 			key = key.encode("latin-1")
 		
 	iv = ciphertext[:AES.block_size]
@@ -1483,11 +1483,11 @@ def decrypt(ciphertext, key):
 	plaintext = cipher.decrypt(ciphertext[AES.block_size:])
 	return plaintext
 
-def tarList(files, display = False):
+def tar_list(files, display = False):
 	""" Tar list of file and return the content of tar generated 
-	>>> tar =tarList(["useful.py"],True)
+	>>> tar =tar_list(["useful.py"],True)
 	Add useful.py
-	>>> len(tar) >= (getFileSize("useful.py") +512)
+	>>> len(tar) >= (get_file_size("useful.py") +512)
 	True"""
 	from os.path import commonprefix, split, normpath, relpath
 	from tarfile import open as openTar
@@ -1505,9 +1505,9 @@ def tarList(files, display = False):
 	tarArchive.close()
 	return tarFile.getvalue()
 
-def getTimeString():
+def get_time_string():
 	""" Get the current time into a string 
-	>>> tim = getTimeString()
+	>>> tim = get_time_string()
 	>>> len(tim)
 	20
 	>>> len(tim.split("__"))
@@ -1518,56 +1518,56 @@ def getTimeString():
 	from time     import strftime
 	return strftime("%d-%m-%Y__%H-%M-%S")
 
-def encryptFile(files, key, output = None):
+def encrypt_file(files, key, output = None):
 	""" Encrypt file
 	>>> makedir("testunit")
 	>>> r=open("testunit/Encrypt.txt","w").write("One")
 	>>> import os
 	>>> key    = b"O"*16
 	>>> badKey = b"A"*16
-	>>> filename = encryptFile("testunit/Encrypt.txt",key,"testunit/TestEncryption.CIP")
+	>>> filename = encrypt_file("testunit/Encrypt.txt",key,"testunit/TestEncryption.CIP")
 	>>> try:
-	...    decryptFile(filename, badKey)
+	...    decrypt_file(filename, badKey)
 	... except:
 	...    print("failed")
 	failed
-	>>> decryptFile(filename, key)
+	>>> decrypt_file(filename, key)
 	>>> os.remove("testunit/Encrypt.txt")
-	>>> removeDir("testunit/TestEncryption")
+	>>> remove_dir("testunit/TestEncryption")
 	"""
 	from os.path import commonprefix, split, normpath, join
-	if isString(files):
+	if is_string(files):
 		files = [files]
-	content  = tarList(files)
+	content  = tar_list(files)
 	cyphered = encrypt(content, key)
 	if output == None:
-		output   = join(split(normpath(commonprefix(files)))[0],getTimeString() + "." + ENCRYPTED_EXTENSION)
+		output   = join(split(normpath(commonprefix(files)))[0],get_time_string() + "." + ENCRYPTED_EXTENSION)
 	with open(output, 'wb') as fo:
 		fo.write(cyphered)
 	return output
 
-def decryptFile(files, key):
+def decrypt_file(files, key):
 	""" Decrypt file
 	>>> makedir("testunit")
 	>>> r=open("testunit/Encrypt.txt","w").write("One")
 	>>> import os
 	>>> key    = b"O"*16
 	>>> badKey = b"A"*16
-	>>> filename = encryptFile("testunit/Encrypt.txt",key,"testunit/TestEncryption.CIP")
+	>>> filename = encrypt_file("testunit/Encrypt.txt",key,"testunit/TestEncryption.CIP")
 	>>> try:
-	...    decryptFile(filename, badKey)
+	...    decrypt_file(filename, badKey)
 	... except:
 	...    print("failed")
 	failed
-	>>> decryptFile(filename, key)
+	>>> decrypt_file(filename, key)
 	>>> os.remove("testunit/Encrypt.txt")
-	>>> removeDir("testunit/TestEncryption")
+	>>> remove_dir("testunit/TestEncryption")
 	"""
 	from os.path import splitext
 	from os import unlink
 	from tarfile import open as openTar
 	
-	if isString(files):
+	if is_string(files):
 		files = [files]
 
 	for filename in files:
@@ -1587,10 +1587,10 @@ def decryptFile(files, key):
 			except:
 				pass
 
-def getRandom(length = 16):
+def get_random(length = 16):
 	""" Get random number
-	>>> a = getRandom()
-	>>> b = getRandom()
+	>>> a = get_random()
+	>>> b = get_random()
 	>>> len(a)
 	256
 	>>> len(b)
@@ -1609,47 +1609,47 @@ def getRandom(length = 16):
 		result += Random.new().read(AES.block_size)
 	return result
 
-def encryptDir(cipFilename, key, directory, includes = ["*"], excludes = [], display=False):
+def encrypt_dir(cipFilename, key, directory, includes = ["*"], excludes = [], display=False):
 	""" Encrypt directory
 	>>> makedir("testunit")
 	>>> import os
 	>>> key    = b"O"*16
 	>>> badKey = b"A"*16
-	>>> encryptDir("testunit/cip.cip",key,"../rbtools","*.py","Color*.py",False)
+	>>> encrypt_dir("testunit/cip.cip",key,"../rbtools","*.py","Color*.py",False)
 	>>> try:
-	...    decryptDir("testunit/cip.cip",badKey)
+	...    decrypt_dir("testunit/cip.cip",badKey)
 	... except:
 	...    print("failed")
 	failed
-	>>> decryptDir("testunit/cip.cip",key)
+	>>> decrypt_dir("testunit/cip.cip",key)
 	"""
 	from os import remove
-	zipFilename = getDirectoryFilename(cipFilename) + ".zip"
-	zipDir(zipFilename, directory, includes, excludes, display)
-	encryptFile(zipFilename, key, cipFilename)
+	zipFilename = get_directory_filename(cipFilename) + ".zip"
+	zip_dir(zipFilename, directory, includes, excludes, display)
+	encrypt_file(zipFilename, key, cipFilename)
 	remove(zipFilename)
 
-def decryptDir(cipFilename, key):
+def decrypt_dir(cipFilename, key):
 	""" Decrypt directory
 	>>> makedir("testunit")
 	>>> import os
 	>>> key    = b"O"*16
 	>>> badKey = b"A"*16
-	>>> encryptDir("testunit/cip.cip",key,"../rbtools","*.py","Color*.py",False)
+	>>> encrypt_dir("testunit/cip.cip",key,"../rbtools","*.py","Color*.py",False)
 	>>> try:
-	...    decryptDir("testunit/cip.cip",badKey)
+	...    decrypt_dir("testunit/cip.cip",badKey)
 	... except:
 	...    print("failed")
 	failed
-	>>> decryptDir("testunit/cip.cip",key)
-	>>> removeDir("testunit")
+	>>> decrypt_dir("testunit/cip.cip",key)
+	>>> remove_dir("testunit")
 	"""
 	import zipfile
 	from os import remove
-	decryptFile(cipFilename, key)
-	zipFilename = normalizePath(getDirectoryFilename(cipFilename) + "\\" + getName(cipFilename) + ".zip")
+	decrypt_file(cipFilename, key)
+	zipFilename = normalize_path(get_directory_filename(cipFilename) + "\\" + get_name(cipFilename) + ".zip")
 	unzip = zipfile.ZipFile(zipFilename, 'r')
-	unzip.extractall(getDirectoryFilename(cipFilename))
+	unzip.extractall(get_directory_filename(cipFilename))
 	unzip.close()
 	remove(zipFilename)
 
@@ -1690,59 +1690,59 @@ class KeyFile:
 		dump(data, open(self.filename,"wb"), protocol=2)
 		print ("Created new key file '%s'"%self.filename)
 
-	def getPassword(self, password):
+	def get_password(self, password):
 		try:
 			from Cryptodome.Cipher import AES
 		except ImportError:
 			from Crypto.Cipher import AES
-		if isString(password):
+		if is_string(password):
 			password = bytes(password.encode("utf8"))
 		password = pad(password) + pad(password)
 		cipher = AES.new(self.key, AES.MODE_CBC, self.iv)
 		result = cipher.encrypt(password)[0:32]
 		return result
 
-def toHexa(data):
+def to_hexa(data):
 	""" Convert data into hexa string
-	>>> print(toHexa("1234"))
+	>>> print(to_hexa("1234"))
 	\\x31\\x32\\x33\\x34
-	>>> print(toHexa(b"1234"))
+	>>> print(to_hexa(b"1234"))
 	\\x31\\x32\\x33\\x34
 	"""
 	result = ""
-	if isBytes(data):
+	if is_bytes(data):
 		data = data.decode("latin-1")
 	for i in data:
 		result += "\\x%02X"%ord(i)
 	return result
 
-def normalizePath(path):
+def normalize_path(path):
 	""" Normalize a pathname by collapsing redundant separators and up-level references """
 	from os.path import normpath, sep
 	result = normpath(path)
 	result = result.replace("/",sep)
 	result = result.replace("\\",sep)
-	return adaptPath(result)
+	return adapt_path(result)
 
-def getFileSizeString(size):
+def get_file_size_string(size):
 	""" Returns the file size in a string
-	>>> print(getFileSizeString(123))
+	>>> print(get_file_size_string(123))
 	123 octets
-	>>> print(getFileSizeString(1234))
+	>>> print(get_file_size_string(1234))
 	1.21 Ko
-	>>> print(getFileSizeString(12345))
+	>>> print(get_file_size_string(12345))
 	12.06 Ko
-	>>> print(getFileSizeString(123456))
+	>>> print(get_file_size_string(123456))
 	120.56 Ko
-	>>> print(getFileSizeString(1234567))
+	>>> print(get_file_size_string(1234567))
 	1.18 Mo
-	>>> print(getFileSizeString(12345678))
+	>>> print(get_file_size_string(12345678))
 	11.77 Mo
-	>>> print(getFileSizeString(123456789))
+	>>> print(get_file_size_string(123456789))
 	117.74 Mo
-	>>> print(getFileSizeString(1234567890))
+	>>> print(get_file_size_string(1234567890))
 	1.15 Go
-	>>> print(getFileSizeString(12345678901234))
+	>>> print(get_file_size_string(12345678901234))
 	11.23 To
 	"""
 	# Si la taille est en Go
@@ -1759,43 +1759,43 @@ def getFileSizeString(size):
 
 def dos2unix(source, target = None):
 	""" Conversion file txt Ms Dos to txt Unix"""
-	lines = open(adaptPath(source),"r").readlines()
+	lines = open(adapt_path(source),"r").readlines()
 	
 	if target == None:
 		target = source
 		
-	output = open(adaptPath(target),"wb")
+	output = open(adapt_path(target),"wb")
 	for line in lines:
 		line = line.replace('\x0D\x0A','\x0A')
 		output.write(line)
 
 def unix2dos(source, target = None):
 	""" Converting Unix text file to text MsDos """
-	lines = open(adaptPath(source),"r").readlines()
+	lines = open(adapt_path(source),"r").readlines()
 	
 	if target == None:
 		target = source
 
-	output = open(adaptPath(target),"wb")
+	output = open(adapt_path(target),"wb")
 	for line in lines:
 		output.write(line[:-1])
 		output.write("\x0D")
 		output.write("\x0A")
 
-def importModule(filename):
+def import_module(filename):
 	""" Import python filename 
-	>>> mod = importModule("./useful.py")
-	>>> mod.importModule.__name__
-	'importModule'
+	>>> mod = import_module("./useful.py")
+	>>> mod.import_module.__name__
+	'import_module'
 	"""
 	from os.path import abspath, split, splitext
 	from sys import path
-	if isPython2():
+	if is_python2():
 		from imp import  reload
 	else:
 		from importlib import reload
 	
-	filename = adaptPath(filename)
+	filename = adapt_path(filename)
 	modulePath = abspath(split(filename)[0])
 	moduleName = splitext(split(filename)[1])[0]
 	
@@ -1806,7 +1806,7 @@ def importModule(filename):
 	return module
 
 def dump (data, file = None, dumpLength = 16):
-	""" Dump a data data in hexadecimal 
+	""" dump a data data in hexadecimal 
 	data : string which contents the data data
 	file : output file
 	dumpLength : number of byte of the data per line
@@ -1817,15 +1817,15 @@ def dump (data, file = None, dumpLength = 16):
 	00000000   01 02 61 62 64                                    |..abd           |
 	<BLANKLINE>
 	"""
-	if isBytes(data):
+	if is_bytes(data):
 		data = data.decode("latin-1")
 	# If no defined file
 	if file == None:
 		file = StringIO()
 	
 	for j in range (0, len (data), dumpLength):
-		file.write('%08X   ' % toInteger(j))
-		dumpLine (data [j:j + dumpLength], file, dumpLength)
+		file.write('%08X   ' % to_integer(j))
+		dump_line (data [j:j + dumpLength], file, dumpLength)
 		file.write('\n')
 
 	# If a string can be returned
@@ -1834,14 +1834,14 @@ def dump (data, file = None, dumpLength = 16):
 	else:
 		return None
 
-def dumpLine (data, file = None, dumpLength = 0):
-	""" Dump a data data in hexadecimal on one line 
-	>>> print(dumpLine("\x01\x02abd"))
+def dump_line (data, file = None, dumpLength = 0):
+	""" dump a data data in hexadecimal on one line 
+	>>> print(dump_line("\x01\x02abd"))
 	01 02 61 62 64   |..abd|
-	>>> print(dumpLine(b"\x01\x02abd"))
+	>>> print(dump_line(b"\x01\x02abd"))
 	01 02 61 62 64   |..abd|
 	"""
-	if isBytes(data):
+	if is_bytes(data):
 		data = data.decode("latin-1")
 	size = len(data)
 	fill = 0
@@ -1856,7 +1856,7 @@ def dumpLine (data, file = None, dumpLength = 0):
 
 	# Displaying values in hex
 	for i in data:
-		file.write('%02X ' % toInteger(i))
+		file.write('%02X ' % to_integer(i))
 		
 	# Filling of vacuum according to the size of the dump
 	file.write('   '*fill)
@@ -1865,7 +1865,7 @@ def dumpLine (data, file = None, dumpLength = 0):
 	file.write('  |')
 	
 	for i in data:
-		if toInteger(i) >= 0x20 and  toInteger(i) <= 0x7F : 
+		if to_integer(i) >= 0x20 and  to_integer(i) <= 0x7F : 
 			file.write(i)
 		else:
 			file.write('.')
@@ -1948,9 +1948,9 @@ class Structure:
 		"string"              : "s",
 		"void *"              : "P",
 	}
-	TYPE = 0
+	type = 0
 	NAME = 1
-	SIZE = 2
+	size = 2
 	VALUE = 3
 	
 	def __init__ (self, structref, byteOrder = "default"):
@@ -2016,14 +2016,14 @@ class Structure:
 		# Built structure used by the struct module
 		for i in self.structref:
 			try:
-				size = i[self.SIZE]
+				size = i[self.size]
 			except IndexError:
 				size = 1
 				
 			if size in (1, None):
-				self.struct = self.struct + self.format [i[self.TYPE]]
+				self.struct = self.struct + self.format [i[self.type]]
 			else:
-				self.struct = self.struct + "%d"%size + self.format [i[self.TYPE]]
+				self.struct = self.struct + "%d"%size + self.format [i[self.type]]
 				
 		# Built structure values
 		self.__dict__["value"] = {}
@@ -2031,7 +2031,7 @@ class Structure:
 			try:
 				self.value[i[self.NAME]] = i[self.VALUE]
 			except IndexError:
-				if i[self.TYPE] in ("char[]", "string"):
+				if i[self.type] in ("char[]", "string"):
 					self.value[i[self.NAME]] = "\0"
 				else:
 					self.value[i[self.NAME]] = 0
@@ -2066,7 +2066,7 @@ class Structure:
 		# Build the list of values
 		for i in self.structref:
 			value = self.value [i[self.NAME]]
-			if isString(value):
+			if is_string(value):
 				value = value.encode(encoding)
 			values.append (value)
 		return struct.pack (str(self.struct), *values)
@@ -2094,7 +2094,7 @@ class Structure:
 		for i in self.structref:
 			Str = Str + "%-15s = "%(i[self.NAME])
 			value = self.value [i[self.NAME]]
-			if isInteger(value):
+			if is_integer(value):
 				Str = Str + "%d, 0x%X"%(value,value)
 				if value >= 0x20 and value <= 0xFF:
 					Str = Str + " '" + chr (value) + "'"
@@ -2140,28 +2140,28 @@ class Node:
 		self.name = name
 		self.data = None
 
-	def setData(self, data):
+	def set_data(self, data):
 		self.data = data
 		
-	def getData(self):
+	def get_data(self):
 		return self.data
 
 	def __repr__(self):
 		return "'%s':%s"%(self.name,self.data)
 
-	def getSoon(self, soonName):
+	def get_soon(self, soonName):
 		""" Search a son node by name """
 		for name, node in self.soon:
 			if name == soonName:
 				return node
 		return None
 
-	def setSoon(self, name, node):
+	def set_soon(self, name, node):
 		""" Adds a node son """
 		self.soon.append([name,node])
 		return node
 
-	def haveSoon(self):
+	def have_soon(self):
 		if len(self.soon) > 0:
 			return 1
 		return 0
@@ -2192,19 +2192,19 @@ class Tree:
 	    '002':'0/01/002'
 	  '00':'0/00'
 	  '06':'0/06'"""
-	def __init__(self, NodeClass = Node, root = None):
+	def __init__(self, node_class = Node, root = None):
 		""" Constructeur """
-		if isList(NodeClass):
-			self.NodeClass = Node
-			self.tree = self.NodeClass(parent = root)
-			self.build(NodeClass)
+		if is_list(node_class):
+			self.node_class = Node
+			self.tree = self.node_class(parent = root)
+			self.build(node_class)
 		else:
-			self.NodeClass = NodeClass
+			self.node_class = node_class
 
 			# Delete the file tree
-			self.tree = self.NodeClass(parent = root)
+			self.tree = self.node_class(parent = root)
 
-	def addNode(self, parent, names, data, level = 0):
+	def add_node(self, parent, names, data, level = 0):
 		""" Adds a node to the tree of files """
 		# Gets the names composing the path
 		try:
@@ -2212,26 +2212,26 @@ class Tree:
 			name = names[0]
 			
 			# Search a given node
-			current = parent.getSoon(name)
+			current = parent.get_soon(name)
 			
 			# If the name of the current node already exists
-			if parent.getSoon(name) == None:
+			if parent.get_soon(name) == None:
 				# adds a new node
-				current = parent.setSoon(name, self.NodeClass(parent = parent, name = name))
+				current = parent.set_soon(name, self.node_class(parent = parent, name = name))
 			
 			# Browse by node
-			self.addNode(current, names[1:], data, level + 1)
+			self.add_node(current, names[1:], data, level + 1)
 		except:
 			# There are no more sub node, store the information of node
-			parent.setData(data)
+			parent.set_data(data)
 
 	def build(self, datas):
 		""" Constructs a tree of files and directories """
 		# Browse the list of files
 		for data in datas:
-			if isString(data):
+			if is_string(data):
 				data = Data(data)
-			elif isList(data):
+			elif is_list(data):
 				state = None
 				name = ""
 				if len(data) >= 1:
@@ -2240,18 +2240,18 @@ class Tree:
 					state = data[1]
 				data = Data(name, state)
 			# Cut the path of the file folder and piece
-			self.addNode(self.tree,data.path(),data)
+			self.add_node(self.tree,data.path(),data)
 
-	def searchNode(self, names):
+	def search_node(self, names):
 		if type(names) == type(""):
 			if '/' in names:
 				names = names.split("/")
 			else:
 				names = names.split("\\")
 		
-		node = self.tree.getSoon(names[0])
+		node = self.tree.get_soon(names[0])
 		for name in names[1:]:
-			node = node.getSoon(name)
+			node = node.get_soon(name)
 		return node
 
 	def display(self, tree, level = 0):
@@ -2259,26 +2259,26 @@ class Tree:
 		result = ""
 		for name, node in tree.soon:
 			result += "  "*level+repr(node)+"\n"
-			result += self.display(tree.getSoon(name),level + 1)
+			result += self.display(tree.get_soon(name),level + 1)
 		return result
 	
 	def __repr__ (self):
 		return self.display (self.tree)
 
-def uuEncode(binData, width = 64):
+def uu_encode(binData, width = 64):
 	""" uu encoding
-	>>> print(uuEncode(b"12345678"))
+	>>> print(uu_encode(b"12345678"))
 	MTIzNDU2Nzg=
-	>>> print(uuEncode("12345678"))
+	>>> print(uu_encode("12345678"))
 	MTIzNDU2Nzg=
 	"""
-	if isPython2():
+	if is_python2():
 		from base64 import encodestring 
 	else:
 		from base64 import encodebytes as encodestring 
 
-	if isPython3():
-		if isString(binData):
+	if is_python3():
+		if is_string(binData):
 			binData = binData.encode()
 	result = ""
 	uuContent = encodestring(binData).decode('utf-8').replace("\n","")
@@ -2289,7 +2289,7 @@ def uuEncode(binData, width = 64):
 		result += part + "\n"
 	return result.strip()
 
-def setupModule(directory, moduleName, appendFile = None, includes = ["*.py"], excludes = []):
+def setup_module(directory, moduleName, appendFile = None, includes = ["*.py"], excludes = []):
 	""" This function is used to create an unique python script with a content of 
 	directory with many python files """
 	moduleHeader = '''#!/usr/bin/python
@@ -2329,19 +2329,19 @@ remove ("%(moduleName)s.zip")
 	
 	moduleFilename = moduleName + ".py"
 	moduleContent = BytesIO()
-	date = getTimeString()
+	date = get_time_string()
 
-	zipDir(moduleContent, directory, includes, excludes + [moduleFilename], False, [[moduleName, moduleName+"_lib"]])
+	zip_dir(moduleContent, directory, includes, excludes + [moduleFilename], False, [[moduleName, moduleName+"_lib"]])
 	
 	# Uuencode zipped module 
-	moduleContent = uuEncode(moduleContent.getvalue(), 8192)
+	moduleContent = uu_encode(moduleContent.getvalue(), 8192)
 	
 	# Write python module
 	output = open(moduleFilename, "w")
 	output.write(moduleHeader%locals())
 	
 	if appendFile != None:
-		if isString(appendFile):
+		if is_string(appendFile):
 			appendFile = [appendFile]
 		for file in appendFile:
 			content = open(file,"r").read()
@@ -2357,14 +2357,14 @@ def thread(core):
 	import threading
 	threading.Thread(target = core).start()
 
-def computeHash(string):
+def compute_hash(string):
 	""" Compute hash 
-	>>> print(computeHash("1234"))
+	>>> print(compute_hash("1234"))
 	49307
-	>>> print(computeHash(b"1234"))
+	>>> print(compute_hash(b"1234"))
 	49307
 	"""
-	if isBytes(string):
+	if is_bytes(string):
 		string = string.decode("latin-1")
 	hash_ = 63689
 	for char in string:
@@ -2461,8 +2461,8 @@ def grep(directory, include, findwhat, recursive=True, ignorecase=False, regexp=
 									
 	return result
 
-def usefulTestCleanUp():
-	""">>> removeDir("testunit")
+def useful_test_clean_up():
+	""">>> remove_dir("testunit")
 	"""
 
 if __name__ == "__main__":

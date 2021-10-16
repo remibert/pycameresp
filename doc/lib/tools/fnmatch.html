@@ -33,8 +33,9 @@ Extracted from cpython fnmatch.py</p>
 Extracted from cpython fnmatch.py &#34;&#34;&#34;
 import re
 
-previousPat = [None, None]
+previous_pat = [None, None]
 def fnmatch(name, pat):
+        &#34;&#34;&#34; Compare filenames &#34;&#34;&#34;
         if pat == &#34;*&#34;:
                 return True
         elif pat == &#34;*.*&#34;:
@@ -43,15 +44,16 @@ def fnmatch(name, pat):
                 else:
                         return False
         else:
-                global previousPat
-                if previousPat[0] == pat:
-                        res = previousPat[1]
+                global previous_pat
+                if previous_pat[0] == pat:
+                        res = previous_pat[1]
                 else:
                         res = translate(pat)
-                        previousPat =[pat, res]
+                        previous_pat =[pat, res]
                 return re.compile(res).match(name) is not None
 
 def escape(pattern):
+        &#34;&#34;&#34; Manage escape in pattern &#34;&#34;&#34;
         result = &#34;&#34;
         for char in pattern:
                 if char in &#39;()[]{}?*+-|^$\\.&amp;~# \t\n\r\v\f&#39;:
@@ -60,6 +62,7 @@ def escape(pattern):
         return result
 
 def translate(pat):
+        &#34;&#34;&#34; Translate pattern &#34;&#34;&#34;
         i, n = 0, len(pat)
         res = &#39;&#39;
         while i &lt; n:
@@ -122,12 +125,13 @@ def translate(pat):
 <span>def <span class="ident">escape</span></span>(<span>pattern)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Manage escape in pattern</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def escape(pattern):
+        &#34;&#34;&#34; Manage escape in pattern &#34;&#34;&#34;
         result = &#34;&#34;
         for char in pattern:
                 if char in &#39;()[]{}?*+-|^$\\.&amp;~# \t\n\r\v\f&#39;:
@@ -140,12 +144,13 @@ def translate(pat):
 <span>def <span class="ident">fnmatch</span></span>(<span>name, pat)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Compare filenames</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def fnmatch(name, pat):
+        &#34;&#34;&#34; Compare filenames &#34;&#34;&#34;
         if pat == &#34;*&#34;:
                 return True
         elif pat == &#34;*.*&#34;:
@@ -154,12 +159,12 @@ def translate(pat):
                 else:
                         return False
         else:
-                global previousPat
-                if previousPat[0] == pat:
-                        res = previousPat[1]
+                global previous_pat
+                if previous_pat[0] == pat:
+                        res = previous_pat[1]
                 else:
                         res = translate(pat)
-                        previousPat =[pat, res]
+                        previous_pat =[pat, res]
                 return re.compile(res).match(name) is not None</code></pre>
 </details>
 </dd>
@@ -167,12 +172,13 @@ def translate(pat):
 <span>def <span class="ident">translate</span></span>(<span>pat)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Translate pattern</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def translate(pat):
+        &#34;&#34;&#34; Translate pattern &#34;&#34;&#34;
         i, n = 0, len(pat)
         res = &#39;&#39;
         while i &lt; n:

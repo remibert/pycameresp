@@ -30,12 +30,12 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Sdcard management class &#34;&#34;&#34;
-from tools import useful
 try:
         import machine
 except:
         pass
 import uos
+from tools import useful
 
 class SdCard:
         &#34;&#34;&#34; Manage the sdcard &#34;&#34;&#34;
@@ -43,30 +43,30 @@ class SdCard:
         mountpoint = [&#34;&#34;]
 
         @staticmethod
-        def getMaxSize():
+        def get_max_size():
                 &#34;&#34;&#34; Return the maximal size of sdcard &#34;&#34;&#34;
-                if SdCard.isMounted():
-                        status = uos.statvfs(SdCard.getMountpoint())
+                if SdCard.is_mounted():
+                        status = uos.statvfs(SdCard.get_mountpoint())
                         return status[1]*status[2]
                 else:
                         return 0
 
         @staticmethod
-        def getFreeSize():
+        def get_free_size():
                 &#34;&#34;&#34; Return the free size of sdcard &#34;&#34;&#34;
-                if SdCard.isMounted():
-                        status = uos.statvfs(SdCard.getMountpoint())
+                if SdCard.is_mounted():
+                        status = uos.statvfs(SdCard.get_mountpoint())
                         return status[0]*status[3]
                 else:
                         return 0
 
         @staticmethod
-        def isMounted():
+        def is_mounted():
                 &#34;&#34;&#34; Indicates if the sd card is mounted &#34;&#34;&#34;
                 return SdCard.opened[0]
 
         @staticmethod
-        def getMountpoint():
+        def get_mountpoint():
                 &#34;&#34;&#34; Return the mount point &#34;&#34;&#34;
                 return SdCard.mountpoint[0]
 
@@ -74,7 +74,7 @@ class SdCard:
         def mount(mountpoint = &#34;/sd&#34;):
                 &#34;&#34;&#34; Mount sd card &#34;&#34;&#34;
                 result = False
-                if SdCard.isMounted() == False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
+                if SdCard.is_mounted() is False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
                         if useful.ismicropython():
                                 try:
                                         # If the sdcard not already mounted
@@ -89,16 +89,16 @@ class SdCard:
                                 SdCard.mountpoint[0] = mountpoint[1:]
                                 SdCard.opened[0] = True
                                 result = True
-                elif SdCard.isMounted():
+                elif SdCard.is_mounted():
                         if useful.ismicropython():
-                                if mountpoint == SdCard.getMountpoint():
+                                if mountpoint == SdCard.get_mountpoint():
                                         result = True
                         else:
                                 result = True
                 return result
 
         @staticmethod
-        def createFile(directory, filename, mode=&#34;w&#34;):
+        def create_file(directory, filename, mode=&#34;w&#34;):
                 &#34;&#34;&#34; Create file with directory &#34;&#34;&#34;
                 result = None
                 filepath = directory + &#34;/&#34; + filename
@@ -146,15 +146,15 @@ class SdCard:
         def save(directory, filename, data):
                 &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
                 result = False
-                if SdCard.isMounted():
+                if SdCard.is_mounted():
                         file = None
                         try:
-                                file = SdCard.createFile(SdCard.getMountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
+                                file = SdCard.create_file(SdCard.get_mountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
                                 file.write(data)
                                 file.close()
                                 result = True
                         except Exception as err:
-                                useful.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.getMountpoint(), directory, filename))
+                                useful.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
                         finally:
                                 if file is not None:
                                         file.close()
@@ -185,30 +185,30 @@ class SdCard:
         mountpoint = [&#34;&#34;]
 
         @staticmethod
-        def getMaxSize():
+        def get_max_size():
                 &#34;&#34;&#34; Return the maximal size of sdcard &#34;&#34;&#34;
-                if SdCard.isMounted():
-                        status = uos.statvfs(SdCard.getMountpoint())
+                if SdCard.is_mounted():
+                        status = uos.statvfs(SdCard.get_mountpoint())
                         return status[1]*status[2]
                 else:
                         return 0
 
         @staticmethod
-        def getFreeSize():
+        def get_free_size():
                 &#34;&#34;&#34; Return the free size of sdcard &#34;&#34;&#34;
-                if SdCard.isMounted():
-                        status = uos.statvfs(SdCard.getMountpoint())
+                if SdCard.is_mounted():
+                        status = uos.statvfs(SdCard.get_mountpoint())
                         return status[0]*status[3]
                 else:
                         return 0
 
         @staticmethod
-        def isMounted():
+        def is_mounted():
                 &#34;&#34;&#34; Indicates if the sd card is mounted &#34;&#34;&#34;
                 return SdCard.opened[0]
 
         @staticmethod
-        def getMountpoint():
+        def get_mountpoint():
                 &#34;&#34;&#34; Return the mount point &#34;&#34;&#34;
                 return SdCard.mountpoint[0]
 
@@ -216,7 +216,7 @@ class SdCard:
         def mount(mountpoint = &#34;/sd&#34;):
                 &#34;&#34;&#34; Mount sd card &#34;&#34;&#34;
                 result = False
-                if SdCard.isMounted() == False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
+                if SdCard.is_mounted() is False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
                         if useful.ismicropython():
                                 try:
                                         # If the sdcard not already mounted
@@ -231,16 +231,16 @@ class SdCard:
                                 SdCard.mountpoint[0] = mountpoint[1:]
                                 SdCard.opened[0] = True
                                 result = True
-                elif SdCard.isMounted():
+                elif SdCard.is_mounted():
                         if useful.ismicropython():
-                                if mountpoint == SdCard.getMountpoint():
+                                if mountpoint == SdCard.get_mountpoint():
                                         result = True
                         else:
                                 result = True
                 return result
 
         @staticmethod
-        def createFile(directory, filename, mode=&#34;w&#34;):
+        def create_file(directory, filename, mode=&#34;w&#34;):
                 &#34;&#34;&#34; Create file with directory &#34;&#34;&#34;
                 result = None
                 filepath = directory + &#34;/&#34; + filename
@@ -288,15 +288,15 @@ class SdCard:
         def save(directory, filename, data):
                 &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
                 result = False
-                if SdCard.isMounted():
+                if SdCard.is_mounted():
                         file = None
                         try:
-                                file = SdCard.createFile(SdCard.getMountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
+                                file = SdCard.create_file(SdCard.get_mountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
                                 file.write(data)
                                 file.close()
                                 result = True
                         except Exception as err:
-                                useful.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.getMountpoint(), directory, filename))
+                                useful.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
                         finally:
                                 if file is not None:
                                         file.close()
@@ -315,8 +315,8 @@ class SdCard:
 </dl>
 <h3>Static methods</h3>
 <dl>
-<dt id="lib.tools.sdcard.SdCard.createFile"><code class="name flex">
-<span>def <span class="ident">createFile</span></span>(<span>directory, filename, mode='w')</span>
+<dt id="lib.tools.sdcard.SdCard.create_file"><code class="name flex">
+<span>def <span class="ident">create_file</span></span>(<span>directory, filename, mode='w')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create file with directory</p></div>
@@ -325,7 +325,7 @@ class SdCard:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def createFile(directory, filename, mode=&#34;w&#34;):
+def create_file(directory, filename, mode=&#34;w&#34;):
         &#34;&#34;&#34; Create file with directory &#34;&#34;&#34;
         result = None
         filepath = directory + &#34;/&#34; + filename
@@ -370,8 +370,8 @@ def createFile(directory, filename, mode=&#34;w&#34;):
         return result</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.sdcard.SdCard.getFreeSize"><code class="name flex">
-<span>def <span class="ident">getFreeSize</span></span>(<span>)</span>
+<dt id="lib.tools.sdcard.SdCard.get_free_size"><code class="name flex">
+<span>def <span class="ident">get_free_size</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the free size of sdcard</p></div>
@@ -380,17 +380,17 @@ def createFile(directory, filename, mode=&#34;w&#34;):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def getFreeSize():
+def get_free_size():
         &#34;&#34;&#34; Return the free size of sdcard &#34;&#34;&#34;
-        if SdCard.isMounted():
-                status = uos.statvfs(SdCard.getMountpoint())
+        if SdCard.is_mounted():
+                status = uos.statvfs(SdCard.get_mountpoint())
                 return status[0]*status[3]
         else:
                 return 0</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.sdcard.SdCard.getMaxSize"><code class="name flex">
-<span>def <span class="ident">getMaxSize</span></span>(<span>)</span>
+<dt id="lib.tools.sdcard.SdCard.get_max_size"><code class="name flex">
+<span>def <span class="ident">get_max_size</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the maximal size of sdcard</p></div>
@@ -399,17 +399,17 @@ def getFreeSize():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def getMaxSize():
+def get_max_size():
         &#34;&#34;&#34; Return the maximal size of sdcard &#34;&#34;&#34;
-        if SdCard.isMounted():
-                status = uos.statvfs(SdCard.getMountpoint())
+        if SdCard.is_mounted():
+                status = uos.statvfs(SdCard.get_mountpoint())
                 return status[1]*status[2]
         else:
                 return 0</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.sdcard.SdCard.getMountpoint"><code class="name flex">
-<span>def <span class="ident">getMountpoint</span></span>(<span>)</span>
+<dt id="lib.tools.sdcard.SdCard.get_mountpoint"><code class="name flex">
+<span>def <span class="ident">get_mountpoint</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the mount point</p></div>
@@ -418,13 +418,13 @@ def getMaxSize():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def getMountpoint():
+def get_mountpoint():
         &#34;&#34;&#34; Return the mount point &#34;&#34;&#34;
         return SdCard.mountpoint[0]</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.sdcard.SdCard.isMounted"><code class="name flex">
-<span>def <span class="ident">isMounted</span></span>(<span>)</span>
+<dt id="lib.tools.sdcard.SdCard.is_mounted"><code class="name flex">
+<span>def <span class="ident">is_mounted</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the sd card is mounted</p></div>
@@ -433,7 +433,7 @@ def getMountpoint():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isMounted():
+def is_mounted():
         &#34;&#34;&#34; Indicates if the sd card is mounted &#34;&#34;&#34;
         return SdCard.opened[0]</code></pre>
 </details>
@@ -451,7 +451,7 @@ def isMounted():
 def mount(mountpoint = &#34;/sd&#34;):
         &#34;&#34;&#34; Mount sd card &#34;&#34;&#34;
         result = False
-        if SdCard.isMounted() == False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
+        if SdCard.is_mounted() is False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
                 if useful.ismicropython():
                         try:
                                 # If the sdcard not already mounted
@@ -466,9 +466,9 @@ def mount(mountpoint = &#34;/sd&#34;):
                         SdCard.mountpoint[0] = mountpoint[1:]
                         SdCard.opened[0] = True
                         result = True
-        elif SdCard.isMounted():
+        elif SdCard.is_mounted():
                 if useful.ismicropython():
-                        if mountpoint == SdCard.getMountpoint():
+                        if mountpoint == SdCard.get_mountpoint():
                                 result = True
                 else:
                         result = True
@@ -488,15 +488,15 @@ def mount(mountpoint = &#34;/sd&#34;):
 def save(directory, filename, data):
         &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
         result = False
-        if SdCard.isMounted():
+        if SdCard.is_mounted():
                 file = None
                 try:
-                        file = SdCard.createFile(SdCard.getMountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
+                        file = SdCard.create_file(SdCard.get_mountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
                         file.write(data)
                         file.close()
                         result = True
                 except Exception as err:
-                        useful.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.getMountpoint(), directory, filename))
+                        useful.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
                 finally:
                         if file is not None:
                                 file.close()
@@ -524,11 +524,11 @@ def save(directory, filename, data):
 <li>
 <h4><code><a title="lib.tools.sdcard.SdCard" href="#lib.tools.sdcard.SdCard">SdCard</a></code></h4>
 <ul class="two-column">
-<li><code><a title="lib.tools.sdcard.SdCard.createFile" href="#lib.tools.sdcard.SdCard.createFile">createFile</a></code></li>
-<li><code><a title="lib.tools.sdcard.SdCard.getFreeSize" href="#lib.tools.sdcard.SdCard.getFreeSize">getFreeSize</a></code></li>
-<li><code><a title="lib.tools.sdcard.SdCard.getMaxSize" href="#lib.tools.sdcard.SdCard.getMaxSize">getMaxSize</a></code></li>
-<li><code><a title="lib.tools.sdcard.SdCard.getMountpoint" href="#lib.tools.sdcard.SdCard.getMountpoint">getMountpoint</a></code></li>
-<li><code><a title="lib.tools.sdcard.SdCard.isMounted" href="#lib.tools.sdcard.SdCard.isMounted">isMounted</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.create_file" href="#lib.tools.sdcard.SdCard.create_file">create_file</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.get_free_size" href="#lib.tools.sdcard.SdCard.get_free_size">get_free_size</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.get_max_size" href="#lib.tools.sdcard.SdCard.get_max_size">get_max_size</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.get_mountpoint" href="#lib.tools.sdcard.SdCard.get_mountpoint">get_mountpoint</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.is_mounted" href="#lib.tools.sdcard.SdCard.is_mounted">is_mounted</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.mount" href="#lib.tools.sdcard.SdCard.mount">mount</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.mountpoint" href="#lib.tools.sdcard.SdCard.mountpoint">mountpoint</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.opened" href="#lib.tools.sdcard.SdCard.opened">opened</a></code></li>

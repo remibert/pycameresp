@@ -4,15 +4,15 @@
 from server.httpserver import HttpServer
 from server.server     import Server
 from htmltemplate      import *
-from webpage.mainpage  import mainFrame
+from webpage.mainpage  import main_frame
 from motion            import Historic
-from tools             import useful, lang
 from video             import Camera
+from tools             import useful, lang
 
-@HttpServer.addRoute(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera() and Camera.isActivated())
+@HttpServer.add_route(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
 	""" Historic motion detection page """
-	await Historic.getRoot()
+	await Historic.get_root()
 	if len(request.params) == 0:
 		detailled = False
 	else:
@@ -21,16 +21,16 @@ async def historic(request, response, args):
 		Tag(b"""
 		<script type='text/javascript'>
 
-		document.onkeydown = checkKey;
-		window.onload = loadHistoric;
+		document.onkeydown = check_key;
+		window.onload = load_historic;
 
 		var historic = null;
 		var images = [];
-		var currentId = 0;
-		var lastId = 0;
+		var current_id = 0;
+		var last_id = 0;
 		var previousId = 0;
-		var historicRequest = new XMLHttpRequest();
-		var imageRequest    = new XMLHttpRequest();
+		var historic_request = new XMLHttpRequest();
+		var image_request    = new XMLHttpRequest();
 
 		setInterval(show, 200);
   
@@ -57,40 +57,40 @@ async def historic(request, response, args):
 			a.click();
 		}
 
-		function downloadMotion()
+		function download_motion()
 		{
-			download("/historic/download/" + historic[currentId][MOTION_FILENAME]);
+			download("/historic/download/" + historic[current_id][MOTION_FILENAME]);
 		}
 
-		function loadHistoric()
+		function load_historic()
 		{
 			var canvas = document.getElementById('motion'); 
-			canvas.addEventListener("mousedown", function (e) { getClickPosition(canvas, e); });
-			historicRequest.onreadystatechange = historicLoaded;
-			historicRequest.open("GET","historic/historic.json",true);
-			historicRequest.send();
+			canvas.addEventListener("mousedown", function (e) { get_click_position(canvas, e); });
+			historic_request.onreadystatechange = historic_loaded;
+			historic_request.open("GET","historic/historic.json",true);
+			historic_request.send();
 		}
 
-		function historicLoaded() 
+		function historic_loaded() 
 		{
-			if (historicRequest.readyState === XMLHttpRequest.DONE)
+			if (historic_request.readyState === XMLHttpRequest.DONE)
 			{
-				if (historicRequest.status === 200)
+				if (historic_request.status === 200)
 				{
-					historic = JSON.parse(historicRequest.responseText);
-					loadImage();
+					historic = JSON.parse(historic_request.responseText);
+					load_image();
 				}
 			}
 		}
 
-		function loadImage()
+		function load_image()
 		{
 			if (historic.length > 0)
 			{
-				var motion = historic[lastId];
-				imageRequest.onreadystatechange = imageLoaded;
-				imageRequest.open("GET","/historic/images/" + motion[MOTION_FILENAME],true);
-				imageRequest.send();
+				var motion = historic[last_id];
+				image_request.onreadystatechange = image_loaded;
+				image_request.open("GET","/historic/images/" + motion[MOTION_FILENAME],true);
+				image_request.send();
 			}
 			else
 			{
@@ -101,31 +101,31 @@ async def historic(request, response, args):
 			}
 		}
 
-		function imageLoaded()
+		function image_loaded()
 		{
-			if (imageRequest.readyState === XMLHttpRequest.DONE)
+			if (image_request.readyState === XMLHttpRequest.DONE)
 			{
-				if (imageRequest.status === 200)
+				if (image_request.status === 200)
 				{
-					var motion = historic[lastId];
+					var motion = historic[last_id];
 					var image = new Image();
-					image.id     = lastId;
-					image.src    = 'data:image/jpeg;base64,' + imageRequest.response;
+					image.id     = last_id;
+					image.src    = 'data:image/jpeg;base64,' + image_request.response;
 					image.width  = motion[MOTION_WIDTH] /15;
 					image.height = motion[MOTION_HEIGHT]/15;
-					image.alt    = getName(motion[MOTION_FILENAME]);
-					image.title  = getName(motion[MOTION_FILENAME]);
+					image.alt    = get_name(motion[MOTION_FILENAME]);
+					image.title  = get_name(motion[MOTION_FILENAME]);
 					image.style  = "padding: 1px;";
 					image.onclick = e => 
 						{
-							clickMotion(parseInt(e.target.id,10));
+							click_motion(parseInt(e.target.id,10));
 						};
 					images.push(image);
 					document.getElementById('motions').appendChild(image);
-					lastId = lastId + 1;
-					if (lastId < historic.length-1)
+					last_id = last_id + 1;
+					if (last_id < historic.length-1)
 					{
-						setTimeout(loadImage, 1);
+						setTimeout(load_image, 1);
 					}
 				}
 			}
@@ -133,10 +133,10 @@ async def historic(request, response, args):
 
 		function show()
 		{
-			showMotion(currentId);
+			show_motion(current_id);
 		}
 
-		function showMotion(id)
+		function show_motion(id)
 		{
 			var motion = historic[id];
 			var ctx = document.getElementById('motion').getContext('2d');
@@ -213,7 +213,7 @@ async def historic(request, response, args):
 			// Show text image
 			ctx.font = '20px monospace';
 			ctx.fillStyle = "red";
-			ctx.fillText(getName(motion[MOTION_FILENAME]), 10, 20);
+			ctx.fillText(get_name(motion[MOTION_FILENAME]), 10, 20);
 
 			// Show arrows
 			ctx.fillStyle = 'rgba(255,255,255,10)';
@@ -225,7 +225,7 @@ async def historic(request, response, args):
 		}
 
 		// Convert the filename into text displayed
-		function getName(filename)
+		function get_name(filename)
 		{
 			filename = filename.split(".")[0];
 			lst = filename.split("/");
@@ -248,43 +248,43 @@ async def historic(request, response, args):
 			return result;
 		}
 
-		function clickMotion(id)
+		function click_motion(id)
 		{
-			currentId = id;
-			showMotion(id);
+			current_id = id;
+			show_motion(id);
 		}
 
-		function firstMotion()
+		function first_motion()
 		{
-			currentId = 0;
-			showMotion(currentId);
+			current_id = 0;
+			show_motion(current_id);
 		}
 
-		function lastMotion()
+		function last_motion()
 		{
-			currentId = lastId-1;
-			showMotion(currentId);
+			current_id = last_id-1;
+			show_motion(current_id);
 		}
 
-		function nextMotion()
+		function next_motion()
 		{
-			if (currentId + 1 < lastId)
+			if (current_id + 1 < last_id)
 			{
-				currentId = currentId + 1;
-				showMotion(currentId);
+				current_id = current_id + 1;
+				show_motion(current_id);
 			}
 		}
 
-		function previousMotion()
+		function previous_motion()
 		{
-			if (currentId > 0)
+			if (current_id > 0)
 			{
-				currentId = currentId -1;
-				showMotion(currentId);
+				current_id = current_id -1;
+				show_motion(current_id);
 			}
 		}
 
-		function checkKey(e)
+		function check_key(e)
 		{
 			e = e || window.event;
 
@@ -296,11 +296,11 @@ async def historic(request, response, args):
 			}
 			else if (e.keyCode == '37') // left arrow
 			{
-				previousMotion();
+				previous_motion();
 			}
 			else if (e.keyCode == '39')// right arrow
 			{
-				nextMotion();
+				next_motion();
 			}
 			else if (e.keyCode == '35') // end
 			{
@@ -310,15 +310,15 @@ async def historic(request, response, args):
 			}
 			else if (e.keyCode == '33') // page up
 			{
-				firstMotion();
+				first_motion();
 			}
 			else if (e.keyCode == '34') // page down
 			{
-				lastMotion();
+				last_motion();
 			}
 		}
 
-		function getClickPosition(canvas, e)
+		function get_click_position(canvas, e)
 		{
 			const rect = canvas.getBoundingClientRect();
 			const x = e.clientX - rect.left;
@@ -330,7 +330,7 @@ async def historic(request, response, args):
 				// Download image
 				if (confirm("Download this image ?"))
 				{
-					downloadMotion();
+					download_motion();
 				}
 			}
 			else
@@ -341,22 +341,22 @@ async def historic(request, response, args):
 					{
 						if (x < y)
 						{
-							previousMotion();
+							previous_motion();
 						}
 						else
 						{
-							firstMotion();
+							first_motion();
 						}
 					}
 					else
 					{
 						if (x < rect.height - y)
 						{
-							previousMotion();
+							previous_motion();
 						}
 						else
 						{
-							lastMotion();
+							last_motion();
 						}
 					}
 				}
@@ -366,22 +366,22 @@ async def historic(request, response, args):
 					{
 						if (rect.width - x < y)
 						{
-							nextMotion();
+							next_motion();
 						}
 						else
 						{
-							firstMotion();
+							first_motion();
 						}
 					}
 					else
 					{
 						if (rect.width - x < rect.height - y)
 						{
-							nextMotion();
+							next_motion();
 						}
 						else
 						{
-							lastMotion();
+							last_motion();
 						}
 					}
 				}
@@ -394,45 +394,45 @@ async def historic(request, response, args):
 		<div id="motions"></div>
 		"""%(lang.historic_not_available, detailled, 800,600)),
 	]
-	page = mainFrame(request, response, args,lang.last_motion_detections,pageContent)
-	await response.sendPage(page)
+	page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
+	await response.send_page(page)
 
-@HttpServer.addRoute(b'/historic/historic.json', available=useful.iscamera() and Camera.isActivated())
-async def historicJson(request, response, args):
+@HttpServer.add_route(b'/historic/historic.json', available=useful.iscamera() and Camera.is_activated())
+async def historic_json(request, response, args):
 	""" Send historic json file """
-	Server.slowDown()
-	if await Historic.locked() == False:
-		await response.sendBuffer(b"historic.json", await Historic.getJson())
+	Server.slow_down()
+	if await Historic.locked() is False:
+		await response.send_buffer(b"historic.json", await Historic.get_json())
 	else:
-		await response.sendBuffer(b"historic.json", b"[]")
+		await response.send_buffer(b"historic.json", b"[]")
 
-@HttpServer.addRoute(b'/historic/images/.*', available=useful.iscamera() and Camera.isActivated())
-async def historicImage(request, response, args):
+@HttpServer.add_route(b'/historic/images/.*', available=useful.iscamera() and Camera.is_activated())
+async def historic_image(request, response, args):
 	""" Send historic image """
-	Server.slowDown()
+	Server.slow_down()
 	reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
 	try:
 		if reserved:
 			await Historic.acquire()
-			await response.sendFile(useful.tostrings(request.path[len("/historic/images/"):]), base64=True)
+			await response.send_file(useful.tostrings(request.path[len("/historic/images/"):]), base64=True)
 		else:
-			await response.sendError(status=b"404", content=b"Image not found")
+			await response.send_error(status=b"404", content=b"Image not found")
 	finally:
 		if reserved:
 			await Historic.release()
 			await Camera.unreserve(Historic)
 
-@HttpServer.addRoute(b'/historic/download/.*', available=useful.iscamera() and Camera.isActivated())
-async def downloadImage(request, response, args):
+@HttpServer.add_route(b'/historic/download/.*', available=useful.iscamera() and Camera.is_activated())
+async def download_image(request, response, args):
 	""" Download historic image """
-	Server.slowDown()
+	Server.slow_down()
 	reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
 	try:
 		if reserved:
 			await Historic.acquire()
-			await response.sendFile(useful.tostrings(request.path[len("/historic/download/"):]), base64=False)
+			await response.send_file(useful.tostrings(request.path[len("/historic/download/"):]), base64=False)
 		else:
-			await response.sendError(status=b"404", content=b"Image not found")
+			await response.send_error(status=b"404", content=b"Image not found")
 	finally:
 		if reserved:
 			await Historic.release()

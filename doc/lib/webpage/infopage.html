@@ -36,30 +36,30 @@ import machine
 import esp
 from server.httpserver import HttpServer
 from htmltemplate      import *
-from webpage.mainpage  import mainFrame
+from webpage.mainpage  import main_frame
 from tools             import useful, lang, builddate
 
 
-@HttpServer.addRoute(b&#39;/&#39;, menu=lang.menu_system, item=lang.item_information)
+@HttpServer.add_route(b&#39;/&#39;, menu=lang.menu_system, item=lang.item_information)
 async def index(request, response, args):
         &#34;&#34;&#34; Function define the web page to display all informations of the board &#34;&#34;&#34;
         try:
                 # pylint: disable=no-member
                 allocated = gc.mem_alloc()
                 freed     = gc.mem_free()
-                memAlloc = useful.sizeToBytes(allocated)
-                memFree  = useful.sizeToBytes(freed)
-                memTotal = useful.sizeToBytes(allocated + freed)
+                mem_alloc = useful.size_to_bytes(allocated)
+                mem_free  = useful.size_to_bytes(freed)
+                mem_total = useful.size_to_bytes(allocated + freed)
         except:
-                memAlloc = lang.unavailable
-                memFree  = lang.unavailable
-                memTotal = lang.unavailable
+                mem_alloc = lang.unavailable
+                mem_free  = lang.unavailable
+                mem_total = lang.unavailable
         try:
-                flashUser = useful.sizeToBytes(esp.flash_user_start())
-                flashSize = useful.sizeToBytes(esp.flash_size())
+                flash_user = useful.size_to_bytes(esp.flash_user_start())
+                flash_size = useful.size_to_bytes(esp.flash_size())
         except:
-                flashUser = lang.unavailable
-                flashSize = lang.unavailable
+                flash_user = lang.unavailable
+                flash_size = lang.unavailable
 
         try:
                 frequency = b&#34;%d&#34;%(machine.freq()//1000000)
@@ -70,27 +70,27 @@ async def index(request, response, args):
                 platform = useful.tobytes(sys.platform)
         except:
                 platform = lang.unavailable
-  
+
         try:
                 uptime = useful.tobytes(useful.uptime(lang.days))
         except:
                 uptime = b&#34;&#34;
 
-        date = useful.dateToBytes()
+        date = useful.date_to_bytes()
 
-        page = mainFrame(request, response, args, lang.device_informations,
+        page = main_frame(request, response, args, lang.device_informations,
                 Edit(text=lang.date,             value=date,           disabled=True),
                 Edit(text=lang.build_date,       value=builddate.date, disabled=True),
                 Edit(text=lang.uptime,           value=uptime,         disabled=True),
                 Edit(text=lang.platform,         value=platform,       disabled=True),
                 Edit(text=lang.frequency,        value=frequency,      disabled=True),
-                Edit(text=lang.memory_free,      value=memFree,        disabled=True),
-                Edit(text=lang.memory_allocated, value=memAlloc,       disabled=True),
-                Edit(text=lang.memory_total,     value=memTotal,       disabled=True),
-                Edit(text=lang.flash_user,       value=flashUser,      disabled=True),
-                Edit(text=lang.flash_size,       value=flashSize,      disabled=True))
+                Edit(text=lang.memory_free,      value=mem_free,        disabled=True),
+                Edit(text=lang.memory_allocated, value=mem_alloc,       disabled=True),
+                Edit(text=lang.memory_total,     value=mem_total,       disabled=True),
+                Edit(text=lang.flash_user,       value=flash_user,      disabled=True),
+                Edit(text=lang.flash_size,       value=flash_size,      disabled=True))
 
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </section>
 <section>
@@ -109,26 +109,26 @@ async def index(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/&#39;, menu=lang.menu_system, item=lang.item_information)
+<pre><code class="python">@HttpServer.add_route(b&#39;/&#39;, menu=lang.menu_system, item=lang.item_information)
 async def index(request, response, args):
         &#34;&#34;&#34; Function define the web page to display all informations of the board &#34;&#34;&#34;
         try:
                 # pylint: disable=no-member
                 allocated = gc.mem_alloc()
                 freed     = gc.mem_free()
-                memAlloc = useful.sizeToBytes(allocated)
-                memFree  = useful.sizeToBytes(freed)
-                memTotal = useful.sizeToBytes(allocated + freed)
+                mem_alloc = useful.size_to_bytes(allocated)
+                mem_free  = useful.size_to_bytes(freed)
+                mem_total = useful.size_to_bytes(allocated + freed)
         except:
-                memAlloc = lang.unavailable
-                memFree  = lang.unavailable
-                memTotal = lang.unavailable
+                mem_alloc = lang.unavailable
+                mem_free  = lang.unavailable
+                mem_total = lang.unavailable
         try:
-                flashUser = useful.sizeToBytes(esp.flash_user_start())
-                flashSize = useful.sizeToBytes(esp.flash_size())
+                flash_user = useful.size_to_bytes(esp.flash_user_start())
+                flash_size = useful.size_to_bytes(esp.flash_size())
         except:
-                flashUser = lang.unavailable
-                flashSize = lang.unavailable
+                flash_user = lang.unavailable
+                flash_size = lang.unavailable
 
         try:
                 frequency = b&#34;%d&#34;%(machine.freq()//1000000)
@@ -139,27 +139,27 @@ async def index(request, response, args):
                 platform = useful.tobytes(sys.platform)
         except:
                 platform = lang.unavailable
-  
+
         try:
                 uptime = useful.tobytes(useful.uptime(lang.days))
         except:
                 uptime = b&#34;&#34;
 
-        date = useful.dateToBytes()
+        date = useful.date_to_bytes()
 
-        page = mainFrame(request, response, args, lang.device_informations,
+        page = main_frame(request, response, args, lang.device_informations,
                 Edit(text=lang.date,             value=date,           disabled=True),
                 Edit(text=lang.build_date,       value=builddate.date, disabled=True),
                 Edit(text=lang.uptime,           value=uptime,         disabled=True),
                 Edit(text=lang.platform,         value=platform,       disabled=True),
                 Edit(text=lang.frequency,        value=frequency,      disabled=True),
-                Edit(text=lang.memory_free,      value=memFree,        disabled=True),
-                Edit(text=lang.memory_allocated, value=memAlloc,       disabled=True),
-                Edit(text=lang.memory_total,     value=memTotal,       disabled=True),
-                Edit(text=lang.flash_user,       value=flashUser,      disabled=True),
-                Edit(text=lang.flash_size,       value=flashSize,      disabled=True))
+                Edit(text=lang.memory_free,      value=mem_free,        disabled=True),
+                Edit(text=lang.memory_allocated, value=mem_alloc,       disabled=True),
+                Edit(text=lang.memory_total,     value=mem_total,       disabled=True),
+                Edit(text=lang.flash_user,       value=flash_user,      disabled=True),
+                Edit(text=lang.flash_size,       value=flash_size,      disabled=True))
 
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </dd>
 </dl>

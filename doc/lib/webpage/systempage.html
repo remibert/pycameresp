@@ -34,69 +34,69 @@ from server.httpserver import HttpServer
 from server.server     import Server
 from wifi.station      import Station
 from htmltemplate      import *
-from webpage.mainpage  import mainFrame
+from webpage.mainpage  import main_frame
 from tools             import useful,lang,archiver
 
-@HttpServer.addRoute(b&#39;/system&#39;, menu=lang.menu_system, item=lang.item_system)
-async def systemPage(request, response, args):
+@HttpServer.add_route(b&#39;/system&#39;, menu=lang.menu_system, item=lang.item_system)
+async def system_page(request, response, args):
         &#34;&#34;&#34; Function define the web page to manage system of the board &#34;&#34;&#34;
-        page = mainFrame(request, response, args, lang.system_management_s%Station.getHostname(),
+        page = main_frame(request, response, args, lang.system_management_s%Station.get_hostname(),
                 Label(text=lang.configuration ),Br(),
-                ImportFile(text=lang.import_, path=b&#34;/system/importConfig&#34;, alert=lang.configuration_imported, accept=b&#34;.cfg&#34;),
-                ExportFile(text=lang.export, path=b&#34;/system/exportConfig&#34;, filename=b&#34;Config_%s.cfg&#34;%Station.getHostname()),
+                ImportFile(text=lang.import_, path=b&#34;/system/import_config&#34;, alert=lang.configuration_imported, accept=b&#34;.cfg&#34;),
+                ExportFile(text=lang.export, path=b&#34;/system/export_config&#34;, filename=b&#34;Config_%s.cfg&#34;%Station.get_hostname()),
 
                 Br(),Br(),Label(text=lang.file_system),Br(),
-                ImportFile(text=lang.import_, path=b&#34;/system/importFileSystem&#34;, alert=lang.import_in_progress, accept=b&#34;.cfs&#34;),
-                ExportFile(text=lang.export, path=b&#34;/system/exportFileSystem&#34;, filename=b&#34;FileSystem_%s.cfs&#34;%Station.getHostname()),
+                ImportFile(text=lang.import_, path=b&#34;/system/import_file_system&#34;, alert=lang.import_in_progress, accept=b&#34;.cfs&#34;),
+                ExportFile(text=lang.export, path=b&#34;/system/export_file_system&#34;, filename=b&#34;FileSystem_%s.cfs&#34;%Station.get_hostname()),
 
                 Br(),Br(),Label(text=lang.syslog),Br(),
-                ExportFile(text=lang.export, path=b&#34;/system/exportSyslog&#34;, filename=b&#34;Syslog_%s.log&#34;%Station.getHostname()),
+                ExportFile(text=lang.export, path=b&#34;/system/export_syslog&#34;, filename=b&#34;Syslog_%s.log&#34;%Station.get_hostname()),
 
                 Br(), Br(),Label(text=lang.reboot_device),Br(),
                 ButtonCmd(text=lang.reboot,path=b&#34;/system/reboot&#34;,confirm=lang.confirm_reboot, name=b&#34;reboot&#34;))
-        await response.sendPage(page)
+        await response.send_page(page)
 
-@HttpServer.addRoute(b&#39;/system/importConfig&#39;)
-async def importConfig(request, response, args):
+@HttpServer.add_route(b&#39;/system/import_config&#39;)
+async def import_config(request, response, args):
         &#34;&#34;&#34; Import configuration &#34;&#34;&#34;
-        Server.slowDown()
-        useful.importFiles(request.getContentFilename())
-        await response.sendOk()
+        Server.slow_down()
+        useful.import_files(request.get_content_filename())
+        await response.send_ok()
 
-@HttpServer.addRoute(b&#39;/system/exportConfig&#39;)
-async def exportConfig(request, response, args):
+@HttpServer.add_route(b&#39;/system/export_config&#39;)
+async def export_config(request, response, args):
         &#34;&#34;&#34; Export all configuration &#34;&#34;&#34;
-        Server.slowDown()
-        archiver.exportFiles(&#34;config.cfg&#34;, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False)
-        await response.sendFile(b&#34;config.cfg&#34;, headers=request.headers)
+        Server.slow_down()
+        archiver.export_files(&#34;config.cfg&#34;, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False)
+        await response.send_file(b&#34;config.cfg&#34;, headers=request.headers)
         useful.remove(&#34;config.cfg&#34;)
 
-@HttpServer.addRoute(b&#39;/system/importFileSystem&#39;)
-async def importFileSystem(request, response, args):
+@HttpServer.add_route(b&#39;/system/import_file_system&#39;)
+async def import_file_system(request, response, args):
         &#34;&#34;&#34; Import file system &#34;&#34;&#34;
-        Server.slowDown()
-        useful.importFiles(request.getContentFilename())
+        Server.slow_down()
+        useful.import_files(request.get_content_filename())
         await reboot(request, response, args)
 
-@HttpServer.addRoute(b&#39;/system/exportFileSystem&#39;)
-async def exportFileSystem(request, response, args):
+@HttpServer.add_route(b&#39;/system/export_file_system&#39;)
+async def export_file_system(request, response, args):
         &#34;&#34;&#34; Export file system &#34;&#34;&#34;
-        Server.slowDown()
-        archiver.exportFiles(&#34;fileSystem.cfs&#34;, path=&#34;./&#34;,pattern=&#34;*.*&#34;, recursive=True)
-        await response.sendFile(b&#34;fileSystem.cfs&#34;, headers=request.headers)
+        Server.slow_down()
+        archiver.export_files(&#34;fileSystem.cfs&#34;, path=&#34;./&#34;,pattern=&#34;*.*&#34;, recursive=True)
+        await response.send_file(b&#34;fileSystem.cfs&#34;, headers=request.headers)
         useful.remove(&#34;fileSystem.cfs&#34;)
 
-@HttpServer.addRoute(b&#39;/system/exportSyslog&#39;)
-async def exportSyslog(request, response, args):
+@HttpServer.add_route(b&#39;/system/export_syslog&#39;)
+async def export_syslog(request, response, args):
         &#34;&#34;&#34; Export file system &#34;&#34;&#34;
-        Server.slowDown()
-        await response.sendFile([b&#34;syslog.log.4&#34;,b&#34;syslog.log.3&#34;,b&#34;syslog.log.2&#34;,b&#34;syslog.log.1&#34;,b&#34;syslog.log&#34;], headers=request.headers)
+        Server.slow_down()
+        await response.send_file([b&#34;syslog.log.4&#34;,b&#34;syslog.log.3&#34;,b&#34;syslog.log.2&#34;,b&#34;syslog.log.1&#34;,b&#34;syslog.log&#34;], headers=request.headers)
 
-@HttpServer.addRoute(b&#39;/system/reboot&#39;)
+@HttpServer.add_route(b&#39;/system/reboot&#39;)
 async def reboot(request, response, args):
         &#34;&#34;&#34; Reboot device &#34;&#34;&#34;
         try:
-                await response.sendOk()
+                await response.send_ok()
         except Exception as err:
                 useful.syslog(err)
         try:
@@ -112,8 +112,8 @@ async def reboot(request, response, args):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.webpage.systempage.exportConfig"><code class="name flex">
-<span>async def <span class="ident">exportConfig</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.systempage.export_config"><code class="name flex">
+<span>async def <span class="ident">export_config</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Export all configuration</p></div>
@@ -121,17 +121,17 @@ async def reboot(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/system/exportConfig&#39;)
-async def exportConfig(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/system/export_config&#39;)
+async def export_config(request, response, args):
         &#34;&#34;&#34; Export all configuration &#34;&#34;&#34;
-        Server.slowDown()
-        archiver.exportFiles(&#34;config.cfg&#34;, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False)
-        await response.sendFile(b&#34;config.cfg&#34;, headers=request.headers)
+        Server.slow_down()
+        archiver.export_files(&#34;config.cfg&#34;, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False)
+        await response.send_file(b&#34;config.cfg&#34;, headers=request.headers)
         useful.remove(&#34;config.cfg&#34;)</code></pre>
 </details>
 </dd>
-<dt id="lib.webpage.systempage.exportFileSystem"><code class="name flex">
-<span>async def <span class="ident">exportFileSystem</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.systempage.export_file_system"><code class="name flex">
+<span>async def <span class="ident">export_file_system</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Export file system</p></div>
@@ -139,17 +139,17 @@ async def exportConfig(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/system/exportFileSystem&#39;)
-async def exportFileSystem(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/system/export_file_system&#39;)
+async def export_file_system(request, response, args):
         &#34;&#34;&#34; Export file system &#34;&#34;&#34;
-        Server.slowDown()
-        archiver.exportFiles(&#34;fileSystem.cfs&#34;, path=&#34;./&#34;,pattern=&#34;*.*&#34;, recursive=True)
-        await response.sendFile(b&#34;fileSystem.cfs&#34;, headers=request.headers)
+        Server.slow_down()
+        archiver.export_files(&#34;fileSystem.cfs&#34;, path=&#34;./&#34;,pattern=&#34;*.*&#34;, recursive=True)
+        await response.send_file(b&#34;fileSystem.cfs&#34;, headers=request.headers)
         useful.remove(&#34;fileSystem.cfs&#34;)</code></pre>
 </details>
 </dd>
-<dt id="lib.webpage.systempage.exportSyslog"><code class="name flex">
-<span>async def <span class="ident">exportSyslog</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.systempage.export_syslog"><code class="name flex">
+<span>async def <span class="ident">export_syslog</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Export file system</p></div>
@@ -157,15 +157,15 @@ async def exportFileSystem(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/system/exportSyslog&#39;)
-async def exportSyslog(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/system/export_syslog&#39;)
+async def export_syslog(request, response, args):
         &#34;&#34;&#34; Export file system &#34;&#34;&#34;
-        Server.slowDown()
-        await response.sendFile([b&#34;syslog.log.4&#34;,b&#34;syslog.log.3&#34;,b&#34;syslog.log.2&#34;,b&#34;syslog.log.1&#34;,b&#34;syslog.log&#34;], headers=request.headers)</code></pre>
+        Server.slow_down()
+        await response.send_file([b&#34;syslog.log.4&#34;,b&#34;syslog.log.3&#34;,b&#34;syslog.log.2&#34;,b&#34;syslog.log.1&#34;,b&#34;syslog.log&#34;], headers=request.headers)</code></pre>
 </details>
 </dd>
-<dt id="lib.webpage.systempage.importConfig"><code class="name flex">
-<span>async def <span class="ident">importConfig</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.systempage.import_config"><code class="name flex">
+<span>async def <span class="ident">import_config</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Import configuration</p></div>
@@ -173,16 +173,16 @@ async def exportSyslog(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/system/importConfig&#39;)
-async def importConfig(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/system/import_config&#39;)
+async def import_config(request, response, args):
         &#34;&#34;&#34; Import configuration &#34;&#34;&#34;
-        Server.slowDown()
-        useful.importFiles(request.getContentFilename())
-        await response.sendOk()</code></pre>
+        Server.slow_down()
+        useful.import_files(request.get_content_filename())
+        await response.send_ok()</code></pre>
 </details>
 </dd>
-<dt id="lib.webpage.systempage.importFileSystem"><code class="name flex">
-<span>async def <span class="ident">importFileSystem</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.systempage.import_file_system"><code class="name flex">
+<span>async def <span class="ident">import_file_system</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Import file system</p></div>
@@ -190,11 +190,11 @@ async def importConfig(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/system/importFileSystem&#39;)
-async def importFileSystem(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/system/import_file_system&#39;)
+async def import_file_system(request, response, args):
         &#34;&#34;&#34; Import file system &#34;&#34;&#34;
-        Server.slowDown()
-        useful.importFiles(request.getContentFilename())
+        Server.slow_down()
+        useful.import_files(request.get_content_filename())
         await reboot(request, response, args)</code></pre>
 </details>
 </dd>
@@ -207,11 +207,11 @@ async def importFileSystem(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/system/reboot&#39;)
+<pre><code class="python">@HttpServer.add_route(b&#39;/system/reboot&#39;)
 async def reboot(request, response, args):
         &#34;&#34;&#34; Reboot device &#34;&#34;&#34;
         try:
-                await response.sendOk()
+                await response.send_ok()
         except Exception as err:
                 useful.syslog(err)
         try:
@@ -220,8 +220,8 @@ async def reboot(request, response, args):
                 useful.syslog(err)</code></pre>
 </details>
 </dd>
-<dt id="lib.webpage.systempage.systemPage"><code class="name flex">
-<span>async def <span class="ident">systemPage</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.systempage.system_page"><code class="name flex">
+<span>async def <span class="ident">system_page</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function define the web page to manage system of the board</p></div>
@@ -229,24 +229,24 @@ async def reboot(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/system&#39;, menu=lang.menu_system, item=lang.item_system)
-async def systemPage(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/system&#39;, menu=lang.menu_system, item=lang.item_system)
+async def system_page(request, response, args):
         &#34;&#34;&#34; Function define the web page to manage system of the board &#34;&#34;&#34;
-        page = mainFrame(request, response, args, lang.system_management_s%Station.getHostname(),
+        page = main_frame(request, response, args, lang.system_management_s%Station.get_hostname(),
                 Label(text=lang.configuration ),Br(),
-                ImportFile(text=lang.import_, path=b&#34;/system/importConfig&#34;, alert=lang.configuration_imported, accept=b&#34;.cfg&#34;),
-                ExportFile(text=lang.export, path=b&#34;/system/exportConfig&#34;, filename=b&#34;Config_%s.cfg&#34;%Station.getHostname()),
+                ImportFile(text=lang.import_, path=b&#34;/system/import_config&#34;, alert=lang.configuration_imported, accept=b&#34;.cfg&#34;),
+                ExportFile(text=lang.export, path=b&#34;/system/export_config&#34;, filename=b&#34;Config_%s.cfg&#34;%Station.get_hostname()),
 
                 Br(),Br(),Label(text=lang.file_system),Br(),
-                ImportFile(text=lang.import_, path=b&#34;/system/importFileSystem&#34;, alert=lang.import_in_progress, accept=b&#34;.cfs&#34;),
-                ExportFile(text=lang.export, path=b&#34;/system/exportFileSystem&#34;, filename=b&#34;FileSystem_%s.cfs&#34;%Station.getHostname()),
+                ImportFile(text=lang.import_, path=b&#34;/system/import_file_system&#34;, alert=lang.import_in_progress, accept=b&#34;.cfs&#34;),
+                ExportFile(text=lang.export, path=b&#34;/system/export_file_system&#34;, filename=b&#34;FileSystem_%s.cfs&#34;%Station.get_hostname()),
 
                 Br(),Br(),Label(text=lang.syslog),Br(),
-                ExportFile(text=lang.export, path=b&#34;/system/exportSyslog&#34;, filename=b&#34;Syslog_%s.log&#34;%Station.getHostname()),
+                ExportFile(text=lang.export, path=b&#34;/system/export_syslog&#34;, filename=b&#34;Syslog_%s.log&#34;%Station.get_hostname()),
 
                 Br(), Br(),Label(text=lang.reboot_device),Br(),
                 ButtonCmd(text=lang.reboot,path=b&#34;/system/reboot&#34;,confirm=lang.confirm_reboot, name=b&#34;reboot&#34;))
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </dd>
 </dl>
@@ -267,13 +267,13 @@ async def systemPage(request, response, args):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
-<li><code><a title="lib.webpage.systempage.exportConfig" href="#lib.webpage.systempage.exportConfig">exportConfig</a></code></li>
-<li><code><a title="lib.webpage.systempage.exportFileSystem" href="#lib.webpage.systempage.exportFileSystem">exportFileSystem</a></code></li>
-<li><code><a title="lib.webpage.systempage.exportSyslog" href="#lib.webpage.systempage.exportSyslog">exportSyslog</a></code></li>
-<li><code><a title="lib.webpage.systempage.importConfig" href="#lib.webpage.systempage.importConfig">importConfig</a></code></li>
-<li><code><a title="lib.webpage.systempage.importFileSystem" href="#lib.webpage.systempage.importFileSystem">importFileSystem</a></code></li>
+<li><code><a title="lib.webpage.systempage.export_config" href="#lib.webpage.systempage.export_config">export_config</a></code></li>
+<li><code><a title="lib.webpage.systempage.export_file_system" href="#lib.webpage.systempage.export_file_system">export_file_system</a></code></li>
+<li><code><a title="lib.webpage.systempage.export_syslog" href="#lib.webpage.systempage.export_syslog">export_syslog</a></code></li>
+<li><code><a title="lib.webpage.systempage.import_config" href="#lib.webpage.systempage.import_config">import_config</a></code></li>
+<li><code><a title="lib.webpage.systempage.import_file_system" href="#lib.webpage.systempage.import_file_system">import_file_system</a></code></li>
 <li><code><a title="lib.webpage.systempage.reboot" href="#lib.webpage.systempage.reboot">reboot</a></code></li>
-<li><code><a title="lib.webpage.systempage.systemPage" href="#lib.webpage.systempage.systemPage">systemPage</a></code></li>
+<li><code><a title="lib.webpage.systempage.system_page" href="#lib.webpage.systempage.system_page">system_page</a></code></li>
 </ul>
 </li>
 </ul>

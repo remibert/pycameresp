@@ -36,11 +36,11 @@ See https://www.pushover.net &#34;&#34;&#34;
 
 import sys
 sys.path.append(&#34;lib&#34;)
-from tools import useful, jsonconfig
 import uasyncio
 from server.stream import *
 from server.httprequest import *
 import wifi
+from tools import useful, jsonconfig
 
 class PushOverConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Configuration of the pushover &#34;&#34;&#34;
@@ -57,7 +57,7 @@ class Notification:
                 &#34;&#34;&#34; Constructor
                 host : hostname of pushover (b&#34;api.pushover.net&#34;)
                 port : port of pushover (80)
-                token : pushover token (you must create it on the web site http://www.pushover.net) 
+                token : pushover token (you must create it on the web site http://www.pushover.net)
                 user : pushover user (you must create it on the web site http://www.pushover.net) &#34;&#34;&#34;
                 self.token = token
                 self.user  = user
@@ -69,37 +69,37 @@ class Notification:
                 message : the message of notification (bytes field not a string)
                 image : the jpeg image or nothing (bytes field)&#34;&#34;&#34;
                 result = False
-                if wifi.Station.isActive():
+                if wifi.Station.is_active():
                         try:
                                 streamio = None
                                 # Open pushover connection
                                 reader,writer = await uasyncio.open_connection(useful.tostrings(self.host), self.port)
                                 streamio = Stream(reader, writer)
 
-                                # Create multipart request 
+                                # Create multipart request
                                 request = HttpRequest(None)
-                                request.setMethod(b&#34;POST&#34;)
-                                request.setPath  (b&#34;/1/messages.json&#34;)
-                                request.setHeader(b&#34;Host&#34;,self.host)
-                                request.setHeader(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
-                                request.setHeader(b&#34;Accept&#34;,         b&#34;*/*&#34;)
-                                request.setHeader(b&#34;Connection&#34;,     b&#34;keep-alive&#34;)
-                                request.setHeader(b&#34;Content-Type&#34;,   b&#34;multipart/form-data&#34;)
-                                
+                                request.set_method(b&#34;POST&#34;)
+                                request.set_path  (b&#34;/1/messages.json&#34;)
+                                request.set_header(b&#34;Host&#34;,self.host)
+                                request.set_header(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
+                                request.set_header(b&#34;Accept&#34;,         b&#34;*/*&#34;)
+                                request.set_header(b&#34;Connection&#34;,     b&#34;keep-alive&#34;)
+                                request.set_header(b&#34;Content-Type&#34;,   b&#34;multipart/form-data&#34;)
+
                                 # Add token in multipart request
-                                if self.token != None:
-                                        request.addPart(PartText(b&#34;token&#34;,self.token))
-                                
+                                if self.token is not None:
+                                        request.add_part(PartText(b&#34;token&#34;,self.token))
+
                                 # Add user in multipart request
-                                if self.user != None:
-                                        request.addPart(PartText(b&#34;user&#34;,self.user))
-                                
+                                if self.user is not None:
+                                        request.add_part(PartText(b&#34;user&#34;,self.user))
+
                                 # Add message text in multipart request
-                                request.addPart(PartText(b&#34;message&#34;, message))
-                
+                                request.add_part(PartText(b&#34;message&#34;, message))
+
                                 # Add image in multipart request
-                                if image != None:
-                                        request.addPart(PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
+                                if image is not None:
+                                        request.add_part(PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
 
                                 # Send request to pushover
                                 await request.send(streamio)
@@ -126,24 +126,24 @@ class Notification:
                         useful.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
                 return result
 
-async def asyncNotify(user, token, message, image=None, display=True):
+async def async_notify(user, token, message, image=None, display=True):
         &#34;&#34;&#34; Asyncio notification function (only in asyncio) &#34;&#34;&#34;
         notification = Notification(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
-        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.getHostname(), message), image, display)
+        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.get_hostname(), useful.tobytes(message)), image, display)
 
 def notify(user, token, message, image=None):
         &#34;&#34;&#34; Notification function &#34;&#34;&#34;
         loop = uasyncio.get_event_loop()
-        loop.run_until_complete(asyncNotify(user=user, token=token, message=message, image=image))
+        loop.run_until_complete(async_notify(user=user, token=token, message=message, image=image))
 
-async def notifyMessage(message, image = None, forced=False, display=True):
+async def notify_message(message, image = None, forced=False, display=True):
         &#34;&#34;&#34; Notify message &#34;&#34;&#34;
         config = PushOverConfig()
-        if config.load() == False:
+        if config.load() is False:
                 config.save()
-        
+
         if config.activated or forced:
-                result = await asyncNotify(config.user, config.token, message, image, display=True)
+                result = await async_notify(config.user, config.token, message, image, display=True)
         else:
                 result = None
         return result</code></pre>
@@ -156,8 +156,8 @@ async def notifyMessage(message, image = None, forced=False, display=True):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.server.pushover.asyncNotify"><code class="name flex">
-<span>async def <span class="ident">asyncNotify</span></span>(<span>user, token, message, image=None, display=True)</span>
+<dt id="lib.server.pushover.async_notify"><code class="name flex">
+<span>async def <span class="ident">async_notify</span></span>(<span>user, token, message, image=None, display=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Asyncio notification function (only in asyncio)</p></div>
@@ -165,10 +165,10 @@ async def notifyMessage(message, image = None, forced=False, display=True):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def asyncNotify(user, token, message, image=None, display=True):
+<pre><code class="python">async def async_notify(user, token, message, image=None, display=True):
         &#34;&#34;&#34; Asyncio notification function (only in asyncio) &#34;&#34;&#34;
         notification = Notification(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
-        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.getHostname(), message), image, display)</code></pre>
+        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.get_hostname(), useful.tobytes(message)), image, display)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.pushover.notify"><code class="name flex">
@@ -183,11 +183,11 @@ async def notifyMessage(message, image = None, forced=False, display=True):
 <pre><code class="python">def notify(user, token, message, image=None):
         &#34;&#34;&#34; Notification function &#34;&#34;&#34;
         loop = uasyncio.get_event_loop()
-        loop.run_until_complete(asyncNotify(user=user, token=token, message=message, image=image))</code></pre>
+        loop.run_until_complete(async_notify(user=user, token=token, message=message, image=image))</code></pre>
 </details>
 </dd>
-<dt id="lib.server.pushover.notifyMessage"><code class="name flex">
-<span>async def <span class="ident">notifyMessage</span></span>(<span>message, image=None, forced=False, display=True)</span>
+<dt id="lib.server.pushover.notify_message"><code class="name flex">
+<span>async def <span class="ident">notify_message</span></span>(<span>message, image=None, forced=False, display=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Notify message</p></div>
@@ -195,14 +195,14 @@ async def notifyMessage(message, image = None, forced=False, display=True):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def notifyMessage(message, image = None, forced=False, display=True):
+<pre><code class="python">async def notify_message(message, image = None, forced=False, display=True):
         &#34;&#34;&#34; Notify message &#34;&#34;&#34;
         config = PushOverConfig()
-        if config.load() == False:
+        if config.load() is False:
                 config.save()
-        
+
         if config.activated or forced:
-                result = await asyncNotify(config.user, config.token, message, image, display=True)
+                result = await async_notify(config.user, config.token, message, image, display=True)
         else:
                 result = None
         return result</code></pre>
@@ -234,7 +234,7 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
                 &#34;&#34;&#34; Constructor
                 host : hostname of pushover (b&#34;api.pushover.net&#34;)
                 port : port of pushover (80)
-                token : pushover token (you must create it on the web site http://www.pushover.net) 
+                token : pushover token (you must create it on the web site http://www.pushover.net)
                 user : pushover user (you must create it on the web site http://www.pushover.net) &#34;&#34;&#34;
                 self.token = token
                 self.user  = user
@@ -246,37 +246,37 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
                 message : the message of notification (bytes field not a string)
                 image : the jpeg image or nothing (bytes field)&#34;&#34;&#34;
                 result = False
-                if wifi.Station.isActive():
+                if wifi.Station.is_active():
                         try:
                                 streamio = None
                                 # Open pushover connection
                                 reader,writer = await uasyncio.open_connection(useful.tostrings(self.host), self.port)
                                 streamio = Stream(reader, writer)
 
-                                # Create multipart request 
+                                # Create multipart request
                                 request = HttpRequest(None)
-                                request.setMethod(b&#34;POST&#34;)
-                                request.setPath  (b&#34;/1/messages.json&#34;)
-                                request.setHeader(b&#34;Host&#34;,self.host)
-                                request.setHeader(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
-                                request.setHeader(b&#34;Accept&#34;,         b&#34;*/*&#34;)
-                                request.setHeader(b&#34;Connection&#34;,     b&#34;keep-alive&#34;)
-                                request.setHeader(b&#34;Content-Type&#34;,   b&#34;multipart/form-data&#34;)
-                                
+                                request.set_method(b&#34;POST&#34;)
+                                request.set_path  (b&#34;/1/messages.json&#34;)
+                                request.set_header(b&#34;Host&#34;,self.host)
+                                request.set_header(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
+                                request.set_header(b&#34;Accept&#34;,         b&#34;*/*&#34;)
+                                request.set_header(b&#34;Connection&#34;,     b&#34;keep-alive&#34;)
+                                request.set_header(b&#34;Content-Type&#34;,   b&#34;multipart/form-data&#34;)
+
                                 # Add token in multipart request
-                                if self.token != None:
-                                        request.addPart(PartText(b&#34;token&#34;,self.token))
-                                
+                                if self.token is not None:
+                                        request.add_part(PartText(b&#34;token&#34;,self.token))
+
                                 # Add user in multipart request
-                                if self.user != None:
-                                        request.addPart(PartText(b&#34;user&#34;,self.user))
-                                
+                                if self.user is not None:
+                                        request.add_part(PartText(b&#34;user&#34;,self.user))
+
                                 # Add message text in multipart request
-                                request.addPart(PartText(b&#34;message&#34;, message))
-                
+                                request.add_part(PartText(b&#34;message&#34;, message))
+
                                 # Add image in multipart request
-                                if image != None:
-                                        request.addPart(PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
+                                if image is not None:
+                                        request.add_part(PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
 
                                 # Send request to pushover
                                 await request.send(streamio)
@@ -321,37 +321,37 @@ image : the jpeg image or nothing (bytes field)</p></div>
         message : the message of notification (bytes field not a string)
         image : the jpeg image or nothing (bytes field)&#34;&#34;&#34;
         result = False
-        if wifi.Station.isActive():
+        if wifi.Station.is_active():
                 try:
                         streamio = None
                         # Open pushover connection
                         reader,writer = await uasyncio.open_connection(useful.tostrings(self.host), self.port)
                         streamio = Stream(reader, writer)
 
-                        # Create multipart request 
+                        # Create multipart request
                         request = HttpRequest(None)
-                        request.setMethod(b&#34;POST&#34;)
-                        request.setPath  (b&#34;/1/messages.json&#34;)
-                        request.setHeader(b&#34;Host&#34;,self.host)
-                        request.setHeader(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
-                        request.setHeader(b&#34;Accept&#34;,         b&#34;*/*&#34;)
-                        request.setHeader(b&#34;Connection&#34;,     b&#34;keep-alive&#34;)
-                        request.setHeader(b&#34;Content-Type&#34;,   b&#34;multipart/form-data&#34;)
-                        
+                        request.set_method(b&#34;POST&#34;)
+                        request.set_path  (b&#34;/1/messages.json&#34;)
+                        request.set_header(b&#34;Host&#34;,self.host)
+                        request.set_header(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
+                        request.set_header(b&#34;Accept&#34;,         b&#34;*/*&#34;)
+                        request.set_header(b&#34;Connection&#34;,     b&#34;keep-alive&#34;)
+                        request.set_header(b&#34;Content-Type&#34;,   b&#34;multipart/form-data&#34;)
+
                         # Add token in multipart request
-                        if self.token != None:
-                                request.addPart(PartText(b&#34;token&#34;,self.token))
-                        
+                        if self.token is not None:
+                                request.add_part(PartText(b&#34;token&#34;,self.token))
+
                         # Add user in multipart request
-                        if self.user != None:
-                                request.addPart(PartText(b&#34;user&#34;,self.user))
-                        
+                        if self.user is not None:
+                                request.add_part(PartText(b&#34;user&#34;,self.user))
+
                         # Add message text in multipart request
-                        request.addPart(PartText(b&#34;message&#34;, message))
-        
+                        request.add_part(PartText(b&#34;message&#34;, message))
+
                         # Add image in multipart request
-                        if image != None:
-                                request.addPart(PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
+                        if image is not None:
+                                request.add_part(PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
 
                         # Send request to pushover
                         await request.send(streamio)
@@ -421,9 +421,9 @@ image : the jpeg image or nothing (bytes field)</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.server.pushover.asyncNotify" href="#lib.server.pushover.asyncNotify">asyncNotify</a></code></li>
+<li><code><a title="lib.server.pushover.async_notify" href="#lib.server.pushover.async_notify">async_notify</a></code></li>
 <li><code><a title="lib.server.pushover.notify" href="#lib.server.pushover.notify">notify</a></code></li>
-<li><code><a title="lib.server.pushover.notifyMessage" href="#lib.server.pushover.notifyMessage">notifyMessage</a></code></li>
+<li><code><a title="lib.server.pushover.notify_message" href="#lib.server.pushover.notify_message">notify_message</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

@@ -180,32 +180,32 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength);
 
 #pragma GCC diagnostic ignored "-Wtype-limits"
 #ifdef CONFIG_ESP32CAM
-//             type,        get             set           , min, max
+//             type,        get             set           , min, max // https://heyrick.eu/blog/index.php?diary=20210418
 CAMERA_SETTING(uint16_t   , aec_value     , aec_value     ,  0, 1200)
 CAMERA_SETTING(framesize_t, framesize     , framesize     ,  FRAMESIZE_96X96, FRAMESIZE_QSXGA)
 CAMERA_SETTING(uint8_t    , quality       , quality       ,  0, 63  )
 CAMERA_SETTING(uint8_t    , special_effect, special_effect,  0, 6   )
-CAMERA_SETTING(uint8_t    , wb_mode       , wb_mode       ,  0, 4   )
-CAMERA_SETTING(uint8_t    , agc_gain      , agc_gain      ,  0, 30  )
+CAMERA_SETTING(uint8_t    , wb_mode       , wb_mode       ,  0, 4   ) // White balance mode
+CAMERA_SETTING(uint8_t    , agc_gain      , agc_gain      ,  0, 30  ) // Automatic gain control
 CAMERA_SETTING(uint8_t    , gainceiling   , gainceiling   ,  0, 6   )
 CAMERA_SETTING(int8_t     , brightness    , brightness    , -2, 2   )
 CAMERA_SETTING(int8_t     , contrast      , contrast      , -2, 2   )
 CAMERA_SETTING(int8_t     , saturation    , saturation    , -2, 2   )
 CAMERA_SETTING(int8_t     , sharpness     , sharpness     , -2, 2   )
-CAMERA_SETTING(int8_t     , ae_level      , ae_level      , -2, 2   )
+CAMERA_SETTING(int8_t     , ae_level      , ae_level      , -2, 2   ) // Automatic exposure
 CAMERA_SETTING(uint8_t    , denoise       , denoise       ,  0, 255 )
-CAMERA_SETTING(uint8_t    , awb           , whitebal      ,  0, 255 )
-CAMERA_SETTING(uint8_t    , awb_gain      , awb_gain      ,  0, 255 )
-CAMERA_SETTING(uint8_t    , aec           , exposure_ctrl ,  0, 255 )
-CAMERA_SETTING(uint8_t    , aec2          , aec2          ,  0, 255 )
-CAMERA_SETTING(uint8_t    , agc           , gain_ctrl     ,  0, 255 )
-CAMERA_SETTING(uint8_t    , bpc           , bpc           ,  0, 255 )
-CAMERA_SETTING(uint8_t    , wpc           , wpc           ,  0, 255 )
+CAMERA_SETTING(uint8_t    , awb           , whitebal      ,  0, 255 ) // Automatic white balance
+CAMERA_SETTING(uint8_t    , awb_gain      , awb_gain      ,  0, 255 ) // Automatic white balance gain
+CAMERA_SETTING(uint8_t    , aec           , exposure_ctrl ,  0, 255 ) // Automatic exposure control
+CAMERA_SETTING(uint8_t    , aec2          , aec2          ,  0, 255 ) // Automatic exposure control 2
+CAMERA_SETTING(uint8_t    , agc           , gain_ctrl     ,  0, 255 ) // Automatic gain control
+CAMERA_SETTING(uint8_t    , bpc           , bpc           ,  0, 255 ) // Black pixel correction
+CAMERA_SETTING(uint8_t    , wpc           , wpc           ,  0, 255 ) // White pixel correction
 CAMERA_SETTING(uint8_t    , raw_gma       , raw_gma       ,  0, 255 )
 CAMERA_SETTING(uint8_t    , lenc          , lenc          ,  0, 255 )
 CAMERA_SETTING(uint8_t    , hmirror       , hmirror       ,  0, 255 )
 CAMERA_SETTING(uint8_t    , vflip         , vflip         ,  0, 255 )
-CAMERA_SETTING(uint8_t    , dcw           , dcw           ,  0, 255 )
+CAMERA_SETTING(uint8_t    , dcw           , dcw           ,  0, 255 ) // Downsize EN
 CAMERA_SETTING(uint8_t    , colorbar      , colorbar      ,  0, 255 )
 #endif
 #pragma GCC diagnostic pop
@@ -479,7 +479,7 @@ STATIC mp_obj_t camera_flash(mp_obj_t level_in)
 			.duty_resolution = LEDC_TIMER_8_BIT,
 
 			// Set timer frequency (high frequency to avoid whistling)
-			.freq_hz = 20000, 
+			.freq_hz = 40000, 
 			.speed_mode = LEDC_LOW_SPEED_MODE,
 			.timer_num = LEDC_TIMER_3,
 		};
@@ -493,7 +493,7 @@ STATIC mp_obj_t camera_flash(mp_obj_t level_in)
 		ledc_channel_config_t channel_config = 
 		{
 			.channel    = LEDC_CHANNEL_7,           // Select available channel
-			.duty       = level,                    // Set the level of flash
+			.duty       = level/2,                  // Set the level of flash
 			.gpio_num   = 4,                        // Flash led gpio
 			.speed_mode = LEDC_LOW_SPEED_MODE,
 			.timer_sel  = LEDC_TIMER_3
@@ -756,8 +756,8 @@ STATIC mp_obj_t Motion_extract(mp_obj_t self_in)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_extract_obj, Motion_extract);
 
-// getImage method
-STATIC mp_obj_t Motion_getImage(mp_obj_t self_in)
+// get_image method
+STATIC mp_obj_t Motion_get_image(mp_obj_t self_in)
 {
 	Motion_t *motion = self_in;
 	mp_obj_t res = mp_const_none;
@@ -767,10 +767,10 @@ STATIC mp_obj_t Motion_getImage(mp_obj_t self_in)
 	}
 	return res;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getImage_obj, Motion_getImage);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_get_image_obj, Motion_get_image);
 
-// getSize method
-STATIC mp_obj_t Motion_getSize(mp_obj_t self_in)
+// get_size method
+STATIC mp_obj_t Motion_get_size(mp_obj_t self_in)
 {
 	Motion_t *motion = self_in;
 	mp_obj_t res = mp_const_none;
@@ -780,10 +780,10 @@ STATIC mp_obj_t Motion_getSize(mp_obj_t self_in)
 	}
 	return res;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getSize_obj, Motion_getSize);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_get_size_obj, Motion_get_size);
 
-// getLight method
-STATIC mp_obj_t Motion_getLight(mp_obj_t self_in)
+// get_light method
+STATIC mp_obj_t Motion_get_light(mp_obj_t self_in)
 {
 	Motion_t *motion = self_in;
 	mp_obj_t res = mp_const_none;
@@ -801,7 +801,7 @@ STATIC mp_obj_t Motion_getLight(mp_obj_t self_in)
 	}
 	return res;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_getLight_obj, Motion_getLight);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_get_light_obj, Motion_get_light);
 
 // Push coordinates
 void Motion_push(Motion_t * motion, int x, int y)
@@ -906,7 +906,7 @@ bool Motion_searchShape(Motion_t * motion, int x, int y, Shape_t * shape)
 }
 
 // Compute histogram
-int Motion_getDiffHisto(Motion_t *self, Motion_t *previous)
+int Motion_get_diff_histo(Motion_t *self, Motion_t *previous)
 {
 	int i;
 	int diff = 0;
@@ -1006,7 +1006,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 {
 	int i;
 	int diffDetected = 0;
-	int diffHisto    = Motion_getDiffHisto(self, previous);
+	int diffHisto    = Motion_get_diff_histo(self, previous);
 	int errLight;
 	int errHisto;
 	uint16_t       *pCurrentLights  = self->lights;
@@ -1296,9 +1296,9 @@ STATIC const mp_rom_map_elem_t Motion_locals_dict_table[] =
 	{ MP_ROM_QSTR(MP_QSTR_extract),            MP_ROM_PTR(&Motion_extract_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_compare),            MP_ROM_PTR(&Motion_compare_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_configure),          MP_ROM_PTR(&Motion_configure_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_getImage),           MP_ROM_PTR(&Motion_getImage_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_getSize),            MP_ROM_PTR(&Motion_getSize_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_getLight),           MP_ROM_PTR(&Motion_getLight_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_get_image),           MP_ROM_PTR(&Motion_get_image_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_get_size),            MP_ROM_PTR(&Motion_get_size_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_get_light),           MP_ROM_PTR(&Motion_get_light_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Motion_locals_dict, Motion_locals_dict_table);
 

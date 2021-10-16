@@ -1,12 +1,13 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Class to manage the camera of the ESP32CAM.
-This requires the modified firmware. 
-I added in the firmware the possibility of detecting movements, 
+This requires the modified firmware.
+I added in the firmware the possibility of detecting movements,
 as well as a lot of adjustment on the camera, not available on the other firmware that manages the esp32cam.
 """
-import camera
+# pylint: disable=multiple-statements
 import time
+import camera
 import uasyncio
 from tools import useful,jsonconfig
 
@@ -24,7 +25,7 @@ class CameraConfig(jsonconfig.JsonConfig):
 		self.saturation = 0
 		self.hmirror    = False
 		self.vflip      = False
-		self.flashLevel = 0
+		self.flash_level = 0
 
 class Motion:
 	""" Class motion detection returned by the detect function """
@@ -48,9 +49,9 @@ class Motion:
 		""" Configure the motion detection """
 		self.motion.configure(param)
 
-	def getImage(self):
+	def get_image(self):
 		""" Return the jpeg buffer of motion """
-		return self.motion.getImage()
+		return self.motion.get_image()
 
 class Reservation:
 	""" Manage the camera reservation """
@@ -64,7 +65,7 @@ class Reservation:
 	async def reserve(self, object_, timeout=0, suspension=None):
 		""" Wait the ressource and reserve """
 		result = False
-		# Wait 
+		# Wait
 		while True:
 			result = await self.acquire(object_, suspension)
 			if result:
@@ -83,9 +84,9 @@ class Reservation:
 		identifier = id(object_)
 		try:
 			# If not reserved
-			if self.identifier == None:
+			if self.identifier is None:
 				# If suspension not required
-				if suspension == None:
+				if suspension is None:
 					# If previous suspension ended
 					if self.suspended <= 0:
 						# Reserve
@@ -143,13 +144,13 @@ class Camera:
 	@staticmethod
 	def open():
 		""" Open the camera """
-		Camera.getConfig()
-		if Camera.isActivated():
+		Camera.get_config()
+		if Camera.is_activated():
 			result = True
-			if Camera.opened == False:
+			if Camera.opened is False:
 				for i in range(10):
 					res = camera.init()
-					if res == False:
+					if res is False:
 						# print("Camera not initialized")
 						camera.deinit()
 						time.sleep(0.5)
@@ -166,12 +167,12 @@ class Camera:
 		return result
 
 	@staticmethod
-	def getStat():
+	def get_stat():
 		""" Statistic """
 		return Camera.success[0], Camera.failed[0]
 
 	@staticmethod
-	def resetStat():
+	def reset_stat():
 		""" Reset statistic """
 		Camera.success[0] = 0
 		Camera.failed [0] = 0
@@ -180,12 +181,12 @@ class Camera:
 	@staticmethod
 	def close():
 		""" Close the camera """
-		if Camera.opened == True:
+		if Camera.opened is True:
 			camera.deinit()
 			Camera.opened = False
 
 	@staticmethod
-	def isOpened():
+	def is_opened():
 		""" Indicates if the camera opened """
 		return Camera.opened
 
@@ -196,7 +197,7 @@ class Camera:
 
 	@staticmethod
 	def motion():
-		""" Get the motion informations. 
+		""" Get the motion informations.
 		This contains a jpeg image, with matrices of the different color RGB """
 		return Camera.retry(camera.motion)
 
@@ -250,12 +251,12 @@ class Camera:
 		return await Camera.reservation.unreserve(object_)
 
 	@staticmethod
-	def isModified():
+	def is_modified():
 		""" Indicates that the camera configuration has been changed """
 		return Camera.modified[0]
 
 	@staticmethod
-	def clearModified():
+	def clear_modified():
 		""" Reset the indicator of configuration modification """
 		Camera.modified[0] = False
 
@@ -273,7 +274,7 @@ class Camera:
 		if resolution == b"QVGA"  or resolution == b"320x240"   :val = camera.FRAMESIZE_QVGA
 		if resolution == b"HQVGA" or resolution == b"240x176"   :val = camera.FRAMESIZE_HQVGA
 		if resolution == b"QQVGA" or resolution == b"160x120"   :val = camera.FRAMESIZE_QQVGA
-		if Camera.opened and val != None:
+		if Camera.opened and val is not None:
 			# print("Framesize %s"%useful.tostrings(resolution))
 			camera.framesize(val)
 		# else:
@@ -292,12 +293,12 @@ class Camera:
 		if format_ == b"RAW"       : val=camera.PIXFORMAT_RAW
 		if format_ == b"RGB444"    : val=camera.PIXFORMAT_RGB444
 		if format_ == b"RGB555"    : val=camera.PIXFORMAT_RGB555
-		if Camera.opened and val != None:
+		if Camera.opened and val is not None:
 			# print("Pixformat %s"%useful.tostrings(format_))
 			camera.pixformat(val)
 		# else:
 			# print("Pixformat not set")
-	
+
 	@staticmethod
 	def quality(val=None, modified=True):
 		""" Configure the compression """
@@ -382,26 +383,26 @@ class Camera:
 			Camera.saturation(config.saturation)
 			Camera.hmirror   (config.hmirror)
 			Camera.vflip     (config.vflip)
-			Camera.flash     (config.flashLevel)
+			Camera.flash     (config.flash_level)
 
 	@staticmethod
-	def getConfig():
+	def get_config():
 		""" Reload configuration if it changed """
-		if Camera.config == None:
+		if Camera.config is None:
 			Camera.config = CameraConfig()
-			if Camera.config.load() == False:
+			if Camera.config.load() is False:
 				Camera.config.save()
 		else:
-			if Camera.config.isChanged():
+			if Camera.config.is_changed():
 				Camera.config.load()
 		return Camera.config
 
 	@staticmethod
-	def isActivated():
+	def is_activated():
 		""" Indicates if the camera is configured to be activated """
-		if Camera.config == None:
-			Camera.getConfig()
-		if Camera.config != None:
+		if Camera.config is None:
+			Camera.get_config()
+		if Camera.config is not None:
 			return Camera.config.activated
 		else:
 			return False

@@ -1,40 +1,40 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-""" Periodic task, wifi management, get wanIp, synchronize time """
-from server.server import ServerConfig, Server
-from tools import battery, lang, awake, tasking
-import wifi
+""" Periodic task, wifi management, get wan_ip, synchronize time """
 import uasyncio
+from server.server import ServerConfig, Server
+import wifi
+from tools import battery, lang, awake, tasking
 
-async def periodicTask():
+async def periodic_task():
 	""" Periodic task """
 	periodic = Periodic()
-	await tasking.taskMonitoring(periodic.task)
+	await tasking.task_monitoring(periodic.task)
 
 class Periodic:
 	""" Class to manage periodic task """
 	def __init__(self):
 		""" Constructor """
-		self.serverConfig = ServerConfig()
-		self.serverConfig.load()
-		self.getLoginState = None
+		self.server_config = ServerConfig()
+		self.server_config.load()
+		self.get_login_state = None
 		tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
 
-	async def checkLogin(self):
+	async def check_login(self):
 		""" Inform that login detected """
 		# Login state not yet get
-		if self.getLoginState is None:
+		if self.get_login_state is None:
 			from server.user import User
-			self.getLoginState = User.getLoginState
+			self.get_login_state = User.get_login_state
 
 		# Get login state
-		login =  self.getLoginState()
+		login =  self.get_login_state()
 
 		# If login detected
 		if login is not None:
 			from server.notifier import Notifier
 			# If notification must be send
-			if self.serverConfig.notify:
+			if self.server_config.notify:
 				if login:
 					await Notifier.notify(lang.login_success_detected, display=False)
 				else:
@@ -42,28 +42,28 @@ class Periodic:
 
 	async def task(self):
 		""" Periodic task method """
-		pollingId = 0
-		
+		polling_id = 0
+
 		tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
 		while True:
 			# Reload server config if changed
-			if pollingId % 5 == 0:
+			if polling_id % 5 == 0:
 				# Manage login user
-				await self.checkLogin()
+				await self.check_login()
 
-				if self.serverConfig.isChanged():
-					self.serverConfig.load()
+				if self.server_config.is_changed():
+					self.server_config.load()
 
 			# Manage server
-			await Server.manage(pollingId)
+			await Server.manage(polling_id)
 
 			# Manage awake duration
 			awake.Awake.manage()
 
 			# Manage battery level
-			battery.Battery.manage(wifi.Wifi.isWanConnected())
+			battery.Battery.manage(wifi.Wifi.is_wan_connected())
 
 			# Reset watch dog
 			tasking.WatchDog.feed()
 			await uasyncio.sleep(1)
-			pollingId += 1
+			polling_id += 1

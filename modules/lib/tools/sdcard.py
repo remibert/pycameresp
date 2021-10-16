@@ -1,12 +1,12 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Sdcard management class """
-from tools import useful
 try:
 	import machine
 except:
 	pass
 import uos
+from tools import useful
 
 class SdCard:
 	""" Manage the sdcard """
@@ -14,30 +14,30 @@ class SdCard:
 	mountpoint = [""]
 
 	@staticmethod
-	def getMaxSize():
+	def get_max_size():
 		""" Return the maximal size of sdcard """
-		if SdCard.isMounted():
-			status = uos.statvfs(SdCard.getMountpoint())
+		if SdCard.is_mounted():
+			status = uos.statvfs(SdCard.get_mountpoint())
 			return status[1]*status[2]
 		else:
 			return 0
 
 	@staticmethod
-	def getFreeSize():
+	def get_free_size():
 		""" Return the free size of sdcard """
-		if SdCard.isMounted():
-			status = uos.statvfs(SdCard.getMountpoint())
+		if SdCard.is_mounted():
+			status = uos.statvfs(SdCard.get_mountpoint())
 			return status[0]*status[3]
 		else:
 			return 0
 
 	@staticmethod
-	def isMounted():
+	def is_mounted():
 		""" Indicates if the sd card is mounted """
 		return SdCard.opened[0]
 
 	@staticmethod
-	def getMountpoint():
+	def get_mountpoint():
 		""" Return the mount point """
 		return SdCard.mountpoint[0]
 
@@ -45,7 +45,7 @@ class SdCard:
 	def mount(mountpoint = "/sd"):
 		""" Mount sd card """
 		result = False
-		if SdCard.isMounted() == False and mountpoint != "/" and mountpoint != "":
+		if SdCard.is_mounted() is False and mountpoint != "/" and mountpoint != "":
 			if useful.ismicropython():
 				try:
 					# If the sdcard not already mounted
@@ -60,16 +60,16 @@ class SdCard:
 				SdCard.mountpoint[0] = mountpoint[1:]
 				SdCard.opened[0] = True
 				result = True
-		elif SdCard.isMounted():
+		elif SdCard.is_mounted():
 			if useful.ismicropython():
-				if mountpoint == SdCard.getMountpoint():
+				if mountpoint == SdCard.get_mountpoint():
 					result = True
 			else:
 				result = True
 		return result
 
 	@staticmethod
-	def createFile(directory, filename, mode="w"):
+	def create_file(directory, filename, mode="w"):
 		""" Create file with directory """
 		result = None
 		filepath = directory + "/" + filename
@@ -117,17 +117,16 @@ class SdCard:
 	def save(directory, filename, data):
 		""" Save file on sd card """
 		result = False
-		if SdCard.isMounted():
+		if SdCard.is_mounted():
 			file = None
 			try:
-				file = SdCard.createFile(SdCard.getMountpoint() + "/" + directory, filename, "w")
+				file = SdCard.create_file(SdCard.get_mountpoint() + "/" + directory, filename, "w")
 				file.write(data)
 				file.close()
 				result = True
 			except Exception as err:
-				useful.syslog(err, "Cannot save %s/%s/%s"%(SdCard.getMountpoint(), directory, filename))
+				useful.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
 			finally:
 				if file is not None:
 					file.close()
 		return result
-

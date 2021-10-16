@@ -54,7 +54,7 @@ STATIC mp_obj_t Server_make_new(const mp_obj_type_t *type, size_t n_args, size_t
 {
 	mp_obj_t  result = mp_const_none;
 	enum 
-	{ 
+	{
 		ARG_uuid,
 	};
 	// Constructor parameters
@@ -110,8 +110,8 @@ STATIC mp_obj_t Server_deinit(mp_obj_t self_in)
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(Server_deinit_obj, Server_deinit);
 
 
-// addCharact method
-STATIC mp_obj_t Server_addCharact(mp_obj_t self_in, mp_obj_t charact_in)
+// add_charact method
+STATIC mp_obj_t Server_add_charact(mp_obj_t self_in, mp_obj_t charact_in)
 {
 	Server_t *self = self_in;
 	if (self->server)
@@ -128,7 +128,7 @@ STATIC mp_obj_t Server_addCharact(mp_obj_t self_in, mp_obj_t charact_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Server_addCharact_obj, Server_addCharact);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Server_add_charact_obj, Server_add_charact);
 
 
 // print method
@@ -144,7 +144,7 @@ STATIC const mp_rom_map_elem_t Server_locals_dict_table[] =
 	// Delete method
 	{ MP_ROM_QSTR(MP_QSTR___del__),         MP_ROM_PTR(&Server_deinit_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deinit),          MP_ROM_PTR(&Server_deinit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_addCharact),      MP_ROM_PTR(&Server_addCharact_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_add_charact),      MP_ROM_PTR(&Server_add_charact_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Server_locals_dict, Server_locals_dict_table);
 

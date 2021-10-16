@@ -5,11 +5,11 @@ See https://www.pushover.net """
 
 import sys
 sys.path.append("lib")
-from tools import useful, jsonconfig
 import uasyncio
 from server.stream import *
 from server.httprequest import *
 import wifi
+from tools import useful, jsonconfig
 
 class PushOverConfig(jsonconfig.JsonConfig):
 	""" Configuration of the pushover """
@@ -26,7 +26,7 @@ class Notification:
 		""" Constructor
 		host : hostname of pushover (b"api.pushover.net")
 		port : port of pushover (80)
-		token : pushover token (you must create it on the web site http://www.pushover.net) 
+		token : pushover token (you must create it on the web site http://www.pushover.net)
 		user : pushover user (you must create it on the web site http://www.pushover.net) """
 		self.token = token
 		self.user  = user
@@ -38,37 +38,37 @@ class Notification:
 		message : the message of notification (bytes field not a string)
 		image : the jpeg image or nothing (bytes field)"""
 		result = False
-		if wifi.Station.isActive():
+		if wifi.Station.is_active():
 			try:
 				streamio = None
 				# Open pushover connection
 				reader,writer = await uasyncio.open_connection(useful.tostrings(self.host), self.port)
 				streamio = Stream(reader, writer)
 
-				# Create multipart request 
+				# Create multipart request
 				request = HttpRequest(None)
-				request.setMethod(b"POST")
-				request.setPath  (b"/1/messages.json")
-				request.setHeader(b"Host",self.host)
-				request.setHeader(b"Accept-Encoding",b"gzip, deflate")
-				request.setHeader(b"Accept",         b"*/*")
-				request.setHeader(b"Connection",     b"keep-alive")
-				request.setHeader(b"Content-Type",   b"multipart/form-data")
-				
+				request.set_method(b"POST")
+				request.set_path  (b"/1/messages.json")
+				request.set_header(b"Host",self.host)
+				request.set_header(b"Accept-Encoding",b"gzip, deflate")
+				request.set_header(b"Accept",         b"*/*")
+				request.set_header(b"Connection",     b"keep-alive")
+				request.set_header(b"Content-Type",   b"multipart/form-data")
+
 				# Add token in multipart request
-				if self.token != None:
-					request.addPart(PartText(b"token",self.token))
-				
+				if self.token is not None:
+					request.add_part(PartText(b"token",self.token))
+
 				# Add user in multipart request
-				if self.user != None:
-					request.addPart(PartText(b"user",self.user))
-				
+				if self.user is not None:
+					request.add_part(PartText(b"user",self.user))
+
 				# Add message text in multipart request
-				request.addPart(PartText(b"message", message))
-		
+				request.add_part(PartText(b"message", message))
+
 				# Add image in multipart request
-				if image != None:
-					request.addPart(PartBin(b"attachment",b"image.jpg",image, b"image/jpeg"))
+				if image is not None:
+					request.add_part(PartBin(b"attachment",b"image.jpg",image, b"image/jpeg"))
 
 				# Send request to pushover
 				await request.send(streamio)
@@ -95,24 +95,24 @@ class Notification:
 			useful.syslog("Notification not sent : wifi not connected", display=display)
 		return result
 
-async def asyncNotify(user, token, message, image=None, display=True):
+async def async_notify(user, token, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
 	notification = Notification(host=b"api.pushover.net", port=80, token=token, user=user)
-	return await notification.notify(b"%s : %s"%(wifi.Station.getHostname(), message), image, display)
+	return await notification.notify(b"%s : %s"%(wifi.Station.get_hostname(), useful.tobytes(message)), image, display)
 
 def notify(user, token, message, image=None):
 	""" Notification function """
 	loop = uasyncio.get_event_loop()
-	loop.run_until_complete(asyncNotify(user=user, token=token, message=message, image=image))
+	loop.run_until_complete(async_notify(user=user, token=token, message=message, image=image))
 
-async def notifyMessage(message, image = None, forced=False, display=True):
+async def notify_message(message, image = None, forced=False, display=True):
 	""" Notify message """
 	config = PushOverConfig()
-	if config.load() == False:
+	if config.load() is False:
 		config.save()
-	
+
 	if config.activated or forced:
-		result = await asyncNotify(config.user, config.token, message, image, display=True)
+		result = await async_notify(config.user, config.token, message, image, display=True)
 	else:
 		result = None
 	return result

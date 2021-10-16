@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>lib.homekit.homekit API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Homekit main class" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,13 +22,16 @@
 <h1 class="title">Module <code>lib.homekit.homekit</code></h1>
 </header>
 <section id="section-intro">
+<p>Homekit main class</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
+<pre><code class="python">&#34;&#34;&#34; Homekit main class &#34;&#34;&#34;
+# Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 class Homekit:
+        &#34;&#34;&#34; Homekit main class &#34;&#34;&#34;
         @staticmethod
         def start():
                 &#34;&#34;&#34; Start home kit engine &#34;&#34;&#34;
@@ -42,10 +45,10 @@ class Homekit:
                 homekit_.stop()
 
         @staticmethod
-        def addAccessory(accessory):
+        def add_accessory(accessory):
                 &#34;&#34;&#34; Add accessory to homekit data base &#34;&#34;&#34;
                 import homekit_
-                homekit_.addAccessory(accessory.accessory)
+                homekit_.add_accessory(accessory.accessory)
 
         @staticmethod
         def init():
@@ -58,26 +61,26 @@ class Homekit:
                 &#34;&#34;&#34; Deinit homekit &#34;&#34;&#34;
                 import homekit_
                 homekit_.deinit()
-        
-        @staticmethod
-        def setSetupId(setupId):
-                &#34;&#34;&#34; Initialize setup id (length must be 4 bytes) &#34;&#34;&#34;
-                import homekit_
-                homekit_.setSetupId(setupId)
 
         @staticmethod
-        def setSetupCode(setupCode):
+        def set_setup_id(setupId):
+                &#34;&#34;&#34; Initialize setup id (length must be 4 bytes) &#34;&#34;&#34;
+                import homekit_
+                homekit_.set_setup_id(setupId)
+
+        @staticmethod
+        def set_setup_code(setupCode):
                 &#34;&#34;&#34; Set the setup code (format must be &#39;xxx-xx-xxx&#39;) &#34;&#34;&#34;
                 import homekit_
-                homekit_.setSetupCode(setupCode)
-        
+                homekit_.set_setup_code(setupCode)
+
         @staticmethod
-        def eraseAll():
+        def erase_all():
                 &#34;&#34;&#34; Stop homekit engine and remove the data of all homekit accessories &#34;&#34;&#34;
                 import homekit_
                 homekit_.stop()
                 homekit_.deinit()
-                homekit_.eraseAll()
+                homekit_.erase_all()
 
         @staticmethod
         def reboot():
@@ -92,14 +95,14 @@ class Homekit:
         def play(accessory, setupCode=&#34;111-11-111&#34;, setupId=&#34;ESP3&#34;):
                 &#34;&#34;&#34; Register accessory, start homekit engine &#34;&#34;&#34;
                 # Add accessory to homekit
-                Homekit.addAccessory(accessory)
-                
+                Homekit.add_accessory(accessory)
+
                 # Initialize setup id (length must be 4 bytes)
-                Homekit.setSetupId(setupId)
-                
+                Homekit.set_setup_id(setupId)
+
                 # Initialize setup code (format must be &#39;xxx-xx-xxx&#39;)
-                Homekit.setSetupCode(setupCode)
-                
+                Homekit.set_setup_code(setupCode)
+
                 # Start homekit
                 Homekit.start()</code></pre>
 </details>
@@ -117,12 +120,13 @@ class Homekit:
 <span>class <span class="ident">Homekit</span></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Homekit main class</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Homekit:
+        &#34;&#34;&#34; Homekit main class &#34;&#34;&#34;
         @staticmethod
         def start():
                 &#34;&#34;&#34; Start home kit engine &#34;&#34;&#34;
@@ -136,10 +140,10 @@ class Homekit:
                 homekit_.stop()
 
         @staticmethod
-        def addAccessory(accessory):
+        def add_accessory(accessory):
                 &#34;&#34;&#34; Add accessory to homekit data base &#34;&#34;&#34;
                 import homekit_
-                homekit_.addAccessory(accessory.accessory)
+                homekit_.add_accessory(accessory.accessory)
 
         @staticmethod
         def init():
@@ -152,26 +156,26 @@ class Homekit:
                 &#34;&#34;&#34; Deinit homekit &#34;&#34;&#34;
                 import homekit_
                 homekit_.deinit()
-        
-        @staticmethod
-        def setSetupId(setupId):
-                &#34;&#34;&#34; Initialize setup id (length must be 4 bytes) &#34;&#34;&#34;
-                import homekit_
-                homekit_.setSetupId(setupId)
 
         @staticmethod
-        def setSetupCode(setupCode):
+        def set_setup_id(setupId):
+                &#34;&#34;&#34; Initialize setup id (length must be 4 bytes) &#34;&#34;&#34;
+                import homekit_
+                homekit_.set_setup_id(setupId)
+
+        @staticmethod
+        def set_setup_code(setupCode):
                 &#34;&#34;&#34; Set the setup code (format must be &#39;xxx-xx-xxx&#39;) &#34;&#34;&#34;
                 import homekit_
-                homekit_.setSetupCode(setupCode)
-        
+                homekit_.set_setup_code(setupCode)
+
         @staticmethod
-        def eraseAll():
+        def erase_all():
                 &#34;&#34;&#34; Stop homekit engine and remove the data of all homekit accessories &#34;&#34;&#34;
                 import homekit_
                 homekit_.stop()
                 homekit_.deinit()
-                homekit_.eraseAll()
+                homekit_.erase_all()
 
         @staticmethod
         def reboot():
@@ -186,21 +190,21 @@ class Homekit:
         def play(accessory, setupCode=&#34;111-11-111&#34;, setupId=&#34;ESP3&#34;):
                 &#34;&#34;&#34; Register accessory, start homekit engine &#34;&#34;&#34;
                 # Add accessory to homekit
-                Homekit.addAccessory(accessory)
-                
+                Homekit.add_accessory(accessory)
+
                 # Initialize setup id (length must be 4 bytes)
-                Homekit.setSetupId(setupId)
-                
+                Homekit.set_setup_id(setupId)
+
                 # Initialize setup code (format must be &#39;xxx-xx-xxx&#39;)
-                Homekit.setSetupCode(setupCode)
-                
+                Homekit.set_setup_code(setupCode)
+
                 # Start homekit
                 Homekit.start()</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
-<dt id="lib.homekit.homekit.Homekit.addAccessory"><code class="name flex">
-<span>def <span class="ident">addAccessory</span></span>(<span>accessory)</span>
+<dt id="lib.homekit.homekit.Homekit.add_accessory"><code class="name flex">
+<span>def <span class="ident">add_accessory</span></span>(<span>accessory)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Add accessory to homekit data base</p></div>
@@ -209,10 +213,10 @@ class Homekit:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def addAccessory(accessory):
+def add_accessory(accessory):
         &#34;&#34;&#34; Add accessory to homekit data base &#34;&#34;&#34;
         import homekit_
-        homekit_.addAccessory(accessory.accessory)</code></pre>
+        homekit_.add_accessory(accessory.accessory)</code></pre>
 </details>
 </dd>
 <dt id="lib.homekit.homekit.Homekit.deinit"><code class="name flex">
@@ -231,8 +235,8 @@ def deinit():
         homekit_.deinit()</code></pre>
 </details>
 </dd>
-<dt id="lib.homekit.homekit.Homekit.eraseAll"><code class="name flex">
-<span>def <span class="ident">eraseAll</span></span>(<span>)</span>
+<dt id="lib.homekit.homekit.Homekit.erase_all"><code class="name flex">
+<span>def <span class="ident">erase_all</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Stop homekit engine and remove the data of all homekit accessories</p></div>
@@ -241,12 +245,12 @@ def deinit():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def eraseAll():
+def erase_all():
         &#34;&#34;&#34; Stop homekit engine and remove the data of all homekit accessories &#34;&#34;&#34;
         import homekit_
         homekit_.stop()
         homekit_.deinit()
-        homekit_.eraseAll()</code></pre>
+        homekit_.erase_all()</code></pre>
 </details>
 </dd>
 <dt id="lib.homekit.homekit.Homekit.init"><code class="name flex">
@@ -278,14 +282,14 @@ def init():
 def play(accessory, setupCode=&#34;111-11-111&#34;, setupId=&#34;ESP3&#34;):
         &#34;&#34;&#34; Register accessory, start homekit engine &#34;&#34;&#34;
         # Add accessory to homekit
-        Homekit.addAccessory(accessory)
-        
+        Homekit.add_accessory(accessory)
+
         # Initialize setup id (length must be 4 bytes)
-        Homekit.setSetupId(setupId)
-        
+        Homekit.set_setup_id(setupId)
+
         # Initialize setup code (format must be &#39;xxx-xx-xxx&#39;)
-        Homekit.setSetupCode(setupCode)
-        
+        Homekit.set_setup_code(setupCode)
+
         # Start homekit
         Homekit.start()</code></pre>
 </details>
@@ -309,8 +313,8 @@ def reboot():
         homekit_.start()</code></pre>
 </details>
 </dd>
-<dt id="lib.homekit.homekit.Homekit.setSetupCode"><code class="name flex">
-<span>def <span class="ident">setSetupCode</span></span>(<span>setupCode)</span>
+<dt id="lib.homekit.homekit.Homekit.set_setup_code"><code class="name flex">
+<span>def <span class="ident">set_setup_code</span></span>(<span>setupCode)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set the setup code (format must be 'xxx-xx-xxx')</p></div>
@@ -319,14 +323,14 @@ def reboot():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def setSetupCode(setupCode):
+def set_setup_code(setupCode):
         &#34;&#34;&#34; Set the setup code (format must be &#39;xxx-xx-xxx&#39;) &#34;&#34;&#34;
         import homekit_
-        homekit_.setSetupCode(setupCode)</code></pre>
+        homekit_.set_setup_code(setupCode)</code></pre>
 </details>
 </dd>
-<dt id="lib.homekit.homekit.Homekit.setSetupId"><code class="name flex">
-<span>def <span class="ident">setSetupId</span></span>(<span>setupId)</span>
+<dt id="lib.homekit.homekit.Homekit.set_setup_id"><code class="name flex">
+<span>def <span class="ident">set_setup_id</span></span>(<span>setupId)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Initialize setup id (length must be 4 bytes)</p></div>
@@ -335,10 +339,10 @@ def setSetupCode(setupCode):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def setSetupId(setupId):
+def set_setup_id(setupId):
         &#34;&#34;&#34; Initialize setup id (length must be 4 bytes) &#34;&#34;&#34;
         import homekit_
-        homekit_.setSetupId(setupId)</code></pre>
+        homekit_.set_setup_id(setupId)</code></pre>
 </details>
 </dd>
 <dt id="lib.homekit.homekit.Homekit.start"><code class="name flex">
@@ -394,14 +398,14 @@ def stop():
 <li>
 <h4><code><a title="lib.homekit.homekit.Homekit" href="#lib.homekit.homekit.Homekit">Homekit</a></code></h4>
 <ul class="two-column">
-<li><code><a title="lib.homekit.homekit.Homekit.addAccessory" href="#lib.homekit.homekit.Homekit.addAccessory">addAccessory</a></code></li>
+<li><code><a title="lib.homekit.homekit.Homekit.add_accessory" href="#lib.homekit.homekit.Homekit.add_accessory">add_accessory</a></code></li>
 <li><code><a title="lib.homekit.homekit.Homekit.deinit" href="#lib.homekit.homekit.Homekit.deinit">deinit</a></code></li>
-<li><code><a title="lib.homekit.homekit.Homekit.eraseAll" href="#lib.homekit.homekit.Homekit.eraseAll">eraseAll</a></code></li>
+<li><code><a title="lib.homekit.homekit.Homekit.erase_all" href="#lib.homekit.homekit.Homekit.erase_all">erase_all</a></code></li>
 <li><code><a title="lib.homekit.homekit.Homekit.init" href="#lib.homekit.homekit.Homekit.init">init</a></code></li>
 <li><code><a title="lib.homekit.homekit.Homekit.play" href="#lib.homekit.homekit.Homekit.play">play</a></code></li>
 <li><code><a title="lib.homekit.homekit.Homekit.reboot" href="#lib.homekit.homekit.Homekit.reboot">reboot</a></code></li>
-<li><code><a title="lib.homekit.homekit.Homekit.setSetupCode" href="#lib.homekit.homekit.Homekit.setSetupCode">setSetupCode</a></code></li>
-<li><code><a title="lib.homekit.homekit.Homekit.setSetupId" href="#lib.homekit.homekit.Homekit.setSetupId">setSetupId</a></code></li>
+<li><code><a title="lib.homekit.homekit.Homekit.set_setup_code" href="#lib.homekit.homekit.Homekit.set_setup_code">set_setup_code</a></code></li>
+<li><code><a title="lib.homekit.homekit.Homekit.set_setup_id" href="#lib.homekit.homekit.Homekit.set_setup_id">set_setup_id</a></code></li>
 <li><code><a title="lib.homekit.homekit.Homekit.start" href="#lib.homekit.homekit.Homekit.start">start</a></code></li>
 <li><code><a title="lib.homekit.homekit.Homekit.stop" href="#lib.homekit.homekit.Homekit.stop">stop</a></code></li>
 </ul>

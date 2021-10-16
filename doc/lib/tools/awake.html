@@ -30,9 +30,9 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Manage the battery &#34;&#34;&#34;
-from tools import jsonconfig, useful
 import machine
 import esp32
+from tools import jsonconfig, useful
 
 class AwakeConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Awake configuration &#34;&#34;&#34;
@@ -42,37 +42,37 @@ class AwakeConfig(jsonconfig.JsonConfig):
 
                 # GPIO wake up
                 self.activated = False  # Wake up on GPIO status
-                self.wakeUpGpio = 13 # Wake up GPIO number
-                self.awakeDuration = 120 # Awake duration in seconds
-                self.sleepDuration = 3600*24*365 # Sleep duration in seconds
+                self.wake_up_gpio = 13 # Wake up GPIO number
+                self.awake_duration = 120 # Awake duration in seconds
+                self.sleep_duration = 3600*24*365 # Sleep duration in seconds
 
 class Awake:
         &#34;&#34;&#34; Manage the awake &#34;&#34;&#34;
         config = None
-        awakeCounter = [0] # Decrease each second
-        refreshCounter = [0]
+        awake_counter = [0] # Decrease each second
+        refresh_counter = [0]
 
         @staticmethod
         def init():
                 &#34;&#34;&#34; Init awake class &#34;&#34;&#34;
                 # If config not yet read
-                if Awake.config == None:
+                if Awake.config is None:
                         Awake.config = AwakeConfig()
                         # If config failed to read
-                        if Awake.config.load() == False:
+                        if Awake.config.load() is False:
                                 # Write default config
                                 Awake.config.save()
-                Awake.keepAwake()
+                Awake.keep_awake()
 
         @staticmethod
-        def setPinWakeUp():
+        def set_pin_wake_up():
                 &#34;&#34;&#34; Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector. &#34;&#34;&#34;
                 Awake.init()
                 try:
-                        if Awake.config.wakeUpGpio != 0:
-                                wake1 = machine.Pin(Awake.config.wakeUpGpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
+                        if Awake.config.wake_up_gpio != 0:
+                                wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
                                 esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                                useful.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wakeUpGpio)
+                                useful.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
                         else:
                                 useful.syslog(&#34;Pin wake up disabled&#34;)
                         return True
@@ -81,12 +81,12 @@ class Awake:
                 return False
 
         @staticmethod
-        def isPinWakeUp():
+        def is_pin_wake_up():
                 &#34;&#34;&#34; Indicates that the machine wake up on pin modification (Only available at start) &#34;&#34;&#34;
                 Awake.init()
                 if Awake.config.activated:
                         try:
-                                pin = machine.Pin(Awake.config.wakeUpGpio, machine.Pin.IN, machine.Pin.PULL_UP)
+                                pin = machine.Pin(Awake.config.wake_up_gpio, machine.Pin.IN, machine.Pin.PULL_UP)
                                 return True if pin.value() == 1 else False
                         except:
                                 return False
@@ -94,27 +94,27 @@ class Awake:
                         return False
 
         @staticmethod
-        def keepAwake():
+        def keep_awake():
                 &#34;&#34;&#34; Keep awake  &#34;&#34;&#34;
                 if Awake.config.activated:
-                        Awake.awakeCounter[0] = Awake.config.awakeDuration
+                        Awake.awake_counter[0] = Awake.config.awake_duration
 
         @staticmethod
         def manage():
                 &#34;&#34;&#34; Manage the awake duration &#34;&#34;&#34;
-                if Awake.refreshCounter[0] % 10 == 0:
-                        if Awake.config.isChanged():
+                if Awake.refresh_counter[0] % 10 == 0:
+                        if Awake.config.is_changed():
                                 Awake.config.load()
-                Awake.refreshCounter[0] += 1
+                Awake.refresh_counter[0] += 1
 
                 if Awake.config.activated:
-                        Awake.awakeCounter[0] -= 1
-                        if Awake.awakeCounter[0] &lt;= 0:
-                                useful.syslog(&#34;Sleep %d s&#34;%Awake.config.sleepDuration)
+                        Awake.awake_counter[0] -= 1
+                        if Awake.awake_counter[0] &lt;= 0:
+                                useful.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
 
                                 # Set the wake up on PIR detection
-                                Awake.setPinWakeUp()
-                                machine.deepsleep(Awake.config.sleepDuration*1000)</code></pre>
+                                Awake.set_pin_wake_up()
+                                machine.deepsleep(Awake.config.sleep_duration*1000)</code></pre>
 </details>
 </section>
 <section>
@@ -138,30 +138,30 @@ class Awake:
 <pre><code class="python">class Awake:
         &#34;&#34;&#34; Manage the awake &#34;&#34;&#34;
         config = None
-        awakeCounter = [0] # Decrease each second
-        refreshCounter = [0]
+        awake_counter = [0] # Decrease each second
+        refresh_counter = [0]
 
         @staticmethod
         def init():
                 &#34;&#34;&#34; Init awake class &#34;&#34;&#34;
                 # If config not yet read
-                if Awake.config == None:
+                if Awake.config is None:
                         Awake.config = AwakeConfig()
                         # If config failed to read
-                        if Awake.config.load() == False:
+                        if Awake.config.load() is False:
                                 # Write default config
                                 Awake.config.save()
-                Awake.keepAwake()
+                Awake.keep_awake()
 
         @staticmethod
-        def setPinWakeUp():
+        def set_pin_wake_up():
                 &#34;&#34;&#34; Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector. &#34;&#34;&#34;
                 Awake.init()
                 try:
-                        if Awake.config.wakeUpGpio != 0:
-                                wake1 = machine.Pin(Awake.config.wakeUpGpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
+                        if Awake.config.wake_up_gpio != 0:
+                                wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
                                 esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                                useful.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wakeUpGpio)
+                                useful.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
                         else:
                                 useful.syslog(&#34;Pin wake up disabled&#34;)
                         return True
@@ -170,12 +170,12 @@ class Awake:
                 return False
 
         @staticmethod
-        def isPinWakeUp():
+        def is_pin_wake_up():
                 &#34;&#34;&#34; Indicates that the machine wake up on pin modification (Only available at start) &#34;&#34;&#34;
                 Awake.init()
                 if Awake.config.activated:
                         try:
-                                pin = machine.Pin(Awake.config.wakeUpGpio, machine.Pin.IN, machine.Pin.PULL_UP)
+                                pin = machine.Pin(Awake.config.wake_up_gpio, machine.Pin.IN, machine.Pin.PULL_UP)
                                 return True if pin.value() == 1 else False
                         except:
                                 return False
@@ -183,31 +183,31 @@ class Awake:
                         return False
 
         @staticmethod
-        def keepAwake():
+        def keep_awake():
                 &#34;&#34;&#34; Keep awake  &#34;&#34;&#34;
                 if Awake.config.activated:
-                        Awake.awakeCounter[0] = Awake.config.awakeDuration
+                        Awake.awake_counter[0] = Awake.config.awake_duration
 
         @staticmethod
         def manage():
                 &#34;&#34;&#34; Manage the awake duration &#34;&#34;&#34;
-                if Awake.refreshCounter[0] % 10 == 0:
-                        if Awake.config.isChanged():
+                if Awake.refresh_counter[0] % 10 == 0:
+                        if Awake.config.is_changed():
                                 Awake.config.load()
-                Awake.refreshCounter[0] += 1
+                Awake.refresh_counter[0] += 1
 
                 if Awake.config.activated:
-                        Awake.awakeCounter[0] -= 1
-                        if Awake.awakeCounter[0] &lt;= 0:
-                                useful.syslog(&#34;Sleep %d s&#34;%Awake.config.sleepDuration)
+                        Awake.awake_counter[0] -= 1
+                        if Awake.awake_counter[0] &lt;= 0:
+                                useful.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
 
                                 # Set the wake up on PIR detection
-                                Awake.setPinWakeUp()
-                                machine.deepsleep(Awake.config.sleepDuration*1000)</code></pre>
+                                Awake.set_pin_wake_up()
+                                machine.deepsleep(Awake.config.sleep_duration*1000)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
-<dt id="lib.tools.awake.Awake.awakeCounter"><code class="name">var <span class="ident">awakeCounter</span></code></dt>
+<dt id="lib.tools.awake.Awake.awake_counter"><code class="name">var <span class="ident">awake_counter</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -215,7 +215,7 @@ class Awake:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="lib.tools.awake.Awake.refreshCounter"><code class="name">var <span class="ident">refreshCounter</span></code></dt>
+<dt id="lib.tools.awake.Awake.refresh_counter"><code class="name">var <span class="ident">refresh_counter</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -235,17 +235,17 @@ class Awake:
 def init():
         &#34;&#34;&#34; Init awake class &#34;&#34;&#34;
         # If config not yet read
-        if Awake.config == None:
+        if Awake.config is None:
                 Awake.config = AwakeConfig()
                 # If config failed to read
-                if Awake.config.load() == False:
+                if Awake.config.load() is False:
                         # Write default config
                         Awake.config.save()
-        Awake.keepAwake()</code></pre>
+        Awake.keep_awake()</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.awake.Awake.isPinWakeUp"><code class="name flex">
-<span>def <span class="ident">isPinWakeUp</span></span>(<span>)</span>
+<dt id="lib.tools.awake.Awake.is_pin_wake_up"><code class="name flex">
+<span>def <span class="ident">is_pin_wake_up</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates that the machine wake up on pin modification (Only available at start)</p></div>
@@ -254,12 +254,12 @@ def init():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isPinWakeUp():
+def is_pin_wake_up():
         &#34;&#34;&#34; Indicates that the machine wake up on pin modification (Only available at start) &#34;&#34;&#34;
         Awake.init()
         if Awake.config.activated:
                 try:
-                        pin = machine.Pin(Awake.config.wakeUpGpio, machine.Pin.IN, machine.Pin.PULL_UP)
+                        pin = machine.Pin(Awake.config.wake_up_gpio, machine.Pin.IN, machine.Pin.PULL_UP)
                         return True if pin.value() == 1 else False
                 except:
                         return False
@@ -267,8 +267,8 @@ def isPinWakeUp():
                 return False</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.awake.Awake.keepAwake"><code class="name flex">
-<span>def <span class="ident">keepAwake</span></span>(<span>)</span>
+<dt id="lib.tools.awake.Awake.keep_awake"><code class="name flex">
+<span>def <span class="ident">keep_awake</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Keep awake</p></div>
@@ -277,10 +277,10 @@ def isPinWakeUp():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def keepAwake():
+def keep_awake():
         &#34;&#34;&#34; Keep awake  &#34;&#34;&#34;
         if Awake.config.activated:
-                Awake.awakeCounter[0] = Awake.config.awakeDuration</code></pre>
+                Awake.awake_counter[0] = Awake.config.awake_duration</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.awake.Awake.manage"><code class="name flex">
@@ -295,23 +295,23 @@ def keepAwake():
 <pre><code class="python">@staticmethod
 def manage():
         &#34;&#34;&#34; Manage the awake duration &#34;&#34;&#34;
-        if Awake.refreshCounter[0] % 10 == 0:
-                if Awake.config.isChanged():
+        if Awake.refresh_counter[0] % 10 == 0:
+                if Awake.config.is_changed():
                         Awake.config.load()
-        Awake.refreshCounter[0] += 1
+        Awake.refresh_counter[0] += 1
 
         if Awake.config.activated:
-                Awake.awakeCounter[0] -= 1
-                if Awake.awakeCounter[0] &lt;= 0:
-                        useful.syslog(&#34;Sleep %d s&#34;%Awake.config.sleepDuration)
+                Awake.awake_counter[0] -= 1
+                if Awake.awake_counter[0] &lt;= 0:
+                        useful.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
 
                         # Set the wake up on PIR detection
-                        Awake.setPinWakeUp()
-                        machine.deepsleep(Awake.config.sleepDuration*1000)</code></pre>
+                        Awake.set_pin_wake_up()
+                        machine.deepsleep(Awake.config.sleep_duration*1000)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.awake.Awake.setPinWakeUp"><code class="name flex">
-<span>def <span class="ident">setPinWakeUp</span></span>(<span>)</span>
+<dt id="lib.tools.awake.Awake.set_pin_wake_up"><code class="name flex">
+<span>def <span class="ident">set_pin_wake_up</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector.</p></div>
@@ -320,14 +320,14 @@ def manage():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def setPinWakeUp():
+def set_pin_wake_up():
         &#34;&#34;&#34; Configure the wake up gpio on high level. For ESP32CAM, the GPIO 13 is used to detect the state of PIR detector. &#34;&#34;&#34;
         Awake.init()
         try:
-                if Awake.config.wakeUpGpio != 0:
-                        wake1 = machine.Pin(Awake.config.wakeUpGpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
+                if Awake.config.wake_up_gpio != 0:
+                        wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
                         esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                        useful.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wakeUpGpio)
+                        useful.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
                 else:
                         useful.syslog(&#34;Pin wake up disabled&#34;)
                 return True
@@ -356,9 +356,9 @@ def setPinWakeUp():
 
                 # GPIO wake up
                 self.activated = False  # Wake up on GPIO status
-                self.wakeUpGpio = 13 # Wake up GPIO number
-                self.awakeDuration = 120 # Awake duration in seconds
-                self.sleepDuration = 3600*24*365 # Sleep duration in seconds</code></pre>
+                self.wake_up_gpio = 13 # Wake up GPIO number
+                self.awake_duration = 120 # Awake duration in seconds
+                self.sleep_duration = 3600*24*365 # Sleep duration in seconds</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -384,14 +384,14 @@ def setPinWakeUp():
 <li>
 <h4><code><a title="lib.tools.awake.Awake" href="#lib.tools.awake.Awake">Awake</a></code></h4>
 <ul class="two-column">
-<li><code><a title="lib.tools.awake.Awake.awakeCounter" href="#lib.tools.awake.Awake.awakeCounter">awakeCounter</a></code></li>
+<li><code><a title="lib.tools.awake.Awake.awake_counter" href="#lib.tools.awake.Awake.awake_counter">awake_counter</a></code></li>
 <li><code><a title="lib.tools.awake.Awake.config" href="#lib.tools.awake.Awake.config">config</a></code></li>
 <li><code><a title="lib.tools.awake.Awake.init" href="#lib.tools.awake.Awake.init">init</a></code></li>
-<li><code><a title="lib.tools.awake.Awake.isPinWakeUp" href="#lib.tools.awake.Awake.isPinWakeUp">isPinWakeUp</a></code></li>
-<li><code><a title="lib.tools.awake.Awake.keepAwake" href="#lib.tools.awake.Awake.keepAwake">keepAwake</a></code></li>
+<li><code><a title="lib.tools.awake.Awake.is_pin_wake_up" href="#lib.tools.awake.Awake.is_pin_wake_up">is_pin_wake_up</a></code></li>
+<li><code><a title="lib.tools.awake.Awake.keep_awake" href="#lib.tools.awake.Awake.keep_awake">keep_awake</a></code></li>
 <li><code><a title="lib.tools.awake.Awake.manage" href="#lib.tools.awake.Awake.manage">manage</a></code></li>
-<li><code><a title="lib.tools.awake.Awake.refreshCounter" href="#lib.tools.awake.Awake.refreshCounter">refreshCounter</a></code></li>
-<li><code><a title="lib.tools.awake.Awake.setPinWakeUp" href="#lib.tools.awake.Awake.setPinWakeUp">setPinWakeUp</a></code></li>
+<li><code><a title="lib.tools.awake.Awake.refresh_counter" href="#lib.tools.awake.Awake.refresh_counter">refresh_counter</a></code></li>
+<li><code><a title="lib.tools.awake.Awake.set_pin_wake_up" href="#lib.tools.awake.Awake.set_pin_wake_up">set_pin_wake_up</a></code></li>
 </ul>
 </li>
 <li>

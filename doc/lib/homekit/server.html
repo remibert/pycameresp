@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>lib.homekit.server API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Create homekit server" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,11 +22,13 @@
 <h1 class="title">Module <code>lib.homekit.server</code></h1>
 </header>
 <section id="section-intro">
+<p>Create homekit server</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
+<pre><code class="python">&#34;&#34;&#34; Create homekit server &#34;&#34;&#34;
+# Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 from homekit.charact   import *
 class Server:
@@ -70,20 +72,20 @@ class Server:
         UUID_FAUCET                       = &#34;D7&#34;
         UUID_TELEVISION                   = &#34;D8&#34;
         UUID_INPUT_SOURCE                 = &#34;D9&#34;
-        def __init__(self, name, serverUuid):
+        def __init__(self, name, server_uuid):
                 &#34;&#34;&#34; Constructor homekit server &#34;&#34;&#34;
                 import homekit_
-                self.server = homekit_.Server(serverUuid)
+                self.server = homekit_.Server(server_uuid)
                 self.name = Charact(Charact.UUID_NAME, Charact.PERM_READ, Charact.TYPE_STRING, name)
-                self.addCharact(self.name)
+                self.add_charact(self.name)
 
         def __del__(self):
                 &#34;&#34;&#34; Destructor homekit server &#34;&#34;&#34;
                 self.server.deinit()
 
-        def addCharact(self, charact):
+        def add_charact(self, charact):
                 &#34;&#34;&#34; Add characteristic to this homekit server &#34;&#34;&#34;
-                self.server.addCharact(charact.charact)</code></pre>
+                self.server.add_charact(charact.charact)</code></pre>
 </details>
 </section>
 <section>
@@ -97,7 +99,7 @@ class Server:
 <dl>
 <dt id="lib.homekit.server.Server"><code class="flex name class">
 <span>class <span class="ident">Server</span></span>
-<span>(</span><span>name, serverUuid)</span>
+<span>(</span><span>name, server_uuid)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create homekit server </p>
@@ -147,20 +149,20 @@ class Server:
         UUID_FAUCET                       = &#34;D7&#34;
         UUID_TELEVISION                   = &#34;D8&#34;
         UUID_INPUT_SOURCE                 = &#34;D9&#34;
-        def __init__(self, name, serverUuid):
+        def __init__(self, name, server_uuid):
                 &#34;&#34;&#34; Constructor homekit server &#34;&#34;&#34;
                 import homekit_
-                self.server = homekit_.Server(serverUuid)
+                self.server = homekit_.Server(server_uuid)
                 self.name = Charact(Charact.UUID_NAME, Charact.PERM_READ, Charact.TYPE_STRING, name)
-                self.addCharact(self.name)
+                self.add_charact(self.name)
 
         def __del__(self):
                 &#34;&#34;&#34; Destructor homekit server &#34;&#34;&#34;
                 self.server.deinit()
 
-        def addCharact(self, charact):
+        def add_charact(self, charact):
                 &#34;&#34;&#34; Add characteristic to this homekit server &#34;&#34;&#34;
-                self.server.addCharact(charact.charact)</code></pre>
+                self.server.add_charact(charact.charact)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -323,8 +325,8 @@ class Server:
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.homekit.server.Server.addCharact"><code class="name flex">
-<span>def <span class="ident">addCharact</span></span>(<span>self, charact)</span>
+<dt id="lib.homekit.server.Server.add_charact"><code class="name flex">
+<span>def <span class="ident">add_charact</span></span>(<span>self, charact)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Add characteristic to this homekit server</p></div>
@@ -332,9 +334,9 @@ class Server:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def addCharact(self, charact):
+<pre><code class="python">def add_charact(self, charact):
         &#34;&#34;&#34; Add characteristic to this homekit server &#34;&#34;&#34;
-        self.server.addCharact(charact.charact)</code></pre>
+        self.server.add_charact(charact.charact)</code></pre>
 </details>
 </dd>
 </dl>
@@ -397,7 +399,7 @@ class Server:
 <li><code><a title="lib.homekit.server.Server.UUID_VALVE" href="#lib.homekit.server.Server.UUID_VALVE">UUID_VALVE</a></code></li>
 <li><code><a title="lib.homekit.server.Server.UUID_WINDOW" href="#lib.homekit.server.Server.UUID_WINDOW">UUID_WINDOW</a></code></li>
 <li><code><a title="lib.homekit.server.Server.UUID_WINDOW_COVERING" href="#lib.homekit.server.Server.UUID_WINDOW_COVERING">UUID_WINDOW_COVERING</a></code></li>
-<li><code><a title="lib.homekit.server.Server.addCharact" href="#lib.homekit.server.Server.addCharact">addCharact</a></code></li>
+<li><code><a title="lib.homekit.server.Server.add_charact" href="#lib.homekit.server.Server.add_charact">add_charact</a></code></li>
 </ul>
 </li>
 </ul>

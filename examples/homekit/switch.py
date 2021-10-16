@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+""" Switch homekit accessory """
 from homekit import *
 
 class Switch(Accessory):
@@ -7,24 +8,26 @@ class Switch(Accessory):
 	def __init__(self, **kwargs):
 		""" Create switch accessory. Parameters : name(string), on(bool) and all Accessory parameters """
 		Accessory.__init__(self, Accessory.CID_SWITCH, **kwargs)
-		self.server = Server(name=kwargs.get("name","Switch"), serverUuid=Server.UUID_SWITCH)
-		
-		self.on = charactBoolCreate (Charact.UUID_ON, Charact.PERM_RWE, kwargs.get("on",True))
-		self.server.addCharact(self.on)
-		self.on.setWriteCallback(self.writeOn)
-		self.addServer(self.server)
+		self.server = Server(name=kwargs.get("name","Switch"), server_uuid=Server.UUID_SWITCH)
 
-	def writeOn(self, value):
+		self.on = charact_bool_create (Charact.UUID_ON, Charact.PERM_RWE, kwargs.get("on",True))
+		self.server.add_charact(self.on)
+		self.on.set_write_callback(self.write_on)
+		self.add_server(self.server)
+
+	def write_on(self, value):
+		""" Write on """
 		if value:
 			print("ON")
 		else:
 			print("OFF")
-		self.on.setValue(value)
+		self.on.set_value(value)
 
 def main():
+	""" Test """
 	# Initialize homekit engine
 	Homekit.init()
-	
+
 	# Create accessory
 	Homekit.play(Switch(name="My Switch"))
 

@@ -1,16 +1,17 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Motion detection only work with ESP32CAM (Requires specially modified ESP32CAM firmware to handle motion detection.) """
+from gc import collect
 import sys
+import time
 import uasyncio
 import video
-from gc import collect
-from tools import useful, jsonconfig, lang, linearfunction, tasking
 from server.notifier import Notifier
 from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
 from video.video     import Camera
+from tools import useful, jsonconfig, lang, linearfunction, tasking
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
@@ -20,28 +21,28 @@ class MotionConfig(jsonconfig.JsonConfig):
 		self.activated = False
 
 		# Suspend the motion detection when presence detected
-		self.suspendOnPresence = True
+		self.suspend_on_presence = True
 
 		# Minimum difference contigous threshold to detect movement
-		self.differencesDetection = 4
+		self.differences_detection = 4
 
 		# Sensitivity in percent (100% = max sensitivity, 0% = min sensitivity)
 		self.sensitivity=80
 
 		# Max images in motion historic
-		self.maxMotionImages=10
+		self.max_motion_images=10
 
 		# Glitch threshold of image ignored (sometime the camera bug)
-		self.thresholdGlitch=2
+		self.threshold_glitch=2
 
 		# Threshold of minimum image to detect motion
-		self.thresholdMotion=3
+		self.threshold_motion=3
 
 		# Number of images before camera stabilization
-		self.stabilizationCamera=8
+		self.stabilization_camera=8
 
 		# Turn on the led flash when the light goes down
-		self.lightCompensation = True
+		self.light_compensation = True
 
 		# Notify motion
 		self.notify = True
@@ -61,16 +62,16 @@ class ImageMotion:
 		self.created[0] += 1
 		self.index    = self.baseIndex[0]
 		self.filename = None
-		self.motionId = None
-		self.date     = useful.dateToString()
-		self.filename = useful.dateToFilename()
-		path = useful.dateToPath()[:-1]
+		self.motion_id = None
+		self.date     = useful.date_to_string()
+		self.filename = useful.date_to_filename()
+		path = useful.date_to_path()[:-1]
 		if path[-1] in [0x30,0x31,0x32]:
 			path = path[:-1] + b"00"
 		else:
 			path = path[:-1] + b"30"
 		self.path     = path
-		self.motionDetected = False
+		self.motion_detected = False
 		self.config = config
 		self.comparison = None
 
@@ -81,46 +82,46 @@ class ImageMotion:
 			print("Destroy %d"%self.created[0])
 		if self.motion:
 			self.motion.deinit()
-	
-	def setMotionId(self, motionId = None):
+
+	def set_motion_id(self, motion_id = None):
 		""" Set the unique image identifier """
-		if motionId == None:
+		if motion_id is None:
 			self.motionBaseId[0] += 1
-			self.motionId = self.motionBaseId[0]
+			self.motion_id = self.motionBaseId[0]
 		else:
-			if self.motionId == None:
-				self.motionId = motionId
+			if self.motion_id is None:
+				self.motion_id = motion_id
 			else:
 				print("Motion id already set")
-	
-	def getMotionId(self):
+
+	def get_motion_id(self):
 		""" Get the unique image identifier """
-		return self.motionId
+		return self.motion_id
 
-	def getFilename(self):
+	def get_filename(self):
 		""" Get the storage filename """
-		return "%s Id=%d D=%d"%(self.filename, self.index, self.getDiffCount())
+		return "%s Id=%d D=%d"%(self.filename, self.index, self.get_diff_count())
 
-	def getMessage(self):
+	def get_message(self):
 		""" Get the message of motion """
-		return "%s %s D=%d"%(useful.tostrings(lang.motion_detected), self.date[-8:], self.getDiffCount())
+		return "%s %s D=%d"%(useful.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
-	def getInformations(self):
+	def get_informations(self):
 		""" Return the informations of motion """
-		if self.comparison != None:
+		if self.comparison is not None:
 			result    = self.comparison.copy()
 		else:
 			result = {}
-		result["image"]    = self.getFilename() + ".jpg"
+		result["image"]    = self.get_filename() + ".jpg"
 		result["path"]     = self.path
 		result["index"]    = self.index
 		result["date"]     = self.date
-		result["motionId"] = self.motionId
+		result["motion_id"] = self.motion_id
 		return result
 
 	async def save(self):
 		""" Save the image on sd card """
-		return await Historic.addMotion(useful.tostrings(self.path), self.getFilename(), self.motion.getImage(), self.getInformations())
+		return await Historic.add_motion(useful.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
 
 	def compare(self, previous, extractShape=True):
 		""" Compare two motion images to get differences """
@@ -128,55 +129,55 @@ class ImageMotion:
 		self.comparison = res
 		return res
 
-	def getMotionDetected(self):
+	def get_motion_detected(self):
 		""" Get the motion detection status """
-		return self.motionDetected
-	
-	def setMotionDetected(self):
+		return self.motion_detected
+
+	def set_motion_detected(self):
 		""" Set the motion detection status """
-		self.motionDetected = True
-	
+		self.motion_detected = True
+
 	def get(self):
 		""" Get the image captured """
-		return self.motion.getImage()
-	
-	def getComparison(self):
+		return self.motion.get_image()
+
+	def get_comparison(self):
 		""" Return the comparison result """
 		return self.comparison
 
-	def getDiffCount(self):
+	def get_diff_count(self):
 		""" Get the difference contigous """
 		if self.comparison:
 			return self.comparison["diff"]["count"]
 		return 0
 
-	def getDiffHisto(self):
+	def get_diff_histo(self):
 		""" Get the histogram difference """
 		if self.comparison:
 			return self.comparison["diff"]["diffhisto"]
 		return 0
 
-	def getDifferences(self):
+	def get_differences(self):
 		""" Get the differences """
 		if self.comparison:
 			return self.comparison["diff"]["diffs"]
 		return ""
 
-	def resetDifferences(self):
+	def reset_differences(self):
 		""" Reset the differences, used during the camera stabilization image """
 		self.comparison = None
 
-	def getSize(self):
+	def get_size(self):
 		""" Return the size of image buffer """
-		return self.motion.getSize()
+		return self.motion.get_size()
 
-	def refreshConfig(self):
+	def refresh_config(self):
 		""" Refresh the motion detection configuration """
-		if self.motion != None:
+		if self.motion is not None:
 			mask = useful.tobytes(self.config.mask)
 			if not b"/" in mask:
 				mask = b""
-			errorLight = linearfunction.getFx(self.config.sensitivity, linearfunction.getLinear(100,8,0,64))
+			errorLight = linearfunction.get_fx(self.config.sensitivity, linearfunction.get_linear(100,8,0,64))
 			self.motion.configure(\
 				{
 					"mask":mask,
@@ -191,9 +192,9 @@ class SnapConfig:
 	@staticmethod
 	def get(width=None, height=None):
 		""" Get the last motion information """
-		if width != None and height != None:
+		if width is not None and height is not None:
 			SnapConfig.info = SnapConfig(width, height)
-		elif SnapConfig.info == None:
+		elif SnapConfig.info is None:
 			SnapConfig.info = SnapConfig()
 		return SnapConfig.info
 
@@ -216,16 +217,16 @@ class SnapConfig:
 
 class Motion:
 	""" Class to manage the motion capture """
-	def __init__(self, config= None, pirDetection=False):
+	def __init__(self, config= None, pir_detection=False):
 		self.images = []
 		self.index  = 0
 		self.config = config
-		self.pirDetection = pirDetection
-		self.imageBackground = None
-		self.mustRefreshConfig = True
+		self.pir_detection = pir_detection
+		self.image_background = None
+		self.must_refresh_config = True
 		self.quality = 15
-		self.previousQuality = 0
-		self.flashLevel = 0
+		self.previous_quality = 0
+		self.flash_level = 0
 
 	def __del__(self):
 		""" Destructor """
@@ -234,12 +235,12 @@ class Motion:
 	def cleanup(self):
 		""" Clean up all images """
 		for image in self.images:
-			if id(image) != id(self.imageBackground):
+			if id(image) != id(self.image_background):
 				image.deinit()
 		self.images = []
-		if self.imageBackground:
-			self.imageBackground.deinit()
-		self.imageBackground = None
+		if self.image_background:
+			self.image_background.deinit()
+		self.image_background = None
 
 	def open(self):
 		""" Open camera """
@@ -258,95 +259,102 @@ class Motion:
 		video.Camera.saturation(0)
 		video.Camera.hmirror(0)
 		video.Camera.vflip(0)
-		video.Camera.flash(self.flashLevel)
+		video.Camera.flash(self.flash_level)
 
-		detected, changePolling = self.detect(False)
-		if detected == False:
+		detected, change_polling = self.detect(False)
+		if detected is False:
 			self.cleanup()
 
 	async def capture(self):
 		""" Capture motion image """
 		result = None
 		# If enough image taken
-		if len(self.images) >= self.config.maxMotionImages:
+		if len(self.images) >= self.config.max_motion_images:
 			# Get older image
 			image = self.images.pop()
-			
+
 			# If motion detected on image, on battery the first five images are sent
-			if image.getMotionDetected() or (self.pirDetection and image.index <= 3):
+			if image.get_motion_detected() or (self.pir_detection and image.index <= 3):
 				# Notification of motion
-				result = (image.getMessage(), image)
+				result = (image.get_message(), image)
 
 				# Save image to sdcard
-				if await image.save() == False:
+				if await image.save() is False:
 					if self.config.notify:
 						await Notifier.notify(lang.failed_to_save)
 			else:
 				# Destroy image
-				self.deinitImage(image)
+				self.deinit_image(image)
 
 		motion = video.Camera.motion()
 
 		# Light can be compensed with flash led
-		if self.config.lightCompensation:
+		if self.config.light_compensation:
 			# If it has enough light
-			if motion.getLight() >= 32:
+			if motion.get_light() >= 45:
 				# If flash led working
-				if self.flashLevel >= 2:
+				if self.flash_level > 8:
 					# Reduce light of flash led
-					self.flashLevel -= 2
-					video.Camera.flash(self.flashLevel)
+					self.flash_level -= 2
+					video.Camera.flash(self.flash_level)
 			# If it has not enough light
-			if motion.getLight() <= 24:
+			elif motion.get_light() <= 35:
 				# If flash to low
-				if self.flashLevel <= 192:
+				if self.flash_level <= 192:
 					# Increase the light of flash led
-					self.flashLevel += 2
-					video.Camera.flash(self.flashLevel)
+					self.flash_level += 2
+					video.Camera.flash(self.flash_level)
+			if self.flash_level < 8:
+				self.flash_level = 8
+				video.Camera.flash(self.flash_level)
 		else:
-			# If flash led working and compensation disabled
-			if self.flashLevel > 0:
-				# Stop flash led
-				self.flashLevel = 0
-				video.Camera.flash(self.flashLevel)
+			self.stop_light()
 
 		image = ImageMotion(motion, self.config)
-		if self.mustRefreshConfig:
-			image.refreshConfig()
-			self.mustRefreshConfig = False
+		if self.must_refresh_config:
+			image.refresh_config()
+			self.must_refresh_config = False
 		self.images.insert(0, image)
 		self.index += 1
 		return result
 
-	def refreshConfig(self):
-		""" Force the refresh of motion configuration """
-		self.mustRefreshConfig = True
+	def stop_light(self):
+		""" Stop the light """
+		# If flash led working and compensation disabled
+		if self.flash_level > 0:
+			# Stop flash led
+			self.flash_level = 0
+			video.Camera.flash(self.flash_level)
 
-	def isStabilized(self):
+	def refresh_config(self):
+		""" Force the refresh of motion configuration """
+		self.must_refresh_config = True
+
+	def is_stabilized(self):
 		""" Indicates if the camera is stabilized """
 		# If the PIR detection force the stabilization
-		if self.pirDetection == True:
+		if self.pir_detection is True:
 			stabilized = True
 		# If the camera not stabilized
-		elif len(self.images) < self.config.stabilizationCamera and len(self.images) < self.config.maxMotionImages:
+		elif len(self.images) < self.config.stabilization_camera and len(self.images) < self.config.max_motion_images:
 			stabilized = False
 		else:
 			stabilized = True
 		return stabilized
 
-	def isDetected(self, comparison):
+	def is_detected(self, comparison):
 		""" Indicates if motion detected """
 		if comparison:
 			# If image seem not equal to previous
-			if comparison["diff"]["count"] >= self.config.differencesDetection:
+			if comparison["diff"]["count"] >= self.config.differences_detection:
 				return True
 		return False
 
-	def adjustQuality(self, current):
-		""" Adjust the image quality according to the size of image to"""
-		if len(self.images) >= self.config.maxMotionImages:
+	def adjust_quality(self, current):
+		""" Adjust the image quality according to the size of image (the max possible is 64K) """
+		if len(self.images) >= self.config.max_motion_images:
 			changed = False
-			size = current.getSize()
+			size = current.get_size()
 			if size > 62*1024:
 				if self.quality < 63:
 					self.quality += 1
@@ -358,88 +366,88 @@ class Motion:
 						self.quality -= 1
 						changed = True
 						video.Camera.quality(self.quality, False)
-			if changed == False:
-				if self.previousQuality != self.quality:
-					self.previousQuality = self.quality
+			if changed is False:
+				if self.previous_quality != self.quality:
+					self.previous_quality = self.quality
 
 	def compare(self, display=True):
 		""" Compare all images captured and search differences """
 		differences = {}
 		if len(self.images) >= 2:
 			current = self.images[0]
-			
-			self.adjustQuality(current)
+
+			self.adjust_quality(current)
 
 			# Compute the motion identifier
 			for previous in self.images[1:]:
 				# # If image not already compared
 				comparison = current.compare(previous, False)
-	
+
 				# If camera not stabilized
-				if self.isStabilized() == False:
+				if self.is_stabilized() is False:
 					# Reject the differences
-					current.resetDifferences()
+					current.reset_differences()
 					break
 
 				# If image seem equal to previous
-				if not self.isDetected(comparison):
+				if not self.is_detected(comparison):
 					# Reuse the motion identifier
-					current.setMotionId(previous.motionId)
+					current.set_motion_id(previous.motion_id)
 					break
 			else:
 				# Create new motion id
-				current.setMotionId()
+				current.set_motion_id()
 
 				# Compare the image with the background if existing and extract modification
-				if self.imageBackground != None:
-					comparison = current.compare(self.imageBackground, True)
+				if self.image_background is not None:
+					comparison = current.compare(self.image_background, True)
 
 			# Compute the list of differences
 			diffs = ""
 			index = 0
 			for image in self.images:
-				differences.setdefault(image.getMotionId(), []).append(image.getMotionId())
-				if image.getMotionId() != None:
+				differences.setdefault(image.get_motion_id(), []).append(image.get_motion_id())
+				if image.get_motion_id() is not None:
 					if image.index % 10 == 0:
 						trace = "_"
 					else:
 						trace = " "
 					if image.index > index:
 						index = image.index
-					diffs += "%d:%d%s%s"%(image.getMotionId(), image.getDiffCount(), chr(0x41 + ((256-image.getDiffHisto())//10)), trace)
+					diffs += "%d:%d%s%s"%(image.get_motion_id(), image.get_diff_count(), chr(0x41 + ((256-image.get_diff_histo())//10)), trace)
 			if display:
-				sys.stdout.write("\r%s %s (%d) "%(useful.dateToString()[12:], diffs, index))
+				sys.stdout.write("\r%s %s (%d) "%(useful.date_to_string()[12:], diffs, index))
 		return differences
 
-	def deinitImage(self, image):
+	def deinit_image(self, image):
 		""" Release image allocated """
 		if image:
 			if not image in self.images:
-				if image != self.imageBackground:
+				if image != self.image_background:
 					image.deinit()
 
 	def detect(self, display=True):
 		""" Detect motion """
 		detected = False
-		changePolling = False
+		change_polling = False
 
 		# Compute the list of differences
 		differences = self.compare(display)
 
 		# Too many differences found
-		if len(list(differences.keys())) >= self.config.thresholdMotion:
+		if len(list(differences.keys())) >= self.config.threshold_motion:
 			detected = True
-			changePolling = True
+			change_polling = True
 		# If no differences
 		elif len(list(differences.keys())) == 1:
-			image = self.imageBackground
-			self.imageBackground = self.images[0]
-			self.deinitImage(image)
+			image = self.image_background
+			self.image_background = self.images[0]
+			self.deinit_image(image)
 			detected = False
 		# If not enough differences
-		elif len(list(differences.keys())) <= self.config.thresholdGlitch:
+		elif len(list(differences.keys())) <= self.config.threshold_glitch:
 			detected = True
-			changePolling = True
+			change_polling = True
 			# Check if it is a glitch
 			for diff in differences.values():
 				if len(diff) <= 1:
@@ -454,89 +462,95 @@ class Motion:
 			# Mark all motion images
 			for image in self.images:
 				# If image seem not equal to previous
-				if self.isDetected(image.getComparison()):
-					image.setMotionDetected()
-		return detected, changePolling
+				if self.is_detected(image.get_comparison()):
+					image.set_motion_detected()
+		return detected, change_polling
 
 class Detection:
 	""" Asynchronous motion detection object """
-	def __init__(self, pirDetection):
+	def __init__(self, pir_detection):
 		""" Constructor """
-		self.pirDetection = pirDetection
-		self.loadConfig()
+		self.pir_detection = pir_detection
+		self.load_config()
 		self.motion = None
-		
-		self.batteryLevel = -2
-		if self.pirDetection == True:
-			self.pollingFrequency = 3
+
+		self.battery_level = -2
+		if self.pir_detection is True:
+			self.polling_frequency = 3
 		else:
-			self.pollingFrequency = 100
+			self.polling_frequency = 100
 		self.detection = None
 		self.activated = None
-		self.refreshConfigCounter = 0
+		self.refresh_config_counter = 0
+		self.cadencer = NotificationCadencer()
 
-	def loadConfig(self):
+	def load_config(self):
 		""" Load motion configuration """
 		# Open motion configuration
-		self.motionConfig      = MotionConfig()
-		if self.motionConfig.load() == False:
-			self.motionConfig.save()
+		self.motion_config      = MotionConfig()
+		if self.motion_config.load() is False:
+			self.motion_config.save()
 
-	def refreshConfig(self):
+	def refresh_config(self):
 		""" Refresh the configuration : it can be changed by web page """
-		if self.refreshConfigCounter % 11 == 0:
+		if self.refresh_config_counter % 11 == 0:
 			# If configuration changed
-			if self.motionConfig.isChanged():
-				self.motionConfig.load()
-				useful.syslog("Change motion config %s"%self.motionConfig.toString(), display=False)
+			if self.motion_config.is_changed():
+				self.motion_config.load()
+				useful.syslog("Change motion config %s"%self.motion_config.to_string(), display=False)
 				if self.motion:
-					self.motion.refreshConfig()
-		self.refreshConfigCounter += 1
+					self.motion.refresh_config()
+		self.refresh_config_counter += 1
 
 	async def run(self):
 		""" Main asynchronous task """
-		await tasking.taskMonitoring(self.detect)
-	
+		await tasking.task_monitoring(self.detect)
+
 	async def detect(self):
 		""" Detect motion """
 		result = False
 		# Wait the server resume
-		await Server.waitResume()
+		await Server.wait_resume()
 
 		# Release previously alocated image
-		self.releaseImage()
+		self.release_image()
 
 		# If the motion detection activated
-		if await self.isActivated():
+		if await self.is_activated():
 			# Capture motion
 			result = await self.capture()
 		else:
+			if self.motion:
+				self.motion.stop_light()
+
 			await uasyncio.sleep(3)
 			result = True
 
+		self.cadencer.refresh()
+
 		# Refresh configuration when it changed
-		self.refreshConfig()
+		self.refresh_config()
 
 		return result
 
-	async def isActivated(self):
+	async def is_activated(self):
 		""" Indicates if the motion detection is activated according to configuration or presence """
 		result = False
 
 		# If motion activated
-		if self.motionConfig.activated:
+		if self.motion_config.activated:
 			# If motion must be suspended on presence
-			if self.motionConfig.suspendOnPresence:
+			if self.motion_config.suspend_on_presence:
 				# If home is empty
-				if Presence.isDetected() == False:
+				if Presence.is_detected() is False:
 					result = True
 			else:
 				result = True
-		
+
 		# If state of motion changed
 		if self.activated != result:
 			# If notification enabled
-			if self.motionConfig.notify:
+			if self.motion_config.notify:
 				if result:
 					await Notifier.notify(lang.motion_detection_on)
 				else:
@@ -544,43 +558,43 @@ class Detection:
 			self.activated = result
 
 		# If camera activated and motion activated
-		if Camera.isActivated() and result:
+		if Camera.is_activated() and result:
 			result = True
 		else:
 			result = False
 
 		# If motion disabled
-		if result == False:
+		if result is False:
 			# Wait moment before next loop
 			await uasyncio.sleep_ms(500)
 		return result
 
-	async def initMotion(self):
+	async def init_motion(self):
 		""" Initialize motion detection """
 		firstInit = False
 
 		# If motion not initialized
-		if self.motion == None:
-			self.motion = Motion(self.motionConfig, self.pirDetection)
-			if self.motion.open() == False:
+		if self.motion is None:
+			self.motion = Motion(self.motion_config, self.pir_detection)
+			if self.motion.open() is False:
 				self.motion = None
 				raise Exception("Cannot open camera")
 			else:
 				firstInit = True
 
 		# If the camera configuration changed
-		if video.Camera.isModified() or firstInit:
+		if video.Camera.is_modified() or firstInit:
 			# Restore motion configuration
 			self.motion.resume()
-			video.Camera.clearModified()
+			video.Camera.clear_modified()
 
-	def releaseImage(self):
+	def release_image(self):
 		""" Release motion image allocated """
 		# If detection
 		if self.detection:
 			message, image = self.detection
 			# Release image buffer
-			self.motion.deinitImage(image)
+			self.motion.deinit_image(image)
 
 		# Force garbage collection each 20 images
 		if self.motion:
@@ -592,8 +606,8 @@ class Detection:
 		result = False
 
 		# If camera not stabilized speed start
-		if self.motion and self.motion.isStabilized() == True:
-			await uasyncio.sleep_ms(self.pollingFrequency*100 if Server.isSlow() else self.pollingFrequency)
+		if self.motion and self.motion.is_stabilized() is True:
+			await uasyncio.sleep_ms(self.polling_frequency*500 if Server.is_slow() else self.polling_frequency)
 
 		try:
 			# Waits for the camera's availability
@@ -602,32 +616,35 @@ class Detection:
 			# If reserved
 			if reserved:
 				# Initialize motion detection
-				await self.initMotion()
+				await self.init_motion()
 
 				# Capture motion image
 				self.detection = await self.motion.capture()
 
 				# If motion detected
-				if self.detection != None:
+				if self.detection is not None:
 					# Notify motion with push over
 					message, image = self.detection
-					if self.motionConfig.notify:
-						await Notifier.notify(message, image.get())
+					if self.motion_config.notify:
+						if self.cadencer.can_notify():
+							await Notifier.notify(message, image.get())
+						else:
+							useful.syslog(message + " ignored")
 				# Detect motion
-				detected, changePolling = self.motion.detect()
+				detected, change_polling = self.motion.detect()
 
 				# If motion found
-				if changePolling == True:
+				if change_polling is True:
 					# Speed up the polling frequency
-					self.pollingFrequency = 10
-					Historic.setMotionState(True)
+					self.polling_frequency = 10
+					Historic.set_motion_state(True)
 				else:
 					# Slow down the polling frequency
-					self.pollingFrequency = 50
-					Historic.setMotionState(False)
+					self.polling_frequency = 50
+					Historic.set_motion_state(False)
 				result = True
 			else:
-				if self.motionConfig.notify:
+				if self.motion_config.notify:
 					await Notifier.notify(lang.motion_detection_suspended)
 				result = True
 
@@ -636,8 +653,69 @@ class Detection:
 				await video.Camera.unreserve(self)
 		return result
 
-async def detectMotion(pirDetection):
-	""" Asynchronous motion detection main routine """
-	detection = Detection(pirDetection)
-	await detection.run()
+class MovingCounters:
+	""" Manages an event counter with a history """
+	def __init__(self, proof, step):
+		""" Constructor, proof=indicates the depth of the history, step=duration in seconds of each history step """
+		self.total = 0
+		self.step = step
+		self.counters = []
+		for i in range(proof):
+			self.counters.insert(0,[0,0])
 
+	def refresh(self, increase=0):
+		""" Refresh counter history, increase=1 forces the counter to increment else the counter history updated """
+		t = int(time.time())
+
+		if self.counters[-1][0] + self.step < t:
+			self.total   -= self.counters[0][1]
+			self.counters = self.counters[1:]
+			self.counters.append([t,0])
+
+		self.counters[-1][1] += increase
+		self.total += increase
+
+	def get_total(self):
+		""" Returns the total value of the counted values. """
+		return self.total
+
+class NotificationCadencer(MovingCounters):
+	""" Cadencer for motion detection notifications
+	Parameters:
+		batch (int):size of a notification batch before changing the wait time
+		duration (int):duration in seconds to add when a batch has ended
+		max_duration (int):max waiting value"""
+	def __init__(self, batch=5, duration=15, max_duration=60):
+		""" Constructor """
+		MovingCounters.__init__(self, 20, 60)
+		self.last = 0
+		self.max_duration = max_duration
+		self.duration = duration
+		self.batch = batch
+
+	def can_notify(self):
+		""" Indicates whether a notification can be sent or not """
+		self.refresh(0)
+
+		total = self.get_total() // self.batch
+
+		if total >= 1:
+			duration = (1<<(total-1))*self.duration
+			if duration > self.max_duration:
+				duration = self.max_duration
+		else:
+			duration = 0
+
+		t = int(time.time())
+		if self.last + duration <= t:
+			self.refresh(1)
+			self.last = t
+			result = True
+		else:
+			result = False
+		return result
+
+async def detect_motion(pir_detection):
+	""" Asynchronous motion detection main routine """
+	detection = Detection(pir_detection)
+	await detection.run()

@@ -4,8 +4,8 @@
 # https://github.com/robert-hh/FTP-Server-for-ESP8266-ESP32-and-PYBD/blob/master/ftp.py
 # but I have modified a lot, there must still be some original functions.
 """ Ftp server main class.
-This class contains few lines of code, this is to save memory. 
-The core of the server is in the other class FtpServerCore, which is loaded into memory only when connecting an FTP client. 
+This class contains few lines of code, this is to save memory.
+The core of the server is in the other class FtpServerCore, which is loaded into memory only when connecting an FTP client.
 It takes a little while the first time you connect, but limits memory consumption if not in use.
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True.
 """
@@ -15,7 +15,7 @@ from tools import useful
 class Ftp:
 	""" Ftp main class """
 	def __init__(self, port=21, preload=False):
-		self.serverClass = None
+		self.server_class = None
 		self.port = port
 		if preload:
 			self.preload()
@@ -24,23 +24,23 @@ class Ftp:
 
 	def preload(self):
 		""" Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) """
-		if self.serverClass == None:
+		if self.server_class is None:
 			useful.syslog("Ftp load server")
 			from server.ftpservercore import FtpServerCore
-			self.serverClass = FtpServerCore
+			self.server_class = FtpServerCore
 			useful.syslog("Ftp ready on %d"%self.port)
-	
-	async def onConnection(self, reader, writer):
+
+	async def on_connection(self, reader, writer):
 		""" Asynchronous connection detected """
 		try:
 			# Preload ftp core class
 			self.preload()
 
 			# Start ftp core
-			server = self.serverClass()
+			server = self.server_class()
 
 			# Call on connection method
-			await server.onConnection(reader, writer)
+			await server.on_connection(reader, writer)
 
 			# Close ftp core
 			server.close()
@@ -50,13 +50,13 @@ class Ftp:
 
 def start(loop=None, port=21, preload=False):
 	""" Start the ftp server with asyncio loop.
-	loop : asyncio loop object 
+	loop : asyncio loop object
 	port : tcp/ip port of the server
 	preload : True = preload the server at the start, False = load the server at the first connection """
 	server = Ftp(port, preload)
 
 	# If asyncio loop not created
-	if loop == None:
+	if loop is None:
 		# Create asyncio loop
 		loop = uasyncio.get_event_loop()
 
@@ -67,7 +67,7 @@ def start(loop=None, port=21, preload=False):
 		run_forever = False
 
 	# Start ftp server on port specified
-	asyncServer = uasyncio.start_server(server.onConnection, "0.0.0.0", port, backlog=1)
+	asyncServer = uasyncio.start_server(server.on_connection, "0.0.0.0", port, backlog=1)
 
 	# Create asyncio task
 	loop.create_task(asyncServer)

@@ -1,8 +1,8 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Manage the battery """
-from tools import jsonconfig, useful
 import machine
+from tools import jsonconfig, useful
 
 class BatteryConfig(jsonconfig.JsonConfig):
 	""" Battery configuration """
@@ -12,13 +12,13 @@ class BatteryConfig(jsonconfig.JsonConfig):
 
 		# Battery monitoring
 		self.activated = False # Monitoring status
-		self.levelGpio    = 12  # Monitoring GPIO
-		self.fullBattery  = 188 # 4.2V mesured with resistor 100k + 47k
-		self.emptyBattery = 158 # 3.6V mesured with resistor 100k + 47k
+		self.level_gpio    = 12  # Monitoring GPIO
+		self.full_battery  = 188 # 4.2V mesured with resistor 100k + 47k
+		self.empty_battery = 158 # 3.6V mesured with resistor 100k + 47k
 
 		# Force deep sleep if to many successive brown out reset detected
-		self.brownoutDetection = True
-		self.brownoutCount = 0
+		self.brownout_detection = True
+		self.brownout_count = 0
 
 class Battery:
 	""" Manage the battery information """
@@ -30,15 +30,15 @@ class Battery:
 	def init():
 		""" Init battery class """
 		# If config not yet read
-		if Battery.config == None:
+		if Battery.config is None:
 			Battery.config = BatteryConfig()
 			# If config failed to read
-			if Battery.config.load() == False:
+			if Battery.config.load() is False:
 				# Write default config
 				Battery.config.save()
 
 	@staticmethod
-	def getLevel():
+	def get_level():
 		""" Return the battery level between 0% to 100% (0%=3.6V 100%=4.2V).
 			For the ESP32CAM with Gpio12, the value can be read only before the open of camera and SD card.
 			The voltage always smaller than 1.5V otherwise the card does not boot (JTAG detection I think).
@@ -49,7 +49,7 @@ class Battery:
 		if Battery.level[0] == -2:
 			level = -1
 			try:
-				adc = machine.ADC(machine.Pin(Battery.config.levelGpio))
+				adc = machine.ADC(machine.Pin(Battery.config.level_gpio))
 				adc.atten(machine.ADC.ATTN_11DB)
 				adc.width(machine.ADC.WIDTH_9BIT)
 				count = 3
@@ -57,11 +57,11 @@ class Battery:
 				for i in range(count):
 					val += adc.read()
 				# If battery level pin not connected
-				if val < (Battery.config.emptyBattery * count) // 2:
+				if val < (Battery.config.empty_battery * count) // 2:
 					level = -1
 				else:
 					# Compute battery level
-					level = Battery.calcPercent(val/count, Battery.config)
+					level = Battery.calc_percent(val/count, Battery.config)
 					if level < 0.:
 						level = 0
 					elif level > 100.:
@@ -75,17 +75,17 @@ class Battery:
 		return Battery.level[0]
 
 	@staticmethod
-	def isActivated():
+	def is_activated():
 		""" Indicates if the battery management activated """
 		Battery.init()
 		return Battery.config.activated
 
 	@staticmethod
-	def calcPercent(x, config):
+	def calc_percent(x, config):
 		""" Calc the percentage of battery according to the configuration """
-		x1 = config.fullBattery
+		x1 = config.full_battery
 		y1 = 100
-		x2 = config.emptyBattery
+		x2 = config.empty_battery
 		y2 = 0
 
 		a = (y1 - y2)/(x1 - x2)
@@ -97,34 +97,34 @@ class Battery:
 	def protect():
 		""" Protect the battery """
 		Battery.init()
-		Battery.keepResetCause()
-		if Battery.manageLevel() or Battery.isTooManyBrownout():
+		Battery.keep_reset_cause()
+		if Battery.manage_level() or Battery.is_too_many_brownout():
 			useful.syslog("Sleep infinite")
 			machine.deepsleep()
 
 	@staticmethod
-	def manageLevel():
-		""" Checks if the battery level is sufficient. 
+	def manage_level():
+		""" Checks if the battery level is sufficient.
 			If the battery is too low, we enter indefinite deep sleep to protect the battery """
 		deepsleep = False
 		if Battery.config.activated:
 			# Can only be done once at boot before start the camera and sd card
-			batteryLevel = Battery.getLevel()
+			battery_level = Battery.get_level()
 
 			# If the battery is too low
-			if batteryLevel > 5 or batteryLevel < 0:
-				batteryProtect = False
+			if battery_level > 5 or battery_level < 0:
+				battery_protect = False
 			else:
-				batteryProtect = True
+				battery_protect = True
 
 			# Case the battery has not enough current and must be protected
-			if batteryProtect:
+			if battery_protect:
 				deepsleep = True
-				useful.syslog("Battery too low %d %%"%batteryLevel)
+				useful.syslog("Battery too low %d %%"%battery_level)
 		return deepsleep
 
 	@staticmethod
-	def keepResetCause():
+	def keep_reset_cause():
 		""" Keep reset cause """
 		causes = {
 			machine.PWRON_RESET     : "Power on",
@@ -139,24 +139,24 @@ class Battery:
 		useful.syslog("%s reset"%causes)
 
 	@staticmethod
-	def isTooManyBrownout():
+	def is_too_many_brownout():
 		""" Checks the number of brownout reset """
 		deepsleep = False
 
-		if Battery.config.isChanged():
+		if Battery.config.is_changed():
 			Battery.config.load()
 
-		if Battery.config.brownoutDetection:
+		if Battery.config.brownout_detection:
 			# If the reset can probably due to insufficient battery
 			if machine.reset_cause() == machine.BROWNOUT_RESET:
-				Battery.config.brownoutCount += 1
+				Battery.config.brownout_count += 1
 			else:
-				Battery.config.brownoutCount = 0
+				Battery.config.brownout_count = 0
 
 			Battery.config.save()
 
 			# if the number of consecutive brownout resets is too high
-			if Battery.config.brownoutCount > 32:
+			if Battery.config.brownout_count > 32:
 				# Battery too low, save the battery status
 				useful.syslog("Too many successive brownout reset")
 				deepsleep = True
@@ -166,12 +166,12 @@ class Battery:
 	def manage(resetBrownout=False):
 		""" Manage the battery level duration """
 		if Battery.refresh[0] % 10 == 0:
-			if Battery.config.isChanged():
+			if Battery.config.is_changed():
 				Battery.config.load()
 		Battery.refresh[0] += 1
 
 		if resetBrownout:
-			if Battery.config.brownoutDetection:
-				if Battery.config.brownoutCount > 0:
-					Battery.config.brownoutCount = 0
+			if Battery.config.brownout_detection:
+				if Battery.config.brownout_count > 0:
+					Battery.config.brownout_count = 0
 					Battery.config.save()

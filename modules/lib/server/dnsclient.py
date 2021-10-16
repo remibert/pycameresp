@@ -1,3 +1,4 @@
+""" Dns client class """
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 # DNS spec https://www2.cs.duke.edu/courses/fall16/compsci356/DNS/DNS-primer.pdf
@@ -31,11 +32,11 @@ class DnsHeader:
 	def __repr__(self):
 		""" Display content """
 		return "Header : ident=0x%04X flag=0x%04X query=%d answer=%d autority=%d additional=%d"%(self.ident, self.flag, self.query, self.answer, self.autority, self.additional)
-	
-	def encodeName(self, name):
+
+	def encode_name(self, name):
 		""" Encode DNS name """
 		result = ""
-		spl = splitIpAddress(name)
+		spl = split_ip_address(name)
 		# Ip address detected
 		if type(spl) == type([]):
 			spl.reverse()
@@ -48,8 +49,8 @@ class DnsHeader:
 			result += chr(len(item))
 			result += item
 		return result + chr(0)
-	
-	def decodeName(self, data, pos):
+
+	def decode_name(self, data, pos):
 		""" Decode DNS name """
 		result = ""
 		while pos < len(data):
@@ -60,7 +61,7 @@ class DnsHeader:
 			elif length & 0xC0 == 0xC0:
 				offset = data[pos] + (length & 0x3F << 8)
 				pos += 1
-				part, pos2 = self.decodeName(data, offset)
+				part, pos2 = self.decode_name(data, offset)
 				result = result + "." + part
 			else:
 				part = data[pos:pos+length]
@@ -81,14 +82,14 @@ class DnsQuery:
 	def serialize(self):
 		""" Serialize query """
 		data = self.header.serialize()
-		data += self.header.encodeName(self.name).encode("latin-1") 
+		data += self.header.encode_name(self.name).encode("latin-1")
 		data += struct.pack(self.format,self.qtype, self.qclass)
 		return data
-		
+
 	def unserialize(self, data):
 		""" Unserialize query """
 		pos = self.header.unserialize(data)
-		self.name, pos = self.header.decodeName(data, pos)
+		self.name, pos = self.header.decode_name(data, pos)
 		self.qtype, self.qclass = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
 		return pos + struct.calcsize(self.format)
 
@@ -117,13 +118,13 @@ class DnsAnswer:
 		if self.atype == 1:
 			self.name = "%d.%d.%d.%d"%(data[pos],data[pos+1],data[pos+2],data[pos+3])
 		else:
-			self.name, posname = self.query.header.decodeName(data, pos)
+			self.name, posname = self.query.header.decode_name(data, pos)
 
 	def __repr__(self):
 		""" Display result """
 		return repr(self.query) + "\n  Answer : info=%04X type=%04X class=%04X time=%d length=%d name='%s'"%(self.info, self.atype, self.aclass, self.timetolive, self.length,self.name)
 
-def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
+def dns_exchange(dnsIp, dnsQuery, dnsAnswer):
 	""" Exchange DNS query and wait answer """
 	result = None
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -140,39 +141,26 @@ def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
 			pass
 	finally:
 		sock.close()
-	
 	return result
 
-def resolveHostname(dnsIp, ipAddress):
+def resolve_hostname(dnsIp, ipAddress):
 	""" Resolve hostname with ip address """
-	return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())
+	return dns_exchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())
 
-def resolveIpAddress(dnsIp, hostname):
+def resolve_ip_address(dnsIp, hostname):
 	""" Resolve ip address with hostname """
-	return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())
+	return dns_exchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())
 
-def splitIpAddress(url):
+def split_ip_address(url):
 	""" Split ip address """
-	if isIpAddress(url):
+	if is_ip_address(url):
 		return url.split(".")
 	else:
 		return url
 
-def isIpAddress(url):
+def is_ip_address(url):
 	""" Indicates if the url is an ip address """
 	# Ip address detected
 	if re.match(r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)", url):
 		return True
 	return False
-
-def main():
-	ROUTER = "192.168.1.1"
-	print(resolveHostname(ROUTER,"192.168.1.51"))
-	print(resolveHostname(ROUTER,ROUTER))
-	print(resolveIpAddress(ROUTER,"iphoneremi.home"))
-	ip   = resolveIpAddress(ROUTER,"google.fr")
-	ip2  = resolveIpAddress(ROUTER, resolveHostname (ROUTER,ip))
-	if ip != ip2: raise Exception("Test failed")
-
-
-if __name__ == "__main__": main()

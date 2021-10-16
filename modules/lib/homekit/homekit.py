@@ -1,6 +1,8 @@
+""" Homekit main class """
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 class Homekit:
+	""" Homekit main class """
 	@staticmethod
 	def start():
 		""" Start home kit engine """
@@ -14,10 +16,10 @@ class Homekit:
 		homekit_.stop()
 
 	@staticmethod
-	def addAccessory(accessory):
+	def add_accessory(accessory):
 		""" Add accessory to homekit data base """
 		import homekit_
-		homekit_.addAccessory(accessory.accessory)
+		homekit_.add_accessory(accessory.accessory)
 
 	@staticmethod
 	def init():
@@ -30,26 +32,26 @@ class Homekit:
 		""" Deinit homekit """
 		import homekit_
 		homekit_.deinit()
-	
-	@staticmethod
-	def setSetupId(setupId):
-		""" Initialize setup id (length must be 4 bytes) """
-		import homekit_
-		homekit_.setSetupId(setupId)
 
 	@staticmethod
-	def setSetupCode(setupCode):
+	def set_setup_id(setupId):
+		""" Initialize setup id (length must be 4 bytes) """
+		import homekit_
+		homekit_.set_setup_id(setupId)
+
+	@staticmethod
+	def set_setup_code(setupCode):
 		""" Set the setup code (format must be 'xxx-xx-xxx') """
 		import homekit_
-		homekit_.setSetupCode(setupCode)
-	
+		homekit_.set_setup_code(setupCode)
+
 	@staticmethod
-	def eraseAll():
+	def erase_all():
 		""" Stop homekit engine and remove the data of all homekit accessories """
 		import homekit_
 		homekit_.stop()
 		homekit_.deinit()
-		homekit_.eraseAll()
+		homekit_.erase_all()
 
 	@staticmethod
 	def reboot():
@@ -64,13 +66,13 @@ class Homekit:
 	def play(accessory, setupCode="111-11-111", setupId="ESP3"):
 		""" Register accessory, start homekit engine """
 		# Add accessory to homekit
-		Homekit.addAccessory(accessory)
-		
+		Homekit.add_accessory(accessory)
+
 		# Initialize setup id (length must be 4 bytes)
-		Homekit.setSetupId(setupId)
-		
+		Homekit.set_setup_id(setupId)
+
 		# Initialize setup code (format must be 'xxx-xx-xxx')
-		Homekit.setSetupCode(setupCode)
-		
+		Homekit.set_setup_code(setupCode)
+
 		# Start homekit
 		Homekit.start()

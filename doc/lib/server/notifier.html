@@ -30,8 +30,9 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
-from tools import useful
+# pylint:disable=consider-using-enumerate
 import wifi
+from tools import useful
 
 class Notifier:
         &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
@@ -52,7 +53,7 @@ class Notifier:
                                 break
 
         @staticmethod
-        def isEmpty():
+        def is_empty():
                 &#34;&#34;&#34; Indicates that no notifier registered or not &#34;&#34;&#34;
                 if len(Notifier.notifiers) == 0:
                         return True
@@ -82,7 +83,7 @@ class Notifier:
                         del Notifier.postponed[0]
 
                 # If wan available
-                if wifi.Wifi.isWanAvailable():
+                if wifi.Wifi.is_wan_available():
                         result = True
                         wanOk = None
 
@@ -91,19 +92,19 @@ class Notifier:
                                 for notification in Notifier.postponed:
                                         message, image, forced, display = notification
                                         res = await notifier(message, image, forced, display=display)
-                                        if res == False:
+                                        if res is False:
                                                 result = False
                                                 wanOk = False
                                                 break
-                                        elif res == True:
+                                        elif res is True:
                                                 wanOk = True
 
                         # If wan connected
-                        if wanOk == True:
-                                wifi.Wifi.wanConnected()
+                        if wanOk is True:
+                                wifi.Wifi.wan_connected()
                         # If wan problem detected
-                        if wanOk == False:
-                                wifi.Wifi.wanDisconnected()
+                        if wanOk is False:
+                                wifi.Wifi.wan_disconnected()
 
                         # If all message notified
                         if result:
@@ -150,7 +151,7 @@ class Notifier:
                                 break
 
         @staticmethod
-        def isEmpty():
+        def is_empty():
                 &#34;&#34;&#34; Indicates that no notifier registered or not &#34;&#34;&#34;
                 if len(Notifier.notifiers) == 0:
                         return True
@@ -180,7 +181,7 @@ class Notifier:
                         del Notifier.postponed[0]
 
                 # If wan available
-                if wifi.Wifi.isWanAvailable():
+                if wifi.Wifi.is_wan_available():
                         result = True
                         wanOk = None
 
@@ -189,19 +190,19 @@ class Notifier:
                                 for notification in Notifier.postponed:
                                         message, image, forced, display = notification
                                         res = await notifier(message, image, forced, display=display)
-                                        if res == False:
+                                        if res is False:
                                                 result = False
                                                 wanOk = False
                                                 break
-                                        elif res == True:
+                                        elif res is True:
                                                 wanOk = True
 
                         # If wan connected
-                        if wanOk == True:
-                                wifi.Wifi.wanConnected()
+                        if wanOk is True:
+                                wifi.Wifi.wan_connected()
                         # If wan problem detected
-                        if wanOk == False:
-                                wifi.Wifi.wanDisconnected()
+                        if wanOk is False:
+                                wifi.Wifi.wan_disconnected()
 
                         # If all message notified
                         if result:
@@ -259,7 +260,7 @@ async def flush():
                 del Notifier.postponed[0]
 
         # If wan available
-        if wifi.Wifi.isWanAvailable():
+        if wifi.Wifi.is_wan_available():
                 result = True
                 wanOk = None
 
@@ -268,19 +269,19 @@ async def flush():
                         for notification in Notifier.postponed:
                                 message, image, forced, display = notification
                                 res = await notifier(message, image, forced, display=display)
-                                if res == False:
+                                if res is False:
                                         result = False
                                         wanOk = False
                                         break
-                                elif res == True:
+                                elif res is True:
                                         wanOk = True
 
                 # If wan connected
-                if wanOk == True:
-                        wifi.Wifi.wanConnected()
+                if wanOk is True:
+                        wifi.Wifi.wan_connected()
                 # If wan problem detected
-                if wanOk == False:
-                        wifi.Wifi.wanDisconnected()
+                if wanOk is False:
+                        wifi.Wifi.wan_disconnected()
 
                 # If all message notified
                 if result:
@@ -290,8 +291,8 @@ async def flush():
         return result</code></pre>
 </details>
 </dd>
-<dt id="lib.server.notifier.Notifier.isEmpty"><code class="name flex">
-<span>def <span class="ident">isEmpty</span></span>(<span>)</span>
+<dt id="lib.server.notifier.Notifier.is_empty"><code class="name flex">
+<span>def <span class="ident">is_empty</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates that no notifier registered or not</p></div>
@@ -300,7 +301,7 @@ async def flush():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isEmpty():
+def is_empty():
         &#34;&#34;&#34; Indicates that no notifier registered or not &#34;&#34;&#34;
         if len(Notifier.notifiers) == 0:
                 return True
@@ -370,7 +371,7 @@ def remove(callback):
 <ul class="two-column">
 <li><code><a title="lib.server.notifier.Notifier.add" href="#lib.server.notifier.Notifier.add">add</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.flush" href="#lib.server.notifier.Notifier.flush">flush</a></code></li>
-<li><code><a title="lib.server.notifier.Notifier.isEmpty" href="#lib.server.notifier.Notifier.isEmpty">isEmpty</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.is_empty" href="#lib.server.notifier.Notifier.is_empty">is_empty</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.notifiers" href="#lib.server.notifier.Notifier.notifiers">notifiers</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.notify" href="#lib.server.notifier.Notifier.notify">notify</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.postponed" href="#lib.server.notifier.Notifier.postponed">postponed</a></code></li>

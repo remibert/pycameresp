@@ -31,7 +31,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Linear function tools &#34;&#34;&#34;
 
-def getLinear(x1, y1, x2, y2, offset=1000):
+def get_linear(x1, y1, x2, y2, offset=1000):
         &#34;&#34;&#34; Return a and b for ax+b of two points x1,y1 and x2,y2 &#34;&#34;&#34;
         # If two points distincts
         if x1 != x2:
@@ -43,13 +43,13 @@ def getLinear(x1, y1, x2, y2, offset=1000):
                 b = 0
         return a,b,offset
 
-def getFx(x, linear):
+def get_fx(x, linear):
         &#34;&#34;&#34; Return the y value of function x &#34;&#34;&#34;
         a,b,offset = linear
         y = ((a * x) + b)//offset
         return y
 
-def getFy(y, linear):
+def get_fy(y, linear):
         &#34;&#34;&#34; Return the x value of function y &#34;&#34;&#34;
         a,b,offset = linear
         x = ((y*offset) -b)//a
@@ -63,8 +63,8 @@ def getFy(y, linear):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.tools.linearfunction.getFx"><code class="name flex">
-<span>def <span class="ident">getFx</span></span>(<span>x, linear)</span>
+<dt id="lib.tools.linearfunction.get_fx"><code class="name flex">
+<span>def <span class="ident">get_fx</span></span>(<span>x, linear)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the y value of function x</p></div>
@@ -72,15 +72,15 @@ def getFy(y, linear):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getFx(x, linear):
+<pre><code class="python">def get_fx(x, linear):
         &#34;&#34;&#34; Return the y value of function x &#34;&#34;&#34;
         a,b,offset = linear
         y = ((a * x) + b)//offset
         return y</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.linearfunction.getFy"><code class="name flex">
-<span>def <span class="ident">getFy</span></span>(<span>y, linear)</span>
+<dt id="lib.tools.linearfunction.get_fy"><code class="name flex">
+<span>def <span class="ident">get_fy</span></span>(<span>y, linear)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the x value of function y</p></div>
@@ -88,15 +88,15 @@ def getFy(y, linear):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getFy(y, linear):
+<pre><code class="python">def get_fy(y, linear):
         &#34;&#34;&#34; Return the x value of function y &#34;&#34;&#34;
         a,b,offset = linear
         x = ((y*offset) -b)//a
         return x</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.linearfunction.getLinear"><code class="name flex">
-<span>def <span class="ident">getLinear</span></span>(<span>x1, y1, x2, y2, offset=1000)</span>
+<dt id="lib.tools.linearfunction.get_linear"><code class="name flex">
+<span>def <span class="ident">get_linear</span></span>(<span>x1, y1, x2, y2, offset=1000)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return a and b for ax+b of two points x1,y1 and x2,y2</p></div>
@@ -104,7 +104,7 @@ def getFy(y, linear):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getLinear(x1, y1, x2, y2, offset=1000):
+<pre><code class="python">def get_linear(x1, y1, x2, y2, offset=1000):
         &#34;&#34;&#34; Return a and b for ax+b of two points x1,y1 and x2,y2 &#34;&#34;&#34;
         # If two points distincts
         if x1 != x2:
@@ -135,9 +135,9 @@ def getFy(y, linear):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.tools.linearfunction.getFx" href="#lib.tools.linearfunction.getFx">getFx</a></code></li>
-<li><code><a title="lib.tools.linearfunction.getFy" href="#lib.tools.linearfunction.getFy">getFy</a></code></li>
-<li><code><a title="lib.tools.linearfunction.getLinear" href="#lib.tools.linearfunction.getLinear">getLinear</a></code></li>
+<li><code><a title="lib.tools.linearfunction.get_fx" href="#lib.tools.linearfunction.get_fx">get_fx</a></code></li>
+<li><code><a title="lib.tools.linearfunction.get_fy" href="#lib.tools.linearfunction.get_fy">get_fy</a></code></li>
+<li><code><a title="lib.tools.linearfunction.get_linear" href="#lib.tools.linearfunction.get_linear">get_linear</a></code></li>
 </ul>
 </li>
 </ul>

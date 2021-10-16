@@ -4,17 +4,17 @@
 #    uping  (MicroPing) for MicroPython
 #    copyright (c) 2018 Shawwwn <shawwwn1@gmail.com>
 #    License: MIT
-   
+
 #    Internet Checksum Algorithm
 #    Author: Olav Morken
 #    https://github.com/olavmrk/python-ping/blob/master/ping.py
 #    @data: bytes
-
+""" Ping network class """
 import time
-import uselect
-import struct
 import random
 import socket
+import struct
+import uselect
 import uasyncio
 import wifi
 
@@ -42,7 +42,7 @@ class Packet:
 		self.size       = size
 		self.ttl = None
 
-	def computeChecksum(self, data):
+	def compute_checksum(self, data):
 		""" Compute the checksum of packet """
 		if len(data) & 0x1: # Odd number of bytes
 			data += b'\0'
@@ -59,32 +59,32 @@ class Packet:
 	def serialize(self):
 		""" Serialize packet and compute the checksum """
 		self.checksum = 0
-		self.checksum = self.computeChecksum(self.__getBuffer())
-		return self.__getBuffer()
-	
+		self.checksum = self.compute_checksum(self.__get_buffer())
+		return self.__get_buffer()
+
 	def unserialize(self, resp):
 		""" Unserialize packet """
 		data = resp[20:]
 		data = data[0:struct.calcsize(self.format)]
 		self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp = struct.unpack(self.format, data)
 		self.ttl = struct.unpack("!B",resp[8:9])[0]
-	
-	def __getBuffer(self):
+
+	def __get_buffer(self):
 		""" Create the serialized buffer of data """
 		data = struct.pack(self.format, self.type, self.code, self.checksum, self.identifier, self.sequence, self.timestamp)
 		padding = b"."*(self.size-len(data))
 		return data + padding
-		
-	def isEqual(self, request):
+
+	def is_equal(self, request):
 		""" Check if the request is equal to this response """
 		if self.identifier == request.identifier and self.sequence == request.sequence:
 			return True
 		return False
-	
-	def getTimeElapsed(self):
+
+	def get_time_elapsed(self):
 		""" Get the time elapsed """
 		return ticks_us() - self.timestamp
-	
+
 	def __repr__(self):
 		""" Display the content of data """
 		return "type       : %d\n"\
@@ -114,18 +114,18 @@ class Ping:
 		self.sock = None
 		self.ttl = None
 		self.host = None
-		self.packetsTransmitted = 0
-		self.packetsReceived = 0
+		self.packets_transmitted = 0
+		self.packets_received = 0
 		self.addr = None
 		self.request = None
 		self.quiet = None
 		self.response = None
-	
+
 	def open(self, host):
 		""" Open connection to host """
 		self.host = host
-		self.packetsTransmitted = 0
-		self.packetsReceived = 0
+		self.packets_transmitted = 0
+		self.packets_received = 0
 		try:
 			result = True
 			self.close()
@@ -133,39 +133,44 @@ class Ping:
 			self.sock.setblocking(0)
 			self.addr = socket.getaddrinfo(self.host, 1, socket.SOCK_DGRAM, socket.AF_INET)[0][-1][0]
 			self.sock.connect((self.addr, 1))
-			if self.quiet == False: print("PING %s (%s)"%(self.host, self.addr))
+			if self.quiet is False:
+				print("PING %s (%s)"%(self.host, self.addr))
 		except:
-			if self.quiet == False : print("Ping open socket failed")
+			if self.quiet is False :
+				print("Ping open socket failed")
 			self.close()
 			result = False
 		return result
-	
+
 	def send(self, seq):
 		""" Send ICMP packet """
 		result = True
 		self.request = Packet(Packet.ECHO_REQUEST, 0, seq)
 		try:
 			self.sock.send(self.request.serialize())
-			self.packetsTransmitted += 1
+			self.packets_transmitted += 1
 		except:
-			if self.quiet == False: print("Cannot send request to '%s'"%self.host)
+			if self.quiet is False:
+				print("Cannot send request to '%s'"%self.host)
 			result = False
 		return result
-	
+
 	def receive(self, seq, sock):
 		""" Receive and decode ICMP packet """
 		result = False
 		if sock:
 			resp = self.sock.recv(256)
 			self.response = Packet(Packet.ECHO_REPLY, 0, seq)
-			
+
 			self.response.unserialize(resp)
-			if self.response.isEqual(self.request):
-				if self.quiet == False: print("%u bytes from %s: icmp_seq=%u, ttl=%u, time=%.2f ms" % (len(resp)-20, self.addr, self.response.sequence, self.response.ttl, self.response.getTimeElapsed()/1000))
-				self.packetsReceived += 1
+			if self.response.is_equal(self.request):
+				if self.quiet is False:
+					print("%u bytes from %s: icmp_seq=%u, ttl=%u, time=%.2f ms" % (len(resp)-20, self.addr, self.response.sequence, self.response.ttl, self.response.get_time_elapsed()/1000))
+				self.packets_received += 1
 				result = True
 		else:
-			if self.quiet == False: print("Request timeout for icmp_seq %d"%seq)
+			if self.quiet is False:
+				print("Request timeout for icmp_seq %d"%seq)
 		return result
 
 	def ping(self, host, count=4, timeout=1, quiet=False):
@@ -174,41 +179,42 @@ class Ping:
 		self.quiet = quiet
 		if self.open(host):
 			for seq in range(count):
-				if self.send(seq) == False:
+				if self.send(seq) is False:
 					result = False
 					break
 				else:
 					socks, _, _ = uselect.select([self.sock], [], [], timeout)
 					if self.receive(seq, socks):
 						time.sleep(timeout)
-			self.showResult()
+			self.show_result()
 		else:
 			result = None
 		self.close()
-		return self.packetsTransmitted, self.packetsReceived, result
+		return self.packets_transmitted, self.packets_received, result
 
-	async def asyncPing(self, host, count=4, timeout=1, quiet=False):
+	async def async_ping(self, host, count=4, timeout=1, quiet=False):
 		""" Do an asynchronous ping """
 		result = True
 		self.quiet = quiet
 		if self.open(host):
 			for seq in range(count):
-				if self.send(seq) == False:
+				if self.send(seq) is False:
 					result = False
 					break
 				else:
 					socks, _, _ = await select([self.sock], [], [], timeout)
 					if self.receive(seq, socks):
 						await uasyncio.sleep(timeout)
-			self.showResult()
+			self.show_result()
 		else:
 			result = None
 		self.close()
-		return self.packetsTransmitted, self.packetsReceived, result
-	
-	def showResult(self):
+		return self.packets_transmitted, self.packets_received, result
+
+	def show_result(self):
 		""" Show the ping result """
-		if self.quiet == False: print("%u packets transmitted, %u packets received" % (self.packetsTransmitted, self.packetsReceived))
+		if self.quiet is False:
+			print("%u packets transmitted, %u packets received" % (self.packets_transmitted, self.packets_received))
 
 	def close(self):
 		""" Close socket to server """
@@ -216,17 +222,17 @@ class Ping:
 			self.sock.close()
 			self.sock = None
 
-async def asyncPing(host, count=4, timeout=1, quiet=False):
+async def async_ping(host, count=4, timeout=1, quiet=False):
 	""" Asynchronous ping of host """
-	if wifi.Station.isActive():
+	if wifi.Station.is_active():
 		ping_ = Ping()
-		return await ping_.asyncPing(host, count, timeout, quiet)
+		return await ping_.async_ping(host, count, timeout, quiet)
 	else:
 		return (0,0,None)
 
 def ping(host, count=4, timeout=1, quiet=False):
 	""" Ping of host """
-	if wifi.Station.isActive():
+	if wifi.Station.is_active():
 		ping_ = Ping()
 		return ping_.ping(host, count, timeout, quiet)
 	else:

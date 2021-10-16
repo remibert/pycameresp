@@ -34,16 +34,16 @@ from binascii import hexlify, b2a_base64, a2b_base64
 import hashlib
 from tools import useful
 
-Aes_ = None
-def Aes(key, mode):
+aes_ = None
+def aes(key, mode):
         &#34;&#34;&#34; AES object loaded on demand &#34;&#34;&#34;
-        global Aes_
-        if Aes_ is None:
+        global aes_
+        if aes_ is None:
                 import cryptolib
-                Aes_ = cryptolib.aes
+                aes_ = cryptolib.aes
         if len(key) % 16 != 0:
                 key = (key*16)[:16]
-        return  Aes_(useful.tobytes(key), mode)
+        return  aes_(useful.tobytes(key), mode)
 
 def encrypt(buffer, key):
         &#34;&#34;&#34; AES encryption of buffer &#34;&#34;&#34;
@@ -51,11 +51,11 @@ def encrypt(buffer, key):
         data = data.rstrip()
         if len(data) % 16 != 0:
                 data = data + b&#34;=&#34;*(16-len(data)%16)
-        return Aes(key,1).encrypt(useful.tobytes(data))
+        return aes(key,1).encrypt(useful.tobytes(data))
 
 def decrypt(buffer, key):
         &#34;&#34;&#34; AES decryption of buffer &#34;&#34;&#34;
-        data = Aes(key, 1).decrypt(buffer)
+        data = aes(key, 1).decrypt(buffer)
         data = a2b_base64(useful.tobytes(data))
         return data
 
@@ -73,8 +73,8 @@ def gethash(password):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.tools.encryption.Aes"><code class="name flex">
-<span>def <span class="ident">Aes</span></span>(<span>key, mode)</span>
+<dt id="lib.tools.encryption.aes"><code class="name flex">
+<span>def <span class="ident">aes</span></span>(<span>key, mode)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>AES object loaded on demand</p></div>
@@ -82,15 +82,15 @@ def gethash(password):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def Aes(key, mode):
+<pre><code class="python">def aes(key, mode):
         &#34;&#34;&#34; AES object loaded on demand &#34;&#34;&#34;
-        global Aes_
-        if Aes_ is None:
+        global aes_
+        if aes_ is None:
                 import cryptolib
-                Aes_ = cryptolib.aes
+                aes_ = cryptolib.aes
         if len(key) % 16 != 0:
                 key = (key*16)[:16]
-        return  Aes_(useful.tobytes(key), mode)</code></pre>
+        return  aes_(useful.tobytes(key), mode)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.encryption.decrypt"><code class="name flex">
@@ -104,7 +104,7 @@ def gethash(password):
 </summary>
 <pre><code class="python">def decrypt(buffer, key):
         &#34;&#34;&#34; AES decryption of buffer &#34;&#34;&#34;
-        data = Aes(key, 1).decrypt(buffer)
+        data = aes(key, 1).decrypt(buffer)
         data = a2b_base64(useful.tobytes(data))
         return data</code></pre>
 </details>
@@ -124,7 +124,7 @@ def gethash(password):
         data = data.rstrip()
         if len(data) % 16 != 0:
                 data = data + b&#34;=&#34;*(16-len(data)%16)
-        return Aes(key,1).encrypt(useful.tobytes(data))</code></pre>
+        return aes(key,1).encrypt(useful.tobytes(data))</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.encryption.gethash"><code class="name flex">
@@ -161,7 +161,7 @@ def gethash(password):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.tools.encryption.Aes" href="#lib.tools.encryption.Aes">Aes</a></code></li>
+<li><code><a title="lib.tools.encryption.aes" href="#lib.tools.encryption.aes">aes</a></code></li>
 <li><code><a title="lib.tools.encryption.decrypt" href="#lib.tools.encryption.decrypt">decrypt</a></code></li>
 <li><code><a title="lib.tools.encryption.encrypt" href="#lib.tools.encryption.encrypt">encrypt</a></code></li>
 <li><code><a title="lib.tools.encryption.gethash" href="#lib.tools.encryption.gethash">gethash</a></code></li>

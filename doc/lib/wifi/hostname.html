@@ -37,16 +37,16 @@ class Hostname:
         number = [None]
 
         @staticmethod
-        def getNumber():
+        def get_number():
                 &#34;&#34;&#34; Get the unic number of device &#34;&#34;&#34;
-                if Hostname.number[0] == None:
+                if Hostname.number[0] is None:
                         from network import WLAN, AP_IF
                         wlan = WLAN(AP_IF)
                         ident = wlan.config(&#34;mac&#34;)
                         mac = &#34;&#34;
                         for i in ident:
                                 mac += &#34;%02X&#34;%i
-                        Hostname.number[0] = useful.computeHash(mac)
+                        Hostname.number[0] = useful.compute_hash(mac)
                         del wlan
                 return Hostname.number[0]</code></pre>
 </details>
@@ -74,16 +74,16 @@ class Hostname:
         number = [None]
 
         @staticmethod
-        def getNumber():
+        def get_number():
                 &#34;&#34;&#34; Get the unic number of device &#34;&#34;&#34;
-                if Hostname.number[0] == None:
+                if Hostname.number[0] is None:
                         from network import WLAN, AP_IF
                         wlan = WLAN(AP_IF)
                         ident = wlan.config(&#34;mac&#34;)
                         mac = &#34;&#34;
                         for i in ident:
                                 mac += &#34;%02X&#34;%i
-                        Hostname.number[0] = useful.computeHash(mac)
+                        Hostname.number[0] = useful.compute_hash(mac)
                         del wlan
                 return Hostname.number[0]</code></pre>
 </details>
@@ -96,8 +96,8 @@ class Hostname:
 </dl>
 <h3>Static methods</h3>
 <dl>
-<dt id="lib.wifi.hostname.Hostname.getNumber"><code class="name flex">
-<span>def <span class="ident">getNumber</span></span>(<span>)</span>
+<dt id="lib.wifi.hostname.Hostname.get_number"><code class="name flex">
+<span>def <span class="ident">get_number</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the unic number of device</p></div>
@@ -106,16 +106,16 @@ class Hostname:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def getNumber():
+def get_number():
         &#34;&#34;&#34; Get the unic number of device &#34;&#34;&#34;
-        if Hostname.number[0] == None:
+        if Hostname.number[0] is None:
                 from network import WLAN, AP_IF
                 wlan = WLAN(AP_IF)
                 ident = wlan.config(&#34;mac&#34;)
                 mac = &#34;&#34;
                 for i in ident:
                         mac += &#34;%02X&#34;%i
-                Hostname.number[0] = useful.computeHash(mac)
+                Hostname.number[0] = useful.compute_hash(mac)
                 del wlan
         return Hostname.number[0]</code></pre>
 </details>
@@ -141,7 +141,7 @@ def getNumber():
 <li>
 <h4><code><a title="lib.wifi.hostname.Hostname" href="#lib.wifi.hostname.Hostname">Hostname</a></code></h4>
 <ul class="">
-<li><code><a title="lib.wifi.hostname.Hostname.getNumber" href="#lib.wifi.hostname.Hostname.getNumber">getNumber</a></code></li>
+<li><code><a title="lib.wifi.hostname.Hostname.get_number" href="#lib.wifi.hostname.Hostname.get_number">get_number</a></code></li>
 <li><code><a title="lib.wifi.hostname.Hostname.number" href="#lib.wifi.hostname.Hostname.number">number</a></code></li>
 </ul>
 </li>

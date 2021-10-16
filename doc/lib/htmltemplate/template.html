@@ -42,13 +42,13 @@ class Template:
                 else:
                         children = params.get(&#34;children&#34;,[])
                 if children != []:
-                        self.addChildren(children)
+                        self.add_children(children)
 
-        def addChildren(self, children):
+        def add_children(self, children):
                 &#34;&#34;&#34; Add children of html template in the current instance &#34;&#34;&#34;
                 if type(children) == type([]) or type(children) == type((0,)):
                         for child in children:
-                                self.addChildren(child)
+                                self.add_children(child)
                 else:
                         self.children.append(children)
 
@@ -56,20 +56,20 @@ class Template:
                 &#34;&#34;&#34; Write to the file stream the html template (parse also all children) &#34;&#34;&#34;
                 try:
                         # pylint: disable=no-member
-                        await file.write(self.getBegin(self))
+                        await file.write(self.get_begin(self))
                         for child in self.children:
                                 if isinstance(child, Template):
                                         await child.write(file)
-                                elif child != None:
+                                elif child is not None:
                                         if type(child) == type(b&#34;&#34;):
                                                 await file.write(child)
                                         elif type(child) == type([]) or type(child) == type((0,)):
                                                 for item in child:
-                                                        if item != None:
+                                                        if item is not None:
                                                                 await item.write(file)
-                        await file.write(self.getEnd(self))
+                        await file.write(self.get_end(self))
                 except Exception as err:
-                        await file.write(useful.htmlException(err))</code></pre>
+                        await file.write(useful.html_exception(err))</code></pre>
 </details>
 </section>
 <section>
@@ -101,13 +101,13 @@ class Template:
                 else:
                         children = params.get(&#34;children&#34;,[])
                 if children != []:
-                        self.addChildren(children)
+                        self.add_children(children)
 
-        def addChildren(self, children):
+        def add_children(self, children):
                 &#34;&#34;&#34; Add children of html template in the current instance &#34;&#34;&#34;
                 if type(children) == type([]) or type(children) == type((0,)):
                         for child in children:
-                                self.addChildren(child)
+                                self.add_children(child)
                 else:
                         self.children.append(children)
 
@@ -115,25 +115,25 @@ class Template:
                 &#34;&#34;&#34; Write to the file stream the html template (parse also all children) &#34;&#34;&#34;
                 try:
                         # pylint: disable=no-member
-                        await file.write(self.getBegin(self))
+                        await file.write(self.get_begin(self))
                         for child in self.children:
                                 if isinstance(child, Template):
                                         await child.write(file)
-                                elif child != None:
+                                elif child is not None:
                                         if type(child) == type(b&#34;&#34;):
                                                 await file.write(child)
                                         elif type(child) == type([]) or type(child) == type((0,)):
                                                 for item in child:
-                                                        if item != None:
+                                                        if item is not None:
                                                                 await item.write(file)
-                        await file.write(self.getEnd(self))
+                        await file.write(self.get_end(self))
                 except Exception as err:
-                        await file.write(useful.htmlException(err))</code></pre>
+                        await file.write(useful.html_exception(err))</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.htmltemplate.template.Template.addChildren"><code class="name flex">
-<span>def <span class="ident">addChildren</span></span>(<span>self, children)</span>
+<dt id="lib.htmltemplate.template.Template.add_children"><code class="name flex">
+<span>def <span class="ident">add_children</span></span>(<span>self, children)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Add children of html template in the current instance</p></div>
@@ -141,11 +141,11 @@ class Template:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def addChildren(self, children):
+<pre><code class="python">def add_children(self, children):
         &#34;&#34;&#34; Add children of html template in the current instance &#34;&#34;&#34;
         if type(children) == type([]) or type(children) == type((0,)):
                 for child in children:
-                        self.addChildren(child)
+                        self.add_children(child)
         else:
                 self.children.append(children)</code></pre>
 </details>
@@ -163,20 +163,20 @@ class Template:
         &#34;&#34;&#34; Write to the file stream the html template (parse also all children) &#34;&#34;&#34;
         try:
                 # pylint: disable=no-member
-                await file.write(self.getBegin(self))
+                await file.write(self.get_begin(self))
                 for child in self.children:
                         if isinstance(child, Template):
                                 await child.write(file)
-                        elif child != None:
+                        elif child is not None:
                                 if type(child) == type(b&#34;&#34;):
                                         await file.write(child)
                                 elif type(child) == type([]) or type(child) == type((0,)):
                                         for item in child:
-                                                if item != None:
+                                                if item is not None:
                                                         await item.write(file)
-                await file.write(self.getEnd(self))
+                await file.write(self.get_end(self))
         except Exception as err:
-                await file.write(useful.htmlException(err))</code></pre>
+                await file.write(useful.html_exception(err))</code></pre>
 </details>
 </dd>
 </dl>
@@ -200,7 +200,7 @@ class Template:
 <li>
 <h4><code><a title="lib.htmltemplate.template.Template" href="#lib.htmltemplate.template.Template">Template</a></code></h4>
 <ul class="">
-<li><code><a title="lib.htmltemplate.template.Template.addChildren" href="#lib.htmltemplate.template.Template.addChildren">addChildren</a></code></li>
+<li><code><a title="lib.htmltemplate.template.Template.add_children" href="#lib.htmltemplate.template.Template.add_children">add_children</a></code></li>
 <li><code><a title="lib.htmltemplate.template.Template.write" href="#lib.htmltemplate.template.Template.write">write</a></code></li>
 </ul>
 </li>

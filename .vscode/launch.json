@@ -12,10 +12,10 @@
 			"program": "${workspaceFolder}/modules/main.py",
 			"program_": "${workspaceFolder}/modules/lib/shell/editor.py",
 			"program_": "${workspaceFolder}/modules/lib/shell/shell.py",
-			"program_": "${workspaceFolder}/modules/lib/server/pushover.py",
-			"program_": "${workspaceFolder}/modules/wanIp.py",
-			"program_": "${workspaceFolder}/modules/decodeJpg.py",
 			"cwd": "${workspaceFolder}/modules",
+			"program_": "${workspaceFolder}/tools/flasher/Main.py",
+			"program_": "${workspaceFolder}/tools/flasher/TermEmulatorTextControl.py",
+			"cwd_": "${workspaceFolder}/tools/flasher",
 		}
 	]
 }

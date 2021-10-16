@@ -1,33 +1,35 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+""" Garage door opener homekit accessory """
 from homekit import *
 
 class GarageDoorOpener(Accessory):
 	""" Garage door opener homekit accessory """
 	def __init__(self, **kwargs):
-		""" Create door opener accessory. Parameters : name(string), currDoorState(int), targDoorState(int), obstrDetect(bool) and all Accessory parameters """
+		""" Create door opener accessory. Parameters : name(string), curr_door_state(int), targ_door_state(int), obstr_detect(bool) and all Accessory parameters """
 		Accessory.__init__(self, Accessory.CID_GARAGE_DOOR_OPENER, **kwargs)
-		self.server = Server(name=kwargs.get("name","Garage door"), serverUuid=Server.UUID_GARAGE_DOOR_OPENER)
-		
-		self.currDoorState = charactUint8Create (Charact.UUID_CURRENT_DOOR_STATE, Charact.PERM_RE, kwargs.get("currDoorState",0))
-		self.currDoorState .setConstraint(0, 4, 1)
-		self.server.addCharact(self.currDoorState)
-		
-		self.targDoorState = charactUint8Create (Charact.UUID_TARGET_DOOR_STATE, Charact.PERM_RWE, kwargs.get("targDoorState",0))
-		self.targDoorState.setConstraint(0, 1, 1)
-		self.server.addCharact(self.targDoorState)
-		
-		self.obstrDetect = charactBoolCreate (Charact.UUID_OBSTRUCTION_DETECTED, Charact.PERM_RE, kwargs.get("obstrDetect",False))
-		self.server.addCharact(self.obstrDetect)
+		self.server = Server(name=kwargs.get("name","Garage door"), server_uuid=Server.UUID_GARAGE_DOOR_OPENER)
 
-		self.targDoorState.setWriteCallback(self.writeTargDoorState)
-		self.addServer(self.server)
+		self.curr_door_state = charact_uint8_create (Charact.UUID_CURRENT_DOOR_STATE, Charact.PERM_RE, kwargs.get("curr_door_state",0))
+		self.curr_door_state .set_constraint(0, 4, 1)
+		self.server.add_charact(self.curr_door_state)
 
-	def writeTargDoorState(self, value):
+		self.targ_door_state = charact_uint8_create (Charact.UUID_TARGET_DOOR_STATE, Charact.PERM_RWE, kwargs.get("targ_door_state",0))
+		self.targ_door_state.set_constraint(0, 1, 1)
+		self.server.add_charact(self.targ_door_state)
+
+		self.obstr_detect = charact_bool_create (Charact.UUID_OBSTRUCTION_DETECTED, Charact.PERM_RE, kwargs.get("obstr_detect",False))
+		self.server.add_charact(self.obstr_detect)
+
+		self.targ_door_state.set_write_callback(self.write_targ_door_state)
+		self.add_server(self.server)
+
+	def write_targ_door_state(self, value):
+		""" Write target door state """
 		import time
 
 		# Write target door state
-		self.targDoorState.setValue(value)
+		self.targ_door_state.set_value(value)
 
 		if value == 1:
 			print("Close door")
@@ -36,7 +38,7 @@ class GarageDoorOpener(Accessory):
 
 		time.sleep(3)
 		# Set the current door state
-		self.currDoorState.setValue(value)
+		self.curr_door_state.set_value(value)
 
 		if value == 1:
 			print("Door closed")
@@ -44,13 +46,12 @@ class GarageDoorOpener(Accessory):
 			print("Door opened")
 
 def main():
+	""" Test """
 	# Initialize homekit engine
 	Homekit.init()
-	
+
 	# Create accessory
 	Homekit.play(GarageDoorOpener(name="My garage door"))
 
 if __name__ == "__main__":
-	#~ main()
-	for i in range(4,-1,-1):
-		print(i)
+	main()

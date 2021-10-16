@@ -16,7 +16,7 @@ class HttpServer:
 	routes = {}
 	wildroutes = []
 	menus = []
-	wwwDir = None
+	www_dir = None
 
 	def __init__(self, port=80, loader=None, preload=False, name=""):
 		""" Constructor """
@@ -39,7 +39,7 @@ class HttpServer:
 			useful.syslog("Html load pages")
 			self.loader()
 			self.loader = None
-			HttpServer.wwwDir = WWW_DIR
+			HttpServer.www_dir = WWW_DIR
 			loaded = True
 
 		if self.server is None:
@@ -52,10 +52,10 @@ class HttpServer:
 			useful.syslog("Http ready on %d"%self.port)
 
 	@staticmethod
-	def addRoute(url, **kwargs):
+	def add_route(url, **kwargs):
 		""" Add a route to select an html page.
 		For the server to know the pages, it must imperatively use this decorator """
-		def addRoute(function):
+		def add_route(function):
 			if useful.tobytes(url[-1]) == ord(b"*"):
 				HttpServer.wildroutes.append([useful.tobytes(url),(function, kwargs)])
 			else:
@@ -66,10 +66,10 @@ class HttpServer:
 					HttpServer.menus.append([kwargs["menu"], kwargs["item"],len(HttpServer.menus), useful.tobytes(url)])
 					HttpServer.menus.sort()
 			return function
-		return addRoute
+		return add_route
 
 	@staticmethod
-	def removeRoute(url=None):
+	def remove_route(url=None):
 		""" Remove a route of html page """
 		if url is None:
 			HttpServer.routes = {}
@@ -89,12 +89,12 @@ class HttpServer:
 						i += 1
 
 	@staticmethod
-	def getMenus():
+	def get_menus():
 		""" Used to get the informations of menu """
 		return HttpServer.menus
 
 	@staticmethod
-	def searchRoute(request):
+	def search_route(request):
 		""" Search route according to the request """
 		function, args = None, None
 
@@ -112,9 +112,9 @@ class HttpServer:
 						found = func
 						break
 				if found is None:
-					staticRe = re.compile("^/("+useful.tostrings(HttpServer.wwwDir)+"/.+|.+)")
+					staticRe = re.compile("^/("+useful.tostrings(HttpServer.www_dir)+"/.+|.+)")
 					if staticRe.match(useful.tostrings(request.path)):
-						function, args = HttpServer.staticPages, {}
+						function, args = HttpServer.static_pages, {}
 				else:
 					function, args = found
 			else:
@@ -122,24 +122,24 @@ class HttpServer:
 		return function, args
 
 	@staticmethod
-	async def staticPages(request, response, args):
+	async def static_pages(request, response, args):
 		""" Treat the case of static pages """
-		path = useful.tobytes(HttpServer.wwwDir) + request.path
+		path = useful.tobytes(HttpServer.www_dir) + request.path
 		path = path.replace(b"//",b"/")
 
 		if b".." in path:
-			await response.sendError(status=b"403",content=b"Forbidden")
+			await response.send_error(status=b"403",content=b"Forbidden")
 		else:
-			await response.sendFile(path, headers=request.headers)
+			await response.send_file(path, headers=request.headers)
 
-	async def onConnection(self, reader, writer):
+	async def on_connection(self, reader, writer):
 		""" Http server connection detected """
 		try:
 			# Preload the server
 			self.preload()
 
 			# Call on connection method
-			await self.server.onConnection(reader, writer)
+			await self.server.on_connection(reader, writer)
 		except Exception as err:
 			useful.syslog(err)
 
@@ -157,7 +157,7 @@ def start(loop=None, port=80, loader=None, preload=False, name=""):
 	else:
 		run_forever = False
 
-	asyncServer = uasyncio.start_server(server.onConnection, "0.0.0.0",port,backlog=5)
+	asyncServer = uasyncio.start_server(server.on_connection, "0.0.0.0",port,backlog=5)
 
 	loop.create_task(asyncServer)
 	if run_forever:

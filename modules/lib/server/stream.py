@@ -40,10 +40,10 @@ if sys.implementation.name == "micropython":
 		async def write(self, data):
 			""" Write data in the stream """
 			result = await self.writer.awrite(data)
-			if result == None:
+			if result is None:
 				result = len(data)
 			else:
-				result = -1 
+				result = -1
 			return result
 
 		async def close(self):
@@ -94,8 +94,8 @@ else:
 			if trace:
 				trace.write(data)
 				trace.flush()
-			
-			if result == None:
+
+			if result is None:
 				result = len(data)
 			return result
 
@@ -118,7 +118,7 @@ class Socket:
 	def write(self, data):
 		""" Write data in the stream """
 		length = self.socket.sendall(data)
-		if length == None:
+		if length is None:
 			length = len(data)
 		return length
 
@@ -147,23 +147,24 @@ class Bytesio:
 
 
 class Bufferedio:
+	""" Bufferized bytes io stream """
 	memorysize = [None]
 	""" Class used to buffered stream write """
 	def __init__(self, streamio, part=1440*20):
 		""" Constructor """
 		self.buffered = BytesIO()
-		
-		if Bufferedio.isEnoughMemory():
+
+		if Bufferedio.is_enough_memory():
 			self.part = part
 		else:
 			self.part = None
-		
+
 		self.streamio = streamio
 
 	@staticmethod
-	def isEnoughMemory():
+	def is_enough_memory():
 		""" Indicate if it has enough memory """
-		if Bufferedio.memorysize[0] == None:
+		if Bufferedio.memorysize[0] is None:
 			import gc
 			try:
 				# pylint: disable=no-member
@@ -174,14 +175,14 @@ class Bufferedio:
 		if Bufferedio.memorysize[0] < 200*1024:
 			return False
 		return True
-	
+
 	async def read(self):
 		""" Read data from the stream """
 		return self.streamio.read()
 
 	async def write(self, data):
 		""" Write data in the stream """
-		if self.part == None:
+		if self.part is None:
 			result = len(data)
 			await self.streamio.write(data)
 		else:

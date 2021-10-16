@@ -32,14 +32,14 @@
 &#34;&#34;&#34; Function define the date time and language &#34;&#34;&#34;
 from server.httpserver import HttpServer
 from htmltemplate      import *
-from webpage.mainpage  import mainFrame, manageDefaultButton
+from webpage.mainpage  import main_frame, manage_default_button
 from tools             import useful,lang
 
-@HttpServer.addRoute(b&#39;/region&#39;, menu=lang.menu_account, item=lang.item_region)
-async def regionPage(request, response, args):
+@HttpServer.add_route(b&#39;/region&#39;, menu=lang.menu_account, item=lang.item_region)
+async def region_page(request, response, args):
         &#34;&#34;&#34; Function define the web page to manage lang and time &#34;&#34;&#34;
         config = lang.RegionConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
+        disabled, action, submit = manage_default_button(request, config)
         langages = []
         for langage in [b&#34;english&#34;,b&#34;french&#34;]:
                 if config.lang == langage:
@@ -53,11 +53,11 @@ async def regionPage(request, response, args):
         else:
                 alert = None
 
-        page = mainFrame(request, response, args, lang.region_configuration,
-                Edit  (text=lang.utc_offset             , name=b&#34;offsettime&#34;,pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=lang.offset_time_to,        value=b&#34;%d&#34;%config.offsettime,       disabled=disabled),
+        page = main_frame(request, response, args, lang.region_configuration,
+                Edit  (text=lang.utc_offset             , name=b&#34;offset_time&#34;,pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=lang.offset_time_to,        value=b&#34;%d&#34;%config.offset_time,       disabled=disabled),
                 Switch(text=lang.daylight_saving_time   , name=b&#34;dst&#34;       ,checked=config.dst,    disabled=disabled),Br(),
                 Select(langages,text=lang.language,name=b&#34;lang&#34;, disabled=disabled), submit, alert)
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </section>
 <section>
@@ -67,8 +67,8 @@ async def regionPage(request, response, args):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.webpage.regionpage.regionPage"><code class="name flex">
-<span>async def <span class="ident">regionPage</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.regionpage.region_page"><code class="name flex">
+<span>async def <span class="ident">region_page</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Function define the web page to manage lang and time</p></div>
@@ -76,11 +76,11 @@ async def regionPage(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/region&#39;, menu=lang.menu_account, item=lang.item_region)
-async def regionPage(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/region&#39;, menu=lang.menu_account, item=lang.item_region)
+async def region_page(request, response, args):
         &#34;&#34;&#34; Function define the web page to manage lang and time &#34;&#34;&#34;
         config = lang.RegionConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
+        disabled, action, submit = manage_default_button(request, config)
         langages = []
         for langage in [b&#34;english&#34;,b&#34;french&#34;]:
                 if config.lang == langage:
@@ -94,11 +94,11 @@ async def regionPage(request, response, args):
         else:
                 alert = None
 
-        page = mainFrame(request, response, args, lang.region_configuration,
-                Edit  (text=lang.utc_offset             , name=b&#34;offsettime&#34;,pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=lang.offset_time_to,        value=b&#34;%d&#34;%config.offsettime,       disabled=disabled),
+        page = main_frame(request, response, args, lang.region_configuration,
+                Edit  (text=lang.utc_offset             , name=b&#34;offset_time&#34;,pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=lang.offset_time_to,        value=b&#34;%d&#34;%config.offset_time,       disabled=disabled),
                 Switch(text=lang.daylight_saving_time   , name=b&#34;dst&#34;       ,checked=config.dst,    disabled=disabled),Br(),
                 Select(langages,text=lang.language,name=b&#34;lang&#34;, disabled=disabled), submit, alert)
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </dd>
 </dl>
@@ -119,7 +119,7 @@ async def regionPage(request, response, args):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.webpage.regionpage.regionPage" href="#lib.webpage.regionpage.regionPage">regionPage</a></code></li>
+<li><code><a title="lib.webpage.regionpage.region_page" href="#lib.webpage.regionpage.region_page">region_page</a></code></li>
 </ul>
 </li>
 </ul>

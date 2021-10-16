@@ -1,8 +1,9 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
-from tools import useful
+# pylint:disable=consider-using-enumerate
 import wifi
+from tools import useful
 
 class Notifier:
 	""" Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
@@ -23,7 +24,7 @@ class Notifier:
 				break
 
 	@staticmethod
-	def isEmpty():
+	def is_empty():
 		""" Indicates that no notifier registered or not """
 		if len(Notifier.notifiers) == 0:
 			return True
@@ -53,7 +54,7 @@ class Notifier:
 			del Notifier.postponed[0]
 
 		# If wan available
-		if wifi.Wifi.isWanAvailable():
+		if wifi.Wifi.is_wan_available():
 			result = True
 			wanOk = None
 
@@ -62,19 +63,19 @@ class Notifier:
 				for notification in Notifier.postponed:
 					message, image, forced, display = notification
 					res = await notifier(message, image, forced, display=display)
-					if res == False:
+					if res is False:
 						result = False
 						wanOk = False
 						break
-					elif res == True:
+					elif res is True:
 						wanOk = True
 
 			# If wan connected
-			if wanOk == True:
-				wifi.Wifi.wanConnected()
+			if wanOk is True:
+				wifi.Wifi.wan_connected()
 			# If wan problem detected
-			if wanOk == False:
-				wifi.Wifi.wanDisconnected()
+			if wanOk is False:
+				wifi.Wifi.wan_disconnected()
 
 			# If all message notified
 			if result:
@@ -82,4 +83,3 @@ class Notifier:
 			else:
 				useful.syslog("Cannot send notification")
 		return result
-

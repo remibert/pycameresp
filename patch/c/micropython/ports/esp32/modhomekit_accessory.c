@@ -15,10 +15,10 @@ typedef struct
 	char          name         [32];
 	char          manufacturer [32];
 	char          model        [32];
-	char          serialNumber[16];
-	char          firmwareRevision       [16];
-	char          hardwareRevision       [16];
-	char          productVersion [16];
+	char          serial_number[16];
+	char          firmware_revision       [16];
+	char          hardware_revision       [16];
+	char          product_version [16];
 	uint8_t       productData[8];
 } Accessory_t;
 
@@ -73,23 +73,23 @@ STATIC mp_obj_t Accessory_make_new(const mp_obj_type_t *type, size_t n_args, siz
 		ARG_name,
 		ARG_manufacturer,
 		ARG_model,
-		ARG_serialNumber,
-		ARG_firmwareRevision,
-		ARG_hardwareRevision,
-		ARG_productVersion,
+		ARG_serial_number,
+		ARG_firmware_revision,
+		ARG_hardware_revision,
+		ARG_product_version,
 	};
 
 	// Constructor parameters
 	static const mp_arg_t allowed_args[] = 
 	{
-		{ MP_QSTR_cid,               MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = HAP_CID_OTHER} },
-		{ MP_QSTR_name,              MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Esp)} },
-		{ MP_QSTR_manufacturer,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Espressif)} },
-		{ MP_QSTR_model,             MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Esp32)} },
-		{ MP_QSTR_serialNumber,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__000000000000)} },
-		{ MP_QSTR_firmwareRevision,  MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
-		{ MP_QSTR_hardwareRevision,  MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
-		{ MP_QSTR_productVersion,    MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
+		{ MP_QSTR_cid,                MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = HAP_CID_OTHER} },
+		{ MP_QSTR_name,               MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Esp)} },
+		{ MP_QSTR_manufacturer,       MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Espressif)} },
+		{ MP_QSTR_model,              MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__Esp32)} },
+		{ MP_QSTR_serial_number,      MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__000000000000)} },
+		{ MP_QSTR_firmware_revision,  MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
+		{ MP_QSTR_hardware_revision,  MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
+		{ MP_QSTR_product_version,    MP_ARG_KW_ONLY | MP_ARG_OBJ, {.u_rom_obj = MP_ROM_QSTR(MP_QSTR__1)} },
 	};
 	
 	// Parsing parameters
@@ -107,20 +107,20 @@ STATIC mp_obj_t Accessory_make_new(const mp_obj_type_t *type, size_t n_args, siz
 		ACCESSORY_SET(name)
 		ACCESSORY_SET(manufacturer)
 		ACCESSORY_SET(model)
-		ACCESSORY_SET(serialNumber)
-		ACCESSORY_SET(firmwareRevision)
-		ACCESSORY_SET(hardwareRevision)
-		ACCESSORY_SET(productVersion)
+		ACCESSORY_SET(serial_number)
+		ACCESSORY_SET(firmware_revision)
+		ACCESSORY_SET(hardware_revision)
+		ACCESSORY_SET(product_version)
 
 		hap_acc_cfg_t cfg = 
 		{
 			.name             = self->name,
 			.manufacturer     = self->manufacturer,
 			.model            = self->model,
-			.serial_num       = self->serialNumber,
-			.fw_rev           = self->firmwareRevision,
-			.hw_rev           = self->hardwareRevision,
-			.pv               = self->productVersion,
+			.serial_num       = self->serial_number,
+			.fw_rev           = self->firmware_revision,
+			.hw_rev           = self->hardware_revision,
+			.pv               = self->product_version,
 			.identify_routine = Accessory_identify,
 			.cid              = args[ARG_cid].u_int,
 		};
@@ -146,11 +146,11 @@ STATIC mp_obj_t Accessory_deinit(mp_obj_t self_in)
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(Accessory_deinit_obj, Accessory_deinit);
 
 
-// addServer method
-STATIC mp_obj_t Accessory_addServer(mp_obj_t self_in, mp_obj_t server_in)
+// add_server method
+STATIC mp_obj_t Accessory_add_server(mp_obj_t self_in, mp_obj_t server_in)
 {
 	Accessory_t *self = self_in;
-	// ESP_LOGE(TAG, "Accessory_addServer");
+	// ESP_LOGE(TAG, "Accessory_add_server");
 	if (self->accessory)
 	{
 		hap_serv_t * server = Server_get_ptr(server_in);
@@ -165,11 +165,11 @@ STATIC mp_obj_t Accessory_addServer(mp_obj_t self_in, mp_obj_t server_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_addServer_obj, Accessory_addServer);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_add_server_obj, Accessory_add_server);
 
 
 // set_identify callback method
-STATIC mp_obj_t Accessory_setIdentifyCallback(mp_obj_t self_in, mp_obj_t identify_callback_in)
+STATIC mp_obj_t Accessory_set_identify_callback(mp_obj_t self_in, mp_obj_t identify_callback_in)
 {
 	Accessory_t *self = self_in;
 
@@ -186,12 +186,12 @@ STATIC mp_obj_t Accessory_setIdentifyCallback(mp_obj_t self_in, mp_obj_t identif
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_setIdentifyCallback_obj, Accessory_setIdentifyCallback);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_set_identify_callback_obj, Accessory_set_identify_callback);
 
 
 
 // set_identify callback method
-STATIC mp_obj_t Accessory_setProductData(mp_obj_t self_in, mp_obj_t product_data_in)
+STATIC mp_obj_t Accessory_set_product_data(mp_obj_t self_in, mp_obj_t product_data_in)
 {
 	Accessory_t *self = self_in;
 
@@ -210,7 +210,7 @@ STATIC mp_obj_t Accessory_setProductData(mp_obj_t self_in, mp_obj_t product_data
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_setProductData_obj, Accessory_setProductData);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_set_product_data_obj, Accessory_set_product_data);
 
 
 // print method
@@ -224,11 +224,11 @@ STATIC void Accessory_print(const mp_print_t *print, mp_obj_t self_in, mp_print_
 STATIC const mp_rom_map_elem_t Accessory_locals_dict_table[] = 
 {
 	// Delete method
-	{ MP_ROM_QSTR(MP_QSTR___del__),              MP_ROM_PTR(&Accessory_deinit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_deinit),               MP_ROM_PTR(&Accessory_deinit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_addServer),            MP_ROM_PTR(&Accessory_addServer_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setIdentifyCallback),  MP_ROM_PTR(&Accessory_setIdentifyCallback_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setProductData),       MP_ROM_PTR(&Accessory_setProductData_obj) },
+	{ MP_ROM_QSTR(MP_QSTR___del__),                MP_ROM_PTR(&Accessory_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_deinit),                 MP_ROM_PTR(&Accessory_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_add_server),             MP_ROM_PTR(&Accessory_add_server_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_set_identify_callback),  MP_ROM_PTR(&Accessory_set_identify_callback_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_set_product_data),       MP_ROM_PTR(&Accessory_set_product_data_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Accessory_locals_dict, Accessory_locals_dict_table);
 

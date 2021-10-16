@@ -35,11 +35,11 @@ from motion.historic import *
 from video.video import Camera
 from tools import useful
 
-def start(loop=None, pirDetection=False):
+def start(loop=None, pir_detection=False):
         &#34;&#34;&#34; Start the asynchronous motion detection and presence detection &#34;&#34;&#34;
-        if useful.iscamera() and Camera.isActivated():
-                loop.create_task(detectMotion(pirDetection))
-                loop.create_task(Historic.periodicTask())</code></pre>
+        if useful.iscamera() and Camera.is_activated():
+                loop.create_task(detect_motion(pir_detection))
+                loop.create_task(Historic.periodic_task())</code></pre>
 </details>
 </section>
 <section>
@@ -61,7 +61,7 @@ def start(loop=None, pirDetection=False):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="lib.motion.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>loop=None, pirDetection=False)</span>
+<span>def <span class="ident">start</span></span>(<span>loop=None, pir_detection=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Start the asynchronous motion detection and presence detection</p></div>
@@ -69,11 +69,11 @@ def start(loop=None, pirDetection=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start(loop=None, pirDetection=False):
+<pre><code class="python">def start(loop=None, pir_detection=False):
         &#34;&#34;&#34; Start the asynchronous motion detection and presence detection &#34;&#34;&#34;
-        if useful.iscamera() and Camera.isActivated():
-                loop.create_task(detectMotion(pirDetection))
-                loop.create_task(Historic.periodicTask())</code></pre>
+        if useful.iscamera() and Camera.is_activated():
+                loop.create_task(detect_motion(pir_detection))
+                loop.create_task(Historic.periodic_task())</code></pre>
 </details>
 </dd>
 </dl>

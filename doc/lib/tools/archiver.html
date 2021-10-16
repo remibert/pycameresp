@@ -33,20 +33,20 @@
 from tools import useful
 
 HEADER_FILE=b&#34;## PYCAMERESP ##\r\n&#34;
-def exportFiles(exportFilename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
+def export_files(export_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
         &#34;&#34;&#34; Exports many file into only one file &#34;&#34;&#34;
         result = True
 
-        print(&#34;Export %s&#34;%exportFilename)
-        useful.remove(exportFilename)
+        print(&#34;Export %s&#34;%export_filename)
+        useful.remove(export_filename)
 
         # Scan directory with pattern
         dirs, files = useful.scandir(path=path, pattern=pattern, recursive=recursive)
-        
+
         try:
                 # Open out file
-                out = open(exportFilename,&#34;wb&#34;)
- 
+                out = open(export_filename,&#34;wb&#34;)
+
                 # Write type of file
                 out.write(HEADER_FILE)
 
@@ -83,13 +83,13 @@ def exportFiles(exportFilename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;
                 out.close()
         return result
 
-def importFiles(importFilename, simulated=False):
+def import_files(import_filename, simulated=False):
         &#34;&#34;&#34; Import files and write all files &#34;&#34;&#34;
         result = True
-        print(&#34;Import %s&#34;%importFilename)
+        print(&#34;Import %s&#34;%import_filename)
         try:
-                readSize = useful.filesize(importFilename)
-                imported = open(importFilename,&#34;rb&#34;)
+                readSize = useful.filesize(import_filename)
+                imported = open(import_filename,&#34;rb&#34;)
                 if not useful.ismicropython():
                         simulated = True
 
@@ -114,7 +114,7 @@ def importFiles(importFilename, simulated=False):
                                                 result = False
                                                 break
                                         size += char
-                                if result == False:
+                                if result is False:
                                         break
                                 size = eval(size)
 
@@ -133,22 +133,22 @@ def importFiles(importFilename, simulated=False):
 
                                 # Read the file
                                 print(&#34;  Import &#39;%s&#39; size=%d&#34;%(filename, size))
-                                
+
                                 try:
-                                        if simulated == False:
+                                        if simulated is False:
                                                 content = open(filename,&#34;wb&#34;)
                                         while size &gt; 0:
                                                 data = imported.read(size if size &lt; 2048 else 2048)
-                                                if simulated == False:
+                                                if simulated is False:
                                                         content.write(data)
                                                 size -= len(data)
                                 except Exception as err:
                                         useful.syslog(err)
                                         result = False
                                 finally:
-                                        if simulated == False:
+                                        if simulated is False:
                                                 content.close()
-                                
+
                                 # Read the end of file
                                 if imported.read(4) != b&#34;\r\n\r\n&#34;:
                                         result = False
@@ -159,7 +159,7 @@ def importFiles(importFilename, simulated=False):
         finally:
                 print(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 imported.close()
-        useful.remove(importFilename)
+        useful.remove(import_filename)
         return result</code></pre>
 </details>
 </section>
@@ -170,8 +170,8 @@ def importFiles(importFilename, simulated=False):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.tools.archiver.exportFiles"><code class="name flex">
-<span>def <span class="ident">exportFiles</span></span>(<span>exportFilename, path='./config', pattern='*.json', recursive=False)</span>
+<dt id="lib.tools.archiver.export_files"><code class="name flex">
+<span>def <span class="ident">export_files</span></span>(<span>export_filename, path='./config', pattern='*.json', recursive=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Exports many file into only one file</p></div>
@@ -179,20 +179,20 @@ def importFiles(importFilename, simulated=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def exportFiles(exportFilename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
+<pre><code class="python">def export_files(export_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
         &#34;&#34;&#34; Exports many file into only one file &#34;&#34;&#34;
         result = True
 
-        print(&#34;Export %s&#34;%exportFilename)
-        useful.remove(exportFilename)
+        print(&#34;Export %s&#34;%export_filename)
+        useful.remove(export_filename)
 
         # Scan directory with pattern
         dirs, files = useful.scandir(path=path, pattern=pattern, recursive=recursive)
-        
+
         try:
                 # Open out file
-                out = open(exportFilename,&#34;wb&#34;)
- 
+                out = open(export_filename,&#34;wb&#34;)
+
                 # Write type of file
                 out.write(HEADER_FILE)
 
@@ -230,8 +230,8 @@ def importFiles(importFilename, simulated=False):
         return result</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.archiver.importFiles"><code class="name flex">
-<span>def <span class="ident">importFiles</span></span>(<span>importFilename, simulated=False)</span>
+<dt id="lib.tools.archiver.import_files"><code class="name flex">
+<span>def <span class="ident">import_files</span></span>(<span>import_filename, simulated=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Import files and write all files</p></div>
@@ -239,13 +239,13 @@ def importFiles(importFilename, simulated=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def importFiles(importFilename, simulated=False):
+<pre><code class="python">def import_files(import_filename, simulated=False):
         &#34;&#34;&#34; Import files and write all files &#34;&#34;&#34;
         result = True
-        print(&#34;Import %s&#34;%importFilename)
+        print(&#34;Import %s&#34;%import_filename)
         try:
-                readSize = useful.filesize(importFilename)
-                imported = open(importFilename,&#34;rb&#34;)
+                readSize = useful.filesize(import_filename)
+                imported = open(import_filename,&#34;rb&#34;)
                 if not useful.ismicropython():
                         simulated = True
 
@@ -270,7 +270,7 @@ def importFiles(importFilename, simulated=False):
                                                 result = False
                                                 break
                                         size += char
-                                if result == False:
+                                if result is False:
                                         break
                                 size = eval(size)
 
@@ -289,22 +289,22 @@ def importFiles(importFilename, simulated=False):
 
                                 # Read the file
                                 print(&#34;  Import &#39;%s&#39; size=%d&#34;%(filename, size))
-                                
+
                                 try:
-                                        if simulated == False:
+                                        if simulated is False:
                                                 content = open(filename,&#34;wb&#34;)
                                         while size &gt; 0:
                                                 data = imported.read(size if size &lt; 2048 else 2048)
-                                                if simulated == False:
+                                                if simulated is False:
                                                         content.write(data)
                                                 size -= len(data)
                                 except Exception as err:
                                         useful.syslog(err)
                                         result = False
                                 finally:
-                                        if simulated == False:
+                                        if simulated is False:
                                                 content.close()
-                                
+
                                 # Read the end of file
                                 if imported.read(4) != b&#34;\r\n\r\n&#34;:
                                         result = False
@@ -315,7 +315,7 @@ def importFiles(importFilename, simulated=False):
         finally:
                 print(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 imported.close()
-        useful.remove(importFilename)
+        useful.remove(import_filename)
         return result</code></pre>
 </details>
 </dd>
@@ -337,8 +337,8 @@ def importFiles(importFilename, simulated=False):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.tools.archiver.exportFiles" href="#lib.tools.archiver.exportFiles">exportFiles</a></code></li>
-<li><code><a title="lib.tools.archiver.importFiles" href="#lib.tools.archiver.importFiles">importFiles</a></code></li>
+<li><code><a title="lib.tools.archiver.export_files" href="#lib.tools.archiver.export_files">export_files</a></code></li>
+<li><code><a title="lib.tools.archiver.import_files" href="#lib.tools.archiver.import_files">import_files</a></code></li>
 </ul>
 </li>
 </ul>

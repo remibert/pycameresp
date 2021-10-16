@@ -32,23 +32,23 @@
 &#34;&#34;&#34; Function define the web page to configure the awake &#34;&#34;&#34;
 from server.httpserver import HttpServer
 from htmltemplate      import *
-from webpage.mainpage  import mainFrame, manageDefaultButton
+from webpage.mainpage  import main_frame, manage_default_button
 from tools             import AwakeConfig,lang
 
-@HttpServer.addRoute(b&#39;/wakeup&#39;, menu=lang.menu_system, item=lang.item_wakeup)
+@HttpServer.add_route(b&#39;/wakeup&#39;, menu=lang.menu_system, item=lang.item_wakeup)
 async def wakeup(request, response, args):
         &#34;&#34;&#34; Wake uo configuration web page &#34;&#34;&#34;
         config = AwakeConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
+        disabled, action, submit = manage_default_button(request, config)
 
-        page = mainFrame(request, response, args, lang.gpio_wake_up, 
+        page = main_frame(request, response, args, lang.gpio_wake_up,
                 Switch(text=lang.activated,       name=b&#34;activated&#34;,     checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.gpio_used_wake_up, name=b&#34;wakeUpGpio&#34;,     placeholder=lang.gpio_connected_to_pir, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wakeUpGpio,    disabled=disabled),
-                Edit(text=lang.awake_duration_in, name=b&#34;awakeDuration&#34;,  placeholder=lang.duration_awake,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.awakeDuration, disabled=disabled),
-                Edit(text=lang.sleep_duration_in, name=b&#34;sleepDuration&#34;,  placeholder=lang.duration_sleep,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.sleepDuration, disabled=disabled), 
+                Edit(text=lang.gpio_used_wake_up, name=b&#34;wake_up_gpio&#34;,     placeholder=lang.gpio_connected_to_pir, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wake_up_gpio,    disabled=disabled),
+                Edit(text=lang.awake_duration_in, name=b&#34;awake_duration&#34;,  placeholder=lang.duration_awake,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.awake_duration, disabled=disabled),
+                Edit(text=lang.sleep_duration_in, name=b&#34;sleep_duration&#34;,  placeholder=lang.duration_sleep,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.sleep_duration, disabled=disabled),
                 Br(),
                 submit)
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </section>
 <section>
@@ -67,20 +67,20 @@ async def wakeup(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/wakeup&#39;, menu=lang.menu_system, item=lang.item_wakeup)
+<pre><code class="python">@HttpServer.add_route(b&#39;/wakeup&#39;, menu=lang.menu_system, item=lang.item_wakeup)
 async def wakeup(request, response, args):
         &#34;&#34;&#34; Wake uo configuration web page &#34;&#34;&#34;
         config = AwakeConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
+        disabled, action, submit = manage_default_button(request, config)
 
-        page = mainFrame(request, response, args, lang.gpio_wake_up, 
+        page = main_frame(request, response, args, lang.gpio_wake_up,
                 Switch(text=lang.activated,       name=b&#34;activated&#34;,     checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.gpio_used_wake_up, name=b&#34;wakeUpGpio&#34;,     placeholder=lang.gpio_connected_to_pir, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wakeUpGpio,    disabled=disabled),
-                Edit(text=lang.awake_duration_in, name=b&#34;awakeDuration&#34;,  placeholder=lang.duration_awake,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.awakeDuration, disabled=disabled),
-                Edit(text=lang.sleep_duration_in, name=b&#34;sleepDuration&#34;,  placeholder=lang.duration_sleep,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.sleepDuration, disabled=disabled), 
+                Edit(text=lang.gpio_used_wake_up, name=b&#34;wake_up_gpio&#34;,     placeholder=lang.gpio_connected_to_pir, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wake_up_gpio,    disabled=disabled),
+                Edit(text=lang.awake_duration_in, name=b&#34;awake_duration&#34;,  placeholder=lang.duration_awake,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.awake_duration, disabled=disabled),
+                Edit(text=lang.sleep_duration_in, name=b&#34;sleep_duration&#34;,  placeholder=lang.duration_sleep,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.sleep_duration, disabled=disabled),
                 Br(),
                 submit)
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </dd>
 </dl>

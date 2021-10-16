@@ -255,8 +255,8 @@ STATIC mp_obj_t Charact_deinit(mp_obj_t self_in)
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(Charact_deinit_obj, Charact_deinit);
 
 
-// setUnit method
-STATIC mp_obj_t Charact_setUnit(mp_obj_t self_in, mp_obj_t unit_in)
+// set_unit method
+STATIC mp_obj_t Charact_set_unit(mp_obj_t self_in, mp_obj_t unit_in)
 {
 	Charact_t *self = self_in;
 	if (self->charact)
@@ -266,11 +266,11 @@ STATIC mp_obj_t Charact_setUnit(mp_obj_t self_in, mp_obj_t unit_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_setUnit_obj, Charact_setUnit);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_set_unit_obj, Charact_set_unit);
 
 
-// setDescription method
-STATIC mp_obj_t Charact_setDescription(mp_obj_t self_in, mp_obj_t description_in)
+// set_description method
+STATIC mp_obj_t Charact_set_description(mp_obj_t self_in, mp_obj_t description_in)
 {
 	Charact_t *self = self_in;
 	if (self->charact)
@@ -280,11 +280,11 @@ STATIC mp_obj_t Charact_setDescription(mp_obj_t self_in, mp_obj_t description_in
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_setDescription_obj, Charact_setDescription);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_set_description_obj, Charact_set_description);
 
 
-// setConstraint method
-STATIC mp_obj_t Charact_setConstraint(mp_obj_t self_in, mp_obj_t min_in, mp_obj_t max_in)
+// set_constraint method
+STATIC mp_obj_t Charact_set_constraint(mp_obj_t self_in, mp_obj_t min_in, mp_obj_t max_in)
 {
 	Charact_t *self = self_in;
 	if (self->charact)
@@ -309,11 +309,11 @@ STATIC mp_obj_t Charact_setConstraint(mp_obj_t self_in, mp_obj_t min_in, mp_obj_
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(Charact_setConstraint_obj, Charact_setConstraint);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(Charact_set_constraint_obj, Charact_set_constraint);
 
 
-// setStep method
-STATIC mp_obj_t Charact_setStep(mp_obj_t self_in, mp_obj_t step_in)
+// set_step method
+STATIC mp_obj_t Charact_set_step(mp_obj_t self_in, mp_obj_t step_in)
 {
 	Charact_t *self = self_in;
 	if (self->charact)
@@ -336,11 +336,11 @@ STATIC mp_obj_t Charact_setStep(mp_obj_t self_in, mp_obj_t step_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_setStep_obj, Charact_setStep);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_set_step_obj, Charact_set_step);
 
 
-// setValue method
-STATIC mp_obj_t Charact_setValue(mp_obj_t self_in, mp_obj_t value_in)
+// set_value method
+STATIC mp_obj_t Charact_set_value(mp_obj_t self_in, mp_obj_t value_in)
 {
 	Charact_t *self = self_in;
 	if (self->charact)
@@ -402,11 +402,11 @@ STATIC mp_obj_t Charact_setValue(mp_obj_t self_in, mp_obj_t value_in)
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_setValue_obj, Charact_setValue);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_set_value_obj, Charact_set_value);
 
 
-// getValue method
-STATIC mp_obj_t Charact_getValue(mp_obj_t self_in)
+// get_value method
+STATIC mp_obj_t Charact_get_value(mp_obj_t self_in)
 {
 	Charact_t *self = self_in;
 	mp_obj_t result = mp_const_none;
@@ -482,11 +482,11 @@ STATIC mp_obj_t Charact_getValue(mp_obj_t self_in)
 	}
 	return result;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(Charact_getValue_obj, Charact_getValue);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Charact_get_value_obj, Charact_get_value);
 
 
-// setReadCallback method
-STATIC mp_obj_t Charact_setReadCallback(mp_obj_t self_in, mp_obj_t read_callback_in)
+// set_read_callback method
+STATIC mp_obj_t Charact_set_read_callback(mp_obj_t self_in, mp_obj_t read_callback_in)
 {
 	Charact_t *self = self_in;
 
@@ -503,11 +503,11 @@ STATIC mp_obj_t Charact_setReadCallback(mp_obj_t self_in, mp_obj_t read_callback
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_setReadCallback_obj, Charact_setReadCallback);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_set_read_callback_obj, Charact_set_read_callback);
 
 
-// setWriteCallback method
-STATIC mp_obj_t Charact_setWriteCallback(mp_obj_t self_in, mp_obj_t write_callback_in)
+// set_write_callback method
+STATIC mp_obj_t Charact_set_write_callback(mp_obj_t self_in, mp_obj_t write_callback_in)
 {
 	Charact_t *self = self_in;
 
@@ -524,7 +524,7 @@ STATIC mp_obj_t Charact_setWriteCallback(mp_obj_t self_in, mp_obj_t write_callba
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_setWriteCallback_obj, Charact_setWriteCallback);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_set_write_callback_obj, Charact_set_write_callback);
 
 
 // print method
@@ -538,16 +538,16 @@ STATIC void Charact_print(const mp_print_t *print, mp_obj_t self_in, mp_print_ki
 STATIC const mp_rom_map_elem_t Charact_locals_dict_table[] = 
 {
 	// Delete method
-	{ MP_ROM_QSTR(MP_QSTR___del__),          MP_ROM_PTR(&Charact_deinit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_deinit),           MP_ROM_PTR(&Charact_deinit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setUnit),          MP_ROM_PTR(&Charact_setUnit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setDescription),   MP_ROM_PTR(&Charact_setDescription_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setConstraint),    MP_ROM_PTR(&Charact_setConstraint_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setStep),          MP_ROM_PTR(&Charact_setStep_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setValue),         MP_ROM_PTR(&Charact_setValue_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_getValue),         MP_ROM_PTR(&Charact_getValue_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setReadCallback),  MP_ROM_PTR(&Charact_setReadCallback_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_setWriteCallback), MP_ROM_PTR(&Charact_setWriteCallback_obj) },
+	{ MP_ROM_QSTR(MP_QSTR___del__),            MP_ROM_PTR(&Charact_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_deinit),             MP_ROM_PTR(&Charact_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_set_unit),           MP_ROM_PTR(&Charact_set_unit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_set_description),    MP_ROM_PTR(&Charact_set_description_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_set_constraint),     MP_ROM_PTR(&Charact_set_constraint_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_set_step),           MP_ROM_PTR(&Charact_set_step_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_set_value),          MP_ROM_PTR(&Charact_set_value_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_get_value),          MP_ROM_PTR(&Charact_get_value_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_set_read_callback),  MP_ROM_PTR(&Charact_set_read_callback_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_set_write_callback), MP_ROM_PTR(&Charact_set_write_callback_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Charact_locals_dict, Charact_locals_dict_table);
 

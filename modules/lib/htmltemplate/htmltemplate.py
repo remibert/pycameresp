@@ -5,7 +5,7 @@ from htmltemplate import WWW_DIR, TEMPLATE_FILE, TEMPLATE_PY
 
 def parse(force=False):
 	""" Check that the template.html file has been modified and if so rebuild the file htmlclasses.py """
-	def getModifiedTime(filename):
+	def get_modified_time(filename):
 		try:
 			from uos import stat
 			ST_MTIME = 8
@@ -16,7 +16,7 @@ def parse(force=False):
 			return stat(filename)[ST_MTIME]
 		except:
 			return 0
-	if getModifiedTime(WWW_DIR+TEMPLATE_FILE) > getModifiedTime(TEMPLATE_PY) or force:
+	if get_modified_time(WWW_DIR+TEMPLATE_FILE) > get_modified_time(TEMPLATE_PY) or force:
 		from htmltemplate import htmlparser
 		htmlparser.parse(force)
 	else:

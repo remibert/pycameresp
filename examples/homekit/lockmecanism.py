@@ -1,30 +1,32 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+""" Lock mecanism homekit accessory """
 from homekit import *
 
 class LockMecanism(Accessory):
 	""" Lock mecanism homekit accessory """
 	def __init__(self, **kwargs):
-		""" Create lock mecanism accessory. Parameters : name(string), lockCurrState(int), lockTargState(int) and all Accessory parameters """
+		""" Create lock mecanism accessory. Parameters : name(string), lock_curr_state(int), lock_targ_state(int) and all Accessory parameters """
 		Accessory.__init__(self, Accessory.CID_LOCK, **kwargs)
-		self.server = Server(name=kwargs.get("name","Lock mecanism"), serverUuid=Server.UUID_LOCK_MECHANISM)
+		self.server = Server(name=kwargs.get("name","Lock mecanism"), server_uuid=Server.UUID_LOCK_MECHANISM)
 
-		self.lockCurrState = charactUint8Create (Charact.UUID_LOCK_CURRENT_STATE, Charact.PERM_RE, kwargs.get("lockCurrState",0))
-		self.lockCurrState.setConstraint(0, 3, 1);
-		self.server.addCharact(self.lockCurrState)
+		self.lock_curr_state = charact_uint8_create (Charact.UUID_LOCK_CURRENT_STATE, Charact.PERM_RE, kwargs.get("lock_curr_state",0))
+		self.lock_curr_state.set_constraint(0, 3, 1)
+		self.server.add_charact(self.lock_curr_state)
 
-		self.lockTargState = charactUint8Create (Charact.UUID_LOCK_TARGET_STATE, Charact.PERM_RWE, kwargs.get("lockTargState",0))
-		self.lockTargState.setConstraint(0, 1, 1)
-		self.server.addCharact(self.lockTargState)
+		self.lock_targ_state = charact_uint8_create (Charact.UUID_LOCK_TARGET_STATE, Charact.PERM_RWE, kwargs.get("lock_targ_state",0))
+		self.lock_targ_state.set_constraint(0, 1, 1)
+		self.server.add_charact(self.lock_targ_state)
 
-		self.lockTargState.setWriteCallback(self.writeLockTargState)
-		self.addServer(self.server)
+		self.lock_targ_state.set_write_callback(self.write_lock_targ_state)
+		self.add_server(self.server)
 
-	def writeLockTargState(self, value):
+	def write_lock_targ_state(self, value):
+		""" Write lock target """
 		import time
 
 		# Write target lock state
-		self.lockTargState.setValue(value)
+		self.lock_targ_state.set_value(value)
 
 		if value == 1:
 			print("Close lock")
@@ -33,7 +35,7 @@ class LockMecanism(Accessory):
 
 		time.sleep(3)
 		# Set the current lock state
-		self.lockCurrState.setValue(value)
+		self.lock_curr_state.set_value(value)
 
 		if value == 1:
 			print("lock closed")
@@ -41,9 +43,10 @@ class LockMecanism(Accessory):
 			print("lock opened")
 
 def main():
+	""" Test """
 	# Initialize homekit engine
 	Homekit.init()
-	
+
 	# Create accessory
 	Homekit.play(LockMecanism(name="My lock mecanism"))
 

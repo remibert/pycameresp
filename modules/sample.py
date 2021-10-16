@@ -1,38 +1,39 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+""" Web page sample """
 from server.httpserver import HttpServer
 from htmltemplate import Br,ButtonCmd,Option,SwitchCmd,Tag,SliderCmd,ComboCmd,Paragraph
 from webpage.mainpage     import *
 from tools       import useful
 
-# Called when the button pressed
-@HttpServer.addRoute(b'/sample/button')
-async def buttonPressed(request, response, args):
+@HttpServer.add_route(b'/sample/button')
+async def button_pressed(request, response, args):
+	""" Called when the button pressed """
 	print("Button clicked")
-	await response.sendOk()
+	await response.send_ok()
 
-# Called when the slider state changed
-@HttpServer.addRoute(b'/sample/slider')
-async def sliderChanged(request, response, args):
+@HttpServer.add_route(b'/sample/slider')
+async def slider_changed(request, response, args):
+	""" Called when the slider state changed """
 	print("Slider change to %d"%int(request.params[b"value"]))
-	await response.sendOk()
+	await response.send_ok()
 
-# Called when the combo state changed
-@HttpServer.addRoute(b'/sample/combo')
-async def comboChanged(request, response, args):
+@HttpServer.add_route(b'/sample/combo')
+async def combo_changed(request, response, args):
+	""" Called when the combo state changed """
 	print("Number %s selected"%useful.tostrings(request.params[b"value"]))
-	await response.sendOk()
+	await response.send_ok()
 
-# Called when the switch state changed
-@HttpServer.addRoute(b'/sample/switch')
-async def switchChanged(request, response, args):
+@HttpServer.add_route(b'/sample/switch')
+async def switch_changed(request, response, args):
+	""" Called when the switch state changed """
 	print("Switch change to %s"%useful.tostrings(request.params[b"value"]))
-	await response.sendOk()
+	await response.send_ok()
 
-# Test simple page with button 
-@HttpServer.addRoute(b'/sample', menu=b"Sample", item=b"Sample")
-async def samplePage(request, response, args):
-	page = mainFrame(request, response, args, b"Sample",
+@HttpServer.add_route(b'/sample', menu=b"Sample", item=b"Sample")
+async def sample_page(request, response, args):
+	""" Test simple page with differents web widgets """
+	page = main_frame(request, response, args, b"Sample",
 		Tag(b'''
 			<p>Example to interact with esp32 via an html page (see the content of file <b>sample.py</b>)</p>
 			'''),
@@ -48,5 +49,4 @@ async def samplePage(request, response, args):
 			Br(),
 			Br(),
 			Paragraph(b"To eliminate this page delete the <b>sample.py</b> file"))
-	await response.sendPage(page)
-
+	await response.send_page(page)

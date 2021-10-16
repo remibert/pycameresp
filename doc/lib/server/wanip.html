@@ -43,17 +43,17 @@ async def request(host, port, path):
                 reader,writer = await uasyncio.open_connection(useful.tostrings(host), port)
                 streamio = Stream(reader, writer)
                 req = HttpRequest(None)
-                req.setPath(path)
-                req.setHeader(b&#34;HOST&#34;,b&#34;ESP32&#34;)
-                req.setMethod(b&#34;GET&#34;)
-                req.setHeader(b&#34;User-Agent&#34;,b&#34;ESP32&#34;)
-                req.setHeader(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
-                req.setHeader(b&#34;Connection&#34;,b&#34;keep-alive&#34;)
+                req.set_path(path)
+                req.set_header(b&#34;HOST&#34;,b&#34;ESP32&#34;)
+                req.set_method(b&#34;GET&#34;)
+                req.set_header(b&#34;User-Agent&#34;,b&#34;ESP32&#34;)
+                req.set_header(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
+                req.set_header(b&#34;Connection&#34;,b&#34;keep-alive&#34;)
                 await req.send(streamio)
                 response = HttpResponse(streamio)
                 await response.receive(streamio)
                 if response.status == b&#34;200&#34;:
-                        result = response.getContent()
+                        result = response.get_content()
         except Exception as err:
                 useful.syslog(err)
         finally:
@@ -61,7 +61,7 @@ async def request(host, port, path):
                         await streamio.close()
         return result
 
-async def getWanIpAsync():
+async def get_wan_ip_async():
         &#34;&#34;&#34; Get the wan ip address with asynchronous method &#34;&#34;&#34;
         resp = await request(&#34;ip4only.me&#34;,80,b&#34;/api/&#34;)
         if resp:
@@ -78,8 +78,8 @@ async def getWanIpAsync():
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.server.wanip.getWanIpAsync"><code class="name flex">
-<span>async def <span class="ident">getWanIpAsync</span></span>(<span>)</span>
+<dt id="lib.server.wanip.get_wan_ip_async"><code class="name flex">
+<span>async def <span class="ident">get_wan_ip_async</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the wan ip address with asynchronous method</p></div>
@@ -87,7 +87,7 @@ async def getWanIpAsync():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def getWanIpAsync():
+<pre><code class="python">async def get_wan_ip_async():
         &#34;&#34;&#34; Get the wan ip address with asynchronous method &#34;&#34;&#34;
         resp = await request(&#34;ip4only.me&#34;,80,b&#34;/api/&#34;)
         if resp:
@@ -114,17 +114,17 @@ async def getWanIpAsync():
                 reader,writer = await uasyncio.open_connection(useful.tostrings(host), port)
                 streamio = Stream(reader, writer)
                 req = HttpRequest(None)
-                req.setPath(path)
-                req.setHeader(b&#34;HOST&#34;,b&#34;ESP32&#34;)
-                req.setMethod(b&#34;GET&#34;)
-                req.setHeader(b&#34;User-Agent&#34;,b&#34;ESP32&#34;)
-                req.setHeader(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
-                req.setHeader(b&#34;Connection&#34;,b&#34;keep-alive&#34;)
+                req.set_path(path)
+                req.set_header(b&#34;HOST&#34;,b&#34;ESP32&#34;)
+                req.set_method(b&#34;GET&#34;)
+                req.set_header(b&#34;User-Agent&#34;,b&#34;ESP32&#34;)
+                req.set_header(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
+                req.set_header(b&#34;Connection&#34;,b&#34;keep-alive&#34;)
                 await req.send(streamio)
                 response = HttpResponse(streamio)
                 await response.receive(streamio)
                 if response.status == b&#34;200&#34;:
-                        result = response.getContent()
+                        result = response.get_content()
         except Exception as err:
                 useful.syslog(err)
         finally:
@@ -151,7 +151,7 @@ async def getWanIpAsync():
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.server.wanip.getWanIpAsync" href="#lib.server.wanip.getWanIpAsync">getWanIpAsync</a></code></li>
+<li><code><a title="lib.server.wanip.get_wan_ip_async" href="#lib.server.wanip.get_wan_ip_async">get_wan_ip_async</a></code></li>
 <li><code><a title="lib.server.wanip.request" href="#lib.server.wanip.request">request</a></code></li>
 </ul>
 </li>

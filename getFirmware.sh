@@ -24,7 +24,9 @@ echo "Get Micropython"
 echo "***************"
 git clone https://github.com/micropython/micropython.git
 cd $ROOT/micropython
-git checkout 145fedef8d74a504c4b7c000e6c305602d07feff
+git checkout 7c54b6428058a236b8a48c93c255948ece7e718b #  Version 1.17 OK
+# git checkout d42cba0d22cac812cc5a12f4670010b45932eafa # Problem PWM
+# git checkout 0d9429f44cd23f5cfdd80d53adccbf384e23665a # Problem PWM
 
 echo "*************************"
 echo "Get micropython submodule"
@@ -40,12 +42,12 @@ echo "*************"
 cd $ROOT
 git clone https://github.com/espressif/esp-idf.git
 cd $ESPIDF
-# Version v4.3-beta1 (bug)
-#~ git checkout 52f1f68dc7f647def4bd3ff14bf145f87fe99995
-# Version v4.2 (OK)
-git checkout c40f2590bf759ff60ef122afa79b4ec04e7633d2
-# Version v4.4-dev (bug)
-#~ git checkout c8315e01107c10898947a817d5cf763cdd3f5a4f
+#~ git checkout 52f1f68dc7f647def4bd3ff14bf145f87fe99995 # Version v4.3-beta1 (bug) 
+#~ git checkout c40f2590bf759ff60ef122afa79b4ec04e7633d2 # Version v4.2 (OK)        
+git checkout 7ab8f793ca5b026f37ae812bcc103e3aa698d164 # Version v4.2.2 (OK)
+#~ git checkout 2e74914051d14ec2290fc751a8486fb51d73a31e # Version v4.3.1 (Seems work, one time I had a problem with camera, Leaves very little RAM on an esp32)
+#~ git checkout c8315e01107c10898947a817d5cf763cdd3f5a4f # Version v4.4-dev (bug)   
+
 
 echo "***********************"
 echo "Get submodule espressif"

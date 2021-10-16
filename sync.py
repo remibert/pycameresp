@@ -1,13 +1,13 @@
 # Distributed under MIT License
 # Copyright (c) 2020 Remi BERTHOLET
 
-def isString(data):
+def is_string(data):
 	""" Indicates if the data is a string
-	>>> isString("str")
+	>>> is_string("str")
 	True
-	>>> isString(u"jjj")
+	>>> is_string(u"jjj")
 	True
-	>>> isString(12)
+	>>> is_string(12)
 	False
 	"""
 	try:
@@ -19,17 +19,17 @@ def isString(data):
 			return True
 	return False
 
-def adaptPath(path):
+def adapt_path(path):
 	from sys import platform  
 	if platform != "win32":
 		return path.replace("\\","/")
 	return path
 
-def normalizeList(lst):
+def normalize_list(lst):
 	from os import sep
 	result = []
 	
-	if isString(lst):
+	if is_string(lst):
 		lst = [lst]
 	
 	for item in lst:
@@ -37,10 +37,10 @@ def normalizeList(lst):
 			tmp = item.replace("\\",sep)
 		else:
 			tmp = item.replace("/",sep)
-		result.append(adaptPath(tmp))
+		result.append(adapt_path(tmp))
 	return result
 	
-def mustBeAdded(filename, includes, excludes):
+def must_be_added(filename, includes, excludes):
 	from fnmatch import fnmatchcase
 	from os.path import split
 	excluded = None
@@ -78,23 +78,23 @@ def mustBeAdded(filename, includes, excludes):
 		elif a and b:     adding = True
 	return adding
 
-def addFilesInList(filename, includes, excludes, lst):
-	if mustBeAdded(filename, includes, excludes):
+def add_files_in_list(filename, includes, excludes, lst):
+	if must_be_added(filename, includes, excludes):
 		lst.append(filename)
 
-def scanAll(root, directory, includes = ["*"], excludes = []):
+def scan_all(root, directory, includes = ["*"], excludes = []):
 	""" Parse a directory and returns the list of files and directories """
 	from os import walk
 	from os.path import join
 
-	excludes = normalizeList(excludes)
-	includes = normalizeList(includes)
-	directory = adaptPath(directory)
+	excludes = normalize_list(excludes)
+	includes = normalize_list(includes)
+	directory = adapt_path(directory)
 
-	if   isString(includes)      : includes = [includes]
+	if   is_string(includes)      : includes = [includes]
 	elif type(includes) == type(None): includes = []
 		
-	if   isString(excludes)      : excludes = [excludes]
+	if   is_string(excludes)      : excludes = [excludes]
 	elif type(excludes) == type(None): excludes = []
 	
 	files = []
@@ -104,10 +104,10 @@ def scanAll(root, directory, includes = ["*"], excludes = []):
 	for i in walk(root + "/" + directory):
 		dirpath, dirnames, filenames = i
 		for dirname in dirnames:
-			addFilesInList(join(dirpath[lengthDirectory+1:], dirname), includes, excludes, directories)
+			add_files_in_list(join(dirpath[lengthDirectory+1:], dirname), includes, excludes, directories)
 
 		for filename in filenames:
-			addFilesInList(join(dirpath[lengthDirectory+1:], filename), includes, excludes, files)
+			add_files_in_list(join(dirpath[lengthDirectory+1:], filename), includes, excludes, files)
 
 	all_ = directories + files
 	return all_, files, directories
@@ -137,7 +137,7 @@ class FtpSync:
 		self.dirs =[]
 		self.includes = includes
 		self.excludes = excludes
-		self.ftp.retrlines('LIST',self.parseLine)
+		self.ftp.retrlines('list',self.parse_line)
 		self.directories += self.dirs
 		if recurse:
 			for dirinfo in self.dirs:
@@ -145,7 +145,7 @@ class FtpSync:
 				#~ print("Scan '%s'"%directory)
 				self.scan("/"+directory, includes, excludes, recurse)
 
-	def parseLine(self, line):
+	def parse_line(self, line):
 		from re import split
 		from time import localtime
 		
@@ -172,7 +172,7 @@ class FtpSync:
 				file = self.path+"/"+filename
 				file = file.replace("//","/")
 				#file = filename.replace("//","/").lstrip("/")
-				if mustBeAdded(file, self.includes, self.excludes):
+				if must_be_added(file, self.includes, self.excludes):
 					self.files[file] = (year,month,day,hour,minute,size)
 					#~ print("%04d/%02d/%02d %02d:%02d %8d %s"%(year,month,day,hour,minute,size,file))
 				else:
@@ -182,7 +182,7 @@ class FtpSync:
 				directory = self.path+"/"+filename
 				directory = directory.replace("//","/")
 				#directory = filename.replace("//","/").lstrip("/")
-				if mustBeAdded(directory, self.includes, self.excludes):
+				if must_be_added(directory, self.includes, self.excludes):
 					self.dirs.append((directory.lstrip("/"),year,month,day,hour,minute))
 					#~ print("%04d/%02d/%02d %02d:%02d          [%s]"%(year,month,day,hour,minute,directory))
 				else:
@@ -192,7 +192,7 @@ class FtpSync:
 			#~ print("Cannot parse ftp list :'%s'"%line)
 	
 	def copy(self, sourceFilename, destinationFilename):
-		self.ftp.storbinary("STOR %s"%destinationFilename, open(sourceFilename,"rb"))
+		self.ftp.storbinary("stor %s"%destinationFilename, open(sourceFilename,"rb"))
 
 class Filters:
 	def __init__(self, includes = ["*"], excludes = ["*.pyc", ".DS_Store", "*/__pycache__/*"]):
@@ -221,17 +221,17 @@ class Synchronization:
 		self.ftp = None
 		
 	def synchronize(self):
-		sources      = self.scanSource()
+		sources      = self.scan_source()
 		self.ftp = FtpSync(self.dst.host, self.dst.port, self.dst.user, self.dst.password)
-		destinations = self.scanDestination()
-		self.copyToDestination(sources, destinations, True)
+		destinations = self.scan_destination()
+		self.copy_to_destination(sources, destinations, True)
 
-	def scanSource(self):
+	def scan_source(self):
 		fileinfos = {}
 		from os import stat, getcwd
 		from time import localtime
 		
-		all, files, directories = scanAll(self.src.root, self.src.path, self.src.filters.includes, self.src.filters.excludes)
+		all, files, directories = scan_all(self.src.root, self.src.path, self.src.filters.includes, self.src.filters.excludes)
 		
 		for file in files:
 			s = stat(self.src.root + "/" +file)
@@ -239,12 +239,12 @@ class Synchronization:
 			fileinfos[file] = (date.tm_year, date.tm_mon, date.tm_mday, date.tm_hour, date.tm_min, s.st_size)
 		return fileinfos
 
-	def scanDestination(self):
+	def scan_destination(self):
 		self.ftp.scan(self.dst.path, self.dst.filters.includes, self.dst.filters.excludes, True)
 		result = self.ftp.files
 		return result
 
-	def copyToDestination(self, sources, destinations, copyfile=False):
+	def copy_to_destination(self, sources, destinations, copyfile=False):
 		for source in sources.keys():
 			if source in destinations:
 				if sources[source][-1] != destinations[source][-1]:

@@ -3,7 +3,7 @@
 """ Language selected and regional time """
 from tools.jsonconfig import *
 
-regionConfig = None
+region_config = None
 
 class RegionConfig(JsonConfig):
 	""" Language selected and regional time """
@@ -11,22 +11,22 @@ class RegionConfig(JsonConfig):
 		""" Constructor """
 		JsonConfig.__init__(self)
 		self.lang        = b"english"
-		self.offsettime  = 1
+		self.offset_time  = 1
 		self.dst         = True
-		self.currentTime = 0
+		self.current_time = 0
 
 	@staticmethod
 	def get():
 		""" Return region configuration """
-		global regionConfig
-		if regionConfig == None:
-			regionConfig = RegionConfig()
-			if regionConfig.load() == False:
-				regionConfig.save()
-		
-		if regionConfig.isChanged():
-			regionConfig.load()
-		return regionConfig
+		global region_config
+		if region_config is None:
+			region_config = RegionConfig()
+			if region_config.load() is False:
+				region_config.save()
+
+		if region_config.is_changed():
+			region_config.load()
+		return region_config
 
 try:
 	exec(b"from tools.lang_%s import *"%RegionConfig.get().lang)
@@ -34,4 +34,3 @@ except Exception as err:
 	from tools import useful
 	useful.syslog(err)
 	from tools.lang_english import *
-	

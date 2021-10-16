@@ -33,83 +33,85 @@ For each of these classes, a json file with the same name is stored in the confi
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-&#34;&#34;&#34; Functions for managing the json configuration. 
-All configuration classes end the name with the word Config. 
+&#34;&#34;&#34; Functions for managing the json configuration.
+All configuration classes end the name with the word Config.
 For each of these classes, a json file with the same name is stored in the config directory of the board. &#34;&#34;&#34;
+# pylint:disable=consider-using-dict-items
+# pylint:disable=consider-iterating-dictionary
 import json
+import re
 import uos
 from tools import useful
-import re
 
 self_config = None
 class JsonConfig:
         &#34;&#34;&#34; Manage json configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.modificationDate = 0
+                self.modification_date = 0
 
-        def configRoot(self):
+        def config_root(self):
                 &#34;&#34;&#34; Configuration root path &#34;&#34;&#34;
                 if useful.ismicropython():
                         return &#34;/config&#34;
                 else:
                         return &#34;config&#34;
 
-        def save(self, file = None, partFilename=&#34;&#34;):
+        def save(self, file = None, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Save object in json file &#34;&#34;&#34;
                 try:
-                        filename = self.getPathname(useful.tofilename(partFilename))
-                        file, filename = self.open(file=file, readWrite=&#34;w&#34;, partFilename=partFilename)
+                        filename = self.get_pathname(useful.tofilename(part_filename))
+                        file, filename = self.open(file=file, read_write=&#34;w&#34;, part_filename=part_filename)
                         data = self.__dict__.copy()
-                        del data[&#34;modificationDate&#34;]
+                        del data[&#34;modification_date&#34;]
                         json.dump(useful.tostrings(data),file)
                         file.close()
-                        self.modificationDate = uos.stat(filename)[8]
+                        self.modification_date = uos.stat(filename)[8]
                         return True
                 except Exception as err:
                         useful.syslog(err, &#34;Cannot save %s &#34;%(filename))
                         return False
 
-        def toString(self):
+        def to_string(self):
                 &#34;&#34;&#34; Convert the configuration to string &#34;&#34;&#34;
                 data = self.__dict__.copy()
-                del data[&#34;modificationDate&#34;]
+                del data[&#34;modification_date&#34;]
                 return json.dumps(useful.tostrings(data))
 
-        def getPathname(self, partFilename=&#34;&#34;):
+        def get_pathname(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Get the configuration filename according to the class name &#34;&#34;&#34;
-                return self.configRoot()+&#34;/&#34;+self.getFilename(partFilename) + &#34;.json&#34;
+                return self.config_root()+&#34;/&#34;+self.get_filename(part_filename) + &#34;.json&#34;
 
-        def listAll(self):
+        def list_all(self):
                 &#34;&#34;&#34; List all configuration files &#34;&#34;&#34;
                 result = []
-                pattern = self.getFilename() + &#34;.*&#34;
-                for fileinfo in uos.ilistdir(self.configRoot()):
+                pattern = self.get_filename() + &#34;.*&#34;
+                for fileinfo in uos.ilistdir(self.config_root()):
                         name = fileinfo[0]
                         typ  = fileinfo[1]
                         if typ &amp; 0xF000 != 0x4000:
                                 if re.match(pattern, name):
-                                        result.append(useful.tobytes(name[len(self.getFilename()):-len(&#34;.json&#34;)]))
+                                        result.append(useful.tobytes(name[len(self.get_filename()):-len(&#34;.json&#34;)]))
                 return result
 
-        def getFilename(self, partFilename=&#34;&#34;):
+        def get_filename(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Return the config filename &#34;&#34;&#34;
                 if self.__class__.__name__[-len(&#34;Config&#34;):] == &#34;Config&#34;:
                         name = self.__class__.__name__[:-len(&#34;Config&#34;)]
                 else:
                         name = self.__class__.__name__
-                return name + useful.tostrings(partFilename)
+                return name + useful.tostrings(part_filename)
 
-        def open(self, file=None, readWrite=&#34;r&#34;, partFilename=&#34;&#34;):
+        def open(self, file=None, read_write=&#34;r&#34;, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Create or open configuration file &#34;&#34;&#34;
                 filename = file
-                if useful.exists(self.configRoot()) == False:
-                        useful.makedir(self.configRoot())
-                if file == None:
-                        filename = self.getPathname(useful.tofilename(partFilename))
-                        file = open(filename, readWrite)
+                if useful.exists(self.config_root()) is False:
+                        useful.makedir(self.config_root())
+                if file is None:
+                        filename = self.get_pathname(useful.tofilename(part_filename))
+                        file = open(filename, read_write)
                 elif type(file) == type(&#34;&#34;):
-                        file = open(filename, readWrite)
+                        file = open(filename, read_write)
                 return file, filename
 
         def update(self, params):
@@ -175,11 +177,11 @@ class JsonConfig:
                 del self_config
                 return result
 
-        def load(self, file = None, partFilename=&#34;&#34;):
+        def load(self, file = None, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
                 try:
-                        filename = self.getPathname(useful.tofilename(partFilename))
-                        file, filename = self.open(file=file, readWrite=&#34;r&#34;, partFilename=partFilename)
+                        filename = self.get_pathname(useful.tofilename(part_filename))
+                        file, filename = self.open(file=file, read_write=&#34;r&#34;, part_filename=part_filename)
                         self.update(useful.tobytes(json.load(file)))
                         file.close()
                         return True
@@ -193,17 +195,17 @@ class JsonConfig:
                         useful.syslog(err, &#34;Cannot load %s &#34;%(filename))
                         return False
 
-        def forget(self, partFilename=&#34;&#34;):
+        def forget(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Forget configuration &#34;&#34;&#34;
-                filename = self.getPathname(partFilename=partFilename)
-                useful.remove(self.configRoot()+&#34;/&#34;+filename)
+                filename = self.get_pathname(part_filename=part_filename)
+                useful.remove(self.config_root()+&#34;/&#34;+filename)
 
-        def isChanged(self, partFilename=&#34;&#34;):
+        def is_changed(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Indicates if the configuration changed &#34;&#34;&#34;
                 try:
-                        modificationDate = uos.stat(self.getPathname(useful.tofilename(partFilename)))[8]
-                        if self.modificationDate != modificationDate:
-                                self.modificationDate = modificationDate
+                        modification_date = uos.stat(self.get_pathname(useful.tofilename(part_filename)))[8]
+                        if self.modification_date != modification_date:
+                                self.modification_date = modification_date
                                 return True
                 except:
                         pass
@@ -233,70 +235,70 @@ class JsonConfig:
         &#34;&#34;&#34; Manage json configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.modificationDate = 0
+                self.modification_date = 0
 
-        def configRoot(self):
+        def config_root(self):
                 &#34;&#34;&#34; Configuration root path &#34;&#34;&#34;
                 if useful.ismicropython():
                         return &#34;/config&#34;
                 else:
                         return &#34;config&#34;
 
-        def save(self, file = None, partFilename=&#34;&#34;):
+        def save(self, file = None, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Save object in json file &#34;&#34;&#34;
                 try:
-                        filename = self.getPathname(useful.tofilename(partFilename))
-                        file, filename = self.open(file=file, readWrite=&#34;w&#34;, partFilename=partFilename)
+                        filename = self.get_pathname(useful.tofilename(part_filename))
+                        file, filename = self.open(file=file, read_write=&#34;w&#34;, part_filename=part_filename)
                         data = self.__dict__.copy()
-                        del data[&#34;modificationDate&#34;]
+                        del data[&#34;modification_date&#34;]
                         json.dump(useful.tostrings(data),file)
                         file.close()
-                        self.modificationDate = uos.stat(filename)[8]
+                        self.modification_date = uos.stat(filename)[8]
                         return True
                 except Exception as err:
                         useful.syslog(err, &#34;Cannot save %s &#34;%(filename))
                         return False
 
-        def toString(self):
+        def to_string(self):
                 &#34;&#34;&#34; Convert the configuration to string &#34;&#34;&#34;
                 data = self.__dict__.copy()
-                del data[&#34;modificationDate&#34;]
+                del data[&#34;modification_date&#34;]
                 return json.dumps(useful.tostrings(data))
 
-        def getPathname(self, partFilename=&#34;&#34;):
+        def get_pathname(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Get the configuration filename according to the class name &#34;&#34;&#34;
-                return self.configRoot()+&#34;/&#34;+self.getFilename(partFilename) + &#34;.json&#34;
+                return self.config_root()+&#34;/&#34;+self.get_filename(part_filename) + &#34;.json&#34;
 
-        def listAll(self):
+        def list_all(self):
                 &#34;&#34;&#34; List all configuration files &#34;&#34;&#34;
                 result = []
-                pattern = self.getFilename() + &#34;.*&#34;
-                for fileinfo in uos.ilistdir(self.configRoot()):
+                pattern = self.get_filename() + &#34;.*&#34;
+                for fileinfo in uos.ilistdir(self.config_root()):
                         name = fileinfo[0]
                         typ  = fileinfo[1]
                         if typ &amp; 0xF000 != 0x4000:
                                 if re.match(pattern, name):
-                                        result.append(useful.tobytes(name[len(self.getFilename()):-len(&#34;.json&#34;)]))
+                                        result.append(useful.tobytes(name[len(self.get_filename()):-len(&#34;.json&#34;)]))
                 return result
 
-        def getFilename(self, partFilename=&#34;&#34;):
+        def get_filename(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Return the config filename &#34;&#34;&#34;
                 if self.__class__.__name__[-len(&#34;Config&#34;):] == &#34;Config&#34;:
                         name = self.__class__.__name__[:-len(&#34;Config&#34;)]
                 else:
                         name = self.__class__.__name__
-                return name + useful.tostrings(partFilename)
+                return name + useful.tostrings(part_filename)
 
-        def open(self, file=None, readWrite=&#34;r&#34;, partFilename=&#34;&#34;):
+        def open(self, file=None, read_write=&#34;r&#34;, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Create or open configuration file &#34;&#34;&#34;
                 filename = file
-                if useful.exists(self.configRoot()) == False:
-                        useful.makedir(self.configRoot())
-                if file == None:
-                        filename = self.getPathname(useful.tofilename(partFilename))
-                        file = open(filename, readWrite)
+                if useful.exists(self.config_root()) is False:
+                        useful.makedir(self.config_root())
+                if file is None:
+                        filename = self.get_pathname(useful.tofilename(part_filename))
+                        file = open(filename, read_write)
                 elif type(file) == type(&#34;&#34;):
-                        file = open(filename, readWrite)
+                        file = open(filename, read_write)
                 return file, filename
 
         def update(self, params):
@@ -362,11 +364,11 @@ class JsonConfig:
                 del self_config
                 return result
 
-        def load(self, file = None, partFilename=&#34;&#34;):
+        def load(self, file = None, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
                 try:
-                        filename = self.getPathname(useful.tofilename(partFilename))
-                        file, filename = self.open(file=file, readWrite=&#34;r&#34;, partFilename=partFilename)
+                        filename = self.get_pathname(useful.tofilename(part_filename))
+                        file, filename = self.open(file=file, read_write=&#34;r&#34;, part_filename=part_filename)
                         self.update(useful.tobytes(json.load(file)))
                         file.close()
                         return True
@@ -380,17 +382,17 @@ class JsonConfig:
                         useful.syslog(err, &#34;Cannot load %s &#34;%(filename))
                         return False
 
-        def forget(self, partFilename=&#34;&#34;):
+        def forget(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Forget configuration &#34;&#34;&#34;
-                filename = self.getPathname(partFilename=partFilename)
-                useful.remove(self.configRoot()+&#34;/&#34;+filename)
+                filename = self.get_pathname(part_filename=part_filename)
+                useful.remove(self.config_root()+&#34;/&#34;+filename)
 
-        def isChanged(self, partFilename=&#34;&#34;):
+        def is_changed(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Indicates if the configuration changed &#34;&#34;&#34;
                 try:
-                        modificationDate = uos.stat(self.getPathname(useful.tofilename(partFilename)))[8]
-                        if self.modificationDate != modificationDate:
-                                self.modificationDate = modificationDate
+                        modification_date = uos.stat(self.get_pathname(useful.tofilename(part_filename)))[8]
+                        if self.modification_date != modification_date:
+                                self.modification_date = modification_date
                                 return True
                 except:
                         pass
@@ -398,8 +400,8 @@ class JsonConfig:
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.tools.jsonconfig.JsonConfig.configRoot"><code class="name flex">
-<span>def <span class="ident">configRoot</span></span>(<span>self)</span>
+<dt id="lib.tools.jsonconfig.JsonConfig.config_root"><code class="name flex">
+<span>def <span class="ident">config_root</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Configuration root path</p></div>
@@ -407,7 +409,7 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def configRoot(self):
+<pre><code class="python">def config_root(self):
         &#34;&#34;&#34; Configuration root path &#34;&#34;&#34;
         if useful.ismicropython():
                 return &#34;/config&#34;
@@ -416,7 +418,7 @@ class JsonConfig:
 </details>
 </dd>
 <dt id="lib.tools.jsonconfig.JsonConfig.forget"><code class="name flex">
-<span>def <span class="ident">forget</span></span>(<span>self, partFilename='')</span>
+<span>def <span class="ident">forget</span></span>(<span>self, part_filename='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Forget configuration</p></div>
@@ -424,14 +426,14 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def forget(self, partFilename=&#34;&#34;):
+<pre><code class="python">def forget(self, part_filename=&#34;&#34;):
         &#34;&#34;&#34; Forget configuration &#34;&#34;&#34;
-        filename = self.getPathname(partFilename=partFilename)
-        useful.remove(self.configRoot()+&#34;/&#34;+filename)</code></pre>
+        filename = self.get_pathname(part_filename=part_filename)
+        useful.remove(self.config_root()+&#34;/&#34;+filename)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.jsonconfig.JsonConfig.getFilename"><code class="name flex">
-<span>def <span class="ident">getFilename</span></span>(<span>self, partFilename='')</span>
+<dt id="lib.tools.jsonconfig.JsonConfig.get_filename"><code class="name flex">
+<span>def <span class="ident">get_filename</span></span>(<span>self, part_filename='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the config filename</p></div>
@@ -439,17 +441,17 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getFilename(self, partFilename=&#34;&#34;):
+<pre><code class="python">def get_filename(self, part_filename=&#34;&#34;):
         &#34;&#34;&#34; Return the config filename &#34;&#34;&#34;
         if self.__class__.__name__[-len(&#34;Config&#34;):] == &#34;Config&#34;:
                 name = self.__class__.__name__[:-len(&#34;Config&#34;)]
         else:
                 name = self.__class__.__name__
-        return name + useful.tostrings(partFilename)</code></pre>
+        return name + useful.tostrings(part_filename)</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.jsonconfig.JsonConfig.getPathname"><code class="name flex">
-<span>def <span class="ident">getPathname</span></span>(<span>self, partFilename='')</span>
+<dt id="lib.tools.jsonconfig.JsonConfig.get_pathname"><code class="name flex">
+<span>def <span class="ident">get_pathname</span></span>(<span>self, part_filename='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the configuration filename according to the class name</p></div>
@@ -457,13 +459,13 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getPathname(self, partFilename=&#34;&#34;):
+<pre><code class="python">def get_pathname(self, part_filename=&#34;&#34;):
         &#34;&#34;&#34; Get the configuration filename according to the class name &#34;&#34;&#34;
-        return self.configRoot()+&#34;/&#34;+self.getFilename(partFilename) + &#34;.json&#34;</code></pre>
+        return self.config_root()+&#34;/&#34;+self.get_filename(part_filename) + &#34;.json&#34;</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.jsonconfig.JsonConfig.isChanged"><code class="name flex">
-<span>def <span class="ident">isChanged</span></span>(<span>self, partFilename='')</span>
+<dt id="lib.tools.jsonconfig.JsonConfig.is_changed"><code class="name flex">
+<span>def <span class="ident">is_changed</span></span>(<span>self, part_filename='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the configuration changed</p></div>
@@ -471,20 +473,20 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def isChanged(self, partFilename=&#34;&#34;):
+<pre><code class="python">def is_changed(self, part_filename=&#34;&#34;):
         &#34;&#34;&#34; Indicates if the configuration changed &#34;&#34;&#34;
         try:
-                modificationDate = uos.stat(self.getPathname(useful.tofilename(partFilename)))[8]
-                if self.modificationDate != modificationDate:
-                        self.modificationDate = modificationDate
+                modification_date = uos.stat(self.get_pathname(useful.tofilename(part_filename)))[8]
+                if self.modification_date != modification_date:
+                        self.modification_date = modification_date
                         return True
         except:
                 pass
         return False</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.jsonconfig.JsonConfig.listAll"><code class="name flex">
-<span>def <span class="ident">listAll</span></span>(<span>self)</span>
+<dt id="lib.tools.jsonconfig.JsonConfig.list_all"><code class="name flex">
+<span>def <span class="ident">list_all</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>List all configuration files</p></div>
@@ -492,21 +494,21 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def listAll(self):
+<pre><code class="python">def list_all(self):
         &#34;&#34;&#34; List all configuration files &#34;&#34;&#34;
         result = []
-        pattern = self.getFilename() + &#34;.*&#34;
-        for fileinfo in uos.ilistdir(self.configRoot()):
+        pattern = self.get_filename() + &#34;.*&#34;
+        for fileinfo in uos.ilistdir(self.config_root()):
                 name = fileinfo[0]
                 typ  = fileinfo[1]
                 if typ &amp; 0xF000 != 0x4000:
                         if re.match(pattern, name):
-                                result.append(useful.tobytes(name[len(self.getFilename()):-len(&#34;.json&#34;)]))
+                                result.append(useful.tobytes(name[len(self.get_filename()):-len(&#34;.json&#34;)]))
         return result</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.jsonconfig.JsonConfig.load"><code class="name flex">
-<span>def <span class="ident">load</span></span>(<span>self, file=None, partFilename='')</span>
+<span>def <span class="ident">load</span></span>(<span>self, file=None, part_filename='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Load object with the file specified</p></div>
@@ -514,11 +516,11 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def load(self, file = None, partFilename=&#34;&#34;):
+<pre><code class="python">def load(self, file = None, part_filename=&#34;&#34;):
         &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
         try:
-                filename = self.getPathname(useful.tofilename(partFilename))
-                file, filename = self.open(file=file, readWrite=&#34;r&#34;, partFilename=partFilename)
+                filename = self.get_pathname(useful.tofilename(part_filename))
+                file, filename = self.open(file=file, read_write=&#34;r&#34;, part_filename=part_filename)
                 self.update(useful.tobytes(json.load(file)))
                 file.close()
                 return True
@@ -534,7 +536,7 @@ class JsonConfig:
 </details>
 </dd>
 <dt id="lib.tools.jsonconfig.JsonConfig.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self, file=None, readWrite='r', partFilename='')</span>
+<span>def <span class="ident">open</span></span>(<span>self, file=None, read_write='r', part_filename='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create or open configuration file</p></div>
@@ -542,21 +544,21 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def open(self, file=None, readWrite=&#34;r&#34;, partFilename=&#34;&#34;):
+<pre><code class="python">def open(self, file=None, read_write=&#34;r&#34;, part_filename=&#34;&#34;):
         &#34;&#34;&#34; Create or open configuration file &#34;&#34;&#34;
         filename = file
-        if useful.exists(self.configRoot()) == False:
-                useful.makedir(self.configRoot())
-        if file == None:
-                filename = self.getPathname(useful.tofilename(partFilename))
-                file = open(filename, readWrite)
+        if useful.exists(self.config_root()) is False:
+                useful.makedir(self.config_root())
+        if file is None:
+                filename = self.get_pathname(useful.tofilename(part_filename))
+                file = open(filename, read_write)
         elif type(file) == type(&#34;&#34;):
-                file = open(filename, readWrite)
+                file = open(filename, read_write)
         return file, filename</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.jsonconfig.JsonConfig.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, file=None, partFilename='')</span>
+<span>def <span class="ident">save</span></span>(<span>self, file=None, part_filename='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Save object in json file</p></div>
@@ -564,24 +566,24 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def save(self, file = None, partFilename=&#34;&#34;):
+<pre><code class="python">def save(self, file = None, part_filename=&#34;&#34;):
         &#34;&#34;&#34; Save object in json file &#34;&#34;&#34;
         try:
-                filename = self.getPathname(useful.tofilename(partFilename))
-                file, filename = self.open(file=file, readWrite=&#34;w&#34;, partFilename=partFilename)
+                filename = self.get_pathname(useful.tofilename(part_filename))
+                file, filename = self.open(file=file, read_write=&#34;w&#34;, part_filename=part_filename)
                 data = self.__dict__.copy()
-                del data[&#34;modificationDate&#34;]
+                del data[&#34;modification_date&#34;]
                 json.dump(useful.tostrings(data),file)
                 file.close()
-                self.modificationDate = uos.stat(filename)[8]
+                self.modification_date = uos.stat(filename)[8]
                 return True
         except Exception as err:
                 useful.syslog(err, &#34;Cannot save %s &#34;%(filename))
                 return False</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.jsonconfig.JsonConfig.toString"><code class="name flex">
-<span>def <span class="ident">toString</span></span>(<span>self)</span>
+<dt id="lib.tools.jsonconfig.JsonConfig.to_string"><code class="name flex">
+<span>def <span class="ident">to_string</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert the configuration to string</p></div>
@@ -589,10 +591,10 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def toString(self):
+<pre><code class="python">def to_string(self):
         &#34;&#34;&#34; Convert the configuration to string &#34;&#34;&#34;
         data = self.__dict__.copy()
-        del data[&#34;modificationDate&#34;]
+        del data[&#34;modification_date&#34;]
         return json.dumps(useful.tostrings(data))</code></pre>
 </details>
 </dd>
@@ -690,16 +692,16 @@ class JsonConfig:
 <li>
 <h4><code><a title="lib.tools.jsonconfig.JsonConfig" href="#lib.tools.jsonconfig.JsonConfig">JsonConfig</a></code></h4>
 <ul class="two-column">
-<li><code><a title="lib.tools.jsonconfig.JsonConfig.configRoot" href="#lib.tools.jsonconfig.JsonConfig.configRoot">configRoot</a></code></li>
+<li><code><a title="lib.tools.jsonconfig.JsonConfig.config_root" href="#lib.tools.jsonconfig.JsonConfig.config_root">config_root</a></code></li>
 <li><code><a title="lib.tools.jsonconfig.JsonConfig.forget" href="#lib.tools.jsonconfig.JsonConfig.forget">forget</a></code></li>
-<li><code><a title="lib.tools.jsonconfig.JsonConfig.getFilename" href="#lib.tools.jsonconfig.JsonConfig.getFilename">getFilename</a></code></li>
-<li><code><a title="lib.tools.jsonconfig.JsonConfig.getPathname" href="#lib.tools.jsonconfig.JsonConfig.getPathname">getPathname</a></code></li>
-<li><code><a title="lib.tools.jsonconfig.JsonConfig.isChanged" href="#lib.tools.jsonconfig.JsonConfig.isChanged">isChanged</a></code></li>
-<li><code><a title="lib.tools.jsonconfig.JsonConfig.listAll" href="#lib.tools.jsonconfig.JsonConfig.listAll">listAll</a></code></li>
+<li><code><a title="lib.tools.jsonconfig.JsonConfig.get_filename" href="#lib.tools.jsonconfig.JsonConfig.get_filename">get_filename</a></code></li>
+<li><code><a title="lib.tools.jsonconfig.JsonConfig.get_pathname" href="#lib.tools.jsonconfig.JsonConfig.get_pathname">get_pathname</a></code></li>
+<li><code><a title="lib.tools.jsonconfig.JsonConfig.is_changed" href="#lib.tools.jsonconfig.JsonConfig.is_changed">is_changed</a></code></li>
+<li><code><a title="lib.tools.jsonconfig.JsonConfig.list_all" href="#lib.tools.jsonconfig.JsonConfig.list_all">list_all</a></code></li>
 <li><code><a title="lib.tools.jsonconfig.JsonConfig.load" href="#lib.tools.jsonconfig.JsonConfig.load">load</a></code></li>
 <li><code><a title="lib.tools.jsonconfig.JsonConfig.open" href="#lib.tools.jsonconfig.JsonConfig.open">open</a></code></li>
 <li><code><a title="lib.tools.jsonconfig.JsonConfig.save" href="#lib.tools.jsonconfig.JsonConfig.save">save</a></code></li>
-<li><code><a title="lib.tools.jsonconfig.JsonConfig.toString" href="#lib.tools.jsonconfig.JsonConfig.toString">toString</a></code></li>
+<li><code><a title="lib.tools.jsonconfig.JsonConfig.to_string" href="#lib.tools.jsonconfig.JsonConfig.to_string">to_string</a></code></li>
 <li><code><a title="lib.tools.jsonconfig.JsonConfig.update" href="#lib.tools.jsonconfig.JsonConfig.update">update</a></code></li>
 </ul>
 </li>

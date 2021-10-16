@@ -31,18 +31,18 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to configure the start of servers &#34;&#34;&#34;
 from server.httpserver import HttpServer
-from htmltemplate      import *
-from webpage.mainpage  import mainFrame, manageDefaultButton
-from tools.useful      import *
 from server.server     import ServerConfig
+from htmltemplate      import *
+from webpage.mainpage  import main_frame, manage_default_button
+from tools.useful      import *
 from tools import lang
 
-@HttpServer.addRoute(b&#39;/server&#39;, menu=lang.menu_server, item=lang.item_server)
+@HttpServer.add_route(b&#39;/server&#39;, menu=lang.menu_server, item=lang.item_server)
 async def server(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the start of servers &#34;&#34;&#34;
         config = ServerConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
-        page = mainFrame(request, response, args,lang.servers_configuration,
+        disabled, action, submit = manage_default_button(request, config)
+        page = main_frame(request, response, args,lang.servers_configuration,
                 Switch(text=lang.ftp   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),Br(),
                 Switch(text=lang.http  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),Br(),
                 Switch(text=lang.telnet, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),Br(),
@@ -50,7 +50,7 @@ async def server(request, response, args):
                 Switch(text=lang.wan_ip   , name=b&#34;wanip&#34;   , checked=config.wanip,    disabled=disabled),Br(),
                 Switch(text=lang.notification_reboot_user, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
                 submit)
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </section>
 <section>
@@ -69,12 +69,12 @@ async def server(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/server&#39;, menu=lang.menu_server, item=lang.item_server)
+<pre><code class="python">@HttpServer.add_route(b&#39;/server&#39;, menu=lang.menu_server, item=lang.item_server)
 async def server(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the start of servers &#34;&#34;&#34;
         config = ServerConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
-        page = mainFrame(request, response, args,lang.servers_configuration,
+        disabled, action, submit = manage_default_button(request, config)
+        page = main_frame(request, response, args,lang.servers_configuration,
                 Switch(text=lang.ftp   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),Br(),
                 Switch(text=lang.http  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),Br(),
                 Switch(text=lang.telnet, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),Br(),
@@ -82,7 +82,7 @@ async def server(request, response, args):
                 Switch(text=lang.wan_ip   , name=b&#34;wanip&#34;   , checked=config.wanip,    disabled=disabled),Br(),
                 Switch(text=lang.notification_reboot_user, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
                 submit)
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </dd>
 </dl>

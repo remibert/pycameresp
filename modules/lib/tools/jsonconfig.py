@@ -1,82 +1,84 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-""" Functions for managing the json configuration. 
-All configuration classes end the name with the word Config. 
+""" Functions for managing the json configuration.
+All configuration classes end the name with the word Config.
 For each of these classes, a json file with the same name is stored in the config directory of the board. """
+# pylint:disable=consider-using-dict-items
+# pylint:disable=consider-iterating-dictionary
 import json
+import re
 import uos
 from tools import useful
-import re
 
 self_config = None
 class JsonConfig:
 	""" Manage json configuration """
 	def __init__(self):
 		""" Constructor """
-		self.modificationDate = 0
+		self.modification_date = 0
 
-	def configRoot(self):
+	def config_root(self):
 		""" Configuration root path """
 		if useful.ismicropython():
 			return "/config"
 		else:
 			return "config"
 
-	def save(self, file = None, partFilename=""):
+	def save(self, file = None, part_filename=""):
 		""" Save object in json file """
 		try:
-			filename = self.getPathname(useful.tofilename(partFilename))
-			file, filename = self.open(file=file, readWrite="w", partFilename=partFilename)
+			filename = self.get_pathname(useful.tofilename(part_filename))
+			file, filename = self.open(file=file, read_write="w", part_filename=part_filename)
 			data = self.__dict__.copy()
-			del data["modificationDate"]
+			del data["modification_date"]
 			json.dump(useful.tostrings(data),file)
 			file.close()
-			self.modificationDate = uos.stat(filename)[8]
+			self.modification_date = uos.stat(filename)[8]
 			return True
 		except Exception as err:
 			useful.syslog(err, "Cannot save %s "%(filename))
 			return False
 
-	def toString(self):
+	def to_string(self):
 		""" Convert the configuration to string """
 		data = self.__dict__.copy()
-		del data["modificationDate"]
+		del data["modification_date"]
 		return json.dumps(useful.tostrings(data))
 
-	def getPathname(self, partFilename=""):
+	def get_pathname(self, part_filename=""):
 		""" Get the configuration filename according to the class name """
-		return self.configRoot()+"/"+self.getFilename(partFilename) + ".json"
+		return self.config_root()+"/"+self.get_filename(part_filename) + ".json"
 
-	def listAll(self):
+	def list_all(self):
 		""" List all configuration files """
 		result = []
-		pattern = self.getFilename() + ".*"
-		for fileinfo in uos.ilistdir(self.configRoot()):
+		pattern = self.get_filename() + ".*"
+		for fileinfo in uos.ilistdir(self.config_root()):
 			name = fileinfo[0]
 			typ  = fileinfo[1]
 			if typ & 0xF000 != 0x4000:
 				if re.match(pattern, name):
-					result.append(useful.tobytes(name[len(self.getFilename()):-len(".json")]))
+					result.append(useful.tobytes(name[len(self.get_filename()):-len(".json")]))
 		return result
 
-	def getFilename(self, partFilename=""):
+	def get_filename(self, part_filename=""):
 		""" Return the config filename """
 		if self.__class__.__name__[-len("Config"):] == "Config":
 			name = self.__class__.__name__[:-len("Config")]
 		else:
 			name = self.__class__.__name__
-		return name + useful.tostrings(partFilename)
+		return name + useful.tostrings(part_filename)
 
-	def open(self, file=None, readWrite="r", partFilename=""):
+	def open(self, file=None, read_write="r", part_filename=""):
 		""" Create or open configuration file """
 		filename = file
-		if useful.exists(self.configRoot()) == False:
-			useful.makedir(self.configRoot())
-		if file == None:
-			filename = self.getPathname(useful.tofilename(partFilename))
-			file = open(filename, readWrite)
+		if useful.exists(self.config_root()) is False:
+			useful.makedir(self.config_root())
+		if file is None:
+			filename = self.get_pathname(useful.tofilename(part_filename))
+			file = open(filename, read_write)
 		elif type(file) == type(""):
-			file = open(filename, readWrite)
+			file = open(filename, read_write)
 		return file, filename
 
 	def update(self, params):
@@ -142,11 +144,11 @@ class JsonConfig:
 		del self_config
 		return result
 
-	def load(self, file = None, partFilename=""):
+	def load(self, file = None, part_filename=""):
 		""" Load object with the file specified """
 		try:
-			filename = self.getPathname(useful.tofilename(partFilename))
-			file, filename = self.open(file=file, readWrite="r", partFilename=partFilename)
+			filename = self.get_pathname(useful.tofilename(part_filename))
+			file, filename = self.open(file=file, read_write="r", part_filename=part_filename)
 			self.update(useful.tobytes(json.load(file)))
 			file.close()
 			return True
@@ -160,17 +162,17 @@ class JsonConfig:
 			useful.syslog(err, "Cannot load %s "%(filename))
 			return False
 
-	def forget(self, partFilename=""):
+	def forget(self, part_filename=""):
 		""" Forget configuration """
-		filename = self.getPathname(partFilename=partFilename)
-		useful.remove(self.configRoot()+"/"+filename)
+		filename = self.get_pathname(part_filename=part_filename)
+		useful.remove(self.config_root()+"/"+filename)
 
-	def isChanged(self, partFilename=""):
+	def is_changed(self, part_filename=""):
 		""" Indicates if the configuration changed """
 		try:
-			modificationDate = uos.stat(self.getPathname(useful.tofilename(partFilename)))[8]
-			if self.modificationDate != modificationDate:
-				self.modificationDate = modificationDate
+			modification_date = uos.stat(self.get_pathname(useful.tofilename(part_filename)))[8]
+			if self.modification_date != modification_date:
+				self.modification_date = modification_date
 				return True
 		except:
 			pass

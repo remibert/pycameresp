@@ -33,15 +33,15 @@
 from server.httpserver import HttpServer
 from server.server     import Server
 from htmltemplate      import *
-from webpage.mainpage  import mainFrame
+from webpage.mainpage  import main_frame
 from motion            import Historic
-from tools             import useful, lang
 from video             import Camera
+from tools             import useful, lang
 
-@HttpServer.addRoute(b&#39;/historic&#39;, menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera() and Camera.isActivated())
+@HttpServer.add_route(b&#39;/historic&#39;, menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
         &#34;&#34;&#34; Historic motion detection page &#34;&#34;&#34;
-        await Historic.getRoot()
+        await Historic.get_root()
         if len(request.params) == 0:
                 detailled = False
         else:
@@ -50,16 +50,16 @@ async def historic(request, response, args):
                 Tag(b&#34;&#34;&#34;
                 &lt;script type=&#39;text/javascript&#39;&gt;
 
-                document.onkeydown = checkKey;
-                window.onload = loadHistoric;
+                document.onkeydown = check_key;
+                window.onload = load_historic;
 
                 var historic = null;
                 var images = [];
-                var currentId = 0;
-                var lastId = 0;
+                var current_id = 0;
+                var last_id = 0;
                 var previousId = 0;
-                var historicRequest = new XMLHttpRequest();
-                var imageRequest    = new XMLHttpRequest();
+                var historic_request = new XMLHttpRequest();
+                var image_request    = new XMLHttpRequest();
 
                 setInterval(show, 200);
   
@@ -86,40 +86,40 @@ async def historic(request, response, args):
                         a.click();
                 }
 
-                function downloadMotion()
+                function download_motion()
                 {
-                        download(&#34;/historic/download/&#34; + historic[currentId][MOTION_FILENAME]);
+                        download(&#34;/historic/download/&#34; + historic[current_id][MOTION_FILENAME]);
                 }
 
-                function loadHistoric()
+                function load_historic()
                 {
                         var canvas = document.getElementById(&#39;motion&#39;); 
-                        canvas.addEventListener(&#34;mousedown&#34;, function (e) { getClickPosition(canvas, e); });
-                        historicRequest.onreadystatechange = historicLoaded;
-                        historicRequest.open(&#34;GET&#34;,&#34;historic/historic.json&#34;,true);
-                        historicRequest.send();
+                        canvas.addEventListener(&#34;mousedown&#34;, function (e) { get_click_position(canvas, e); });
+                        historic_request.onreadystatechange = historic_loaded;
+                        historic_request.open(&#34;GET&#34;,&#34;historic/historic.json&#34;,true);
+                        historic_request.send();
                 }
 
-                function historicLoaded() 
+                function historic_loaded() 
                 {
-                        if (historicRequest.readyState === XMLHttpRequest.DONE)
+                        if (historic_request.readyState === XMLHttpRequest.DONE)
                         {
-                                if (historicRequest.status === 200)
+                                if (historic_request.status === 200)
                                 {
-                                        historic = JSON.parse(historicRequest.responseText);
-                                        loadImage();
+                                        historic = JSON.parse(historic_request.responseText);
+                                        load_image();
                                 }
                         }
                 }
 
-                function loadImage()
+                function load_image()
                 {
                         if (historic.length &gt; 0)
                         {
-                                var motion = historic[lastId];
-                                imageRequest.onreadystatechange = imageLoaded;
-                                imageRequest.open(&#34;GET&#34;,&#34;/historic/images/&#34; + motion[MOTION_FILENAME],true);
-                                imageRequest.send();
+                                var motion = historic[last_id];
+                                image_request.onreadystatechange = image_loaded;
+                                image_request.open(&#34;GET&#34;,&#34;/historic/images/&#34; + motion[MOTION_FILENAME],true);
+                                image_request.send();
                         }
                         else
                         {
@@ -130,31 +130,31 @@ async def historic(request, response, args):
                         }
                 }
 
-                function imageLoaded()
+                function image_loaded()
                 {
-                        if (imageRequest.readyState === XMLHttpRequest.DONE)
+                        if (image_request.readyState === XMLHttpRequest.DONE)
                         {
-                                if (imageRequest.status === 200)
+                                if (image_request.status === 200)
                                 {
-                                        var motion = historic[lastId];
+                                        var motion = historic[last_id];
                                         var image = new Image();
-                                        image.id     = lastId;
-                                        image.src    = &#39;data:image/jpeg;base64,&#39; + imageRequest.response;
+                                        image.id     = last_id;
+                                        image.src    = &#39;data:image/jpeg;base64,&#39; + image_request.response;
                                         image.width  = motion[MOTION_WIDTH] /15;
                                         image.height = motion[MOTION_HEIGHT]/15;
-                                        image.alt    = getName(motion[MOTION_FILENAME]);
-                                        image.title  = getName(motion[MOTION_FILENAME]);
+                                        image.alt    = get_name(motion[MOTION_FILENAME]);
+                                        image.title  = get_name(motion[MOTION_FILENAME]);
                                         image.style  = &#34;padding: 1px;&#34;;
                                         image.onclick = e =&gt; 
                                                 {
-                                                        clickMotion(parseInt(e.target.id,10));
+                                                        click_motion(parseInt(e.target.id,10));
                                                 };
                                         images.push(image);
                                         document.getElementById(&#39;motions&#39;).appendChild(image);
-                                        lastId = lastId + 1;
-                                        if (lastId &lt; historic.length-1)
+                                        last_id = last_id + 1;
+                                        if (last_id &lt; historic.length-1)
                                         {
-                                                setTimeout(loadImage, 1);
+                                                setTimeout(load_image, 1);
                                         }
                                 }
                         }
@@ -162,10 +162,10 @@ async def historic(request, response, args):
 
                 function show()
                 {
-                        showMotion(currentId);
+                        show_motion(current_id);
                 }
 
-                function showMotion(id)
+                function show_motion(id)
                 {
                         var motion = historic[id];
                         var ctx = document.getElementById(&#39;motion&#39;).getContext(&#39;2d&#39;);
@@ -242,7 +242,7 @@ async def historic(request, response, args):
                         // Show text image
                         ctx.font = &#39;20px monospace&#39;;
                         ctx.fillStyle = &#34;red&#34;;
-                        ctx.fillText(getName(motion[MOTION_FILENAME]), 10, 20);
+                        ctx.fillText(get_name(motion[MOTION_FILENAME]), 10, 20);
 
                         // Show arrows
                         ctx.fillStyle = &#39;rgba(255,255,255,10)&#39;;
@@ -254,7 +254,7 @@ async def historic(request, response, args):
                 }
 
                 // Convert the filename into text displayed
-                function getName(filename)
+                function get_name(filename)
                 {
                         filename = filename.split(&#34;.&#34;)[0];
                         lst = filename.split(&#34;/&#34;);
@@ -277,43 +277,43 @@ async def historic(request, response, args):
                         return result;
                 }
 
-                function clickMotion(id)
+                function click_motion(id)
                 {
-                        currentId = id;
-                        showMotion(id);
+                        current_id = id;
+                        show_motion(id);
                 }
 
-                function firstMotion()
+                function first_motion()
                 {
-                        currentId = 0;
-                        showMotion(currentId);
+                        current_id = 0;
+                        show_motion(current_id);
                 }
 
-                function lastMotion()
+                function last_motion()
                 {
-                        currentId = lastId-1;
-                        showMotion(currentId);
+                        current_id = last_id-1;
+                        show_motion(current_id);
                 }
 
-                function nextMotion()
+                function next_motion()
                 {
-                        if (currentId + 1 &lt; lastId)
+                        if (current_id + 1 &lt; last_id)
                         {
-                                currentId = currentId + 1;
-                                showMotion(currentId);
+                                current_id = current_id + 1;
+                                show_motion(current_id);
                         }
                 }
 
-                function previousMotion()
+                function previous_motion()
                 {
-                        if (currentId &gt; 0)
+                        if (current_id &gt; 0)
                         {
-                                currentId = currentId -1;
-                                showMotion(currentId);
+                                current_id = current_id -1;
+                                show_motion(current_id);
                         }
                 }
 
-                function checkKey(e)
+                function check_key(e)
                 {
                         e = e || window.event;
 
@@ -325,11 +325,11 @@ async def historic(request, response, args):
                         }
                         else if (e.keyCode == &#39;37&#39;) // left arrow
                         {
-                                previousMotion();
+                                previous_motion();
                         }
                         else if (e.keyCode == &#39;39&#39;)// right arrow
                         {
-                                nextMotion();
+                                next_motion();
                         }
                         else if (e.keyCode == &#39;35&#39;) // end
                         {
@@ -339,15 +339,15 @@ async def historic(request, response, args):
                         }
                         else if (e.keyCode == &#39;33&#39;) // page up
                         {
-                                firstMotion();
+                                first_motion();
                         }
                         else if (e.keyCode == &#39;34&#39;) // page down
                         {
-                                lastMotion();
+                                last_motion();
                         }
                 }
 
-                function getClickPosition(canvas, e)
+                function get_click_position(canvas, e)
                 {
                         const rect = canvas.getBoundingClientRect();
                         const x = e.clientX - rect.left;
@@ -359,7 +359,7 @@ async def historic(request, response, args):
                                 // Download image
                                 if (confirm(&#34;Download this image ?&#34;))
                                 {
-                                        downloadMotion();
+                                        download_motion();
                                 }
                         }
                         else
@@ -370,22 +370,22 @@ async def historic(request, response, args):
                                         {
                                                 if (x &lt; y)
                                                 {
-                                                        previousMotion();
+                                                        previous_motion();
                                                 }
                                                 else
                                                 {
-                                                        firstMotion();
+                                                        first_motion();
                                                 }
                                         }
                                         else
                                         {
                                                 if (x &lt; rect.height - y)
                                                 {
-                                                        previousMotion();
+                                                        previous_motion();
                                                 }
                                                 else
                                                 {
-                                                        lastMotion();
+                                                        last_motion();
                                                 }
                                         }
                                 }
@@ -395,22 +395,22 @@ async def historic(request, response, args):
                                         {
                                                 if (rect.width - x &lt; y)
                                                 {
-                                                        nextMotion();
+                                                        next_motion();
                                                 }
                                                 else
                                                 {
-                                                        firstMotion();
+                                                        first_motion();
                                                 }
                                         }
                                         else
                                         {
                                                 if (rect.width - x &lt; rect.height - y)
                                                 {
-                                                        nextMotion();
+                                                        next_motion();
                                                 }
                                                 else
                                                 {
-                                                        lastMotion();
+                                                        last_motion();
                                                 }
                                         }
                                 }
@@ -423,45 +423,45 @@ async def historic(request, response, args):
                 &lt;div id=&#34;motions&#34;&gt;&lt;/div&gt;
                 &#34;&#34;&#34;%(lang.historic_not_available, detailled, 800,600)),
         ]
-        page = mainFrame(request, response, args,lang.last_motion_detections,pageContent)
-        await response.sendPage(page)
+        page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
+        await response.send_page(page)
 
-@HttpServer.addRoute(b&#39;/historic/historic.json&#39;, available=useful.iscamera() and Camera.isActivated())
-async def historicJson(request, response, args):
+@HttpServer.add_route(b&#39;/historic/historic.json&#39;, available=useful.iscamera() and Camera.is_activated())
+async def historic_json(request, response, args):
         &#34;&#34;&#34; Send historic json file &#34;&#34;&#34;
-        Server.slowDown()
-        if await Historic.locked() == False:
-                await response.sendBuffer(b&#34;historic.json&#34;, await Historic.getJson())
+        Server.slow_down()
+        if await Historic.locked() is False:
+                await response.send_buffer(b&#34;historic.json&#34;, await Historic.get_json())
         else:
-                await response.sendBuffer(b&#34;historic.json&#34;, b&#34;[]&#34;)
+                await response.send_buffer(b&#34;historic.json&#34;, b&#34;[]&#34;)
 
-@HttpServer.addRoute(b&#39;/historic/images/.*&#39;, available=useful.iscamera() and Camera.isActivated())
-async def historicImage(request, response, args):
+@HttpServer.add_route(b&#39;/historic/images/.*&#39;, available=useful.iscamera() and Camera.is_activated())
+async def historic_image(request, response, args):
         &#34;&#34;&#34; Send historic image &#34;&#34;&#34;
-        Server.slowDown()
-        reserved = await Camera.reserve(Historic, timeout=5, suspension=30)
+        Server.slow_down()
+        reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
         try:
                 if reserved:
                         await Historic.acquire()
-                        await response.sendFile(useful.tostrings(request.path[len(&#34;/historic/images/&#34;):]), base64=True)
+                        await response.send_file(useful.tostrings(request.path[len(&#34;/historic/images/&#34;):]), base64=True)
                 else:
-                        await response.sendError(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
+                        await response.send_error(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
         finally:
                 if reserved:
                         await Historic.release()
                         await Camera.unreserve(Historic)
 
-@HttpServer.addRoute(b&#39;/historic/download/.*&#39;, available=useful.iscamera() and Camera.isActivated())
-async def downloadImage(request, response, args):
+@HttpServer.add_route(b&#39;/historic/download/.*&#39;, available=useful.iscamera() and Camera.is_activated())
+async def download_image(request, response, args):
         &#34;&#34;&#34; Download historic image &#34;&#34;&#34;
-        Server.slowDown()
-        reserved = await Camera.reserve(Historic, timeout=5, suspension=30)
+        Server.slow_down()
+        reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
         try:
                 if reserved:
                         await Historic.acquire()
-                        await response.sendFile(useful.tostrings(request.path[len(&#34;/historic/download/&#34;):]), base64=False)
+                        await response.send_file(useful.tostrings(request.path[len(&#34;/historic/download/&#34;):]), base64=False)
                 else:
-                        await response.sendError(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
+                        await response.send_error(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
         finally:
                 if reserved:
                         await Historic.release()
@@ -475,8 +475,8 @@ async def downloadImage(request, response, args):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.webpage.historicpage.downloadImage"><code class="name flex">
-<span>async def <span class="ident">downloadImage</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.historicpage.download_image"><code class="name flex">
+<span>async def <span class="ident">download_image</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Download historic image</p></div>
@@ -484,17 +484,17 @@ async def downloadImage(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/historic/download/.*&#39;, available=useful.iscamera() and Camera.isActivated())
-async def downloadImage(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/historic/download/.*&#39;, available=useful.iscamera() and Camera.is_activated())
+async def download_image(request, response, args):
         &#34;&#34;&#34; Download historic image &#34;&#34;&#34;
-        Server.slowDown()
-        reserved = await Camera.reserve(Historic, timeout=5, suspension=30)
+        Server.slow_down()
+        reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
         try:
                 if reserved:
                         await Historic.acquire()
-                        await response.sendFile(useful.tostrings(request.path[len(&#34;/historic/download/&#34;):]), base64=False)
+                        await response.send_file(useful.tostrings(request.path[len(&#34;/historic/download/&#34;):]), base64=False)
                 else:
-                        await response.sendError(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
+                        await response.send_error(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
         finally:
                 if reserved:
                         await Historic.release()
@@ -510,10 +510,10 @@ async def downloadImage(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/historic&#39;, menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera() and Camera.isActivated())
+<pre><code class="python">@HttpServer.add_route(b&#39;/historic&#39;, menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
         &#34;&#34;&#34; Historic motion detection page &#34;&#34;&#34;
-        await Historic.getRoot()
+        await Historic.get_root()
         if len(request.params) == 0:
                 detailled = False
         else:
@@ -522,16 +522,16 @@ async def historic(request, response, args):
                 Tag(b&#34;&#34;&#34;
                 &lt;script type=&#39;text/javascript&#39;&gt;
 
-                document.onkeydown = checkKey;
-                window.onload = loadHistoric;
+                document.onkeydown = check_key;
+                window.onload = load_historic;
 
                 var historic = null;
                 var images = [];
-                var currentId = 0;
-                var lastId = 0;
+                var current_id = 0;
+                var last_id = 0;
                 var previousId = 0;
-                var historicRequest = new XMLHttpRequest();
-                var imageRequest    = new XMLHttpRequest();
+                var historic_request = new XMLHttpRequest();
+                var image_request    = new XMLHttpRequest();
 
                 setInterval(show, 200);
   
@@ -558,40 +558,40 @@ async def historic(request, response, args):
                         a.click();
                 }
 
-                function downloadMotion()
+                function download_motion()
                 {
-                        download(&#34;/historic/download/&#34; + historic[currentId][MOTION_FILENAME]);
+                        download(&#34;/historic/download/&#34; + historic[current_id][MOTION_FILENAME]);
                 }
 
-                function loadHistoric()
+                function load_historic()
                 {
                         var canvas = document.getElementById(&#39;motion&#39;); 
-                        canvas.addEventListener(&#34;mousedown&#34;, function (e) { getClickPosition(canvas, e); });
-                        historicRequest.onreadystatechange = historicLoaded;
-                        historicRequest.open(&#34;GET&#34;,&#34;historic/historic.json&#34;,true);
-                        historicRequest.send();
+                        canvas.addEventListener(&#34;mousedown&#34;, function (e) { get_click_position(canvas, e); });
+                        historic_request.onreadystatechange = historic_loaded;
+                        historic_request.open(&#34;GET&#34;,&#34;historic/historic.json&#34;,true);
+                        historic_request.send();
                 }
 
-                function historicLoaded() 
+                function historic_loaded() 
                 {
-                        if (historicRequest.readyState === XMLHttpRequest.DONE)
+                        if (historic_request.readyState === XMLHttpRequest.DONE)
                         {
-                                if (historicRequest.status === 200)
+                                if (historic_request.status === 200)
                                 {
-                                        historic = JSON.parse(historicRequest.responseText);
-                                        loadImage();
+                                        historic = JSON.parse(historic_request.responseText);
+                                        load_image();
                                 }
                         }
                 }
 
-                function loadImage()
+                function load_image()
                 {
                         if (historic.length &gt; 0)
                         {
-                                var motion = historic[lastId];
-                                imageRequest.onreadystatechange = imageLoaded;
-                                imageRequest.open(&#34;GET&#34;,&#34;/historic/images/&#34; + motion[MOTION_FILENAME],true);
-                                imageRequest.send();
+                                var motion = historic[last_id];
+                                image_request.onreadystatechange = image_loaded;
+                                image_request.open(&#34;GET&#34;,&#34;/historic/images/&#34; + motion[MOTION_FILENAME],true);
+                                image_request.send();
                         }
                         else
                         {
@@ -602,31 +602,31 @@ async def historic(request, response, args):
                         }
                 }
 
-                function imageLoaded()
+                function image_loaded()
                 {
-                        if (imageRequest.readyState === XMLHttpRequest.DONE)
+                        if (image_request.readyState === XMLHttpRequest.DONE)
                         {
-                                if (imageRequest.status === 200)
+                                if (image_request.status === 200)
                                 {
-                                        var motion = historic[lastId];
+                                        var motion = historic[last_id];
                                         var image = new Image();
-                                        image.id     = lastId;
-                                        image.src    = &#39;data:image/jpeg;base64,&#39; + imageRequest.response;
+                                        image.id     = last_id;
+                                        image.src    = &#39;data:image/jpeg;base64,&#39; + image_request.response;
                                         image.width  = motion[MOTION_WIDTH] /15;
                                         image.height = motion[MOTION_HEIGHT]/15;
-                                        image.alt    = getName(motion[MOTION_FILENAME]);
-                                        image.title  = getName(motion[MOTION_FILENAME]);
+                                        image.alt    = get_name(motion[MOTION_FILENAME]);
+                                        image.title  = get_name(motion[MOTION_FILENAME]);
                                         image.style  = &#34;padding: 1px;&#34;;
                                         image.onclick = e =&gt; 
                                                 {
-                                                        clickMotion(parseInt(e.target.id,10));
+                                                        click_motion(parseInt(e.target.id,10));
                                                 };
                                         images.push(image);
                                         document.getElementById(&#39;motions&#39;).appendChild(image);
-                                        lastId = lastId + 1;
-                                        if (lastId &lt; historic.length-1)
+                                        last_id = last_id + 1;
+                                        if (last_id &lt; historic.length-1)
                                         {
-                                                setTimeout(loadImage, 1);
+                                                setTimeout(load_image, 1);
                                         }
                                 }
                         }
@@ -634,10 +634,10 @@ async def historic(request, response, args):
 
                 function show()
                 {
-                        showMotion(currentId);
+                        show_motion(current_id);
                 }
 
-                function showMotion(id)
+                function show_motion(id)
                 {
                         var motion = historic[id];
                         var ctx = document.getElementById(&#39;motion&#39;).getContext(&#39;2d&#39;);
@@ -714,7 +714,7 @@ async def historic(request, response, args):
                         // Show text image
                         ctx.font = &#39;20px monospace&#39;;
                         ctx.fillStyle = &#34;red&#34;;
-                        ctx.fillText(getName(motion[MOTION_FILENAME]), 10, 20);
+                        ctx.fillText(get_name(motion[MOTION_FILENAME]), 10, 20);
 
                         // Show arrows
                         ctx.fillStyle = &#39;rgba(255,255,255,10)&#39;;
@@ -726,7 +726,7 @@ async def historic(request, response, args):
                 }
 
                 // Convert the filename into text displayed
-                function getName(filename)
+                function get_name(filename)
                 {
                         filename = filename.split(&#34;.&#34;)[0];
                         lst = filename.split(&#34;/&#34;);
@@ -749,43 +749,43 @@ async def historic(request, response, args):
                         return result;
                 }
 
-                function clickMotion(id)
+                function click_motion(id)
                 {
-                        currentId = id;
-                        showMotion(id);
+                        current_id = id;
+                        show_motion(id);
                 }
 
-                function firstMotion()
+                function first_motion()
                 {
-                        currentId = 0;
-                        showMotion(currentId);
+                        current_id = 0;
+                        show_motion(current_id);
                 }
 
-                function lastMotion()
+                function last_motion()
                 {
-                        currentId = lastId-1;
-                        showMotion(currentId);
+                        current_id = last_id-1;
+                        show_motion(current_id);
                 }
 
-                function nextMotion()
+                function next_motion()
                 {
-                        if (currentId + 1 &lt; lastId)
+                        if (current_id + 1 &lt; last_id)
                         {
-                                currentId = currentId + 1;
-                                showMotion(currentId);
+                                current_id = current_id + 1;
+                                show_motion(current_id);
                         }
                 }
 
-                function previousMotion()
+                function previous_motion()
                 {
-                        if (currentId &gt; 0)
+                        if (current_id &gt; 0)
                         {
-                                currentId = currentId -1;
-                                showMotion(currentId);
+                                current_id = current_id -1;
+                                show_motion(current_id);
                         }
                 }
 
-                function checkKey(e)
+                function check_key(e)
                 {
                         e = e || window.event;
 
@@ -797,11 +797,11 @@ async def historic(request, response, args):
                         }
                         else if (e.keyCode == &#39;37&#39;) // left arrow
                         {
-                                previousMotion();
+                                previous_motion();
                         }
                         else if (e.keyCode == &#39;39&#39;)// right arrow
                         {
-                                nextMotion();
+                                next_motion();
                         }
                         else if (e.keyCode == &#39;35&#39;) // end
                         {
@@ -811,15 +811,15 @@ async def historic(request, response, args):
                         }
                         else if (e.keyCode == &#39;33&#39;) // page up
                         {
-                                firstMotion();
+                                first_motion();
                         }
                         else if (e.keyCode == &#39;34&#39;) // page down
                         {
-                                lastMotion();
+                                last_motion();
                         }
                 }
 
-                function getClickPosition(canvas, e)
+                function get_click_position(canvas, e)
                 {
                         const rect = canvas.getBoundingClientRect();
                         const x = e.clientX - rect.left;
@@ -831,7 +831,7 @@ async def historic(request, response, args):
                                 // Download image
                                 if (confirm(&#34;Download this image ?&#34;))
                                 {
-                                        downloadMotion();
+                                        download_motion();
                                 }
                         }
                         else
@@ -842,22 +842,22 @@ async def historic(request, response, args):
                                         {
                                                 if (x &lt; y)
                                                 {
-                                                        previousMotion();
+                                                        previous_motion();
                                                 }
                                                 else
                                                 {
-                                                        firstMotion();
+                                                        first_motion();
                                                 }
                                         }
                                         else
                                         {
                                                 if (x &lt; rect.height - y)
                                                 {
-                                                        previousMotion();
+                                                        previous_motion();
                                                 }
                                                 else
                                                 {
-                                                        lastMotion();
+                                                        last_motion();
                                                 }
                                         }
                                 }
@@ -867,22 +867,22 @@ async def historic(request, response, args):
                                         {
                                                 if (rect.width - x &lt; y)
                                                 {
-                                                        nextMotion();
+                                                        next_motion();
                                                 }
                                                 else
                                                 {
-                                                        firstMotion();
+                                                        first_motion();
                                                 }
                                         }
                                         else
                                         {
                                                 if (rect.width - x &lt; rect.height - y)
                                                 {
-                                                        nextMotion();
+                                                        next_motion();
                                                 }
                                                 else
                                                 {
-                                                        lastMotion();
+                                                        last_motion();
                                                 }
                                         }
                                 }
@@ -895,12 +895,12 @@ async def historic(request, response, args):
                 &lt;div id=&#34;motions&#34;&gt;&lt;/div&gt;
                 &#34;&#34;&#34;%(lang.historic_not_available, detailled, 800,600)),
         ]
-        page = mainFrame(request, response, args,lang.last_motion_detections,pageContent)
-        await response.sendPage(page)</code></pre>
+        page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
+        await response.send_page(page)</code></pre>
 </details>
 </dd>
-<dt id="lib.webpage.historicpage.historicImage"><code class="name flex">
-<span>async def <span class="ident">historicImage</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.historicpage.historic_image"><code class="name flex">
+<span>async def <span class="ident">historic_image</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send historic image</p></div>
@@ -908,25 +908,25 @@ async def historic(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/historic/images/.*&#39;, available=useful.iscamera() and Camera.isActivated())
-async def historicImage(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/historic/images/.*&#39;, available=useful.iscamera() and Camera.is_activated())
+async def historic_image(request, response, args):
         &#34;&#34;&#34; Send historic image &#34;&#34;&#34;
-        Server.slowDown()
-        reserved = await Camera.reserve(Historic, timeout=5, suspension=30)
+        Server.slow_down()
+        reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
         try:
                 if reserved:
                         await Historic.acquire()
-                        await response.sendFile(useful.tostrings(request.path[len(&#34;/historic/images/&#34;):]), base64=True)
+                        await response.send_file(useful.tostrings(request.path[len(&#34;/historic/images/&#34;):]), base64=True)
                 else:
-                        await response.sendError(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
+                        await response.send_error(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
         finally:
                 if reserved:
                         await Historic.release()
                         await Camera.unreserve(Historic)</code></pre>
 </details>
 </dd>
-<dt id="lib.webpage.historicpage.historicJson"><code class="name flex">
-<span>async def <span class="ident">historicJson</span></span>(<span>request, response, args)</span>
+<dt id="lib.webpage.historicpage.historic_json"><code class="name flex">
+<span>async def <span class="ident">historic_json</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send historic json file</p></div>
@@ -934,14 +934,14 @@ async def historicImage(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/historic/historic.json&#39;, available=useful.iscamera() and Camera.isActivated())
-async def historicJson(request, response, args):
+<pre><code class="python">@HttpServer.add_route(b&#39;/historic/historic.json&#39;, available=useful.iscamera() and Camera.is_activated())
+async def historic_json(request, response, args):
         &#34;&#34;&#34; Send historic json file &#34;&#34;&#34;
-        Server.slowDown()
-        if await Historic.locked() == False:
-                await response.sendBuffer(b&#34;historic.json&#34;, await Historic.getJson())
+        Server.slow_down()
+        if await Historic.locked() is False:
+                await response.send_buffer(b&#34;historic.json&#34;, await Historic.get_json())
         else:
-                await response.sendBuffer(b&#34;historic.json&#34;, b&#34;[]&#34;)</code></pre>
+                await response.send_buffer(b&#34;historic.json&#34;, b&#34;[]&#34;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -962,10 +962,10 @@ async def historicJson(request, response, args):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.webpage.historicpage.downloadImage" href="#lib.webpage.historicpage.downloadImage">downloadImage</a></code></li>
+<li><code><a title="lib.webpage.historicpage.download_image" href="#lib.webpage.historicpage.download_image">download_image</a></code></li>
 <li><code><a title="lib.webpage.historicpage.historic" href="#lib.webpage.historicpage.historic">historic</a></code></li>
-<li><code><a title="lib.webpage.historicpage.historicImage" href="#lib.webpage.historicpage.historicImage">historicImage</a></code></li>
-<li><code><a title="lib.webpage.historicpage.historicJson" href="#lib.webpage.historicpage.historicJson">historicJson</a></code></li>
+<li><code><a title="lib.webpage.historicpage.historic_image" href="#lib.webpage.historicpage.historic_image">historic_image</a></code></li>
+<li><code><a title="lib.webpage.historicpage.historic_json" href="#lib.webpage.historicpage.historic_json">historic_json</a></code></li>
 </ul>
 </li>
 </ul>

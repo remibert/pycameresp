@@ -51,7 +51,7 @@ class HttpServer:
         routes = {}
         wildroutes = []
         menus = []
-        wwwDir = None
+        www_dir = None
 
         def __init__(self, port=80, loader=None, preload=False, name=&#34;&#34;):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
@@ -74,7 +74,7 @@ class HttpServer:
                         useful.syslog(&#34;Html load pages&#34;)
                         self.loader()
                         self.loader = None
-                        HttpServer.wwwDir = WWW_DIR
+                        HttpServer.www_dir = WWW_DIR
                         loaded = True
 
                 if self.server is None:
@@ -87,10 +87,10 @@ class HttpServer:
                         useful.syslog(&#34;Http ready on %d&#34;%self.port)
 
         @staticmethod
-        def addRoute(url, **kwargs):
+        def add_route(url, **kwargs):
                 &#34;&#34;&#34; Add a route to select an html page.
                 For the server to know the pages, it must imperatively use this decorator &#34;&#34;&#34;
-                def addRoute(function):
+                def add_route(function):
                         if useful.tobytes(url[-1]) == ord(b&#34;*&#34;):
                                 HttpServer.wildroutes.append([useful.tobytes(url),(function, kwargs)])
                         else:
@@ -101,10 +101,10 @@ class HttpServer:
                                         HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), useful.tobytes(url)])
                                         HttpServer.menus.sort()
                         return function
-                return addRoute
+                return add_route
 
         @staticmethod
-        def removeRoute(url=None):
+        def remove_route(url=None):
                 &#34;&#34;&#34; Remove a route of html page &#34;&#34;&#34;
                 if url is None:
                         HttpServer.routes = {}
@@ -124,12 +124,12 @@ class HttpServer:
                                                 i += 1
 
         @staticmethod
-        def getMenus():
+        def get_menus():
                 &#34;&#34;&#34; Used to get the informations of menu &#34;&#34;&#34;
                 return HttpServer.menus
 
         @staticmethod
-        def searchRoute(request):
+        def search_route(request):
                 &#34;&#34;&#34; Search route according to the request &#34;&#34;&#34;
                 function, args = None, None
 
@@ -147,9 +147,9 @@ class HttpServer:
                                                 found = func
                                                 break
                                 if found is None:
-                                        staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.wwwDir)+&#34;/.+|.+)&#34;)
+                                        staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
                                         if staticRe.match(useful.tostrings(request.path)):
-                                                function, args = HttpServer.staticPages, {}
+                                                function, args = HttpServer.static_pages, {}
                                 else:
                                         function, args = found
                         else:
@@ -157,24 +157,24 @@ class HttpServer:
                 return function, args
 
         @staticmethod
-        async def staticPages(request, response, args):
+        async def static_pages(request, response, args):
                 &#34;&#34;&#34; Treat the case of static pages &#34;&#34;&#34;
-                path = useful.tobytes(HttpServer.wwwDir) + request.path
+                path = useful.tobytes(HttpServer.www_dir) + request.path
                 path = path.replace(b&#34;//&#34;,b&#34;/&#34;)
 
                 if b&#34;..&#34; in path:
-                        await response.sendError(status=b&#34;403&#34;,content=b&#34;Forbidden&#34;)
+                        await response.send_error(status=b&#34;403&#34;,content=b&#34;Forbidden&#34;)
                 else:
-                        await response.sendFile(path, headers=request.headers)
+                        await response.send_file(path, headers=request.headers)
 
-        async def onConnection(self, reader, writer):
+        async def on_connection(self, reader, writer):
                 &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
                 try:
                         # Preload the server
                         self.preload()
 
                         # Call on connection method
-                        await self.server.onConnection(reader, writer)
+                        await self.server.on_connection(reader, writer)
                 except Exception as err:
                         useful.syslog(err)
 
@@ -192,7 +192,7 @@ def start(loop=None, port=80, loader=None, preload=False, name=&#34;&#34;):
         else:
                 run_forever = False
 
-        asyncServer = uasyncio.start_server(server.onConnection, &#34;0.0.0.0&#34;,port,backlog=5)
+        asyncServer = uasyncio.start_server(server.on_connection, &#34;0.0.0.0&#34;,port,backlog=5)
 
         loop.create_task(asyncServer)
         if run_forever:
@@ -232,7 +232,7 @@ preload : True = preload the server at the start, False = load the server at the
         else:
                 run_forever = False
 
-        asyncServer = uasyncio.start_server(server.onConnection, &#34;0.0.0.0&#34;,port,backlog=5)
+        asyncServer = uasyncio.start_server(server.on_connection, &#34;0.0.0.0&#34;,port,backlog=5)
 
         loop.create_task(asyncServer)
         if run_forever:
@@ -260,7 +260,7 @@ preload : True = preload the server at the start, False = load the server at the
         routes = {}
         wildroutes = []
         menus = []
-        wwwDir = None
+        www_dir = None
 
         def __init__(self, port=80, loader=None, preload=False, name=&#34;&#34;):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
@@ -283,7 +283,7 @@ preload : True = preload the server at the start, False = load the server at the
                         useful.syslog(&#34;Html load pages&#34;)
                         self.loader()
                         self.loader = None
-                        HttpServer.wwwDir = WWW_DIR
+                        HttpServer.www_dir = WWW_DIR
                         loaded = True
 
                 if self.server is None:
@@ -296,10 +296,10 @@ preload : True = preload the server at the start, False = load the server at the
                         useful.syslog(&#34;Http ready on %d&#34;%self.port)
 
         @staticmethod
-        def addRoute(url, **kwargs):
+        def add_route(url, **kwargs):
                 &#34;&#34;&#34; Add a route to select an html page.
                 For the server to know the pages, it must imperatively use this decorator &#34;&#34;&#34;
-                def addRoute(function):
+                def add_route(function):
                         if useful.tobytes(url[-1]) == ord(b&#34;*&#34;):
                                 HttpServer.wildroutes.append([useful.tobytes(url),(function, kwargs)])
                         else:
@@ -310,10 +310,10 @@ preload : True = preload the server at the start, False = load the server at the
                                         HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), useful.tobytes(url)])
                                         HttpServer.menus.sort()
                         return function
-                return addRoute
+                return add_route
 
         @staticmethod
-        def removeRoute(url=None):
+        def remove_route(url=None):
                 &#34;&#34;&#34; Remove a route of html page &#34;&#34;&#34;
                 if url is None:
                         HttpServer.routes = {}
@@ -333,12 +333,12 @@ preload : True = preload the server at the start, False = load the server at the
                                                 i += 1
 
         @staticmethod
-        def getMenus():
+        def get_menus():
                 &#34;&#34;&#34; Used to get the informations of menu &#34;&#34;&#34;
                 return HttpServer.menus
 
         @staticmethod
-        def searchRoute(request):
+        def search_route(request):
                 &#34;&#34;&#34; Search route according to the request &#34;&#34;&#34;
                 function, args = None, None
 
@@ -356,9 +356,9 @@ preload : True = preload the server at the start, False = load the server at the
                                                 found = func
                                                 break
                                 if found is None:
-                                        staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.wwwDir)+&#34;/.+|.+)&#34;)
+                                        staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
                                         if staticRe.match(useful.tostrings(request.path)):
-                                                function, args = HttpServer.staticPages, {}
+                                                function, args = HttpServer.static_pages, {}
                                 else:
                                         function, args = found
                         else:
@@ -366,24 +366,24 @@ preload : True = preload the server at the start, False = load the server at the
                 return function, args
 
         @staticmethod
-        async def staticPages(request, response, args):
+        async def static_pages(request, response, args):
                 &#34;&#34;&#34; Treat the case of static pages &#34;&#34;&#34;
-                path = useful.tobytes(HttpServer.wwwDir) + request.path
+                path = useful.tobytes(HttpServer.www_dir) + request.path
                 path = path.replace(b&#34;//&#34;,b&#34;/&#34;)
 
                 if b&#34;..&#34; in path:
-                        await response.sendError(status=b&#34;403&#34;,content=b&#34;Forbidden&#34;)
+                        await response.send_error(status=b&#34;403&#34;,content=b&#34;Forbidden&#34;)
                 else:
-                        await response.sendFile(path, headers=request.headers)
+                        await response.send_file(path, headers=request.headers)
 
-        async def onConnection(self, reader, writer):
+        async def on_connection(self, reader, writer):
                 &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
                 try:
                         # Preload the server
                         self.preload()
 
                         # Call on connection method
-                        await self.server.onConnection(reader, writer)
+                        await self.server.on_connection(reader, writer)
                 except Exception as err:
                         useful.syslog(err)</code></pre>
 </details>
@@ -401,15 +401,15 @@ preload : True = preload the server at the start, False = load the server at the
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="lib.server.httpserver.HttpServer.wwwDir"><code class="name">var <span class="ident">wwwDir</span></code></dt>
+<dt id="lib.server.httpserver.HttpServer.www_dir"><code class="name">var <span class="ident">www_dir</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Static methods</h3>
 <dl>
-<dt id="lib.server.httpserver.HttpServer.addRoute"><code class="name flex">
-<span>def <span class="ident">addRoute</span></span>(<span>url, **kwargs)</span>
+<dt id="lib.server.httpserver.HttpServer.add_route"><code class="name flex">
+<span>def <span class="ident">add_route</span></span>(<span>url, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Add a route to select an html page.
@@ -419,10 +419,10 @@ For the server to know the pages, it must imperatively use this decorator</p></d
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def addRoute(url, **kwargs):
+def add_route(url, **kwargs):
         &#34;&#34;&#34; Add a route to select an html page.
         For the server to know the pages, it must imperatively use this decorator &#34;&#34;&#34;
-        def addRoute(function):
+        def add_route(function):
                 if useful.tobytes(url[-1]) == ord(b&#34;*&#34;):
                         HttpServer.wildroutes.append([useful.tobytes(url),(function, kwargs)])
                 else:
@@ -433,11 +433,11 @@ def addRoute(url, **kwargs):
                                 HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), useful.tobytes(url)])
                                 HttpServer.menus.sort()
                 return function
-        return addRoute</code></pre>
+        return add_route</code></pre>
 </details>
 </dd>
-<dt id="lib.server.httpserver.HttpServer.getMenus"><code class="name flex">
-<span>def <span class="ident">getMenus</span></span>(<span>)</span>
+<dt id="lib.server.httpserver.HttpServer.get_menus"><code class="name flex">
+<span>def <span class="ident">get_menus</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Used to get the informations of menu</p></div>
@@ -446,13 +446,13 @@ def addRoute(url, **kwargs):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def getMenus():
+def get_menus():
         &#34;&#34;&#34; Used to get the informations of menu &#34;&#34;&#34;
         return HttpServer.menus</code></pre>
 </details>
 </dd>
-<dt id="lib.server.httpserver.HttpServer.removeRoute"><code class="name flex">
-<span>def <span class="ident">removeRoute</span></span>(<span>url=None)</span>
+<dt id="lib.server.httpserver.HttpServer.remove_route"><code class="name flex">
+<span>def <span class="ident">remove_route</span></span>(<span>url=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Remove a route of html page</p></div>
@@ -461,7 +461,7 @@ def getMenus():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def removeRoute(url=None):
+def remove_route(url=None):
         &#34;&#34;&#34; Remove a route of html page &#34;&#34;&#34;
         if url is None:
                 HttpServer.routes = {}
@@ -481,8 +481,8 @@ def removeRoute(url=None):
                                         i += 1</code></pre>
 </details>
 </dd>
-<dt id="lib.server.httpserver.HttpServer.searchRoute"><code class="name flex">
-<span>def <span class="ident">searchRoute</span></span>(<span>request)</span>
+<dt id="lib.server.httpserver.HttpServer.search_route"><code class="name flex">
+<span>def <span class="ident">search_route</span></span>(<span>request)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Search route according to the request</p></div>
@@ -491,7 +491,7 @@ def removeRoute(url=None):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def searchRoute(request):
+def search_route(request):
         &#34;&#34;&#34; Search route according to the request &#34;&#34;&#34;
         function, args = None, None
 
@@ -509,9 +509,9 @@ def searchRoute(request):
                                         found = func
                                         break
                         if found is None:
-                                staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.wwwDir)+&#34;/.+|.+)&#34;)
+                                staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
                                 if staticRe.match(useful.tostrings(request.path)):
-                                        function, args = HttpServer.staticPages, {}
+                                        function, args = HttpServer.static_pages, {}
                         else:
                                 function, args = found
                 else:
@@ -519,8 +519,8 @@ def searchRoute(request):
         return function, args</code></pre>
 </details>
 </dd>
-<dt id="lib.server.httpserver.HttpServer.staticPages"><code class="name flex">
-<span>async def <span class="ident">staticPages</span></span>(<span>request, response, args)</span>
+<dt id="lib.server.httpserver.HttpServer.static_pages"><code class="name flex">
+<span>async def <span class="ident">static_pages</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Treat the case of static pages</p></div>
@@ -529,22 +529,22 @@ def searchRoute(request):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def staticPages(request, response, args):
+async def static_pages(request, response, args):
         &#34;&#34;&#34; Treat the case of static pages &#34;&#34;&#34;
-        path = useful.tobytes(HttpServer.wwwDir) + request.path
+        path = useful.tobytes(HttpServer.www_dir) + request.path
         path = path.replace(b&#34;//&#34;,b&#34;/&#34;)
 
         if b&#34;..&#34; in path:
-                await response.sendError(status=b&#34;403&#34;,content=b&#34;Forbidden&#34;)
+                await response.send_error(status=b&#34;403&#34;,content=b&#34;Forbidden&#34;)
         else:
-                await response.sendFile(path, headers=request.headers)</code></pre>
+                await response.send_file(path, headers=request.headers)</code></pre>
 </details>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.server.httpserver.HttpServer.onConnection"><code class="name flex">
-<span>async def <span class="ident">onConnection</span></span>(<span>self, reader, writer)</span>
+<dt id="lib.server.httpserver.HttpServer.on_connection"><code class="name flex">
+<span>async def <span class="ident">on_connection</span></span>(<span>self, reader, writer)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Http server connection detected</p></div>
@@ -552,14 +552,14 @@ async def staticPages(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def onConnection(self, reader, writer):
+<pre><code class="python">async def on_connection(self, reader, writer):
         &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
         try:
                 # Preload the server
                 self.preload()
 
                 # Call on connection method
-                await self.server.onConnection(reader, writer)
+                await self.server.on_connection(reader, writer)
         except Exception as err:
                 useful.syslog(err)</code></pre>
 </details>
@@ -584,7 +584,7 @@ You must define the content of a callback, which only import the python module w
                 useful.syslog(&#34;Html load pages&#34;)
                 self.loader()
                 self.loader = None
-                HttpServer.wwwDir = WWW_DIR
+                HttpServer.www_dir = WWW_DIR
                 loaded = True
 
         if self.server is None:
@@ -623,17 +623,17 @@ You must define the content of a callback, which only import the python module w
 <li>
 <h4><code><a title="lib.server.httpserver.HttpServer" href="#lib.server.httpserver.HttpServer">HttpServer</a></code></h4>
 <ul class="two-column">
-<li><code><a title="lib.server.httpserver.HttpServer.addRoute" href="#lib.server.httpserver.HttpServer.addRoute">addRoute</a></code></li>
-<li><code><a title="lib.server.httpserver.HttpServer.getMenus" href="#lib.server.httpserver.HttpServer.getMenus">getMenus</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.add_route" href="#lib.server.httpserver.HttpServer.add_route">add_route</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.get_menus" href="#lib.server.httpserver.HttpServer.get_menus">get_menus</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.menus" href="#lib.server.httpserver.HttpServer.menus">menus</a></code></li>
-<li><code><a title="lib.server.httpserver.HttpServer.onConnection" href="#lib.server.httpserver.HttpServer.onConnection">onConnection</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.on_connection" href="#lib.server.httpserver.HttpServer.on_connection">on_connection</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.preload" href="#lib.server.httpserver.HttpServer.preload">preload</a></code></li>
-<li><code><a title="lib.server.httpserver.HttpServer.removeRoute" href="#lib.server.httpserver.HttpServer.removeRoute">removeRoute</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.remove_route" href="#lib.server.httpserver.HttpServer.remove_route">remove_route</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.routes" href="#lib.server.httpserver.HttpServer.routes">routes</a></code></li>
-<li><code><a title="lib.server.httpserver.HttpServer.searchRoute" href="#lib.server.httpserver.HttpServer.searchRoute">searchRoute</a></code></li>
-<li><code><a title="lib.server.httpserver.HttpServer.staticPages" href="#lib.server.httpserver.HttpServer.staticPages">staticPages</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.search_route" href="#lib.server.httpserver.HttpServer.search_route">search_route</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.static_pages" href="#lib.server.httpserver.HttpServer.static_pages">static_pages</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.wildroutes" href="#lib.server.httpserver.HttpServer.wildroutes">wildroutes</a></code></li>
-<li><code><a title="lib.server.httpserver.HttpServer.wwwDir" href="#lib.server.httpserver.HttpServer.wwwDir">wwwDir</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.www_dir" href="#lib.server.httpserver.HttpServer.www_dir">www_dir</a></code></li>
 </ul>
 </li>
 </ul>

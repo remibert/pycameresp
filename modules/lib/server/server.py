@@ -1,10 +1,11 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-from tools import jsonconfig,useful,builddate,lang, tasking
+""" Manage server class """
+import time
 from video.video import Camera
 import wifi
 import uasyncio
-import time
+from tools import jsonconfig,useful,builddate,lang, tasking
 
 class ServerConfig(jsonconfig.JsonConfig):
 	""" Servers configuration """
@@ -16,39 +17,38 @@ class ServerConfig(jsonconfig.JsonConfig):
 		self.telnet = True
 		self.wanip = True
 		self.notify = True
-		self.serverPostponed = 7
+		self.server_postponed = 7
 
 class ServerContext:
 	""" Context to initialize the servers """
-	def __init__(self, loop=None, pageLoader=None, preload=False, httpPort=80):
-		from server.timesetting import setTime
+	def __init__(self, loop=None, page_loader=None, preload=False, http_port=80):
+		from server.timesetting import set_time
 		self.loop          = loop
-		self.pageLoader    = pageLoader
+		self.page_loader    = page_loader
 		self.preload       = preload
-		self.httpPort      = httpPort
-		self.serverStarted = False
+		self.http_port      = http_port
+		self.server_started = False
 		self.notifier      = None
-		self.getWanIpAsync = None
-		self.wanIp = None
-		self.serverConfig  = ServerConfig()
-		self.regionConfig  = lang.RegionConfig()
-		self.setDate = None
-		self.onePerDay = None
+		self.get_wan_ip_async = None
+		self.wan_ip = None
+		self.server_config  = ServerConfig()
+		self.region_config  = lang.RegionConfig()
+		self.set_date = None
+		self.one_per_day = None
 		self.flushed = False
-		
-		if self.serverConfig.load() == False:
-			self.serverConfig.save()
 
-		if self.regionConfig.load() == False:
-			self.regionConfig.save()
+		if self.server_config.load() is False:
+			self.server_config.save()
 
-		self.serverPostponed = self.serverConfig.serverPostponed
-		setTime(self.regionConfig.currentTime)
+		if self.region_config.load() is False:
+			self.region_config.save()
 
+		self.server_postponed = self.server_config.server_postponed
+		set_time(self.region_config.current_time)
 class Server:
 	""" Class used to manage the servers """
 	suspended = [False]
-	slowSpeed = [None]
+	slow_speed = [None]
 	tasks = {}
 	context = None
 
@@ -63,9 +63,9 @@ class Server:
 		Server.suspended[0] = False
 
 	@staticmethod
-	async def waitResume(duration=None):
+	async def wait_resume(duration=None):
 		""" Wait the resume of task servers """
-		if duration != None:
+		if duration is not None:
 			Server.tasks[id(uasyncio.current_task())] = True
 			await uasyncio.sleep(duration)
 		if Server.suspended[0]:
@@ -75,35 +75,35 @@ class Server:
 		Server.tasks[id(uasyncio.current_task())] = False
 
 	@staticmethod
-	def isSlow():
+	def is_slow():
 		""" Indicates that task other than server must be slower """
-		if Server.slowSpeed[0] == None:
+		if Server.slow_speed[0] is None:
 			return False
-		elif time.time() > Server.slowSpeed[0]:
-			Server.slowSpeed[0] = None
+		elif time.time() > Server.slow_speed[0]:
+			Server.slow_speed[0] = None
 			return False
 		else:
 			return True
 
 	@staticmethod
-	def slowDown(duration=20):
+	def slow_down(duration=20):
 		""" Set the state slow for a specified duration """
-		Server.slowSpeed[0] = time.time() + duration
+		Server.slow_speed[0] = time.time() + duration
 
 	@staticmethod
-	def isAllWaiting():
+	def is_all_waiting():
 		""" Check if all task resumed """
 		result = True
 		for key, value in Server.tasks.items():
-			if value == False:
+			if value is False:
 				result = False
 		return result
 
 	@staticmethod
-	async def waitAllSuspended():
+	async def wait_all_suspended():
 		""" Wait all servers suspended """
 		for i in range(30):
-			if Server.isAllWaiting() == True:
+			if Server.is_all_waiting() is True:
 				break
 			else:
 				if i % 6 == 0:
@@ -112,58 +112,58 @@ class Server:
 				tasking.WatchDog.feed()
 
 	@staticmethod
-	def init(loop=None, pageLoader=None, preload=False, httpPort=80):
+	def init(loop=None, page_loader=None, preload=False, http_port=80):
 		""" Init servers
 		loop : asyncio loop
-		pageLoader : callback to load html page
-		preload : True force the load of page at the start, 
+		page_loader : callback to load html page
+		preload : True force the load of page at the start,
 		False the load of page is done a the first http connection (Takes time on first connection) """
-		Server.context = ServerContext(loop, pageLoader, preload, httpPort)
+		Server.context = ServerContext(loop, page_loader, preload, http_port)
 		useful.syslog(useful.sysinfo(display=False))
 		useful.syslog("Firmware build date '%s'"%useful.tostrings(builddate.date))
 
-		from server.periodic import periodicTask
-		loop.create_task(periodicTask())
+		from server.periodic import periodic_task
+		loop.create_task(periodic_task())
 
 	@staticmethod
-	async def synchronizeWanIp(forced):
+	async def synchronize_wan_ip(forced):
 		""" Synchronize wan ip """
 		# If wan ip synchronization enabled
-		if Server.context.serverConfig.wanip:
-			if wifi.Wifi.isWanAvailable():
+		if Server.context.server_config.wanip:
+			if wifi.Wifi.is_wan_available():
 				useful.syslog("Synchronize Wan ip")
 				# Wan ip not yet get
-				if Server.context.getWanIpAsync is None:
-					from server.wanip import getWanIpAsync
-					Server.context.getWanIpAsync = getWanIpAsync
+				if Server.context.get_wan_ip_async is None:
+					from server.wanip import get_wan_ip_async
+					Server.context.get_wan_ip_async = get_wan_ip_async
 
-				# Get wan ip 
-				newWanIp = await Server.context.getWanIpAsync()
+				# Get wan ip
+				newWanIp = await Server.context.get_wan_ip_async()
 
 				# If wan ip get
 				if newWanIp is not None:
 					# If wan ip must be notified
-					if (Server.context.wanIp != newWanIp or forced):
-						await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(wifi.Station.getInfo()[0],newWanIp, useful.uptime()))
-					Server.context.wanIp = newWanIp
-					wifi.Wifi.wanConnected()
+					if (Server.context.wan_ip != newWanIp or forced):
+						await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(wifi.Station.get_info()[0],newWanIp, useful.uptime()))
+					Server.context.wan_ip = newWanIp
+					wifi.Wifi.wan_connected()
 				else:
 					useful.syslog("Cannot get wan ip")
-					wifi.Wifi.wanDisconnected()
+					wifi.Wifi.wan_disconnected()
 
 	@staticmethod
-	async def synchronizeTime():
+	async def synchronize_time():
 		""" Synchronize time """
 		# If ntp synchronization enabled
-		if Server.context.serverConfig.ntp:
+		if Server.context.server_config.ntp:
 			# If the wan is present
-			if wifi.Wifi.isWanAvailable():
+			if wifi.Wifi.is_wan_available():
 				useful.syslog("Synchronize time")
 
 				# If synchronisation not yet done
-				if Server.context.setDate == None:
-					from server.timesetting import setDate
-					Server.context.setDate = setDate
+				if Server.context.set_date is None:
+					from server.timesetting import set_date
+					Server.context.set_date = set_date
 
 				updated = False
 				# Try many time
@@ -172,118 +172,118 @@ class Server:
 					oldTime = time.time()
 
 					# Read date from ntp server
-					currentTime = Server.context.setDate(Server.context.regionConfig.offsettime, dst=Server.context.regionConfig.dst, display=False)
+					current_time = Server.context.set_date(Server.context.region_config.offset_time, dst=Server.context.region_config.dst, display=False)
 
 					# If date get
-					if currentTime > 0:
+					if current_time > 0:
 						# Save new date
-						Server.context.regionConfig.currentTime = int(currentTime)
-						Server.context.regionConfig.save()
+						Server.context.region_config.current_time = int(current_time)
+						Server.context.region_config.save()
 
 						# If clock changed
-						if abs(oldTime - currentTime) > 1:
+						if abs(oldTime - current_time) > 1:
 							# Log difference
-							useful.syslog("Time synchronized delta=%ds"%(currentTime-oldTime))
+							useful.syslog("Time synchronized delta=%ds"%(current_time-oldTime))
 						updated = True
 						break
 					else:
 						await uasyncio.sleep(1)
 				if updated:
-					wifi.Wifi.wanConnected()
+					wifi.Wifi.wan_connected()
 				else:
-					wifi.Wifi.wanDisconnected()
+					wifi.Wifi.wan_disconnected()
 
 	@staticmethod
-	def isOnePerDay():
+	def is_one_per_day():
 		""" Indicates if the action must be done on per day """
-		date = useful.dateToBytes()[:14]
-		if Server.context.onePerDay is None or (date[-2:] == b"12" and date != Server.context.onePerDay):
-			Server.context.onePerDay = date
+		date = useful.date_to_bytes()[:14]
+		if Server.context.one_per_day is None or (date[-2:] == b"12" and date != Server.context.one_per_day):
+			Server.context.one_per_day = date
 			return True
 		return False
 
 	@staticmethod
-	async def startServer():
+	async def start_server():
 		""" Start all servers """
 		# If server not started
-		if Server.context.serverStarted == False:
+		if Server.context.server_started is False:
 			# If wifi available
-			if wifi.Wifi.isLanConnected():
-				Server.context.serverStarted = True
+			if wifi.Wifi.is_lan_connected():
+				Server.context.server_started = True
 
 				# Add notifier if no notifier registered
-				if Server.context.notifier.isEmpty():
-					from server.pushover import notifyMessage
-					Server.context.notifier.add(notifyMessage)
+				if Server.context.notifier.is_empty():
+					from server.pushover import notify_message
+					Server.context.notifier.add(notify_message)
 
 				# If telnet activated
-				if Server.context.serverConfig.telnet:
+				if Server.context.server_config.telnet:
 					# Load and start telnet
 					import server.telnet
 					server.telnet.start()
 
 				# If ftp activated
-				if Server.context.serverConfig.ftp:
+				if Server.context.server_config.ftp:
 					# Load and start ftp server
 					import server.ftpserver
 					server.ftpserver.start(loop=Server.context.loop, preload=Server.context.preload)
 
 				# If http activated
-				if Server.context.serverConfig.http:
+				if Server.context.server_config.http:
 					# Load and start http server
 					import server.httpserver
-					server.httpserver.start(loop=Server.context.loop, loader=Server.context.pageLoader, preload=Server.context.preload, port=Server.context.httpPort, name="httpServer")
+					server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port, name="httpServer")
 
 					# If camera present
-					if useful.iscamera() and Camera.isActivated():
+					if useful.iscamera() and Camera.is_activated():
 						# Load and start streaming http server
-						server.httpserver.start(loop=Server.context.loop, loader=Server.context.pageLoader, preload=Server.context.preload, port=Server.context.httpPort +1, name="StreamingServer")
+						server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name="StreamingServer")
 
-				from server.presence import detectPresence
-				Server.context.loop.create_task(detectPresence())
+				from server.presence import detect_presence
+				Server.context.loop.create_task(detect_presence())
 
 	@staticmethod
-	async def manage(pollingId):
+	async def manage(polling_id):
 		""" Manage the network and server """
 		# Server can be started
-		if Server.context.serverPostponed == 0:
+		if Server.context.server_postponed == 0:
 			# Start server if no yet started
-			await Server.startServer()
+			await Server.start_server()
 
 			# Polling for wifi
-			if pollingId %179 == 0:
+			if polling_id %179 == 0:
 				await wifi.Wifi.manage()
 
 			# Polling for notification not sent
-			if pollingId %181 == 0 and Server.context.flushed == False:
-				if wifi.Wifi.isWanAvailable():
-					await Server.synchronizeTime()
+			if polling_id %181 == 0 and Server.context.flushed is False:
+				if wifi.Wifi.is_wan_available():
+					await Server.synchronize_time()
 					await Server.context.notifier.flush()
-					if wifi.Wifi.isWanConnected():
+					if wifi.Wifi.is_wan_connected():
 						Server.context.flushed = True
 
 			# Polling for time synchronisation
-			if pollingId % 3607 == 0:
-				await Server.synchronizeTime()
+			if polling_id % 3607 == 0:
+				await Server.synchronize_time()
 
 			# Polling for get wan ip
-			if pollingId % 59 == 0:
-				forced =  Server.isOnePerDay()
+			if polling_id % 59 == 0:
+				forced =  Server.is_one_per_day()
 			else:
 				forced = False
 
-			if pollingId % 3593 == 0 or forced:
-				await Server.synchronizeWanIp(forced)
+			if polling_id % 3593 == 0 or forced:
+				await Server.synchronize_wan_ip(forced)
 
 			# Save current time
-			if pollingId % 59 == 0:
-				Server.context.regionConfig.currentTime = time.time()
-				Server.context.regionConfig.save()
+			if polling_id % 59 == 0:
+				Server.context.region_config.current_time = time.time()
+				Server.context.region_config.save()
 		else:
-			Server.context.serverPostponed -= 1
+			Server.context.server_postponed -= 1
 
 			# If server can start
-			if Server.context.serverPostponed == 0:
+			if Server.context.server_postponed == 0:
 				from server.notifier import Notifier
 				Server.context.notifier = Notifier
 
@@ -291,12 +291,11 @@ class Server:
 				await wifi.Wifi.manage()
 
 				# If wan connected
-				if wifi.Wifi.isWanAvailable():
+				if wifi.Wifi.is_wan_available():
 					# Synchronize time
-					await Server.synchronizeTime()
+					await Server.synchronize_time()
 
 					# Flush notification not sent
 					await Server.context.notifier.flush()
-					if wifi.Wifi.isWanConnected():
+					if wifi.Wifi.is_wan_connected():
 						Server.context.flushed = True
-

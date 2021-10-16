@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>lib.server.dnsclient API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Dns client class" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,11 +22,13 @@
 <h1 class="title">Module <code>lib.server.dnsclient</code></h1>
 </header>
 <section id="section-intro">
+<p>Dns client class</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
+<pre><code class="python">&#34;&#34;&#34; Dns client class &#34;&#34;&#34;
+# Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 # DNS spec https://www2.cs.duke.edu/courses/fall16/compsci356/DNS/DNS-primer.pdf
 import struct
@@ -59,11 +61,11 @@ class DnsHeader:
         def __repr__(self):
                 &#34;&#34;&#34; Display content &#34;&#34;&#34;
                 return &#34;Header : ident=0x%04X flag=0x%04X query=%d answer=%d autority=%d additional=%d&#34;%(self.ident, self.flag, self.query, self.answer, self.autority, self.additional)
-        
-        def encodeName(self, name):
+
+        def encode_name(self, name):
                 &#34;&#34;&#34; Encode DNS name &#34;&#34;&#34;
                 result = &#34;&#34;
-                spl = splitIpAddress(name)
+                spl = split_ip_address(name)
                 # Ip address detected
                 if type(spl) == type([]):
                         spl.reverse()
@@ -76,8 +78,8 @@ class DnsHeader:
                         result += chr(len(item))
                         result += item
                 return result + chr(0)
-        
-        def decodeName(self, data, pos):
+
+        def decode_name(self, data, pos):
                 &#34;&#34;&#34; Decode DNS name &#34;&#34;&#34;
                 result = &#34;&#34;
                 while pos &lt; len(data):
@@ -88,7 +90,7 @@ class DnsHeader:
                         elif length &amp; 0xC0 == 0xC0:
                                 offset = data[pos] + (length &amp; 0x3F &lt;&lt; 8)
                                 pos += 1
-                                part, pos2 = self.decodeName(data, offset)
+                                part, pos2 = self.decode_name(data, offset)
                                 result = result + &#34;.&#34; + part
                         else:
                                 part = data[pos:pos+length]
@@ -109,14 +111,14 @@ class DnsQuery:
         def serialize(self):
                 &#34;&#34;&#34; Serialize query &#34;&#34;&#34;
                 data = self.header.serialize()
-                data += self.header.encodeName(self.name).encode(&#34;latin-1&#34;) 
+                data += self.header.encode_name(self.name).encode(&#34;latin-1&#34;)
                 data += struct.pack(self.format,self.qtype, self.qclass)
                 return data
-                
+
         def unserialize(self, data):
                 &#34;&#34;&#34; Unserialize query &#34;&#34;&#34;
                 pos = self.header.unserialize(data)
-                self.name, pos = self.header.decodeName(data, pos)
+                self.name, pos = self.header.decode_name(data, pos)
                 self.qtype, self.qclass = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
                 return pos + struct.calcsize(self.format)
 
@@ -145,13 +147,13 @@ class DnsAnswer:
                 if self.atype == 1:
                         self.name = &#34;%d.%d.%d.%d&#34;%(data[pos],data[pos+1],data[pos+2],data[pos+3])
                 else:
-                        self.name, posname = self.query.header.decodeName(data, pos)
+                        self.name, posname = self.query.header.decode_name(data, pos)
 
         def __repr__(self):
                 &#34;&#34;&#34; Display result &#34;&#34;&#34;
                 return repr(self.query) + &#34;\n  Answer : info=%04X type=%04X class=%04X time=%d length=%d name=&#39;%s&#39;&#34;%(self.info, self.atype, self.aclass, self.timetolive, self.length,self.name)
 
-def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
+def dns_exchange(dnsIp, dnsQuery, dnsAnswer):
         &#34;&#34;&#34; Exchange DNS query and wait answer &#34;&#34;&#34;
         result = None
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -168,42 +170,29 @@ def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
                         pass
         finally:
                 sock.close()
-        
         return result
 
-def resolveHostname(dnsIp, ipAddress):
+def resolve_hostname(dnsIp, ipAddress):
         &#34;&#34;&#34; Resolve hostname with ip address &#34;&#34;&#34;
-        return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())
+        return dns_exchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())
 
-def resolveIpAddress(dnsIp, hostname):
+def resolve_ip_address(dnsIp, hostname):
         &#34;&#34;&#34; Resolve ip address with hostname &#34;&#34;&#34;
-        return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())
+        return dns_exchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())
 
-def splitIpAddress(url):
+def split_ip_address(url):
         &#34;&#34;&#34; Split ip address &#34;&#34;&#34;
-        if isIpAddress(url):
+        if is_ip_address(url):
                 return url.split(&#34;.&#34;)
         else:
                 return url
 
-def isIpAddress(url):
+def is_ip_address(url):
         &#34;&#34;&#34; Indicates if the url is an ip address &#34;&#34;&#34;
         # Ip address detected
         if re.match(r&#34;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)&#34;, url):
                 return True
-        return False
-
-def main():
-        ROUTER = &#34;192.168.1.1&#34;
-        print(resolveHostname(ROUTER,&#34;192.168.1.51&#34;))
-        print(resolveHostname(ROUTER,ROUTER))
-        print(resolveIpAddress(ROUTER,&#34;iphoneremi.home&#34;))
-        ip   = resolveIpAddress(ROUTER,&#34;google.fr&#34;)
-        ip2  = resolveIpAddress(ROUTER, resolveHostname (ROUTER,ip))
-        if ip != ip2: raise Exception(&#34;Test failed&#34;)
-
-
-if __name__ == &#34;__main__&#34;: main()</code></pre>
+        return False</code></pre>
 </details>
 </section>
 <section>
@@ -213,8 +202,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.server.dnsclient.dnsExchange"><code class="name flex">
-<span>def <span class="ident">dnsExchange</span></span>(<span>dnsIp, dnsQuery, dnsAnswer)</span>
+<dt id="lib.server.dnsclient.dns_exchange"><code class="name flex">
+<span>def <span class="ident">dns_exchange</span></span>(<span>dnsIp, dnsQuery, dnsAnswer)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Exchange DNS query and wait answer</p></div>
@@ -222,7 +211,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dnsExchange(dnsIp, dnsQuery, dnsAnswer):
+<pre><code class="python">def dns_exchange(dnsIp, dnsQuery, dnsAnswer):
         &#34;&#34;&#34; Exchange DNS query and wait answer &#34;&#34;&#34;
         result = None
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -239,12 +228,11 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
                         pass
         finally:
                 sock.close()
-        
         return result</code></pre>
 </details>
 </dd>
-<dt id="lib.server.dnsclient.isIpAddress"><code class="name flex">
-<span>def <span class="ident">isIpAddress</span></span>(<span>url)</span>
+<dt id="lib.server.dnsclient.is_ip_address"><code class="name flex">
+<span>def <span class="ident">is_ip_address</span></span>(<span>url)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if the url is an ip address</p></div>
@@ -252,7 +240,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def isIpAddress(url):
+<pre><code class="python">def is_ip_address(url):
         &#34;&#34;&#34; Indicates if the url is an ip address &#34;&#34;&#34;
         # Ip address detected
         if re.match(r&#34;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)&#34;, url):
@@ -260,27 +248,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         return False</code></pre>
 </details>
 </dd>
-<dt id="lib.server.dnsclient.main"><code class="name flex">
-<span>def <span class="ident">main</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def main():
-        ROUTER = &#34;192.168.1.1&#34;
-        print(resolveHostname(ROUTER,&#34;192.168.1.51&#34;))
-        print(resolveHostname(ROUTER,ROUTER))
-        print(resolveIpAddress(ROUTER,&#34;iphoneremi.home&#34;))
-        ip   = resolveIpAddress(ROUTER,&#34;google.fr&#34;)
-        ip2  = resolveIpAddress(ROUTER, resolveHostname (ROUTER,ip))
-        if ip != ip2: raise Exception(&#34;Test failed&#34;)</code></pre>
-</details>
-</dd>
-<dt id="lib.server.dnsclient.resolveHostname"><code class="name flex">
-<span>def <span class="ident">resolveHostname</span></span>(<span>dnsIp, ipAddress)</span>
+<dt id="lib.server.dnsclient.resolve_hostname"><code class="name flex">
+<span>def <span class="ident">resolve_hostname</span></span>(<span>dnsIp, ipAddress)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Resolve hostname with ip address</p></div>
@@ -288,13 +257,13 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def resolveHostname(dnsIp, ipAddress):
+<pre><code class="python">def resolve_hostname(dnsIp, ipAddress):
         &#34;&#34;&#34; Resolve hostname with ip address &#34;&#34;&#34;
-        return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())</code></pre>
+        return dns_exchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), ipAddress, 0xC), DnsAnswer())</code></pre>
 </details>
 </dd>
-<dt id="lib.server.dnsclient.resolveIpAddress"><code class="name flex">
-<span>def <span class="ident">resolveIpAddress</span></span>(<span>dnsIp, hostname)</span>
+<dt id="lib.server.dnsclient.resolve_ip_address"><code class="name flex">
+<span>def <span class="ident">resolve_ip_address</span></span>(<span>dnsIp, hostname)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Resolve ip address with hostname</p></div>
@@ -302,13 +271,13 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def resolveIpAddress(dnsIp, hostname):
+<pre><code class="python">def resolve_ip_address(dnsIp, hostname):
         &#34;&#34;&#34; Resolve ip address with hostname &#34;&#34;&#34;
-        return dnsExchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())</code></pre>
+        return dns_exchange(dnsIp, DnsQuery(DnsHeader(random.randint(0, 65535), 0x0100, 1, 0), hostname, 1), DnsAnswer())</code></pre>
 </details>
 </dd>
-<dt id="lib.server.dnsclient.splitIpAddress"><code class="name flex">
-<span>def <span class="ident">splitIpAddress</span></span>(<span>url)</span>
+<dt id="lib.server.dnsclient.split_ip_address"><code class="name flex">
+<span>def <span class="ident">split_ip_address</span></span>(<span>url)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Split ip address</p></div>
@@ -316,9 +285,9 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def splitIpAddress(url):
+<pre><code class="python">def split_ip_address(url):
         &#34;&#34;&#34; Split ip address &#34;&#34;&#34;
-        if isIpAddress(url):
+        if is_ip_address(url):
                 return url.split(&#34;.&#34;)
         else:
                 return url</code></pre>
@@ -360,7 +329,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
                 if self.atype == 1:
                         self.name = &#34;%d.%d.%d.%d&#34;%(data[pos],data[pos+1],data[pos+2],data[pos+3])
                 else:
-                        self.name, posname = self.query.header.decodeName(data, pos)
+                        self.name, posname = self.query.header.decode_name(data, pos)
 
         def __repr__(self):
                 &#34;&#34;&#34; Display result &#34;&#34;&#34;
@@ -385,7 +354,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         if self.atype == 1:
                 self.name = &#34;%d.%d.%d.%d&#34;%(data[pos],data[pos+1],data[pos+2],data[pos+3])
         else:
-                self.name, posname = self.query.header.decodeName(data, pos)</code></pre>
+                self.name, posname = self.query.header.decode_name(data, pos)</code></pre>
 </details>
 </dd>
 </dl>
@@ -426,11 +395,11 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         def __repr__(self):
                 &#34;&#34;&#34; Display content &#34;&#34;&#34;
                 return &#34;Header : ident=0x%04X flag=0x%04X query=%d answer=%d autority=%d additional=%d&#34;%(self.ident, self.flag, self.query, self.answer, self.autority, self.additional)
-        
-        def encodeName(self, name):
+
+        def encode_name(self, name):
                 &#34;&#34;&#34; Encode DNS name &#34;&#34;&#34;
                 result = &#34;&#34;
-                spl = splitIpAddress(name)
+                spl = split_ip_address(name)
                 # Ip address detected
                 if type(spl) == type([]):
                         spl.reverse()
@@ -443,8 +412,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
                         result += chr(len(item))
                         result += item
                 return result + chr(0)
-        
-        def decodeName(self, data, pos):
+
+        def decode_name(self, data, pos):
                 &#34;&#34;&#34; Decode DNS name &#34;&#34;&#34;
                 result = &#34;&#34;
                 while pos &lt; len(data):
@@ -455,7 +424,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
                         elif length &amp; 0xC0 == 0xC0:
                                 offset = data[pos] + (length &amp; 0x3F &lt;&lt; 8)
                                 pos += 1
-                                part, pos2 = self.decodeName(data, offset)
+                                part, pos2 = self.decode_name(data, offset)
                                 result = result + &#34;.&#34; + part
                         else:
                                 part = data[pos:pos+length]
@@ -465,8 +434,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.server.dnsclient.DnsHeader.decodeName"><code class="name flex">
-<span>def <span class="ident">decodeName</span></span>(<span>self, data, pos)</span>
+<dt id="lib.server.dnsclient.DnsHeader.decode_name"><code class="name flex">
+<span>def <span class="ident">decode_name</span></span>(<span>self, data, pos)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Decode DNS name</p></div>
@@ -474,7 +443,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def decodeName(self, data, pos):
+<pre><code class="python">def decode_name(self, data, pos):
         &#34;&#34;&#34; Decode DNS name &#34;&#34;&#34;
         result = &#34;&#34;
         while pos &lt; len(data):
@@ -485,7 +454,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
                 elif length &amp; 0xC0 == 0xC0:
                         offset = data[pos] + (length &amp; 0x3F &lt;&lt; 8)
                         pos += 1
-                        part, pos2 = self.decodeName(data, offset)
+                        part, pos2 = self.decode_name(data, offset)
                         result = result + &#34;.&#34; + part
                 else:
                         part = data[pos:pos+length]
@@ -494,8 +463,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         return result.strip(&#34;.&#34;), pos</code></pre>
 </details>
 </dd>
-<dt id="lib.server.dnsclient.DnsHeader.encodeName"><code class="name flex">
-<span>def <span class="ident">encodeName</span></span>(<span>self, name)</span>
+<dt id="lib.server.dnsclient.DnsHeader.encode_name"><code class="name flex">
+<span>def <span class="ident">encode_name</span></span>(<span>self, name)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Encode DNS name</p></div>
@@ -503,10 +472,10 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def encodeName(self, name):
+<pre><code class="python">def encode_name(self, name):
         &#34;&#34;&#34; Encode DNS name &#34;&#34;&#34;
         result = &#34;&#34;
-        spl = splitIpAddress(name)
+        spl = split_ip_address(name)
         # Ip address detected
         if type(spl) == type([]):
                 spl.reverse()
@@ -577,14 +546,14 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
         def serialize(self):
                 &#34;&#34;&#34; Serialize query &#34;&#34;&#34;
                 data = self.header.serialize()
-                data += self.header.encodeName(self.name).encode(&#34;latin-1&#34;) 
+                data += self.header.encode_name(self.name).encode(&#34;latin-1&#34;)
                 data += struct.pack(self.format,self.qtype, self.qclass)
                 return data
-                
+
         def unserialize(self, data):
                 &#34;&#34;&#34; Unserialize query &#34;&#34;&#34;
                 pos = self.header.unserialize(data)
-                self.name, pos = self.header.decodeName(data, pos)
+                self.name, pos = self.header.decode_name(data, pos)
                 self.qtype, self.qclass = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
                 return pos + struct.calcsize(self.format)
 
@@ -606,7 +575,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <pre><code class="python">def serialize(self):
         &#34;&#34;&#34; Serialize query &#34;&#34;&#34;
         data = self.header.serialize()
-        data += self.header.encodeName(self.name).encode(&#34;latin-1&#34;) 
+        data += self.header.encode_name(self.name).encode(&#34;latin-1&#34;)
         data += struct.pack(self.format,self.qtype, self.qclass)
         return data</code></pre>
 </details>
@@ -623,7 +592,7 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <pre><code class="python">def unserialize(self, data):
         &#34;&#34;&#34; Unserialize query &#34;&#34;&#34;
         pos = self.header.unserialize(data)
-        self.name, pos = self.header.decodeName(data, pos)
+        self.name, pos = self.header.decode_name(data, pos)
         self.qtype, self.qclass = struct.unpack(self.format, data[pos:pos+struct.calcsize(self.format)])
         return pos + struct.calcsize(self.format)</code></pre>
 </details>
@@ -645,13 +614,12 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="two-column">
-<li><code><a title="lib.server.dnsclient.dnsExchange" href="#lib.server.dnsclient.dnsExchange">dnsExchange</a></code></li>
-<li><code><a title="lib.server.dnsclient.isIpAddress" href="#lib.server.dnsclient.isIpAddress">isIpAddress</a></code></li>
-<li><code><a title="lib.server.dnsclient.main" href="#lib.server.dnsclient.main">main</a></code></li>
-<li><code><a title="lib.server.dnsclient.resolveHostname" href="#lib.server.dnsclient.resolveHostname">resolveHostname</a></code></li>
-<li><code><a title="lib.server.dnsclient.resolveIpAddress" href="#lib.server.dnsclient.resolveIpAddress">resolveIpAddress</a></code></li>
-<li><code><a title="lib.server.dnsclient.splitIpAddress" href="#lib.server.dnsclient.splitIpAddress">splitIpAddress</a></code></li>
+<ul class="">
+<li><code><a title="lib.server.dnsclient.dns_exchange" href="#lib.server.dnsclient.dns_exchange">dns_exchange</a></code></li>
+<li><code><a title="lib.server.dnsclient.is_ip_address" href="#lib.server.dnsclient.is_ip_address">is_ip_address</a></code></li>
+<li><code><a title="lib.server.dnsclient.resolve_hostname" href="#lib.server.dnsclient.resolve_hostname">resolve_hostname</a></code></li>
+<li><code><a title="lib.server.dnsclient.resolve_ip_address" href="#lib.server.dnsclient.resolve_ip_address">resolve_ip_address</a></code></li>
+<li><code><a title="lib.server.dnsclient.split_ip_address" href="#lib.server.dnsclient.split_ip_address">split_ip_address</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -665,8 +633,8 @@ if __name__ == &#34;__main__&#34;: main()</code></pre>
 <li>
 <h4><code><a title="lib.server.dnsclient.DnsHeader" href="#lib.server.dnsclient.DnsHeader">DnsHeader</a></code></h4>
 <ul class="">
-<li><code><a title="lib.server.dnsclient.DnsHeader.decodeName" href="#lib.server.dnsclient.DnsHeader.decodeName">decodeName</a></code></li>
-<li><code><a title="lib.server.dnsclient.DnsHeader.encodeName" href="#lib.server.dnsclient.DnsHeader.encodeName">encodeName</a></code></li>
+<li><code><a title="lib.server.dnsclient.DnsHeader.decode_name" href="#lib.server.dnsclient.DnsHeader.decode_name">decode_name</a></code></li>
+<li><code><a title="lib.server.dnsclient.DnsHeader.encode_name" href="#lib.server.dnsclient.DnsHeader.encode_name">encode_name</a></code></li>
 <li><code><a title="lib.server.dnsclient.DnsHeader.serialize" href="#lib.server.dnsclient.DnsHeader.serialize">serialize</a></code></li>
 <li><code><a title="lib.server.dnsclient.DnsHeader.unserialize" href="#lib.server.dnsclient.DnsHeader.unserialize">unserialize</a></code></li>
 </ul>

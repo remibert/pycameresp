@@ -18,6 +18,9 @@ try:
 	import uos
 except:
 	pass
+# pylint:disable=ungrouped-imports
+# pylint:disable=consider-using-enumerate
+from tools.tasking import WatchDog
 
 def ismicropython():
 	""" Indicates if the python is micropython """
@@ -26,8 +29,7 @@ def ismicropython():
 	return False
 
 if ismicropython():
-	from tools import tasking
-	def getLengthUtf8(key):
+	def get_length_utf8(key):
 		""" Get the length utf8 string """
 		if len(key) > 0:
 			char = key[0]
@@ -42,8 +44,8 @@ if ismicropython():
 			return 1
 		else:
 			return 0
-			
-	def isKeyEnded(key):
+
+	def is_key_ended(key):
 		""" Indicates if the key completly entered """
 		if len(key) == 0:
 			return False
@@ -52,7 +54,7 @@ if ismicropython():
 			if len(key) == 1:
 				if char == 0x1B:
 					return False
-				elif getLengthUtf8(key) == len(key):
+				elif get_length_utf8(key) == len(key):
 					return True
 			elif len(key) == 2:
 				if key[0] == b"\x1B" and key[1] == b"\x1B":
@@ -64,7 +66,7 @@ if ismicropython():
 						return False
 					else:
 						return True
-				elif getLengthUtf8(key) == len(key):
+				elif get_length_utf8(key) == len(key):
 					return True
 			else:
 				if key[-1] >= ord("A") and key[-1] <= ord("Z"):
@@ -73,21 +75,21 @@ if ismicropython():
 					return True
 				elif key[-1] == b"~":
 					return True
-				elif key[0] != b"\x1B" and getLengthUtf8(key) == len(key):
+				elif key[0] != b"\x1B" and get_length_utf8(key) == len(key):
 					return True
 		return False
 
 	def getch(raw = True, duration=100000000, interchar=0.05):
 		""" Wait a key pressed on keyboard and return it """
 		key = b""
-		tasking.WatchDog.feed()
+		WatchDog.feed()
 		while 1:
 			if len(key) == 0:
 				delay = duration
 			else:
 				delay = interchar
 			keyPressed = kbhit(delay)
-			if isKeyEnded(key):
+			if is_key_ended(key):
 				break
 			if keyPressed:
 				key += sys.stdin.buffer.read(1)
@@ -115,32 +117,32 @@ if ismicropython():
 				sys.stdin.buffer.read(1)
 			else:
 				break
-		
 else:
 	def getch(raw = True, duration=100000000, interchar=0.01):
 		""" Wait a key pressed on keyboard and return it """
-		return readKeyboard(duration, raw, getChar)
+		return read_keyboard(duration, raw, get_char)
 
 	def kbhit(duration=0.001):
 		""" Indicates if a key is pressed or not """
-		return readKeyboard(duration, True, testChar)
+		return read_keyboard(duration, True, test_char)
 
-	def getChar(stdins):
+	def get_char(stdins):
 		""" Get character """
 		if stdins != []:
 			return stdins[0].read()
 		return None
 
-	def testChar(stdins):
+	def test_char(stdins):
 		""" Test a character """
 		if stdins != []:
 			return True
 		return False
 
-	def readKeyboard(duration=0.001, raw=True, callback=None):
+	def read_keyboard(duration=0.001, raw=True, callback=None):
 		""" Read keyboard on os/x, linux or windows"""
-		import termios, fcntl
 		import tty
+		import termios
+		import fcntl
 		fd = sys.stdin.fileno()
 		oldattr = termios.tcgetattr(fd)
 		oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
@@ -174,12 +176,14 @@ try:
 
 	from time import ticks_ms
 	def ticks():
+		""" Count tick elapsed from start """
 		return ticks_ms()
 except:
 	def ticks():
+		""" Count tick elapsed from start """
 		return (int)(time.time() * 1000)
 
-def ticksToString():
+def ticks_to_string():
 	""" Create a string with tick in seconds """
 	tick = ticks()
 	return "%d.%03d s"%(tick/1000, tick%1000)
@@ -191,44 +195,44 @@ def log(msg):
 	global previousTime
 	if previousTime == 0:
 		previousTime = current
-	if msg != None:
+	if msg is not None:
 		print("%03d.%03d:%s"%((current-previousTime)/1000, (current-previousTime)%1000, msg))
 	previousTime = ticks()
 
-def dateToString(date = None):
+def date_to_string(date = None):
 	""" Get a string with the current date """
-	return dateToBytes(date).decode("utf8")
+	return date_to_bytes(date).decode("utf8")
 
-def dateToBytes(date = None):
+def date_to_bytes(date = None):
 	""" Get a bytes with the current date """
 	year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
 	return b"%04d/%02d/%02d  %02d:%02d:%02d"%(year,month,day,hour,minute,second)
 
-def dateMsToString():
+def date_ms_to_string():
 	""" Get a string with the current date with ms """
 	ms = (time.time_ns() // 1000000)%1000
 	year,month,day,hour,minute,second,weekday,yearday = time.localtime(None)[:8]
 	return "%04d/%02d/%02d %02d:%02d:%02d.%03d"%(year,month,day,hour,minute,second,ms)
 
-def dateToFilename(date = None):
+def date_to_filename(date = None):
 	""" Get a filename with a date """
-	filename = dateToString(date)
+	filename = date_to_string(date)
 	filename = filename.replace("  "," ")
 	filename = filename.replace(" ","_")
 	filename = filename.replace("/","-")
 	filename = filename.replace(":","-")
 	return filename
 
-def dateToPath(date=None):
+def date_to_path(date=None):
 	""" Get a path with year/month/day/hour """
 	year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
 	return b"%04d/%02d/%02d/%02dh%02d"%(year,month,day,hour,minute)
 
-def sizeToString(size, largeur=6):
+def size_to_string(size, largeur=6):
 	""" Convert a size in a string with k, m, g, t..."""
-	return sizeToBytes(size, largeur).decode("utf8")
+	return size_to_bytes(size, largeur).decode("utf8")
 
-def sizeToBytes(size, largeur=6):
+def size_to_bytes(size, largeur=6):
 	""" Convert a size in a bytes with k, m, g, t..."""
 	if size > 1073741824*1024:
 		return  b"%*.2fT"%(largeur, size / (1073741824.*1024.))
@@ -248,7 +252,7 @@ def meminfo(display=True):
 		# pylint: disable=no-member
 		alloc = gc.mem_alloc()
 		free  = gc.mem_free()
-		result = b"Mem alloc=%s free=%s total=%s"%(sizeToBytes(alloc, 1), sizeToBytes(free, 1), sizeToBytes(alloc+free, 1))
+		result = b"Mem alloc=%s free=%s total=%s"%(size_to_bytes(alloc, 1), size_to_bytes(free, 1), size_to_bytes(alloc+free, 1))
 		if display:
 			print(tostrings(result))
 		else:
@@ -260,7 +264,7 @@ def flashinfo(display=True):
 	""" Get flash informations """
 	try:
 		import esp
-		result = b"Flash user=%s size=%s"%(sizeToBytes(esp.flash_user_start(), 1), sizeToBytes(esp.flash_size(), 1))
+		result = b"Flash user=%s size=%s"%(size_to_bytes(esp.flash_user_start(), 1), size_to_bytes(esp.flash_size(), 1))
 		if display:
 			print(tostrings(result))
 		else:
@@ -271,7 +275,7 @@ def flashinfo(display=True):
 def sysinfo(display=True, text=""):
 	""" Get system informations """
 	try:
-		result = b"%s%s %dMhz, %s, %s, %s"%(text, sys.platform, machine.freq()//1000000, dateToBytes(), meminfo(False), flashinfo(False))
+		result = b"%s%s %dMhz, %s, %s, %s"%(text, sys.platform, machine.freq()//1000000, date_to_bytes(), meminfo(False), flashinfo(False))
 		if display:
 			print(tostrings(result))
 		else:
@@ -321,7 +325,7 @@ def import_(filename):
 		pass
 	try:
 		exec("import %s"%moduleName)
-		
+
 		for fct in dir(sys.modules[moduleName]):
 			if fct == "main":
 				print("Start main function")
@@ -475,11 +479,11 @@ def syslog(err, msg="", display=True):
 		logFile = open(filename,"a")
 
 	result = "%s%s"%(tostrings(msg),tostrings(err))
-	logFile.write(dateMsToString() + " %s\n"%(result))
+	logFile.write(date_ms_to_string() + " %s\n"%(result))
 	logFile.close()
 	return result
 
-def htmlException(err):
+def html_exception(err):
 	""" Return the content of exception into an html bytes """
 	text = exception(err)
 	text = text.replace("\n    ","<br>&nbsp;&nbsp;&nbsp;&nbsp;")
@@ -502,7 +506,7 @@ def blink(duration=10):
 
 screenSize = None
 
-def refreshScreenSize():
+def refresh_screen_size():
 	""" Refresh the screen size """
 	global screenSize
 	try:
@@ -530,24 +534,24 @@ def refreshScreenSize():
 	kbflush()
 	return result
 
-def getScreenSize():
+def get_screen_size():
 	""" Get the VT100 screen size """
 	global screenSize
-	if screenSize != None:
+	if screenSize is not None:
 		return screenSize
 	else:
-		return refreshScreenSize()
+		return refresh_screen_size()
 
 def prefix(files):
 	""" Get the common prefix of all files """
 	# Initializes counters
 	counters = []
-	
+
 	# For all files
 	for file in files:
 		# Split the file name into a piece
 		paths = file.split("/")
-		
+
 		# For each piece
 		for i in range(0,len(paths)):
 			try:
@@ -560,7 +564,7 @@ def prefix(files):
 			except:
 				# Adds a new level of depth
 				counters.append({paths[i] : 1})
-	
+
 	# Constructs the prefix of the list of files
 	try:
 		result = ""
@@ -578,11 +582,11 @@ def now():
 	""" Get time now """
 	return time.localtime()
 
-def computeHash(string):
-	""" Compute hash 
-	>>> print(computeHash("1234"))
+def compute_hash(string):
+	""" Compute hash
+	>>> print(compute_hash("1234"))
 	49307
-	>>> print(computeHash(b"1234"))
+	>>> print(compute_hash(b"1234"))
 	49307
 	"""
 	string = tostrings(string)
@@ -640,7 +644,7 @@ def ispunctuation(char):
 		return False
 
 def dump(buff, withColor=True):
-	""" Dump buffer """
+	""" dump buffer """
 	if withColor:
 		string = "\x1B[7m"
 	else:
@@ -661,11 +665,11 @@ def dump(buff, withColor=True):
 		string += "\x1B[m"
 	return string
 
-def dumpLine (data, line = None, width = 0):
-	""" Dump a data data in hexadecimal on one line """
+def dump_line (data, line = None, width = 0):
+	""" dump a data data in hexadecimal on one line """
 	size = len(data)
 	fill = 0
-	
+
 	# Calculation of the filling length
 	if width > size:
 		fill = width-size
@@ -673,13 +677,13 @@ def dumpLine (data, line = None, width = 0):
 	# Displaying values in hex
 	for i in data:
 		line.write(b'%02X ' % i)
-		
+
 	# Filling of vacuum according to the size of the dump
 	line.write(b'   '*fill)
-	
+
 	# Display of ASCII codes
 	line.write(b' |')
-	
+
 	for i in data:
 		if i >= 0x20 and  i < 0x7F:
 			line.write(chr(i).encode("utf8"))
@@ -688,13 +692,13 @@ def dumpLine (data, line = None, width = 0):
 
 	# Filling of vacuum according to the size of the dump
 	line.write(b' '*fill)
-	
+
 	# End of data ascii
 	line.write(b'|')
 
 def makedir(directory, recursive=False):
 	""" Make directory recursively """
-	if recursive == False:
+	if recursive is False:
 		os.mkdir(directory)
 	else:
 		directories = [directory]
@@ -729,7 +733,7 @@ def tobytes(datas, encoding="utf8"):
 		for key, value in datas.items():
 			result[tobytes(key,encoding)] = tobytes(value, encoding)
 	return result
-	
+
 def tostrings(datas, encoding="utf8"):
 	""" Convert data to strings """
 	result = datas
@@ -793,7 +797,7 @@ def scandir(path, pattern, recursive, displayer=None):
 	if path == "":
 		path = "."
 	try:
-		if path != None and pattern != None:
+		if path is not None and pattern is not None:
 			for file in os.listdir(path):
 				if path != "":
 					filename = path + "/" + file
@@ -822,15 +826,19 @@ def scandir(path, pattern, recursive, displayer=None):
 
 def remove(filename):
 	""" Remove file existing """
-	try:    uos.remove(filename)
-	except: pass 
+	try:
+		uos.remove(filename)
+	except:
+		pass
 
 def rename(old, new):
 	""" Rename file """
 	if exists(new):
 		remove(new)
-	try: uos.rename(old, new)
-	except: pass
+	try:
+		uos.rename(old, new)
+	except:
+		pass
 
 def uptime(text="days"):
 	""" Tell how long the system has been running """
@@ -851,10 +859,10 @@ def reboot(message="Reboot"):
 	""" Reboot command """
 	syslog(message)
 	from tools.lang import RegionConfig
-	regionConfig = RegionConfig()
-	if regionConfig.load():
-		regionConfig.currentTime = time.time() + 8
-		regionConfig.save()
+	region_config = RegionConfig()
+	if region_config.load():
+		region_config.current_time = time.time() + 8
+		region_config.save()
 	try:
 		if ismicropython():
 			import camera

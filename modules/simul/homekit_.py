@@ -1,24 +1,49 @@
+# Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+""" Simulate homekit_ module """
 class Accessory:
-	def __init__(self, cid, name="Esp", manufacturer="Espressif", model="Esp32", serialNumber="00112233445566", firmwareRevision="1.0.0", hardwareRevision="1.0.0", productVersion="1.0"): pass
-	def __del__(self): pass
-	def deinit(self):pass
-	def addServer(self, server): pass
-	def setIdentifyCallback(self, callback): pass
-	def setProductData(self, data): pass
+	""" Homekit accessory """
+	def __init__(self, cid, name="Esp", manufacturer="Espressif", model="Esp32", serialNumber="00112233445566", firmwareRevision="1.0.0", hardwareRevision="1.0.0", productVersion="1.0"):
+		""" Constructor """
+	def __del__(self):
+		""" Destructor """
+	def deinit(self):
+		""" Deinitialize """
+	def add_server(self, server):
+		""" Add server """
+	def set_identify_callback(self, callback):
+		""" Set identify callback """
+	def set_product_data(self, data):
+		""" Set product data """
 
 class Server:
-	def __init__(self, serverUuid): pass
-	def deinit(self): pass
-	def addCharact(self, charact): pass
+	""" Homkit server """
+	def __init__(self, server_uuid):
+		""" Constructor """
+	def deinit(self):
+		""" Deinitialize """
+	def add_charact(self, charact):
+		""" Add characteristic """
 
 class Charact:
-	def __init__(self, uuid, typ, perm, value): pass
-	def deinit(self): pass
-	def setUnit(self, unit): pass
-	def setDescription(self, description): pass
-	def setConstraint(self, mini, maxi): pass
-	def setStep(self, step): pass
-	def setValue(self, value): pass
-	def getValue(self): pass
-	def setReadCallback(self, callback): pass
-	def setWriteCallback(self, callback): pass
+	""" Homekit characteristic """
+	def __init__(self, uuid, typ, perm, value):
+		""" Constructor """
+	def deinit(self):
+		""" Deinitialize """
+	def set_unit(self, unit):
+		""" Set unit """
+	def set_description(self, description):
+		""" Set description """
+	def set_constraint(self, mini, maxi):
+		""" Set min and max constraint """
+	def set_step(self, step):
+		""" Set step """
+	def set_value(self, value):
+		""" Set value """
+	def get_value(self):
+		""" Get value """
+	def set_read_callback(self, callback):
+		""" Set read callback """
+	def set_write_callback(self, callback):
+		""" Set write callback """

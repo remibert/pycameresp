@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>lib.homekit.accessory API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Homekit accessory class" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,14 +22,15 @@
 <h1 class="title">Module <code>lib.homekit.accessory</code></h1>
 </header>
 <section id="section-intro">
+<p>Homekit accessory class</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+&#34;&#34;&#34; Homekit accessory class &#34;&#34;&#34;
 from homekit.server import *
-
 class Accessory:
         &#34;&#34;&#34; Homekit accessory class &#34;&#34;&#34;
         CID_NONE                = 0
@@ -57,35 +58,35 @@ class Accessory:
         CID_HUMIDIFIER          = 22
         CID_DEHUMIDIFIER        = 23
         def __init__(self, cid, **kwargs):
-                &#34;&#34;&#34; Create accessory. 
+                &#34;&#34;&#34; Create accessory.
                         Parameters : name(string), manufacturer(string), model(string), serialNumber(string), firmwareRevision(string), hardwareRevision(string), productVersion(string), productData (string with 8 bytes required)&#34;&#34;&#34;
                 import homekit_
                 self.accessory = homekit_.Accessory(\
                         cid              = cid, \
-                        name             = kwargs.get(&#34;name&#34;            , &#34;NoName&#34;), \
-                        manufacturer     = kwargs.get(&#34;manufacturer&#34;    , &#34;Manufacturer&#34;), \
-                        model            = kwargs.get(&#34;model&#34;           , &#34;ESP32&#34;), \
-                        serialNumber     = kwargs.get(&#34;serialNumber&#34;    , &#34;0000000000&#34;), \
-                        firmwareRevision = kwargs.get(&#34;firmwareRevision&#34;, &#34;1.0&#34;), \
-                        hardwareRevision = kwargs.get(&#34;hardwareRevision&#34;, &#34;1.0&#34;), \
-                        productVersion   = kwargs.get(&#34;productVersion&#34;  , &#34;1.0&#34;))
-                self.accessory.setProductData(kwargs.get(&#34;productData&#34;,&#34;01234568&#34;))
+                        name             = kwargs.get(&#34;name&#34;             , &#34;NoName&#34;), \
+                        manufacturer     = kwargs.get(&#34;manufacturer&#34;     , &#34;Manufacturer&#34;), \
+                        model            = kwargs.get(&#34;model&#34;            , &#34;ESP32&#34;), \
+                        serialNumber     = kwargs.get(&#34;serial_number&#34;    , &#34;0000000000&#34;), \
+                        firmwareRevision = kwargs.get(&#34;firmware_revision&#34;, &#34;1.0&#34;), \
+                        hardwareRevision = kwargs.get(&#34;hardware_revision&#34;, &#34;1.0&#34;), \
+                        productVersion   = kwargs.get(&#34;product_version&#34;  , &#34;1.0&#34;))
+                self.accessory.set_product_data(kwargs.get(&#34;product_data&#34;,&#34;01234568&#34;))
 
         def __del__(self):
                 &#34;&#34;&#34; Destroy homekit accessory &#34;&#34;&#34;
                 self.accessory.deinit()
 
-        def addServer(self, server):
+        def add_server(self, server):
                 &#34;&#34;&#34;  Add the serve to the accessory object &#34;&#34;&#34;
-                self.accessory.addServer(server.server)
+                self.accessory.add_server(server.server)
 
-        def setIdentifyCallback(self, callback):
+        def set_identify_callback(self, callback):
                 &#34;&#34;&#34; Set identify callback. In a real accessory, something like LED blink should be implemented got visual identification &#34;&#34;&#34;
-                self.accessory.setIdentifyCallback(callback)
+                self.accessory.set_identify_callback(callback)
 
-        def setProductData(self, data):
+        def set_product_data(self, data):
                 &#34;&#34;&#34; Set product data. 8 bytes product data assigned to the Product Plan. &#34;&#34;&#34;
-                self.accessory.setProductData(data)</code></pre>
+                self.accessory.set_product_data(data)</code></pre>
 </details>
 </section>
 <section>
@@ -136,35 +137,35 @@ Parameters : name(string), manufacturer(string), model(string), serialNumber(str
         CID_HUMIDIFIER          = 22
         CID_DEHUMIDIFIER        = 23
         def __init__(self, cid, **kwargs):
-                &#34;&#34;&#34; Create accessory. 
+                &#34;&#34;&#34; Create accessory.
                         Parameters : name(string), manufacturer(string), model(string), serialNumber(string), firmwareRevision(string), hardwareRevision(string), productVersion(string), productData (string with 8 bytes required)&#34;&#34;&#34;
                 import homekit_
                 self.accessory = homekit_.Accessory(\
                         cid              = cid, \
-                        name             = kwargs.get(&#34;name&#34;            , &#34;NoName&#34;), \
-                        manufacturer     = kwargs.get(&#34;manufacturer&#34;    , &#34;Manufacturer&#34;), \
-                        model            = kwargs.get(&#34;model&#34;           , &#34;ESP32&#34;), \
-                        serialNumber     = kwargs.get(&#34;serialNumber&#34;    , &#34;0000000000&#34;), \
-                        firmwareRevision = kwargs.get(&#34;firmwareRevision&#34;, &#34;1.0&#34;), \
-                        hardwareRevision = kwargs.get(&#34;hardwareRevision&#34;, &#34;1.0&#34;), \
-                        productVersion   = kwargs.get(&#34;productVersion&#34;  , &#34;1.0&#34;))
-                self.accessory.setProductData(kwargs.get(&#34;productData&#34;,&#34;01234568&#34;))
+                        name             = kwargs.get(&#34;name&#34;             , &#34;NoName&#34;), \
+                        manufacturer     = kwargs.get(&#34;manufacturer&#34;     , &#34;Manufacturer&#34;), \
+                        model            = kwargs.get(&#34;model&#34;            , &#34;ESP32&#34;), \
+                        serialNumber     = kwargs.get(&#34;serial_number&#34;    , &#34;0000000000&#34;), \
+                        firmwareRevision = kwargs.get(&#34;firmware_revision&#34;, &#34;1.0&#34;), \
+                        hardwareRevision = kwargs.get(&#34;hardware_revision&#34;, &#34;1.0&#34;), \
+                        productVersion   = kwargs.get(&#34;product_version&#34;  , &#34;1.0&#34;))
+                self.accessory.set_product_data(kwargs.get(&#34;product_data&#34;,&#34;01234568&#34;))
 
         def __del__(self):
                 &#34;&#34;&#34; Destroy homekit accessory &#34;&#34;&#34;
                 self.accessory.deinit()
 
-        def addServer(self, server):
+        def add_server(self, server):
                 &#34;&#34;&#34;  Add the serve to the accessory object &#34;&#34;&#34;
-                self.accessory.addServer(server.server)
+                self.accessory.add_server(server.server)
 
-        def setIdentifyCallback(self, callback):
+        def set_identify_callback(self, callback):
                 &#34;&#34;&#34; Set identify callback. In a real accessory, something like LED blink should be implemented got visual identification &#34;&#34;&#34;
-                self.accessory.setIdentifyCallback(callback)
+                self.accessory.set_identify_callback(callback)
 
-        def setProductData(self, data):
+        def set_product_data(self, data):
                 &#34;&#34;&#34; Set product data. 8 bytes product data assigned to the Product Plan. &#34;&#34;&#34;
-                self.accessory.setProductData(data)</code></pre>
+                self.accessory.set_product_data(data)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -267,8 +268,8 @@ Parameters : name(string), manufacturer(string), model(string), serialNumber(str
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.homekit.accessory.Accessory.addServer"><code class="name flex">
-<span>def <span class="ident">addServer</span></span>(<span>self, server)</span>
+<dt id="lib.homekit.accessory.Accessory.add_server"><code class="name flex">
+<span>def <span class="ident">add_server</span></span>(<span>self, server)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Add the serve to the accessory object</p></div>
@@ -276,13 +277,13 @@ Parameters : name(string), manufacturer(string), model(string), serialNumber(str
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def addServer(self, server):
+<pre><code class="python">def add_server(self, server):
         &#34;&#34;&#34;  Add the serve to the accessory object &#34;&#34;&#34;
-        self.accessory.addServer(server.server)</code></pre>
+        self.accessory.add_server(server.server)</code></pre>
 </details>
 </dd>
-<dt id="lib.homekit.accessory.Accessory.setIdentifyCallback"><code class="name flex">
-<span>def <span class="ident">setIdentifyCallback</span></span>(<span>self, callback)</span>
+<dt id="lib.homekit.accessory.Accessory.set_identify_callback"><code class="name flex">
+<span>def <span class="ident">set_identify_callback</span></span>(<span>self, callback)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set identify callback. In a real accessory, something like LED blink should be implemented got visual identification</p></div>
@@ -290,13 +291,13 @@ Parameters : name(string), manufacturer(string), model(string), serialNumber(str
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setIdentifyCallback(self, callback):
+<pre><code class="python">def set_identify_callback(self, callback):
         &#34;&#34;&#34; Set identify callback. In a real accessory, something like LED blink should be implemented got visual identification &#34;&#34;&#34;
-        self.accessory.setIdentifyCallback(callback)</code></pre>
+        self.accessory.set_identify_callback(callback)</code></pre>
 </details>
 </dd>
-<dt id="lib.homekit.accessory.Accessory.setProductData"><code class="name flex">
-<span>def <span class="ident">setProductData</span></span>(<span>self, data)</span>
+<dt id="lib.homekit.accessory.Accessory.set_product_data"><code class="name flex">
+<span>def <span class="ident">set_product_data</span></span>(<span>self, data)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set product data. 8 bytes product data assigned to the Product Plan.</p></div>
@@ -304,9 +305,9 @@ Parameters : name(string), manufacturer(string), model(string), serialNumber(str
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def setProductData(self, data):
+<pre><code class="python">def set_product_data(self, data):
         &#34;&#34;&#34; Set product data. 8 bytes product data assigned to the Product Plan. &#34;&#34;&#34;
-        self.accessory.setProductData(data)</code></pre>
+        self.accessory.set_product_data(data)</code></pre>
 </details>
 </dd>
 </dl>
@@ -354,9 +355,9 @@ Parameters : name(string), manufacturer(string), model(string), serialNumber(str
 <li><code><a title="lib.homekit.accessory.Accessory.CID_VIDEO_DOORBELL" href="#lib.homekit.accessory.Accessory.CID_VIDEO_DOORBELL">CID_VIDEO_DOORBELL</a></code></li>
 <li><code><a title="lib.homekit.accessory.Accessory.CID_WINDOW" href="#lib.homekit.accessory.Accessory.CID_WINDOW">CID_WINDOW</a></code></li>
 <li><code><a title="lib.homekit.accessory.Accessory.CID_WINDOW_COVERING" href="#lib.homekit.accessory.Accessory.CID_WINDOW_COVERING">CID_WINDOW_COVERING</a></code></li>
-<li><code><a title="lib.homekit.accessory.Accessory.addServer" href="#lib.homekit.accessory.Accessory.addServer">addServer</a></code></li>
-<li><code><a title="lib.homekit.accessory.Accessory.setIdentifyCallback" href="#lib.homekit.accessory.Accessory.setIdentifyCallback">setIdentifyCallback</a></code></li>
-<li><code><a title="lib.homekit.accessory.Accessory.setProductData" href="#lib.homekit.accessory.Accessory.setProductData">setProductData</a></code></li>
+<li><code><a title="lib.homekit.accessory.Accessory.add_server" href="#lib.homekit.accessory.Accessory.add_server">add_server</a></code></li>
+<li><code><a title="lib.homekit.accessory.Accessory.set_identify_callback" href="#lib.homekit.accessory.Accessory.set_identify_callback">set_identify_callback</a></code></li>
+<li><code><a title="lib.homekit.accessory.Accessory.set_product_data" href="#lib.homekit.accessory.Accessory.set_product_data">set_product_data</a></code></li>
 </ul>
 </li>
 </ul>

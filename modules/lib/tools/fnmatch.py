@@ -2,8 +2,9 @@
 Extracted from cpython fnmatch.py """
 import re
 
-previousPat = [None, None]
+previous_pat = [None, None]
 def fnmatch(name, pat):
+	""" Compare filenames """
 	if pat == "*":
 		return True
 	elif pat == "*.*":
@@ -12,15 +13,16 @@ def fnmatch(name, pat):
 		else:
 			return False
 	else:
-		global previousPat
-		if previousPat[0] == pat:
-			res = previousPat[1]
+		global previous_pat
+		if previous_pat[0] == pat:
+			res = previous_pat[1]
 		else:
 			res = translate(pat)
-			previousPat =[pat, res]
+			previous_pat =[pat, res]
 		return re.compile(res).match(name) is not None
 
 def escape(pattern):
+	""" Manage escape in pattern """
 	result = ""
 	for char in pattern:
 		if char in '()[]{}?*+-|^$\\.&~# \t\n\r\v\f':
@@ -29,6 +31,7 @@ def escape(pattern):
 	return result
 
 def translate(pat):
+	""" Translate pattern """
 	i, n = 0, len(pat)
 	res = ''
 	while i < n:

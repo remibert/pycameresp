@@ -34,17 +34,17 @@ Class to manage session, user password, stream.</p>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Class for servers FTP, HTTP, Telnet.
-Class to dialog with NTP, PushOver. 
+Class to dialog with NTP, PushOver.
 Class to manage session, user password, stream.&#34;&#34;&#34;
 
-def init(loop=None, pageLoader=None, preload=False, httpPort=80):
+def init(loop=None, page_loader=None, preload=False, http_port=80):
         &#34;&#34;&#34; Init servers
         loop : asyncio loop
-        pageLoader : callback to load html page
-        preload : True force the load of page at the start, 
+        page_loader : callback to load html page
+        preload : True force the load of page at the start,
         False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
         from server.server import Server
-        Server.init(loop, pageLoader, preload, httpPort)</code></pre>
+        Server.init(loop, page_loader, preload, http_port)</code></pre>
 </details>
 </section>
 <section>
@@ -52,7 +52,7 @@ def init(loop=None, pageLoader=None, preload=False, httpPort=80):
 <dl>
 <dt><code class="name"><a title="lib.server.dnsclient" href="dnsclient.html">lib.server.dnsclient</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Dns client class</p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.ftpserver" href="ftpserver.html">lib.server.ftpserver</a></code></dt>
 <dd>
@@ -86,11 +86,11 @@ The core of the server is in the other …</p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.periodic" href="periodic.html">lib.server.periodic</a></code></dt>
 <dd>
-<div class="desc"><p>Periodic task, wifi management, get wanIp, synchronize time</p></div>
+<div class="desc"><p>Periodic task, wifi management, get wan_ip, synchronize time</p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.ping" href="ping.html">lib.server.ping</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Ping network class</p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.presence" href="presence.html">lib.server.presence</a></code></dt>
 <dd>
@@ -103,7 +103,7 @@ See <a href="https://www.pushover.net">https://www.pushover.net</a></p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.server" href="server.html">lib.server.server</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Manage server class</p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.sessions" href="sessions.html">lib.server.sessions</a></code></dt>
 <dd>
@@ -116,7 +116,7 @@ an user and password, on your site</p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.telnet" href="telnet.html">lib.server.telnet</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Telnet class</p></div>
 </dd>
 <dt><code class="name"><a title="lib.server.timesetting" href="timesetting.html">lib.server.timesetting</a></code></dt>
 <dd>
@@ -138,26 +138,26 @@ an user and password, on your site</p></div>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="lib.server.init"><code class="name flex">
-<span>def <span class="ident">init</span></span>(<span>loop=None, pageLoader=None, preload=False, httpPort=80)</span>
+<span>def <span class="ident">init</span></span>(<span>loop=None, page_loader=None, preload=False, http_port=80)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Init servers
 loop : asyncio loop
-pageLoader : callback to load html page
+page_loader : callback to load html page
 preload : True force the load of page at the start,
 False the load of page is done a the first http connection (Takes time on first connection)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def init(loop=None, pageLoader=None, preload=False, httpPort=80):
+<pre><code class="python">def init(loop=None, page_loader=None, preload=False, http_port=80):
         &#34;&#34;&#34; Init servers
         loop : asyncio loop
-        pageLoader : callback to load html page
-        preload : True force the load of page at the start, 
+        page_loader : callback to load html page
+        preload : True force the load of page at the start,
         False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
         from server.server import Server
-        Server.init(loop, pageLoader, preload, httpPort)</code></pre>
+        Server.init(loop, page_loader, preload, http_port)</code></pre>
 </details>
 </dd>
 </dl>

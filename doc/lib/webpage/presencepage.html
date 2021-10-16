@@ -30,56 +30,57 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to configure the presence detection &#34;&#34;&#34;
+# pylint:disable=consider-using-enumerate
 from server.httpserver import HttpServer
-from server.dnsclient  import resolveHostname, isIpAddress
+from server.dnsclient  import resolve_hostname, is_ip_address
 from server.presence   import PresenceConfig
 from htmltemplate      import *
-from webpage.mainpage  import mainFrame, manageDefaultButton
+from webpage.mainpage  import main_frame, manage_default_button
 import wifi
 from tools import useful,lang
 
-@HttpServer.addRoute(b&#39;/presence&#39;, menu=lang.menu_server, item=lang.item_presence)
+@HttpServer.add_route(b&#39;/presence&#39;, menu=lang.menu_server, item=lang.item_presence)
 async def presence(request, response, args):
         &#34;&#34;&#34; Presence configuration page &#34;&#34;&#34;
         config = PresenceConfig()
-        def updateConfig(request, config):
+        def update_config(request, config):
                 resolve = False
                 if b&#34;resolve&#34; in request.params:
                         if request.params[b&#34;resolve&#34;] != b&#34;0&#34;:
                                 resolve = True
 
                 if resolve:
-                        ipaddress, netmask, gateway, dns = wifi.Station.getInfo()
+                        ip_address, netmask, gateway, dns = wifi.Station.get_info()
                         if dns != &#34;&#34;:
                                 for i in range(len(config.smartphones)):
                                         smartphone = config.smartphones[i]
                                         try:
-                                                if isIpAddress(useful.tostrings(smartphone)):
-                                                        hostname = resolveHostname(dns, useful.tostrings(smartphone))
-                                                        if hostname != None:
+                                                if is_ip_address(useful.tostrings(smartphone)):
+                                                        hostname = resolve_hostname(dns, useful.tostrings(smartphone))
+                                                        if hostname is not None:
                                                                 config.smartphones[i] = useful.tobytes(hostname)
                                         except:
                                                         pass
 
-        disabled, action, submit = manageDefaultButton(request, config, updateConfig)
+        disabled, action, submit = manage_default_button(request, config, update_config)
         if action == b&#39;modify&#39;:
                 submit = Switch(text=lang.convert_ip_address, name=b&#34;resolve&#34;, checked=False, disabled=disabled),submit
 
         editSmartphones = []
         i = 0
         for smartphone in config.smartphones:
-                editSmartphones.append(Edit(text=lang.smartphone_d%(i+1),         name=b&#34;smartphones[%d]&#34;%i,  
+                editSmartphones.append(Edit(text=lang.smartphone_d%(i+1),         name=b&#34;smartphones[%d]&#34;%i,
                                                                 placeholder=lang.enter_ip_address_or_dns,
                                                                 value=useful.tobytes(config.smartphones[i]),  disabled=disabled))
                 i += 1
 
-        page = mainFrame(request, response, args,lang.presence_detection_configuration,
+        page = main_frame(request, response, args,lang.presence_detection_configuration,
                 Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
                 editSmartphones,
                 Switch(text=lang.notification, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
                 submit)
 
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </section>
 <section>
@@ -98,48 +99,48 @@ async def presence(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/presence&#39;, menu=lang.menu_server, item=lang.item_presence)
+<pre><code class="python">@HttpServer.add_route(b&#39;/presence&#39;, menu=lang.menu_server, item=lang.item_presence)
 async def presence(request, response, args):
         &#34;&#34;&#34; Presence configuration page &#34;&#34;&#34;
         config = PresenceConfig()
-        def updateConfig(request, config):
+        def update_config(request, config):
                 resolve = False
                 if b&#34;resolve&#34; in request.params:
                         if request.params[b&#34;resolve&#34;] != b&#34;0&#34;:
                                 resolve = True
 
                 if resolve:
-                        ipaddress, netmask, gateway, dns = wifi.Station.getInfo()
+                        ip_address, netmask, gateway, dns = wifi.Station.get_info()
                         if dns != &#34;&#34;:
                                 for i in range(len(config.smartphones)):
                                         smartphone = config.smartphones[i]
                                         try:
-                                                if isIpAddress(useful.tostrings(smartphone)):
-                                                        hostname = resolveHostname(dns, useful.tostrings(smartphone))
-                                                        if hostname != None:
+                                                if is_ip_address(useful.tostrings(smartphone)):
+                                                        hostname = resolve_hostname(dns, useful.tostrings(smartphone))
+                                                        if hostname is not None:
                                                                 config.smartphones[i] = useful.tobytes(hostname)
                                         except:
                                                         pass
 
-        disabled, action, submit = manageDefaultButton(request, config, updateConfig)
+        disabled, action, submit = manage_default_button(request, config, update_config)
         if action == b&#39;modify&#39;:
                 submit = Switch(text=lang.convert_ip_address, name=b&#34;resolve&#34;, checked=False, disabled=disabled),submit
 
         editSmartphones = []
         i = 0
         for smartphone in config.smartphones:
-                editSmartphones.append(Edit(text=lang.smartphone_d%(i+1),         name=b&#34;smartphones[%d]&#34;%i,  
+                editSmartphones.append(Edit(text=lang.smartphone_d%(i+1),         name=b&#34;smartphones[%d]&#34;%i,
                                                                 placeholder=lang.enter_ip_address_or_dns,
                                                                 value=useful.tobytes(config.smartphones[i]),  disabled=disabled))
                 i += 1
 
-        page = mainFrame(request, response, args,lang.presence_detection_configuration,
+        page = main_frame(request, response, args,lang.presence_detection_configuration,
                 Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
                 editSmartphones,
                 Switch(text=lang.notification, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
                 submit)
 
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </dd>
 </dl>

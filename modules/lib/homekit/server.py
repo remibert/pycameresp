@@ -1,3 +1,4 @@
+""" Create homekit server """
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 from homekit.charact   import *
@@ -42,19 +43,17 @@ class Server:
 	UUID_FAUCET                       = "D7"
 	UUID_TELEVISION                   = "D8"
 	UUID_INPUT_SOURCE                 = "D9"
-	def __init__(self, name, serverUuid):
+	def __init__(self, name, server_uuid):
 		""" Constructor homekit server """
 		import homekit_
-		self.server = homekit_.Server(serverUuid)
+		self.server = homekit_.Server(server_uuid)
 		self.name = Charact(Charact.UUID_NAME, Charact.PERM_READ, Charact.TYPE_STRING, name)
-		self.addCharact(self.name)
+		self.add_charact(self.name)
 
 	def __del__(self):
 		""" Destructor homekit server """
 		self.server.deinit()
 
-	def addCharact(self, charact):
+	def add_charact(self, charact):
 		""" Add characteristic to this homekit server """
-		self.server.addCharact(charact.charact)
-
-
+		self.server.add_charact(charact.charact)

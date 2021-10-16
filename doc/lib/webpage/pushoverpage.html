@@ -31,34 +31,34 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to configure the pushover notifications &#34;&#34;&#34;
 from server.httpserver import HttpServer
-from htmltemplate      import *
-from webpage.mainpage  import mainFrame, manageDefaultButton
 from server.pushover   import *
+from htmltemplate      import *
+from webpage.mainpage  import main_frame, manage_default_button
 from tools             import lang
 
-@HttpServer.addRoute(b&#39;/pushover&#39;, menu=lang.menu_server, item=lang.item_notification)
+@HttpServer.add_route(b&#39;/pushover&#39;, menu=lang.menu_server, item=lang.item_notification)
 async def pushover(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the pushover notifications &#34;&#34;&#34;
         config = PushOverConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
+        disabled, action, submit = manage_default_button(request, config)
         if action == b&#34;save&#34;:
                 if config.activated:
                         msg = lang.pushover_on
                 else:
                         msg = lang.pushover_off
-                await asyncNotify(token=config.token, user=config.user, message = msg)
+                await async_notify(token=config.token, user=config.user, message = msg)
         if disabled:
                 typ = b&#34;password&#34;
         else:
                 typ = b&#34;&#34;
-        page = mainFrame(request, response, args,lang.notification_configuration,
+        page = main_frame(request, response, args,lang.notification_configuration,
                 Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
                 Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
                 Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
                 submit,
                 Br(), Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website))
 
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </section>
 <section>
@@ -77,29 +77,29 @@ async def pushover(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.addRoute(b&#39;/pushover&#39;, menu=lang.menu_server, item=lang.item_notification)
+<pre><code class="python">@HttpServer.add_route(b&#39;/pushover&#39;, menu=lang.menu_server, item=lang.item_notification)
 async def pushover(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the pushover notifications &#34;&#34;&#34;
         config = PushOverConfig()
-        disabled, action, submit = manageDefaultButton(request, config)
+        disabled, action, submit = manage_default_button(request, config)
         if action == b&#34;save&#34;:
                 if config.activated:
                         msg = lang.pushover_on
                 else:
                         msg = lang.pushover_off
-                await asyncNotify(token=config.token, user=config.user, message = msg)
+                await async_notify(token=config.token, user=config.user, message = msg)
         if disabled:
                 typ = b&#34;password&#34;
         else:
                 typ = b&#34;&#34;
-        page = mainFrame(request, response, args,lang.notification_configuration,
+        page = main_frame(request, response, args,lang.notification_configuration,
                 Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
                 Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
                 Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
                 submit,
                 Br(), Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website))
 
-        await response.sendPage(page)</code></pre>
+        await response.send_page(page)</code></pre>
 </details>
 </dd>
 </dl>

@@ -31,11 +31,10 @@ an user and password, on your site</p>
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-&#34;&#34;&#34; Class used to store http connection sessions, it is useful if you define 
+&#34;&#34;&#34; Class used to store http connection sessions, it is useful if you define
 an user and password, on your site &#34;&#34;&#34;
-
-from tools import useful, encryption
 import time
+from tools import useful, encryption
 
 class Sessions:
         &#34;&#34;&#34; Class manage an http sessions &#34;&#34;&#34;
@@ -44,7 +43,7 @@ class Sessions:
         @staticmethod
         def create(duration):
                 &#34;&#34;&#34; Create new session &#34;&#34;&#34;
-                session = encryption.gethash(useful.dateToBytes())
+                session = encryption.gethash(useful.date_to_bytes())
                 Sessions.sessions.append((session, time.time() + duration))
                 return session
 
@@ -52,7 +51,7 @@ class Sessions:
         def check(session):
                 &#34;&#34;&#34; Check if the session not expired &#34;&#34;&#34;
                 result = False
-                if session != None:
+                if session is not None:
                         for sessionId, expiration in Sessions.sessions:
                                 if sessionId == session:
                                         result = True
@@ -63,9 +62,9 @@ class Sessions:
         @staticmethod
         def purge():
                 &#34;&#34;&#34; Purge older sessions (only expired) &#34;&#34;&#34;
-                currentTime = time.time()
+                current_time = time.time()
                 for sessionId, expiration in Sessions.sessions:
-                        if expiration &lt; currentTime:
+                        if expiration &lt; current_time:
                                 Sessions.sessions.remove((sessionId, expiration))
 
         @staticmethod
@@ -101,7 +100,7 @@ class Sessions:
         @staticmethod
         def create(duration):
                 &#34;&#34;&#34; Create new session &#34;&#34;&#34;
-                session = encryption.gethash(useful.dateToBytes())
+                session = encryption.gethash(useful.date_to_bytes())
                 Sessions.sessions.append((session, time.time() + duration))
                 return session
 
@@ -109,7 +108,7 @@ class Sessions:
         def check(session):
                 &#34;&#34;&#34; Check if the session not expired &#34;&#34;&#34;
                 result = False
-                if session != None:
+                if session is not None:
                         for sessionId, expiration in Sessions.sessions:
                                 if sessionId == session:
                                         result = True
@@ -120,9 +119,9 @@ class Sessions:
         @staticmethod
         def purge():
                 &#34;&#34;&#34; Purge older sessions (only expired) &#34;&#34;&#34;
-                currentTime = time.time()
+                current_time = time.time()
                 for sessionId, expiration in Sessions.sessions:
-                        if expiration &lt; currentTime:
+                        if expiration &lt; current_time:
                                 Sessions.sessions.remove((sessionId, expiration))
 
         @staticmethod
@@ -154,7 +153,7 @@ class Sessions:
 def check(session):
         &#34;&#34;&#34; Check if the session not expired &#34;&#34;&#34;
         result = False
-        if session != None:
+        if session is not None:
                 for sessionId, expiration in Sessions.sessions:
                         if sessionId == session:
                                 result = True
@@ -175,7 +174,7 @@ def check(session):
 <pre><code class="python">@staticmethod
 def create(duration):
         &#34;&#34;&#34; Create new session &#34;&#34;&#34;
-        session = encryption.gethash(useful.dateToBytes())
+        session = encryption.gethash(useful.date_to_bytes())
         Sessions.sessions.append((session, time.time() + duration))
         return session</code></pre>
 </details>
@@ -192,9 +191,9 @@ def create(duration):
 <pre><code class="python">@staticmethod
 def purge():
         &#34;&#34;&#34; Purge older sessions (only expired) &#34;&#34;&#34;
-        currentTime = time.time()
+        current_time = time.time()
         for sessionId, expiration in Sessions.sessions:
-                if expiration &lt; currentTime:
+                if expiration &lt; current_time:
                         Sessions.sessions.remove((sessionId, expiration))</code></pre>
 </details>
 </dd>

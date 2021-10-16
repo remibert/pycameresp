@@ -8,7 +8,7 @@ from server.server   import Server
 from wifi.station import Station
 from tools import lang
 
-def mainPage(request, response, args, content=None):
+def main_page(request, response, args, content=None):
 	""" Function define the main web page with menu, it check also the login password """
 	try:
 		title  = args["title"]
@@ -19,7 +19,7 @@ def mainPage(request, response, args, content=None):
 	except:
 		active = 0
 	# On wifi station, the external style cheet is added
-	if Station.isIpOnInterface(request.remoteaddr):
+	if Station.is_ip_on_interface(request.remoteaddr):
 		# stylesheet = StylesheetDefault()
 		stylesheet = Stylesheet()
 		MenuClass     = Menu
@@ -39,49 +39,49 @@ def mainPage(request, response, args, content=None):
 	# Create main page if logged
 	page = PasswordPage.login(request, response, 15*60)
 
-	if page == None:
-		menuItems = []
+	if page is None:
+		menu_items = []
 		menus = []
-		menuBar = []
-		previousMenu = None
-		for menu,  item , index, href in HttpServer.getMenus():
+		menu_bar = []
+		previous_menu = None
+		for menu,  item , index, href in HttpServer.get_menus():
 			menuItem = MenuItemClass(text=item, href=href, active=(active==index))
 
-			if previousMenu != menu:
-				if previousMenu is not None:
-					menuBar.append(MenuClass(menuItems, text=previousMenu))
-				menuItems = [menuItem]
-				previousMenu = menu
+			if previous_menu != menu:
+				if previous_menu is not None:
+					menu_bar.append(MenuClass(menu_items, text=previous_menu))
+				menu_items = [menuItem]
+				previous_menu = menu
 			else:
-				menuItems.append(menuItem)
-		menuBar.append(MenuClass(menuItems, text=previousMenu))
+				menu_items.append(menuItem)
+		menu_bar.append(MenuClass(menu_items, text=previous_menu))
 		page = Page(
 				Container(
 					Card(
-						Form([stylesheet, Br(), MenuBarClass(menuBar), content])
+						Form([stylesheet, Br(), MenuBarClass(menu_bar), content])
 					, class_=b"shadow", style=b"margin:1em")
 				)
 				, title=title)
 	else:
 		page = Page(page + [stylesheet], title=lang.login)
-	Server.slowDown()
+	Server.slow_down()
 	return page
 
-def mainFrame(request, response, args, titleFrame, *content):
+def main_frame(request, response, args, titleFrame, *content):
 	""" Function define the main frame into the main page with menu, it check also the login password """
 	internal = [Title3(text=titleFrame, style=b"padding-top:0.5em;padding-bottom:0.5em;"),content]
-	return mainPage(request, response, args, content=internal)
+	return main_page(request, response, args, content=internal)
 
-def manageDefaultButton(request, config, callback=None, onclick=b""):
+def manage_default_button(request, config, callback=None, onclick=b""):
 	""" Manage the 'modify' and 'save' button on the page """
-	if config.load() == False:
+	if config.load() is False:
 		config.save()
 	action = request.params.get(b"action",b"none")
 	disabled = False
 	if   action == b"none":
 		disabled = True
 	elif action == b"modify":
-		disabled = False 
+		disabled = False
 	elif action == b"save":
 		disabled = True
 		config.update(request.params)

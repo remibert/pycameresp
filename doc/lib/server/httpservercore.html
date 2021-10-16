@@ -37,8 +37,8 @@ Http server core, it instanciated only if a connection is done to the asynchrono
 &#34;&#34;&#34;
 from server.httpserver import HttpServer
 from server.httprequest import HttpRequest, HttpResponse
-from tools import useful
 from server.stream import Stream
+from tools import useful
 
 class HttpServerCore:
         &#34;&#34;&#34; Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
@@ -48,7 +48,7 @@ class HttpServerCore:
                 self.port = port
                 self.name = name
 
-        async def onConnection(self, reader, writer):
+        async def on_connection(self, reader, writer):
                 &#34;&#34;&#34; Asynchronous connection call back &#34;&#34;&#34;
                 remoteaddr = writer.get_extra_info(&#39;peername&#39;)[0]
                 stream    = Stream(reader, writer)
@@ -57,9 +57,9 @@ class HttpServerCore:
                 try:
                         await request.receive()
                         # print(request.path)
-                        function, args = HttpServer.searchRoute(request)
-                        if function == None:
-                                await response.sendError(status=b&#34;404&#34;, content=b&#34;Page not found&#34;)
+                        function, args = HttpServer.search_route(request)
+                        if function is None:
+                                await response.send_error(status=b&#34;404&#34;, content=b&#34;Page not found&#34;)
                         else:
                                 await function(request, response, args)
                 except OSError as err:
@@ -68,9 +68,9 @@ class HttpServerCore:
                                 # Ignore error
                                 pass
                         else:
-                                await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                                await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
                 except Exception as err:
-                        await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                        await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
                 finally:
                         await stream.close()</code></pre>
 </details>
@@ -104,7 +104,7 @@ if the server not used, it not consum memory </p>
                 self.port = port
                 self.name = name
 
-        async def onConnection(self, reader, writer):
+        async def on_connection(self, reader, writer):
                 &#34;&#34;&#34; Asynchronous connection call back &#34;&#34;&#34;
                 remoteaddr = writer.get_extra_info(&#39;peername&#39;)[0]
                 stream    = Stream(reader, writer)
@@ -113,9 +113,9 @@ if the server not used, it not consum memory </p>
                 try:
                         await request.receive()
                         # print(request.path)
-                        function, args = HttpServer.searchRoute(request)
-                        if function == None:
-                                await response.sendError(status=b&#34;404&#34;, content=b&#34;Page not found&#34;)
+                        function, args = HttpServer.search_route(request)
+                        if function is None:
+                                await response.send_error(status=b&#34;404&#34;, content=b&#34;Page not found&#34;)
                         else:
                                 await function(request, response, args)
                 except OSError as err:
@@ -124,16 +124,16 @@ if the server not used, it not consum memory </p>
                                 # Ignore error
                                 pass
                         else:
-                                await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                                await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
                 except Exception as err:
-                        await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                        await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
                 finally:
                         await stream.close()</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.server.httpservercore.HttpServerCore.onConnection"><code class="name flex">
-<span>async def <span class="ident">onConnection</span></span>(<span>self, reader, writer)</span>
+<dt id="lib.server.httpservercore.HttpServerCore.on_connection"><code class="name flex">
+<span>async def <span class="ident">on_connection</span></span>(<span>self, reader, writer)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Asynchronous connection call back</p></div>
@@ -141,7 +141,7 @@ if the server not used, it not consum memory </p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def onConnection(self, reader, writer):
+<pre><code class="python">async def on_connection(self, reader, writer):
         &#34;&#34;&#34; Asynchronous connection call back &#34;&#34;&#34;
         remoteaddr = writer.get_extra_info(&#39;peername&#39;)[0]
         stream    = Stream(reader, writer)
@@ -150,9 +150,9 @@ if the server not used, it not consum memory </p>
         try:
                 await request.receive()
                 # print(request.path)
-                function, args = HttpServer.searchRoute(request)
-                if function == None:
-                        await response.sendError(status=b&#34;404&#34;, content=b&#34;Page not found&#34;)
+                function, args = HttpServer.search_route(request)
+                if function is None:
+                        await response.send_error(status=b&#34;404&#34;, content=b&#34;Page not found&#34;)
                 else:
                         await function(request, response, args)
         except OSError as err:
@@ -161,9 +161,9 @@ if the server not used, it not consum memory </p>
                         # Ignore error
                         pass
                 else:
-                        await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                        await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
         except Exception as err:
-                await response.sendError(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
         finally:
                 await stream.close()</code></pre>
 </details>
@@ -189,7 +189,7 @@ if the server not used, it not consum memory </p>
 <li>
 <h4><code><a title="lib.server.httpservercore.HttpServerCore" href="#lib.server.httpservercore.HttpServerCore">HttpServerCore</a></code></h4>
 <ul class="">
-<li><code><a title="lib.server.httpservercore.HttpServerCore.onConnection" href="#lib.server.httpservercore.HttpServerCore.onConnection">onConnection</a></code></li>
+<li><code><a title="lib.server.httpservercore.HttpServerCore.on_connection" href="#lib.server.httpservercore.HttpServerCore.on_connection">on_connection</a></code></li>
 </ul>
 </li>
 </ul>

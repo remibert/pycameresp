@@ -69,10 +69,10 @@ if sys.implementation.name == &#34;micropython&#34;:
                 async def write(self, data):
                         &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
                         result = await self.writer.awrite(data)
-                        if result == None:
+                        if result is None:
                                 result = len(data)
                         else:
-                                result = -1 
+                                result = -1
                         return result
 
                 async def close(self):
@@ -123,8 +123,8 @@ else:
                         if trace:
                                 trace.write(data)
                                 trace.flush()
-                        
-                        if result == None:
+
+                        if result is None:
                                 result = len(data)
                         return result
 
@@ -147,7 +147,7 @@ class Socket:
         def write(self, data):
                 &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
                 length = self.socket.sendall(data)
-                if length == None:
+                if length is None:
                         length = len(data)
                 return length
 
@@ -176,23 +176,24 @@ class Bytesio:
 
 
 class Bufferedio:
+        &#34;&#34;&#34; Bufferized bytes io stream &#34;&#34;&#34;
         memorysize = [None]
         &#34;&#34;&#34; Class used to buffered stream write &#34;&#34;&#34;
         def __init__(self, streamio, part=1440*20):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.buffered = BytesIO()
-                
-                if Bufferedio.isEnoughMemory():
+
+                if Bufferedio.is_enough_memory():
                         self.part = part
                 else:
                         self.part = None
-                
+
                 self.streamio = streamio
 
         @staticmethod
-        def isEnoughMemory():
+        def is_enough_memory():
                 &#34;&#34;&#34; Indicate if it has enough memory &#34;&#34;&#34;
-                if Bufferedio.memorysize[0] == None:
+                if Bufferedio.memorysize[0] is None:
                         import gc
                         try:
                                 # pylint: disable=no-member
@@ -203,14 +204,14 @@ class Bufferedio:
                 if Bufferedio.memorysize[0] &lt; 200*1024:
                         return False
                 return True
-        
+
         async def read(self):
                 &#34;&#34;&#34; Read data from the stream &#34;&#34;&#34;
                 return self.streamio.read()
 
         async def write(self, data):
                 &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
-                if self.part == None:
+                if self.part is None:
                         result = len(data)
                         await self.streamio.write(data)
                 else:
@@ -244,29 +245,31 @@ class Bufferedio:
 <span>(</span><span>streamio, part=28800)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Constructor</p></div>
+<div class="desc"><p>Bufferized bytes io stream </p>
+<p>Constructor</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Bufferedio:
+        &#34;&#34;&#34; Bufferized bytes io stream &#34;&#34;&#34;
         memorysize = [None]
         &#34;&#34;&#34; Class used to buffered stream write &#34;&#34;&#34;
         def __init__(self, streamio, part=1440*20):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.buffered = BytesIO()
-                
-                if Bufferedio.isEnoughMemory():
+
+                if Bufferedio.is_enough_memory():
                         self.part = part
                 else:
                         self.part = None
-                
+
                 self.streamio = streamio
 
         @staticmethod
-        def isEnoughMemory():
+        def is_enough_memory():
                 &#34;&#34;&#34; Indicate if it has enough memory &#34;&#34;&#34;
-                if Bufferedio.memorysize[0] == None:
+                if Bufferedio.memorysize[0] is None:
                         import gc
                         try:
                                 # pylint: disable=no-member
@@ -277,14 +280,14 @@ class Bufferedio:
                 if Bufferedio.memorysize[0] &lt; 200*1024:
                         return False
                 return True
-        
+
         async def read(self):
                 &#34;&#34;&#34; Read data from the stream &#34;&#34;&#34;
                 return self.streamio.read()
 
         async def write(self, data):
                 &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
-                if self.part == None:
+                if self.part is None:
                         result = len(data)
                         await self.streamio.write(data)
                 else:
@@ -311,8 +314,8 @@ class Bufferedio:
 </dl>
 <h3>Static methods</h3>
 <dl>
-<dt id="lib.server.stream.Bufferedio.isEnoughMemory"><code class="name flex">
-<span>def <span class="ident">isEnoughMemory</span></span>(<span>)</span>
+<dt id="lib.server.stream.Bufferedio.is_enough_memory"><code class="name flex">
+<span>def <span class="ident">is_enough_memory</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicate if it has enough memory</p></div>
@@ -321,9 +324,9 @@ class Bufferedio:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def isEnoughMemory():
+def is_enough_memory():
         &#34;&#34;&#34; Indicate if it has enough memory &#34;&#34;&#34;
-        if Bufferedio.memorysize[0] == None:
+        if Bufferedio.memorysize[0] is None:
                 import gc
                 try:
                         # pylint: disable=no-member
@@ -382,7 +385,7 @@ def isEnoughMemory():
 </summary>
 <pre><code class="python">async def write(self, data):
         &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
-        if self.part == None:
+        if self.part is None:
                 result = len(data)
                 await self.streamio.write(data)
         else:
@@ -494,7 +497,7 @@ def isEnoughMemory():
         def write(self, data):
                 &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
                 length = self.socket.sendall(data)
-                if length == None:
+                if length is None:
                         length = len(data)
                 return length
 
@@ -545,7 +548,7 @@ def isEnoughMemory():
 <pre><code class="python">def write(self, data):
         &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
         length = self.socket.sendall(data)
-        if length == None:
+        if length is None:
                 length = len(data)
         return length</code></pre>
 </details>
@@ -597,10 +600,10 @@ def isEnoughMemory():
         async def write(self, data):
                 &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
                 result = await self.writer.awrite(data)
-                if result == None:
+                if result is None:
                         result = len(data)
                 else:
-                        result = -1 
+                        result = -1
                 return result
 
         async def close(self):
@@ -688,8 +691,8 @@ It then returns only the requested row. This significantly increases read perfor
         if trace:
                 trace.write(data)
                 trace.flush()
-        
-        if result == None:
+
+        if result is None:
                 result = len(data)
         return result</code></pre>
 </details>
@@ -716,7 +719,7 @@ It then returns only the requested row. This significantly increases read perfor
 <h4><code><a title="lib.server.stream.Bufferedio" href="#lib.server.stream.Bufferedio">Bufferedio</a></code></h4>
 <ul class="">
 <li><code><a title="lib.server.stream.Bufferedio.close" href="#lib.server.stream.Bufferedio.close">close</a></code></li>
-<li><code><a title="lib.server.stream.Bufferedio.isEnoughMemory" href="#lib.server.stream.Bufferedio.isEnoughMemory">isEnoughMemory</a></code></li>
+<li><code><a title="lib.server.stream.Bufferedio.is_enough_memory" href="#lib.server.stream.Bufferedio.is_enough_memory">is_enough_memory</a></code></li>
 <li><code><a title="lib.server.stream.Bufferedio.memorysize" href="#lib.server.stream.Bufferedio.memorysize">memorysize</a></code></li>
 <li><code><a title="lib.server.stream.Bufferedio.read" href="#lib.server.stream.Bufferedio.read">read</a></code></li>
 <li><code><a title="lib.server.stream.Bufferedio.write" href="#lib.server.stream.Bufferedio.write">write</a></code></li>

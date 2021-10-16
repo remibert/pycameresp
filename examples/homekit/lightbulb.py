@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+""" Lightbulb homekit accessory """
 from homekit import *
 
 class Lightbulb(Accessory):
@@ -7,52 +8,57 @@ class Lightbulb(Accessory):
 	def __init__(self, **kwargs):
 		""" Create lightbulb accessory. Parameters : name(string), on(bool), brigthness(int), saturation(float), hue(float) and all Accessory parameters """
 		Accessory.__init__(self, Accessory.CID_LIGHTING, **kwargs)
-		self.server = Server(name=kwargs.get("name","Lightbulb"), serverUuid=Server.UUID_LIGHTBULB)
-		
-		self.on = charactBoolCreate (Charact.UUID_ON, Charact.PERM_RWE, kwargs.get("on",True))
-		self.on.setWriteCallback(self.writeOn)
-		self.server.addCharact(self.on)
-		
-		self.brightness = charactIntCreate (Charact.UUID_BRIGHTNESS, Charact.PERM_RWE, kwargs.get("brigthness",50))
-		self.brightness.setConstraint(0, 100, 1)
-		self.brightness.setUnit(Charact.UNIT_PERCENTAGE)
-		self.brightness.setWriteCallback(self.writeBrightness)
-		self.server.addCharact(self.brightness)
-		
-		self.saturation = charactFloatCreate (Charact.UUID_SATURATION, Charact.PERM_RWE, kwargs.get("saturation",50.))
-		self.saturation.setConstraint(0.0, 100.0, 1.0)
-		self.saturation.setUnit(Charact.UNIT_PERCENTAGE)
-		self.saturation.setWriteCallback(self.writeSaturation)
-		self.server.addCharact(self.saturation)
-		
-		self.hue = charactFloatCreate (Charact.UUID_HUE, Charact.PERM_RWE, kwargs.get("hue",50.))
-		self.hue.setConstraint(0.0, 360.0, 1.0)
-		self.hue.setUnit(Charact.UNIT_ARCDEGREES)
-		self.hue.setWriteCallback(self.writeHue)
-		self.server.addCharact(self.hue)
-		
-		self.addServer(self.server)
-		
-	def writeOn(self, value):
+		self.server = Server(name=kwargs.get("name","Lightbulb"), server_uuid=Server.UUID_LIGHTBULB)
+
+		self.on = charact_bool_create (Charact.UUID_ON, Charact.PERM_RWE, kwargs.get("on",True))
+		self.on.set_write_callback(self.write_on)
+		self.server.add_charact(self.on)
+
+		self.brightness = charact_int_create (Charact.UUID_BRIGHTNESS, Charact.PERM_RWE, kwargs.get("brigthness",50))
+		self.brightness.set_constraint(0, 100, 1)
+		self.brightness.set_unit(Charact.UNIT_PERCENTAGE)
+		self.brightness.set_write_callback(self.write_brightness)
+		self.server.add_charact(self.brightness)
+
+		self.saturation = charact_float_create (Charact.UUID_SATURATION, Charact.PERM_RWE, kwargs.get("saturation",50.))
+		self.saturation.set_constraint(0.0, 100.0, 1.0)
+		self.saturation.set_unit(Charact.UNIT_PERCENTAGE)
+		self.saturation.set_write_callback(self.write_saturation)
+		self.server.add_charact(self.saturation)
+
+		self.hue = charact_float_create (Charact.UUID_HUE, Charact.PERM_RWE, kwargs.get("hue",50.))
+		self.hue.set_constraint(0.0, 360.0, 1.0)
+		self.hue.set_unit(Charact.UNIT_ARCDEGREES)
+		self.hue.set_write_callback(self.write_hue)
+		self.server.add_charact(self.hue)
+
+		self.add_server(self.server)
+
+	def write_on(self, value):
+		""" Write on """
 		if value:
 			print("ON")
 		else:
 			print("OFF")
-		self.on.setValue(value)
+		self.on.set_value(value)
 
-	def writeBrightness(self, value):
+	def write_brightness(self, value):
+		""" Write brightness """
 		print("Brightness %f"%value)
-		self.brightness.setValue(value)
+		self.brightness.set_value(value)
 
-	def writeSaturation(self, value):
+	def write_saturation(self, value):
+		""" Write saturation """
 		print("Saturation %d"%value)
-		self.saturation.setValue(value)
+		self.saturation.set_value(value)
 
-	def writeHue(self, value):
+	def write_hue(self, value):
+		""" Write hue """
 		print("Hue %f"%value)
-		self.hue.setValue(value)
+		self.hue.set_value(value)
 
 def main():
+	""" Test """
 	# Initialize homekit engine
 	Homekit.init()
 

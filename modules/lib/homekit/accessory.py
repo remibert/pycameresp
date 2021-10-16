@@ -1,7 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+""" Homekit accessory class """
 from homekit.server import *
-
 class Accessory:
 	""" Homekit accessory class """
 	CID_NONE                = 0
@@ -29,34 +29,32 @@ class Accessory:
 	CID_HUMIDIFIER          = 22
 	CID_DEHUMIDIFIER        = 23
 	def __init__(self, cid, **kwargs):
-		""" Create accessory. 
+		""" Create accessory.
 			Parameters : name(string), manufacturer(string), model(string), serialNumber(string), firmwareRevision(string), hardwareRevision(string), productVersion(string), productData (string with 8 bytes required)"""
 		import homekit_
 		self.accessory = homekit_.Accessory(\
 			cid              = cid, \
-			name             = kwargs.get("name"            , "NoName"), \
-			manufacturer     = kwargs.get("manufacturer"    , "Manufacturer"), \
-			model            = kwargs.get("model"           , "ESP32"), \
-			serialNumber     = kwargs.get("serialNumber"    , "0000000000"), \
-			firmwareRevision = kwargs.get("firmwareRevision", "1.0"), \
-			hardwareRevision = kwargs.get("hardwareRevision", "1.0"), \
-			productVersion   = kwargs.get("productVersion"  , "1.0"))
-		self.accessory.setProductData(kwargs.get("productData","01234568"))
+			name             = kwargs.get("name"             , "NoName"), \
+			manufacturer     = kwargs.get("manufacturer"     , "Manufacturer"), \
+			model            = kwargs.get("model"            , "ESP32"), \
+			serialNumber     = kwargs.get("serial_number"    , "0000000000"), \
+			firmwareRevision = kwargs.get("firmware_revision", "1.0"), \
+			hardwareRevision = kwargs.get("hardware_revision", "1.0"), \
+			productVersion   = kwargs.get("product_version"  , "1.0"))
+		self.accessory.set_product_data(kwargs.get("product_data","01234568"))
 
 	def __del__(self):
 		""" Destroy homekit accessory """
 		self.accessory.deinit()
 
-	def addServer(self, server):
+	def add_server(self, server):
 		"""  Add the serve to the accessory object """
-		self.accessory.addServer(server.server)
+		self.accessory.add_server(server.server)
 
-	def setIdentifyCallback(self, callback):
+	def set_identify_callback(self, callback):
 		""" Set identify callback. In a real accessory, something like LED blink should be implemented got visual identification """
-		self.accessory.setIdentifyCallback(callback)
+		self.accessory.set_identify_callback(callback)
 
-	def setProductData(self, data):
+	def set_product_data(self, data):
 		""" Set product data. 8 bytes product data assigned to the Product Plan. """
-		self.accessory.setProductData(data)
-
-
+		self.accessory.set_product_data(data)

@@ -1,3 +1,4 @@
+""" Class to manage Apple characteristics """
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 class Charact:
@@ -121,7 +122,7 @@ class Charact:
 	UUID_PICTURE_MODE                             = "E2"
 	UUID_REMOTE_KEY                               = "E1"
 	UUID_PRODUCT_DATA                             = "220"
-	
+
 	# Type of characteristic
 	TYPE_INT    = 0
 	TYPE_BOOL   = 1
@@ -154,55 +155,55 @@ class Charact:
 		""" Destructor of characteristic """
 		self.charact.deinit()
 
-	def setUnit(self, unit):
+	def set_unit(self, unit):
 		""" Set characteristic unit """
-		self.charact.setUnit(unit)
+		self.charact.set_unit(unit)
 
-	def setDescription(self, description):
+	def set_description(self, description):
 		""" Set characteristic description """
-		self.charact.setDescription(description)
+		self.charact.set_description(description)
 
-	def setConstraint(self, mini, maxi, step):
+	def set_constraint(self, mini, maxi, step):
 		""" Set characteristic constraints (min, max) """
-		self.charact.setConstraint(mini, maxi)
-		self.charact.setStep(step)
+		self.charact.set_constraint(mini, maxi)
+		self.charact.set_step(step)
 
-	def setValue(self, value):
+	def set_value(self, value):
 		""" Set characteristic value """
-		self.charact.setValue(value)
+		self.charact.set_value(value)
 
-	def getValue(self):
+	def get_value(self):
 		""" Get characteristic value """
-		return self.charact.getValue()
-	
-	def setReadCallback(self, callback):
+		return self.charact.get_value()
+
+	def set_read_callback(self, callback):
 		""" Set the read callback """
-		self.charact.setReadCallback(callback)
+		self.charact.set_read_callback(callback)
 
-	def setWriteCallback(self, callback):
+	def set_write_callback(self, callback):
 		""" Set the write callback """
-		self.charact.setWriteCallback(callback)
+		self.charact.set_write_callback(callback)
 
-def charactIntCreate(uuid, perm, value):
+def charact_int_create(uuid, perm, value):
 	""" Create integer characteristic """
 	return Charact(uuid, perm, Charact.TYPE_INT, value)
 
-def charactFloatCreate(uuid, perm, value):
+def charact_float_create(uuid, perm, value):
 	""" Create float characteristic """
 	return Charact(uuid, perm, Charact.TYPE_FLOAT, value)
-	
-def charactUint8Create(uuid, perm, value):
+
+def charact_uint8_create(uuid, perm, value):
 	""" Create unsigned int 8 bits characteristic """
 	return Charact(uuid, perm, Charact.TYPE_UINT8, value)
-	
-def charactStringCreate(uuid, perm, value):
+
+def charact_string_create(uuid, perm, value):
 	""" Create string characteristic """
 	return Charact(uuid, perm, Charact.TYPE_STRING, value)
 
-def charactBoolCreate(uuid, perm, value):
+def charact_bool_create(uuid, perm, value):
 	""" Create bool characteristic """
 	return Charact(uuid, perm, Charact.TYPE_BOOL, value)
 
-def charactUint32Create(uuid, perm, value):
+def charact_uint32_create(uuid, perm, value):
 	""" Create unsigned integer 32 bits characteristic """
 	return Charact(uuid, perm, Charact.TYPE_UINT32, value)

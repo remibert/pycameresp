@@ -1,5 +1,5 @@
 from useful import *
-def gitChangedRecently(root, component, files):
+def git_changed_recently(root, component, files):
 	from os import chdir, getcwd
 	from os.path import join
 	chdir(root + "/" +component)
@@ -18,7 +18,7 @@ def gitChangedRecently(root, component, files):
 	
 	chdir(root)
 
-def zipFiles(zipFilename, directory, files, display=True):
+def zip_files(zipFilename, directory, files, display=True):
 	from zipfile import ZipFile, ZIP_DEFLATED 
 	from os.path import join, normpath
 	
@@ -46,10 +46,10 @@ if __name__ == "__main__":
 	else:
 		root = "firmware"
 	files = []
-	gitChangedRecently(root, "micropython",files)
-	gitChangedRecently(root, "esp-idf",files)
-	gitChangedRecently(root, "esp32-camera",files)
-	gitChangedRecently(root, "esp-homekit-sdk",files)
+	git_changed_recently(root, "micropython",files)
+	git_changed_recently(root, "esp-idf",files)
+	git_changed_recently(root, "esp32-camera",files)
+	git_changed_recently(root, "esp-homekit-sdk",files)
 	from time import localtime, time, strftime
 	filename = strftime(root + "/BackupGit__%Y.%m.%d__%H-%M-%S.zip",localtime(time()))
-	zipFiles(filename,".",files,True)
+	zip_files(filename,".",files,True)

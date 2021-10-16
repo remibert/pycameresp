@@ -3,6 +3,7 @@
 """ Simul crypto lib """
 
 class aes:
+	""" Aes crypto class """
 	def __init__(self, key, mode = 1):
 		self.key = key
 
@@ -31,4 +32,3 @@ class aes:
 		cipher = AES.new(self.key, AES.MODE_CBC, iv)
 		plaintext = cipher.decrypt(ciphertext[AES.block_size:])
 		return plaintext
-

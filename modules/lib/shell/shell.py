@@ -87,8 +87,8 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 			d = parts[0]
 		if "/" in directories:
 			directories.remove("/")
-		if sdcard.SdCard.getMountpoint() in directories:
-			directories.remove(sdcard.SdCard.getMountpoint())
+		if sdcard.SdCard.get_mountpoint() in directories:
+			directories.remove(sdcard.SdCard.get_mountpoint())
 		for d in directories:
 			if useful.exists(d) and d != ".":
 				removedir(d, force=force, quiet=quiet, simulate=simulate)
@@ -194,13 +194,13 @@ class LsDisplayer:
 	""" Ls displayer class """
 	def __init__(self, path, showdir, long):
 		""" Constructor """
-		self.height, self.width = useful.getScreenSize()
+		self.height, self.width = useful.get_screen_size()
 		self.count = 1
 		self.long = long
 		self.path = path
 		self.showdir = showdir
 
-	def purgePath(self, path):
+	def purge_path(self, path):
 		""" Purge the path for the display """
 		if path != "/" and self.path != "/":
 			path = path.replace(self.path,"")
@@ -219,19 +219,19 @@ class LsDisplayer:
 		if fileinfo[0] & 0x4000 == 0x4000:
 			if self.showdir:
 				if self.long:
-					message = "%s %s [%s]"%(useful.dateToString(date_)," "*7,self.purgePath(path))
+					message = "%s %s [%s]"%(useful.date_to_string(date_)," "*7,self.purge_path(path))
 				else:
-					message = "[%s]"%self.purgePath(path)
-				self.count = printPart(message, self.width, self.height, self.count)
+					message = "[%s]"%self.purge_path(path)
+				self.count = print_part(message, self.width, self.height, self.count)
 		else:
 			if self.long:
 				fileinfo = useful.fileinfo(path)
 				date_ = fileinfo[8]
 				size = fileinfo[6]
-				message = "%s %s %s"%(useful.dateToString(date_),useful.sizeToString(size),self.purgePath(path))
+				message = "%s %s %s"%(useful.date_to_string(date_),useful.size_to_string(size),self.purge_path(path))
 			else:
-				message = self.purgePath(path)
-			self.count = printPart(message, self.width, self.height, self.count)
+				message = self.purge_path(path)
+			self.count = print_part(message, self.width, self.height, self.count)
 
 def ls(file="", recursive=False, long=False):
 	""" List command """
@@ -252,7 +252,7 @@ def find(file):
 	for filename in filenames:
 		print(filename)
 
-def printPart(message, width, height, count):
+def print_part(message, width, height, count):
 	""" Print a part of text """
 	if count != None and count >= height:
 		print(message,end="")
@@ -294,7 +294,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 						line = line.replace("\t","    ")
 						message = "%s:%d:%s"%(filename, lineNumber, line)
 						message = message.rstrip()[:width]
-						count = printPart(message, width, height, count)
+						count = print_part(message, width, height, count)
 						if count == None:
 							print("")
 							return None
@@ -309,7 +309,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 		path, pattern = useful.split(file)
 		directories, filenames = useful.scandir(path, pattern, recursive)
 
-	height, width = useful.getScreenSize()
+	height, width = useful.get_screen_size()
 	count = 1
 	for filename in filenames:
 		count = __grep(text, filename, ignorecase, regexp, width, height, count)
@@ -321,19 +321,19 @@ def ping(host):
 	from server.ping import ping as ping_
 	ping_(host, count=4, timeout=1)
 
-def ip2host(ipaddress):
+def ip2host(ip_address):
 	""" Convert ip to hostname """
 	import wifi
-	_, _, _, dns = wifi.Station.getInfo()
-	from server.dnsclient import resolveHostname
-	print(resolveHostname(dns, ipaddress))
+	_, _, _, dns = wifi.Station.get_info()
+	from server.dnsclient import resolve_hostname
+	print(resolve_hostname(dns, ip_address))
 
 def host2ip(hostname):
 	""" Convert hostname to ip """
 	import wifi
-	_, _, _, dns = wifi.Station.getInfo()
-	from server.dnsclient import resolveIpAddress
-	print(resolveIpAddress(dns, hostname))
+	_, _, _, dns = wifi.Station.get_info()
+	from server.dnsclient import resolve_ip_address
+	print(resolve_ip_address(dns, hostname))
 
 def mountsd(mountpoint="/sd"):
 	""" Mount command """
@@ -353,14 +353,14 @@ def umountsd(mountpoint="/sd"):
 
 def date(update=False, offsetUTC=+1, noDst=False):
 	""" Get or set date """
-	from server.timesetting import setDate
+	from server.timesetting import set_date
 	if update:
 		if noDst:
 			dst = False
 		else:
 			dst = True
-		setDate(offsetUTC, dst)
-	print(useful.dateToString())
+		set_date(offsetUTC, dst)
+	print(useful.date_to_string())
 	del sys.modules["server.timesetting"]
 
 def setdate(datetime=""):
@@ -407,30 +407,30 @@ def deepsleep(seconds=60):
 	""" Deep sleep command """
 	machine.deepsleep(int(seconds)*1000)
 
-editClass = None
+edit_class = None
 def edit(file):
 	""" Edit command """
-	global editClass
-	if editClass == None:
+	global edit_class
+	if edit_class == None:
 		try:
 			from shell.editor import Editor
 		except:
 			from editor import Editor
-		editClass = Editor
-	editClass(file)
+		edit_class = Editor
+	edit_class(file)
 
 def cat(file):
 	""" Cat command """
 	try:
 		f = open(file, "r")
-		height, width = useful.getScreenSize()
+		height, width = useful.get_screen_size()
 		count = 1
 		while 1:
 			line = f.readline()
 			if not line:
 				break
 			message = line.replace("\t","    ").rstrip()[:width]
-			count = printPart(message, width, height, count)
+			count = print_part(message, width, height, count)
 			if count == None:
 				break
 		f.close()
@@ -443,7 +443,7 @@ def df(mountpoint = "/"):
 	freeSize  = status[0]*status[3]
 	totalSize = status[1]*status[2]
 	print("Filesystem     Free   Capacity   Used")
-	print("%-10s %-10s %-10s %-3.2f%%"%(mountpoint, useful.sizeToString(freeSize,8),useful.sizeToString(totalSize,), totalSize/freeSize))
+	print("%-10s %-10s %-10s %-3.2f%%"%(mountpoint, useful.size_to_string(freeSize,8),useful.size_to_string(totalSize,), totalSize/freeSize))
 
 def gc():
 	""" Garbage collector command """
@@ -456,35 +456,35 @@ def uptime():
 
 def man(command):
 	""" Man command """
-	print(manOne(command))
+	print(man_one(command))
 
-def manOne(commandName):
+def man_one(command_name):
 	""" Manual of one command """
 	try:
-		commandName, commandFunction, commandParams, commandFlags = getCommand(commandName)
-		text = "  " + commandName + " "
-		for param in commandParams:
+		command_name, command_function, command_params, command_flags = get_command(command_name)
+		text = "  " + command_name + " "
+		for param in command_params:
 			text += param + " "
 		text += "\n"
-		for flag,flagName,val in commandFlags:
+		for flag,flagName,val in command_flags:
 			text += "    %s : %s\n"%(flag,flagName)
 		result = text[:-1]
 	except:
-		result = "Unknown command '%s'"%commandName
+		result = "Unknown command '%s'"%command_name
 	return result
 
 # pylint: disable=redefined-builtin
 def help():
 	""" Help command """
-	height, width = useful.getScreenSize()
+	height, width = useful.get_screen_size()
 	count = 1
-	cmds = list(shellCommands.keys())
+	cmds = list(shell_commands.keys())
 	cmds.sort()
 	for command in cmds:
-		lines = manOne(command)
+		lines = man_one(command)
 		lines = "-"*30+"\n" + lines
 		for line in lines.split("\n"):
-			count = printPart(line, width, height, count)
+			count = print_part(line, width, height, count)
 			if count == None:
 				return
 
@@ -503,8 +503,8 @@ def exit():
 	shell_exited = True
 
 def dump_(filename):
-	""" Dump file content """
-	height, width = useful.getScreenSize()
+	""" dump file content """
+	height, width = useful.get_screen_size()
 	width = 16
 	offset = 0
 	file = open(filename, "rb")
@@ -516,13 +516,13 @@ def dump_(filename):
 		data = file.read(width)
 		if len(data) <= 0:
 			break
-		useful.dumpLine (data, line, width)
+		useful.dump_line (data, line, width)
 		offset += width
-		count = printPart(line.getvalue().decode("utf8"), width, height, count)
+		count = print_part(line.getvalue().decode("utf8"), width, height, count)
 		if count == None:
 			break
 
-def parseCommandLine(commandLine):
+def parse_command_line(commandLine):
 	""" Parse command line """
 	commands = []
 	args = []
@@ -562,36 +562,36 @@ def parseCommandLine(commandLine):
 		commands.append(args)
 
 	for command in commands:
-		execCommand(command)
+		exec_command(command)
 
 def cls():
-	""" Clear screen """
+	""" clear screen """
 	print("\x1B[2J\x1B[0;0f", end="")
 
-def getCommand(commandName):
+def get_command(command_name):
 	""" Get a command callback according to the command name """
 	try:
-		global shellCommands
-		command = shellCommands[commandName]
-		commandFunction = command[0]
-		commandParams = []
-		commandFlags  = []
+		global shell_commands
+		command = shell_commands[command_name]
+		command_function = command[0]
+		command_params = []
+		command_flags  = []
 		for item in command[1:]:
 			if type(item) == type(""):
-				commandParams.append(item)
+				command_params.append(item)
 			if type(item) == type((0,)):
-				commandFlags.append(item)
+				command_flags.append(item)
 	except  Exception as err:
 		# pylint: disable=raise-missing-from
-		raise Exception("Command not found '%s'"%commandName)
-	return commandName, commandFunction, commandParams, commandFlags
+		raise Exception("Command not found '%s'"%command_name)
+	return command_name, command_function, command_params, command_flags
 
-def execCommand(args):
+def exec_command(args):
 	""" Execute command """
-	commandName = ""
-	commandFunction = None
-	commandParams = []
-	commandFlags = []
+	command_name = ""
+	command_function = None
+	command_params = []
+	command_flags = []
 	try:
 		if len(args) >= 1:
 			paramsCount = 0
@@ -599,38 +599,38 @@ def execCommand(args):
 			for arg in args:
 				arg = arg.strip()
 				if len(arg) > 0:
-					if commandName == "":
-						commandName, commandFunction, commandParams, commandFlags = getCommand(arg)
+					if command_name == "":
+						command_name, command_function, command_params, command_flags = get_command(arg)
 					else:
 						if len(arg) >= 2 and arg[:2] == "--":
-							for commandFlag in commandFlags:
+							for commandFlag in command_flags:
 								if arg.strip()[2:] == commandFlag[1].strip():
 									flags[commandFlag[1]] = commandFlag[2]
 									break
 							else:
 								raise Exception("Illegal option '%s' for"%arg)
 						elif arg[0] == "-":
-							for commandFlag in commandFlags:
+							for commandFlag in command_flags:
 								if arg.strip() == commandFlag[0].strip():
 									flags[commandFlag[1]] = commandFlag[2]
 									break
 							else:
 								raise Exception("Illegal option '%s' for"%arg)
 						else:
-							if paramsCount >= len(commandParams):
+							if paramsCount >= len(command_params):
 								raise Exception("Too many parameters for")
 							else:
-								flags[commandParams[paramsCount]] = arg
+								flags[command_params[paramsCount]] = arg
 								paramsCount += 1
 	except Exception as err:
 		# print(useful.syslog(err))
 		print(err)
 		return
 	try:
-		if commandName.strip() != "":
-			commandFunction(**flags)
+		if command_name.strip() != "":
+			command_function(**flags)
 	except TypeError as err:
-		useful.syslog(err, msg="Missing parameters for '%s'"%commandName)
+		useful.syslog(err, msg="Missing parameters for '%s'"%command_name)
 	except KeyboardInterrupt:
 		print(" [Canceled]")
 	except Exception as err:
@@ -659,9 +659,9 @@ def shell():
 
 		if commandLine.strip() == "quit":
 			raise KeyboardInterrupt()
-		parseCommandLine(commandLine)
+		parse_command_line(commandLine)
 
-async def asyncShell():
+async def async_shell():
 	""" Asynchronous shell """
 	import uasyncio
 	from server.server import Server
@@ -683,13 +683,13 @@ async def asyncShell():
 				Server.suspend()
 
 				# Wait all server suspended
-				await Server.waitAllSuspended()
+				await Server.wait_all_suspended()
 
 				# Extend watch dog duration
 				tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
 
 				# Get the size of screen
-				useful.refreshScreenSize()
+				useful.refresh_screen_size()
 
 				# Start shell
 				print("")
@@ -710,7 +710,7 @@ async def asyncShell():
 			await uasyncio.sleep(polling1)
 
 
-shellCommands = \
+shell_commands = \
 {
 	"cd"       :[cd       ,"directory"],
 	"pwd"      :[pwd      ],
@@ -743,7 +743,7 @@ shellCommands = \
 	"help"     :[help     ],
 	"man"      :[man      ,"command"],
 	"df"       :[df       ,"mountpoint"],
-	"ip2host"  :[ip2host  ,"ipaddress"],
+	"ip2host"  :[ip2host  ,"ip_address"],
 	"host2ip"  :[host2ip  ,"hostname"],
 	"eval"     :[eval_    ,"string"],
 	"exec"     :[exec_    ,"string"],
