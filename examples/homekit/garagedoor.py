@@ -24,23 +24,22 @@ class GarageDoorOpener(Accessory):
 		self.targ_door_state.set_write_callback(self.write_targ_door_state)
 		self.add_server(self.server)
 
-	def write_targ_door_state(self, value):
+	def write_targ_door_state(self, charact):
 		""" Write target door state """
 		import time
 
-		# Write target door state
-		self.targ_door_state.set_value(value)
-
-		if value == 1:
+		# Close or open door
+		if charact.get_value() == 1:
 			print("Close door")
 		else:
 			print("Open door")
 
 		time.sleep(3)
-		# Set the current door state
-		self.curr_door_state.set_value(value)
 
-		if value == 1:
+		# Set the current door state
+		self.curr_door_state.set_value(charact.get_value())
+
+		if charact.get_value() == 1:
 			print("Door closed")
 		else:
 			print("Door opened")

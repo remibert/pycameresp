@@ -15,13 +15,12 @@ class Switch(Accessory):
 		self.on.set_write_callback(self.write_on)
 		self.add_server(self.server)
 
-	def write_on(self, value):
+	def write_on(self, charact):
 		""" Write on """
-		if value:
+		if charact.get_value():
 			print("ON")
 		else:
 			print("OFF")
-		self.on.set_value(value)
 
 def main():
 	""" Test """

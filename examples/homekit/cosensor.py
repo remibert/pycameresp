@@ -10,7 +10,6 @@ class CarbonMonoxideSensor(Accessory):
 		Accessory.__init__(self, Accessory.CID_SENSOR, **kwargs)
 
 		self.server = Server(name=kwargs.get("name","Carbon monoxide sensor"), server_uuid=Server.UUID_CARBON_MONOXIDE_SENSOR)
-
 		self.carbon_monoxide_detected = charact_uint8_create (Charact.UUID_CARBON_MONOXIDE_DETECTED, Charact.PERM_RE, kwargs.get("carbon_monoxide",0))
 		self.carbon_monoxide_detected.set_constraint(0, 1, 1)
 		self.server.add_charact(self.carbon_monoxide_detected)

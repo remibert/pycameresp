@@ -33,14 +33,14 @@ class Accessory:
 			Parameters : name(string), manufacturer(string), model(string), serialNumber(string), firmwareRevision(string), hardwareRevision(string), productVersion(string), productData (string with 8 bytes required)"""
 		import homekit_
 		self.accessory = homekit_.Accessory(\
-			cid              = cid, \
-			name             = kwargs.get("name"             , "NoName"), \
-			manufacturer     = kwargs.get("manufacturer"     , "Manufacturer"), \
-			model            = kwargs.get("model"            , "ESP32"), \
-			serialNumber     = kwargs.get("serial_number"    , "0000000000"), \
-			firmwareRevision = kwargs.get("firmware_revision", "1.0"), \
-			hardwareRevision = kwargs.get("hardware_revision", "1.0"), \
-			productVersion   = kwargs.get("product_version"  , "1.0"))
+			cid               = cid, \
+			name              = kwargs.get("name"             , "NoName"), \
+			manufacturer      = kwargs.get("manufacturer"     , "Manufacturer"), \
+			model             = kwargs.get("model"            , "ESP32"), \
+			serial_number     = kwargs.get("serial_number"    , "0000000000"), \
+			firmware_revision = kwargs.get("firmware_revision", "1.0"), \
+			hardware_revision = kwargs.get("hardware_revision", "1.0"), \
+			product_version   = kwargs.get("product_version"  , "1.0"))
 		self.accessory.set_product_data(kwargs.get("product_data","01234568"))
 
 	def __del__(self):

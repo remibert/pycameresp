@@ -40,7 +40,7 @@ hap_acc_t * Accessory_get_ptr(mp_obj_t self_in)
 
 static int Accessory_identify(hap_acc_t *ha)
 {
-	ESP_LOGE(TAG, "Accessory_identify");
+	//ESP_LOGE(TAG, "Accessory_identify");
 	if (identifyCallback != mp_const_none)
 	{
 		mp_sched_schedule(identifyCallback, mp_const_none);
@@ -216,7 +216,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(Accessory_set_product_data_obj, Accessory_set_p
 // print method
 STATIC void Accessory_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) 
 {
-	ESP_LOGE(TAG, "Accessory_print");
+	//ESP_LOGE(TAG, "Accessory_print");
 }
 
 

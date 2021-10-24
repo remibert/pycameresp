@@ -8,6 +8,9 @@ Copyright (c) 2021 Remi BERTHOLET */
 #include <hap_apple_chars.h>
 #include "py/runtime.h"
 #include "py/objstr.h"
+#include "py/gc.h"
+#include "py/mpstate.h"
+#include "py/stackctrl.h"
 #include "mphalport.h"
 #include "string.h"
 

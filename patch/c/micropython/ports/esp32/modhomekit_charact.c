@@ -1,7 +1,6 @@
 /* Distributed under MIT License
 Copyright (c) 2021 Remi BERTHOLET */
 #include "modhomekit.h"
-
 #define TAG "Homekit"
 
 #define TYPE_INT    0
@@ -51,7 +50,7 @@ hap_status_t Charact_read_call(hap_char_t *charact)
 	if (charact)
 	{
 		Charact_t * self;
-		ESP_LOGE(TAG, "Read '%s'", hap_char_get_type_uuid(charact));
+		//ESP_LOGE(TAG, "Read '%s'", hap_char_get_type_uuid(charact));
 		self = hap_char_get_priv(charact);
 		if (self)
 		{
@@ -78,28 +77,18 @@ hap_status_t Charact_write_call(hap_char_t *charact, hap_val_t * value)
 	if (charact)
 	{
 		Charact_t * self;
-		ESP_LOGE(TAG, "Write '%s'", hap_char_get_type_uuid(charact));
+		//ESP_LOGE(TAG, "Write '%s'", hap_char_get_type_uuid(charact));
 		self = hap_char_get_priv(charact);
 		if (self)
 		{
 			if (self->charact)
 			{
+				hap_char_update_val(self->charact, value);
 				if (self->write_callback)
 				{
 					if (mp_obj_is_callable(self->write_callback))
 					{
-						mp_obj_t val = mp_const_none;
-						
-						switch(self->type)
-						{
-						case TYPE_STRING: val = mp_obj_new_str(value->s, strlen(value->s)); break;
-						case TYPE_INT   : val = mp_obj_new_int(value->i); break;
-						case TYPE_UINT8 : val = mp_obj_new_int(value->u); break;
-						case TYPE_UINT32: val = mp_obj_new_int(value->u); break;
-						case TYPE_BOOL  : if (value->b) val = mp_const_true; else val = mp_const_false; break;
-						case TYPE_FLOAT : val = mp_obj_new_float(value->f); break;
-						}
-						mp_sched_schedule(self->write_callback, val);
+						mp_sched_schedule(self->write_callback, self);
 						mp_hal_wake_main_task_from_isr();
 					}
 				}
@@ -530,7 +519,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(Charact_set_write_callback_obj, Charact_set_wri
 // print method
 STATIC void Charact_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) 
 {
-	ESP_LOGE(TAG, "Charact_print");
+	//ESP_LOGE(TAG, "Charact_print");
 }
 
 

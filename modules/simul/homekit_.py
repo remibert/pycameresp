@@ -3,7 +3,7 @@
 """ Simulate homekit_ module """
 class Accessory:
 	""" Homekit accessory """
-	def __init__(self, cid, name="Esp", manufacturer="Espressif", model="Esp32", serialNumber="00112233445566", firmwareRevision="1.0.0", hardwareRevision="1.0.0", productVersion="1.0"):
+	def __init__(self, cid, name="Esp", manufacturer="Espressif", model="Esp32", serial_number="00112233445566", firmware_revision="1.0.0", hardware_revision="1.0.0", product_version="1.0"):
 		""" Constructor """
 	def __del__(self):
 		""" Destructor """

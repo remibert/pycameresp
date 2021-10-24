@@ -9,7 +9,7 @@ class Thermostat(Accessory):
 	COOLING   = 2
 	AUTOMATIC = 3
 	def __init__(self, **kwargs):
-		""" Create thermostat accessory. Parameters : name(string), current_state(int), target_state(int), temperature(float), target_temperature(float), temp_disp_units(int) and all Accessory parameters """
+		""" Create thermostat accessory. Parameters : name(string), current_state(int), target_state(int), temperature(float), target_temperature(float), temp_disp_units(int) curr_humidity(float) and all Accessory parameters """
 		Accessory.__init__(self, Accessory.CID_THERMOSTAT, **kwargs)
 		self.server = Server(name=kwargs.get("name","Thermostat"), server_uuid=Server.UUID_THERMOSTAT)
 
@@ -19,7 +19,6 @@ class Thermostat(Accessory):
 
 		self.target_state = charact = charact_uint8_create (Charact.UUID_TARGET_HEATING_COOLING_STATE, Charact.PERM_RWE, kwargs.get("target_state",0))
 		self.target_state.set_constraint(0, 3, 1)
-		self.target_state.set_write_callback(self.write_target_state)
 		self.server.add_charact(self.target_state)
 
 		self.temperature = charact_float_create (Charact.UUID_CURRENT_TEMPERATURE, Charact.PERM_RE, kwargs.get("temperature",20.))
@@ -30,7 +29,6 @@ class Thermostat(Accessory):
 		self.target_temperature = charact_float_create (Charact.UUID_TARGET_TEMPERATURE, Charact.PERM_RWE, kwargs.get("target_temperature",10.))
 		self.target_temperature.set_constraint(10.0, 38.0, 0.1)
 		self.target_temperature.set_unit(Charact.UNIT_CELSIUS)
-		self.target_temperature.set_write_callback(self.write_target_temperature)
 		self.server.add_charact(self.target_temperature)
 
 		self.temp_disp_units = charact_uint8_create (Charact.UUID_TEMPERATURE_DISPLAY_UNITS, Charact.PERM_RWE, kwargs.get("temp_disp_units",0))
@@ -40,38 +38,20 @@ class Thermostat(Accessory):
 		self.cooling_threshold = charact_float_create (Charact.UUID_COOLING_THRESHOLD_TEMPERATURE, Charact.PERM_RWE, kwargs.get("cooling_threshold",26.))
 		self.cooling_threshold.set_constraint(10.0, 38.0, 0.1)
 		self.cooling_threshold.set_unit(Charact.UNIT_CELSIUS)
-		self.cooling_threshold.set_write_callback(self.write_cooling_threshold)
 		self.server.add_charact(self.cooling_threshold)
 
 		self.heating_threshold = charact_float_create (Charact.UUID_HEATING_THRESHOLD_TEMPERATURE, Charact.PERM_RWE, kwargs.get("heating_threshold",18.))
 		self.heating_threshold.set_constraint(10.0, 38.0, 0.1)
 		self.heating_threshold.set_unit(Charact.UNIT_CELSIUS)
-		self.heating_threshold.set_write_callback(self.write_heating_threshold)
 		self.server.add_charact(self.heating_threshold)
 
-		self.current_humidity = charact_float_create (Charact.UUID_CURRENT_RELATIVE_HUMIDITY, Charact.PERM_RE, kwargs.get("currHumidity",0.))
+		self.current_humidity = charact_float_create (Charact.UUID_CURRENT_RELATIVE_HUMIDITY, Charact.PERM_RE, kwargs.get("curr_humidity",0.))
 		self.current_humidity.set_constraint(0.0, 100.0, 1.0)
 		self.current_humidity.set_unit(Charact.UNIT_PERCENTAGE)
 		self.server.add_charact(self.current_humidity)
 
 		self.add_server(self.server)
 		self.previous_state = None
-
-	def write_target_state(self, value):
-		""" Write target state """
-		self.target_state.set_value(value)
-
-	def write_target_temperature(self, value):
-		""" Write target temperature """
-		self.target_temperature.set_value(value)
-
-	def write_cooling_threshold(self, value):
-		""" Write cooling threshold """
-		self.cooling_threshold.set_value(value)
-
-	def write_heating_threshold(self, value):
-		""" Write heating threshold """
-		self.heating_threshold.set_value(value)
 
 	def manage(self):
 		""" Manage state """

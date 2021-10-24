@@ -134,7 +134,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(Server_add_charact_obj, Server_add_charact);
 // print method
 STATIC void Server_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) 
 {
-	ESP_LOGE(TAG, "Server_print");
+	//ESP_LOGE(TAG, "Server_print");
 }
 
 

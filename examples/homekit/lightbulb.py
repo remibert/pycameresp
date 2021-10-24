@@ -34,28 +34,24 @@ class Lightbulb(Accessory):
 
 		self.add_server(self.server)
 
-	def write_on(self, value):
+	def write_on(self, charact):
 		""" Write on """
-		if value:
+		if charact.get_value():
 			print("ON")
 		else:
 			print("OFF")
-		self.on.set_value(value)
 
-	def write_brightness(self, value):
+	def write_brightness(self, charact):
 		""" Write brightness """
-		print("Brightness %f"%value)
-		self.brightness.set_value(value)
+		print("Brightness %f"%charact.get_value())
 
-	def write_saturation(self, value):
+	def write_saturation(self, charact):
 		""" Write saturation """
-		print("Saturation %d"%value)
-		self.saturation.set_value(value)
+		print("Saturation %d"%charact.get_value())
 
-	def write_hue(self, value):
+	def write_hue(self, charact):
 		""" Write hue """
-		print("Hue %f"%value)
-		self.hue.set_value(value)
+		print("Hue %f"%charact.get_value())
 
 def main():
 	""" Test """

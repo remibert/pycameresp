@@ -21,23 +21,21 @@ class LockMecanism(Accessory):
 		self.lock_targ_state.set_write_callback(self.write_lock_targ_state)
 		self.add_server(self.server)
 
-	def write_lock_targ_state(self, value):
+	def write_lock_targ_state(self, charact):
 		""" Write lock target """
 		import time
 
-		# Write target lock state
-		self.lock_targ_state.set_value(value)
-
-		if value == 1:
+		# Close or open lock
+		if charact.get_value() == 1:
 			print("Close lock")
 		else:
 			print("Open lock")
 
 		time.sleep(3)
 		# Set the current lock state
-		self.lock_curr_state.set_value(value)
+		self.lock_curr_state.set_value(charact.get_value())
 
-		if value == 1:
+		if charact.get_value() == 1:
 			print("lock closed")
 		else:
 			print("lock opened")
