@@ -111,17 +111,12 @@ class Motion:
 	def deinit (self):
 		""" Deinit motion """
 
-	def compare(self, other, extractShape):
+	def compare(self, other):
 		""" Compare two motion detection """
 		return {
 			'feature': {'light': 37, 'saturation': 13},
 			'path': '2021-04-25 11-37-00',
 			'diff': {'squarex': 40, 'squarey': 40, 'width': 20, 'height': 15, 'max': 300, 'count': 0, 'light': 94, 'errhisto':256, 'diffhisto':256},
-			'shapes':
-			[
-				{'size': 35, 'id': 1, 'height': 360, 'width': 200, 'y': 0, 'x': 0, 'centerx': 40, 'centery': 120},
-				{'size': 94, 'id': 2, 'height': 600, 'width': 400, 'y': 0, 'x': 360, 'centerx': 480, 'centery': 240}
-			],
 			'index': 5417,
 			'image': '21-04-25 11-37-01 Id=5417 D=129.jpg',
 			'date': '2021-04-25 11-37-01',

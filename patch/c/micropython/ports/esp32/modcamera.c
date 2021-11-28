@@ -115,18 +115,6 @@ static camera_config_t camera_config =
 };
 #endif
 
-typedef struct Shape_t
-{
-	uint16_t id;
-	uint32_t x;
-	uint32_t y;
-	uint16_t minx;
-	uint16_t maxx;
-	uint16_t miny;
-	uint16_t maxy;
-	uint16_t size;
-} Shape_t;
-
 #define MAX_LINES 4
 // Straight line portion
 typedef struct 
@@ -155,13 +143,15 @@ typedef struct
 
 	uint16_t       *lights;
 
+	uint16_t       max_light;
+	uint16_t       min_light;
+
 	uint16_t       *diffs;
 	uint16_t       *stack;
 
 #define MAX_HISTO 16
 	uint16_t histo[MAX_HISTO];
 
-	uint16_t       stackpos;
 } Motion_t;
 const mp_obj_type_t Motion_type;
 
@@ -638,10 +628,14 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength)
 				memcpy(motion->imageData, imageData, max(imageLength, 64*1024)); // Max size image is 65536 limited by system
 			}
 
+			motion->max_light = 0;
+			motion->min_light = 0xFFFF;
 			for (i = 0; i < motion->diffMax; i++)
 			{
 				// Calculate the average on the detection square
 				motion->lights[i] /= square;
+				motion->max_light = max(motion->lights[i], motion->max_light);
+				motion->min_light = min(motion->lights[i], motion->min_light);
 			}
 			for (i = 0; i < MAX_HISTO; i++)
 			{
@@ -803,22 +797,31 @@ STATIC mp_obj_t Motion_get_light(mp_obj_t self_in)
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_get_light_obj, Motion_get_light);
 
-// Push coordinates
-void Motion_push(Motion_t * motion, int x, int y)
+// get_max_light method
+STATIC mp_obj_t Motion_get_max_light(mp_obj_t self_in)
 {
-	motion->stack[motion->stackpos++] = x;
-	motion->stack[motion->stackpos++] = y;
-}
-
-// Pop coordinates
-void Motion_pop(Motion_t * motion, int *x, int *y)
-{
-	if (motion->stackpos > 0)
+	Motion_t *motion = self_in;
+	mp_obj_t res = mp_const_none;
+	if (motion)
 	{
-		*y = motion->stack[--motion->stackpos];
-		*x = motion->stack[--motion->stackpos];
+		res = mp_obj_new_int(motion->max_light);
 	}
+	return res;
 }
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_get_max_light_obj, Motion_get_max_light);
+
+// get_min_light method
+STATIC mp_obj_t Motion_get_min_light(mp_obj_t self_in)
+{
+	Motion_t *motion = self_in;
+	mp_obj_t res = mp_const_none;
+	if (motion)
+	{
+		res = mp_obj_new_int(motion->min_light);
+	}
+	return res;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(Motion_get_min_light_obj, Motion_get_min_light);
 
 // Check if difference detected in the current pixel
 bool Motion_isDifference(Motion_t * motion, int x, int y)
@@ -840,70 +843,6 @@ bool Motion_isDifference(Motion_t * motion, int x, int y)
 	return result;
 }
 
-// Set the difference
-void Motion_setDifference(Motion_t * motion, int x, int y, Shape_t * shape)
-{
-	int i = y*(motion->width/motion->square_x) + x;
-	uint16_t diff = motion->diffs[i];
-
-	// If difference not yet parsed
-	if ((diff & 0xFF00) == 0)
-	{
-		// Modify current difference to add shape identifier
-		motion->diffs[i] = (diff &0xFF) | (shape->id << 8);
-
-		// Compute the difference informations
-		shape->size ++;
-		shape->x += x;
-		shape->y += y;
-		if (x < shape->minx) shape->minx = x;
-		if (x > shape->maxx) shape->maxx = x;
-		if (y < shape->miny) shape->miny = y;
-		if (y > shape->maxy) shape->maxy = y;
-	}
-}
-
-// Search a shape in the differences
-bool Motion_searchShape(Motion_t * motion, int x, int y, Shape_t * shape)
-{
-	bool result = false;
-
-	// Push coordinates
-	motion->stackpos = 0;
-
-	if (Motion_isDifference(motion, x, y))
-	{
-		Motion_push(motion, x,  y);
-		
-		while(motion->stackpos > 0)
-		{
-			// Pop coordinates
-			Motion_pop(motion, &x, &y);
-			
-			Motion_setDifference(motion, x, y, shape);
-
-			// Search in contigous pixels
-			if (Motion_isDifference(motion, x+1,y  )) Motion_push(motion, x+1, y);
-			if (Motion_isDifference(motion, x-1,y  )) Motion_push(motion, x-1, y);
-			if (Motion_isDifference(motion, x  ,y+1)) Motion_push(motion, x  , y+1);
-			if (Motion_isDifference(motion, x  ,y-1)) Motion_push(motion, x  , y-1);
-			//if (Motion_isDifference(motion, x+1,y+1)) Motion_push(motion, x+1, y+1);
-			//if (Motion_isDifference(motion, x-1,y+1)) Motion_push(motion, x-1, y+1);
-			//if (Motion_isDifference(motion, x+1,y-1)) Motion_push(motion, x+1, y-1);
-			//if (Motion_isDifference(motion, x-1,y-1)) Motion_push(motion, x-1, y-1);
-		}
-		result = true;
-	}
-
-	// Compute the center of shape
-	if (shape->size > 0)
-	{
-		shape->x = shape->x / shape->size;
-		shape->y = shape->y / shape->size;
-		result = true;
-	}
-	return result;
-}
 
 // Compute histogram
 int Motion_get_diff_histo(Motion_t *self, Motion_t *previous)
@@ -1107,87 +1046,9 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 	return diffDetected;
 }
 
-STATIC void Motion_extractShape(Motion_t *self, mp_obj_t result, bool extractShape)
-{
-	int x;
-	int y;
-	int width  = self->width /self->square_x;
-	int height = self->height/self->square_y;
-
-	// Get the list of shapes detected
-	mp_obj_t shapeslist = mp_obj_new_list(0, NULL);
-
-	if (extractShape)
-	{
-		Shape_t shape;
-		int shapeId = 1;
-
-		for (y = 0; y < height; y++)
-		{
-			for (x = 0; x < width; x++)
-			{
-				memset(&shape, 0, sizeof(shape));
-				shape.minx = self->diffMax;
-				shape.miny = self->diffMax;
-				shape.id = shapeId;
-
-				// If shape found
-				if (Motion_searchShape(self, x, y,&shape))
-				{
-					mp_obj_t shapedict = mp_obj_new_dict(0);
-						mp_obj_dict_store(shapedict, mp_obj_new_str("size",    strlen("size")),     mp_obj_new_int(shape.size));
-	#if 1
-						mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x*self->square_x*8));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y*self->square_y*8));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("x",       strlen("x")),        mp_obj_new_int(shape.minx*self->square_x*8));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("y",       strlen("y")),        mp_obj_new_int(shape.miny*self->square_y*8));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int((shape.maxx + 1 - shape.minx)*self->square_x*8));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("height",  strlen("height")),   mp_obj_new_int((shape.maxy + 1 - shape.miny)*self->square_y*8));
-	#else
-						mp_obj_dict_store(shapedict, mp_obj_new_str("centerx", strlen("centerx")),  mp_obj_new_int(shape.x));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("centery", strlen("centery")),  mp_obj_new_int(shape.y));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("minx",    strlen("minx")),     mp_obj_new_int(shape.minx));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("miny",    strlen("miny")),     mp_obj_new_int(shape.miny));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("maxx",    strlen("maxx")),     mp_obj_new_int(shape.maxx));
-						mp_obj_dict_store(shapedict, mp_obj_new_str("maxy",    strlen("maxy")),     mp_obj_new_int(shape.maxy));
-	#endif
-						mp_obj_dict_store(shapedict, mp_obj_new_str("id",      strlen("id")),       mp_obj_new_int(shape.id));
-					mp_obj_list_append(shapeslist, shapedict);
-					shapeId++;
-				}
-			}
-		}
-		#if 0
-		{
-			char line[100];
-			int i;
-
-			for (y = 0; y < height; y++)
-			{
-				for (x = 0; x < width; x++)
-				{
-					i = y * width + x;
-					if (self->diffs[i])
-					{
-						line[x] = ((self->diffs[i]&0xFF00)>>8) + 0x30;
-						line[x+1] = '\0';
-					}
-					else
-					{
-						line[x] = ' ';
-						line[x+1] = '\0';
-					}
-				}
-				ESP_LOGE(TAG,"|%s|",line);
-			}
-		}
-		#endif
-	}
-	mp_obj_dict_store(result, mp_obj_new_str("shapes"      , strlen("shapes")) , shapeslist);
-}
 
 // compare method
-STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t extract_shape_in)
+STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 {
 	Motion_t *self = self_in;
 	Motion_t *previous = other_in;
@@ -1200,20 +1061,11 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t ext
 	{
 		mp_raise_TypeError(MP_ERROR_TEXT("Motions not same format"));
 	}
-	else if (!mp_obj_is_bool(extract_shape_in) && extract_shape_in != mp_const_none)
-	{
-		mp_raise_TypeError(MP_ERROR_TEXT("Motions bad parameters"));
-	}
 	else
 	{
-		int extractShape = mp_obj_is_true(extract_shape_in);
-
 		mp_obj_t result = mp_obj_new_dict(0);
 
-		if (Motion_computeDiff(self, previous, result) > 0)
-		{
-			Motion_extractShape(self, result, extractShape);
-		}
+		Motion_computeDiff(self, previous, result);
 
 		mp_obj_t geometrydict = mp_obj_new_dict(0);
 			mp_obj_dict_store(geometrydict, mp_obj_new_str("width",   strlen("width")),    mp_obj_new_int(self->width  * 8));
@@ -1224,7 +1076,7 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in, mp_obj_t ext
 	}
 	return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(Motion_compare_obj, Motion_compare);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_compare_obj, Motion_compare);
 
 
 
@@ -1291,14 +1143,16 @@ STATIC void Motion_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kin
 STATIC const mp_rom_map_elem_t Motion_locals_dict_table[] = 
 {
 	// Delete method
-	{ MP_ROM_QSTR(MP_QSTR___del__),            MP_ROM_PTR(&Motion_deinit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_deinit),             MP_ROM_PTR(&Motion_deinit_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_extract),            MP_ROM_PTR(&Motion_extract_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_compare),            MP_ROM_PTR(&Motion_compare_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_configure),          MP_ROM_PTR(&Motion_configure_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_get_image),           MP_ROM_PTR(&Motion_get_image_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_get_size),            MP_ROM_PTR(&Motion_get_size_obj) },
-	{ MP_ROM_QSTR(MP_QSTR_get_light),           MP_ROM_PTR(&Motion_get_light_obj) },
+	{ MP_ROM_QSTR(MP_QSTR___del__),           MP_ROM_PTR(&Motion_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_deinit),            MP_ROM_PTR(&Motion_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_extract),           MP_ROM_PTR(&Motion_extract_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_compare),           MP_ROM_PTR(&Motion_compare_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_configure),         MP_ROM_PTR(&Motion_configure_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_get_image),         MP_ROM_PTR(&Motion_get_image_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_get_size),          MP_ROM_PTR(&Motion_get_size_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_get_light),         MP_ROM_PTR(&Motion_get_light_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_get_min_light),     MP_ROM_PTR(&Motion_get_min_light_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_get_max_light),     MP_ROM_PTR(&Motion_get_max_light_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(Motion_locals_dict, Motion_locals_dict_table);
 

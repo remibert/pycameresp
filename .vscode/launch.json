@@ -2,20 +2,42 @@
 	"comment": "For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387",
 	"version": "0.2.0",
 	"configurations": [
+		
 		{
-			"name": "Python : main",
+			"name": "Pycameresp",
 			"type": "python",
 			"request": "launch",
-			"program_": "${workspaceFolder}/sync.py",
-			"cwd_": "${workspaceFolder}",
-		
 			"program": "${workspaceFolder}/modules/main.py",
-			"program_": "${workspaceFolder}/modules/lib/shell/editor.py",
-			"program_": "${workspaceFolder}/modules/lib/shell/shell.py",
-			"cwd": "${workspaceFolder}/modules",
-			"program_": "${workspaceFolder}/tools/flasher/Main.py",
-			"program_": "${workspaceFolder}/tools/flasher/TermEmulatorTextControl.py",
-			"cwd_": "${workspaceFolder}/tools/flasher",
+			"cwd"    : "${workspaceFolder}/modules",
+			"justMyCode": false
+		},
+		{
+			"name": "Editor",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/modules/lib/shell/editor.py",
+			"cwd"    : "${workspaceFolder}/modules",
+		},
+		{
+			"name": "Shell",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/modules/lib/shell/shell.py",
+			"cwd"    : "${workspaceFolder}/modules",
+		},
+		{
+			"name": "Flasher",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/tools/flasher/Main.py",
+			"cwd": "${workspaceFolder}/tools/flasher",
+		},
+		{
+			"name": "VT100",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/tools/flasher/TermVT100.py",
+			"cwd": "${workspaceFolder}/tools/flasher",
 		}
 	]
 }

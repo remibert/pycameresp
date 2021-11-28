@@ -41,9 +41,9 @@ class Motion:
 		""" Extract the full content of motion """
 		return self.motion.extract()
 
-	def compare(self, other, extractShape):
+	def compare(self, other):
 		""" Compare image to detect motion """
-		return self.motion.compare(other.motion, extractShape)
+		return self.motion.compare(other.motion)
 
 	def configure(self, param):
 		""" Configure the motion detection """
@@ -314,10 +314,7 @@ class Camera:
 		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Brightness %d"%val)
-			if camera.brightness() != val:
-				return camera.brightness(val)
-			else:
-				return val
+			return camera.brightness(val)
 		return None
 
 	@staticmethod
@@ -326,10 +323,7 @@ class Camera:
 		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Contrast %d"%val)
-			if camera.contrast() != val:
-				return camera.contrast(val)
-			else:
-				return val
+			return camera.contrast(val)
 		return None
 
 	@staticmethod
@@ -338,10 +332,7 @@ class Camera:
 		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Saturation %d"%val)
-			if camera.saturation() != val:
-				return camera.saturation(val)
-			else:
-				return val
+			return camera.saturation(val)
 		return None
 
 	@staticmethod

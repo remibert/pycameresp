@@ -49,7 +49,6 @@ class Historic:
 				await Historic.acquire()
 				path = useful.tostrings(path)
 				name = useful.tostrings(name)
-				jsonInfo = useful.tobytes(json.dumps(info))
 				item = Historic.create_item(root + "/" + path + "/" + name +".json", info)
 				res1 = sdcard.SdCard.save(path, name + ".jpg" , image)
 				res2 = sdcard.SdCard.save(path, name + ".json", json.dumps(item))
@@ -66,14 +65,9 @@ class Historic:
 		""" Create historic item """
 		name = useful.splitext(filename)[0] + ".jpg"
 		result = None
-		shapes = []
-		if "shapes" in info:
-			for shape in info["shapes"]:
-				shapes.append([shape["size"],shape["x"],shape["y"],shape["width"],shape["height"]])
-
 		if "geometry" in info:
 			# Add json file to the historic
-			result = [name, info["geometry"]["width"],info["geometry"]["height"], shapes, info["diff"]["diffs"], info["diff"]["squarex"], info["diff"]["squarey"]]
+			result = [name, info["geometry"]["width"],info["geometry"]["height"], info["diff"]["diffs"], info["diff"]["squarex"], info["diff"]["squarey"]]
 		return result
 
 	@staticmethod

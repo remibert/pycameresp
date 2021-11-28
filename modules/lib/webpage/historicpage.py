@@ -37,16 +37,9 @@ async def historic(request, response, args):
 		const MOTION_FILENAME =0;
 		const MOTION_WIDTH    =1;
 		const MOTION_HEIGHT   =2;
-		const MOTION_SHAPES   =3;
-		const MOTION_DIFFS    =4;
-		const MOTION_SQUAREX  =5;
-		const MOTION_SQUAREY  =6;
-
-		const SHAPE_COUNT     =0;
-		const SHAPE_X         =1;
-		const SHAPE_Y         =2;
-		const SHAPE_WIDTH     =3;
-		const SHAPE_HEIGHT    =4;
+		const MOTION_DIFFS    =3;
+		const MOTION_SQUAREX  =4;
+		const MOTION_SQUAREY  =5;
 
 		function download(fileUrl) 
 		{

@@ -123,9 +123,9 @@ class ImageMotion:
 		""" Save the image on sd card """
 		return await Historic.add_motion(useful.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
 
-	def compare(self, previous, extractShape=True):
+	def compare(self, previous):
 		""" Compare two motion images to get differences """
-		res = self.motion.compare(previous.motion, extractShape)
+		res = self.motion.compare(previous.motion)
 		self.comparison = res
 		return res
 
@@ -265,6 +265,32 @@ class Motion:
 		if detected is False:
 			self.cleanup()
 
+	def manage_flash(self, motion):
+		""" Manage the flash level is low light """
+		# Light can be compensed with flash led
+		if self.config.light_compensation:
+			# If it has enough light
+			if motion.get_light() >= 50:
+				# If flash led working
+				if self.flash_level > 8:
+					# Reduce light of flash led
+					self.flash_level -= 2
+					video.Camera.flash(self.flash_level)
+			# If it has not enough light
+			elif motion.get_light() <= 40:
+				# If flash to low
+				if self.flash_level <= 192:
+					# Increase the light of flash led
+					self.flash_level += 2
+					video.Camera.flash(self.flash_level)
+			# If low level for flash
+			if self.flash_level < 8:
+				# Show motion started indicator
+				self.flash_level = 8
+				video.Camera.flash(self.flash_level)
+		else:
+			self.stop_light()
+
 	async def capture(self):
 		""" Capture motion image """
 		result = None
@@ -287,29 +313,7 @@ class Motion:
 				self.deinit_image(image)
 
 		motion = video.Camera.motion()
-
-		# Light can be compensed with flash led
-		if self.config.light_compensation:
-			# If it has enough light
-			if motion.get_light() >= 45:
-				# If flash led working
-				if self.flash_level > 8:
-					# Reduce light of flash led
-					self.flash_level -= 2
-					video.Camera.flash(self.flash_level)
-			# If it has not enough light
-			elif motion.get_light() <= 35:
-				# If flash to low
-				if self.flash_level <= 192:
-					# Increase the light of flash led
-					self.flash_level += 2
-					video.Camera.flash(self.flash_level)
-			if self.flash_level < 8:
-				self.flash_level = 8
-				video.Camera.flash(self.flash_level)
-		else:
-			self.stop_light()
-
+		self.manage_flash(motion)	
 		image = ImageMotion(motion, self.config)
 		if self.must_refresh_config:
 			image.refresh_config()
@@ -381,7 +385,7 @@ class Motion:
 			# Compute the motion identifier
 			for previous in self.images[1:]:
 				# # If image not already compared
-				comparison = current.compare(previous, False)
+				comparison = current.compare(previous)
 
 				# If camera not stabilized
 				if self.is_stabilized() is False:
@@ -400,7 +404,7 @@ class Motion:
 
 				# Compare the image with the background if existing and extract modification
 				if self.image_background is not None:
-					comparison = current.compare(self.image_background, True)
+					comparison = current.compare(self.image_background)
 
 			# Compute the list of differences
 			diffs = ""

@@ -840,13 +840,23 @@ def rename(old, new):
 	except:
 		pass
 
+up_last=0
+up_total=0
+
 def uptime(text="days"):
 	""" Tell how long the system has been running """
+	global up_last, up_total
 	try:
 		# pylint: disable=no-member
 		up = time.ticks_ms()
 	except:
 		up = time.time() * 1000
+	
+	if up_last > up:
+		up_total += 1^30
+
+	up_last = up
+	up += up_total
 
 	millis  = (up%1000)
 	seconds = (up/1000)%60

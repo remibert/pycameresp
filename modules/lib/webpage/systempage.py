@@ -31,7 +31,8 @@ async def system_page(request, response, args):
 async def import_config(request, response, args):
 	""" Import configuration """
 	Server.slow_down()
-	useful.import_files(request.get_content_filename())
+	file = request.get_content_filename()
+	archiver.import_files(file)
 	await response.send_ok()
 
 @HttpServer.add_route(b'/system/export_config')
@@ -46,7 +47,7 @@ async def export_config(request, response, args):
 async def import_file_system(request, response, args):
 	""" Import file system """
 	Server.slow_down()
-	useful.import_files(request.get_content_filename())
+	archiver.import_files(request.get_content_filename())
 	await reboot(request, response, args)
 
 @HttpServer.add_route(b'/system/export_file_system')
