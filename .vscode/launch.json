@@ -29,15 +29,8 @@
 			"name": "Flasher",
 			"type": "python",
 			"request": "launch",
-			"program": "${workspaceFolder}/tools/flasher/Main.py",
-			"cwd": "${workspaceFolder}/tools/flasher",
-		},
-		{
-			"name": "VT100",
-			"type": "python",
-			"request": "launch",
-			"program": "${workspaceFolder}/tools/flasher/TermVT100.py",
-			"cwd": "${workspaceFolder}/tools/flasher",
+			"program": "${workspaceFolder}/tools/camflasher/main.py",
+			"cwd": "${workspaceFolder}/tools/camflasher",
 		}
 	]
 }

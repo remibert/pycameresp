@@ -274,6 +274,8 @@ With the SR602 you have to extend the detection delay (10s > boot time ESP32CAM)
 In deep sleep mode, the AMS1117 regulator consumes 10mA, if you want your batteries not to drain too quickly,
 you have to use an external LDO regulator 3.3V (in my case 6206A) and remove AMS1117 of the ESP32CAM (powered by 3.3 v it still consumes 4ma).
 Then the consumption is close to 1.7mA with the SR602. 
+To go even further, look here https://time4ee.com/articles.php?article_id=126
+
 
 ## Reduce the browout reset
 To avoid reset brownout, you must add a 2200uF capacitor on 3.3v.
