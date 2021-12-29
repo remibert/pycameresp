@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=multiple-statements
+# pylint:disable=too-many-lines
 """ Class defining a VT100 text editor.
 This editor works directly in the board.
 This allows you to make quick and easy changes directly on the board, without having to use synchronization tools.
@@ -39,47 +41,47 @@ except:
 TABSIZE = 4          # Tabulation size
 HORIZONTAL_MOVE=8    # Scrolling minimal deplacement
 
-ESCAPE           = "\x1B"
+ESCAPE           = "\x1b"
 
 # Move shortcuts
-UP               = ["\x1B[A"]
-DOWN             = ["\x1B[B"]
-RIGHT            = ["\x1B[C"]
-LEFT             = ["\x1B[D"]
-HOME             = ["\x1B[1;3D", "\x1B[H", "\x1B\x1B[D", "\x1B[1~", "\x1Bb"]
-END              = ["\x1B[1;3C", "\x1B[F", "\x1B\x1B[C", "\x1B[4~", "\x1Bf"]
-PAGE_UP          = ["\x1B[1;3A", "\x1B[A", "\x1B\x1B[A", "\x1B[5~"]
-PAGE_DOWN        = ["\x1B[1;3B", "\x1B[B", "\x1B\x1B[B", "\x1B[6~"]
-TOP              = ["\x1B[1;5H"]
-BOTTOM           = ["\x1B[1;5F"]
-NEXT_WORD        = ["\x1B[1;5C"]
-PREVIOUS_WORD    = ["\x1B[1;5D"]
+UP               = ["\x1b[A"]
+DOWN             = ["\x1b[B"]
+RIGHT            = ["\x1b[C"]
+LEFT             = ["\x1b[D"]
+HOME             = ["\x1b[1;3D", "\x1b[H", "\x1b\x1b[D", "\x1b[1~", "\x1bb"]
+END              = ["\x1b[1;3C", "\x1b[F", "\x1b\x1b[C", "\x1b[4~", "\x1bf"]
+PAGE_UP          = ["\x1b[1;3A", "\x1b[A", "\x1b\x1b[A", "\x1b[5~"]
+PAGE_DOWN        = ["\x1b[1;3B", "\x1b[B", "\x1b\x1b[B", "\x1b[6~"]
+TOP              = ["\x1b[1;5H"]
+BOTTOM           = ["\x1b[1;5F"]
+NEXT_WORD        = ["\x1b[1;5C"]
+PREVIOUS_WORD    = ["\x1b[1;5D"]
 
 # Selection shortcuts
-SELECT_UP        = ["\x1B[1;2A"]
-SELECT_DOWN      = ["\x1B[1;2B"]
-SELECT_RIGHT     = ["\x1B[1;2C"]
-SELECT_LEFT      = ["\x1B[1;2D"]
-SELECT_PAGE_UP   = ["\x1B[1;10A","\x1B[1;4A","\x1B[5;2~"]
-SELECT_PAGE_DOWN = ["\x1B[1;10B","\x1B[1;4B","\x1B[6;2~"]
-SELECT_HOME      = ["\x1B[1;2H","\x1B[1;10D"]
-SELECT_END       = ["\x1B[1;2F","\x1B[1;10C"]
+SELECT_UP        = ["\x1b[1;2A"]
+SELECT_DOWN      = ["\x1b[1;2B"]
+SELECT_RIGHT     = ["\x1b[1;2C"]
+SELECT_LEFT      = ["\x1b[1;2D"]
+SELECT_PAGE_UP   = ["\x1b[1;10A","\x1b[1;4A","\x1b[5;2~"]
+SELECT_PAGE_DOWN = ["\x1b[1;10B","\x1b[1;4B","\x1b[6;2~"]
+SELECT_HOME      = ["\x1b[1;6H", "\x1b[1;2H","\x1b[1;10D"]
+SELECT_END       = ["\x1b[1;6F", "\x1b[1;2F","\x1b[1;10C"]
 SELECT_ALL       = ["\x01"]
-SELECT_NEXT_WORD = ["\x1B[1;6C","\x1B[1;4C"]
-SELECT_PREV_WORD = ["\x1B[1;6D","\x1B[1;4D"]
+SELECT_NEXT_WORD = ["\x1b[1;6C","\x1b[1;4C"]
+SELECT_PREV_WORD = ["\x1b[1;6D","\x1b[1;4D"]
 
 # Clipboard shortcuts
-CUT              = ["\x18","\x1Bx"]                      # Cut
-COPY             = ["\x03","\x1Bc"]                      # Copy
-PASTE            = ["\x16","\x1Bv"]                      # Paste
+CUT              = ["\x18","\x1bx"]                      # Cut
+COPY             = ["\x03","\x1bc"]                      # Copy
+PASTE            = ["\x16","\x1bv"]                      # Paste
 
 # Selection modification shortcut
 INDENT           = ["\t"]                                # Indent
-UNINDENT         = ["\x1B[Z"]                            # Unindent
+UNINDENT         = ["\x1b[Z"]                            # Unindent
 CHANGE_CASE      = ["\x15"]                              # Change case
 COMMENT          = ["\x11"]                              # Comment block
 
-DELETE           = ["\x1B[3~"]                           # Delete pressed
+DELETE           = ["\x1b[3~"]                           # Delete pressed
 BACKSPACE        = ["\x7F"]                              # Backspace pressed
 NEW_LINE         = ["\n", "\r"]                          # New line pressed
 
@@ -89,11 +91,11 @@ FIND             = ["\x06"]                              # Find
 FIND_NEXT        = ["\x1bOR"]                            # Find next
 FIND_PREVIOUS    = ["\x1b[1;2R"]                         # Find previous
 GOTO             = ["\x07"]                              # Goto line
-SAVE             = ["\x13","\x1Bs"]                      # Save
+SAVE             = ["\x13","\x1bs"]                      # Save
 DELETE_LINE      = ["\x0C"]                              # Delete line
 REPLACE          = ["\x08"]                              # Replace
 REPLACE_CURRENT  = ["\x12"]                              # Replace the selection
-EXECUTE          = ["\x1B[15~"]                          # Execute script
+EXECUTE          = ["\x1b[15~"]                          # Execute script
 
 class View:
 	""" Class which manage the view of the edit field """
@@ -140,7 +142,7 @@ class View:
 
 	def reset(self):
 		""" Reset VT100 """
-		self.write("\x1b""c")
+		self.write("\x1B""c")
 		self.flush()
 
 	def reset_scroll_region(self):
@@ -1221,6 +1223,7 @@ class Text:
 						break
 				if isUpper is not None:
 					break
+			# pylint:disable=consider-using-enumerate
 			for line in range(len(selection)):
 				if isUpper:
 					selection[line] = selection[line].lower()
@@ -1238,8 +1241,8 @@ class Text:
 		# If selection
 		if self.selection_start is not None:
 			selection_start, selection_end = self.get_selection()
-			sel_column_start, sel_line_start, dummy = selection_start
-			sel_column_end,   sel_line_end,   dummy = selection_end
+			_, sel_line_start, _ = selection_start
+			_, sel_line_end,   _ = selection_end
 
 			# Add tabulation
 			for line in range(sel_line_start, sel_line_end+1):

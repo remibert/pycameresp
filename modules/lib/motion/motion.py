@@ -313,7 +313,7 @@ class Motion:
 				self.deinit_image(image)
 
 		motion = video.Camera.motion()
-		self.manage_flash(motion)	
+		self.manage_flash(motion)
 		image = ImageMotion(motion, self.config)
 		if self.must_refresh_config:
 			image.refresh_config()
@@ -524,12 +524,11 @@ class Detection:
 			# Capture motion
 			result = await self.capture()
 		else:
-			if self.motion:
-				self.motion.stop_light()
-
-			await uasyncio.sleep(3)
-			result = True
-
+			result = await self.fake_capture()
+			if result:
+				if self.motion:
+					self.motion.stop_light()
+			await uasyncio.sleep(10)
 		self.cadencer.refresh()
 
 		# Refresh configuration when it changed
@@ -604,6 +603,26 @@ class Detection:
 		if self.motion:
 			if self.motion.index %30 == 0:
 				collect()
+
+	async def fake_capture(self):
+		""" Used to continue the dialogue with the camera, to avoid losing the link after too long a delay (The problem occurs once every ten days) """
+		result = False
+		try:
+			# Waits for the camera's availability
+			reserved = await video.Camera.reserve(self, timeout=60)
+
+			# If reserved
+			if reserved:
+				# Initialize motion detection
+				await self.init_motion()
+
+				# Captures an unnecessary image to maintain a dialogue with the camera
+				video.Camera.capture()
+				result = True
+		finally:
+			if reserved:
+				await video.Camera.unreserve(self)
+		return result
 
 	async def capture(self):
 		""" Capture motion """

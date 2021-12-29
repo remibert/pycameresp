@@ -26,7 +26,7 @@
 			"cwd"    : "${workspaceFolder}/modules",
 		},
 		{
-			"name": "Flasher",
+			"name": "CamFlasher",
 			"type": "python",
 			"request": "launch",
 			"program": "${workspaceFolder}/tools/camflasher/main.py",

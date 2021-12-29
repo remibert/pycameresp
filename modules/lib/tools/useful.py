@@ -851,7 +851,7 @@ def uptime(text="days"):
 		up = time.ticks_ms()
 	except:
 		up = time.time() * 1000
-	
+
 	if up_last > up:
 		up_total += 1^30
 

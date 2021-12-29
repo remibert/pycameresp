@@ -32,10 +32,10 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=False , icon='icons/icon.icns')
+          console=False , icon='icons/camflasher.icns')
 app = BUNDLE(exe,
              name='%(NAME)s-%(VERSION)s.app',
-             icon='./icons/icon.icns',
+             icon='./icons/camflasher.icns',
              bundle_identifier='github.com/remibert/pycameresp')
 """
 
@@ -46,6 +46,6 @@ spec_file.close()
 execute("rm -rf dist build")
 execute("pyuic6 camflasher.ui -o camflasher.py")
 execute("pyinstaller --log-level=DEBUG --noconfirm --windowed build-osx.spec")
-execute("create-dmg %(NAME)s-%(VERSION)s.dmg dist/%(NAME)s-%(VERSION)s.app --volicon icons/icon.icns"%(globals()))
+execute("create-dmg %(NAME)s-%(VERSION)s.dmg dist/%(NAME)s-%(VERSION)s.app --volicon icons/camflasher.icns"%(globals()))
 execute("rm build-osx.spec")
 execute("rm -rf build dist")

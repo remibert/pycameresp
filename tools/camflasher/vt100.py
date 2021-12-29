@@ -1,12 +1,36 @@
 """ Class used to manage VT100 """
-import useful
-
 TABSIZE = 4
 BACKSPACE        = "\x7F"
 LINE_FEED        = "\n"
 CARRIAGE_RETURN  = "\r"
 ESCAPE           = "\x1B"
 
+# Supported VT100 escape sequences :
+#    ESC c                      Reset to Initial State
+
+#    ESC [ Pn ; Pn H            Direct Cursor Addressing
+#    ESC [ Pn ; Pn f            same as above
+#    ESC [ Pn J                 Erase in Display
+#          Pn = None or 0       From Cursor to End of Screen
+#               1               From Beginning of Screen to Cursor
+#               2               Entire Screen
+#    ESC [ Pn K                 Erase in Line
+#          Pn = None or 0       From Cursor to End of Line
+#               1               From Beginning of Line to Cursor
+#               2               Entire Line
+
+#    ESC [ Pn A                 Cursor Up
+#    ESC [ Pn B                 Cursor Down
+#    ESC [ Pn C                 Cursor Right
+#    ESC [ Pn D                 Cursor Left
+
+#    ESC [ Ps ;...; Ps m        Select Graphic Rendition
+#    ESC [ Pn ; Pn r            Set Scrolling Region
+
+#    ESC [ Pn S                 Scroll Scrolling Region Up
+#    ESC [ Pn T                 Scroll Scrolling Region Down
+
+#    ESC [ 6 n                  Send Cursor Position Report
 
 #REGEXP_ESCAPE_SEQUENCE=r"(\x1b\[|\x9b)[^@-_]*[@-_]|\x1b[@-_]"
 def isascii(char):
@@ -82,102 +106,161 @@ vga_colors = [
 	0xA8A8A8, 0xB2B2B2, 0xBCBCBC, 0xC6C6C6, 0xD0D0D0, 0xDADADA, 0xE4E4E4, 0xEEEEEE,
 	]
 
+def get_len_utf8(key):
+	""" Get the length utf8 string """
+	if len(key) > 0:
+		char = ord(key[0])
+		if char <= 0x7F:
+			return 1
+		elif char >= 0xC2 and char <= 0xDF:
+			return 2
+		elif char >= 0xE0 and char <= 0xEF:
+			return 3
+		elif char >= 0xF0 and char <= 0xF4:
+			return 4
+		return 1
+	else:
+		return 0
+
+def is_key_ended(key):
+	""" Indicates if the key completly entered """
+	if len(key) == 0:
+		return False
+	else:
+		char = key[-1]
+		if len(key) == 1:
+			if char == "\x1B":
+				return False
+			elif get_len_utf8(key) == len(key):
+				return True
+		elif len(key) == 2:
+			if key[0] == "\x1B" and key[1] == "\x1B":
+				return False
+			elif key[0] == "\x1B":
+				if  key[1] == "[" or key[1] == "(" or \
+					key[1] == ")" or key[1] == "#" or \
+					key[1] == "?" or key[1] == "O":
+					return False
+				else:
+					return True
+			elif get_len_utf8(key) == len(key):
+				return True
+		else:
+			if ord(key[-1]) >= ord("A") and ord(key[-1]) <= ord("Z"):
+				return True
+			elif ord(key[-1]) >= ord("a") and ord(key[-1]) <= ord("z"):
+				return True
+			elif ord(key[-1]) == "~":
+				return True
+			elif ord(key[0]) != "\x1B" and get_len_utf8(key) == len(key):
+				return True
+	return False
+
 class Line:
 	""" VT 100 line """
-	def __init__(self):
+	def __init__(self, width):
 		""" VT100 line constructor """
+		self.width      = width
+		self.line       = ""
+		self.forecolors = []
+		self.backcolors = []
+		self.reverses   = []
+		self.htmline    = None
+		self.cursor     = None
 		self.clear_line()
+
+	def resize(self, width):
+		""" Resize the line """
+		if width > self.width:
+			self.fill(width)
+		else:
+			self.truncate(width)
+		self.width = width
+		self.htmline = None
+
+	def fill(self, length):
+		""" Fill the end of line if not enough long """
+		if length > len(self.line):
+			delta = length-len(self.line)
+			self.line       += " "*delta
+			self.forecolors += [DEFAULT_FORECOLOR]*delta
+			self.backcolors += [DEFAULT_BACKCOLOR]*delta
+			self.reverses   += [False]*delta
+			self.htmline    = None
+
+	def truncate(self, length):
+		""" Truncate the line """
+		if len(self.line) > length:
+			self.line       = self.line      [:length]
+			self.forecolors = self.forecolors[:length]
+			self.backcolors = self.backcolors[:length]
+			self.reverses   = self.reverses  [:length]
+			self.htmline    = None
 
 	def clear_line(self):
 		""" Clear the content of line """
-		self.line = ""
+		self.line       = ""
 		self.forecolors = []
 		self.backcolors = []
-		self.reverses = []
-		self.htmline = None
-
-	def set_data(self, lst, data, cursor_column):
-		""" Set data into the line at the cursor position"""
-		if len(lst) > 0:
-			lst = lst[:cursor_column] + data
-			if cursor_column < len(lst)-1:
-				lst += lst[cursor_column+1:]
-		else:
-			if type(lst) == type(""):
-				lst += data
-			else:
-				lst.append(data)
-		return lst
+		self.reverses   = []
+		self.fill(self.width)
 
 	def replace_char(self, char, forecolor, backcolor, reverse, cursor_column):
 		""" Replace character """
-		# pylint:disable=attribute-defined-outside-init
 		self.htmline = None
-		if len(self.line) > 0:
-			line = self.line[:cursor_column] + char
-			if cursor_column < len(line) - 1:
-				self.line = line + self.line[cursor_column+1:]
-			else:
-				self.line = line
+		if cursor_column > len(self.line):
+			delta = (cursor_column-len(self.line))
+			self.line += " "*delta + char
+			self.forecolors += [DEFAULT_FORECOLOR]*delta + [forecolor]*len(char)
+			self.backcolors += [DEFAULT_BACKCOLOR]*delta + [backcolor]*len(char)
+			self.reverses   += [False]*delta             + [reverse]*len(char)
 		else:
-			self.line = char
-
-		if len(self.forecolors) > 0:
-			line = self.forecolors[:cursor_column] + [forecolor]*len(char)
-			if cursor_column < len(line) - 1:
-				self.forecolors = line + self.forecolors[cursor_column+1:]
-			else:
-				self.forecolors = line
-		else:
-			self.forecolors = [forecolor]*len(char)
-
-		if len(self.backcolors) > 0:
-			line = self.backcolors[:cursor_column] + [backcolor]*len(char)
-			if cursor_column < len(line) - 1:
-				self.backcolors = line + self.backcolors[cursor_column+1:]
-			else:
-				self.backcolors = line
-		else:
-			self.backcolors = [backcolor]*len(char)
-
-		if len(self.reverses) > 0:
-			line = self.reverses[:cursor_column] + [reverse]*len(char)
-			if cursor_column < len(line) - 1:
-				self.reverses = line + self.reverses[cursor_column+1:]
-			else:
-				self.reverses = line
-		else:
-			self.reverses = [reverse]*len(char)
+			self.line       = self.line      [:cursor_column] + char                  + self.line      [cursor_column+1:]
+			self.forecolors = self.forecolors[:cursor_column] + [forecolor]*len(char) + self.forecolors[cursor_column+1:]
+			self.backcolors = self.backcolors[:cursor_column] + [backcolor]*len(char) + self.backcolors[cursor_column+1:]
+			self.reverses   = self.reverses  [:cursor_column] + [reverse  ]*len(char) + self.reverses  [cursor_column+1:]
 
 	def erase_line(self, cursor_column, direction = None):
 		""" Erase the line """
-		# pylint:disable=attribute-defined-outside-init
-		if direction == 1:
-			self.line       = self.line      [cursor_column:]
-			self.forecolors = self.forecolors[cursor_column:]
-			self.backcolors = self.backcolors[cursor_column:]
-			self.reverses   = self.reverses  [cursor_column:]
-			self.htmline    = None
-		elif direction == -1:
-			self.line       = self.line      [:cursor_column]
-			self.forecolors = self.forecolors[:cursor_column]
-			self.backcolors = self.backcolors[:cursor_column]
-			self.reverses   = self.reverses  [:cursor_column]
-			self.htmline    = None
+		if cursor_column <= self.width and cursor_column >= 0:
+			delta = self.width-cursor_column
+			# Erase to end of line
+			if direction == "0" or direction == "":
+				self.line       = self.line      [:cursor_column] + " "*delta
+				self.forecolors = self.forecolors[:cursor_column] + [DEFAULT_FORECOLOR]*delta
+				self.backcolors = self.backcolors[:cursor_column] + [DEFAULT_BACKCOLOR]*delta
+				self.reverses   = self.reverses  [:cursor_column] + [False]*delta
+				self.htmline    = None
+			# Erase to beginning of line
+			elif direction == "1":
+				self.line       =  " "*cursor_column                 + self.line      [cursor_column:]
+				self.forecolors =  [DEFAULT_FORECOLOR]*cursor_column + self.forecolors[cursor_column:]
+				self.backcolors =  [DEFAULT_BACKCOLOR]*cursor_column + self.backcolors[cursor_column:]
+				self.reverses   =  [False]*cursor_column             + self.reverses  [cursor_column:]
+				self.htmline    = None
+			# Erase entire line
+			elif direction == "2":
+				self.line       = " "*self.width
+				self.forecolors += [DEFAULT_FORECOLOR]*self.width
+				self.backcolors += [DEFAULT_BACKCOLOR]*self.width
+				self.reverses   += [False]*self.width
+				self.htmline    = None
 
 	def get(self):
 		""" Get the content of line"""
 		return self.line
 
-	def to_html(self, width):
+	def to_html(self, cursor=None):
 		""" Export line to html with color and reverse video """
-		# pylint:disable=attribute-defined-outside-init
-		if self.htmline is None:
+		if self.htmline is None or cursor != self.cursor:
+			self.cursor = cursor
 			previous_forecolor = None
 			previous_backcolor = None
 			previous_reverse = None
 			htmlline = ""
-			length = min(width,len(self.line))
+			length = len(self.line.rstrip()) + 2
+			if length > len(self.line):
+				length = len(self.line)
 			for i in range(length):
 				part = ""
 				changed = False
@@ -203,254 +286,172 @@ class Line:
 					fore = forecolor
 					back = backcolor
 
+				if cursor == i:
+					back = 0xDFDFDF
+
 				if changed:
 					part = '<span style="color:#%06X;background-color:#%06X">'%(fore,back)
 					if i > 0:
 						part = '</span>' + part
 				else:
 					part = ""
-				htmlline += part + self.line[i]
-			htmlline += '</span><br>'
+				char = self.line[i]
+				if   char == " ":
+					char = "&nbsp;"
+				elif char == "<":
+					char = "&lt;"
+				elif char == ">":
+					char = "&gt;"
+				elif char == "'":
+					char = "&apos;"
+				elif char == '"':
+					char = "&quot;"
+				htmlline += part + char
+			htmlline += '</span>'
 			self.htmline = htmlline
 		return self.htmline
 
-
 class VT100:
 	""" Class which manage the VT100 console """
-	def __init__(self, read_only=False):
+	def __init__(self, width = 80, height = 20):
 		""" Constructor """
+		self.width               = width
+		self.height              = height
+		self.lines               = []
+
+		self.forecolor           = DEFAULT_FORECOLOR
+		self.backcolor           = DEFAULT_BACKCOLOR
+		self.reverse             = False
+		self.region_start        = 0
+		self.region_end          = self.height
+
+		self.cursor_line         = 0
+		self.cursor_column       = 0
+		self.cursor_column_saved = None
+		self.cursor_line_saved   = None
+
+		self.escape              = None
+		self.modified            = True
+
+		self.set_size(width,height)
+		self.cls()
+		self.test_number = 0
+		self.output              = ""
+
+	def reset(self):
+		""" Reset to initial state """
+		self.forecolor           = DEFAULT_FORECOLOR
+		self.backcolor           = DEFAULT_BACKCOLOR
+		self.reverse             = False
+		self.region_start        = 0
+		self.region_end          = self.height
+
+		self.cursor_line         = 0
+		self.cursor_column       = 0
+		self.cursor_column_saved = None
+		self.cursor_line_saved   = None
 		self.cls()
 
-	def cls(self):
-		""" Clear screen """
-		self.lines = []
-		self.forecolor = DEFAULT_FORECOLOR
-		self.backcolor = DEFAULT_BACKCOLOR
-		self.reverse   = False
-		self.cursor_line   = 0
-		self.cursor_column = 0
-		self.tab_cursor_column   = 0
-		self.tab_size      = TABSIZE
-		self.escape = None
-		self.line_feed()
+	def set_size(self, width, height):
+		""" Set the size of console """
+		# If size of VT100 display changed
+		if self.width != width or self.height != height:
+			self.modified = True
+			self.width  = width
+			self.height = height
 
-	def get_count_lines(self):
-		""" Get the total of lines """
-		result = len(self.lines)
-		if result > 1:
-			if self.lines[-1].get() == "":
-				result -= 1
-		return result
+			# If lines missing
+			if len(self.lines) < self.height:
+				# Add empty lines
+				count = self.height - len(self.lines)
+				for i in range(count):
+					self.lines.append(Line(self.width))
+			# Resize all lines
+			for line in self.lines:
+				line.resize(self.width)
 
-	def get_cursor_line(self):
-		""" Get the current line of the cursor """
-		return self.cursor_line
+			# If too many lines
+			if len(self.lines) > self.height:
+				# Cut the end of lines
+				self.lines = self.lines[:self.height]
 
-	def get_tab_cursor_column(self):
-		""" Get the column of cursor in tabuled line """
-		# pylint:disable=attribute-defined-outside-init
-		line = self.lines[self.cursor_line].get()
-		column = 0
-		self.tab_cursor_column = 0
-		while column < self.cursor_column:
-			if line[column] == "\t":
-				pos = self.tab_cursor_column%self.tab_size
-				self.tab_cursor_column += self.tab_size-pos
-				column += 1
-			else:
-				tab = line.find("\t",column)
-				if tab > 0:
-					delta = tab - column
-					if column + delta > self.cursor_column:
-						delta = self.cursor_column - column
-						self.tab_cursor_column += delta
-						column += delta
-					else:
-						self.tab_cursor_column += delta
-						column += delta
-				else:
-					delta = self.cursor_column - column
-					self.tab_cursor_column += delta
-					column += delta
+			# Fix the cursor position
+			self.correct_cursor()
 
-	def set_cursor_column(self):
-		""" When the line change compute the cursor position with tabulation in the line """
-		# pylint:disable=attribute-defined-outside-init
-		line = self.lines[self.cursor_line].get()
-		column = 0
-		tab_cursor_column = 0
-		lenLine = len(line)
-		column = 0
-		while column < lenLine:
-			char = line[column]
-			# If the previous position found exactly in the current line
-			if tab_cursor_column == self.tab_cursor_column:
-				self.cursor_column = column
-				break
-			# If the previous position not found in the current line
-			if tab_cursor_column > self.tab_cursor_column:
-				# Keep last existing position
-				self.cursor_column = column
-				break
-			# If tabulation found
-			if char == "\t":
-				tab_cursor_column += self.tab_size-(tab_cursor_column%self.tab_size)
-				column += 1
-			else:
-				# Optimization to accelerate the cursor position
-				tab = line.find("\t", column)
+	def correct_cursor(self):
+		""" Correct cursor position """
+		# If cursor outside the screen by right
+		if self.cursor_column >= self.width:
+			# Move cursor
+			self.cursor_column = self.width-1
+		# If cursor outside the screen by bottom
+		if self.cursor_line >= self.height:
+			# Move cursor
+			self.cursor_line = self.height-1
 
-				# Tabulation found
-				if tab > 0:
-					delta = tab - column
-					# If the tabulation position is after the previous tabulation cursor
-					if delta + tab_cursor_column > self.tab_cursor_column:
-						# Move the cursor to the left
-						self.cursor_column = column + (self.tab_cursor_column - tab_cursor_column)
-						break
-					else:
-						# Another tabulation found, move it after
-						tab_cursor_column += delta
-						column += delta
-				# Tabulation not found
-				else:
-					# Move the cursor to the end of line
-					self.cursor_column = column + (self.tab_cursor_column - tab_cursor_column)
-					break
-		else:
-			if len(line) >= 1:
-				self.cursor_column = len(line)-1
-			else:
-				self.cursor_column = 0
-
-	def change_line(self, moveLine):
-		""" Move the cursor on another line """
-		# pylint:disable=attribute-defined-outside-init
-		# If cursor is before the first line
-		if moveLine + self.cursor_line < 0:
-			# Set the cursor to the first line
-			self.cursor_line = 0
+		# If cursor outside the screen by left
+		if self.cursor_column < 0:
+			# Move cursor
 			self.cursor_column = 0
-			self.change_column(0)
-		# If the cursor is after the last line
-		elif moveLine + self.cursor_line >= len(self.lines):
-			self.cursor_line = len(self.lines) -1
-			self.cursor_column = len(self.lines[self.cursor_line].get())
-			self.change_column(0)
-		# else the cursor is in the lines of text
-		else:
-			self.cursor_line += moveLine
-			if len(self.lines) - 1 == self.cursor_line:
-				lenLine = len(self.lines[self.cursor_line].get())
-			else:
-				lenLine = len(self.lines[self.cursor_line].get())-1
+		# If cursor outside the screen by top
+		if self.cursor_line < 0:
+			# Move cursor
+			self.cursor_line = 0
 
-			self.set_cursor_column()
-			# If the new cursor position is outside the last line of text
-			if self.cursor_column > lenLine:
-				self.cursor_column = lenLine
+	def get_size(self):
+		""" Get the size of console """
+		return self.width, self.height
 
-	def change_column(self, move_column):
-		""" Move the cursor on another column """
-		# pylint:disable=attribute-defined-outside-init
-		cursor_line   = self.cursor_line
-		cursor_column = self.cursor_column
-		# If the cursor go to the previous line
-		if move_column + self.cursor_column < 0:
-			# If start of line
-			if abs(move_column) > 1:
-				self.cursor_column = 0
-			# If move to the left and must go to previous line
-			elif self.cursor_line > 0:
-				self.cursor_line -= 1
-				self.cursor_column = len(self.lines[self.cursor_line].get())-1
-		# If the cursor is at the end of line
-		elif move_column + self.cursor_column > len(self.lines[self.cursor_line].get())-1:
-			# If the cursor is on the last line of file
-			if abs(move_column) > 1 or self.cursor_line+1 == len(self.lines):
-				# If the file is empty
-				if self.lines[self.cursor_line].get() == "":
-					self.cursor_column = 0
-					self.tab_cursor_column = 0
-				# If the last line of contains return char
-				elif self.lines[self.cursor_line].get()[-1] == "\n":
-					# Move cursor before return
-					self.cursor_column = len(self.lines[self.cursor_line].get())-1
-				else:
-					# Move cursor after the last char
-					self.cursor_column = len(self.lines[self.cursor_line].get())
+	def cls(self, direction="2"):
+		""" Clear screen command """
+		# Erase to end of screen
+		if direction == "0":
+			for i in range(self.cursor_line+1, self.height):
+				self.lines[i].clear_line()
+			self.lines[self.cursor_line].erase_line(self.cursor_column,"0")
+		# Erase to beginning of screen
+		elif direction == "1":
+			for i in range(0, self.cursor_line):
+				self.lines[i].clear_line()
+			self.lines[self.cursor_line].erase_line(self.cursor_column,"1")
+		# Erase entire screen
+		elif direction == "2":
+			for line in self.lines:
+				line.clear_line()
 
-			# If the cursor is on the end of line and must change of line
-			elif self.cursor_line+1 < len(self.lines):
-				self.cursor_line += 1
-				self.cursor_column = 0
-				self.tab_cursor_column = 0
-		# Normal move of cursor
-		else:
-			# Next or previous column
-			self.cursor_column += move_column
-		if abs(move_column) > 0:
-			self.get_tab_cursor_column()
-
-		if self.cursor_column == cursor_column and self.cursor_line == cursor_line:
-			return False
-		else:
-			return True
-
-	def backspace(self):
-		""" Manage the backspace key """
-		self.replace_char(" ")
-
-	def line_feed(self):
-		""" Manage the line feed """
-		# pylint:disable=attribute-defined-outside-init
-		if self.cursor_line +1 >= len(self.lines):
-			self.lines.append(Line())
-		self.change_line(1)
-		self.change_column(-100000000000)
-
-	def carriage_return(self):
-		""" Manage the carriage return """
-		self.change_column(-100000000000)
-
-	def replace_char(self, char):
-		""" Replace character """
-		# pylint:disable=attribute-defined-outside-init
-		try:
-			self.lines[self.cursor_line].replace_char(char, self.forecolor, self.backcolor, self.reverse, self.cursor_column)
-		except:
-			self.lines[self.cursor_line] = char
-
-		self.change_column(1)
-
-	def add_char(self, char):
-		""" Manage other key, add character """
-		# pylint:disable=attribute-defined-outside-init
-		result = False
-		if ord(char) >= 0x20 and ord(char) != 0x7F or ord(char) == 6:
-			self.replace_char(char)
-			result = True
-		return result
-
-	def move_cursor(self, line, column):
-		""" Move the cursor """
-		# pylint:disable=attribute-defined-outside-init
-		self.cursor_line   = line
-		self.cursor_column = column
-		self.change_column(0)
-		self.get_tab_cursor_column()
+	def is_modified(self):
+		""" Indicates that the console must be refreshed """
+		return self.modified
+	
+	def set_modified(self):
+		self.modified = True
 
 	def treat_char(self, char):
 		""" Treat character entered """
-		# pylint:disable=attribute-defined-outside-init
-		if ord(char) >= 0x20 and ord(char) != 0x7F:
-			self.add_char(char)
-			return True
+		try:
+			if ord(char) >= 0x20 and ord(char) != 0x7F:
+				if self.cursor_column >= self.width:
+					self.cursor_column = 0
+					self.auto_scroll(1)
+				if self.cursor_line >= self.height:
+					self.cursor_line = self.height-1
+				self.lines[self.cursor_line].replace_char(char, self.forecolor, self.backcolor, self.reverse, self.cursor_column)
+				self.cursor_column += 1
+				return True
+		except Exception as err:
+			return False
 		return False
+
+	def to_int(self, value, default=0):
+		""" Convert string into integer """
+		try:
+			result = int(value)
+		except:
+			result = default
+		return result
 
 	def parse_color(self, escape):
 		""" Parse vt100 colors """
-		# pylint:disable=attribute-defined-outside-init
 		result = False
 		if len(escape) >= 3:
 			# If color modification detected
@@ -470,25 +471,25 @@ class VT100:
 				# Case VT100 large predefined colors
 				if len(values) == 3:
 					if values[0] == '38' and values[1] == '5':
-						color = int(values[3])
+						color = self.to_int(values[2])
 						if color < 256:
 							foreground = vga_colors[color]
 					elif values[0] == '48' and values[1] == '5':
-						color = int(values[3])
+						color = self.to_int(values[2])
 						if color < 256:
 							background = vga_colors[color]
 				# Case VT100 RGB colors
 				elif len(values) == 5:
 					if values[0] == '38' and values[1] == '2':
-						foreground = ((int(values[2]) % 256) << 16) | ((int(values[3])%256) << 8) | ((int(values[4])%256))
+						foreground = ((self.to_int(values[2]) % 256) << 16) | ((self.to_int(values[3])%256) << 8) | ((self.to_int(values[4])%256))
 					elif values[0] == '48' and values[1] == '2':
-						background = ((int(values[2]) % 256) << 16) | ((int(values[3])%256) << 8) | ((int(values[4])%256))
+						background = ((self.to_int(values[2]) % 256) << 16) | ((self.to_int(values[3])%256) << 8) | ((self.to_int(values[4])%256))
 
 				# If color not found
 				if foreground is None and background is None and reverse is None:
 					# Case VT100 reduced predefined colors and reverse
 					for value in values:
-						value = int(value)
+						value = self.to_int(value)
 						if value == 0:
 							foreground = DEFAULT_FORECOLOR
 							background = DEFAULT_BACKCOLOR
@@ -519,69 +520,360 @@ class VT100:
 				result = True
 		return result
 
-	def parse_erasing(self, escape):
-		""" Parse vt100 erasing command """
-		# pylint:disable=attribute-defined-outside-init
+	def parse_erasing_line(self, escape):
+		""" Parse vt100 erasing line command """
+		if len(escape) >= 3:
+			# Erase line
+			if escape[-1] == "K":
+				if len(escape) == 3:
+					self.lines[self.cursor_line].erase_line(self.cursor_column, "")
+				elif len(escape) > 3:
+					self.lines[self.cursor_line].erase_line(self.cursor_column, escape[2])
+
+	def parse_erasing_screen(self, escape):
+		""" Parse vt100 erasing screen command """
 		if len(escape) >= 3:
 			# Erase screen
 			if escape[-1] == "J":
-				if len(escape) > 3:
-					if   escape[2] == "0":
+				if len(escape) == 3:
+					self.cls("0")
+				else:
+					self.cls(escape[2])
+
+	def parse_cursor(self, escape):
+		""" Parse vt100 cursor command """
+		try:
+			if len(escape) == 2:
+				# Cursor down
+				if escape[-1] == "D":
+					self.cursor_line += 1
+					if self.cursor_line >= self.height:
+						self.scroll(1,self.height,-1)
+						self.cursor_line = self.height-1
+				# Cursor up
+				elif escape[-1] == "M":
+					self.cursor_line -= 1
+					if self.cursor_line < 0:
+						self.scroll(0,self.height,1)
+						self.cursor_line = 0
+				# Save cursor position
+				elif escape[-1] == "7":
+					self.cursor_column_saved = self.cursor_column
+					self.cursor_line_saved   = self.cursor_line
+				# Restore cursor position
+				elif escape[-1] == "8":
+					self.cursor_column  = self.cursor_column_saved
+					self.cursor_line    = self.cursor_line_saved
+			elif len(escape) == 3:
+				# Set cursor home
+				if escape[1] == "[" and (escape[2] == "f" or escape[2] == "H"):
+					self.cursor_column = 0
+			elif len(escape) > 3:
+				#  Cursor position report
+				if escape == "\x1B[6n":
+					self.output = "\x1B[%d;%dR"%(self.cursor_line + 1, self.cursor_column + 1)
+				# Cursor up pn times - stop at top
+				elif escape[-1] == "A":
+					move = eval(escape[2:-1])
+					self.cursor_line -= move
+				# Cursor down pn times - stop at bottom
+				elif escape[-1] == "B":
+					move = eval(escape[2:-1])
+					self.cursor_line += move
+				# Cursor right pn times - stop at far right
+				elif escape[-1] == "C":
+					move = eval(escape[2:-1])
+					self.cursor_column += move
+				# Cursor left pn times - stop at far left
+				elif escape[-1] == "D":
+					move = eval(escape[2:-1])
+					self.cursor_column -=move
+				# Set cursor position - pl Line, pc Column
+				elif escape[-1] == "H" or escape[-1] == "f":
+					try:
+						line, column = escape[2:-1].split(";")
+						self.cursor_column = eval(column)-1
+						self.cursor_line   = eval(line)-1
+					except:
 						pass
-					elif escape[2] == "1":
-						pass
-					elif escape[2] == "2":
-						self.cls()
-			# Erase line
-			elif escape[-1] == "K":
-				if len(escape) > 3:
-					#  erase to end of line
-					if   escape[2] == "0":
-						self.lines[self.cursor_line].erase_line(self.cursor_column, 1)
-					#  Erase to beginning of line
-					elif escape[2] == "1":
-						self.lines[self.cursor_line].erase_line(self.cursor_column, -1)
-						self.cursor_column = 0
-					# Erase entire line
-					elif escape[2] == "2":
-						self.lines[self.cursor_line].clear_line()
-						self.cursor_column = 0
-					# pass
+		except:
+			pass
+		self.correct_cursor()
+
+	def parse_scroll_region(self, escape):
+		""" Parse vt100 scroll region """
+		result = False
+		if len(escape) >= 3:
+			# If scrolling region detected
+			if escape[-1] == "r" and escape[1]=="[":
+				data = escape[2:-1]
+				values = data.split(';')
+				if len(values) == 2:
+					self.region_start = self.to_int(values[0], 0)-1
+					self.region_end   = self.to_int(values[1], self.height)-1
+					if self.region_start < 0:
+						self.region_start = 0
+					elif self.region_start >= self.height:
+						self.region_start = self.height
+					if self.region_end < 0:
+						self.region_end = 0
+					elif self.region_end >= self.height:
+						self.region_end = self.height
+					if self.region_start > self.region_end:
+						self.region_end = self.region_start
+			# Clear scrolling region
+			elif escape == "\x1B[?6l":
+				self.region_start = 0
+				self.region_end = self.height
+			# Scrolling region up
+			elif escape[-1] == "S" and escape[1]=="[":
+				move = self.to_int(escape[2:-1])
+				self.scroll(self.region_start, self.region_end-self.region_start, -move)
+			# Scrolling region down
+			elif escape[-1] == "T" and escape[1]=="[":
+				move = self.to_int(escape[2:-1])
+				self.scroll(self.region_start, self.region_end-self.region_start, move)
+		return result
+
+	def parse_reset(self, escape):
+		""" Parse reset to initial state """
+		if escape == "\x1B"+"c":
+			self.reset()
+
+	def scroll(self, pos, length, move):
+		""" Scroll screen """
+		# If position is in the screen
+		if pos >= 0 and pos < self.height:
+			# If the scroll not null
+			if length > 0:
+				# If scroll down
+				if move > 0:
+					# If move greater than the screen
+					if move > self.height:
+						move = self.height
+
+					# Scroll part
+					for i in range(pos + length, pos-1, -1):
+						# Move line
+						if (i + move) < self.height:
+							self.lines[i+move] = self.lines[i]
+						# Clear line
+						if (i < self.height):
+							self.lines[i] = Line(self.width)
+				# Else scroll up
+				elif move < 0:
+					# If move greater than the screen
+					if move < (-self.height):
+						move = (-self.height)
+
+					# Scroll
+					for i in range(pos, pos + length +1):
+						# Move line
+						if i + move >= pos and i + move < self.height and i < self.height:
+							self.lines[i+move] = self.lines[i]
+						# Clear line
+						if i >= 0 and i < self.height:
+							self.lines[i] = Line(self.width)
+
+	def auto_scroll(self, direction):
+		""" Automatic scroll """
+		self.cursor_line += direction
+		# If the scroll is bottom
+		if self.cursor_line < 0:
+			self.cursor_line = 0
+			self.lines.insert(Line(self.width),0)
+			self.lines = self.lines[:self.height]
+			self.cursor_column = 0
+		# If the scroll is top
+		elif self.cursor_line >= self.height:
+			self.cursor_line = self.height -1
+			self.lines = self.lines[1:]
+			self.lines.append(Line(self.width))
 
 	def treat_key(self, char):
 		""" Treat keys """
-		# pylint:disable=attribute-defined-outside-init
+		self.output = ""
 		if self.escape is None:
 			if self.treat_char(char) is False:
-				if   char in BACKSPACE:
-					self.backspace()
-				elif char in LINE_FEED:
-					self.line_feed()
-				elif char in CARRIAGE_RETURN:
-					self.carriage_return()
+				if char in "\r":
+					self.cursor_column = 0
+				elif char in "\n":
+					self.cursor_column = 0
+					self.auto_scroll(1)
+				elif char in "\x08":
+					self.cursor_column -= 1
+					self.correct_cursor()
 				elif char in ESCAPE:
 					self.escape = ESCAPE
 		else:
 			self.escape += char
-			if useful.is_key_ended(self.escape):
+			if is_key_ended(self.escape):
 				escape = self.escape
-				self.parse_color(escape)
-				self.parse_erasing(escape)
+				self.parse_color         (escape)
+				self.parse_erasing_line  (escape)
+				self.parse_erasing_screen(escape)
+				self.parse_cursor        (escape)
+				self.parse_scroll_region (escape)
+				self.parse_reset         (escape)
 				self.escape = None
+		return self.output
 
-	def forget_lines(self, count):
-		""" Forget older lines from vt100 console """
-		# pylint:disable=attribute-defined-outside-init
-		if count > 0:
-			if len(self.lines) > count:
-				self.lines         = self.lines[count:]
-				self.cursor_line -= count
-				if self.cursor_line < 0:
-					self.cursor_line = 0
-
-	def get_content(self, width):
+	def to_html(self):
 		""" Get the html content of VT100 """
 		result = ""
+		pos = 0
 		for line in self.lines:
-			result += line.to_html(width)
+			if pos == self.cursor_line:
+				cursor = self.cursor_column
+			else:
+				cursor = None
+			pos += 1
+			text_line = line.to_html(cursor)
+			if pos == self.height:
+				result += text_line + "\n"
+			else:
+				result += text_line + "<br>\n"
+		self.modified = False
 		return result
+
+	def test_move_abs_cursor(self):
+		""" Test the move absolute cursor """
+		print("\x1B[2J",end="")
+		for i in range(1,self.height+1):
+			print("\x1B[%d;%dH#"%(i,i), end="")
+		for i in range(1,self.width+1):
+			print("\x1B[%d;%dH*"%(0,i), end="")
+		for i in range(1,self.width+1):
+			print("\x1B[%d;%dH*"%(self.height+1,i), end="")
+		for i in range(1,self.height+1):
+			print("\x1B[%d;%dH*"%(i,0), end="")
+		for i in range(1,self.height+1):
+			print("\x1B[%d;%dH*"%(i,self.width+1), end="")
+
+	def test_move_relative_cursor(self):
+		""" Test the move relative cursor """
+		print("\x1B[%d;%dH"%(3, 7), end="")
+		for i in range(10):
+			print("\x1B[1C%d\x1B[1D"%i, end="")
+		for i in range(10):
+			print("\x1B[1B%d\x1B[1D"%i, end="")
+		for i in range(10):
+			print("\x1B[1D%d\x1B[1D"%i, end="")
+		for i in range(10):
+			print("\x1B[1A%d\x1B[1D"%i, end="")
+
+	def test_clear_line_part(self):
+		""" Test clear line part """
+		print("\x1B[%d;%dH"%(self.height//2, self.width//2), end="")
+		print("<<<<[]>>>>",end="")
+		print("\x1B[5D",end="")
+		print("\x1B[K",end="")
+
+		print("\x1B[%d;%dH"%(self.height//2 + 1, self.width//2), end="")
+		print("<<<<[]>>>>",end="")
+		print("\x1B[5D",end="")
+		print("\x1B[0K",end="")
+
+		print("\x1B[%d;%dH"%(self.height//2 + 2, self.width//2), end="")
+		print("<<<<[]>>>>",end="")
+		print("\x1B[5D",end="")
+		print("\x1B[1K",end="")
+
+		print("\x1B[%d;%dH"%(self.height//2 + 3, self.width//2), end="")
+		print("<<<<[]>>>>",end="")
+		print("\x1B[5D",end="")
+		print("\x1B[2K",end="")
+
+	def test_clear_screen_part(self):
+		""" Test clear screen part """
+		print("\x1B[%d;%dH"%(self.height//2, self.width//2), end="")
+		print("<<<<[]>>>>",end="")
+		print("\x1B[2D",end="")
+		print("\x1B[0J",end="")
+		print("\x1B[6D",end="")
+		print("\x1B[1J",end="")
+
+	def test_fill_screen(self):
+		""" Test fill screen check the automatic line feeld """
+		print("\x1B[1;1H", end="")
+		for i in range(1680):
+			print("%c"%chr((i %96) + 0x20), end="")
+
+	def test_ansi_color(self):
+		""" Test ansi color """
+		for i in range(11):
+			for j in range(10):
+				n = 10*i + j
+				if (n > 108):
+					break
+				print("\x1B[%dm %3d\033[m"%(n, n), end="")
+			print("\n", end="")
+
+	def test_fill_scroll_screen(self):
+		""" Test move cursor with scrolling """
+		print("\x1B[2J",end="")
+		print("\x1B[1;1H", end="")
+		for line in range(self.height):
+			print("%c"%(chr(0x41+line))*(self.width),end="")
+
+	def test_scroll_down(self):
+		""" Test scrolling down direction """
+		print("\x1B[1;1H", end="")
+		for i in range(5):
+			print("\x1BM",end="") # curseur up, scrolling down
+
+	def test_scroll_up(self):
+		""" Test scrolling up direction """
+		print("\x1B[%d;1H"%self.height, end="")
+		for i in range(5):
+			print("\x1BD",end="") # curseur up, scrolling down
+
+	def test_scroll_down_region(self):
+		""" Test scroll down region """
+		print("\x1B[3;%dr"%(self.height-3), end="")
+		for i in range(2):
+			print("\x1B[1T", end="")
+
+	def test_scroll_up_region(self):
+		""" Test scroll up region """
+		print("\x1B[3;%dr"%(self.height-3), end="")
+		for i in range(2):
+			print("\x1B[1S", end="")
+
+	def test(self):
+		""" Unitary test """
+		tests= \
+		[
+			self.test_fill_scroll_screen,
+			self.test_scroll_down_region,
+			self.test_scroll_down_region,
+			self.test_scroll_down_region,
+			self.test_scroll_up_region,
+			self.test_scroll_up_region,
+			self.test_scroll_up_region,
+			# self.test_fill_scroll_screen,
+			# self.test_scroll_up,
+			# self.test_scroll_up,
+			# self.test_scroll_up,
+			# self.test_scroll_up,
+			# self.test_scroll_up,
+			# self.test_fill_scroll_screen,
+			# self.test_scroll_down,
+			# self.test_scroll_down,
+			# self.test_scroll_down,
+			# self.test_scroll_down,
+			# self.test_scroll_down,
+			# self.test_ansi_color,
+			# self.test_fill_screen,
+			# self.test_move_abs_cursor,
+			# self.test_move_relative_cursor,
+			# self.test_clear_screen_part,
+			# self.test_move_abs_cursor,
+			# self.test_clear_line_part,
+		]
+
+		if self.test_number % 1 == 0:
+			if self.test_number//1 < len(tests):
+				tests[self.test_number//1]()
+
+		self.test_number += 1
