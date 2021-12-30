@@ -144,7 +144,7 @@ class Server:
 				if newWanIp is not None:
 					# If wan ip must be notified
 					if (Server.context.wan_ip != newWanIp or forced):
-						await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(wifi.Station.get_info()[0],newWanIp, useful.uptime()))
+						await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s"%(wifi.Station.get_info()[0],newWanIp))
 					Server.context.wan_ip = newWanIp
 					wifi.Wifi.wan_connected()
 				else:

@@ -1,9 +1,10 @@
 """ Tools to flash the firmware of pycameresp """
 import sys
 # pylint:disable=no-name-in-module
+import os.path
 from PyQt6 import uic
 from PyQt6.QtCore import QTimer, QEvent, Qt
-from PyQt6.QtWidgets import QFileDialog, QMainWindow, QApplication
+from PyQt6.QtWidgets import QFileDialog, QMainWindow, QApplication, QMessageBox
 from serial.tools import list_ports
 from flasher import Flasher
 from qstdoutvt100 import QStdoutVT100
@@ -124,6 +125,9 @@ class CamFlasher(QMainWindow):
 		self.ui.cbo_baud.addItems(["9600","57600","74880","115200","230400","460800"])
 		self.ui.cbo_baud.setCurrentIndex(5)
 
+		self.port_selected = None
+		self.ui.cbo_port.currentTextChanged.connect(self.on_port_changed)
+
 		self.move(0,0)
 		self.show()
 		self.console.resizeEvent()
@@ -152,9 +156,21 @@ class CamFlasher(QMainWindow):
 		# If the list of serial port changed
 		if self.serial_ports != ports:
 			self.serial_ports = ports
-			self.ui.cbo_port.clear()
-			self.ui.cbo_port.addItems(ports)
-			self.flasher.set_info(port=self.get_port())
+
+			for i in range(self.ui.cbo_port.count()):
+				if not self.ui.cbo_port.itemText(i) in ports:
+					self.ui.cbo_port.removeItem(i)
+
+			for port in ports:
+				for i in range(self.ui.cbo_port.count()):
+					if self.ui.cbo_port.itemText(i) == port:
+						break
+				else:
+					self.ui.cbo_port.addItem(port)
+
+	def on_port_changed(self, event):
+		""" On port changed event """
+		self.flasher.set_info(port = self.get_port())
 
 	def on_firmware_clicked(self, event):
 		""" Selection of firmware button clicked """
@@ -168,7 +184,18 @@ class CamFlasher(QMainWindow):
 		baud     = self.ui.cbo_baud.currentText()
 		firmware = self.ui.txt_firmware.text()
 		erase    = self.ui.chk_erase.isChecked()
-		self.flasher.set_info(port, baud, firmware, erase)
+		if os.path.exists(firmware) is False:
+			msg = QMessageBox()
+			w = self.geometry().width()
+			h = self.geometry().height()
+			x = self.geometry().x()
+			y = self.geometry().y()
+			msg.setGeometry(x + w//3,y + h//3,w,h)
+			msg.setIcon(QMessageBox.Icon.Critical)
+			msg.setText("Firmware not found")
+			msg.exec()
+		else:
+			self.flasher.flash(port, baud, firmware, erase)
 
 	def get_port(self):
 		""" Get the name of serial port """
@@ -190,7 +217,7 @@ class CamFlasher(QMainWindow):
 		self.console.close()
 
 		# Stop serial thread
-		self.flasher.cancel()
+		self.flasher.quit()
 
 def main():
 	""" Main application """
