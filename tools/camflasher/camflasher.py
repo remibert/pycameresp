@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_win_main(object):
     def setupUi(self, win_main):
         win_main.setObjectName("win_main")
-        win_main.resize(589, 406)
+        win_main.resize(800, 600)
         win_main.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.DefaultContextMenu)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("icons/camflasher.ico"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)

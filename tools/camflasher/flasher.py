@@ -2,6 +2,7 @@
 import threading
 import queue
 from serial import Serial
+
 class ThreadSerial(threading.Thread):
 	""" Serial thread """
 	def __init__(self, receive_callback):
@@ -13,6 +14,7 @@ class ThreadSerial(threading.Thread):
 		self.port = ""
 		self.loop = True
 		self.buffer = b""
+		self.buffer2 = b""
 
 		self.CONNECT = 0
 		self.DISCONNECT = 1
@@ -24,33 +26,6 @@ class ThreadSerial(threading.Thread):
 	def __del__(self):
 		""" Destructor """
 		self.quit()
-
-	def get_utf8_length(self, data):
-		""" Get the length of utf8 character """
-		# 0XXX XXXX one byte
-		if data[0] <= 0x7F:
-			length = 1
-		# 110X XXXX  two length
-		else:
-			# first byte
-			if ((data[0] & 0xE0) == 0xC0):
-				length = 2
-			# 1110 XXXX  three bytes length
-			elif ((data[0] & 0xF0) == 0xE0):
-				length = 3
-			# 1111 0XXX  four bytes length
-			elif ((data[0] & 0xF8) == 0xF0):
-				length = 4
-			# 1111 10XX  five bytes length
-			elif ((data[0] & 0xFC) == 0xF8):
-				length = 5
-			# 1111 110X  six bytes length
-			elif ((data[0] & 0xFE) == 0xFC):
-				length = 6
-			else:
-				# not a valid first byte of a UTF-8 sequence
-				length = 1
-		return length
 
 	def close(self):
 		""" Close serial """
@@ -98,24 +73,7 @@ class ThreadSerial(threading.Thread):
 		""" Receive data from serial """
 		if self.serial is not None:
 			try:
-				# Read data
-				char = self.serial.read(1)
-				if char != b"":
-					self.buffer += char
-
-					# If no data received
-					if len(self.buffer) == 0:
-						# Compute the utf8 length
-						length = self.get_utf8_length(char)
-					else:
-						# Compute the utf8 length
-						length = self.get_utf8_length(self.buffer)
-
-					# If utf8 char completly received
-					if length == len(self.buffer):
-						# Send utf8 received
-						self.receive_callback(self.buffer)
-						self.buffer = b""
+				self.receive_callback(self.serial.read(self.serial.in_waiting or 1))
 			except Exception as err:
 				self.close()
 
@@ -138,30 +96,27 @@ class ThreadSerial(threading.Thread):
 					self.on_quit   (command)
 				self.receive()
 
-	def quit(self):
-		""" Send quit command to serial thread """
-		self.command.put((self.QUIT,None))
+	def send(self, message):
+		""" Send message to serial thread """
+		self.command.put(message)
 		if self.serial is not None:
 			self.serial.cancel_read()
+
+	def quit(self):
+		""" Send quit command to serial thread """
+		self.send((self.QUIT,None))
 
 	def write(self, data):
 		""" Send write data command to serial thread """
-		self.command.put((self.WRITE_DATA,data))
-		if self.serial is not None:
-			self.serial.cancel_read()
+		self.send((self.WRITE_DATA,data))
 
 	def connect(self, port):
 		""" Send connect command to serial thread """
-		self.command.put((self.CONNECT, port))
-		if self.serial is not None:
-			self.serial.cancel_read()
+		self.send((self.CONNECT, port))
 
 	def disconnect(self):
 		""" Send disconnect command to serial thread """
-		self.command.put((self.DISCONNECT, None))
-		if self.serial is not None:
-			self.serial.cancel_read()
-
+		self.send((self.DISCONNECT, None))
 class Flasher(threading.Thread):
 	""" Micropython firmware flasher for esp32 """
 	def __init__(self):
@@ -177,18 +132,8 @@ class Flasher(threading.Thread):
 
 		self.loop = True
 		self.flashing = False
+		self.waiting_data = b""
 		self.serial_thread = ThreadSerial(self.receive)
-
-	def decode(self, data):
-		""" Decode bytes into string """
-		if type(data) == type(""):
-			result = data
-		else:
-			try:
-				result = data.decode("utf8")
-			except:
-				result = data.decode("latin-1")
-		return result
 
 	def run(self):
 		""" Thread core """
@@ -210,6 +155,69 @@ class Flasher(threading.Thread):
 				self.flashing = False
 			elif command == self.SET_INFO:
 				self.serial_thread.connect(data)
+
+	def get_utf8_length(self, data):
+		""" Get the length of utf8 character """
+		# 0XXX XXXX one byte
+		if data <= 0x7F:
+			length = 1
+		# 110X XXXX  two length
+		else:
+			# first byte
+			if ((data & 0xE0) == 0xC0):
+				length = 2
+			# 1110 XXXX  three bytes length
+			elif ((data & 0xF0) == 0xE0):
+				length = 3
+			# 1111 0XXX  four bytes length
+			elif ((data & 0xF8) == 0xF0):
+				length = 4
+			# 1111 10XX  five bytes length
+			elif ((data & 0xFC) == 0xF8):
+				length = 5
+			# 1111 110X  six bytes length
+			elif ((data & 0xFE) == 0xFC):
+				length = 6
+			else:
+				# not a valid first byte of a UTF-8 sequence
+				length = -1
+		return length
+
+	def decode(self, data):
+		""" Decode bytes data into string """
+		result = ""
+		# If data received from serial port
+		if type(data) == type(b""):
+			last_i = -1
+			self.waiting_data += data
+			if len(self.waiting_data) > 0:
+				i = 0
+				while i < len(self.waiting_data):
+					length = self.get_utf8_length(self.waiting_data[i])
+					if length >= 1:
+						if i + length <= len(self.waiting_data):
+							try:
+								char = self.waiting_data[i:i+length].decode("utf-8")
+								i += length
+							except:
+								char = bytes([self.waiting_data[i]]).decode("latin-1")
+								i += 1
+							result += char
+						else:
+							last_i = i
+							break
+					elif length < 0:
+						char = bytes([self.waiting_data[i]]).decode("latin-1")
+						result += char
+						i += 1
+			if last_i >= 0:
+				self.waiting_data = self.waiting_data[last_i:]
+			else:
+				self.waiting_data = b""
+		else:
+			# Else it is standard printing
+			result = data
+		return result
 
 	def flasher(self, port, baud, firmware, erase):
 		""" Flasher of firmware it use the esptool.py command """

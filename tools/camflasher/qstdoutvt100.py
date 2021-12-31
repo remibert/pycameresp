@@ -2,11 +2,12 @@
 import sys
 from threading import Lock
 from vt100 import VT100
-
+from PyQt6.QtCore import Qt
 class QStdoutVT100:
 	""" Stdout VT100 ouptut on qtextbrowser widget """
 	def __init__(self, qtextbrowser):
 		""" Constructor with QTextBrowser widget"""
+		self.platform = sys.platform
 		self.qtextbrowser = qtextbrowser
 		self.vt100 = VT100()
 		self.lock = Lock()
@@ -28,23 +29,11 @@ class QStdoutVT100:
 		if self.can_test:
 			self.vt100.test()
 
-	def decode(self, data):
-		""" Decode bytes into string """
-		if type(data) == type(""):
-			result = data
-		else:
-			try:
-				result = data.decode("utf8")
-			except:
-				result = data.decode("latin-1")
-		return result
-
 	def write(self, string):
 		""" Write on stdout """
-		try:
-			self.lock.acquire()
-			if len(string) > 0 or string is None:
-				string = self.decode(string)
+		if len(string) > 0 and string is not None and string != "":
+			try:
+				self.lock.acquire()
 				# self.stdout.write(string)
 				# pylint:disable=consider-using-enumerate
 				for char in range(len(string)):
@@ -52,19 +41,22 @@ class QStdoutVT100:
 					if output != "":
 						self.output.append(output)
 				self.vt100.set_modified()
-		except Exception as err:
-			self.stdout.write(err)
-		finally:
-			self.lock.release()
+			except Exception as err:
+				self.stdout.write(err)
+			finally:
+				self.lock.release()
 
 	def get_size(self):
 		""" Get the size of VT100 console """
-		content_width  = self.qtextbrowser.contentsRect().width()
-		content_height = self.qtextbrowser.contentsRect().height()
-		char_width  = self.qtextbrowser.fontMetrics().boundingRect("W"*100).size().width()
-		char_height = self.qtextbrowser.fontMetrics().boundingRectChar("|").size().height()
-		width = ((content_width*100)//char_width)-1
-		height = content_height//char_height
+		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
+		line = "W"*200 + "\n"
+		line = line*200
+		line = line[:-1]
+		size = self.qtextbrowser.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
+
+		# Deduce the size of console visible in the window
+		width  = (self.qtextbrowser.contentsRect().width()  * 200)// size.width() -  1
+		height = (self.qtextbrowser.contentsRect().height() * 200)// size.height()
 		return width, height
 
 	def resizeEvent(self):

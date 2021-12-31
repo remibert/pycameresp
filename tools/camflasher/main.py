@@ -100,9 +100,11 @@ class CamFlasher(QMainWindow):
 			from camflasher import Ui_win_main
 			self.ui = Ui_win_main()
 			self.ui.setupUi(self)
-		self.txt_result.installEventFilter(self)
+			self.ui.txt_result.installEventFilter(self)
 
 		# Start stdout redirection vt100 console
+		self.ui.txt_result.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+		self.ui.txt_result.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 		self.console = QStdoutVT100(self.ui.txt_result)
 
 		# Serial listener thread
@@ -128,7 +130,7 @@ class CamFlasher(QMainWindow):
 		self.port_selected = None
 		self.ui.cbo_port.currentTextChanged.connect(self.on_port_changed)
 
-		self.move(0,0)
+		#~ self.move(0,0)
 		self.show()
 		self.console.resizeEvent()
 

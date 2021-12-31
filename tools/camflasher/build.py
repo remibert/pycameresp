@@ -32,20 +32,24 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=False , icon='icons/camflasher.icns')
+          console=False , icon='%(ICONS)s')
 app = BUNDLE(exe,
              name='%(NAME)s-%(VERSION)s.app',
-             icon='./icons/camflasher.icns',
+             icon='%(ICONS)s',
              bundle_identifier='github.com/remibert/pycameresp')
 """
 
-spec_file = open("build-osx.spec","w")
+from sys import platform
+if platform == "win32":
+	ICONS = "icons/camflasher.ico"
+elif platform == "darwin":
+	ICONS = "icons/camflasher.icns"
+
+spec_file = open("build-%s.spec"%platform,"w")
 spec_file.write(spec%globals())
 spec_file.close()
-
-execute("rm -rf dist build")
 execute("pyuic6 camflasher.ui -o camflasher.py")
-execute("pyinstaller --log-level=DEBUG --noconfirm --windowed build-osx.spec")
-execute("create-dmg %(NAME)s-%(VERSION)s.dmg dist/%(NAME)s-%(VERSION)s.app --volicon icons/camflasher.icns"%(globals()))
-execute("rm build-osx.spec")
-execute("rm -rf build dist")
+execute("pyinstaller --log-level=DEBUG --noconfirm --windowed build-%s.spec"%platform)
+
+if platform == "darwin":
+	execute("create-dmg dist/%(NAME)s-%(VERSION)s.dmg dist/%(NAME)s-%(VERSION)s.app --volicon %(ICONS)s"%(globals()))

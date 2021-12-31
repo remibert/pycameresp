@@ -287,7 +287,7 @@ class Line:
 					back = backcolor
 
 				if cursor == i:
-					back = 0xDFDFDF
+					back = 0xcFcFcF
 
 				if changed:
 					part = '<span style="color:#%06X;background-color:#%06X">'%(fore,back)
@@ -422,8 +422,9 @@ class VT100:
 	def is_modified(self):
 		""" Indicates that the console must be refreshed """
 		return self.modified
-	
+
 	def set_modified(self):
+		""" Force the modification of console """
 		self.modified = True
 
 	def treat_char(self, char):
@@ -851,25 +852,25 @@ class VT100:
 			self.test_scroll_up_region,
 			self.test_scroll_up_region,
 			self.test_scroll_up_region,
-			# self.test_fill_scroll_screen,
-			# self.test_scroll_up,
-			# self.test_scroll_up,
-			# self.test_scroll_up,
-			# self.test_scroll_up,
-			# self.test_scroll_up,
-			# self.test_fill_scroll_screen,
-			# self.test_scroll_down,
-			# self.test_scroll_down,
-			# self.test_scroll_down,
-			# self.test_scroll_down,
-			# self.test_scroll_down,
-			# self.test_ansi_color,
-			# self.test_fill_screen,
-			# self.test_move_abs_cursor,
-			# self.test_move_relative_cursor,
-			# self.test_clear_screen_part,
-			# self.test_move_abs_cursor,
-			# self.test_clear_line_part,
+			self.test_fill_scroll_screen,
+			self.test_scroll_up,
+			self.test_scroll_up,
+			self.test_scroll_up,
+			self.test_scroll_up,
+			self.test_scroll_up,
+			self.test_fill_scroll_screen,
+			self.test_scroll_down,
+			self.test_scroll_down,
+			self.test_scroll_down,
+			self.test_scroll_down,
+			self.test_scroll_down,
+			self.test_ansi_color,
+			self.test_fill_screen,
+			self.test_move_abs_cursor,
+			self.test_move_relative_cursor,
+			self.test_clear_screen_part,
+			self.test_move_abs_cursor,
+			self.test_clear_line_part,
 		]
 
 		if self.test_number % 1 == 0:
