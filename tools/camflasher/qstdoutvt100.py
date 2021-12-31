@@ -7,7 +7,6 @@ class QStdoutVT100:
 	""" Stdout VT100 ouptut on qtextbrowser widget """
 	def __init__(self, qtextbrowser):
 		""" Constructor with QTextBrowser widget"""
-		self.platform = sys.platform
 		self.qtextbrowser = qtextbrowser
 		self.vt100 = VT100()
 		self.lock = Lock()
