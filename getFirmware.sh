@@ -14,18 +14,18 @@ echo "*************"
 echo "Install tools"
 echo "*************"
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-	sudo apt-get update                  --fix-missing
-	sudo apt-get install git             --fix-missing
-	sudo apt-get install wget            --fix-missing
-	sudo apt-get install make            --fix-missing
-	sudo apt-get install libncurses-dev  --fix-missing
-	sudo apt-get install flex bison      --fix-missing
-	sudo apt-get install gperf           --fix-missing
-	sudo apt-get install scite           --fix-missing
-	sudo apt-get install python3-pip     --fix-missing
-	sudo apt-get install python3-tk      --fix-missing
-	sudo apt-get install python3-venv    --fix-missing
-	sudo apt-get install cmake           --fix-missing
+	sudo apt-get update                  --fix-missing -y
+	sudo apt-get install git             --fix-missing -y
+	sudo apt-get install wget            --fix-missing -y
+	sudo apt-get install make            --fix-missing -y
+	sudo apt-get install libncurses-dev  --fix-missing -y
+	sudo apt-get install flex bison      --fix-missing -y
+	sudo apt-get install gperf           --fix-missing -y
+	sudo apt-get install scite           --fix-missing -y
+	sudo apt-get install python3-pip     --fix-missing -y
+	sudo apt-get install python3-tk      --fix-missing -y
+	sudo apt-get install python3-venv    --fix-missing -y
+	sudo apt-get install cmake           --fix-missing -y
 	pip3 install serial
 	pip3 install pyqt6
 	pip3 install pyinstaller
