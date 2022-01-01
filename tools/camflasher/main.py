@@ -2,9 +2,14 @@
 import sys
 # pylint:disable=no-name-in-module
 import os.path
-from PyQt6 import uic
-from PyQt6.QtCore import QTimer, QEvent, Qt
-from PyQt6.QtWidgets import QFileDialog, QMainWindow, QApplication, QMessageBox
+try:
+	from PyQt6 import uic
+	from PyQt6.QtCore import QTimer, QEvent, Qt
+	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QApplication, QMessageBox
+except:
+	from PyQt5 import uic
+	from PyQt5.QtCore import QTimer, QEvent, Qt
+	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QApplication, QMessageBox
 from serial.tools import list_ports
 from flasher import Flasher
 from qstdoutvt100 import QStdoutVT100
@@ -53,7 +58,12 @@ def convert_key_to_vt100(key_event):
 	""" Convert the key event qt into vt100 key """
 	result = None
 	key = key_event.key()
-	modifier = key_event.keyCombination().keyboardModifiers() & ~Qt.KeyboardModifier.KeypadModifier
+	try:
+		# PyQt6
+		modifier = key_event.keyCombination().keyboardModifiers() & ~Qt.KeyboardModifier.KeypadModifier
+	except:
+		# PyQt5
+		modifier = key_event.modifiers()& ~Qt.KeyboardModifier.KeypadModifier
 
 	if key >= 0x1000000:
 		# Manage main keys
@@ -133,7 +143,7 @@ class CamFlasher(QMainWindow):
 
 		#~ self.move(0,0)
 		self.show()
-		self.console.resizeEvent()
+		self.resize_console()
 
 	def eventFilter(self, obj, event):
 		""" Treat key pressed on console """
@@ -144,9 +154,35 @@ class CamFlasher(QMainWindow):
 			return True
 		return super(CamFlasher, self).eventFilter(obj, event)
 
+	def get_size(self):
+		""" Get the size of VT100 console """
+		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
+		line = "W"*200 + "\n"
+		line = line*200
+		line = line[:-1]
+		size = self.ui.txt_result.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
+
+		# Deduce the size of console visible in the window
+		width  = (self.ui.txt_result.contentsRect().width()  * 200)// size.width() -  1
+		height = (self.ui.txt_result.contentsRect().height() * 200)// size.height()
+		return width, height
+
+	def resize_console(self):
+		""" Resize console """
+		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
+		line = "W"*200 + "\n"
+		line = line*200
+		line = line[:-1]
+		size = self.ui.txt_result.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
+
+		# Deduce the size of console visible in the window
+		width  = (self.ui.txt_result.contentsRect().width()  * 200)// size.width() -  1
+		height = (self.ui.txt_result.contentsRect().height() * 200)// size.height()
+		self.console.set_size(width, height)
+
 	def resizeEvent(self, _):
 		""" Treat the window resize event """
-		self.console.resizeEvent()
+		self.resize_console()
 
 	def on_refresh_port(self):
 		""" Refresh the combobox content with the serial ports detected """

@@ -2,7 +2,7 @@
 import sys
 from threading import Lock
 from vt100 import VT100
-from PyQt6.QtCore import Qt
+
 class QStdoutVT100:
 	""" Stdout VT100 ouptut on qtextbrowser widget """
 	def __init__(self, qtextbrowser):
@@ -45,22 +45,8 @@ class QStdoutVT100:
 			finally:
 				self.lock.release()
 
-	def get_size(self):
-		""" Get the size of VT100 console """
-		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
-		line = "W"*200 + "\n"
-		line = line*200
-		line = line[:-1]
-		size = self.qtextbrowser.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
-
-		# Deduce the size of console visible in the window
-		width  = (self.qtextbrowser.contentsRect().width()  * 200)// size.width() -  1
-		height = (self.qtextbrowser.contentsRect().height() * 200)// size.height()
-		return width, height
-
-	def resizeEvent(self):
+	def set_size(self, width, height):
 		""" Resize event """
-		width, height = self.get_size()
 		self.vt100.set_size(width,height)
 
 	def refresh(self):

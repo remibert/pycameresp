@@ -117,6 +117,7 @@ class ThreadSerial(threading.Thread):
 	def disconnect(self):
 		""" Send disconnect command to serial thread """
 		self.send((self.DISCONNECT, None))
+
 class Flasher(threading.Thread):
 	""" Micropython firmware flasher for esp32 """
 	def __init__(self):
