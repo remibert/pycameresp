@@ -258,8 +258,11 @@ class Line:
 			previous_backcolor = None
 			previous_reverse = None
 			htmlline = ""
-			length = len(self.line.rstrip()) + 2
-			if length > len(self.line):
+			if cursor is None:
+				length = len(self.line.rstrip()) + 2
+				if length > len(self.line):
+					length = len(self.line)
+			else:
 				length = len(self.line)
 			for i in range(length):
 				part = ""
