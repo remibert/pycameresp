@@ -1,6 +1,7 @@
 """ Micropython firmware flasher for esp32 """
 import threading
 import queue
+import time
 from serial import Serial
 
 class ThreadSerial(threading.Thread):
@@ -100,7 +101,10 @@ class ThreadSerial(threading.Thread):
 		""" Send message to serial thread """
 		self.command.put(message)
 		if self.serial is not None:
-			self.serial.cancel_read()
+			try:
+				self.serial.cancel_read()
+			except:
+				pass
 
 	def quit(self):
 		""" Send quit command to serial thread """
@@ -117,6 +121,10 @@ class ThreadSerial(threading.Thread):
 	def disconnect(self):
 		""" Send disconnect command to serial thread """
 		self.send((self.DISCONNECT, None))
+
+	def is_disconnected(self):
+		""" Indicates if the serial port is disconnected """
+		return self.serial is None
 
 class Flasher(threading.Thread):
 	""" Micropython firmware flasher for esp32 """
@@ -148,12 +156,8 @@ class Flasher(threading.Thread):
 			elif command == self.DATA_RECEIVED:
 				print(self.decode(data), end="")
 			elif command == self.FLASH:
-				self.flashing = True
-				self.serial_thread.disconnect()
 				port, baud, firmware, erase= data
 				self.flasher(port, baud, firmware, erase)
-				self.serial_thread.connect(port)
-				self.flashing = False
 			elif command == self.SET_INFO:
 				self.serial_thread.connect(data)
 
@@ -224,7 +228,19 @@ class Flasher(threading.Thread):
 		""" Flasher of firmware it use the esptool.py command """
 		from traceback import format_exc
 		import esptool
+
+		# Disconnect serial link
+		self.flashing = True
+		self.serial_thread.disconnect()
+
 		try:
+			# Waits for the serial link to be available
+			for i in range(10):
+				if self.serial_thread.is_disconnected() is True:
+					break
+				time.sleep(0.1)
+
+			# Start flasher
 			print("\x1B[48;5;229m\x1B[38;5;243m")
 			flash_command = ["--port", port, "--baud", baud, "--chip", "auto", "write_flash", "0x1000", firmware]
 
@@ -235,6 +251,10 @@ class Flasher(threading.Thread):
 			print("\n\x1B[42;93mFlashed with success. Remove strap and press reset button\x1B[m")
 		except:
 			print("\x1B[93;101mFirmware flash failed : \n%s\x1B[m"%format_exc())
+
+		# Connect serial link
+		self.serial_thread.connect(port)
+		self.flashing = False
 
 	def set_info(self, port):
 		""" Set the information of the flasher """

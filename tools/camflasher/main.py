@@ -110,7 +110,7 @@ class CamFlasher(QMainWindow):
 			from camflasher import Ui_win_main
 			self.ui = Ui_win_main()
 			self.ui.setupUi(self)
-		
+
 		self.ui.txt_result.installEventFilter(self)
 
 		# Start stdout redirection vt100 console
