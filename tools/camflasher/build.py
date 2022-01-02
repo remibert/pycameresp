@@ -1,8 +1,14 @@
 #!/usr/bin/python3
-VERSION="1.0.0"
+""" Build standalone executable for camflasher """
+from platform import uname
+from sys import platform
+from shutil import rmtree
+from os import remove
+
 NAME="CamFlasher"
 
 def execute(command):
+	""" Execute command """
 	from subprocess import run, PIPE, STDOUT
 	print("> %s"%command)
 	p = run(command.split(" "), stdout=PIPE, stderr=STDOUT, encoding='utf-8')
@@ -28,37 +34,40 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='%(NAME)s-%(VERSION)s',
+          name='%(NAME)s',
           debug=False,
           strip=False,
           upx=True,
           console=False , icon='%(ICONS)s')
 app = BUNDLE(exe,
-             name='%(NAME)s-%(VERSION)s.app',
+             name='%(NAME)s.app',
              icon='%(ICONS)s',
              bundle_identifier='github.com/remibert/pycameresp')
 """
-
-from sys import platform
-from shutil import rmtree
-from os import remove
-if platform == "win32" or platform == "linux":
+UIC = 6
+if platform == "win32":
 	ICONS = "icons/camflasher.ico"
-	execute("pyuic5 camflasher.ui -o camflasher.py")
+	import struct
+	version = struct.calcsize("P")*8
+	TARGET = "windows_%s_%d"%(uname()[2], version)
+	if uname()[2] == "7":
+		UIC = 5
 elif platform == "linux":
 	ICONS = "icons/camflasher.ico"
-	execute("pyuic6 camflasher.ui -o camflasher.py")
+	TARGET = "linux"
 elif platform == "darwin":
 	ICONS = "icons/camflasher.icns"
-	execute("pyuic6 camflasher.ui -o camflasher.py")
+	TARGET = "osx"
+	
+execute("pyuic%(UIC)s camflasher.ui -o camflasher.py"%globals())
 
-spec_file = open("build-%(platform)s.spec"%globals(),"w")
+spec_file = open("build-%(TARGET)s.spec"%globals(),"w")
 spec_file.write(spec%globals())
 spec_file.close()
 
-execute("pyinstaller --log-level=DEBUG --noconfirm --windowed build-%(platform)s.spec"%globals())
+execute("pyinstaller --log-level=DEBUG --noconfirm --distpath dist/%(TARGET)s --windowed build-%(TARGET)s.spec"%globals())
 
 if platform == "darwin":
-	execute("create-dmg dist/%(NAME)s-%(VERSION)s.dmg dist/%(NAME)s-%(VERSION)s.app --volicon %(ICONS)s"%(globals()))
+	execute("create-dmg dist/%(TARGET)s/%(NAME)s.dmg dist/%(TARGET)s/%(NAME)s.app --volicon %(ICONS)s"%(globals()))
 rmtree("build")
-remove("build-%(platform)s.spec"%globals())
+remove("build-%(TARGET)s.spec"%globals())

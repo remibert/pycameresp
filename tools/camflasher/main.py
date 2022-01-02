@@ -1,6 +1,17 @@
+#!/usr/bin/python3
 """ Tools to flash the firmware of pycameresp """
-import sys
+# Requirements :
+#	- pip3 install serial
+#	- pip3 install pyinstaller
+#	- pip3 install esptool
+#	- pip3 install pyserial
+# For windows seven
+#	- pip3 install pyqt5
+# For windows 10, 11, linux, osx
+#	- pip3 install pyqt6
+#
 # pylint:disable=no-name-in-module
+import sys
 import os.path
 try:
 	from PyQt6 import uic
