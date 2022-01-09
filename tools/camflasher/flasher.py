@@ -44,6 +44,8 @@ class ThreadSerial(threading.Thread):
 					self.serial = Serial(port=port, baudrate=115200, timeout=1)
 
 					# Clear input serial buffer
+					self.serial.dtr = False
+					self.serial.rts = False
 					self.serial.reset_input_buffer()
 					self.port = port
 					self.receive_callback("\n\x1B[42;93mSelect %s\x1B[m\n"%self.port)
@@ -66,7 +68,19 @@ class ThreadSerial(threading.Thread):
 		if command == self.WRITE_DATA:
 			if self.serial is not None:
 				try:
-					self.serial.write(data)
+					if len(data) > 32:
+						while len(data) > 0:
+							buf = data[:32]
+							data = data[32:]
+							self.serial.write(buf)
+							if len(data) > 0:
+								time.sleep(0.1)
+							while self.serial.in_waiting > 0:
+								self.receive_callback(self.serial.read(self.serial.in_waiting))
+								if self.serial.in_waiting == 0:
+									time.sleep(0.2)
+					else:
+						self.serial.write(data)
 				except Exception as err:
 					self.close()
 

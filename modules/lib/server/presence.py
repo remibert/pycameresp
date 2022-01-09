@@ -61,7 +61,7 @@ class Presence:
 		""" Run the task """
 		# If configuration must be read
 		if Presence.config:
-			if Presence.configRefreshCounter % 7 == 0:
+			if Presence.configRefreshCounter % 7 == 0 or Presence.pollingDuration == Presence.SLOW_POLLING:
 				if Presence.config.is_changed():
 					if Presence.config.load() is False:
 						Presence.config.save()

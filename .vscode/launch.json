@@ -12,6 +12,13 @@
 			"justMyCode": false
 		},
 		{
+			"name": "CamFlasher",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/tools/camflasher/main.py",
+			"cwd": "${workspaceFolder}/tools/camflasher",
+		},
+		{
 			"name": "Editor",
 			"type": "python",
 			"request": "launch",
@@ -24,13 +31,6 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/modules/lib/shell/shell.py",
 			"cwd"    : "${workspaceFolder}/modules",
-		},
-		{
-			"name": "CamFlasher",
-			"type": "python",
-			"request": "launch",
-			"program": "${workspaceFolder}/tools/camflasher/main.py",
-			"cwd": "${workspaceFolder}/tools/camflasher",
 		}
 	]
 }

@@ -150,7 +150,8 @@ async def motion(request, response, args):
 		zone_masking(config, disabled), Br(),
 		Slider(text=lang.detects_a_movement,          name=b"differences_detection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differences_detection,         disabled=disabled),
 		Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),
-		Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),Br(),
+		Switch(text=lang.notification_motion, name=b"notify",       checked=config.notify,       disabled=disabled),Br(),
+		Switch(text=lang.notification_state,  name=b"notify_state", checked=config.notify_state, disabled=disabled),Br(),
 		Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence", checked=config.suspend_on_presence, disabled=disabled),Br(),
 		Switch(text=lang.turn_on_flash,                            name=b"light_compensation", checked=config.light_compensation, disabled=disabled),Br(),
 		submit)

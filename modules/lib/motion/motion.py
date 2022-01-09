@@ -44,8 +44,11 @@ class MotionConfig(jsonconfig.JsonConfig):
 		# Turn on the led flash when the light goes down
 		self.light_compensation = True
 
-		# Notify motion
+		# Notify motion detection or problem to save on sd card
 		self.notify = True
+
+		# Notify motion state change
+		self.notify_state = True
 
 		# Empty mask is equal disable masking
 		self.mask = b""
@@ -524,10 +527,8 @@ class Detection:
 			# Capture motion
 			result = await self.capture()
 		else:
-			result = await self.fake_capture()
-			if result:
-				if self.motion:
-					self.motion.stop_light()
+			if self.motion:
+				self.motion.stop_light()
 			await uasyncio.sleep(10)
 		self.cadencer.refresh()
 
@@ -552,8 +553,11 @@ class Detection:
 
 		# If state of motion changed
 		if self.activated != result:
+			# Force garbage collection
+			collect()
+
 			# If notification enabled
-			if self.motion_config.notify:
+			if self.motion_config.notify_state:
 				if result:
 					await Notifier.notify(lang.motion_detection_on)
 				else:
@@ -604,26 +608,6 @@ class Detection:
 			if self.motion.index %30 == 0:
 				collect()
 
-	async def fake_capture(self):
-		""" Used to continue the dialogue with the camera, to avoid losing the link after too long a delay (The problem occurs once every ten days) """
-		result = False
-		try:
-			# Waits for the camera's availability
-			reserved = await video.Camera.reserve(self, timeout=60)
-
-			# If reserved
-			if reserved:
-				# Initialize motion detection
-				await self.init_motion()
-
-				# Captures an unnecessary image to maintain a dialogue with the camera
-				video.Camera.capture()
-				result = True
-		finally:
-			if reserved:
-				await video.Camera.unreserve(self)
-		return result
-
 	async def capture(self):
 		""" Capture motion """
 		result = False
@@ -667,7 +651,7 @@ class Detection:
 					Historic.set_motion_state(False)
 				result = True
 			else:
-				if self.motion_config.notify:
+				if self.motion_config.notify_state:
 					await Notifier.notify(lang.motion_detection_suspended)
 				result = True
 

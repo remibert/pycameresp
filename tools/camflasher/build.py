@@ -58,8 +58,10 @@ elif platform == "linux":
 elif platform == "darwin":
 	ICONS = "icons/camflasher.icns"
 	TARGET = "osx"
-	
+
 execute("pyuic%(UIC)s camflasher.ui -o camflasher.py"%globals())
+execute("pyuic%(UIC)s dialogflash.ui -o dialogflash.py"%globals())
+execute("pyuic%(UIC)s dialogabout.ui -o dialogabout.py"%globals())
 
 spec_file = open("build-%(TARGET)s.spec"%globals(),"w")
 spec_file.write(spec%globals())

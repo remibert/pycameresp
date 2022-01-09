@@ -16,11 +16,13 @@ import os.path
 try:
 	from PyQt6 import uic
 	from PyQt6.QtCore import QTimer, QEvent, Qt
-	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QApplication, QMessageBox
+	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox
+	from PyQt6.QtGui import QCursor,QAction
 except:
 	from PyQt5 import uic
 	from PyQt5.QtCore import QTimer, QEvent, Qt
-	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QApplication, QMessageBox
+	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QAction
+	from PyQt5.QtGui import QCursor
 from serial.tools import list_ports
 from flasher import Flasher
 from qstdoutvt100 import QStdoutVT100
@@ -110,24 +112,78 @@ def convert_key_to_vt100(key_event):
 		result = key_event.text().encode("utf-8")
 	return result
 
+class AboutDialog(QDialog):
+	""" Dialog about """
+	def __init__(self, parent):
+		""" Dialog box constructor """
+		QDialog.__init__(self, parent)
+		try:
+			self.dialog = uic.loadUi('dialogabout.ui', self)
+		except Exception as err:
+			from dialogabout import Ui_DialogAbout
+			self.dialog = Ui_DialogAbout()
+			self.dialog.setupUi(self)
+
+	def accept(self):
+		self.close()
+class FlashDialog(QDialog):
+	""" Dialog box to select firmware """
+	def __init__(self, parent):
+		""" Dialog box constructor """
+		QDialog.__init__(self, parent)
+		try:
+			self.dialog = uic.loadUi('dialogflash.ui', self)
+		except Exception as err:
+			from dialogflash import Ui_dialog_flash
+			self.dialog = Ui_dialog_flash()
+			self.dialog.setupUi(self)
+
+		self.dialog.select_firmware.clicked.connect(self.on_firmware_clicked)
+		self.dialog.baud.addItems(["9600","57600","74880","115200","230400","460800"])
+		self.dialog.baud.setCurrentIndex(5)
+
+	def accept(self):
+		""" Called when ok pressed """
+		if os.path.exists(self.dialog.firmware.text()) is False:
+			msg = QMessageBox()
+			w = self.geometry().width()
+			h = self.geometry().height()
+			x = self.geometry().x()
+			y = self.geometry().y()
+			msg.setGeometry(x + w//3,y + h//3,w,h)
+			msg.setIcon(QMessageBox.Icon.Critical)
+			msg.setText("Firmware not found")
+			msg.exec()
+		else:
+			super().accept()
+
+	def on_firmware_clicked(self, event):
+		""" Selection of firmware button clicked """
+		firmware = QFileDialog.getOpenFileName(self, 'Select firmware file', '',"Firmware files (*.bin)")
+		if firmware != ('', ''):
+			self.dialog.firmware.setText(firmware[0])
+
 class CamFlasher(QMainWindow):
 	""" Tools to flash the firmware of pycameresp """
 	def __init__(self):
 		""" Main window contructor """
 		super(CamFlasher, self).__init__()
 		try:
-			self.ui = uic.loadUi('camflasher.ui', self)
-		except:
-			from camflasher import Ui_win_main
-			self.ui = Ui_win_main()
-			self.ui.setupUi(self)
+			self.window = uic.loadUi('camflasher.ui', self)
+		except Exception as err:
+			from camflasher import Ui_main_window
+			self.window = Ui_main_window()
+			self.window.setupUi(self)
 
-		self.ui.txt_result.installEventFilter(self)
+		self.window.output.installEventFilter(self)
+
+		self.flash_dialog = FlashDialog(self)
+		self.about_dialog = AboutDialog(self)
 
 		# Start stdout redirection vt100 console
-		self.ui.txt_result.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-		self.ui.txt_result.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-		self.console = QStdoutVT100(self.ui.txt_result)
+		self.window.output.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+		self.window.output.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+		self.console = QStdoutVT100(self.window.output)
 
 		# Serial listener thread
 		self.flasher = Flasher()
@@ -144,24 +200,95 @@ class CamFlasher(QMainWindow):
 		self.timer_refresh_port.start()
 		self.serial_ports = []
 
-		self.ui.but_firmware.clicked.connect(self.on_firmware_clicked)
-		self.ui.but_flash.clicked.connect(self.on_flash_clicked)
-		self.ui.cbo_baud.addItems(["9600","57600","74880","115200","230400","460800"])
-		self.ui.cbo_baud.setCurrentIndex(5)
-
 		self.port_selected = None
-		self.ui.cbo_port.currentTextChanged.connect(self.on_port_changed)
+		self.window.combo_port.currentTextChanged.connect(self.on_port_changed)
 
-		#~ self.move(0,0)
+		self.move(10,200)
 		self.show()
 		self.resize_console()
+		self.paused = False
+		self.window.output.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+		self.window.output.customContextMenuRequested.connect(self.context_menu)
+
+		self.window.action_paste.triggered.connect(self.paste)
+		self.window.action_copy.triggered.connect(self.copy)
+		self.window.action_pause.triggered.connect(self.pause)
+		self.window.action_resume.triggered.connect(self.pause)
+		self.window.action_resume.setDisabled(True)
+		self.window.action_flash.triggered.connect(self.on_flash_clicked)
+		self.window.action_about.triggered.connect(self.on_about_clicked)
+
+	def on_about_clicked(self):
+		""" About menu clicked """
+		self.about_dialog.show()
+		self.about_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+		self.about_dialog.exec()
+
+	def context_menu(self, pos):
+		""" Customization of the context menu """
+		context = QMenu(self)
+
+		copy = QAction("Copy", self)
+		copy.triggered.connect(self.copy)
+		context.addAction(copy)
+
+		if self.paused is False:
+			paste = QAction("Paste", self)
+			paste.triggered.connect(self.paste)
+			context.addAction(paste)
+
+			cls = QAction("Cls", self)
+			cls.triggered.connect(self.cls)
+			context.addAction(cls)
+
+			pause = QAction("Pause", self)
+			pause.triggered.connect(self.pause)
+			context.addAction(pause)
+		else:
+			pause = QAction("Resume", self)
+			pause.triggered.connect(self.pause)
+			context.addAction(pause)
+
+		context.exec(QCursor.pos())
+
+	def pause(self):
+		""" Pause console display """
+		self.paused = not self.paused
+		if self.paused:
+			self.window.action_paste.setDisabled(True)
+			self.window.action_pause.setDisabled(True)
+			self.window.action_resume.setEnabled(True)
+		else:
+			self.window.action_pause.setEnabled(True)
+			self.window.action_paste.setEnabled(True)
+			self.window.action_resume.setDisabled(True)
+
+	def cls(self):
+		""" Clear screen """
+		print("\x1B[2J\x1B[1;1f",end="")
+
+	def copy(self):
+		""" Copy to clipboard the text selected """
+		text_selected = self.window.output.textCursor().selectedText()
+		text_selected = text_selected.replace("\xa0"," ")
+		text_selected = text_selected.replace("\u2028","\n")
+		QApplication.clipboard().setText(text_selected)
+
+	def paste(self):
+		""" Paste to console the content of clipboard """
+		paste = QApplication.clipboard().text()
+		paste = paste.replace("\n","\r")
+		paste = paste.encode("utf-8")
+		self.flasher.send_key(paste)
+		self.console.stdout.write("Paste '%s'\n"%QApplication.clipboard().text())
 
 	def eventFilter(self, obj, event):
 		""" Treat key pressed on console """
 		if event.type() == QEvent.Type.KeyPress:
 			key = convert_key_to_vt100(event)
 			if key is not None:
-				self.flasher.send_key(key)
+				if self.paused is False:
+					self.flasher.send_key(key)
 			return True
 		return super(CamFlasher, self).eventFilter(obj, event)
 
@@ -171,11 +298,11 @@ class CamFlasher(QMainWindow):
 		line = "W"*200 + "\n"
 		line = line*200
 		line = line[:-1]
-		size = self.ui.txt_result.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
+		size = self.window.output.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
 
 		# Deduce the size of console visible in the window
-		width  = (self.ui.txt_result.contentsRect().width()  * 200)// size.width() -  1
-		height = (self.ui.txt_result.contentsRect().height() * 200)// size.height()
+		width  = (self.window.output.contentsRect().width()  * 200)// size.width() -  1
+		height = (self.window.output.contentsRect().height() * 200)// size.height()
 		return width, height
 
 	def resize_console(self):
@@ -184,11 +311,11 @@ class CamFlasher(QMainWindow):
 		line = "W"*200 + "\n"
 		line = line*200
 		line = line[:-1]
-		size = self.ui.txt_result.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
+		size = self.window.output.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
 
 		# Deduce the size of console visible in the window
-		width  = (self.ui.txt_result.contentsRect().width()  * 200)// size.width() -  1
-		height = (self.ui.txt_result.contentsRect().height() * 200)// size.height()
+		width  = (self.window.output.contentsRect().width()  * 200)// size.width() -  1
+		height = (self.window.output.contentsRect().height() * 200)// size.height()
 		self.console.set_size(width, height)
 
 	def resizeEvent(self, _):
@@ -207,16 +334,16 @@ class CamFlasher(QMainWindow):
 		if self.serial_ports != ports:
 			self.serial_ports = ports
 
-			for i in range(self.ui.cbo_port.count()):
-				if not self.ui.cbo_port.itemText(i) in ports:
-					self.ui.cbo_port.removeItem(i)
+			for i in range(self.window.combo_port.count()):
+				if not self.window.combo_port.itemText(i) in ports:
+					self.window.combo_port.removeItem(i)
 
 			for port in ports:
-				for i in range(self.ui.cbo_port.count()):
-					if self.ui.cbo_port.itemText(i) == port:
+				for i in range(self.window.combo_port.count()):
+					if self.window.combo_port.itemText(i) == port:
 						break
 				else:
-					self.ui.cbo_port.addItem(port)
+					self.window.combo_port.addItem(port)
 
 	def on_port_changed(self, event):
 		""" On port changed event """
@@ -226,40 +353,38 @@ class CamFlasher(QMainWindow):
 		""" Selection of firmware button clicked """
 		firmware = QFileDialog.getOpenFileName(self, 'Select firmware file', '',"Firmware files (*.bin)")
 		if firmware != ('', ''):
-			self.ui.txt_firmware.setText(firmware[0])
+			self.window.txt_firmware.setText(firmware[0])
 
 	def on_flash_clicked(self, event):
 		""" Flash of firmware button clicked """
-		port     = self.ui.cbo_port.currentText()
-		baud     = self.ui.cbo_baud.currentText()
-		firmware = self.ui.txt_firmware.text()
-		erase    = self.ui.chk_erase.isChecked()
-		if os.path.exists(firmware) is False:
-			msg = QMessageBox()
-			w = self.geometry().width()
-			h = self.geometry().height()
-			x = self.geometry().x()
-			y = self.geometry().y()
-			msg.setGeometry(x + w//3,y + h//3,w,h)
-			msg.setIcon(QMessageBox.Icon.Critical)
-			msg.setText("Firmware not found")
-			msg.exec()
-		else:
-			self.flasher.flash(port, baud, firmware, erase)
+		self.flash_dialog.show()
+		self.flash_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+		result = self.flash_dialog.exec()
+		if result == 1 and self.window.combo_port.currentText() != "":
+			try:
+				firmware  = self.flash_dialog.dialog.firmware.text()
+				baud      = self.flash_dialog.dialog.baud.currentText()
+				erase     = self.flash_dialog.dialog.erase.isChecked()
+				port      = self.window.combo_port.currentText()
+				self.flasher.flash(port, baud, firmware, erase)
+			except Exception as err:
+				print(err)
 
 	def get_port(self):
 		""" Get the name of serial port """
 		try:
-			result = self.ui.cbo_port.currentText()
+			result = self.window.combo_port.currentText()
 		except:
 			result = None
 		return result
 
 	def on_refresh_console(self):
 		""" Refresh the console content """
-		output = self.console.refresh()
-		if output != "":
-			self.flasher.send_key(output.encode("utf-8"))
+		self.window.output.viewport().setProperty("cursor", QCursor(Qt.CursorShape.ArrowCursor))
+		if self.paused is False:
+			output = self.console.refresh()
+			if output != "":
+				self.flasher.send_key(output.encode("utf-8"))
 
 	def closeEvent(self, event):
 		""" On close window event """

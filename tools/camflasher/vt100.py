@@ -259,7 +259,7 @@ class Line:
 			previous_reverse = None
 			htmlline = ""
 			if cursor is None:
-				length = len(self.line.rstrip()) + 2
+				length = len(self.line.rstrip())
 				if length > len(self.line):
 					length = len(self.line)
 			else:

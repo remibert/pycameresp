@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>win_main</class>
- <widget class="QMainWindow" name="win_main">
+ <class>main_window</class>
+ <widget class="QMainWindow" name="main_window">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -10,9 +10,6 @@
     <height>600</height>
    </rect>
   </property>
-  <property name="contextMenuPolicy">
-   <enum>Qt::DefaultContextMenu</enum>
-  </property>
   <property name="windowTitle">
    <string>CamFlasher</string>
   </property>
@@ -20,8 +17,8 @@
    <iconset>
     <normaloff>icons/camflasher.ico</normaloff>icons/camflasher.ico</iconset>
   </property>
-  <widget class="QWidget" name="lay_window">
-   <layout class="QGridLayout" name="gridLayout_2">
+  <widget class="QWidget" name="main_layout">
+   <layout class="QGridLayout" name="gridLayout">
     <property name="leftMargin">
      <number>5</number>
     </property>
@@ -34,151 +31,114 @@
     <property name="bottomMargin">
      <number>5</number>
     </property>
-    <item row="0" column="0">
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
-       <widget class="QLabel" name="lbl_port">
-        <property name="maximumSize">
-         <size>
-          <width>80</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Serial port</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1" colspan="2">
-       <widget class="QComboBox" name="cbo_port">
-        <property name="toolTip">
-         <string>Select device serial port</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="6">
-       <widget class="QCheckBox" name="chk_erase">
-        <property name="toolTip">
-         <string>Check to erase the flash content before write firmware</string>
-        </property>
-        <property name="text">
-         <string>Erase flash</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="4" colspan="2">
-       <widget class="QComboBox" name="cbo_baud">
-        <property name="toolTip">
-         <string>Select flash baud rate</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="lbl_firmware">
-        <property name="text">
-         <string>Firmware</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLabel" name="lbl_baud">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>16777213</height>
-         </size>
-        </property>
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
-        <property name="text">
-         <string>Baud rate</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="7">
-       <widget class="QPushButton" name="but_flash">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="toolTip">
-         <string>Start the flash of firmware</string>
-        </property>
-        <property name="text">
-         <string>Flash firmware</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="7">
-       <widget class="QPushButton" name="but_firmware">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="acceptDrops">
-         <bool>true</bool>
-        </property>
-        <property name="toolTip">
-         <string>Select firmware file</string>
-        </property>
-        <property name="text">
-         <string>...</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" colspan="6">
-       <widget class="QLineEdit" name="txt_firmware">
-        <property name="toolTip">
-         <string>Enter firmware file</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+    <item row="0" column="1">
+     <widget class="QComboBox" name="combo_port">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="toolTip">
+       <string>Select device serial port</string>
+      </property>
+     </widget>
     </item>
-    <item row="1" column="0">
-     <widget class="QTextBrowser" name="txt_result">
+    <item row="1" column="0" colspan="2">
+     <widget class="QTextBrowser" name="output">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="font">
        <font>
         <family>Courier</family>
        </font>
       </property>
+      <property name="cursor" stdset="0">
+       <cursorShape>ArrowCursor</cursorShape>
+      </property>
+      <property name="readOnly">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_port">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Serial port</string>
+      </property>
      </widget>
     </item>
    </layout>
   </widget>
+  <widget class="QMenuBar" name="menu_bar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_flasher">
+    <property name="title">
+     <string>Flasher</string>
+    </property>
+    <addaction name="action_flash"/>
+   </widget>
+   <widget class="QMenu" name="menu_output">
+    <property name="title">
+     <string>Output</string>
+    </property>
+    <addaction name="action_copy"/>
+    <addaction name="action_paste"/>
+    <addaction name="action_pause"/>
+    <addaction name="action_resume"/>
+   </widget>
+   <widget class="QMenu" name="menu_info">
+    <property name="title">
+     <string>Info</string>
+    </property>
+    <addaction name="action_about"/>
+   </widget>
+   <addaction name="menu_flasher"/>
+   <addaction name="menu_output"/>
+   <addaction name="menu_info"/>
+  </widget>
+  <action name="action_flash">
+   <property name="text">
+    <string>Flash</string>
+   </property>
+  </action>
+  <action name="action_copy">
+   <property name="text">
+    <string> Copy</string>
+   </property>
+  </action>
+  <action name="action_paste">
+   <property name="text">
+    <string> Paste</string>
+   </property>
+  </action>
+  <action name="action_pause">
+   <property name="text">
+    <string> Pause</string>
+   </property>
+  </action>
+  <action name="action_resume">
+   <property name="text">
+    <string> Resume</string>
+   </property>
+  </action>
+  <action name="action_about">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
  </widget>
- <tabstops>
-  <tabstop>txt_firmware</tabstop>
-  <tabstop>but_firmware</tabstop>
-  <tabstop>cbo_port</tabstop>
-  <tabstop>cbo_baud</tabstop>
-  <tabstop>chk_erase</tabstop>
-  <tabstop>but_flash</tabstop>
-  <tabstop>txt_result</tabstop>
- </tabstops>
  <resources/>
  <connections/>
 </ui>
