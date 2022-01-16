@@ -2,6 +2,7 @@
 import threading
 import queue
 import time
+import sys
 from serial import Serial
 
 class ThreadSerial(threading.Thread):
@@ -15,7 +16,6 @@ class ThreadSerial(threading.Thread):
 		self.port = ""
 		self.loop = True
 		self.buffer = b""
-		self.buffer2 = b""
 
 		self.CONNECT = 0
 		self.DISCONNECT = 1
@@ -70,15 +70,21 @@ class ThreadSerial(threading.Thread):
 				try:
 					if len(data) > 32:
 						while len(data) > 0:
-							buf = data[:32]
-							data = data[32:]
-							self.serial.write(buf)
+							data_to_send = data[:8]
+							data = data[8:]
+							self.serial.write(data_to_send)
 							if len(data) > 0:
-								time.sleep(0.1)
-							while self.serial.in_waiting > 0:
-								self.receive_callback(self.serial.read(self.serial.in_waiting))
-								if self.serial.in_waiting == 0:
-									time.sleep(0.2)
+								for i in range(15):
+									time.sleep(0.01)
+									if self.serial.in_waiting > 0:
+										break
+								while self.serial.in_waiting > 0:
+									self.receive_callback(self.serial.read(self.serial.in_waiting))
+									if self.serial.in_waiting == 0:
+										for i in range(15):
+											time.sleep(0.01)
+											if self.serial.in_waiting > 0:
+												break
 					else:
 						self.serial.write(data)
 				except Exception as err:
@@ -240,7 +246,6 @@ class Flasher(threading.Thread):
 
 	def flasher(self, port, baud, firmware, erase):
 		""" Flasher of firmware it use the esptool.py command """
-		from traceback import format_exc
 		import esptool
 
 		# Disconnect serial link
@@ -264,7 +269,7 @@ class Flasher(threading.Thread):
 			esptool.main(flash_command)
 			print("\n\x1B[42;93mFlashed with success. Remove strap and press reset button\x1B[m")
 		except:
-			print("\x1B[93;101mFirmware flash failed : \n%s\x1B[m"%format_exc())
+			print("\n\x1B[93;101mFlash failed\n\x1B[m")
 
 		# Connect serial link
 		self.serial_thread.connect(port)

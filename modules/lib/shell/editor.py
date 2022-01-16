@@ -64,8 +64,10 @@ SELECT_RIGHT     = ["\x1b[1;2C"]
 SELECT_LEFT      = ["\x1b[1;2D"]
 SELECT_PAGE_UP   = ["\x1b[1;10A","\x1b[1;4A","\x1b[5;2~"]
 SELECT_PAGE_DOWN = ["\x1b[1;10B","\x1b[1;4B","\x1b[6;2~"]
-SELECT_HOME      = ["\x1b[1;6H", "\x1b[1;2H","\x1b[1;10D"]
-SELECT_END       = ["\x1b[1;6F", "\x1b[1;2F","\x1b[1;10C"]
+SELECT_HOME      = ["\x1b[1;2H","\x1b[1;10D"]
+SELECT_END       = ["\x1b[1;2F","\x1b[1;10C"]
+SELECT_TOP       = ["\x1b[1;6H"]
+SELECT_BOTTOM    = ["\x1b[1;6F"]
 SELECT_ALL       = ["\x01"]
 SELECT_NEXT_WORD = ["\x1b[1;6C","\x1b[1;4C"]
 SELECT_PREV_WORD = ["\x1b[1;6D","\x1b[1;4D"]
@@ -949,6 +951,16 @@ class Text:
 		self.open_selection()
 		self.move_word(-1)
 
+	def select_top(self):
+		""" Manage select to the first line of text """
+		self.open_selection()
+		self.change_line(-100000000000)
+
+	def select_bottom(self):
+		""" Manage select to the last line of text """
+		self.open_selection()
+		self.change_line(100000000000)
+
 	def page_up(self, keys):
 		""" Manage page up key """
 		self.hide_selection()
@@ -1458,6 +1470,8 @@ class Text:
 			elif keys[0] in SELECT_LEFT:     self.select_left(keys)
 			elif keys[0] in SELECT_HOME:     self.select_home()
 			elif keys[0] in SELECT_END:      self.select_end()
+			elif keys[0] in SELECT_TOP:      self.select_top()
+			elif keys[0] in SELECT_BOTTOM:   self.select_bottom()
 			elif keys[0] in SELECT_PAGE_UP:  self.select_page_up(keys)
 			elif keys[0] in SELECT_PAGE_DOWN:self.select_page_down(keys)
 			elif keys[0] in SELECT_ALL:      self.select_all()

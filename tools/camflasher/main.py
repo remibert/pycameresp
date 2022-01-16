@@ -16,12 +16,12 @@ import os.path
 try:
 	from PyQt6 import uic
 	from PyQt6.QtCore import QTimer, QEvent, Qt
-	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox
+	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage
 	from PyQt6.QtGui import QCursor,QAction
 except:
 	from PyQt5 import uic
 	from PyQt5.QtCore import QTimer, QEvent, Qt
-	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QAction
+	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QAction
 	from PyQt5.QtGui import QCursor
 from serial.tools import list_ports
 from flasher import Flasher
@@ -40,31 +40,31 @@ main_keys = {
 
 # Function keys
 function_keys = {
-	Qt.Key.Key_F1        : [b'\x1bOP'  ,b'\x1b[1;2P'],
-	Qt.Key.Key_F2        : [b'\x1bOQ'  ,b'\x1b[1;2Q'],
-	Qt.Key.Key_F3        : [b'\x1bOR'  ,b'\x1b[1;2R'],
-	Qt.Key.Key_F4        : [b'\x1bOS'  ,b'\x1b[1;2S'],
-	Qt.Key.Key_F5        : [b'\x1b[15~',b'\x1b[15;2~'],
-	Qt.Key.Key_F6        : [b'\x1b[17~',b'\x1b[17;2~'],
-	Qt.Key.Key_F6        : [b'\x1b[18~',b'\x1b[18;2~'],
-	Qt.Key.Key_F8        : [b'\x1b[19~',b'\x1b[19;2~'],
-	Qt.Key.Key_F9        : [b'\x1b[20~',b'\x1b[20;2~'],
-	Qt.Key.Key_F10       : [b'\x1b[21~',b'\x1b[21;2~'],
-	Qt.Key.Key_F11       : [b'\x1b[23~',b'\x1b[23;2~'],
-	Qt.Key.Key_F12       : [b'\x1b[24~',b'\x1b[24;2~'],
+	Qt.Key.Key_F1        : [b"\x1bOP"  ,b"\x1b[1;2P"],
+	Qt.Key.Key_F2        : [b"\x1bOQ"  ,b"\x1b[1;2Q"],
+	Qt.Key.Key_F3        : [b"\x1bOR"  ,b"\x1b[1;2R"],
+	Qt.Key.Key_F4        : [b"\x1bOS"  ,b"\x1b[1;2S"],
+	Qt.Key.Key_F5        : [b"\x1b[15~",b"\x1b[15;2~"],
+	Qt.Key.Key_F6        : [b"\x1b[17~",b"\x1b[17;2~"],
+	Qt.Key.Key_F6        : [b"\x1b[18~",b"\x1b[18;2~"],
+	Qt.Key.Key_F8        : [b"\x1b[19~",b"\x1b[19;2~"],
+	Qt.Key.Key_F9        : [b"\x1b[20~",b"\x1b[20;2~"],
+	Qt.Key.Key_F10       : [b"\x1b[21~",b"\x1b[21;2~"],
+	Qt.Key.Key_F11       : [b"\x1b[23~",b"\x1b[23;2~"],
+	Qt.Key.Key_F12       : [b"\x1b[24~",b"\x1b[24;2~"],
 }
 
 # Arrow keys, page up and down, home and end
 move_keys = {
-	#                        Nothing   Shift        Meta         Alt            Control    Shift+Alt    Shift+Meta   Shift+Control
-	Qt.Key.Key_Up        : [b'\x1b[A' ,b'\x1b[1;2A',b'\x1b[1;5A',b'\x1b\x1b[A' ,b'\x1b[A' ,b'\x1b[1;2A',b'\x1b[1;6A',b'\x1b[1;6A'],
-	Qt.Key.Key_Down      : [b'\x1b[B' ,b'\x1b[1;2B',b'\x1b[1;5B',b'\x1b\x1b[B' ,b'\x1b[B' ,b'\x1b[1;2B',b'\x1b[1;6B',b'\x1b[1;6B'],
-	Qt.Key.Key_Right     : [b'\x1b[C' ,b'\x1b[1;2C',b'\x1b[1;5C',b'\x1b\x1b[C' ,b'\x1b[C' ,b'\x1b[1;2C',b'\x1b[1;6C',b'\x1b[1;6C'],
-	Qt.Key.Key_Left      : [b'\x1b[D' ,b'\x1b[1;2D',b'\x1b[1;5D',b'\x1b\x1b[D' ,b'\x1b[D' ,b'\x1b[1;2D',b'\x1b[1;6D',b'\x1b[1;6D'],
-	Qt.Key.Key_Home      : [b'\x1b[H' ,b'\x1b[1;2H',b'\x1b[1;5H',b'\x1b[1;9H'  ,b'\x1b[H' ,b'\x1b[1;2H',b'\x1b[1;6H',b'\x1b[1;6H'],
-	Qt.Key.Key_End       : [b'\x1b[F' ,b'\x1b[1;2F',b'\x1b[1;5F',b'\x1b[1;9F'  ,b'\x1b[F' ,b'\x1b[1;2F',b'\x1b[1;6F',b'\x1b[1;6F'],
-	Qt.Key.Key_PageUp    : [b'\x1b[5~',b"\x1b[1;4A",b'\x1b[5~'  ,b'\x1b\x1b[5~',b'\x1b[5~',b'\x1b[5~'  ,b'\x1b[5~'  ,b'\x1b[5~'  ],
-	Qt.Key.Key_PageDown  : [b'\x1b[6~',b"\x1b[1;4B",b'\x1b[6~'  ,b'\x1b\x1b[6~',b'\x1b[6~',b'\x1b[6~'  ,b'\x1b[6~'  ,b'\x1b[6~'  ],
+	#                        Nothing   Shift        Meta         Alt            Control       Shift+Alt    Shift+Meta   Shift+Control
+	Qt.Key.Key_Up        : [b"\x1b[A" ,b"\x1b[1;2A",b"\x1b[1;5A",b"\x1b\x1b[A" ,b"\x1b[1;5A" ,b"\x1b[1;2A",b"\x1b[1;6A",b"\x1b[1;6A"],
+	Qt.Key.Key_Down      : [b"\x1b[B" ,b"\x1b[1;2B",b"\x1b[1;5B",b"\x1b\x1b[B" ,b"\x1b[1;5B" ,b"\x1b[1;2B",b"\x1b[1;6B",b"\x1b[1;6B"],
+	Qt.Key.Key_Right     : [b"\x1b[C" ,b"\x1b[1;2C",b"\x1b[1;5C",b"\x1b\x1b[C" ,b"\x1b[1;5C" ,b"\x1b[1;2C",b"\x1b[1;6C",b"\x1b[1;6C"],
+	Qt.Key.Key_Left      : [b"\x1b[D" ,b"\x1b[1;2D",b"\x1b[1;5D",b"\x1b\x1b[D" ,b"\x1b[1;5D" ,b"\x1b[1;2D",b"\x1b[1;6D",b"\x1b[1;6D"],
+	Qt.Key.Key_Home      : [b"\x1b[H" ,b"\x1b[1;2H",b"\x1b[1;5H",b"\x1b[1;9H"  ,b"\x1b[H"    ,b"\x1b[1;2H",b"\x1b[1;6H",b"\x1b[1;6H"],
+	Qt.Key.Key_End       : [b"\x1b[F" ,b"\x1b[1;2F",b"\x1b[1;5F",b"\x1b[1;9F"  ,b"\x1b[F"    ,b"\x1b[1;2F",b"\x1b[1;6F",b"\x1b[1;6F"],
+	Qt.Key.Key_PageUp    : [b"\x1b[5~",b"\x1b[1;4A",b"\x1b[5~"  ,b"\x1b\x1b[5~",b"\x1b[5~"   ,b"\x1b[5~"  ,b"\x1b[5~"  ,b"\x1b[5~"  ],
+	Qt.Key.Key_PageDown  : [b"\x1b[6~",b"\x1b[1;4B",b"\x1b[6~"  ,b"\x1b\x1b[6~",b"\x1b[6~"   ,b"\x1b[6~"  ,b"\x1b[6~"  ,b"\x1b[6~"  ],
 }
 
 def convert_key_to_vt100(key_event):
@@ -109,7 +109,12 @@ def convert_key_to_vt100(key_event):
 			else:
 				result = normal
 	else:
-		result = key_event.text().encode("utf-8")
+		# If control letter pressed
+		if key >= 65 and key <= 90 and (modifier & Qt.KeyboardModifier.ControlModifier or modifier & Qt.KeyboardModifier.MetaModifier):
+			key -= 64
+			result = key.to_bytes(1,"little")
+		else:
+			result = key_event.text().encode("utf-8")
 	return result
 
 class AboutDialog(QDialog):
@@ -174,7 +179,8 @@ class CamFlasher(QMainWindow):
 			from camflasher import Ui_main_window
 			self.window = Ui_main_window()
 			self.window.setupUi(self)
-
+		self.window.output.setAcceptDrops(False)
+		self.window.output.setReadOnly(True)
 		self.window.output.installEventFilter(self)
 
 		self.flash_dialog = FlashDialog(self)
@@ -280,7 +286,6 @@ class CamFlasher(QMainWindow):
 		paste = paste.replace("\n","\r")
 		paste = paste.encode("utf-8")
 		self.flasher.send_key(paste)
-		self.console.stdout.write("Paste '%s'\n"%QApplication.clipboard().text())
 
 	def eventFilter(self, obj, event):
 		""" Treat key pressed on console """
@@ -394,9 +399,24 @@ class CamFlasher(QMainWindow):
 		# Stop serial thread
 		self.flasher.quit()
 
+def except_hook(cls, exception, traceback):
+	""" Exception hook """
+	from traceback import extract_tb
+	msg = QErrorMessage()
+	text = '<code>' + str(exception) + "<br>"
+	for filename, line, method, content in extract_tb(traceback) :
+		text += '&nbsp;&nbsp;&nbsp;&nbsp;<FONT COLOR="#ff0000">File "%s", line %d, in %s</FONT><br>'%(filename,line,method)
+		text += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br>'%(content)
+	text += "</code>"
+	msg.resize(800, 400)
+	msg.showMessage(text)
+	msg.exec()
+	sys.__excepthook__(cls, exception, traceback)
+
 def main():
 	""" Main application """
 	app = QApplication(sys.argv)
+	sys.excepthook = except_hook
 	window = CamFlasher()
 	app.exec()
 
