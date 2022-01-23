@@ -15,17 +15,23 @@ import sys
 import os.path
 try:
 	from PyQt6 import uic
-	from PyQt6.QtCore import QTimer, QEvent, Qt
-	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage
-	from PyQt6.QtGui import QCursor,QAction
+	from PyQt6.QtCore import QTimer, QEvent, Qt, QSettings
+	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QFontDialog
+	from PyQt6.QtGui import QCursor,QAction,QFont, QFontMetrics
 except:
 	from PyQt5 import uic
-	from PyQt5.QtCore import QTimer, QEvent, Qt
-	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QAction
-	from PyQt5.QtGui import QCursor
+	from PyQt5.QtCore import QTimer, QEvent, Qt, QSettings
+	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QAction, QFontDialog
+	from PyQt5.QtGui import QCursor, QFont, QFontMetrics
 from serial.tools import list_ports
 from flasher import Flasher
 from qstdoutvt100 import QStdoutVT100
+
+# Settings
+FONT_FAMILY = "camflasher.font.family"
+FONT_SIZE   = "camflasher.font.size"
+FONT_BOLD   = "camflasher.font.bold"
+FONT_ITALIC = "camflasher.font.italic"
 
 # Main keys
 main_keys = {
@@ -173,12 +179,23 @@ class CamFlasher(QMainWindow):
 	def __init__(self):
 		""" Main window contructor """
 		super(CamFlasher, self).__init__()
+		self.stdout = sys.stdout
 		try:
 			self.window = uic.loadUi('camflasher.ui', self)
 		except Exception as err:
 			from camflasher import Ui_main_window
 			self.window = Ui_main_window()
 			self.window.setupUi(self)
+
+		# Select font
+		settings = QSettings()
+		font = QFont()
+		font.setFamily    (settings.value(FONT_FAMILY ,"Courier"))
+		font.setPointSize (settings.value(FONT_SIZE   ,12))
+		font.setItalic    (settings.value(FONT_ITALIC ,False))
+		font.setBold      (settings.value(FONT_BOLD   ,False))
+		self.window.output.setFont(font)
+
 		self.window.output.setAcceptDrops(False)
 		self.window.output.setReadOnly(True)
 		self.window.output.installEventFilter(self)
@@ -221,6 +238,7 @@ class CamFlasher(QMainWindow):
 		self.window.action_pause.triggered.connect(self.pause)
 		self.window.action_resume.triggered.connect(self.pause)
 		self.window.action_resume.setDisabled(True)
+		self.window.action_font.triggered.connect(self.select_font)
 		self.window.action_flash.triggered.connect(self.on_flash_clicked)
 		self.window.action_about.triggered.connect(self.on_about_clicked)
 
@@ -287,6 +305,35 @@ class CamFlasher(QMainWindow):
 		paste = paste.encode("utf-8")
 		self.flasher.send_key(paste)
 
+	def select_font(self):
+		""" Select the font """
+		dialog = QFontDialog(self.window.output.font(),self)
+		dialog.setOption(QFontDialog.FontDialogOption.MonospacedFonts)
+		font, ok = dialog.getFont()
+		if ok:
+			fontMetrics = QFontMetrics(font)
+
+			if fontMetrics.size(Qt.TextFlag.TextWordWrap,"W").width() == fontMetrics.size(Qt.TextFlag.TextWordWrap,"|").width():
+				settings = QSettings()
+				settings.setValue(FONT_FAMILY , font.family())
+				settings.setValue(FONT_SIZE   , font.pointSize())
+				settings.setValue(FONT_ITALIC , font.italic())
+				settings.setValue(FONT_BOLD   , font.bold())
+
+				self.window.output.setFont(font)
+				self.resize_console()
+			else:
+				msg = QMessageBox()
+				w = self.geometry().width()
+				h = self.geometry().height()
+				x = self.geometry().x()
+				y = self.geometry().y()
+				msg.setGeometry(x + w//3,y + h//3,w,h)
+				msg.setIcon(QMessageBox.Icon.Critical)
+				msg.setText("The font selected not monospaced")
+				msg.exec()
+
+
 	def eventFilter(self, obj, event):
 		""" Treat key pressed on console """
 		if event.type() == QEvent.Type.KeyPress:
@@ -296,19 +343,6 @@ class CamFlasher(QMainWindow):
 					self.flasher.send_key(key)
 			return True
 		return super(CamFlasher, self).eventFilter(obj, event)
-
-	def get_size(self):
-		""" Get the size of VT100 console """
-		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
-		line = "W"*200 + "\n"
-		line = line*200
-		line = line[:-1]
-		size = self.window.output.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
-
-		# Deduce the size of console visible in the window
-		width  = (self.window.output.contentsRect().width()  * 200)// size.width() -  1
-		height = (self.window.output.contentsRect().height() * 200)// size.height()
-		return width, height
 
 	def resize_console(self):
 		""" Resize console """
@@ -332,7 +366,7 @@ class CamFlasher(QMainWindow):
 		# self.console.test()
 		ports = []
 		for port, _, _ in sorted(list_ports.comports()):
-			if not "Bluetooth" in port and not "Wireless" in port:
+			if not "Bluetooth" in port and not "Wireless" in port and "cu.BLTH" not in port:
 				ports.append(port)
 
 		# If the list of serial port changed

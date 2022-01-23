@@ -97,6 +97,7 @@
     <addaction name="action_paste"/>
     <addaction name="action_pause"/>
     <addaction name="action_resume"/>
+    <addaction name="action_font"/>
    </widget>
    <widget class="QMenu" name="menu_info">
     <property name="title">
@@ -136,6 +137,11 @@
   <action name="action_about">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="action_font">
+   <property name="text">
+    <string> Font</string>
    </property>
   </action>
  </widget>
