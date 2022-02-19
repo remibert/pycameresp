@@ -9,7 +9,7 @@ Http server core, it instanciated only if a connection is done to the asynchrono
 from server.httpserver import HttpServer
 from server.httprequest import HttpRequest, HttpResponse
 from server.stream import Stream
-from tools import useful
+from tools import logger,strings
 
 class HttpServerCore:
 	""" Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
@@ -39,8 +39,8 @@ class HttpServerCore:
 				# Ignore error
 				pass
 			else:
-				await response.send_error(status=b"404", content=useful.tobytes(useful.exception(err)))
+				await response.send_error(status=b"404", content=strings.tobytes(logger.exception(err)))
 		except Exception as err:
-			await response.send_error(status=b"404", content=useful.tobytes(useful.exception(err)))
+			await response.send_error(status=b"404", content=strings.tobytes(logger.exception(err)))
 		finally:
 			await stream.close()

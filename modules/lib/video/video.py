@@ -9,7 +9,7 @@ as well as a lot of adjustment on the camera, not available on the other firmwar
 import time
 import camera
 import uasyncio
-from tools import useful,jsonconfig
+from tools import system,jsonconfig,logger
 
 class CameraConfig(jsonconfig.JsonConfig):
 	""" Class that collects the camera rendering configuration """
@@ -214,7 +214,7 @@ class Camera:
 			retry = 10
 			while 1:
 				if retry <= 0:
-					useful.reboot("Reboot forced after camera problem")
+					system.reboot("Reboot forced after camera problem")
 				try:
 					result = callback()
 					Camera.success[0] += 1
@@ -223,7 +223,7 @@ class Camera:
 					Camera.failed[0] += 1
 					Camera.newFailed[0] += 1
 					if retry <= 3:
-						useful.syslog("Failed to get image %d retry before reset"%retry)
+						logger.syslog("Failed to get image %d retry before reset"%retry)
 					retry -= 1
 					time.sleep(0.5)
 			total = Camera.success[0] + Camera.failed[0]
@@ -235,7 +235,7 @@ class Camera:
 				else:
 					newFailed = 0.
 					failed    = 0.
-				useful.syslog("Camera stat : last %-3.1f%%, total %-3.1f%% success on %d"%(newFailed, failed, total))
+				logger.syslog("Camera stat : last %-3.1f%%, total %-3.1f%% success on %d"%(newFailed, failed, total))
 				Camera.newFailed[0] = 0
 		return result
 
@@ -275,7 +275,7 @@ class Camera:
 		if resolution == b"HQVGA" or resolution == b"240x176"   :val = camera.FRAMESIZE_HQVGA
 		if resolution == b"QQVGA" or resolution == b"160x120"   :val = camera.FRAMESIZE_QQVGA
 		if Camera.opened and val is not None:
-			# print("Framesize %s"%useful.tostrings(resolution))
+			# print("Framesize %s"%strings.tostrings(resolution))
 			camera.framesize(val)
 		# else:
 			# print("Framesize not set")
@@ -294,7 +294,7 @@ class Camera:
 		if format_ == b"RGB444"    : val=camera.PIXFORMAT_RGB444
 		if format_ == b"RGB555"    : val=camera.PIXFORMAT_RGB555
 		if Camera.opened and val is not None:
-			# print("Pixformat %s"%useful.tostrings(format_))
+			# print("Pixformat %s"%strings.tostrings(format_))
 			camera.pixformat(val)
 		# else:
 			# print("Pixformat not set")

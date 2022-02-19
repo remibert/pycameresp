@@ -5,7 +5,6 @@ from server.httpserver import HttpServer
 from server.server     import ServerConfig
 from htmltemplate      import *
 from webpage.mainpage  import main_frame, manage_default_button
-from tools.useful      import *
 from tools import lang
 
 @HttpServer.add_route(b'/server', menu=lang.menu_server, item=lang.item_server)

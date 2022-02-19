@@ -6,7 +6,7 @@ from server.server     import Server
 from wifi.station      import Station
 from htmltemplate      import *
 from webpage.mainpage  import main_frame
-from tools             import useful,lang,archiver
+from tools             import lang,archiver,filesystem,logger,system
 
 @HttpServer.add_route(b'/system', menu=lang.menu_system, item=lang.item_system)
 async def system_page(request, response, args):
@@ -41,7 +41,7 @@ async def export_config(request, response, args):
 	Server.slow_down()
 	archiver.export_files("config.cfg", path="./config",pattern="*.json", recursive=False)
 	await response.send_file(b"config.cfg", headers=request.headers)
-	useful.remove("config.cfg")
+	filesystem.remove("config.cfg")
 
 @HttpServer.add_route(b'/system/import_file_system')
 async def import_file_system(request, response, args):
@@ -56,7 +56,7 @@ async def export_file_system(request, response, args):
 	Server.slow_down()
 	archiver.export_files("fileSystem.cfs", path="./",pattern="*.*", recursive=True)
 	await response.send_file(b"fileSystem.cfs", headers=request.headers)
-	useful.remove("fileSystem.cfs")
+	filesystem.remove("fileSystem.cfs")
 
 @HttpServer.add_route(b'/system/export_syslog')
 async def export_syslog(request, response, args):
@@ -70,8 +70,8 @@ async def reboot(request, response, args):
 	try:
 		await response.send_ok()
 	except Exception as err:
-		useful.syslog(err)
+		logger.syslog(err)
 	try:
-		useful.reboot("Reboot asked on system html page")
+		system.reboot("Reboot asked on system html page")
 	except Exception as err:
-		useful.syslog(err)
+		logger.syslog(err)

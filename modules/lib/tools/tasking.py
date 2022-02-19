@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Miscellaneous utility functions """
 import machine
-from tools import useful
+from tools import strings,logger,system
 
 LONG_WATCH_DOG=15*60*1000
 SHORT_WATCH_DOG=5*60*1000
@@ -61,11 +61,11 @@ async def task_monitoring(task):
 					retry = 0
 
 		except Exception as err:
-			lastError = useful.syslog(err, "Task error")
+			lastError = logger.syslog(err, "Task error")
 			retry += 1
 			await uasyncio.sleep_ms(6000)
-		useful.syslog("Task retry %d"%retry)
-	useful.syslog("Too many task error reboot")
+		logger.syslog("Task retry %d"%retry)
+	logger.syslog("Too many task error reboot")
 
 	from server.server import ServerConfig
 	from server.notifier import Notifier
@@ -74,5 +74,5 @@ async def task_monitoring(task):
 	config.load()
 	if config.notify:
 		from tools import lang
-		await Notifier.notify(lang.reboot_after_many%useful.tobytes(lastError))
-	useful.reboot()
+		await Notifier.notify(lang.reboot_after_many%strings.tobytes(lastError))
+	system.reboot()

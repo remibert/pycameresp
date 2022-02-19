@@ -11,7 +11,7 @@ from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
 from video.video     import Camera
-from tools import useful, jsonconfig, lang, linearfunction, tasking
+from tools import logger,jsonconfig,lang,linearfunction,tasking,strings
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
@@ -66,9 +66,9 @@ class ImageMotion:
 		self.index    = self.baseIndex[0]
 		self.filename = None
 		self.motion_id = None
-		self.date     = useful.date_to_string()
-		self.filename = useful.date_to_filename()
-		path = useful.date_to_path()[:-1]
+		self.date     = strings.date_to_string()
+		self.filename = strings.date_to_filename()
+		path = strings.date_to_path()[:-1]
 		if path[-1] in [0x30,0x31,0x32]:
 			path = path[:-1] + b"00"
 		else:
@@ -107,7 +107,7 @@ class ImageMotion:
 
 	def get_message(self):
 		""" Get the message of motion """
-		return "%s %s D=%d"%(useful.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+		return "%s %s D=%d"%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
 	def get_informations(self):
 		""" Return the informations of motion """
@@ -124,7 +124,7 @@ class ImageMotion:
 
 	async def save(self):
 		""" Save the image on sd card """
-		return await Historic.add_motion(useful.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
+		return await Historic.add_motion(strings.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
 
 	def compare(self, previous):
 		""" Compare two motion images to get differences """
@@ -177,7 +177,7 @@ class ImageMotion:
 	def refresh_config(self):
 		""" Refresh the motion detection configuration """
 		if self.motion is not None:
-			mask = useful.tobytes(self.config.mask)
+			mask = strings.tobytes(self.config.mask)
 			if not b"/" in mask:
 				mask = b""
 			errorLight = linearfunction.get_fx(self.config.sensitivity, linearfunction.get_linear(100,8,0,64))
@@ -423,7 +423,7 @@ class Motion:
 						index = image.index
 					diffs += "%d:%d%s%s"%(image.get_motion_id(), image.get_diff_count(), chr(0x41 + ((256-image.get_diff_histo())//10)), trace)
 			if display:
-				sys.stdout.write("\r%s %s (%d) "%(useful.date_to_string()[12:], diffs, index))
+				sys.stdout.write("\r%s %s (%d) "%(strings.date_to_string()[12:], diffs, index))
 		return differences
 
 	def deinit_image(self, image):
@@ -504,7 +504,7 @@ class Detection:
 			# If configuration changed
 			if self.motion_config.is_changed():
 				self.motion_config.load()
-				useful.syslog("Change motion config %s"%self.motion_config.to_string(), display=False)
+				logger.syslog("Change motion config %s"%self.motion_config.to_string(), display=False)
 				if self.motion:
 					self.motion.refresh_config()
 		self.refresh_config_counter += 1
@@ -636,7 +636,7 @@ class Detection:
 						if self.cadencer.can_notify():
 							await Notifier.notify(message, image.get())
 						else:
-							useful.syslog(message + " ignored")
+							logger.syslog(message + " ignored")
 				# Detect motion
 				detected, change_polling = self.motion.detect()
 

@@ -1,7 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Class used to manage a username and a password """
-from tools import useful,jsonconfig,encryption
+from tools import logger,jsonconfig,encryption,strings
 
 EMPTY_PASSWORD = b"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" # empty password
 
@@ -50,12 +50,12 @@ class User:
 			else:
 				if log is True:
 					User.login_state[0] = False
-					useful.syslog("Login failed, wrong password for user '%s'"%useful.tostrings(user))
+					logger.syslog("Login failed, wrong password for user '%s'"%strings.tostrings(user))
 		else:
 			if user != b"":
 				if log is True:
 					User.login_state[0] = False
-					useful.syslog("Login failed, unkwnon user '%s'"%useful.tostrings(user))
+					logger.syslog("Login failed, unkwnon user '%s'"%strings.tostrings(user))
 		return False
 
 	@staticmethod

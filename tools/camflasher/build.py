@@ -2,7 +2,7 @@
 """ Build standalone executable for camflasher """
 from platform import uname
 from sys import platform
-from shutil import rmtree
+from shutil import rmtree, copyfile
 from os import remove
 
 NAME="CamFlasher"
@@ -62,6 +62,11 @@ elif platform == "darwin":
 execute("pyuic%(UIC)s camflasher.ui -o camflasher.py"%globals())
 execute("pyuic%(UIC)s dialogflash.ui -o dialogflash.py"%globals())
 execute("pyuic%(UIC)s dialogabout.ui -o dialogabout.py"%globals())
+execute("pyuic%(UIC)s dialogoption.ui -o dialogoption.py"%globals())
+
+copyfile("../../modules/lib/tools/strings.py"   ,"strings.py")
+copyfile("../../modules/lib/tools/filesystem.py","filesystem.py")
+copyfile("../../modules/lib/tools/exchange.py"  ,"exchange.py")
 
 spec_file = open("build-%(TARGET)s.spec"%globals(),"w")
 spec_file.write(spec%globals())
@@ -71,5 +76,11 @@ execute("pyinstaller --log-level=DEBUG --noconfirm --distpath dist/%(TARGET)s --
 
 if platform == "darwin":
 	execute("create-dmg dist/%(TARGET)s/%(NAME)s.dmg dist/%(TARGET)s/%(NAME)s.app --volicon %(ICONS)s"%(globals()))
+
 rmtree("build")
+
 remove("build-%(TARGET)s.spec"%globals())
+
+remove("strings.py")
+remove("filesystem.py")
+remove("exchange.py")

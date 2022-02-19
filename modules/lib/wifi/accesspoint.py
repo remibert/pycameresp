@@ -1,8 +1,8 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Classes used to manage the wifi access point """
-from wifi.hostname import Hostname
-from tools import jsonconfig,useful
+from wifi import hostname, ip
+from tools import jsonconfig,strings,logger
 
 class AccessPointConfig(jsonconfig.JsonConfig):
 	""" Access point configuration class """
@@ -23,15 +23,15 @@ class AccessPointConfig(jsonconfig.JsonConfig):
 		# Get network address
 		ip_address, netmask, gateway, dns = AccessPoint.wlan.ifconfig()
 
-		result = "%s:\n"%useful.tostrings(self.__class__.__name__)
+		result = "%s:\n"%strings.tostrings(self.__class__.__name__)
 		result +="   Ip address :%s\n"%ip_address
 		result +="   Netmask    :%s\n"%netmask
 		result +="   Gateway    :%s\n"%gateway
 		result +="   Dns        :%s\n"%dns
-		result +="   Ssid       :%s\n"%useful.tostrings(self.ssid)
-		result +="   Password   :%s\n"%useful.tostrings(self.wifi_password)
-		result +="   Authmode   :%s\n"%useful.tostrings(self.authmode)
-		result +="   Activated  :%s\n"%useful.tostrings(self.activated)
+		result +="   Ssid       :%s\n"%strings.tostrings(self.ssid)
+		result +="   Password   :%s\n"%strings.tostrings(self.wifi_password)
+		result +="   Authmode   :%s\n"%strings.tostrings(self.authmode)
+		result +="   Activated  :%s\n"%strings.tostrings(self.activated)
 		return result
 
 class AccessPoint:
@@ -44,9 +44,9 @@ class AccessPoint:
 		""" Open access point """
 		from wifi import AUTHMODE
 		# pylint:disable=multiple-statements
-		if ssid     is not None: AccessPoint.config.ssid         = useful.tobytes(ssid)
-		if password is not None: AccessPoint.config.wifi_password = useful.tobytes(password)
-		if authmode is not None: AccessPoint.config.authmode     = useful.tobytes(authmode)
+		if ssid     is not None: AccessPoint.config.ssid         = strings.tobytes(ssid)
+		if password is not None: AccessPoint.config.wifi_password = strings.tobytes(password)
+		if authmode is not None: AccessPoint.config.authmode     = strings.tobytes(authmode)
 
 		authmode = 3
 		for authmode_num, authmode_name in AUTHMODE.items():
@@ -55,8 +55,8 @@ class AccessPoint:
 				break
 		AccessPoint.wlan.active(True) # IMPORTANT : Activate before configure
 		AccessPoint.wlan.config(\
-			essid    = useful.tostrings(AccessPoint.config.ssid),
-			password = useful.tostrings(AccessPoint.config.wifi_password),
+			essid    = strings.tostrings(AccessPoint.config.ssid),
+			password = strings.tostrings(AccessPoint.config.wifi_password),
 			authmode = authmode)
 
 	@staticmethod
@@ -65,10 +65,10 @@ class AccessPoint:
 		if AccessPoint.config is None:
 			AccessPoint.config = AccessPointConfig()
 			if AccessPoint.config.load() is False:
-				AccessPoint.config.ssid           = b"esp%05d"%Hostname.get_number()
-				AccessPoint.config.wifi_password  = b"Pycam_%05d"%Hostname.get_number()
+				AccessPoint.config.ssid           = b"esp%05d"%hostname.Hostname.get_number()
+				AccessPoint.config.wifi_password  = b"Pycam_%05d"%hostname.Hostname.get_number()
 				AccessPoint.config.save()
-				useful.syslog("Access point not initialized")
+				logger.syslog("Access point not initialized")
 		else:
 			if AccessPoint.config.is_changed():
 				AccessPoint.config.load()
@@ -103,15 +103,15 @@ class AccessPoint:
 	def configure(ip_address = None, netmask = None, gateway = None, dns = None):
 		""" Configure the access point """
 		# pylint:disable=multiple-statements
-		if ip_address is not None: AccessPoint.config.ip_address = useful.tobytes(ip_address)
-		if netmask    is not None: AccessPoint.config.netmask    = useful.tobytes(netmask)
-		if gateway    is not None: AccessPoint.config.gateway    = useful.tobytes(gateway)
-		if dns        is not None: AccessPoint.config.dns        = useful.tobytes(dns)
+		if ip_address is not None: AccessPoint.config.ip_address = strings.tobytes(ip_address)
+		if netmask    is not None: AccessPoint.config.netmask    = strings.tobytes(netmask)
+		if gateway    is not None: AccessPoint.config.gateway    = strings.tobytes(gateway)
+		if dns        is not None: AccessPoint.config.dns        = strings.tobytes(dns)
 
-		if AccessPoint.config.ip_address == b"": AccessPoint.config.ip_address = useful.tobytes(AccessPoint.wlan.ifconfig()[0])
-		if AccessPoint.config.netmask    == b"": AccessPoint.config.netmask    = useful.tobytes(AccessPoint.wlan.ifconfig()[1])
-		if AccessPoint.config.gateway    == b"": AccessPoint.config.gateway    = useful.tobytes(AccessPoint.wlan.ifconfig()[2])
-		if AccessPoint.config.dns        == b"": AccessPoint.config.dns        = useful.tobytes(AccessPoint.wlan.ifconfig()[3])
+		if AccessPoint.config.ip_address == b"": AccessPoint.config.ip_address = strings.tobytes(AccessPoint.wlan.ifconfig()[0])
+		if AccessPoint.config.netmask    == b"": AccessPoint.config.netmask    = strings.tobytes(AccessPoint.wlan.ifconfig()[1])
+		if AccessPoint.config.gateway    == b"": AccessPoint.config.gateway    = strings.tobytes(AccessPoint.wlan.ifconfig()[2])
+		if AccessPoint.config.dns        == b"": AccessPoint.config.dns        = strings.tobytes(AccessPoint.wlan.ifconfig()[3])
 
 		if AccessPoint.config.ip_address == b"0.0.0.0": AccessPoint.config.ip_address = b""
 		if AccessPoint.config.netmask    == b"0.0.0.0": AccessPoint.config.netmask   = b""
@@ -124,12 +124,12 @@ class AccessPoint:
 				AccessPoint.config.gateway   != b"" and \
 				AccessPoint.config.dns       != b"":
 				AccessPoint.wlan.ifconfig((
-					useful.tostrings(AccessPoint.config.ip_address),
-					useful.tostrings(AccessPoint.config.netmask),
-					useful.tostrings(AccessPoint.config.gateway),
-					useful.tostrings(AccessPoint.config.dns)))
+					strings.tostrings(AccessPoint.config.ip_address),
+					strings.tostrings(AccessPoint.config.netmask),
+					strings.tostrings(AccessPoint.config.gateway),
+					strings.tostrings(AccessPoint.config.dns)))
 		except Exception as err:
-			useful.syslog(err, msg="Cannot configure wifi AccessPoint")
+			logger.syslog(err, msg="Cannot configure wifi AccessPoint")
 
 	@staticmethod
 	def start(force=False):
@@ -139,7 +139,7 @@ class AccessPoint:
 			AccessPoint.reload_config()
 
 			if AccessPoint.config.activated or force:
-				useful.syslog("Start AccessPoint")
+				logger.syslog("Start AccessPoint")
 				from network import WLAN, AP_IF
 				AccessPoint.wlan = WLAN(AP_IF)
 				AccessPoint.configure()
@@ -148,7 +148,7 @@ class AccessPoint:
 				print(repr(AccessPoint.config))
 				result = True
 			else:
-				useful.syslog("AccessPoint disabled")
+				logger.syslog("AccessPoint disabled")
 		else:
 			print("%s already opened"%AccessPoint.__class__.__name__)
 			print(repr(AccessPoint.config))
@@ -159,7 +159,7 @@ class AccessPoint:
 	def stop():
 		""" Stop access point """
 		if AccessPoint.is_active():
-			useful.syslog("AccessPoint stopped")
+			logger.syslog("AccessPoint stopped")
 			AccessPoint.close()
 
 	@staticmethod
@@ -167,5 +167,5 @@ class AccessPoint:
 		""" Indicates if the address ip is connected to the wifi access point """
 		ipInterface = AccessPoint.get_info()
 		if ipInterface is not None:
-			return useful.issameinterface(useful.tostrings(ipAddr), ipInterface[0], ipInterface[1])
+			return ip.issameinterface(strings.tostrings(ipAddr), ipInterface[0], ipInterface[1])
 		return False

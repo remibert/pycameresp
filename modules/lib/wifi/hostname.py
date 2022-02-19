@@ -1,7 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Manage the host name """
-from tools import useful
+from tools import strings
 
 class Hostname:
 	""" Manage the host name """
@@ -17,6 +17,6 @@ class Hostname:
 			mac = ""
 			for i in ident:
 				mac += "%02X"%i
-			Hostname.number[0] = useful.compute_hash(mac)
+			Hostname.number[0] = strings.compute_hash(mac)
 			del wlan
 		return Hostname.number[0]

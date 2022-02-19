@@ -6,7 +6,7 @@ import wifi
 from server.ping import async_ping
 from server.notifier import Notifier
 from server.server import Server
-from tools import useful, jsonconfig, lang, tasking
+from tools import logger,jsonconfig,lang,tasking
 
 class PresenceConfig(jsonconfig.JsonConfig):
 	""" Configuration class of presence detection """
@@ -65,7 +65,7 @@ class Presence:
 				if Presence.config.is_changed():
 					if Presence.config.load() is False:
 						Presence.config.save()
-					useful.syslog("Change presence config %s"%Presence.config.to_string(), display=False)
+					logger.syslog("Change presence config %s"%Presence.config.to_string(), display=False)
 			Presence.configRefreshCounter += 1
 
 		if Presence.config.activated is True and wifi.Wifi.is_lan_available():

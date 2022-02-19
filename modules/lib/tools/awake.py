@@ -3,7 +3,7 @@
 """ Manage the battery """
 import machine
 import esp32
-from tools import jsonconfig, useful
+from tools import jsonconfig,logger
 
 class AwakeConfig(jsonconfig.JsonConfig):
 	""" Awake configuration """
@@ -43,12 +43,12 @@ class Awake:
 			if Awake.config.wake_up_gpio != 0:
 				wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
 				esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-				useful.syslog("Pin wake up on %d"%Awake.config.wake_up_gpio)
+				logger.syslog("Pin wake up on %d"%Awake.config.wake_up_gpio)
 			else:
-				useful.syslog("Pin wake up disabled")
+				logger.syslog("Pin wake up disabled")
 			return True
 		except Exception as err:
-			useful.syslog(err,"Cannot set wake up")
+			logger.syslog(err,"Cannot set wake up")
 		return False
 
 	@staticmethod
@@ -81,7 +81,7 @@ class Awake:
 		if Awake.config.activated:
 			Awake.awake_counter[0] -= 1
 			if Awake.awake_counter[0] <= 0:
-				useful.syslog("Sleep %d s"%Awake.config.sleep_duration)
+				logger.syslog("Sleep %d s"%Awake.config.sleep_duration)
 
 				# Set the wake up on PIR detection
 				Awake.set_pin_wake_up()

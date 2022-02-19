@@ -25,18 +25,21 @@ Editor shortcuts :
 <br> - <b>Execute       </b>: F5
 
 This editor also works on linux and osx, and can also be used autonomously,
-you need to add the useful.py script to its side.
+you need to add the useful.py,logger.py,strings.py,terminal.py script to its side.
 All the keyboard shortcuts are at the start of the script.
 
 On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.
 """
 import sys
+
+from . import filesystem
 sys.path.append("lib")
 sys.path.append("lib/tools")
 try:
-	from tools import useful
+	from tools import useful,logger,strings,terminal
 except:
-	import useful
+	# pylint:disable=multiple-imports
+	import useful,logger,strings,terminal
 
 TABSIZE = 4          # Tabulation size
 HORIZONTAL_MOVE=8    # Scrolling minimal deplacement
@@ -449,7 +452,7 @@ class View:
 
 	def get_screen_size(self):
 		""" Get the screen size """
-		height, width = useful.get_screen_size()
+		height, width = terminal.get_screen_size()
 		self.screen_height = height
 		self.screen_width = width
 		self.height = height-self.top-1
@@ -645,7 +648,7 @@ class Text:
 			self.lines = [""]
 			# File not existing
 		except Exception as err:
-			useful.syslog(err)
+			logger.syslog(err)
 			self.lines = [""]
 
 	def save(self):
@@ -661,7 +664,7 @@ class Text:
 					self.modified = False
 					result = True
 				except Exception as err:
-					useful.syslog(err)
+					logger.syslog(err)
 		return result
 
 	def change_line(self, moveLine):
@@ -985,17 +988,17 @@ class Text:
 		""" Manage other key, add character """
 		result = False
 
-		if useful.isascii(keys[0]):
+		if strings.isascii(keys[0]):
 			self.remove_selection()
 			for char in keys:
-				if useful.isascii(char):
+				if strings.isascii(char):
 					if self.replace_mode:
 						self.replace_char(char)
 					else:
 						self.insert_char(char)
 					result = True
 		# if result is False:
-			# print(useful.dump(keys[0]))
+			# print(strings.dump(keys[0]))
 		return result
 
 	def find_next(self, text):
@@ -1227,10 +1230,10 @@ class Text:
 			isUpper = None
 			for line in selection:
 				for char in line:
-					if useful.isupper(char):
+					if strings.isupper(char):
 						isUpper = True
 						break
-					elif useful.islower(char):
+					elif strings.islower(char):
 						isUpper = False
 						break
 				if isUpper is not None:
@@ -1402,17 +1405,17 @@ class Text:
 			current_char = self.get_cursor_char()
 			if current_char is None:
 				break
-			elif useful.ispunctuation(current_char):
+			elif strings.ispunctuation(current_char):
 				if state == 0:
 					state = 2
 				elif state == 1:
 					break
-			elif useful.isalpha(current_char):
+			elif strings.isalpha(current_char):
 				if state == 0:
 					state = 1
 				elif state == 2:
 					break
-			elif useful.isspace(current_char):
+			elif strings.isspace(current_char):
 				if state == 1:
 					break
 				if state == 2:
@@ -1510,7 +1513,7 @@ class Editor:
 	def __init__(self, filename_, read_only=False):
 		""" Constructor """
 		self.file = filename_
-		self.filename = useful.split(filename_)[1]
+		self.filename = filesystem.split(filename_)[1]
 		self.edit = Edit(read_only=read_only)
 		self.edit.text.load(filename_)
 		self.is_refresh_header = True
@@ -1519,7 +1522,7 @@ class Editor:
 		self.keys= []
 		self.loop = None
 
-		if (not useful.exists(filename_) and read_only is True) or useful.isdir(filename_):
+		if (not filesystem.exists(filename_) and read_only is True) or filesystem.isdir(filename_):
 			print("Cannot open '%s'"%self.filename)
 		else:
 			self.run()
@@ -1565,7 +1568,7 @@ class Editor:
 			self.edit.view.write("\nSave file '%s' (\x1b[7mY\x1b[m:Yes, \x1b[7mN\x1b[m:No, \x1b[7mEsc\x1b[m:Cancel) : "%self.filename)
 			self.edit.view.flush()
 			while 1:
-				key = useful.getch()
+				key = terminal.getch()
 				if key == "Y" or key == "y":
 					if self.edit.text.save():
 						self.edit.view.write("Saved\n")
@@ -1659,7 +1662,7 @@ class Editor:
 			if self.keys[0] == result[0]:
 				result.append(self.keys.pop(0))
 			else:
-				if useful.isascii(result[0]) and useful.isascii(self.keys[0]):
+				if strings.isascii(result[0]) and strings.isascii(self.keys[0]):
 					result.append(self.keys.pop(0))
 				else:
 					break
@@ -1670,11 +1673,11 @@ class Editor:
 		if len(self.keys) == 0:
 			while True:
 				try:
-					key = useful.getch()
+					key = terminal.getch()
 				except KeyboardInterrupt:
 					key = "\x03"
 				self.keys.append(key)
-				if useful.kbhit() is False or len(self.keys) > 5:
+				if terminal.kbhit() is False or len(self.keys) > 5:
 					break
 		return self.group_key()
 
@@ -1686,13 +1689,12 @@ class Editor:
 			self.edit.view.reset_scroll_region()
 			self.edit.view.cls()
 			self.edit.view.flush()
-			startTime = useful.ticks()
+			startTime = strings.ticks()
 			try:
-				useful.log(None)
-				useful.import_(self.filename)
+				useful.run(self.filename)
 			except KeyboardInterrupt:
 				pass
-			endTime = useful.ticks()
+			endTime = strings.ticks()
 			print( "\x1B[7mTime: %d.%03d s Press enter to stop\x1B[m"%((endTime-startTime)/1000, (endTime-startTime)%1000))
 			while 1:
 				keys = self.get_key()
@@ -1702,7 +1704,7 @@ class Editor:
 				elif keys[0] in EXECUTE:
 					break
 				# else:
-					# print(useful.dump(keys[0]))
+					# print(strings.dump(keys[0]))
 		self.edit.view.cls()
 		self.edit.view.set_refresh_all()
 		self.is_refresh_header = True

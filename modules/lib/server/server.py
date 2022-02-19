@@ -5,7 +5,7 @@ import time
 from video.video import Camera
 import wifi
 import uasyncio
-from tools import jsonconfig,useful,builddate,lang, tasking
+from tools import jsonconfig,logger,builddate,lang,tasking,info,strings
 
 class ServerConfig(jsonconfig.JsonConfig):
 	""" Servers configuration """
@@ -119,8 +119,8 @@ class Server:
 		preload : True force the load of page at the start,
 		False the load of page is done a the first http connection (Takes time on first connection) """
 		Server.context = ServerContext(loop, page_loader, preload, http_port)
-		useful.syslog(useful.sysinfo(display=False))
-		useful.syslog("Firmware build date '%s'"%useful.tostrings(builddate.date))
+		logger.syslog(info.sysinfo(display=False))
+		logger.syslog("Firmware build date '%s'"%strings.tostrings(builddate.date))
 
 		from server.periodic import periodic_task
 		loop.create_task(periodic_task())
@@ -131,7 +131,7 @@ class Server:
 		# If wan ip synchronization enabled
 		if Server.context.server_config.wanip:
 			if wifi.Wifi.is_wan_available():
-				useful.syslog("Synchronize Wan ip")
+				logger.syslog("Synchronize Wan ip")
 				# Wan ip not yet get
 				if Server.context.get_wan_ip_async is None:
 					from server.wanip import get_wan_ip_async
@@ -144,11 +144,11 @@ class Server:
 				if newWanIp is not None:
 					# If wan ip must be notified
 					if (Server.context.wan_ip != newWanIp or forced):
-						await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(wifi.Station.get_info()[0],newWanIp, useful.uptime()))
+						await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(wifi.Station.get_info()[0],newWanIp, info.uptime()))
 					Server.context.wan_ip = newWanIp
 					wifi.Wifi.wan_connected()
 				else:
-					useful.syslog("Cannot get wan ip")
+					logger.syslog("Cannot get wan ip")
 					wifi.Wifi.wan_disconnected()
 
 	@staticmethod
@@ -158,7 +158,7 @@ class Server:
 		if Server.context.server_config.ntp:
 			# If the wan is present
 			if wifi.Wifi.is_wan_available():
-				useful.syslog("Synchronize time")
+				logger.syslog("Synchronize time")
 
 				# If synchronisation not yet done
 				if Server.context.set_date is None:
@@ -183,7 +183,7 @@ class Server:
 						# If clock changed
 						if abs(oldTime - current_time) > 1:
 							# Log difference
-							useful.syslog("Time synchronized delta=%ds"%(current_time-oldTime))
+							logger.syslog("Time synchronized delta=%ds"%(current_time-oldTime))
 						updated = True
 						break
 					else:
@@ -196,7 +196,7 @@ class Server:
 	@staticmethod
 	def is_one_per_day():
 		""" Indicates if the action must be done on per day """
-		date = useful.date_to_bytes()[:14]
+		date = strings.date_to_bytes()[:14]
 		if Server.context.one_per_day is None or (date[-2:] == b"12" and date != Server.context.one_per_day):
 			Server.context.one_per_day = date
 			return True
@@ -235,7 +235,7 @@ class Server:
 					server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port, name="httpServer")
 
 					# If camera present
-					if useful.iscamera() and Camera.is_activated():
+					if info.iscamera() and Camera.is_activated():
 						# Load and start streaming http server
 						server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name="StreamingServer")
 

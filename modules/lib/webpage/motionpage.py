@@ -8,13 +8,13 @@ from webpage.streamingpage import *
 from video                 import CameraConfig, Camera
 from motion                import SnapConfig, MotionConfig
 import uasyncio
-from tools                 import useful, lang
+from tools                 import lang, info
 
 zone_config = CameraConfig()
 
 def zone_masking(config, disabled):
 	""" displays an html page to hide certain area of the camera, in order to ignore movements """
-	info = SnapConfig.get()
+	_ = SnapConfig.get()
 
 	squarex = SnapConfig.get().square_x - 2
 	squarey = SnapConfig.get().square_y - 2
@@ -130,7 +130,7 @@ def zone_masking(config, disabled):
 """%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
 	return result
 
-@HttpServer.add_route(b'/motion/config', menu=lang.menu_motion, item=lang.item_motion, available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b'/motion/config', menu=lang.menu_motion, item=lang.item_motion, available=info.iscamera() and Camera.is_activated())
 async def motion(request, response, args):
 	""" Motion configuration page """
 	zone_config.framesize  = b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height)
@@ -157,7 +157,7 @@ async def motion(request, response, args):
 		submit)
 	await response.send_page(page)
 
-@HttpServer.add_route(b'/motion/onoff', menu=lang.menu_motion, item=lang.item_motion_onoff, available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b'/motion/onoff', menu=lang.menu_motion, item=lang.item_motion_onoff, available=info.iscamera() and Camera.is_activated())
 async def motion_on_off(request, response, args):
 	""" Motion command page """
 	config = MotionConfig()

@@ -3,8 +3,6 @@
 """ Manages access to wifi, treats cases of network loss with retry, and manages a fallback on the access point if no network is available """
 from wifi.accesspoint import *
 from wifi.station import *
-from wifi.hostname import *
-from tools import useful
 
 WIFI_OFF            = 0
 WIFI_OTHER_NETWORK  = 1
@@ -49,14 +47,14 @@ class Wifi:
 		""" Set the state of wifi """
 		# pylint:disable=multiple-statements
 		if Wifi.context.state != state:
-			if state == WIFI_OFF           : useful.syslog("Wifi off")
-			if state == WIFI_OTHER_NETWORK : useful.syslog("Wifi select other network")
-			if state == WIFI_CONNECTED     : useful.syslog("Wifi connected")
-			if state == LAN_CONNECTED      : useful.syslog("Wifi LAN connected")
-			if state == WAN_CONNECTED      : useful.syslog("Wifi WAN connected")
-			if state == ACCESS_POINT_FORCED: useful.syslog("Wifi access point forced")
-			if state == WIFI_LOST          : useful.syslog("Wifi lost connection")
-			if state == WIFI_CLOSE         : useful.syslog("Wifi closed")
+			if state == WIFI_OFF           : logger.syslog("Wifi off")
+			if state == WIFI_OTHER_NETWORK : logger.syslog("Wifi select other network")
+			if state == WIFI_CONNECTED     : logger.syslog("Wifi connected")
+			if state == LAN_CONNECTED      : logger.syslog("Wifi LAN connected")
+			if state == WAN_CONNECTED      : logger.syslog("Wifi WAN connected")
+			if state == ACCESS_POINT_FORCED: logger.syslog("Wifi access point forced")
+			if state == WIFI_LOST          : logger.syslog("Wifi lost connection")
+			if state == WIFI_CLOSE         : logger.syslog("Wifi closed")
 		Wifi.context.state = state
 
 	@staticmethod
@@ -73,7 +71,7 @@ class Wifi:
 		""" Set wan have establish dialog with external server """
 		Wifi.lan_connected(False)
 		if Wifi.context.wan_problem > 0:
-			useful.syslog("Wan connected")
+			logger.syslog("Wan connected")
 			Wifi.context.wan_problem = 0
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED]:
 			Wifi.set_state(WAN_CONNECTED)
@@ -83,13 +81,13 @@ class Wifi:
 		""" Indicates that wan have probably a problem """
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.wan_problem += 1
-			useful.syslog("Wan problem %d detected"%Wifi.context.wan_problem)
+			logger.syslog("Wan problem %d detected"%Wifi.context.wan_problem)
 
 	@staticmethod
 	def lan_connected(changeState=True):
 		""" Indicates that lan connection detected """
 		if Wifi.context.lan_problem > 0:
-			useful.syslog("Lan connected")
+			logger.syslog("Lan connected")
 			Wifi.context.lan_problem = 0
 		if changeState:
 			if Wifi.get_state() == WIFI_CONNECTED:
@@ -100,7 +98,7 @@ class Wifi:
 		""" Indicates that lan disconnection detected """
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.lan_problem += 1
-			useful.syslog("Lan problem %d detected"%Wifi.context.lan_problem)
+			logger.syslog("Lan problem %d detected"%Wifi.context.lan_problem)
 
 	@staticmethod
 	def is_wan_available():

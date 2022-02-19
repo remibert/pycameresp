@@ -9,13 +9,13 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_dialog_flash(object):
-    def setupUi(self, dialog_flash):
-        dialog_flash.setObjectName("dialog_flash")
-        dialog_flash.resize(438, 218)
-        self.gridLayout = QtWidgets.QGridLayout(dialog_flash)
+class Ui_DialogFlash(object):
+    def setupUi(self, DialogFlash):
+        DialogFlash.setObjectName("DialogFlash")
+        DialogFlash.resize(600, 218)
+        self.gridLayout = QtWidgets.QGridLayout(DialogFlash)
         self.gridLayout.setObjectName("gridLayout")
-        self.label_firmware = QtWidgets.QLabel(dialog_flash)
+        self.label_firmware = QtWidgets.QLabel(DialogFlash)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -26,10 +26,10 @@ class Ui_dialog_flash(object):
         self.gridLayout.addWidget(self.label_firmware, 0, 0, 1, 1)
         self.firmware_layout = QtWidgets.QHBoxLayout()
         self.firmware_layout.setObjectName("firmware_layout")
-        self.firmware = QtWidgets.QLineEdit(dialog_flash)
+        self.firmware = QtWidgets.QLineEdit(DialogFlash)
         self.firmware.setObjectName("firmware")
         self.firmware_layout.addWidget(self.firmware)
-        self.select_firmware = QtWidgets.QPushButton(dialog_flash)
+        self.select_firmware = QtWidgets.QPushButton(DialogFlash)
         self.select_firmware.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -40,7 +40,7 @@ class Ui_dialog_flash(object):
         self.select_firmware.setObjectName("select_firmware")
         self.firmware_layout.addWidget(self.select_firmware)
         self.gridLayout.addLayout(self.firmware_layout, 1, 0, 1, 2)
-        self.label_baud = QtWidgets.QLabel(dialog_flash)
+        self.label_baud = QtWidgets.QLabel(DialogFlash)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -53,7 +53,7 @@ class Ui_dialog_flash(object):
         self.gridLayout.addWidget(self.label_baud, 2, 0, 1, 1)
         self.baud_layout = QtWidgets.QHBoxLayout()
         self.baud_layout.setObjectName("baud_layout")
-        self.baud = QtWidgets.QComboBox(dialog_flash)
+        self.baud = QtWidgets.QComboBox(DialogFlash)
         self.baud.setEnabled(True)
         self.baud.setMinimumSize(QtCore.QSize(150, 0))
         self.baud.setObjectName("baud")
@@ -61,7 +61,7 @@ class Ui_dialog_flash(object):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.baud_layout.addItem(spacerItem)
         self.gridLayout.addLayout(self.baud_layout, 3, 0, 1, 2)
-        self.erase = QtWidgets.QCheckBox(dialog_flash)
+        self.erase = QtWidgets.QCheckBox(DialogFlash)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -71,28 +71,29 @@ class Ui_dialog_flash(object):
         self.gridLayout.addWidget(self.erase, 4, 0, 1, 1)
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
         self.gridLayout.addItem(spacerItem1, 5, 1, 1, 1)
-        self.button_box = QtWidgets.QDialogButtonBox(dialog_flash)
+        self.button_box = QtWidgets.QDialogButtonBox(DialogFlash)
         self.button_box.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.button_box.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
+        self.button_box.setCenterButtons(True)
         self.button_box.setObjectName("button_box")
         self.gridLayout.addWidget(self.button_box, 6, 0, 1, 2)
 
-        self.retranslateUi(dialog_flash)
-        self.button_box.accepted.connect(dialog_flash.accept) # type: ignore
-        self.button_box.rejected.connect(dialog_flash.reject) # type: ignore
-        QtCore.QMetaObject.connectSlotsByName(dialog_flash)
-        dialog_flash.setTabOrder(self.firmware, self.select_firmware)
-        dialog_flash.setTabOrder(self.select_firmware, self.baud)
-        dialog_flash.setTabOrder(self.baud, self.erase)
+        self.retranslateUi(DialogFlash)
+        self.button_box.accepted.connect(DialogFlash.accept) # type: ignore
+        self.button_box.rejected.connect(DialogFlash.reject) # type: ignore
+        QtCore.QMetaObject.connectSlotsByName(DialogFlash)
+        DialogFlash.setTabOrder(self.firmware, self.select_firmware)
+        DialogFlash.setTabOrder(self.select_firmware, self.baud)
+        DialogFlash.setTabOrder(self.baud, self.erase)
 
-    def retranslateUi(self, dialog_flash):
+    def retranslateUi(self, DialogFlash):
         _translate = QtCore.QCoreApplication.translate
-        dialog_flash.setWindowTitle(_translate("dialog_flash", "Flash firmware"))
-        self.label_firmware.setText(_translate("dialog_flash", "Firmware"))
-        self.firmware.setToolTip(_translate("dialog_flash", "Enter firmware file"))
-        self.select_firmware.setToolTip(_translate("dialog_flash", "Select firmware file"))
-        self.select_firmware.setText(_translate("dialog_flash", "..."))
-        self.label_baud.setText(_translate("dialog_flash", "Baud rate"))
-        self.baud.setToolTip(_translate("dialog_flash", "Select flash baud rate"))
-        self.erase.setToolTip(_translate("dialog_flash", "Check to erase the flash content before write firmware"))
-        self.erase.setText(_translate("dialog_flash", "Erase flash"))
+        DialogFlash.setWindowTitle(_translate("DialogFlash", "Flash firmware"))
+        self.label_firmware.setText(_translate("DialogFlash", "Firmware"))
+        self.firmware.setToolTip(_translate("DialogFlash", "Enter firmware file"))
+        self.select_firmware.setToolTip(_translate("DialogFlash", "Select firmware file"))
+        self.select_firmware.setText(_translate("DialogFlash", "..."))
+        self.label_baud.setText(_translate("DialogFlash", "Baud rate"))
+        self.baud.setToolTip(_translate("DialogFlash", "Select flash baud rate"))
+        self.erase.setToolTip(_translate("DialogFlash", "Check to erase the flash content before write firmware"))
+        self.erase.setText(_translate("DialogFlash", "Erase flash"))

@@ -4,14 +4,14 @@
 import uasyncio
 from server.stream import *
 from server.httprequest import *
-from tools import useful
+from tools import logger,strings
 
 async def request(host, port, path):
 	""" Asynchronous request to ip server """
 	result = None
 	try:
 		streamio = None
-		reader,writer = await uasyncio.open_connection(useful.tostrings(host), port)
+		reader,writer = await uasyncio.open_connection(strings.tostrings(host), port)
 		streamio = Stream(reader, writer)
 		req = HttpRequest(None)
 		req.set_path(path)
@@ -26,7 +26,7 @@ async def request(host, port, path):
 		if response.status == b"200":
 			result = response.get_content()
 	except Exception as err:
-		useful.syslog(err)
+		logger.syslog(err)
 	finally:
 		if streamio:
 			await streamio.close()

@@ -7,9 +7,9 @@ from htmltemplate      import *
 from webpage.mainpage  import main_frame
 from motion            import Historic
 from video             import Camera
-from tools             import useful, lang
+from tools             import lang,info, strings
 
-@HttpServer.add_route(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=info.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
 	""" Historic motion detection page """
 	await Historic.get_root()
@@ -390,7 +390,7 @@ async def historic(request, response, args):
 	page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
 	await response.send_page(page)
 
-@HttpServer.add_route(b'/historic/historic.json', available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b'/historic/historic.json', available=info.iscamera() and Camera.is_activated())
 async def historic_json(request, response, args):
 	""" Send historic json file """
 	Server.slow_down()
@@ -399,7 +399,7 @@ async def historic_json(request, response, args):
 	else:
 		await response.send_buffer(b"historic.json", b"[]")
 
-@HttpServer.add_route(b'/historic/images/.*', available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b'/historic/images/.*', available=info.iscamera() and Camera.is_activated())
 async def historic_image(request, response, args):
 	""" Send historic image """
 	Server.slow_down()
@@ -407,7 +407,7 @@ async def historic_image(request, response, args):
 	try:
 		if reserved:
 			await Historic.acquire()
-			await response.send_file(useful.tostrings(request.path[len("/historic/images/"):]), base64=True)
+			await response.send_file(strings.tostrings(request.path[len("/historic/images/"):]), base64=True)
 		else:
 			await response.send_error(status=b"404", content=b"Image not found")
 	finally:
@@ -415,7 +415,7 @@ async def historic_image(request, response, args):
 			await Historic.release()
 			await Camera.unreserve(Historic)
 
-@HttpServer.add_route(b'/historic/download/.*', available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b'/historic/download/.*', available=info.iscamera() and Camera.is_activated())
 async def download_image(request, response, args):
 	""" Download historic image """
 	Server.slow_down()
@@ -423,7 +423,7 @@ async def download_image(request, response, args):
 	try:
 		if reserved:
 			await Historic.acquire()
-			await response.send_file(useful.tostrings(request.path[len("/historic/download/"):]), base64=False)
+			await response.send_file(strings.tostrings(request.path[len("/historic/download/"):]), base64=False)
 		else:
 			await response.send_error(status=b"404", content=b"Image not found")
 	finally:

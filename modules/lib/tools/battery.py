@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Manage the battery """
 import machine
-from tools import jsonconfig, useful
+from tools import jsonconfig,logger
 
 class BatteryConfig(jsonconfig.JsonConfig):
 	""" Battery configuration """
@@ -68,9 +68,9 @@ class Battery:
 						level = 100
 					else:
 						level = int(level)
-				useful.syslog("Battery level %d %% (%d)"%(level, int(val/count)))
+				logger.syslog("Battery level %d %% (%d)"%(level, int(val/count)))
 			except Exception as err:
-				useful.syslog(err,"Cannot read battery status")
+				logger.syslog(err,"Cannot read battery status")
 			Battery.level[0] = level
 		return Battery.level[0]
 
@@ -99,7 +99,7 @@ class Battery:
 		Battery.init()
 		Battery.keep_reset_cause()
 		if Battery.manage_level() or Battery.is_too_many_brownout():
-			useful.syslog("Sleep infinite")
+			logger.syslog("Sleep infinite")
 			machine.deepsleep()
 
 	@staticmethod
@@ -120,7 +120,7 @@ class Battery:
 			# Case the battery has not enough current and must be protected
 			if battery_protect:
 				deepsleep = True
-				useful.syslog("Battery too low %d %%"%battery_level)
+				logger.syslog("Battery too low %d %%"%battery_level)
 		return deepsleep
 
 	@staticmethod
@@ -134,9 +134,9 @@ class Battery:
 			machine.SOFT_RESET      : "Soft",
 			machine.BROWNOUT_RESET  : "Brownout",
 		}.setdefault(machine.reset_cause(), "%d"%machine.reset_cause())
-		useful.syslog(" ")
-		useful.syslog("%s Start %s"%('-'*10,'-'*10), display=False)
-		useful.syslog("%s reset"%causes)
+		logger.syslog(" ")
+		logger.syslog("%s Start %s"%('-'*10,'-'*10), display=False)
+		logger.syslog("%s reset"%causes)
 
 	@staticmethod
 	def is_too_many_brownout():
@@ -158,7 +158,7 @@ class Battery:
 			# if the number of consecutive brownout resets is too high
 			if Battery.config.brownout_count > 32:
 				# Battery too low, save the battery status
-				useful.syslog("Too many successive brownout reset")
+				logger.syslog("Too many successive brownout reset")
 				deepsleep = True
 		return deepsleep
 

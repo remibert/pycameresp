@@ -2,14 +2,12 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ These classes are used to send notifications to smartphones, via the pushover application.
 See https://www.pushover.net """
-
-import sys
-sys.path.append("lib")
+# pylint:disable=wrong-import-position
 import uasyncio
 from server.stream import *
 from server.httprequest import *
 import wifi
-from tools import useful, jsonconfig
+from tools import logger,jsonconfig,strings
 
 class PushOverConfig(jsonconfig.JsonConfig):
 	""" Configuration of the pushover """
@@ -42,7 +40,7 @@ class Notification:
 			try:
 				streamio = None
 				# Open pushover connection
-				reader,writer = await uasyncio.open_connection(useful.tostrings(self.host), self.port)
+				reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
 				streamio = Stream(reader, writer)
 
 				# Create multipart request
@@ -82,23 +80,23 @@ class Notification:
 				# If response failed
 				if response.status != b"200":
 					# Print error
-					useful.syslog("Notification failed to sent", display=display)
+					logger.syslog("Notification failed to sent", display=display)
 
 				# Close all connection with push over server
 				result = True
 			except Exception as err:
-				useful.syslog(err)
+				logger.syslog(err)
 			finally:
 				if streamio:
 					await streamio.close()
 		else:
-			useful.syslog("Notification not sent : wifi not connected", display=display)
+			logger.syslog("Notification not sent : wifi not connected", display=display)
 		return result
 
 async def async_notify(user, token, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
 	notification = Notification(host=b"api.pushover.net", port=80, token=token, user=user)
-	return await notification.notify(b"%s : %s"%(wifi.Station.get_hostname(), useful.tobytes(message)), image, display)
+	return await notification.notify(b"%s : %s"%(wifi.Station.get_hostname(), strings.tobytes(message)), image, display)
 
 def notify(user, token, message, image=None):
 	""" Notification function """

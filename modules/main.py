@@ -12,18 +12,16 @@ except:
 sys.path.append("sample")
 import uasyncio
 import machine
-from tools.battery import Battery
-from tools.awake import Awake
-from tools.useful import iscamera, syslog, reboot
+from tools import battery, awake, logger, system, info
 
 # Force high frequency of esp32
 machine.freq(240000000)
 
 # Check the battery level and force deepsleep is to low
-Battery.protect()
+battery.Battery.protect()
 
 # Can only be done once at boot before start of the camera and sd card
-pinWakeUp = Awake.is_pin_wake_up()
+pinWakeUp = awake.Awake.is_pin_wake_up()
 
 def html_page_loader():
 	""" Html pages loader """
@@ -48,20 +46,21 @@ import server
 server.init(loop=loop, page_loader=html_page_loader)
 
 # If camera is available (required specific firmware)
-if iscamera():
+if info.iscamera():
 	# Start motion detection (can be only used with ESP32CAM)
 	import motion
 	motion.start(loop, pinWakeUp)
 
 # Add shell asynchronous task (press any key to get shell prompt)
-from shell.shell import async_shell
+# pylint:disable=unused-import
+from shell import async_shell,sh
 loop.create_task(async_shell())
 
 try:
 	# Run asyncio for ever
 	loop.run_forever()
 except KeyboardInterrupt:
-	syslog("Control C in main")
+	logger.syslog("Control C in main")
 except Exception as err:
-	syslog(err)
-	reboot("Crash in main")
+	logger.syslog(err)
+	system.reboot("Crash in main")

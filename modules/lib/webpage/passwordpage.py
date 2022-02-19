@@ -4,7 +4,7 @@
 from htmltemplate import *
 from server.user import User
 from server.sessions import Sessions
-from tools import useful, lang
+from tools import lang
 
 class PasswordPage:
 	""" Html page of password """

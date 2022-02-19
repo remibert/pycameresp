@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>dialog_flash</class>
- <widget class="QDialog" name="dialog_flash">
+ <class>DialogFlash</class>
+ <widget class="QDialog" name="DialogFlash">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>438</width>
+    <width>600</width>
     <height>218</height>
    </rect>
   </property>
@@ -158,6 +158,9 @@
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
+     <property name="centerButtons">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
   </layout>
@@ -173,7 +176,7 @@
   <connection>
    <sender>button_box</sender>
    <signal>accepted()</signal>
-   <receiver>dialog_flash</receiver>
+   <receiver>DialogFlash</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -189,7 +192,7 @@
   <connection>
    <sender>button_box</sender>
    <signal>rejected()</signal>
-   <receiver>dialog_flash</receiver>
+   <receiver>DialogFlash</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

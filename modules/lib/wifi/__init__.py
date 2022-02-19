@@ -5,5 +5,7 @@
 from wifi.accesspoint import *
 from wifi.station import *
 from wifi.wifi import *
+from wifi.ip import *
+
 
 AUTHMODE = {0: b"open", 1: b"WEP", 2: b"WPA-PSK", 3: b"WPA2-PSK", 4: b"WPA/WPA2-PSK"}

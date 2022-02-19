@@ -1,6 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-""" Class defining a minimalist shell, directly executable on the board. 
+""" Class defining a minimalist shell, directly executable on the board.
 We modify directories, list, delete, move files, edit files ...
 The commands are :
 - cd      : change directory
@@ -32,13 +32,16 @@ The commands are :
 - help    : list all command available
 - man     : manual of one command
 """
+# pylint:disable=wrong-import-position
 import sys
+
 sys.path.append("lib")
+sys.path.append("simul")
 import io
 import os
 import uos
 import machine
-from tools import useful, sdcard, tasking
+from tools import useful,logger,sdcard,tasking,filesystem,exchange,info,strings,terminal,system
 
 def cd(directory = "/"):
 	""" Change directory """
@@ -54,33 +57,33 @@ def pwd():
 def mkdir(directory, recursive=False, quiet=False):
 	""" Make directory """
 	try:
-		if quiet == False:
+		if quiet is False:
 			print("mkdir '%s'"%directory)
-		useful.makedir(directory, recursive)
+		filesystem.makedir(directory, recursive)
 	except:
 		print("Cannot mkdir '%s'"%directory)
 
 def removedir(directory, force=False, quiet=False, simulate=False):
 	""" Remove directory """
 	try:
-		if useful.exists(directory+"/.DS_Store"):
+		if filesystem.exists(directory+"/.DS_Store"):
 			rmfile(directory+"/.DS_Store", quiet, force, simulate)
-		if (useful.ismicropython() or force) and simulate == False:
+		if (filesystem.ismicropython() or force) and simulate is False:
 			uos.rmdir(directory)
-		if quiet == False:
+		if quiet is False:
 			print("rmdir '%s'"%(directory))
 	except:
 		print("rmdir '%s' not removed"%(directory))
 
 def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 	""" Remove directory """
-	if recursive == False:
+	if recursive is False:
 		removedir(directory, force=force, quiet=quiet, simulate=simulate)
 	else:
 		directories = [directory]
 		d = directory
 		while 1:
-			parts = useful.split(d)
+			parts = filesystem.split(d)
 			if parts[1] == "" or parts[0] == "":
 				break
 			directories.append(parts[0])
@@ -90,7 +93,7 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 		if sdcard.SdCard.get_mountpoint() in directories:
 			directories.remove(sdcard.SdCard.get_mountpoint())
 		for d in directories:
-			if useful.exists(d) and d != ".":
+			if filesystem.exists(d) and d != ".":
 				removedir(d, force=force, quiet=quiet, simulate=simulate)
 
 def mv(source, destination):
@@ -104,14 +107,14 @@ def copyfile(src,dst,quiet):
 	""" Copy file """
 	dst = dst.replace("//","/")
 	dst = dst.replace("//","/")
-	dstdir, dstfile = useful.split(dst)
+	dstdir, dstfile = filesystem.split(dst)
 	try:
-		if not useful.exists(dstdir):
+		if not filesystem.exists(dstdir):
 			if dstdir != "." and dstdir != "":
 				mkdir(dstdir, recursive=True, quiet=quiet)
 		src_file = open(src, 'rb')
 		dst_file = open(dst, 'wb')
-		if quiet == False:
+		if quiet is False:
 			print("cp '%s' -> '%s'"%(src,dst))
 		while True:
 			buf = src_file.read(256)
@@ -129,16 +132,16 @@ def cp(source, destination, recursive=False, quiet=False):
 	filenames   = []
 	directories = []
 
-	if useful.isfile(source):
+	if filesystem.isfile(source):
 		copyfile(source,destination,quiet)
 	else:
-		if useful.isdir(source):
+		if filesystem.isdir(source):
 			path = source
 			pattern = "*"
 		else:
-			path, pattern = useful.split(source)
-				
-		directories, filenames = useful.scandir(path, pattern, recursive)
+			path, pattern = filesystem.split(source)
+
+		directories, filenames = filesystem.scandirexcp(path, pattern, recursive)
 
 		for src in filenames:
 			dst = destination + "/" + src[len(path):]
@@ -147,9 +150,9 @@ def cp(source, destination, recursive=False, quiet=False):
 def rmfile(filename, quiet=False, force=False, simulate=False):
 	""" Remove file """
 	try:
-		if (useful.ismicropython() or force) and simulate == False:
+		if (filesystem.ismicropython() or force) and simulate is False:
 			uos.remove(filename)
-		if quiet == False:
+		if quiet is False:
 			print("rm '%s'"%(filename))
 	except:
 		print("rm '%s' not removed"%(filename))
@@ -158,12 +161,12 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
 	""" Remove file command """
 	filenames   = []
 	directories = []
-	
-	if useful.isfile(file):
+
+	if filesystem.isfile(file):
 		path = file
 		rmfile(file, force=force, quiet=quiet, simulate=simulate)
 	else:
-		if useful.isdir(file):
+		if filesystem.isdir(file):
 			if recursive:
 				directories.append(file)
 				path = file
@@ -172,17 +175,17 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
 				path = None
 				pattern = None
 		else:
-			path, pattern = useful.split(file)
+			path, pattern = filesystem.split(file)
 
-		if path == None:
+		if path is None:
 			print("Cannot rm '%s'"%file)
 		else:
-			dirs, filenames = useful.scandir(path, pattern, recursive)
+			dirs, filenames = filesystem.scandirexcp(path, pattern, recursive)
 			directories += dirs
-					
+
 			for filename in filenames:
 				rmfile(filename, force=force, quiet=quiet, simulate=simulate)
-		
+
 			if recursive:
 				directories.sort()
 				directories.reverse()
@@ -194,7 +197,7 @@ class LsDisplayer:
 	""" Ls displayer class """
 	def __init__(self, path, showdir, long):
 		""" Constructor """
-		self.height, self.width = useful.get_screen_size()
+		self.height, self.width = terminal.get_screen_size()
 		self.count = 1
 		self.long = long
 		self.path = path
@@ -211,7 +214,7 @@ class LsDisplayer:
 
 	def show(self, path):
 		""" Show the information of a file or directory """
-		fileinfo = useful.fileinfo(path)
+		fileinfo = filesystem.fileinfo(path)
 		date_ = fileinfo[8]
 		size = fileinfo[6]
 
@@ -219,50 +222,50 @@ class LsDisplayer:
 		if fileinfo[0] & 0x4000 == 0x4000:
 			if self.showdir:
 				if self.long:
-					message = "%s %s [%s]"%(useful.date_to_string(date_)," "*7,self.purge_path(path))
+					message = "%s %s [%s]"%(strings.date_to_string(date_)," "*7,self.purge_path(path))
 				else:
 					message = "[%s]"%self.purge_path(path)
 				self.count = print_part(message, self.width, self.height, self.count)
 		else:
 			if self.long:
-				fileinfo = useful.fileinfo(path)
+				fileinfo = filesystem.fileinfo(path)
 				date_ = fileinfo[8]
 				size = fileinfo[6]
-				message = "%s %s %s"%(useful.date_to_string(date_),useful.size_to_string(size),self.purge_path(path))
+				message = "%s %s %s"%(strings.date_to_string(date_),strings.size_to_string(size),self.purge_path(path))
 			else:
 				message = self.purge_path(path)
 			self.count = print_part(message, self.width, self.height, self.count)
 
 def ls(file="", recursive=False, long=False):
 	""" List command """
-	if useful.isfile(file):
+	if filesystem.isfile(file):
 		LsDisplayer("", False, long).show(file)
 	elif file == "":
-		useful.scandir(uos.getcwd(), "*", recursive, LsDisplayer(uos.getcwd(), True, long))
-	elif useful.isdir(file):
-		useful.scandir(file, "*", recursive, LsDisplayer(file, True, long))
+		filesystem.scandirexcp(uos.getcwd(), "*", recursive, LsDisplayer(uos.getcwd(), True, long))
+	elif filesystem.isdir(file):
+		filesystem.scandirexcp(file, "*", recursive, LsDisplayer(file, True, long))
 	else:
-		path, pattern = useful.split(file)
-		useful.scandir(path, pattern, recursive, LsDisplayer(path, False, long))
+		path, pattern = filesystem.split(file)
+		filesystem.scandirexcp(path, pattern, recursive, LsDisplayer(path, False, long))
 
 def find(file):
 	""" Find a file in directories """
-	path, pattern = useful.split(file)
-	directories, filenames = useful.scandir(path, pattern, True)
+	path, pattern = filesystem.split(file)
+	_, filenames = filesystem.scandirexcp(path, pattern, True)
 	for filename in filenames:
 		print(filename)
 
 def print_part(message, width, height, count):
 	""" Print a part of text """
-	if count != None and count >= height:
+	if count is not None and count >= height:
 		print(message,end="")
-		key = useful.getch()
+		key = terminal.getch()
 		count = 1
 		if key in ["x","X","q","Q","\x1B"]:
 			return None
 		print("\n", end="")
 	else:
-		if count == None:
+		if count is None:
 			count = 1
 		else:
 			count += 1
@@ -295,7 +298,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 						message = "%s:%d:%s"%(filename, lineNumber, line)
 						message = message.rstrip()[:width]
 						count = print_part(message, width, height, count)
-						if count == None:
+						if count is None:
 							print("")
 							return None
 					lineNumber += 1
@@ -303,17 +306,17 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 					break
 		return count
 
-	if useful.isfile(file):
+	if filesystem.isfile(file):
 		filenames = [file]
 	else:
-		path, pattern = useful.split(file)
-		directories, filenames = useful.scandir(path, pattern, recursive)
+		path, pattern = filesystem.split(file)
+		_, filenames = filesystem.scandirexcp(path, pattern, recursive)
 
-	height, width = useful.get_screen_size()
+	height, width = terminal.get_screen_size()
 	count = 1
 	for filename in filenames:
 		count = __grep(text, filename, ignorecase, regexp, width, height, count)
-		if count == None:
+		if count is None:
 			break
 
 def ping(host):
@@ -360,7 +363,7 @@ def date(update=False, offsetUTC=+1, noDst=False):
 		else:
 			dst = True
 		set_date(offsetUTC, dst)
-	print(useful.date_to_string())
+	print(strings.date_to_string())
 	del sys.modules["server.timesetting"]
 
 def setdate(datetime=""):
@@ -394,14 +397,14 @@ def setdate(datetime=""):
 			failed = True
 	except Exception as err:
 		failed = True
-		useful.syslog(err)
+		logger.syslog(err)
 
-	if failed == True:
+	if failed is True:
 		print('Expected format "YYYY/MM/DD hh:mm:ss"')
 
 def reboot():
 	""" Reboot command """
-	useful.reboot("Reboot device")
+	system.reboot("Reboot device")
 
 def deepsleep(seconds=60):
 	""" Deep sleep command """
@@ -411,7 +414,7 @@ edit_class = None
 def edit(file):
 	""" Edit command """
 	global edit_class
-	if edit_class == None:
+	if edit_class is None:
 		try:
 			from shell.editor import Editor
 		except:
@@ -423,7 +426,7 @@ def cat(file):
 	""" Cat command """
 	try:
 		f = open(file, "r")
-		height, width = useful.get_screen_size()
+		height, width = terminal.get_screen_size()
 		count = 1
 		while 1:
 			line = f.readline()
@@ -431,7 +434,7 @@ def cat(file):
 				break
 			message = line.replace("\t","    ").rstrip()[:width]
 			count = print_part(message, width, height, count)
-			if count == None:
+			if count is None:
 				break
 		f.close()
 	except:
@@ -443,7 +446,7 @@ def df(mountpoint = "/"):
 	freeSize  = status[0]*status[3]
 	totalSize = status[1]*status[2]
 	print("Filesystem     Free   Capacity   Used")
-	print("%-10s %-10s %-10s %-3.2f%%"%(mountpoint, useful.size_to_string(freeSize,8),useful.size_to_string(totalSize,), totalSize/freeSize))
+	print("%-10s %-10s %-10s %-3.2f%%"%(mountpoint, strings.size_to_string(freeSize,8),strings.size_to_string(totalSize,), totalSize/freeSize))
 
 def gc():
 	""" Garbage collector command """
@@ -452,7 +455,7 @@ def gc():
 
 def uptime():
 	""" Tell how long the system has been running """
-	print(useful.uptime())
+	print(info.uptime())
 
 def man(command):
 	""" Man command """
@@ -476,7 +479,7 @@ def man_one(command_name):
 # pylint: disable=redefined-builtin
 def help():
 	""" Help command """
-	height, width = useful.get_screen_size()
+	height, width = terminal.get_screen_size()
 	count = 1
 	cmds = list(shell_commands.keys())
 	cmds.sort()
@@ -485,7 +488,7 @@ def help():
 		lines = "-"*30+"\n" + lines
 		for line in lines.split("\n"):
 			count = print_part(line, width, height, count)
-			if count == None:
+			if count is None:
 				return
 
 def eval_(string):
@@ -504,7 +507,7 @@ def exit():
 
 def dump_(filename):
 	""" dump file content """
-	height, width = useful.get_screen_size()
+	height, width = terminal.get_screen_size()
 	width = 16
 	offset = 0
 	file = open(filename, "rb")
@@ -516,57 +519,125 @@ def dump_(filename):
 		data = file.read(width)
 		if len(data) <= 0:
 			break
-		useful.dump_line (data, line, width)
+		strings.dump_line (data, line, width)
 		offset += width
 		count = print_part(line.getvalue().decode("utf8"), width, height, count)
-		if count == None:
+		if count is None:
 			break
-
-def parse_command_line(commandLine):
-	""" Parse command line """
-	commands = []
-	args = []
-	quote = None
-	arg = ""
-	for char in commandLine:
-		if char == '"' or char == "'":
-			if quote is not None:
-				if quote == char:
-					args.append(arg)
-					arg = ""
-					quote = None
-				else:
-					arg += char
-			else:
-				quote = char
-		elif char == " ":
-			if quote is not None:
-				arg += char
-			else:
-				args.append(arg)
-				arg = ""
-		elif char == ";":
-			if quote is not None:
-				arg += char
-			else:
-				if len(arg) > 0:
-					args.append(arg)
-				commands.append(args)
-				arg = ""
-				args = []
-		else:
-			arg += char
-	if len(arg) > 0:
-		args.append(arg)
-	if len(args) > 0:
-		commands.append(args)
-
-	for command in commands:
-		exec_command(command)
 
 def cls():
 	""" clear screen """
 	print("\x1B[2J\x1B[0;0f", end="")
+
+def check_cam_flasher():
+	""" Check if the terminal is CamFlasher """
+	# Request terminal device attribut
+	sys.stdout.write(b"\x1B[0c")
+
+	# Wait terminal device attribut response
+	response = terminal.getch(duration=1000)
+
+	# If CamFlasher detected
+	if response == "\x1B[?3;2c":
+		return True
+	return False
+
+class Downloader:
+	""" Downloader file from camflasher """
+	def __init__(self, file, recursive, in_file, out_file):
+		self.in_file = in_file
+		self.out_file = out_file
+		self.header = "࿋%s\r\n%s\r\n%d\r\n"%(file, uos.getcwd(), 1 if recursive else 0)
+
+	def read(self):
+		""" Read file downloaded """
+		self.out_file.write(self.header.encode("utf8"))
+		START_FILE = "࿊".encode("utf8")
+		END_DOWNLOAD = "྾".encode("utf8")
+
+		while True:
+			command = self.in_file.read(len(START_FILE))
+			if command == START_FILE:
+				file_reader = exchange.FileReader()
+				if file_reader.read(self.in_file, self.out_file) is not None:
+					print("  Download ---%s"%file_reader.filename.get())
+			elif command == END_DOWNLOAD:
+				break
+
+def download_file(file="", recursive=False):
+	""" Download file from computer to device """
+	if check_cam_flasher():
+		print("Download start")
+		load_file = Downloader(file, recursive, sys.stdin.buffer, sys.stdout.buffer)
+		load_file.read()
+		print ("Download end")
+	else:
+		print("CamFlasher application required for this command")
+
+
+class Uploader:
+	""" Uploader file to camflasher """
+	def __init__(self, path):
+		""" Constructor """
+		self.path = path
+
+	def purge_path(self, path):
+		""" Purge the path for the display """
+		if len(path) >= 2 and path[:2] == "./":
+			path = path[2:]
+		path = path.lstrip("/")
+		return path
+
+	def send_file(self, path):
+		""" Send the file """
+		result = True
+		fileinfo = filesystem.fileinfo(path)
+
+		# If a file
+		if fileinfo[0] & 0x4000 != 0x4000:
+			path = self.purge_path(path)
+			path = self.path + "/" + path
+			path = path.replace("//","/")
+			file_write = exchange.FileWriter()
+			if filesystem.exists(path):
+				sys.stdout.buffer.write("࿊".encode("utf8"))
+				result = file_write.write(path, sys.stdin.buffer, sys.stdout.buffer)
+		return result
+
+	def show(self, path):
+		""" Show the information of a file or directory """
+		for _ in range(3):
+			# If the first send successful
+			if self.send_file(path) is True:
+				break
+
+def upload_file(file="", recursive=False):
+	""" Upload file from device to computer """
+	if check_cam_flasher():
+		path, pattern = filesystem.split(file)
+		print("Upload start")
+
+		try:
+			if filesystem.isfile(file):
+				Uploader("").show(file)
+			elif file == "":
+				filesystem.scandirexcp(uos.getcwd(), "*", recursive, Uploader(uos.getcwd()))
+			elif filesystem.isdir(file):
+				path, pattern = filesystem.split(file)
+				filesystem.scandirexcp(file, "*", recursive, Uploader(uos.getcwd()))
+			else:
+				path, pattern = filesystem.split(file)
+				filesystem.scandirexcp(path, pattern, recursive, Uploader(uos.getcwd()))
+			print ("Upload end")
+		except exchange.FileError as err:
+			print("Upload failed : %s"%err.message)
+	else:
+		print("CamFlasher application required for this command")
+
+def temperature():
+	""" Get the internal temperature """
+	celcius, farenheit = info.temperature()
+	print("%.2f°C, %d°F"%(celcius, farenheit))
 
 def get_command(command_name):
 	""" Get a command callback according to the command name """
@@ -623,30 +694,67 @@ def exec_command(args):
 								flags[command_params[paramsCount]] = arg
 								paramsCount += 1
 	except Exception as err:
-		# print(useful.syslog(err))
+		# print(logger.syslog(err))
 		print(err)
 		return
 	try:
 		if command_name.strip() != "":
 			command_function(**flags)
 	except TypeError as err:
-		useful.syslog(err, msg="Missing parameters for '%s'"%command_name)
+		logger.syslog(err, msg="Missing parameters for '%s'"%command_name)
 	except KeyboardInterrupt:
 		print(" [Canceled]")
 	except Exception as err:
-		useful.syslog(err)
+		logger.syslog(err)
 
-def temperature():
-	""" Get the internal temperature """
-	celcius, farenheit = useful.temperature()
-	print("%.2f°C, %d°F"%(celcius, farenheit))
+def parse_command_line(commandLine):
+	""" Parse command line """
+	commands = []
+	args = []
+	quote = None
+	arg = ""
+	for char in commandLine:
+		if char == '"' or char == "'":
+			if quote is not None:
+				if quote == char:
+					args.append(arg)
+					arg = ""
+					quote = None
+				else:
+					arg += char
+			else:
+				quote = char
+		elif char == " ":
+			if quote is not None:
+				arg += char
+			else:
+				args.append(arg)
+				arg = ""
+		elif char == ";":
+			if quote is not None:
+				arg += char
+			else:
+				if len(arg) > 0:
+					args.append(arg)
+				commands.append(args)
+				arg = ""
+				args = []
+		else:
+			arg += char
+	if len(arg) > 0:
+		args.append(arg)
+	if len(args) > 0:
+		commands.append(args)
 
-def shell():
+	for command in commands:
+		exec_command(command)
+
+def sh():
 	""" Start the shell """
 	global shell_exited
 
 	shell_exited = False
-	while shell_exited == False:
+	while shell_exited is False:
 		try:
 			commandLine = ""
 			commandLine = input("%s=> "%os.getcwd())
@@ -666,7 +774,7 @@ async def async_shell():
 	import uasyncio
 	from server.server import Server
 
-	if useful.ismicropython():
+	if filesystem.ismicropython():
 		polling1 = 2
 		polling2 = 0.01
 	else:
@@ -674,8 +782,8 @@ async def async_shell():
 		polling2 = 0.5
 	while 1:
 		# If key pressed
-		if useful.kbhit(polling2):
-			character = useful.getch()[0]
+		if terminal.kbhit(polling2):
+			character = terminal.getch()[0]
 
 			# Check if character is correct to start shell
 			if not ord(character) in [0,0xA]:
@@ -689,14 +797,14 @@ async def async_shell():
 				tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
 
 				# Get the size of screen
-				useful.refresh_screen_size()
+				terminal.refresh_screen_size()
 
 				# Start shell
 				print("")
-				useful.syslog("<"*10+" Enter shell " +">"*10)
-				shell()
+				logger.syslog("<"*10+" Enter shell " +">"*10)
+				sh()
 				print("")
-				useful.syslog("<"*10+" Exit  shell " +">"*10)
+				logger.syslog("<"*10+" Exit  shell " +">"*10)
 
 				# Restore default path
 				uos.chdir("/")
@@ -709,46 +817,47 @@ async def async_shell():
 		else:
 			await uasyncio.sleep(polling1)
 
-
 shell_commands = \
 {
-	"cd"       :[cd       ,"directory"],
-	"pwd"      :[pwd      ],
-	"cat"      :[cat      ,"file"],
-	"cls"      :[cls      ],
-	"mkdir"    :[mkdir    ,"directory",            ("-r","recursive",True)],
-	"mv"       :[mv       ,"source","destination"],
-	"rmdir"    :[rmdir    ,"directory",            ("-r","recursive",True),("-f","force",True),("-q","quiet",True),("-s","simulate",True)],
-	"cp"       :[cp       ,"source","destination", ("-r","recursive",True),("-q","quiet",True)],
-	"rm"       :[rm       ,"file",                 ("-r","recursive",True),("-f","force",True),("-s","simulate",True)],
-	"ls"       :[ls       ,"file",                 ("-r","recursive",True),("-l","long",True)],
-	"date"     :[date     ,"offsetUTC" ,           ("-u","update",True),   ("-n","noDst",True)],
-	"setdate"  :[setdate  ,"datetime"],
-	"uptime"   :[uptime   ],
-	"find"     :[find     ,"file"],
-	"run"      :[useful.import_  ,"filename"],
-	"edit"     :[edit     ,"file"],
-	"exit"     :[exit     ],
-	"gc"       :[gc       ],
-	"grep"     :[grep     ,"text","file",          ("-r","recursive",True),("-i","ignorecase",True),("-e","regexp",True)],
-	"mount"    :[mountsd  ,"mountpoint"],
-	"umount"   :[umountsd ,"mountpoint"],
-	"temperature":[temperature],
-	"meminfo"  :[useful.meminfo  ],
-	"flashinfo":[useful.flashinfo],
-	"sysinfo"  :[useful.sysinfo  ],
-	"deepsleep":[deepsleep,"seconds"],
-	"ping"     :[ping      ,"host"],
-	"reboot"   :[reboot   ],
-	"help"     :[help     ],
-	"man"      :[man      ,"command"],
-	"df"       :[df       ,"mountpoint"],
-	"ip2host"  :[ip2host  ,"ip_address"],
-	"host2ip"  :[host2ip  ,"hostname"],
-	"eval"     :[eval_    ,"string"],
-	"exec"     :[exec_    ,"string"],
-	"dump"     :[dump_    ,"filename"],
+	"cd"         :[cd              ,"directory"            ],
+	"pwd"        :[pwd                                     ],
+	"cat"        :[cat             ,"file"                 ],
+	"cls"        :[cls                                     ],
+	"mkdir"      :[mkdir           ,"directory",             ("-r","recursive",True)],
+	"mv"         :[mv              ,"source","destination" ],
+	"rmdir"      :[rmdir           ,"directory",             ("-r","recursive",True),("-f","force",True),("-q","quiet",True),("-s","simulate",True)],
+	"cp"         :[cp              ,"source","destination",  ("-r","recursive",True),("-q","quiet",True)],
+	"rm"         :[rm              ,"file",                  ("-r","recursive",True),("-f","force",True),("-s","simulate",True)],
+	"ls"         :[ls              ,"file",                  ("-r","recursive",True),("-l","long",True)],
+	"date"       :[date            ,"offsetUTC" ,            ("-u","update",True),   ("-n","noDst",True)],
+	"setdate"    :[setdate         ,"datetime"             ],
+	"uptime"     :[uptime                                  ],
+	"find"       :[find            ,"file"                 ],
+	"run"        :[useful.run      ,"filename"             ],
+	"upload"     :[upload_file     ,"file",                  ("-r","recursive",True)],
+	"download"   :[download_file   ,"file",                  ("-r","recursive",True)],
+	"edit"       :[edit            ,"file"                 ],
+	"exit"       :[exit                                    ],
+	"gc"         :[gc                                      ],
+	"grep"       :[grep            ,"text","file",           ("-r","recursive",True),("-i","ignorecase",True),("-e","regexp",True)],
+	"mount"      :[mountsd         ,"mountpoint"           ],
+	"umount"     :[umountsd        ,"mountpoint"           ],
+	"temperature":[temperature                             ],
+	"meminfo"    :[info.meminfo                            ],
+	"flashinfo"  :[info.flashinfo                          ],
+	"sysinfo"    :[info.sysinfo                            ],
+	"deepsleep"  :[deepsleep       ,"seconds"              ],
+	"ping"       :[ping            ,"host"                 ],
+	"reboot"     :[reboot                                  ],
+	"help"       :[help                                    ],
+	"man"        :[man             ,"command"              ],
+	"df"         :[df              ,"mountpoint"           ],
+	"ip2host"    :[ip2host         ,"ip_address"           ],
+	"host2ip"    :[host2ip         ,"hostname"             ],
+	"eval"       :[eval_           ,"string"               ],
+	"exec"       :[exec_           ,"string"               ],
+	"dump"       :[dump_           ,"filename"             ],
 }
 
 if __name__ == "__main__":
-	shell()
+	sh()

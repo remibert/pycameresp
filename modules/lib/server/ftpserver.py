@@ -10,7 +10,7 @@ It takes a little while the first time you connect, but limits memory consumptio
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True.
 """
 import uasyncio
-from tools import useful
+from tools import logger
 
 class Ftp:
 	""" Ftp main class """
@@ -20,15 +20,15 @@ class Ftp:
 		if preload:
 			self.preload()
 		else:
-			useful.syslog("Ftp waiting on %d"%self.port)
+			logger.syslog("Ftp waiting on %d"%self.port)
 
 	def preload(self):
 		""" Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) """
 		if self.server_class is None:
-			useful.syslog("Ftp load server")
+			logger.syslog("Ftp load server")
 			from server.ftpservercore import FtpServerCore
 			self.server_class = FtpServerCore
-			useful.syslog("Ftp ready on %d"%self.port)
+			logger.syslog("Ftp ready on %d"%self.port)
 
 	async def on_connection(self, reader, writer):
 		""" Asynchronous connection detected """
@@ -46,7 +46,7 @@ class Ftp:
 			server.close()
 			del server
 		except Exception as err:
-			useful.syslog(err)
+			logger.syslog(err)
 
 def start(loop=None, port=21, preload=False):
 	""" Start the ftp server with asyncio loop.

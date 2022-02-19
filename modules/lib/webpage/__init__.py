@@ -13,7 +13,7 @@ from webpage.presencepage       import *
 from webpage.batterypage        import *
 from webpage.awakepage          import *
 from webpage.systempage         import *
-from tools.useful               import iscamera
+from tools.info                 import iscamera
 if iscamera():
 	# pylint:disable=ungrouped-imports
 	from webpage.streamingpage  import *

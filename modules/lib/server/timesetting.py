@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function which sets the internal clock of the card based on an ntp server """
 import time
-from tools import useful
+from tools import logger,strings
 def get_ntp_time():
 	""" Return the time from a NTP server """
 	try:
@@ -34,7 +34,7 @@ def set_time(currenttime):
 		import machine
 		machine.RTC().datetime((year, month, day, weekday + 1, hour, minute, second, 0))
 	except Exception as exc:
-		useful.syslog("Cannot set time '%s'"%exc)
+		logger.syslog("Cannot set time '%s'"%exc)
 
 def calc_local_time(currenttime, offsetTime=+1, dst=True):
 	""" Calculate the local time """
@@ -59,6 +59,6 @@ def set_date(offsetTime=+1, dst=True, display=False):
 		if currenttime > 0:
 			set_time(currenttime)
 			if display:
-				useful.syslog("Date updated : %s"%(useful.date_to_string()))
+				logger.syslog("Date updated : %s"%(strings.date_to_string()))
 			return currenttime
 	return 0

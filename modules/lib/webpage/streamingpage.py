@@ -7,7 +7,7 @@ from server.server      import Server
 from htmltemplate       import *
 from video              import Camera
 import uasyncio
-from tools              import useful, tasking
+from tools              import logger,tasking,info
 
 class Streaming:
 	""" Management class of video streaming of the camera via an html page """
@@ -76,7 +76,7 @@ class Streaming:
 		""" Return the current streaming id """
 		return Streaming.streaming_id[0]
 
-@HttpServer.add_route(b'/camera/start', available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b'/camera/start', available=info.iscamera() and Camera.is_activated())
 async def camera_start_streaming(request, response, args):
 	""" Start video streaming """
 	Server.slow_down()
@@ -101,7 +101,7 @@ async def camera_start_streaming(request, response, args):
 			identifier = b"\r\n%x\r\n\r\n--%s\r\n\r\n"%(len(response.identifier) + 6, response.identifier)
 			frame = b'%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n'
 
-			if useful.ismicropython():
+			if filesystem.ismicropython():
 				micropython = True
 			else:
 				micropython = False
@@ -132,7 +132,7 @@ async def camera_start_streaming(request, response, args):
 				if micropython is False:
 					await uasyncio.sleep(0.1)
 	except Exception as err:
-		useful.syslog(err)
+		logger.syslog(err)
 	finally:
 		if reserved:
 			# print("End streaming %d"%currentstreaming_id)

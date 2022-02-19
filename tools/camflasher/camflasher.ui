@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>main_window</class>
- <widget class="QMainWindow" name="main_window">
+ <class>CamFlasher</class>
+ <widget class="QMainWindow" name="CamFlasher">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -35,6 +35,9 @@
      <widget class="QComboBox" name="combo_port">
       <property name="enabled">
        <bool>true</bool>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
       </property>
       <property name="toolTip">
        <string>Select device serial port</string>
@@ -89,15 +92,15 @@
     </property>
     <addaction name="action_flash"/>
    </widget>
-   <widget class="QMenu" name="menu_output">
+   <widget class="QMenu" name="menu_console">
     <property name="title">
-     <string>Output</string>
+     <string>Console</string>
     </property>
     <addaction name="action_copy"/>
     <addaction name="action_paste"/>
     <addaction name="action_pause"/>
     <addaction name="action_resume"/>
-    <addaction name="action_font"/>
+    <addaction name="action_option"/>
    </widget>
    <widget class="QMenu" name="menu_info">
     <property name="title">
@@ -106,7 +109,7 @@
     <addaction name="action_about"/>
    </widget>
    <addaction name="menu_flasher"/>
-   <addaction name="menu_output"/>
+   <addaction name="menu_console"/>
    <addaction name="menu_info"/>
   </widget>
   <action name="action_flash">
@@ -142,6 +145,11 @@
   <action name="action_font">
    <property name="text">
     <string> Font</string>
+   </property>
+  </action>
+  <action name="action_option">
+   <property name="text">
+    <string> Option</string>
    </property>
   </action>
  </widget>

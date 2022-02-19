@@ -14,7 +14,7 @@ import time
 from binascii import hexlify, b2a_base64
 import collections
 import server.stream
-from tools import useful
+from tools import logger,filesystem,strings
 
 MIMES = {\
 	b".txt"   : b"text/plain",
@@ -63,7 +63,7 @@ class Http:
 
 	def __del__(self):
 		if self.content_file is not None:
-			useful.remove(self.content_file)
+			filesystem.remove(self.content_file)
 
 	def quote(self, text):
 		""" Insert in the string the character not supported in an url """
@@ -318,7 +318,7 @@ class Http:
 			except Exception as err:
 				# Serialize error detected
 				result += await streamio.write(b'Content-Type: text/plain\r\n\r\n')
-				result += await streamio.write(useful.tostrings(useful.exception(err)))
+				result += await streamio.write(strings.tostrings(logger.exception(err)))
 		# If multipart detected
 		elif len(self.parts) > 0:
 			# If the header is a multipart
@@ -375,8 +375,8 @@ class ContentFile:
 		self.base64 = base64
 		if content_type is None:
 			global MIMES
-			ext = useful.splitext(useful.tostrings(self.filenames[0]))[1]
-			self.content_type = MIMES.get(useful.tobytes(ext),b"text/plain")
+			ext = filesystem.splitext(strings.tostrings(self.filenames[0]))[1]
+			self.content_type = MIMES.get(strings.tobytes(ext),b"text/plain")
 		else:
 			self.content_type = content_type
 
@@ -385,10 +385,10 @@ class ContentFile:
 		found = False
 		try:
 			f = None
-			# print("Begin send %s"%useful.tostrings(self.filename))
+			# print("Begin send %s"%strings.tostrings(self.filename))
 			for filename in self.filenames:
-				if useful.exists(filename):
-					f = open(useful.tostrings(filename), "rb")
+				if filesystem.exists(filename):
+					f = open(strings.tostrings(filename), "rb")
 					if found is False:
 						result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.content_type))
 					found = True
@@ -415,7 +415,7 @@ class ContentFile:
 							lengthWritten += await streamio.write(b2a_base64(buf))
 						else:
 							lengthWritten += await streamio.write(buf)
-					# print("End send %s"%useful.tostrings(self.filename))
+					# print("End send %s"%strings.tostrings(self.filename))
 					result += lengthWritten
 		except Exception as err:
 			pass
@@ -426,8 +426,8 @@ class ContentFile:
 			result = await streamio.write(b'Content-Type: text/plain\r\n\r\n')
 			filenames = b""
 			for filename in self.filenames:
-				filenames += useful.tobytes(filename) + b" "
-			result += await streamio.write(b"File %s not found"%useful.tobytes(filename))
+				filenames += strings.tobytes(filename) + b" "
+			result += await streamio.write(b"File %s not found"%strings.tobytes(filename))
 		return result
 
 class ContentBuffer:
@@ -438,8 +438,8 @@ class ContentBuffer:
 		self.buffer = buffer
 		if content_type is None:
 			global MIMES
-			ext = useful.splitext(useful.tostrings(filename))[1]
-			self.content_type = MIMES.get(useful.tobytes(ext),b"text/plain")
+			ext = filesystem.splitext(strings.tostrings(filename))[1]
+			self.content_type = MIMES.get(strings.tobytes(ext),b"text/plain")
 		else:
 			self.content_type = content_type
 
@@ -448,7 +448,7 @@ class ContentBuffer:
 		try:
 			b = self.buffer[0]
 			result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.content_type))
-			result += await streamio.write(useful.tobytes(self.buffer))
+			result += await streamio.write(strings.tobytes(self.buffer))
 		except Exception as err:
 			result = await streamio.write(b'Content-Type: text/plain\r\n\r\n')
 			result += await streamio.write(b"Nothing")
@@ -493,7 +493,7 @@ class PartFile:
 		result = await self.serialize_header(identifier, streamio)
 		try:
 			part = b""
-			file = open(useful.tostrings(self.filename),"rb")
+			file = open(strings.tostrings(self.filename),"rb")
 			part = file.read()
 		finally:
 			file.close()
@@ -504,7 +504,7 @@ class PartFile:
 	async def get_size(self, identifier):
 		""" Get the size of multi part file """
 		headerSize = await self.serialize_header(identifier, server.stream.Bytesio())
-		fileSize = useful.filesize((useful.tostrings(self.filename)))
+		fileSize = filesystem.filesize((strings.tostrings(self.filename)))
 		return headerSize + fileSize + 4 + len(identifier) + 2
 
 class PartBin(PartFile):

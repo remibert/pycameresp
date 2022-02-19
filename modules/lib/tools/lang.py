@@ -31,6 +31,6 @@ class RegionConfig(JsonConfig):
 try:
 	exec(b"from tools.lang_%s import *"%RegionConfig.get().lang)
 except Exception as err:
-	from tools import useful
-	useful.syslog(err)
+	from tools import logger
+	logger.syslog(err)
 	from tools.lang_english import *

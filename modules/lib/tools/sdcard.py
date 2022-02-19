@@ -6,7 +6,7 @@ try:
 except:
 	pass
 import uos
-from tools import useful
+from tools import logger,filesystem
 
 class SdCard:
 	""" Manage the sdcard """
@@ -46,7 +46,7 @@ class SdCard:
 		""" Mount sd card """
 		result = False
 		if SdCard.is_mounted() is False and mountpoint != "/" and mountpoint != "":
-			if useful.ismicropython():
+			if filesystem.ismicropython():
 				try:
 					# If the sdcard not already mounted
 					if uos.statvfs("/") == uos.statvfs(mountpoint):
@@ -55,13 +55,13 @@ class SdCard:
 						SdCard.opened[0]= True
 						result = True
 				except Exception as err:
-					useful.syslog("Cannot mount %s"%mountpoint)
+					logger.syslog("Cannot mount %s"%mountpoint)
 			else:
 				SdCard.mountpoint[0] = mountpoint[1:]
 				SdCard.opened[0] = True
 				result = True
 		elif SdCard.is_mounted():
-			if useful.ismicropython():
+			if filesystem.ismicropython():
 				if mountpoint == SdCard.get_mountpoint():
 					result = True
 			else:
@@ -76,7 +76,7 @@ class SdCard:
 		directories = [directory]
 		direct = directory
 		while 1:
-			parts = useful.split(direct)
+			parts = filesystem.split(direct)
 
 			if parts[1] == "" or parts[0] == "":
 				break
@@ -102,14 +102,14 @@ class SdCard:
 					uos.mkdir(direct)
 				except OSError as err:
 					if err.args[0] not in [2,17]:
-						useful.syslog(err)
+						logger.syslog(err)
 						break
 			try:
 				result = open(filepath,mode)
 				break
 			except OSError as err:
 				if err.args[0] not in [2,17]:
-					useful.syslog(err)
+					logger.syslog(err)
 					break
 		return result
 
@@ -125,7 +125,7 @@ class SdCard:
 				file.close()
 				result = True
 			except Exception as err:
-				useful.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
+				logger.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
 			finally:
 				if file is not None:
 					file.close()

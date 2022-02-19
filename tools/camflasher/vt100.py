@@ -339,7 +339,7 @@ class VT100:
 		self.set_size(width,height)
 		self.cls()
 		self.test_number = 0
-		self.output              = ""
+		self.output              = None
 
 	def reset(self):
 		""" Reset to initial state """
@@ -544,6 +544,11 @@ class VT100:
 				else:
 					self.cls(escape[2])
 
+	def parse_device_attribut(self, escape):
+		""" Parse vt100 device attribut """
+		if escape == "\x1B[0c":
+			self.output = "\x1B[?3;2c" # Respond pycameresp VT
+
 	def parse_cursor(self, escape):
 		""" Parse vt100 cursor command """
 		try:
@@ -696,7 +701,7 @@ class VT100:
 
 	def treat_key(self, char):
 		""" Treat keys """
-		self.output = ""
+		self.output = None
 		if self.escape is None:
 			if self.treat_char(char) is False:
 				if char in "\r":
@@ -719,6 +724,7 @@ class VT100:
 				self.parse_cursor        (escape)
 				self.parse_scroll_region (escape)
 				self.parse_reset         (escape)
+				self.parse_device_attribut(escape)
 				self.escape = None
 		return self.output
 

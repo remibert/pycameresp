@@ -5,8 +5,7 @@ from server.httpserver        import HttpServer
 from htmltemplate.htmlclasses import *
 from webpage.mainpage         import main_frame, manage_default_button
 import wifi
-from tools.useful             import *
-from tools                    import useful,lang
+from tools                    import lang,strings,logger
 
 def static_ip_html(config, disabled):
 	""" Html to get static ip """
@@ -28,7 +27,7 @@ def select_network(increase=0, reparse=False):
 		current_networks = current_network.list_known()
 	current = 0
 	for network in current_networks:
-		searched = useful.tobytes(useful.tofilename(current_network.ssid))
+		searched = strings.tobytes(strings.tofilename(current_network.ssid))
 		if searched == network:
 			break
 		current += 1
@@ -47,7 +46,7 @@ def select_network(increase=0, reparse=False):
 			part_filename = b""
 		current_network.load(part_filename = part_filename)
 	except Exception as err:
-		useful.syslog(err)
+		logger.syslog(err)
 	return current_network
 
 @HttpServer.add_route(b'/wifi', menu=lang.menu_network, item=lang.item_wifi)
@@ -105,7 +104,7 @@ async def wifi_config(request, response, args):
 		network.forget()
 		network = select_network(-1,True)
 	elif action == b"default":
-		config.default = useful.tostrings(network.ssid)
+		config.default = strings.tostrings(network.ssid)
 		config.save()
 	if forced == b"none":
 		dynamic = network.dynamic
@@ -139,7 +138,7 @@ async def wifi_config(request, response, args):
 		Switch(text=lang.fallback_to_the, name=b"fallback", checked=config.fallback, disabled=disabled),Br(),
 		Card(
 			[
-				CardHeader(text= lang.wifi if useful.tostrings(network.ssid) != useful.tostrings(config.default) else lang.wifi_default),
+				CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
 				CardBody([
 					ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b"ssid", value=network.ssid, disabled=disabled),
 					Edit(text=lang.password,    name=b"wifi_password", placeholder=lang.enter_password,      type=b"password",value=network.wifi_password, disabled=disabled),

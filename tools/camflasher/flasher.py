@@ -3,7 +3,43 @@ import threading
 import queue
 import time
 import sys
+import os.path
 from serial import Serial
+sys.path.append("../../modules/lib/tools")
+# pylint:disable=wrong-import-position
+# pylint:disable=import-error
+from filesystem import scandir
+from strings import get_utf8_length
+from exchange import FileReader, PatternReader, FilenameReader, IntReader, FileWriter
+
+class FileDownload:
+	""" File downloader """
+	def __init__(self, directory):
+		""" Constructor """
+		self.pattern  = PatternReader()
+		self.path     = FilenameReader()
+		self.recursive = IntReader()
+		self.directory = directory
+		self.read_byte   = self.read_pattern
+
+	def read_pattern(self, byte):
+		""" Read pattern """
+		if self.pattern.read_byte(byte) is not None:
+			self.read_byte = self.read_path
+		return None
+
+	def read_path(self, byte):
+		""" Read path """
+		if self.path.read_byte(byte) is not None:
+			self.read_byte = self.read_recursive
+		return None
+
+	def read_recursive(self, byte):
+		""" Read recursive """
+		if self.recursive.read_byte(byte) is not None:
+			_, filenames = scandir(os.path.normpath(self.directory + "/" + self.path.get()), self.pattern.get(), True if self.recursive.get() == 1 else False)
+			return filenames
+
 
 class ThreadSerial(threading.Thread):
 	""" Serial thread """
@@ -20,8 +56,9 @@ class ThreadSerial(threading.Thread):
 		self.CONNECT = 0
 		self.DISCONNECT = 1
 		self.WRITE_DATA = 2
-		self.QUIT = 3
-
+		self.WRITE_FILE =3
+		self.READ_FILE = 4
+		self.QUIT = 5
 		self.start()
 
 	def __del__(self):
@@ -48,9 +85,13 @@ class ThreadSerial(threading.Thread):
 					self.serial.rts = False
 					self.serial.reset_input_buffer()
 					self.port = port
-					self.receive_callback("\n\x1B[42;93mSelect %s\x1B[m\n"%self.port)
+					self.print("\n\x1B[42;93mSelect %s\x1B[m\n"%self.port)
 			except:
 				self.close()
+
+	def print(self, message):
+		""" Print message to console """
+		self.receive_callback(message)
 
 	def on_quit(self, command):
 		""" Treat quit command """
@@ -62,6 +103,26 @@ class ThreadSerial(threading.Thread):
 		""" Treat disconnect command """
 		if command == self.DISCONNECT:
 			self.close()
+
+	def on_write_file(self, command, data):
+		""" Treat write file command """
+		if command == self.WRITE_FILE:
+			file_writer = FileWriter()
+			_, filenames = data
+			for filename in filenames:
+				# self.serial.write("࿊".encode("utf8"))
+				file_writer.write(filename, self.serial, self.serial)
+			# ࿌
+			# self.serial.write("྾".encode("utf8"))
+
+	def on_read_file(self, command, directory):
+		""" Treat the read file command """
+		if command == self.READ_FILE:
+			file_reader = FileReader()
+			if file_reader.read(directory, self.serial, self.serial) != -1:
+				self.print("  %s\n"%file_reader.filename.get())
+			else:
+				self.print("  %s bad crc\n"%file_reader.filename.get())
 
 	def on_write(self, command, data):
 		""" Treat write command """
@@ -94,7 +155,8 @@ class ThreadSerial(threading.Thread):
 		""" Receive data from serial """
 		if self.serial is not None:
 			try:
-				self.receive_callback(self.serial.read(self.serial.in_waiting or 1))
+				data = self.serial.read(self.serial.in_waiting or 1)
+				self.receive_callback(data)
 			except Exception as err:
 				self.close()
 
@@ -111,10 +173,12 @@ class ThreadSerial(threading.Thread):
 				if self.command.qsize() > 0:
 					# read command
 					command,data = self.command.get()
-					self.on_write  (command, data)
-					self.on_connect(command, data)
-					self.on_disconnect(command)
-					self.on_quit   (command)
+					self.on_write      (command, data)
+					self.on_write_file (command, data)
+					self.on_read_file  (command, data)
+					self.on_connect    (command, data)
+					self.on_disconnect (command)
+					self.on_quit       (command)
 				self.receive()
 
 	def send(self, message):
@@ -134,6 +198,14 @@ class ThreadSerial(threading.Thread):
 		""" Send write data command to serial thread """
 		self.send((self.WRITE_DATA,data))
 
+	def write_file(self, data):
+		""" Send write file command to serial thread """
+		self.send((self.WRITE_FILE,data))
+
+	def read_file(self, directory):
+		""" Send read file command to serial thread """
+		self.send((self.READ_FILE,directory))
+
 	def connect(self, port):
 		""" Send connect command to serial thread """
 		self.send((self.CONNECT, port))
@@ -148,7 +220,7 @@ class ThreadSerial(threading.Thread):
 
 class Flasher(threading.Thread):
 	""" Micropython firmware flasher for esp32 """
-	def __init__(self):
+	def __init__(self, stdout, directory):
 		""" Constructor with thread on serial port """
 		threading.Thread.__init__(self)
 		self.command    = queue.Queue()
@@ -163,6 +235,12 @@ class Flasher(threading.Thread):
 		self.flashing = False
 		self.waiting_data = b""
 		self.serial_thread = ThreadSerial(self.receive)
+		self.stdout = stdout
+		self.directory = directory
+
+	def set_directory(self, directory):
+		""" Set the working directory for upload and download """
+		self.directory = directory
 
 	def run(self):
 		""" Thread core """
@@ -181,48 +259,29 @@ class Flasher(threading.Thread):
 			elif command == self.SET_INFO:
 				self.serial_thread.connect(data)
 
-	def get_utf8_length(self, data):
-		""" Get the length of utf8 character """
-		# 0XXX XXXX one byte
-		if data <= 0x7F:
-			length = 1
-		# 110X XXXX  two length
-		else:
-			# first byte
-			if ((data & 0xE0) == 0xC0):
-				length = 2
-			# 1110 XXXX  three bytes length
-			elif ((data & 0xF0) == 0xE0):
-				length = 3
-			# 1111 0XXX  four bytes length
-			elif ((data & 0xF8) == 0xF0):
-				length = 4
-			# 1111 10XX  five bytes length
-			elif ((data & 0xFC) == 0xF8):
-				length = 5
-			# 1111 110X  six bytes length
-			elif ((data & 0xFE) == 0xFC):
-				length = 6
-			else:
-				# not a valid first byte of a UTF-8 sequence
-				length = -1
-		return length
-
 	def decode(self, data):
 		""" Decode bytes data into string """
 		result = ""
 		# If data received from serial port
 		if type(data) == type(b""):
 			last_i = -1
+
 			self.waiting_data += data
 			if len(self.waiting_data) > 0:
 				i = 0
 				while i < len(self.waiting_data):
-					length = self.get_utf8_length(self.waiting_data[i])
+					length = get_utf8_length(self.waiting_data[i])
 					if length >= 1:
 						if i + length <= len(self.waiting_data):
 							try:
 								char = self.waiting_data[i:i+length].decode("utf-8")
+								# Special char to upload file
+								if char == "࿊":
+									self.serial_thread.read_file(self.directory)
+									char = ""
+								# Special char for download file
+								elif char == "࿋":
+									char = ""
 								i += length
 							except:
 								char = bytes([self.waiting_data[i]]).decode("latin-1")
@@ -235,6 +294,8 @@ class Flasher(threading.Thread):
 						char = bytes([self.waiting_data[i]]).decode("latin-1")
 						result += char
 						i += 1
+			else:
+				pass
 			if last_i >= 0:
 				self.waiting_data = self.waiting_data[last_i:]
 			else:

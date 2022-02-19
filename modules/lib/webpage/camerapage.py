@@ -8,9 +8,9 @@ from webpage.mainpage      import main_frame
 from webpage.streamingpage import *
 from video                 import Camera
 import uasyncio
-from tools                 import useful, lang
+from tools                 import lang,info
 
-@HttpServer.add_route(b'/camera', menu=lang.menu_camera, item=lang.item_camera, available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b'/camera', menu=lang.menu_camera, item=lang.item_camera, available=info.iscamera() and Camera.is_activated())
 async def camera_page(request, response, args):
 	""" Camera streaming page """
 	framesizes = []
@@ -35,7 +35,7 @@ async def camera_page(request, response, args):
 async def camera_configure(request, response, args):
 	""" Real time camera configuration """
 	Server.slow_down()
-	# print(useful.tostrings(b"%s=%s"%(request.params[b"name"],request.params[b"value"])))
+	# print(strings.tostrings(b"%s=%s"%(request.params[b"name"],request.params[b"value"])))
 	config = Camera.get_config()
 	config.update(request.params)
 	config.save()
@@ -44,7 +44,7 @@ async def camera_configure(request, response, args):
 	Streaming.activity()
 	await response.send_ok()
 
-@HttpServer.add_route(b'/camera/onoff', menu=lang.menu_camera, item=lang.item_onoff, available=useful.iscamera())
+@HttpServer.add_route(b'/camera/onoff', menu=lang.menu_camera, item=lang.item_onoff, available=info.iscamera())
 async def camera_on_off(request, response, args):
 	""" Camera command page """
 	config = Camera.get_config()

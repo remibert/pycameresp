@@ -8,8 +8,7 @@ import esp
 from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import main_frame
-from tools             import useful, lang, builddate
-
+from tools             import info, lang, builddate, strings
 
 @HttpServer.add_route(b'/', menu=lang.menu_system, item=lang.item_information)
 async def index(request, response, args):
@@ -18,16 +17,16 @@ async def index(request, response, args):
 		# pylint: disable=no-member
 		allocated = gc.mem_alloc()
 		freed     = gc.mem_free()
-		mem_alloc = useful.size_to_bytes(allocated)
-		mem_free  = useful.size_to_bytes(freed)
-		mem_total = useful.size_to_bytes(allocated + freed)
+		mem_alloc = strings.size_to_bytes(allocated)
+		mem_free  = strings.size_to_bytes(freed)
+		mem_total = strings.size_to_bytes(allocated + freed)
 	except:
 		mem_alloc = lang.unavailable
 		mem_free  = lang.unavailable
 		mem_total = lang.unavailable
 	try:
-		flash_user = useful.size_to_bytes(esp.flash_user_start())
-		flash_size = useful.size_to_bytes(esp.flash_size())
+		flash_user = strings.size_to_bytes(esp.flash_user_start())
+		flash_size = strings.size_to_bytes(esp.flash_size())
 	except:
 		flash_user = lang.unavailable
 		flash_size = lang.unavailable
@@ -38,16 +37,16 @@ async def index(request, response, args):
 		frequency = lang.unavailable
 
 	try:
-		platform = useful.tobytes(sys.platform)
+		platform = strings.tobytes(sys.platform)
 	except:
 		platform = lang.unavailable
 
 	try:
-		uptime = useful.tobytes(useful.uptime(lang.days))
+		uptime = strings.tobytes(info.uptime(lang.days))
 	except:
 		uptime = b""
 
-	date = useful.date_to_bytes()
+	date = strings.date_to_bytes()
 
 	page = main_frame(request, response, args, lang.device_informations,
 		Edit(text=lang.date,             value=date,           disabled=True),

@@ -4,7 +4,7 @@
 from server.httpserver import HttpServer
 from htmltemplate import Br,ButtonCmd,Option,SwitchCmd,Tag,SliderCmd,ComboCmd,Paragraph
 from webpage.mainpage     import *
-from tools       import useful
+from tools       import strings
 
 @HttpServer.add_route(b'/sample/button')
 async def button_pressed(request, response, args):
@@ -21,13 +21,13 @@ async def slider_changed(request, response, args):
 @HttpServer.add_route(b'/sample/combo')
 async def combo_changed(request, response, args):
 	""" Called when the combo state changed """
-	print("Number %s selected"%useful.tostrings(request.params[b"value"]))
+	print("Number %s selected"%strings.tostrings(request.params[b"value"]))
 	await response.send_ok()
 
 @HttpServer.add_route(b'/sample/switch')
 async def switch_changed(request, response, args):
 	""" Called when the switch state changed """
-	print("Switch change to %s"%useful.tostrings(request.params[b"value"]))
+	print("Switch change to %s"%strings.tostrings(request.params[b"value"]))
 	await response.send_ok()
 
 @HttpServer.add_route(b'/sample', menu=b"Sample", item=b"Sample")

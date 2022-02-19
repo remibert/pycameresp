@@ -8,7 +8,7 @@ from server.presence   import PresenceConfig
 from htmltemplate      import *
 from webpage.mainpage  import main_frame, manage_default_button
 import wifi
-from tools import useful,lang
+from tools import lang,strings
 
 @HttpServer.add_route(b'/presence', menu=lang.menu_server, item=lang.item_presence)
 async def presence(request, response, args):
@@ -26,10 +26,10 @@ async def presence(request, response, args):
 				for i in range(len(config.smartphones)):
 					smartphone = config.smartphones[i]
 					try:
-						if is_ip_address(useful.tostrings(smartphone)):
-							hostname = resolve_hostname(dns, useful.tostrings(smartphone))
+						if is_ip_address(strings.tostrings(smartphone)):
+							hostname = resolve_hostname(dns, strings.tostrings(smartphone))
 							if hostname is not None:
-								config.smartphones[i] = useful.tobytes(hostname)
+								config.smartphones[i] = strings.tobytes(hostname)
 					except:
 							pass
 
@@ -42,7 +42,7 @@ async def presence(request, response, args):
 	for smartphone in config.smartphones:
 		editSmartphones.append(Edit(text=lang.smartphone_d%(i+1),         name=b"smartphones[%d]"%i,
 								placeholder=lang.enter_ip_address_or_dns,
-								value=useful.tobytes(config.smartphones[i]),  disabled=disabled))
+								value=strings.tobytes(config.smartphones[i]),  disabled=disabled))
 		i += 1
 
 	page = main_frame(request, response, args,lang.presence_detection_configuration,

@@ -4,6 +4,15 @@
 	"configurations": [
 		
 		{
+			"name": "Rtest",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/tools/test/main.py",
+			"cwd"    : "${workspaceFolder}/tools/test",
+			"args": ["-p","/dev/cu.usbserial-01EECC2F","--debug"],
+			"justMyCode": false
+		},
+		{
 			"name": "Pycameresp",
 			"type": "python",
 			"request": "launch",

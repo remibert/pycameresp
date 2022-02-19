@@ -3,7 +3,7 @@
 """ Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
 # pylint:disable=consider-using-enumerate
 import wifi
-from tools import useful
+from tools import logger,strings
 
 class Notifier:
 	""" Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
@@ -34,7 +34,7 @@ class Notifier:
 	async def notify(message, image = None, forced=False, display=True):
 		""" Notify message for all notifier registered """
 		result = True
-		useful.syslog("Notification '%s'"%useful.tostrings(message), display=display)
+		logger.syslog("Notification '%s'"%strings.tostrings(message), display=display)
 
 		# Add message into postponed list
 		Notifier.postponed.append([message, image, forced, display])
@@ -50,7 +50,7 @@ class Notifier:
 		if len(Notifier.postponed) > 10:
 			# Remove older
 			message, image, forced, display = Notifier.postponed[0]
-			useful.syslog("Notification '%s' failed to send"%useful.tostrings(message), display=display)
+			logger.syslog("Notification '%s' failed to send"%strings.tostrings(message), display=display)
 			del Notifier.postponed[0]
 
 		# If wan available
@@ -81,5 +81,5 @@ class Notifier:
 			if result:
 				Notifier.postponed.clear()
 			else:
-				useful.syslog("Cannot send notification")
+				logger.syslog("Cannot send notification")
 		return result

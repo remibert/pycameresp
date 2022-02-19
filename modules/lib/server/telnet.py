@@ -7,13 +7,13 @@ import socket
 import errno
 from io import IOBase
 from server.user import User
-from tools import useful
+from tools import logger,strings
 
 try:
 	import wifi
-	hostname = useful.tobytes(wifi.Station.get_hostname())
+	hostname = strings.tobytes(wifi.Station.get_hostname())
 except:
-	hostname = useful.tobytes(sys.platform)
+	hostname = strings.tobytes(sys.platform)
 last_client_socket = None
 server_socket = None
 
@@ -164,7 +164,7 @@ def accept_telnet_connect(telnet_server):
 		uos.dupterm(None)
 		last_client_socket.close()
 	last_client_socket, remote_addr = telnet_server.accept()
-	useful.syslog("Telnet connected from : %s" % remote_addr[0])
+	logger.syslog("Telnet connected from : %s" % remote_addr[0])
 	last_client_socket.setblocking(False)
 	last_client_socket.setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
 
@@ -199,7 +199,7 @@ def start(port=23):
 		server_socket.listen(1)
 		server_socket.setsockopt(socket.SOL_SOCKET, 20, accept_telnet_connect)
 
-		useful.syslog("Telnet start %d"%port)
+		logger.syslog("Telnet start %d"%port)
 
 	except Exception as err:
-		useful.syslog("Telnet not available '%s'"%str(err))
+		logger.syslog("Telnet not available '%s'"%str(err))
