@@ -3,18 +3,23 @@
 """ Classes for exchanging files between the device and the computer """
 import time
 import os
+import io
 from binascii import crc32
 try:
 	import filesystem
 except:
 	from tools import filesystem
+if filesystem.ismicropython():
+	# pylint:disable=import-error
+	import micropython
 
-CHUNK_SIZE=512
+CHUNK_SIZE=256
 ACK=b"\x06"
 NAK=b"\x15"
 
 class FileError(Exception):
 	""" File reader exception """
+	# pylint:disable=super-init-not-called
 	def __init__(self, message = ""):
 		""" File exception constructor """
 		self.message = message
@@ -66,7 +71,7 @@ class IntReader(Reader):
 			raise FileError("Integer too long")
 
 class DateReader(Reader):
-	""" Read formated date 'YYYY/MM/DD hh:mm:ss\x0D\x0A'  """
+	""" Read formated date 'YYYY/MM/DD hh:mm:ss'  """
 	def __init__(self):
 		""" Constructor """
 		Reader.__init__(self)
@@ -220,10 +225,9 @@ class BinaryReader(Reader):
 			else:
 				raise FileError("Bad binary terminator")
 
-
 class FileReader:
 	""" File reader """
-	def __init__(self):
+	def __init__(self, simulated=False):
 		self.blank    = BlankLineReader()
 		self.date     = DateReader()
 		self.filename = FilenameReader()
@@ -233,6 +237,9 @@ class FileReader:
 		self.crc      = IntReader()
 		self.crc_computed = 0
 		self.read_byte  = self.read_blank
+		self.start_content = False
+		self.simulated = simulated
+		self.read_count = 0
 
 	def read_blank(self, byte):
 		""" Read blank line """
@@ -263,9 +270,11 @@ class FileReader:
 		if self.size.read_byte(byte) is not None:
 			self.content.set_length(self.size.get())
 			self.read_byte = self.read_content
+			self.start_content = True
 
 	def read_content(self, byte):
 		""" Read content """
+		self.read_count += 1
 		if self.content.read_byte(byte) is not None:
 			self.read_byte = self.read_crc
 
@@ -279,58 +288,87 @@ class FileReader:
 
 	def read(self, directory, in_file, out_file=None):
 		""" Read the file completly """
-		result = None
-		while result is None:
-			if self.read_byte != self.read_content or out_file is None:
-				byte = in_file.read(1)
-				# pylint:disable=assignment-from-none
-				result = self.read_byte(byte)
+		try:
+			# Disable the Ctr-C
+			if filesystem.ismicropython() and out_file is not None:
+				micropython.kbd_intr(-1)
+
+			result = None
+			while result is None and self.blank.get() != "exit":
+				if self.start_content is False:
+					byte = in_file.read(1)
+					# pylint:disable=assignment-from-none
+					result = self.read_byte(byte)
+				else:
+					send_ack(out_file,ACK)
+
+					# Create directory
+					filename = filesystem.normpath(directory + "/" + self.filename.get())
+					filesystem.makedir(filesystem.split(filename)[0], True)
+
+					# Write file
+					self.write_file(filename, self.size.get(), in_file, out_file)
+
+					# Set time of file
+					try:
+						os.utime(filename,(self.date.get(), self.date.get()))
+					except:
+						pass
+
+					self.read_byte = self.read_blank_content
+					self.start_content = False
+
+			if self.blank.get() != "exit":
+				if result is not None:
+					# If crc is not correct
+					if result == -1:
+						send_ack(out_file,NAK)
+						result = True
+					else:
+						send_ack(out_file,ACK)
+						result = True
 			else:
-				# Start content reception
-				out_file.write(ACK)
-
-				# Get size
-				size = self.size.get()
-
-				# Create directory
-				filename = filesystem.normpath(directory + "/" + self.filename.get())
-				filesystem.makedir(filesystem.split(filename)[0], True)
-
-				# Open file
-				with open(filename, "wb") as file:
-					chunk = bytearray(CHUNK_SIZE)
-
-					while size > 0:
-						# Receive content part
-						length = in_file.readinto(chunk)
-
-						# Send ack
-						out_file.write(ACK)
-
-						# Compute crc
-						self.crc_computed = crc32(chunk[:length], self.crc_computed)
-
-						# Write content part received
-						file.write(chunk[:length])
-
-						# Decrease the remaining size
-						size -= length
-				# Set time of file
-				try:
-					os.utime(filename,(self.date.get(), self.date.get()))
-				except:
-					pass
-
-				self.read_byte = self.read_blank_content
-
-		if result is not None:
-			# If crc is not correct
-			if result == -1:
-				out_file.write(NAK)
-			else:
-				out_file.write(ACK)
-
+				result = False
+		finally:
+			# Enable the Ctr-C
+			if filesystem.ismicropython() and out_file is not None:
+				micropython.kbd_intr(3)
 		return result
+
+	def write_file(self, filename, size, in_file, out_file):
+		""" Write the file on disk """
+		file = None
+		try:
+			if self.simulated:
+				file = io.BytesIO()
+			else:
+				file = open(filename, "wb")
+			chunk = bytearray(CHUNK_SIZE)
+
+			if size <= 0:
+				send_ack(out_file,ACK)
+			else:
+				while size > 0:
+					# Receive content part
+					if filesystem.ismicropython():
+						length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
+					else:
+						chunk = bytearray(min(size, CHUNK_SIZE))
+						length = in_file.readinto(chunk)
+					# Send ack
+					send_ack(out_file,ACK)
+
+					# Compute crc
+					self.crc_computed = crc32(chunk[:length], self.crc_computed)
+
+					# Write content part received
+					file.write(chunk[:length])
+
+					# Decrease the remaining size
+					size -= length
+		finally:
+			if file is not None:
+				file.close()
 
 
 class FileWriter:
@@ -361,27 +399,32 @@ class FileWriter:
 			out_file.write(b"# %d\x0D\x0A"%(size))
 
 			# Wait confirmation to send content file
-			if self.wait_ack(in_file):
+			if wait_ack(in_file):
 				crc = 0
 
-				# Open file
-				with open(filename_, "rb") as file:
-					chunk = bytearray(CHUNK_SIZE)
-					while size > 0:
-						# Read file part
-						length = file.readinto(chunk)
+				# If file empty
+				if size <= 0:
+					# Wait reception ack
+					wait_ack(in_file)
+				else:
+					# Open file
+					with open(filename, "rb") as file:
+						chunk = bytearray(CHUNK_SIZE)
+						while size > 0:
+							# Read file part
+							length = file.readinto(chunk)
 
-						# Send part
-						out_file.write(chunk[:length])
+							# Send part
+							out_file.write(chunk[:length])
 
-						# Compute the remaining size
-						size -= length
+							# Compute the remaining size
+							size -= length
 
-						# Compte crc
-						crc = crc32(chunk[:length], crc)
+							# Compte crc
+							crc = crc32(chunk[:length], crc)
 
-						# Wait reception ack
-						self.wait_ack(in_file)
+							# Wait reception ack
+							wait_ack(in_file)
 
 				# Send file content terminator
 				out_file.write(b"\x0D\x0A")
@@ -390,26 +433,80 @@ class FileWriter:
 				out_file.write(b"# %d\x0D\x0A"%crc)
 
 				# Waits for confirmation that the file has been received wit success or not
-				result = self.wait_ack(in_file, True)
+				result = wait_ack(in_file, True)
 		return result
 
-	def wait_ack(self, in_file, nak=False):
-		""" Wait acquittement from file sender """
-		result = True
-		# If flow control activated
-		if in_file is not None:
-			result = False
-			while True:
-				r = in_file.read(1)
-				# If aquittement
-				if r == ACK:
-					result = True
-					break
-				# If not acquittement and nak can be received
-				elif r == NAK and nak:
-					result = False
-					break
-				# If communication failed
-				elif r != b"":
-					raise FileError("Transmission error")
+def wait_ack(in_file, nak=False):
+	""" Wait acquittement from file sender """
+	result = True
+	buffer = b""
+	# If flow control activated
+	if in_file is not None:
+		result = False
+		while True:
+			r = in_file.read(1)
+			buffer += r
+			# If aquittement
+			if r == ACK:
+				result = True
+				break
+			# If not acquittement and nak can be received
+			elif r == NAK and nak:
+				result = False
+				break
+			# If communication failed
+			elif r != b"":
+				raise FileError("Transmission error")
+	return result
+
+def send_ack(out_file, buffer):
+	""" Send ack or nak """
+	if out_file is not None:
+		out_file.write(buffer)
+
+class ImporterCommand:
+	""" Importer command """
+	def __init__(self, directory):
+		""" Constructor """
+		self.pattern   = PatternReader()
+		self.path      = FilenameReader()
+		self.recursive = IntReader()
+		self.directory = directory
+		self.read_byte   = self.read_pattern
+
+	def read_pattern(self, byte):
+		""" Read pattern """
+		if self.pattern.read_byte(byte) is not None:
+			self.read_byte = self.read_path
+		return None
+
+	def read_path(self, byte):
+		""" Read path """
+		if self.path.read_byte(byte) is not None:
+			self.read_byte = self.read_recursive
+		return None
+
+	def read_recursive(self, byte):
+		""" Read recursive """
+		if self.recursive.read_byte(byte) is not None:
+			return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)
+
+	def write(self, file, recursive, in_file, out_file):
+		""" Write exporter command """
+		out_file.write("࿋".encode("utf8"))
+		wait_ack(in_file)
+		out_file.write(b"# %s\r\n"%file.encode("utf8"))
+		out_file.write(b"# %s\r\n"%self.directory.encode("utf8"))
+		out_file.write(b"# %d\r\n"%(1 if recursive else 0))
+		wait_ack(in_file)
+
+	def read(self, in_file, out_file):
+		""" Read the file completly """
+		send_ack(out_file, ACK)
+		result = None
+		while result is None:
+			byte = in_file.read(1)
+			# pylint:disable=assignment-from-none
+			result = self.read_byte(byte)
+		send_ack(out_file, ACK)
 		return result

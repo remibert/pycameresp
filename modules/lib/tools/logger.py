@@ -3,7 +3,12 @@
 """ Logger and exception functions """
 import sys
 import io
-from tools import filesystem, strings
+try:
+	from tools import filesystem, strings
+except:
+	import filesystem
+	import strings
+
 
 def exception(err, msg=""):
 	""" Return the content of exception into a string """
@@ -23,11 +28,8 @@ def exception(err, msg=""):
 
 def syslog(err, msg="", display=True):
 	""" Log the error in syslog.log file """
-	filename = "syslog.log"
 	if isinstance(err, Exception):
 		err = exception(err)
-	if filesystem.ismicropython():
-		filename = "/" + filename
 	if msg != "":
 		msg += "\n"
 		if display:
@@ -35,22 +37,32 @@ def syslog(err, msg="", display=True):
 	if display:
 		print(strings.tostrings(err))
 
-	logFile = open(filename,"a")
-	logFile.seek(0,2)
+	result = "%s%s"%(strings.tostrings(msg),strings.tostrings(err))
 
-	if logFile.tell() >32*1024:
-		logFile.close()
-		print("File %s too big"%filename)
+	log(result)
+	return result
+
+def log(msg):
+	""" Log message in syslog.log file without printing """
+	filename = "syslog.log"
+	if filesystem.ismicropython():
+		filename = "/" + filename
+
+	log_file = open(filename,"a")
+	log_file.seek(0,2)
+
+	if log_file.tell() >32*1024:
+		log_file.close()
 		filesystem.rename(filename + ".3",filename + ".4")
 		filesystem.rename(filename + ".2",filename + ".3")
 		filesystem.rename(filename + ".1",filename + ".2")
 		filesystem.rename(filename       ,filename + ".1")
-		logFile = open(filename,"a")
+		log_file = open(filename,"a")
 
-	result = "%s%s"%(strings.tostrings(msg),strings.tostrings(err))
-	logFile.write(strings.date_ms_to_string() + " %s\n"%(result))
-	logFile.close()
-	return result
+	log_file.write(strings.date_ms_to_string() + " %s\n"%(msg))
+	log_file.flush()
+	log_file.close()
+
 
 def html_exception(err):
 	""" Return the content of exception into an html bytes """

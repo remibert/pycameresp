@@ -3,34 +3,45 @@
 """ Class defining a minimalist shell, directly executable on the board.
 We modify directories, list, delete, move files, edit files ...
 The commands are :
-- cd      : change directory
-- pwd     : current directory
-- cat     : display the content of file
-- mkdir   : create directory
-- mv      : move file
-- rmdir   : remove directory
-- cp      : copy file
-- rm      : remove file
-- ls      : list file
-- date    : get the system date or synchronize with Ntp
-- setdate : set date and time
-- df      : display free disk space
-- find    : find a file
-- run     : run a script
-- edit    : edit a text file
-- exit    : exit of shell
-- gc      : garbage collection
-- grep    : grep text in many files
-- ping    : ping host
-- mount   : mount sd card
-- umount  : umount sd card
-- meminfo : memory informations
-- flashinfo: flash informations
-- sysinfo : system informations
-- deepsleep: deepsleep of board
-- reboot  : reboot board
-- help    : list all command available
-- man     : manual of one command
+- cd          : change directory
+- pwd         : current directory
+- cat         : display the content of file
+- cls         : clear screen
+- mkdir       : create directory
+- mv          : move file
+- rmdir       : remove directory
+- cp          : copy file
+- rm          : remove file
+- ls          : list file
+- ll          : list file long
+- date        : get the system date or synchronize with Ntp
+- setdate     : set date and time
+- uptime      : the amount of time system is running
+- find        : find a file
+- run         : execute python script
+- exporter    : transfer files from device to computer (only available with camflasher)
+- importer    : transfer files from computer to device (only available with camflasher)
+- edit        : edit a text file
+- exit        : exit of shell
+- gc          : garbage collection
+- grep        : grep text in many files
+- mount       : mount sd card
+- umount      : umount sd card
+- temperature : device temperature
+- meminfo     : memory informations
+- flashinfo   : flash informations
+- sysinfo     : system informations
+- deepsleep   : deepsleep of board
+- ping        : ping host
+- reboot      : reboot board
+- help        : list all command available
+- man         : manual of one command
+- df          : display free disk space
+- ip2host     : convert ip address in hostname
+- host2ip     : convert hostname in ip address
+- eval        : evaluation python string
+- exec        : execute python string
+- dump        : display hexadecimal dump of the content of file
 """
 # pylint:disable=wrong-import-position
 import sys
@@ -129,9 +140,6 @@ def copyfile(src,dst,quiet):
 
 def cp(source, destination, recursive=False, quiet=False):
 	""" Copy file command """
-	filenames   = []
-	directories = []
-
 	if filesystem.isfile(source):
 		copyfile(source,destination,quiet)
 	else:
@@ -141,7 +149,7 @@ def cp(source, destination, recursive=False, quiet=False):
 		else:
 			path, pattern = filesystem.split(source)
 
-		directories, filenames = filesystem.scandirexcp(path, pattern, recursive)
+		_, filenames = filesystem.scandir(path, pattern, recursive)
 
 		for src in filenames:
 			dst = destination + "/" + src[len(path):]
@@ -180,7 +188,7 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
 		if path is None:
 			print("Cannot rm '%s'"%file)
 		else:
-			dirs, filenames = filesystem.scandirexcp(path, pattern, recursive)
+			dirs, filenames = filesystem.scandir(path, pattern, recursive)
 			directories += dirs
 
 			for filename in filenames:
@@ -236,22 +244,46 @@ class LsDisplayer:
 				message = self.purge_path(path)
 			self.count = print_part(message, self.width, self.height, self.count)
 
+	def show_dir(self, state):
+		""" Indicates if the directory must show """
+		self.showdir = state
+
 def ls(file="", recursive=False, long=False):
-	""" List command """
-	if filesystem.isfile(file):
-		LsDisplayer("", False, long).show(file)
-	elif file == "":
-		filesystem.scandirexcp(uos.getcwd(), "*", recursive, LsDisplayer(uos.getcwd(), True, long))
-	elif filesystem.isdir(file):
-		filesystem.scandirexcp(file, "*", recursive, LsDisplayer(file, True, long))
-	else:
-		path, pattern = filesystem.split(file)
-		filesystem.scandirexcp(path, pattern, recursive, LsDisplayer(path, False, long))
+	""" List files command """
+	searchfile(file, recursive, LsDisplayer(uos.getcwd(), True, long))
+
+def ll(file="", recursive=False):
+	""" List files long command """
+	searchfile(file, recursive, LsDisplayer(uos.getcwd(), True, True))
+
+def searchfile(file, recursive, obj = None):
+	""" Search file """
+	p = filesystem.abspath(uos.getcwd(), file)
+	filenames = []
+	try:
+		if file == "":
+			_,filenames = filesystem.scandir(uos.getcwd(), "*", recursive, obj)
+		elif filesystem.isfile(p):
+			if obj is not None:
+				obj.show_dir(False)
+				obj.show(p)
+			filenames = [p]
+		elif filesystem.isdir(p):
+			_, filenames = filesystem.scandir(p, "*", recursive, obj)
+		else:
+			path, pattern = filesystem.split(p)
+			if obj is not None:
+				obj.show_dir(False)
+			_, filenames = filesystem.scandir(path, pattern, recursive, obj)
+	except:
+		pass
+	if len(filenames) == 0 and file != "":
+		print("%s : No such file or directory"%file)
+	return filenames
 
 def find(file):
 	""" Find a file in directories """
-	path, pattern = filesystem.split(file)
-	_, filenames = filesystem.scandirexcp(path, pattern, True)
+	filenames = searchfile(file, True)
 	for filename in filenames:
 		print(filename)
 
@@ -310,7 +342,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 		filenames = [file]
 	else:
 		path, pattern = filesystem.split(file)
-		_, filenames = filesystem.scandirexcp(path, pattern, recursive)
+		_, filenames = filesystem.scandir(path, pattern, recursive)
 
 	height, width = terminal.get_screen_size()
 	count = 1
@@ -404,7 +436,7 @@ def setdate(datetime=""):
 
 def reboot():
 	""" Reboot command """
-	system.reboot("Reboot device")
+	system.reboot("Reboot device with command")
 
 def deepsleep(seconds=60):
 	""" Deep sleep command """
@@ -542,51 +574,27 @@ def check_cam_flasher():
 		return True
 	return False
 
-class Downloader:
-	""" Downloader file from camflasher """
-	def __init__(self, file, recursive, in_file, out_file):
-		self.in_file = in_file
-		self.out_file = out_file
-		self.header = "࿋%s\r\n%s\r\n%d\r\n"%(file, uos.getcwd(), 1 if recursive else 0)
-
-	def read(self):
-		""" Read file downloaded """
-		self.out_file.write(self.header.encode("utf8"))
-		START_FILE = "࿊".encode("utf8")
-		END_DOWNLOAD = "྾".encode("utf8")
-
-		while True:
-			command = self.in_file.read(len(START_FILE))
-			if command == START_FILE:
-				file_reader = exchange.FileReader()
-				if file_reader.read(self.in_file, self.out_file) is not None:
-					print("  Download ---%s"%file_reader.filename.get())
-			elif command == END_DOWNLOAD:
-				break
-
-def download_file(file="", recursive=False):
-	""" Download file from computer to device """
+def importer(file="", recursive=False):
+	""" Importer file from computer to device """
 	if check_cam_flasher():
-		print("Download start")
-		load_file = Downloader(file, recursive, sys.stdin.buffer, sys.stdout.buffer)
-		load_file.read()
-		print ("Download end")
+		print("Importer start")
+		try:
+			command = exchange.ImporterCommand(uos.getcwd())
+			command.write(file, recursive, sys.stdin.buffer, sys.stdout.buffer)
+			result = True
+			while result:
+				file_reader = exchange.FileReader()
+				result = file_reader.read(uos.getcwd(), sys.stdin.buffer, sys.stdout.buffer)
+			print ("Importer end")
+		except Exception as err:
+			logger.syslog(err)
 	else:
 		print("CamFlasher application required for this command")
 
-
-class Uploader:
-	""" Uploader file to camflasher """
-	def __init__(self, path):
+class Exporter:
+	""" Exporter file to camflasher """
+	def __init__(self):
 		""" Constructor """
-		self.path = path
-
-	def purge_path(self, path):
-		""" Purge the path for the display """
-		if len(path) >= 2 and path[:2] == "./":
-			path = path[2:]
-		path = path.lstrip("/")
-		return path
 
 	def send_file(self, path):
 		""" Send the file """
@@ -595,9 +603,6 @@ class Uploader:
 
 		# If a file
 		if fileinfo[0] & 0x4000 != 0x4000:
-			path = self.purge_path(path)
-			path = self.path + "/" + path
-			path = path.replace("//","/")
 			file_write = exchange.FileWriter()
 			if filesystem.exists(path):
 				sys.stdout.buffer.write("࿊".encode("utf8"))
@@ -607,30 +612,22 @@ class Uploader:
 	def show(self, path):
 		""" Show the information of a file or directory """
 		for _ in range(3):
-			# If the first send successful
+			# If the send successful exit, else retry three time
 			if self.send_file(path) is True:
 				break
 
-def upload_file(file="", recursive=False):
-	""" Upload file from device to computer """
-	if check_cam_flasher():
-		path, pattern = filesystem.split(file)
-		print("Upload start")
+	def show_dir(self, state):
+		""" Indicates if the directory must show """
 
+def exporter(file="", recursive=False):
+	""" Exporter file from device to computer """
+	if check_cam_flasher():
+		print("Exporter start")
 		try:
-			if filesystem.isfile(file):
-				Uploader("").show(file)
-			elif file == "":
-				filesystem.scandirexcp(uos.getcwd(), "*", recursive, Uploader(uos.getcwd()))
-			elif filesystem.isdir(file):
-				path, pattern = filesystem.split(file)
-				filesystem.scandirexcp(file, "*", recursive, Uploader(uos.getcwd()))
-			else:
-				path, pattern = filesystem.split(file)
-				filesystem.scandirexcp(path, pattern, recursive, Uploader(uos.getcwd()))
-			print ("Upload end")
+			searchfile(file, recursive, Exporter())
+			print ("Exporter end")
 		except exchange.FileError as err:
-			print("Upload failed : %s"%err.message)
+			print("Exporter failed : %s"%err.message)
 	else:
 		print("CamFlasher application required for this command")
 
@@ -702,7 +699,8 @@ def exec_command(args):
 			command_function(**flags)
 	except TypeError as err:
 		logger.syslog(err, msg="Missing parameters for '%s'"%command_name)
-	except KeyboardInterrupt:
+	except KeyboardInterrupt as err:
+		logger.syslog(err)
 		print(" [Canceled]")
 	except Exception as err:
 		logger.syslog(err)
@@ -774,6 +772,7 @@ async def async_shell():
 	import uasyncio
 	from server.server import Server
 
+	print("\nPress key to start command line")
 	if filesystem.ismicropython():
 		polling1 = 2
 		polling2 = 0.01
@@ -802,6 +801,7 @@ async def async_shell():
 				# Start shell
 				print("")
 				logger.syslog("<"*10+" Enter shell " +">"*10)
+				print("Use 'exit' to restart server or 'quit' to get python prompt")
 				sh()
 				print("")
 				logger.syslog("<"*10+" Exit  shell " +">"*10)
@@ -829,13 +829,14 @@ shell_commands = \
 	"cp"         :[cp              ,"source","destination",  ("-r","recursive",True),("-q","quiet",True)],
 	"rm"         :[rm              ,"file",                  ("-r","recursive",True),("-f","force",True),("-s","simulate",True)],
 	"ls"         :[ls              ,"file",                  ("-r","recursive",True),("-l","long",True)],
+	"ll"         :[ll              ,"file",                  ("-r","recursive",True)],
 	"date"       :[date            ,"offsetUTC" ,            ("-u","update",True),   ("-n","noDst",True)],
 	"setdate"    :[setdate         ,"datetime"             ],
 	"uptime"     :[uptime                                  ],
 	"find"       :[find            ,"file"                 ],
 	"run"        :[useful.run      ,"filename"             ],
-	"upload"     :[upload_file     ,"file",                  ("-r","recursive",True)],
-	"download"   :[download_file   ,"file",                  ("-r","recursive",True)],
+	"exporter"   :[exporter        ,"file",                  ("-r","recursive",True)],
+	"importer"   :[importer        ,"file",                  ("-r","recursive",True)],
 	"edit"       :[edit            ,"file"                 ],
 	"exit"       :[exit                                    ],
 	"gc"         :[gc                                      ],

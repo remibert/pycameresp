@@ -8,7 +8,7 @@ def export_files(export_filename, path="./config",pattern="*.json", recursive=Fa
 	""" Exports many file into only one file """
 	result = True
 
-	print("Export %s"%export_filename)
+	logger.syslog("Export %s"%export_filename)
 	filesystem.remove(export_filename)
 
 	# Scan directory with pattern
@@ -23,7 +23,7 @@ def export_files(export_filename, path="./config",pattern="*.json", recursive=Fa
 		for filename in files:
 			# All files except .tmp and sdcard
 			if filename[-4:] != ".tmp" and filename[:4] != "/sd/" and filename[5:] != "./sd/":
-				print("  Export '%s'"%(filename))
+				logger.syslog("  Export '%s'"%(filename))
 				if file_write.write(filename, None, out_file) is False:
 					result = False
 					break
@@ -31,34 +31,33 @@ def export_files(export_filename, path="./config",pattern="*.json", recursive=Fa
 		logger.syslog(err)
 		result = False
 	finally:
-		print("Export %s"%("success" if result else "failed"))
+		logger.syslog("Export %s"%("success" if result else "failed"))
 		out_file.close()
 	return result
 
-def import_files(import_filename, directory="/", simulated=False):
+def import_files(import_filename, directory="/"):
 	""" Import files and write all files """
 	result = True
-	print("Import %s"%import_filename)
+	logger.syslog("Import %s"%import_filename)
 	try:
 		in_file = open(import_filename,"rb")
-		if not filesystem.ismicropython():
+		if filesystem.ismicropython():
+			simulated = False
+		else:
 			simulated = True
 
 		read_size = filesystem.filesize(import_filename)
-		file_reader = FileReader()
+
 		while in_file.tell() < read_size:
-			if file_reader.read(in_file) is not None:
-				print("Import %s"%file_reader.filename.get())
-				if filesystem.ismicropython():
-					if simulated is False:
-						file_reader.save(directory)
-				file_reader = FileReader()
+			file_reader = FileReader(simulated)
+			res = file_reader.read(directory, in_file)
+			logger.syslog("Import %s %s"%(file_reader.filename.get(), "" if res else "failed"))
 
 	except Exception as err:
 		logger.syslog(err)
 		result = False
 	finally:
-		print("Import %s"%("success" if result else "failed"))
+		logger.syslog("Import %s"%("success" if result else "failed"))
 		in_file.close()
 	filesystem.remove(import_filename)
 	return result

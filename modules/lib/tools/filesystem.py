@@ -199,19 +199,9 @@ def scandir(path, pattern, recursive, displayer=None):
 				if fnmatch.fnmatch(file, pattern):
 					if displayer:
 						displayer.show(filename)
+						filenames = [""]
 					else:
 						filenames.append(filename)
-	return directories, filenames
-
-def scandirexcp(path, pattern, recursive, displayer=None):
-	""" Scan recursively a directory """
-	filenames   = []
-	directories = []
-	try:
-		directories, filenames = scandir(path, pattern, recursive, displayer)
-	except Exception as err:
-		from tools import logger
-		logger.syslog(err)
 	return directories, filenames
 
 def prefix(files):
@@ -254,7 +244,7 @@ def prefix(files):
 def normpath(path):
 	# Extract from https://github.com/python/cpython/blob/main/Lib/posixpath.py
 	"""Normalize path, eliminating double slashes, etc."""
-	path = os.fspath(path)
+	# path = os.fspath(path)
 	if isinstance(path, bytes):
 		sep = b'/'
 		empty = b''

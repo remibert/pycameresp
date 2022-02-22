@@ -4,46 +4,63 @@ import queue
 import time
 import sys
 import os.path
-from serial import Serial
+import serial
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
-from filesystem import scandir
 from strings import get_utf8_length
-from exchange import FileReader, PatternReader, FilenameReader, IntReader, FileWriter
+from exchange import FileReader, FileWriter, ImporterCommand
+from filesystem import scandir
 
-class FileDownload:
-	""" File downloader """
-	def __init__(self, directory):
-		""" Constructor """
-		self.pattern  = PatternReader()
-		self.path     = FilenameReader()
-		self.recursive = IntReader()
-		self.directory = directory
-		self.read_byte   = self.read_pattern
+def ticks_us():
+	""" Get tick in microseconds """
+	try:
+		# pylint: disable=no-member
+		return time.ticks_us() * 1000
+	except:
+		return time.time_ns()//1000 // 1000
 
-	def read_pattern(self, byte):
-		""" Read pattern """
-		if self.pattern.read_byte(byte) is not None:
-			self.read_byte = self.read_path
-		return None
+class SerialLogger(serial.Serial):
+	""" Serial with log exchange """
+	def __init__(self, *args, **params):
+		if "stdout" in params:
+			# self.stdout = params["stdout"]
+			self.stdout = None
+			del params["stdout"]
+		else:
+			self.stdout = None
+		serial.Serial.__init__(*((self,) + args), **params)
+		self.latence = 0
+		self.data_written = 0
+		self.data_read = 0
 
-	def read_path(self, byte):
-		""" Read path """
-		if self.path.read_byte(byte) is not None:
-			self.read_byte = self.read_recursive
-		return None
+	def write(self, data):
+		""" Write buffer to serial link """
+		self.data_written += len(data)
+		return serial.Serial.write(self, data)
 
-	def read_recursive(self, byte):
-		""" Read recursive """
-		if self.recursive.read_byte(byte) is not None:
-			_, filenames = scandir(os.path.normpath(self.directory + "/" + self.path.get()), self.pattern.get(), True if self.recursive.get() == 1 else False)
-			return filenames
+	def read(self, size=1):
+		""" Read length from serial link """
+		data = serial.Serial.read(self, size)
+		if len(data) == 0:
+			self.latence += 1
+		else:
+			self.data_read += len(data)
+		return data
 
+	def clear_stat(self):
+		""" Clear statistic counters """
+		self.latence = 0
+		self.data_read = 0
+		self.data_written = 0
+
+	def get_stat(self):
+		""" Get statistic counters """
+		return self.data_read, self.data_written, self.latence
 
 class ThreadSerial(threading.Thread):
 	""" Serial thread """
-	def __init__(self, receive_callback):
+	def __init__(self, receive_callback, stdout):
 		""" Constructor """
 		threading.Thread.__init__(self)
 		self.serial = None
@@ -59,6 +76,7 @@ class ThreadSerial(threading.Thread):
 		self.WRITE_FILE =3
 		self.READ_FILE = 4
 		self.QUIT = 5
+		self.stdout = stdout
 		self.start()
 
 	def __del__(self):
@@ -78,7 +96,7 @@ class ThreadSerial(threading.Thread):
 			try:
 				if port != "":
 					# Open serial console
-					self.serial = Serial(port=port, baudrate=115200, timeout=1)
+					self.serial = SerialLogger(port=port, baudrate=115200, timeout=0.2, stdout=self.stdout)
 
 					# Clear input serial buffer
 					self.serial.dtr = False
@@ -104,16 +122,39 @@ class ThreadSerial(threading.Thread):
 		if command == self.DISCONNECT:
 			self.close()
 
-	def on_write_file(self, command, data):
+	def on_write_file(self, command, directory):
 		""" Treat write file command """
 		if command == self.WRITE_FILE:
-			file_writer = FileWriter()
-			_, filenames = data
-			for filename in filenames:
-				# self.serial.write("࿊".encode("utf8"))
-				file_writer.write(filename, self.serial, self.serial)
-			# ࿌
-			# self.serial.write("྾".encode("utf8"))
+			try:
+				self.serial.clear_stat()
+				start = time.time_ns()
+				command = ImporterCommand(directory)
+				path, pattern, recursive = command.read(self.serial, self.serial)
+				if len(pattern) > 0 and pattern[0] == "/":
+					directory_, pattern_ = os.path.split(os.path.normpath(directory + "/" + pattern))
+				else:
+					directory_, pattern_ = os.path.split(os.path.normpath(directory + "/" + path + "/" + pattern))
+
+				# If directory can be parsed
+				if directory_.find(os.path.normpath(directory)) == 0 and os.path.exists(directory_):
+					_, filenames = scandir(directory_, pattern_, recursive)
+
+					for filename in filenames:
+						file_writer = FileWriter()
+						filename_ = filename.replace(directory, "")
+						if file_writer.write(filename, self.serial, self.serial, directory) is True:
+							self.print("  %s\n"%filename_)
+						else:
+							self.print("  %s bad crc\n"%filename_)
+				else:
+					self.print("'%s' not found\n"%(os.path.normpath(path + "/" + pattern)))
+
+				self.serial.write(b"exit\r\n")
+				stat = self.serial.get_stat()
+				end = time.time_ns()
+				# self.print("read=%d, write=%d, latency=%.2fs, duration=%d\n"%(stat[0],stat[1],stat[2]*0.2, (end-start)//1000//1000))
+			except Exception as err:
+				self.print("Importer error")
 
 	def on_read_file(self, command, directory):
 		""" Treat the read file command """
@@ -198,9 +239,9 @@ class ThreadSerial(threading.Thread):
 		""" Send write data command to serial thread """
 		self.send((self.WRITE_DATA,data))
 
-	def write_file(self, data):
+	def write_file(self, directory):
 		""" Send write file command to serial thread """
-		self.send((self.WRITE_FILE,data))
+		self.send((self.WRITE_FILE,directory))
 
 	def read_file(self, directory):
 		""" Send read file command to serial thread """
@@ -234,7 +275,7 @@ class Flasher(threading.Thread):
 		self.loop = True
 		self.flashing = False
 		self.waiting_data = b""
-		self.serial_thread = ThreadSerial(self.receive)
+		self.serial_thread = ThreadSerial(self.receive, stdout)
 		self.stdout = stdout
 		self.directory = directory
 
@@ -281,6 +322,7 @@ class Flasher(threading.Thread):
 									char = ""
 								# Special char for download file
 								elif char == "࿋":
+									self.serial_thread.write_file(self.directory)
 									char = ""
 								i += length
 							except:

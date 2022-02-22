@@ -17,13 +17,13 @@ import os
 try:
 	from PyQt6 import uic
 	from PyQt6.QtCore import QTimer, QEvent, Qt, QSettings
-	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QFontDialog
-	from PyQt6.QtGui import QCursor,QAction,QFont, QFontMetrics
+	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage
+	from PyQt6.QtGui import QCursor,QAction,QFont
 except:
 	from PyQt5 import uic
 	from PyQt5.QtCore import QTimer, QEvent, Qt, QSettings
-	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QAction, QFontDialog
-	from PyQt5.QtGui import QCursor, QFont, QFontMetrics
+	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QAction
+	from PyQt5.QtGui import QCursor, QFont
 from serial.tools import list_ports
 from flasher import Flasher
 from qstdoutvt100 import QStdoutVT100
