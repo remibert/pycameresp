@@ -37,13 +37,13 @@ from webpage.streamingpage import *
 from video                 import CameraConfig, Camera
 from motion                import SnapConfig, MotionConfig
 import uasyncio
-from tools                 import useful, lang
+from tools                 import lang, info
 
 zone_config = CameraConfig()
 
 def zone_masking(config, disabled):
         &#34;&#34;&#34; displays an html page to hide certain area of the camera, in order to ignore movements &#34;&#34;&#34;
-        info = SnapConfig.get()
+        _ = SnapConfig.get()
 
         squarex = SnapConfig.get().square_x - 2
         squarey = SnapConfig.get().square_y - 2
@@ -159,7 +159,7 @@ def zone_masking(config, disabled):
 &#34;&#34;&#34;%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
         return result
 
-@HttpServer.add_route(b&#39;/motion/config&#39;, menu=lang.menu_motion, item=lang.item_motion, available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b&#39;/motion/config&#39;, menu=lang.menu_motion, item=lang.item_motion, available=info.iscamera() and Camera.is_activated())
 async def motion(request, response, args):
         &#34;&#34;&#34; Motion configuration page &#34;&#34;&#34;
         zone_config.framesize  = b&#34;%dx%d&#34;%(SnapConfig.get().width, SnapConfig.get().height)
@@ -179,13 +179,14 @@ async def motion(request, response, args):
                 zone_masking(config, disabled), Br(),
                 Slider(text=lang.detects_a_movement,          name=b&#34;differences_detection&#34;,        min=b&#34;1&#34;,  max=b&#34;64&#34;, step=b&#34;1&#34;,  value=b&#34;%d&#34;%config.differences_detection,         disabled=disabled),
                 Slider(text=lang.motion_detection_sensitivity,          name=b&#34;sensitivity&#34;,        min=b&#34;0&#34;,  max=b&#34;100&#34;, step=b&#34;5&#34;,  value=b&#34;%d&#34;%config.sensitivity,         disabled=disabled),
-                Switch(text=lang.notification, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
+                Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),Br(),
+                Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),Br(),
                 Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),Br(),
                 Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;, checked=config.light_compensation, disabled=disabled),Br(),
                 submit)
         await response.send_page(page)
 
-@HttpServer.add_route(b&#39;/motion/onoff&#39;, menu=lang.menu_motion, item=lang.item_motion_onoff, available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b&#39;/motion/onoff&#39;, menu=lang.menu_motion, item=lang.item_motion_onoff, available=info.iscamera() and Camera.is_activated())
 async def motion_on_off(request, response, args):
         &#34;&#34;&#34; Motion command page &#34;&#34;&#34;
         config = MotionConfig()
@@ -219,7 +220,7 @@ async def motion_on_off(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.add_route(b&#39;/motion/config&#39;, menu=lang.menu_motion, item=lang.item_motion, available=useful.iscamera() and Camera.is_activated())
+<pre><code class="python">@HttpServer.add_route(b&#39;/motion/config&#39;, menu=lang.menu_motion, item=lang.item_motion, available=info.iscamera() and Camera.is_activated())
 async def motion(request, response, args):
         &#34;&#34;&#34; Motion configuration page &#34;&#34;&#34;
         zone_config.framesize  = b&#34;%dx%d&#34;%(SnapConfig.get().width, SnapConfig.get().height)
@@ -239,7 +240,8 @@ async def motion(request, response, args):
                 zone_masking(config, disabled), Br(),
                 Slider(text=lang.detects_a_movement,          name=b&#34;differences_detection&#34;,        min=b&#34;1&#34;,  max=b&#34;64&#34;, step=b&#34;1&#34;,  value=b&#34;%d&#34;%config.differences_detection,         disabled=disabled),
                 Slider(text=lang.motion_detection_sensitivity,          name=b&#34;sensitivity&#34;,        min=b&#34;0&#34;,  max=b&#34;100&#34;, step=b&#34;5&#34;,  value=b&#34;%d&#34;%config.sensitivity,         disabled=disabled),
-                Switch(text=lang.notification, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
+                Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),Br(),
+                Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),Br(),
                 Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),Br(),
                 Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;, checked=config.light_compensation, disabled=disabled),Br(),
                 submit)
@@ -255,7 +257,7 @@ async def motion(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.add_route(b&#39;/motion/onoff&#39;, menu=lang.menu_motion, item=lang.item_motion_onoff, available=useful.iscamera() and Camera.is_activated())
+<pre><code class="python">@HttpServer.add_route(b&#39;/motion/onoff&#39;, menu=lang.menu_motion, item=lang.item_motion_onoff, available=info.iscamera() and Camera.is_activated())
 async def motion_on_off(request, response, args):
         &#34;&#34;&#34; Motion command page &#34;&#34;&#34;
         config = MotionConfig()
@@ -284,7 +286,7 @@ async def motion_on_off(request, response, args):
 </summary>
 <pre><code class="python">def zone_masking(config, disabled):
         &#34;&#34;&#34; displays an html page to hide certain area of the camera, in order to ignore movements &#34;&#34;&#34;
-        info = SnapConfig.get()
+        _ = SnapConfig.get()
 
         squarex = SnapConfig.get().square_x - 2
         squarey = SnapConfig.get().square_y - 2

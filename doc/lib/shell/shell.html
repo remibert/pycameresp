@@ -33,6 +33,8 @@ The commands are :
 : current directory
 - cat
 : display the content of file
+- cls
+: clear screen
 - mkdir
 : create directory
 - mv
@@ -45,15 +47,22 @@ The commands are :
 : remove file
 - ls
 : list file
+- ll
+: list file long
 - date
 : get the system date or synchronize with Ntp
-- setdate : set date and time
-- df
-: display free disk space
+- setdate
+: set date and time
+- uptime
+: the amount of time system is running
 - find
 : find a file
 - run
-: run a script
+: execute python script
+- exporter
+: transfer files from device to computer (only available with camflasher)
+- importer
+: transfer files from computer to device (only available with camflasher)
 - edit
 : edit a text file
 - exit
@@ -62,67 +71,98 @@ The commands are :
 : garbage collection
 - grep
 : grep text in many files
-- ping
-: ping host
 - mount
 : mount sd card
 - umount
 : umount sd card
-- meminfo : memory informations
-- flashinfo: flash informations
-- sysinfo : system informations
-- deepsleep: deepsleep of board
+- temperature : device temperature
+- meminfo
+: memory informations
+- flashinfo
+: flash informations
+- sysinfo
+: system informations
+- deepsleep
+: deepsleep of board
+- ping
+: ping host
 - reboot
 : reboot board
 - help
 : list all command available
 - man
-: manual of one command</p>
+: manual of one command
+- df
+: display free disk space
+- ip2host
+: convert ip address in hostname
+- host2ip
+: convert hostname in ip address
+- eval
+: evaluation python string
+- exec
+: execute python string
+- dump
+: display hexadecimal dump of the content of file</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-&#34;&#34;&#34; Class defining a minimalist shell, directly executable on the board. 
+&#34;&#34;&#34; Class defining a minimalist shell, directly executable on the board.
 We modify directories, list, delete, move files, edit files ...
 The commands are :
-- cd      : change directory
-- pwd     : current directory
-- cat     : display the content of file
-- mkdir   : create directory
-- mv      : move file
-- rmdir   : remove directory
-- cp      : copy file
-- rm      : remove file
-- ls      : list file
-- date    : get the system date or synchronize with Ntp
-- setdate : set date and time
-- df      : display free disk space
-- find    : find a file
-- run     : run a script
-- edit    : edit a text file
-- exit    : exit of shell
-- gc      : garbage collection
-- grep    : grep text in many files
-- ping    : ping host
-- mount   : mount sd card
-- umount  : umount sd card
-- meminfo : memory informations
-- flashinfo: flash informations
-- sysinfo : system informations
-- deepsleep: deepsleep of board
-- reboot  : reboot board
-- help    : list all command available
-- man     : manual of one command
+- cd          : change directory
+- pwd         : current directory
+- cat         : display the content of file
+- cls         : clear screen
+- mkdir       : create directory
+- mv          : move file
+- rmdir       : remove directory
+- cp          : copy file
+- rm          : remove file
+- ls          : list file
+- ll          : list file long
+- date        : get the system date or synchronize with Ntp
+- setdate     : set date and time
+- uptime      : the amount of time system is running
+- find        : find a file
+- run         : execute python script
+- exporter    : transfer files from device to computer (only available with camflasher)
+- importer    : transfer files from computer to device (only available with camflasher)
+- edit        : edit a text file
+- exit        : exit of shell
+- gc          : garbage collection
+- grep        : grep text in many files
+- mount       : mount sd card
+- umount      : umount sd card
+- temperature : device temperature
+- meminfo     : memory informations
+- flashinfo   : flash informations
+- sysinfo     : system informations
+- deepsleep   : deepsleep of board
+- ping        : ping host
+- reboot      : reboot board
+- help        : list all command available
+- man         : manual of one command
+- df          : display free disk space
+- ip2host     : convert ip address in hostname
+- host2ip     : convert hostname in ip address
+- eval        : evaluation python string
+- exec        : execute python string
+- dump        : display hexadecimal dump of the content of file
 &#34;&#34;&#34;
+# pylint:disable=wrong-import-position
 import sys
+
 sys.path.append(&#34;lib&#34;)
+sys.path.append(&#34;simul&#34;)
 import io
 import os
 import uos
 import machine
-from tools import useful, sdcard, tasking
+from tools import useful,logger,sdcard,tasking,filesystem,exchange,info,strings,terminal,system
 
 def cd(directory = &#34;/&#34;):
         &#34;&#34;&#34; Change directory &#34;&#34;&#34;
@@ -138,33 +178,33 @@ def pwd():
 def mkdir(directory, recursive=False, quiet=False):
         &#34;&#34;&#34; Make directory &#34;&#34;&#34;
         try:
-                if quiet == False:
+                if quiet is False:
                         print(&#34;mkdir &#39;%s&#39;&#34;%directory)
-                useful.makedir(directory, recursive)
+                filesystem.makedir(directory, recursive)
         except:
                 print(&#34;Cannot mkdir &#39;%s&#39;&#34;%directory)
 
 def removedir(directory, force=False, quiet=False, simulate=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         try:
-                if useful.exists(directory+&#34;/.DS_Store&#34;):
+                if filesystem.exists(directory+&#34;/.DS_Store&#34;):
                         rmfile(directory+&#34;/.DS_Store&#34;, quiet, force, simulate)
-                if (useful.ismicropython() or force) and simulate == False:
+                if (filesystem.ismicropython() or force) and simulate is False:
                         uos.rmdir(directory)
-                if quiet == False:
+                if quiet is False:
                         print(&#34;rmdir &#39;%s&#39;&#34;%(directory))
         except:
                 print(&#34;rmdir &#39;%s&#39; not removed&#34;%(directory))
 
 def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
-        if recursive == False:
+        if recursive is False:
                 removedir(directory, force=force, quiet=quiet, simulate=simulate)
         else:
                 directories = [directory]
                 d = directory
                 while 1:
-                        parts = useful.split(d)
+                        parts = filesystem.split(d)
                         if parts[1] == &#34;&#34; or parts[0] == &#34;&#34;:
                                 break
                         directories.append(parts[0])
@@ -174,7 +214,7 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
                 if sdcard.SdCard.get_mountpoint() in directories:
                         directories.remove(sdcard.SdCard.get_mountpoint())
                 for d in directories:
-                        if useful.exists(d) and d != &#34;.&#34;:
+                        if filesystem.exists(d) and d != &#34;.&#34;:
                                 removedir(d, force=force, quiet=quiet, simulate=simulate)
 
 def mv(source, destination):
@@ -188,14 +228,14 @@ def copyfile(src,dst,quiet):
         &#34;&#34;&#34; Copy file &#34;&#34;&#34;
         dst = dst.replace(&#34;//&#34;,&#34;/&#34;)
         dst = dst.replace(&#34;//&#34;,&#34;/&#34;)
-        dstdir, dstfile = useful.split(dst)
+        dstdir, dstfile = filesystem.split(dst)
         try:
-                if not useful.exists(dstdir):
+                if not filesystem.exists(dstdir):
                         if dstdir != &#34;.&#34; and dstdir != &#34;&#34;:
                                 mkdir(dstdir, recursive=True, quiet=quiet)
                 src_file = open(src, &#39;rb&#39;)
                 dst_file = open(dst, &#39;wb&#39;)
-                if quiet == False:
+                if quiet is False:
                         print(&#34;cp &#39;%s&#39; -&gt; &#39;%s&#39;&#34;%(src,dst))
                 while True:
                         buf = src_file.read(256)
@@ -210,19 +250,16 @@ def copyfile(src,dst,quiet):
 
 def cp(source, destination, recursive=False, quiet=False):
         &#34;&#34;&#34; Copy file command &#34;&#34;&#34;
-        filenames   = []
-        directories = []
-
-        if useful.isfile(source):
+        if filesystem.isfile(source):
                 copyfile(source,destination,quiet)
         else:
-                if useful.isdir(source):
+                if filesystem.isdir(source):
                         path = source
                         pattern = &#34;*&#34;
                 else:
-                        path, pattern = useful.split(source)
-                                
-                directories, filenames = useful.scandir(path, pattern, recursive)
+                        path, pattern = filesystem.split(source)
+
+                _, filenames = filesystem.scandir(path, pattern, recursive)
 
                 for src in filenames:
                         dst = destination + &#34;/&#34; + src[len(path):]
@@ -231,9 +268,9 @@ def cp(source, destination, recursive=False, quiet=False):
 def rmfile(filename, quiet=False, force=False, simulate=False):
         &#34;&#34;&#34; Remove file &#34;&#34;&#34;
         try:
-                if (useful.ismicropython() or force) and simulate == False:
+                if (filesystem.ismicropython() or force) and simulate is False:
                         uos.remove(filename)
-                if quiet == False:
+                if quiet is False:
                         print(&#34;rm &#39;%s&#39;&#34;%(filename))
         except:
                 print(&#34;rm &#39;%s&#39; not removed&#34;%(filename))
@@ -242,12 +279,12 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
         &#34;&#34;&#34; Remove file command &#34;&#34;&#34;
         filenames   = []
         directories = []
-        
-        if useful.isfile(file):
+
+        if filesystem.isfile(file):
                 path = file
                 rmfile(file, force=force, quiet=quiet, simulate=simulate)
         else:
-                if useful.isdir(file):
+                if filesystem.isdir(file):
                         if recursive:
                                 directories.append(file)
                                 path = file
@@ -256,17 +293,17 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
                                 path = None
                                 pattern = None
                 else:
-                        path, pattern = useful.split(file)
+                        path, pattern = filesystem.split(file)
 
-                if path == None:
+                if path is None:
                         print(&#34;Cannot rm &#39;%s&#39;&#34;%file)
                 else:
-                        dirs, filenames = useful.scandir(path, pattern, recursive)
+                        dirs, filenames = filesystem.scandir(path, pattern, recursive)
                         directories += dirs
-                                        
+
                         for filename in filenames:
                                 rmfile(filename, force=force, quiet=quiet, simulate=simulate)
-                
+
                         if recursive:
                                 directories.sort()
                                 directories.reverse()
@@ -278,7 +315,7 @@ class LsDisplayer:
         &#34;&#34;&#34; Ls displayer class &#34;&#34;&#34;
         def __init__(self, path, showdir, long):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.height, self.width = useful.get_screen_size()
+                self.height, self.width = terminal.get_screen_size()
                 self.count = 1
                 self.long = long
                 self.path = path
@@ -295,7 +332,7 @@ class LsDisplayer:
 
         def show(self, path):
                 &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
-                fileinfo = useful.fileinfo(path)
+                fileinfo = filesystem.fileinfo(path)
                 date_ = fileinfo[8]
                 size = fileinfo[6]
 
@@ -303,50 +340,74 @@ class LsDisplayer:
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
                                 if self.long:
-                                        message = &#34;%s %s [%s]&#34;%(useful.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
+                                        message = &#34;%s %s [%s]&#34;%(strings.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
                                 else:
                                         message = &#34;[%s]&#34;%self.purge_path(path)
                                 self.count = print_part(message, self.width, self.height, self.count)
                 else:
                         if self.long:
-                                fileinfo = useful.fileinfo(path)
+                                fileinfo = filesystem.fileinfo(path)
                                 date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                message = &#34;%s %s %s&#34;%(useful.date_to_string(date_),useful.size_to_string(size),self.purge_path(path))
+                                message = &#34;%s %s %s&#34;%(strings.date_to_string(date_),strings.size_to_string(size),self.purge_path(path))
                         else:
                                 message = self.purge_path(path)
                         self.count = print_part(message, self.width, self.height, self.count)
 
+        def show_dir(self, state):
+                &#34;&#34;&#34; Indicates if the directory must show &#34;&#34;&#34;
+                self.showdir = state
+
 def ls(file=&#34;&#34;, recursive=False, long=False):
-        &#34;&#34;&#34; List command &#34;&#34;&#34;
-        if useful.isfile(file):
-                LsDisplayer(&#34;&#34;, False, long).show(file)
-        elif file == &#34;&#34;:
-                useful.scandir(uos.getcwd(), &#34;*&#34;, recursive, LsDisplayer(uos.getcwd(), True, long))
-        elif useful.isdir(file):
-                useful.scandir(file, &#34;*&#34;, recursive, LsDisplayer(file, True, long))
-        else:
-                path, pattern = useful.split(file)
-                useful.scandir(path, pattern, recursive, LsDisplayer(path, False, long))
+        &#34;&#34;&#34; List files command &#34;&#34;&#34;
+        searchfile(file, recursive, LsDisplayer(uos.getcwd(), True, long))
+
+def ll(file=&#34;&#34;, recursive=False):
+        &#34;&#34;&#34; List files long command &#34;&#34;&#34;
+        searchfile(file, recursive, LsDisplayer(uos.getcwd(), True, True))
+
+def searchfile(file, recursive, obj = None):
+        &#34;&#34;&#34; Search file &#34;&#34;&#34;
+        p = filesystem.abspath(uos.getcwd(), file)
+        filenames = []
+        try:
+                if file == &#34;&#34;:
+                        _,filenames = filesystem.scandir(uos.getcwd(), &#34;*&#34;, recursive, obj)
+                elif filesystem.isfile(p):
+                        if obj is not None:
+                                obj.show_dir(False)
+                                obj.show(p)
+                        filenames = [p]
+                elif filesystem.isdir(p):
+                        _, filenames = filesystem.scandir(p, &#34;*&#34;, recursive, obj)
+                else:
+                        path, pattern = filesystem.split(p)
+                        if obj is not None:
+                                obj.show_dir(False)
+                        _, filenames = filesystem.scandir(path, pattern, recursive, obj)
+        except:
+                pass
+        if len(filenames) == 0 and file != &#34;&#34;:
+                print(&#34;%s : No such file or directory&#34;%file)
+        return filenames
 
 def find(file):
         &#34;&#34;&#34; Find a file in directories &#34;&#34;&#34;
-        path, pattern = useful.split(file)
-        directories, filenames = useful.scandir(path, pattern, True)
+        filenames = searchfile(file, True)
         for filename in filenames:
                 print(filename)
 
 def print_part(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
-        if count != None and count &gt;= height:
+        if count is not None and count &gt;= height:
                 print(message,end=&#34;&#34;)
-                key = useful.getch()
+                key = terminal.getch()
                 count = 1
                 if key in [&#34;x&#34;,&#34;X&#34;,&#34;q&#34;,&#34;Q&#34;,&#34;\x1B&#34;]:
                         return None
                 print(&#34;\n&#34;, end=&#34;&#34;)
         else:
-                if count == None:
+                if count is None:
                         count = 1
                 else:
                         count += 1
@@ -379,7 +440,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
                                                 message = &#34;%s:%d:%s&#34;%(filename, lineNumber, line)
                                                 message = message.rstrip()[:width]
                                                 count = print_part(message, width, height, count)
-                                                if count == None:
+                                                if count is None:
                                                         print(&#34;&#34;)
                                                         return None
                                         lineNumber += 1
@@ -387,17 +448,17 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
                                         break
                 return count
 
-        if useful.isfile(file):
+        if filesystem.isfile(file):
                 filenames = [file]
         else:
-                path, pattern = useful.split(file)
-                directories, filenames = useful.scandir(path, pattern, recursive)
+                path, pattern = filesystem.split(file)
+                _, filenames = filesystem.scandir(path, pattern, recursive)
 
-        height, width = useful.get_screen_size()
+        height, width = terminal.get_screen_size()
         count = 1
         for filename in filenames:
                 count = __grep(text, filename, ignorecase, regexp, width, height, count)
-                if count == None:
+                if count is None:
                         break
 
 def ping(host):
@@ -444,7 +505,7 @@ def date(update=False, offsetUTC=+1, noDst=False):
                 else:
                         dst = True
                 set_date(offsetUTC, dst)
-        print(useful.date_to_string())
+        print(strings.date_to_string())
         del sys.modules[&#34;server.timesetting&#34;]
 
 def setdate(datetime=&#34;&#34;):
@@ -478,14 +539,14 @@ def setdate(datetime=&#34;&#34;):
                         failed = True
         except Exception as err:
                 failed = True
-                useful.syslog(err)
+                logger.syslog(err)
 
-        if failed == True:
+        if failed is True:
                 print(&#39;Expected format &#34;YYYY/MM/DD hh:mm:ss&#34;&#39;)
 
 def reboot():
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
-        useful.reboot(&#34;Reboot device&#34;)
+        system.reboot(&#34;Reboot device with command&#34;)
 
 def deepsleep(seconds=60):
         &#34;&#34;&#34; Deep sleep command &#34;&#34;&#34;
@@ -495,7 +556,7 @@ edit_class = None
 def edit(file):
         &#34;&#34;&#34; Edit command &#34;&#34;&#34;
         global edit_class
-        if edit_class == None:
+        if edit_class is None:
                 try:
                         from shell.editor import Editor
                 except:
@@ -507,7 +568,7 @@ def cat(file):
         &#34;&#34;&#34; Cat command &#34;&#34;&#34;
         try:
                 f = open(file, &#34;r&#34;)
-                height, width = useful.get_screen_size()
+                height, width = terminal.get_screen_size()
                 count = 1
                 while 1:
                         line = f.readline()
@@ -515,7 +576,7 @@ def cat(file):
                                 break
                         message = line.replace(&#34;\t&#34;,&#34;    &#34;).rstrip()[:width]
                         count = print_part(message, width, height, count)
-                        if count == None:
+                        if count is None:
                                 break
                 f.close()
         except:
@@ -527,7 +588,7 @@ def df(mountpoint = &#34;/&#34;):
         freeSize  = status[0]*status[3]
         totalSize = status[1]*status[2]
         print(&#34;Filesystem     Free   Capacity   Used&#34;)
-        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, useful.size_to_string(freeSize,8),useful.size_to_string(totalSize,), totalSize/freeSize))
+        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, strings.size_to_string(freeSize,8),strings.size_to_string(totalSize,), totalSize/freeSize))
 
 def gc():
         &#34;&#34;&#34; Garbage collector command &#34;&#34;&#34;
@@ -536,7 +597,7 @@ def gc():
 
 def uptime():
         &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
-        print(useful.uptime())
+        print(info.uptime())
 
 def man(command):
         &#34;&#34;&#34; Man command &#34;&#34;&#34;
@@ -560,7 +621,7 @@ def man_one(command_name):
 # pylint: disable=redefined-builtin
 def help():
         &#34;&#34;&#34; Help command &#34;&#34;&#34;
-        height, width = useful.get_screen_size()
+        height, width = terminal.get_screen_size()
         count = 1
         cmds = list(shell_commands.keys())
         cmds.sort()
@@ -569,7 +630,7 @@ def help():
                 lines = &#34;-&#34;*30+&#34;\n&#34; + lines
                 for line in lines.split(&#34;\n&#34;):
                         count = print_part(line, width, height, count)
-                        if count == None:
+                        if count is None:
                                 return
 
 def eval_(string):
@@ -588,7 +649,7 @@ def exit():
 
 def dump_(filename):
         &#34;&#34;&#34; dump file content &#34;&#34;&#34;
-        height, width = useful.get_screen_size()
+        height, width = terminal.get_screen_size()
         width = 16
         offset = 0
         file = open(filename, &#34;rb&#34;)
@@ -600,57 +661,90 @@ def dump_(filename):
                 data = file.read(width)
                 if len(data) &lt;= 0:
                         break
-                useful.dump_line (data, line, width)
+                strings.dump_line (data, line, width)
                 offset += width
                 count = print_part(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
-                if count == None:
+                if count is None:
                         break
-
-def parse_command_line(commandLine):
-        &#34;&#34;&#34; Parse command line &#34;&#34;&#34;
-        commands = []
-        args = []
-        quote = None
-        arg = &#34;&#34;
-        for char in commandLine:
-                if char == &#39;&#34;&#39; or char == &#34;&#39;&#34;:
-                        if quote is not None:
-                                if quote == char:
-                                        args.append(arg)
-                                        arg = &#34;&#34;
-                                        quote = None
-                                else:
-                                        arg += char
-                        else:
-                                quote = char
-                elif char == &#34; &#34;:
-                        if quote is not None:
-                                arg += char
-                        else:
-                                args.append(arg)
-                                arg = &#34;&#34;
-                elif char == &#34;;&#34;:
-                        if quote is not None:
-                                arg += char
-                        else:
-                                if len(arg) &gt; 0:
-                                        args.append(arg)
-                                commands.append(args)
-                                arg = &#34;&#34;
-                                args = []
-                else:
-                        arg += char
-        if len(arg) &gt; 0:
-                args.append(arg)
-        if len(args) &gt; 0:
-                commands.append(args)
-
-        for command in commands:
-                exec_command(command)
 
 def cls():
         &#34;&#34;&#34; clear screen &#34;&#34;&#34;
         print(&#34;\x1B[2J\x1B[0;0f&#34;, end=&#34;&#34;)
+
+def check_cam_flasher():
+        &#34;&#34;&#34; Check if the terminal is CamFlasher &#34;&#34;&#34;
+        # Request terminal device attribut
+        sys.stdout.write(b&#34;\x1B[0c&#34;)
+
+        # Wait terminal device attribut response
+        response = terminal.getch(duration=1000)
+
+        # If CamFlasher detected
+        if response == &#34;\x1B[?3;2c&#34;:
+                return True
+        return False
+
+def importer(file=&#34;&#34;, recursive=False):
+        &#34;&#34;&#34; Importer file from computer to device &#34;&#34;&#34;
+        if check_cam_flasher():
+                print(&#34;Importer start&#34;)
+                try:
+                        command = exchange.ImporterCommand(uos.getcwd())
+                        command.write(file, recursive, sys.stdin.buffer, sys.stdout.buffer)
+                        result = True
+                        while result:
+                                file_reader = exchange.FileReader()
+                                result = file_reader.read(uos.getcwd(), sys.stdin.buffer, sys.stdout.buffer)
+                        print (&#34;Importer end&#34;)
+                except Exception as err:
+                        logger.syslog(err)
+        else:
+                print(&#34;CamFlasher application required for this command&#34;)
+
+class Exporter:
+        &#34;&#34;&#34; Exporter file to camflasher &#34;&#34;&#34;
+        def __init__(self):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+
+        def send_file(self, path):
+                &#34;&#34;&#34; Send the file &#34;&#34;&#34;
+                result = True
+                fileinfo = filesystem.fileinfo(path)
+
+                # If a file
+                if fileinfo[0] &amp; 0x4000 != 0x4000:
+                        file_write = exchange.FileWriter()
+                        if filesystem.exists(path):
+                                sys.stdout.buffer.write(&#34;࿊&#34;.encode(&#34;utf8&#34;))
+                                result = file_write.write(path, sys.stdin.buffer, sys.stdout.buffer)
+                return result
+
+        def show(self, path):
+                &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
+                for _ in range(3):
+                        # If the send successful exit, else retry three time
+                        if self.send_file(path) is True:
+                                break
+
+        def show_dir(self, state):
+                &#34;&#34;&#34; Indicates if the directory must show &#34;&#34;&#34;
+
+def exporter(file=&#34;&#34;, recursive=False):
+        &#34;&#34;&#34; Exporter file from device to computer &#34;&#34;&#34;
+        if check_cam_flasher():
+                print(&#34;Exporter start&#34;)
+                try:
+                        searchfile(file, recursive, Exporter())
+                        print (&#34;Exporter end&#34;)
+                except exchange.FileError as err:
+                        print(&#34;Exporter failed : %s&#34;%err.message)
+        else:
+                print(&#34;CamFlasher application required for this command&#34;)
+
+def temperature():
+        &#34;&#34;&#34; Get the internal temperature &#34;&#34;&#34;
+        celcius, farenheit = info.temperature()
+        print(&#34;%.2f°C, %d°F&#34;%(celcius, farenheit))
 
 def get_command(command_name):
         &#34;&#34;&#34; Get a command callback according to the command name &#34;&#34;&#34;
@@ -707,30 +801,68 @@ def exec_command(args):
                                                                 flags[command_params[paramsCount]] = arg
                                                                 paramsCount += 1
         except Exception as err:
-                # print(useful.syslog(err))
+                # print(logger.syslog(err))
                 print(err)
                 return
         try:
                 if command_name.strip() != &#34;&#34;:
                         command_function(**flags)
         except TypeError as err:
-                useful.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%command_name)
-        except KeyboardInterrupt:
+                logger.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%command_name)
+        except KeyboardInterrupt as err:
+                logger.syslog(err)
                 print(&#34; [Canceled]&#34;)
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
 
-def temperature():
-        &#34;&#34;&#34; Get the internal temperature &#34;&#34;&#34;
-        celcius, farenheit = useful.temperature()
-        print(&#34;%.2f°C, %d°F&#34;%(celcius, farenheit))
+def parse_command_line(commandLine):
+        &#34;&#34;&#34; Parse command line &#34;&#34;&#34;
+        commands = []
+        args = []
+        quote = None
+        arg = &#34;&#34;
+        for char in commandLine:
+                if char == &#39;&#34;&#39; or char == &#34;&#39;&#34;:
+                        if quote is not None:
+                                if quote == char:
+                                        args.append(arg)
+                                        arg = &#34;&#34;
+                                        quote = None
+                                else:
+                                        arg += char
+                        else:
+                                quote = char
+                elif char == &#34; &#34;:
+                        if quote is not None:
+                                arg += char
+                        else:
+                                args.append(arg)
+                                arg = &#34;&#34;
+                elif char == &#34;;&#34;:
+                        if quote is not None:
+                                arg += char
+                        else:
+                                if len(arg) &gt; 0:
+                                        args.append(arg)
+                                commands.append(args)
+                                arg = &#34;&#34;
+                                args = []
+                else:
+                        arg += char
+        if len(arg) &gt; 0:
+                args.append(arg)
+        if len(args) &gt; 0:
+                commands.append(args)
 
-def shell():
+        for command in commands:
+                exec_command(command)
+
+def sh():
         &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
         global shell_exited
 
         shell_exited = False
-        while shell_exited == False:
+        while shell_exited is False:
                 try:
                         commandLine = &#34;&#34;
                         commandLine = input(&#34;%s=&gt; &#34;%os.getcwd())
@@ -750,7 +882,8 @@ async def async_shell():
         import uasyncio
         from server.server import Server
 
-        if useful.ismicropython():
+        print(&#34;\nPress key to start command line&#34;)
+        if filesystem.ismicropython():
                 polling1 = 2
                 polling2 = 0.01
         else:
@@ -758,8 +891,8 @@ async def async_shell():
                 polling2 = 0.5
         while 1:
                 # If key pressed
-                if useful.kbhit(polling2):
-                        character = useful.getch()[0]
+                if terminal.kbhit(polling2):
+                        character = terminal.getch()[0]
 
                         # Check if character is correct to start shell
                         if not ord(character) in [0,0xA]:
@@ -773,14 +906,15 @@ async def async_shell():
                                 tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
 
                                 # Get the size of screen
-                                useful.refresh_screen_size()
+                                terminal.refresh_screen_size()
 
                                 # Start shell
                                 print(&#34;&#34;)
-                                useful.syslog(&#34;&lt;&#34;*10+&#34; Enter shell &#34; +&#34;&gt;&#34;*10)
-                                shell()
+                                logger.syslog(&#34;&lt;&#34;*10+&#34; Enter shell &#34; +&#34;&gt;&#34;*10)
+                                print(&#34;Use &#39;exit&#39; to restart server or &#39;quit&#39; to get python prompt&#34;)
+                                sh()
                                 print(&#34;&#34;)
-                                useful.syslog(&#34;&lt;&#34;*10+&#34; Exit  shell &#34; +&#34;&gt;&#34;*10)
+                                logger.syslog(&#34;&lt;&#34;*10+&#34; Exit  shell &#34; +&#34;&gt;&#34;*10)
 
                                 # Restore default path
                                 uos.chdir(&#34;/&#34;)
@@ -793,49 +927,51 @@ async def async_shell():
                 else:
                         await uasyncio.sleep(polling1)
 
-
 shell_commands = \
 {
-        &#34;cd&#34;       :[cd       ,&#34;directory&#34;],
-        &#34;pwd&#34;      :[pwd      ],
-        &#34;cat&#34;      :[cat      ,&#34;file&#34;],
-        &#34;cls&#34;      :[cls      ],
-        &#34;mkdir&#34;    :[mkdir    ,&#34;directory&#34;,            (&#34;-r&#34;,&#34;recursive&#34;,True)],
-        &#34;mv&#34;       :[mv       ,&#34;source&#34;,&#34;destination&#34;],
-        &#34;rmdir&#34;    :[rmdir    ,&#34;directory&#34;,            (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-f&#34;,&#34;force&#34;,True),(&#34;-q&#34;,&#34;quiet&#34;,True),(&#34;-s&#34;,&#34;simulate&#34;,True)],
-        &#34;cp&#34;       :[cp       ,&#34;source&#34;,&#34;destination&#34;, (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-q&#34;,&#34;quiet&#34;,True)],
-        &#34;rm&#34;       :[rm       ,&#34;file&#34;,                 (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-f&#34;,&#34;force&#34;,True),(&#34;-s&#34;,&#34;simulate&#34;,True)],
-        &#34;ls&#34;       :[ls       ,&#34;file&#34;,                 (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-l&#34;,&#34;long&#34;,True)],
-        &#34;date&#34;     :[date     ,&#34;offsetUTC&#34; ,           (&#34;-u&#34;,&#34;update&#34;,True),   (&#34;-n&#34;,&#34;noDst&#34;,True)],
-        &#34;setdate&#34;  :[setdate  ,&#34;datetime&#34;],
-        &#34;uptime&#34;   :[uptime   ],
-        &#34;find&#34;     :[find     ,&#34;file&#34;],
-        &#34;run&#34;      :[useful.import_  ,&#34;filename&#34;],
-        &#34;edit&#34;     :[edit     ,&#34;file&#34;],
-        &#34;exit&#34;     :[exit     ],
-        &#34;gc&#34;       :[gc       ],
-        &#34;grep&#34;     :[grep     ,&#34;text&#34;,&#34;file&#34;,          (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-i&#34;,&#34;ignorecase&#34;,True),(&#34;-e&#34;,&#34;regexp&#34;,True)],
-        &#34;mount&#34;    :[mountsd  ,&#34;mountpoint&#34;],
-        &#34;umount&#34;   :[umountsd ,&#34;mountpoint&#34;],
-        &#34;temperature&#34;:[temperature],
-        &#34;meminfo&#34;  :[useful.meminfo  ],
-        &#34;flashinfo&#34;:[useful.flashinfo],
-        &#34;sysinfo&#34;  :[useful.sysinfo  ],
-        &#34;deepsleep&#34;:[deepsleep,&#34;seconds&#34;],
-        &#34;ping&#34;     :[ping      ,&#34;host&#34;],
-        &#34;reboot&#34;   :[reboot   ],
-        &#34;help&#34;     :[help     ],
-        &#34;man&#34;      :[man      ,&#34;command&#34;],
-        &#34;df&#34;       :[df       ,&#34;mountpoint&#34;],
-        &#34;ip2host&#34;  :[ip2host  ,&#34;ip_address&#34;],
-        &#34;host2ip&#34;  :[host2ip  ,&#34;hostname&#34;],
-        &#34;eval&#34;     :[eval_    ,&#34;string&#34;],
-        &#34;exec&#34;     :[exec_    ,&#34;string&#34;],
-        &#34;dump&#34;     :[dump_    ,&#34;filename&#34;],
+        &#34;cd&#34;         :[cd              ,&#34;directory&#34;            ],
+        &#34;pwd&#34;        :[pwd                                     ],
+        &#34;cat&#34;        :[cat             ,&#34;file&#34;                 ],
+        &#34;cls&#34;        :[cls                                     ],
+        &#34;mkdir&#34;      :[mkdir           ,&#34;directory&#34;,             (&#34;-r&#34;,&#34;recursive&#34;,True)],
+        &#34;mv&#34;         :[mv              ,&#34;source&#34;,&#34;destination&#34; ],
+        &#34;rmdir&#34;      :[rmdir           ,&#34;directory&#34;,             (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-f&#34;,&#34;force&#34;,True),(&#34;-q&#34;,&#34;quiet&#34;,True),(&#34;-s&#34;,&#34;simulate&#34;,True)],
+        &#34;cp&#34;         :[cp              ,&#34;source&#34;,&#34;destination&#34;,  (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-q&#34;,&#34;quiet&#34;,True)],
+        &#34;rm&#34;         :[rm              ,&#34;file&#34;,                  (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-f&#34;,&#34;force&#34;,True),(&#34;-s&#34;,&#34;simulate&#34;,True)],
+        &#34;ls&#34;         :[ls              ,&#34;file&#34;,                  (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-l&#34;,&#34;long&#34;,True)],
+        &#34;ll&#34;         :[ll              ,&#34;file&#34;,                  (&#34;-r&#34;,&#34;recursive&#34;,True)],
+        &#34;date&#34;       :[date            ,&#34;offsetUTC&#34; ,            (&#34;-u&#34;,&#34;update&#34;,True),   (&#34;-n&#34;,&#34;noDst&#34;,True)],
+        &#34;setdate&#34;    :[setdate         ,&#34;datetime&#34;             ],
+        &#34;uptime&#34;     :[uptime                                  ],
+        &#34;find&#34;       :[find            ,&#34;file&#34;                 ],
+        &#34;run&#34;        :[useful.run      ,&#34;filename&#34;             ],
+        &#34;exporter&#34;   :[exporter        ,&#34;file&#34;,                  (&#34;-r&#34;,&#34;recursive&#34;,True)],
+        &#34;importer&#34;   :[importer        ,&#34;file&#34;,                  (&#34;-r&#34;,&#34;recursive&#34;,True)],
+        &#34;edit&#34;       :[edit            ,&#34;file&#34;                 ],
+        &#34;exit&#34;       :[exit                                    ],
+        &#34;gc&#34;         :[gc                                      ],
+        &#34;grep&#34;       :[grep            ,&#34;text&#34;,&#34;file&#34;,           (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-i&#34;,&#34;ignorecase&#34;,True),(&#34;-e&#34;,&#34;regexp&#34;,True)],
+        &#34;mount&#34;      :[mountsd         ,&#34;mountpoint&#34;           ],
+        &#34;umount&#34;     :[umountsd        ,&#34;mountpoint&#34;           ],
+        &#34;temperature&#34;:[temperature                             ],
+        &#34;meminfo&#34;    :[info.meminfo                            ],
+        &#34;flashinfo&#34;  :[info.flashinfo                          ],
+        &#34;sysinfo&#34;    :[info.sysinfo                            ],
+        &#34;deepsleep&#34;  :[deepsleep       ,&#34;seconds&#34;              ],
+        &#34;ping&#34;       :[ping            ,&#34;host&#34;                 ],
+        &#34;reboot&#34;     :[reboot                                  ],
+        &#34;help&#34;       :[help                                    ],
+        &#34;man&#34;        :[man             ,&#34;command&#34;              ],
+        &#34;df&#34;         :[df              ,&#34;mountpoint&#34;           ],
+        &#34;ip2host&#34;    :[ip2host         ,&#34;ip_address&#34;           ],
+        &#34;host2ip&#34;    :[host2ip         ,&#34;hostname&#34;             ],
+        &#34;eval&#34;       :[eval_           ,&#34;string&#34;               ],
+        &#34;exec&#34;       :[exec_           ,&#34;string&#34;               ],
+        &#34;dump&#34;       :[dump_           ,&#34;filename&#34;             ],
 }
 
 if __name__ == &#34;__main__&#34;:
-        shell()</code></pre>
+        sh()</code></pre>
 </details>
 </section>
 <section>
@@ -859,7 +995,8 @@ if __name__ == &#34;__main__&#34;:
         import uasyncio
         from server.server import Server
 
-        if useful.ismicropython():
+        print(&#34;\nPress key to start command line&#34;)
+        if filesystem.ismicropython():
                 polling1 = 2
                 polling2 = 0.01
         else:
@@ -867,8 +1004,8 @@ if __name__ == &#34;__main__&#34;:
                 polling2 = 0.5
         while 1:
                 # If key pressed
-                if useful.kbhit(polling2):
-                        character = useful.getch()[0]
+                if terminal.kbhit(polling2):
+                        character = terminal.getch()[0]
 
                         # Check if character is correct to start shell
                         if not ord(character) in [0,0xA]:
@@ -882,14 +1019,15 @@ if __name__ == &#34;__main__&#34;:
                                 tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
 
                                 # Get the size of screen
-                                useful.refresh_screen_size()
+                                terminal.refresh_screen_size()
 
                                 # Start shell
                                 print(&#34;&#34;)
-                                useful.syslog(&#34;&lt;&#34;*10+&#34; Enter shell &#34; +&#34;&gt;&#34;*10)
-                                shell()
+                                logger.syslog(&#34;&lt;&#34;*10+&#34; Enter shell &#34; +&#34;&gt;&#34;*10)
+                                print(&#34;Use &#39;exit&#39; to restart server or &#39;quit&#39; to get python prompt&#34;)
+                                sh()
                                 print(&#34;&#34;)
-                                useful.syslog(&#34;&lt;&#34;*10+&#34; Exit  shell &#34; +&#34;&gt;&#34;*10)
+                                logger.syslog(&#34;&lt;&#34;*10+&#34; Exit  shell &#34; +&#34;&gt;&#34;*10)
 
                                 # Restore default path
                                 uos.chdir(&#34;/&#34;)
@@ -916,7 +1054,7 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Cat command &#34;&#34;&#34;
         try:
                 f = open(file, &#34;r&#34;)
-                height, width = useful.get_screen_size()
+                height, width = terminal.get_screen_size()
                 count = 1
                 while 1:
                         line = f.readline()
@@ -924,7 +1062,7 @@ if __name__ == &#34;__main__&#34;:
                                 break
                         message = line.replace(&#34;\t&#34;,&#34;    &#34;).rstrip()[:width]
                         count = print_part(message, width, height, count)
-                        if count == None:
+                        if count is None:
                                 break
                 f.close()
         except:
@@ -946,6 +1084,29 @@ if __name__ == &#34;__main__&#34;:
                 uos.chdir(directory)
         except:
                 print(&#34;No such file or directory &#39;%s&#39;&#34;%directory)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.check_cam_flasher"><code class="name flex">
+<span>def <span class="ident">check_cam_flasher</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if the terminal is CamFlasher</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_cam_flasher():
+        &#34;&#34;&#34; Check if the terminal is CamFlasher &#34;&#34;&#34;
+        # Request terminal device attribut
+        sys.stdout.write(b&#34;\x1B[0c&#34;)
+
+        # Wait terminal device attribut response
+        response = terminal.getch(duration=1000)
+
+        # If CamFlasher detected
+        if response == &#34;\x1B[?3;2c&#34;:
+                return True
+        return False</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.cls"><code class="name flex">
@@ -975,14 +1136,14 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Copy file &#34;&#34;&#34;
         dst = dst.replace(&#34;//&#34;,&#34;/&#34;)
         dst = dst.replace(&#34;//&#34;,&#34;/&#34;)
-        dstdir, dstfile = useful.split(dst)
+        dstdir, dstfile = filesystem.split(dst)
         try:
-                if not useful.exists(dstdir):
+                if not filesystem.exists(dstdir):
                         if dstdir != &#34;.&#34; and dstdir != &#34;&#34;:
                                 mkdir(dstdir, recursive=True, quiet=quiet)
                 src_file = open(src, &#39;rb&#39;)
                 dst_file = open(dst, &#39;wb&#39;)
-                if quiet == False:
+                if quiet is False:
                         print(&#34;cp &#39;%s&#39; -&gt; &#39;%s&#39;&#34;%(src,dst))
                 while True:
                         buf = src_file.read(256)
@@ -1007,19 +1168,16 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def cp(source, destination, recursive=False, quiet=False):
         &#34;&#34;&#34; Copy file command &#34;&#34;&#34;
-        filenames   = []
-        directories = []
-
-        if useful.isfile(source):
+        if filesystem.isfile(source):
                 copyfile(source,destination,quiet)
         else:
-                if useful.isdir(source):
+                if filesystem.isdir(source):
                         path = source
                         pattern = &#34;*&#34;
                 else:
-                        path, pattern = useful.split(source)
-                                
-                directories, filenames = useful.scandir(path, pattern, recursive)
+                        path, pattern = filesystem.split(source)
+
+                _, filenames = filesystem.scandir(path, pattern, recursive)
 
                 for src in filenames:
                         dst = destination + &#34;/&#34; + src[len(path):]
@@ -1044,7 +1202,7 @@ if __name__ == &#34;__main__&#34;:
                 else:
                         dst = True
                 set_date(offsetUTC, dst)
-        print(useful.date_to_string())
+        print(strings.date_to_string())
         del sys.modules[&#34;server.timesetting&#34;]</code></pre>
 </details>
 </dd>
@@ -1077,7 +1235,7 @@ if __name__ == &#34;__main__&#34;:
         freeSize  = status[0]*status[3]
         totalSize = status[1]*status[2]
         print(&#34;Filesystem     Free   Capacity   Used&#34;)
-        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, useful.size_to_string(freeSize,8),useful.size_to_string(totalSize,), totalSize/freeSize))</code></pre>
+        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, strings.size_to_string(freeSize,8),strings.size_to_string(totalSize,), totalSize/freeSize))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.dump_"><code class="name flex">
@@ -1091,7 +1249,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def dump_(filename):
         &#34;&#34;&#34; dump file content &#34;&#34;&#34;
-        height, width = useful.get_screen_size()
+        height, width = terminal.get_screen_size()
         width = 16
         offset = 0
         file = open(filename, &#34;rb&#34;)
@@ -1103,10 +1261,10 @@ if __name__ == &#34;__main__&#34;:
                 data = file.read(width)
                 if len(data) &lt;= 0:
                         break
-                useful.dump_line (data, line, width)
+                strings.dump_line (data, line, width)
                 offset += width
                 count = print_part(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
-                if count == None:
+                if count is None:
                         break</code></pre>
 </details>
 </dd>
@@ -1122,7 +1280,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def edit(file):
         &#34;&#34;&#34; Edit command &#34;&#34;&#34;
         global edit_class
-        if edit_class == None:
+        if edit_class is None:
                 try:
                         from shell.editor import Editor
                 except:
@@ -1205,18 +1363,19 @@ if __name__ == &#34;__main__&#34;:
                                                                 flags[command_params[paramsCount]] = arg
                                                                 paramsCount += 1
         except Exception as err:
-                # print(useful.syslog(err))
+                # print(logger.syslog(err))
                 print(err)
                 return
         try:
                 if command_name.strip() != &#34;&#34;:
                         command_function(**flags)
         except TypeError as err:
-                useful.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%command_name)
-        except KeyboardInterrupt:
+                logger.syslog(err, msg=&#34;Missing parameters for &#39;%s&#39;&#34;%command_name)
+        except KeyboardInterrupt as err:
+                logger.syslog(err)
                 print(&#34; [Canceled]&#34;)
         except Exception as err:
-                useful.syslog(err)</code></pre>
+                logger.syslog(err)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.exit"><code class="name flex">
@@ -1234,6 +1393,28 @@ if __name__ == &#34;__main__&#34;:
         shell_exited = True</code></pre>
 </details>
 </dd>
+<dt id="lib.shell.shell.exporter"><code class="name flex">
+<span>def <span class="ident">exporter</span></span>(<span>file='', recursive=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Exporter file from device to computer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exporter(file=&#34;&#34;, recursive=False):
+        &#34;&#34;&#34; Exporter file from device to computer &#34;&#34;&#34;
+        if check_cam_flasher():
+                print(&#34;Exporter start&#34;)
+                try:
+                        searchfile(file, recursive, Exporter())
+                        print (&#34;Exporter end&#34;)
+                except exchange.FileError as err:
+                        print(&#34;Exporter failed : %s&#34;%err.message)
+        else:
+                print(&#34;CamFlasher application required for this command&#34;)</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.shell.find"><code class="name flex">
 <span>def <span class="ident">find</span></span>(<span>file)</span>
 </code></dt>
@@ -1245,8 +1426,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def find(file):
         &#34;&#34;&#34; Find a file in directories &#34;&#34;&#34;
-        path, pattern = useful.split(file)
-        directories, filenames = useful.scandir(path, pattern, True)
+        filenames = searchfile(file, True)
         for filename in filenames:
                 print(filename)</code></pre>
 </details>
@@ -1329,7 +1509,7 @@ if __name__ == &#34;__main__&#34;:
                                                 message = &#34;%s:%d:%s&#34;%(filename, lineNumber, line)
                                                 message = message.rstrip()[:width]
                                                 count = print_part(message, width, height, count)
-                                                if count == None:
+                                                if count is None:
                                                         print(&#34;&#34;)
                                                         return None
                                         lineNumber += 1
@@ -1337,17 +1517,17 @@ if __name__ == &#34;__main__&#34;:
                                         break
                 return count
 
-        if useful.isfile(file):
+        if filesystem.isfile(file):
                 filenames = [file]
         else:
-                path, pattern = useful.split(file)
-                directories, filenames = useful.scandir(path, pattern, recursive)
+                path, pattern = filesystem.split(file)
+                _, filenames = filesystem.scandir(path, pattern, recursive)
 
-        height, width = useful.get_screen_size()
+        height, width = terminal.get_screen_size()
         count = 1
         for filename in filenames:
                 count = __grep(text, filename, ignorecase, regexp, width, height, count)
-                if count == None:
+                if count is None:
                         break</code></pre>
 </details>
 </dd>
@@ -1362,7 +1542,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def help():
         &#34;&#34;&#34; Help command &#34;&#34;&#34;
-        height, width = useful.get_screen_size()
+        height, width = terminal.get_screen_size()
         count = 1
         cmds = list(shell_commands.keys())
         cmds.sort()
@@ -1371,7 +1551,7 @@ if __name__ == &#34;__main__&#34;:
                 lines = &#34;-&#34;*30+&#34;\n&#34; + lines
                 for line in lines.split(&#34;\n&#34;):
                         count = print_part(line, width, height, count)
-                        if count == None:
+                        if count is None:
                                 return</code></pre>
 </details>
 </dd>
@@ -1392,6 +1572,33 @@ if __name__ == &#34;__main__&#34;:
         print(resolve_ip_address(dns, hostname))</code></pre>
 </details>
 </dd>
+<dt id="lib.shell.shell.importer"><code class="name flex">
+<span>def <span class="ident">importer</span></span>(<span>file='', recursive=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Importer file from computer to device</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def importer(file=&#34;&#34;, recursive=False):
+        &#34;&#34;&#34; Importer file from computer to device &#34;&#34;&#34;
+        if check_cam_flasher():
+                print(&#34;Importer start&#34;)
+                try:
+                        command = exchange.ImporterCommand(uos.getcwd())
+                        command.write(file, recursive, sys.stdin.buffer, sys.stdout.buffer)
+                        result = True
+                        while result:
+                                file_reader = exchange.FileReader()
+                                result = file_reader.read(uos.getcwd(), sys.stdin.buffer, sys.stdout.buffer)
+                        print (&#34;Importer end&#34;)
+                except Exception as err:
+                        logger.syslog(err)
+        else:
+                print(&#34;CamFlasher application required for this command&#34;)</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.shell.ip2host"><code class="name flex">
 <span>def <span class="ident">ip2host</span></span>(<span>ip_address)</span>
 </code></dt>
@@ -1409,26 +1616,32 @@ if __name__ == &#34;__main__&#34;:
         print(resolve_hostname(dns, ip_address))</code></pre>
 </details>
 </dd>
+<dt id="lib.shell.shell.ll"><code class="name flex">
+<span>def <span class="ident">ll</span></span>(<span>file='', recursive=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>List files long command</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ll(file=&#34;&#34;, recursive=False):
+        &#34;&#34;&#34; List files long command &#34;&#34;&#34;
+        searchfile(file, recursive, LsDisplayer(uos.getcwd(), True, True))</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.shell.ls"><code class="name flex">
 <span>def <span class="ident">ls</span></span>(<span>file='', recursive=False, long=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>List command</p></div>
+<div class="desc"><p>List files command</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def ls(file=&#34;&#34;, recursive=False, long=False):
-        &#34;&#34;&#34; List command &#34;&#34;&#34;
-        if useful.isfile(file):
-                LsDisplayer(&#34;&#34;, False, long).show(file)
-        elif file == &#34;&#34;:
-                useful.scandir(uos.getcwd(), &#34;*&#34;, recursive, LsDisplayer(uos.getcwd(), True, long))
-        elif useful.isdir(file):
-                useful.scandir(file, &#34;*&#34;, recursive, LsDisplayer(file, True, long))
-        else:
-                path, pattern = useful.split(file)
-                useful.scandir(path, pattern, recursive, LsDisplayer(path, False, long))</code></pre>
+        &#34;&#34;&#34; List files command &#34;&#34;&#34;
+        searchfile(file, recursive, LsDisplayer(uos.getcwd(), True, long))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.man"><code class="name flex">
@@ -1482,9 +1695,9 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def mkdir(directory, recursive=False, quiet=False):
         &#34;&#34;&#34; Make directory &#34;&#34;&#34;
         try:
-                if quiet == False:
+                if quiet is False:
                         print(&#34;mkdir &#39;%s&#39;&#34;%directory)
-                useful.makedir(directory, recursive)
+                filesystem.makedir(directory, recursive)
         except:
                 print(&#34;Cannot mkdir &#39;%s&#39;&#34;%directory)</code></pre>
 </details>
@@ -1602,15 +1815,15 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def print_part(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
-        if count != None and count &gt;= height:
+        if count is not None and count &gt;= height:
                 print(message,end=&#34;&#34;)
-                key = useful.getch()
+                key = terminal.getch()
                 count = 1
                 if key in [&#34;x&#34;,&#34;X&#34;,&#34;q&#34;,&#34;Q&#34;,&#34;\x1B&#34;]:
                         return None
                 print(&#34;\n&#34;, end=&#34;&#34;)
         else:
-                if count == None:
+                if count is None:
                         count = 1
                 else:
                         count += 1
@@ -1643,7 +1856,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def reboot():
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
-        useful.reboot(&#34;Reboot device&#34;)</code></pre>
+        system.reboot(&#34;Reboot device with command&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.removedir"><code class="name flex">
@@ -1658,11 +1871,11 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def removedir(directory, force=False, quiet=False, simulate=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         try:
-                if useful.exists(directory+&#34;/.DS_Store&#34;):
+                if filesystem.exists(directory+&#34;/.DS_Store&#34;):
                         rmfile(directory+&#34;/.DS_Store&#34;, quiet, force, simulate)
-                if (useful.ismicropython() or force) and simulate == False:
+                if (filesystem.ismicropython() or force) and simulate is False:
                         uos.rmdir(directory)
-                if quiet == False:
+                if quiet is False:
                         print(&#34;rmdir &#39;%s&#39;&#34;%(directory))
         except:
                 print(&#34;rmdir &#39;%s&#39; not removed&#34;%(directory))</code></pre>
@@ -1681,12 +1894,12 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Remove file command &#34;&#34;&#34;
         filenames   = []
         directories = []
-        
-        if useful.isfile(file):
+
+        if filesystem.isfile(file):
                 path = file
                 rmfile(file, force=force, quiet=quiet, simulate=simulate)
         else:
-                if useful.isdir(file):
+                if filesystem.isdir(file):
                         if recursive:
                                 directories.append(file)
                                 path = file
@@ -1695,17 +1908,17 @@ if __name__ == &#34;__main__&#34;:
                                 path = None
                                 pattern = None
                 else:
-                        path, pattern = useful.split(file)
+                        path, pattern = filesystem.split(file)
 
-                if path == None:
+                if path is None:
                         print(&#34;Cannot rm &#39;%s&#39;&#34;%file)
                 else:
-                        dirs, filenames = useful.scandir(path, pattern, recursive)
+                        dirs, filenames = filesystem.scandir(path, pattern, recursive)
                         directories += dirs
-                                        
+
                         for filename in filenames:
                                 rmfile(filename, force=force, quiet=quiet, simulate=simulate)
-                
+
                         if recursive:
                                 directories.sort()
                                 directories.reverse()
@@ -1725,13 +1938,13 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
-        if recursive == False:
+        if recursive is False:
                 removedir(directory, force=force, quiet=quiet, simulate=simulate)
         else:
                 directories = [directory]
                 d = directory
                 while 1:
-                        parts = useful.split(d)
+                        parts = filesystem.split(d)
                         if parts[1] == &#34;&#34; or parts[0] == &#34;&#34;:
                                 break
                         directories.append(parts[0])
@@ -1741,7 +1954,7 @@ if __name__ == &#34;__main__&#34;:
                 if sdcard.SdCard.get_mountpoint() in directories:
                         directories.remove(sdcard.SdCard.get_mountpoint())
                 for d in directories:
-                        if useful.exists(d) and d != &#34;.&#34;:
+                        if filesystem.exists(d) and d != &#34;.&#34;:
                                 removedir(d, force=force, quiet=quiet, simulate=simulate)</code></pre>
 </details>
 </dd>
@@ -1757,12 +1970,47 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def rmfile(filename, quiet=False, force=False, simulate=False):
         &#34;&#34;&#34; Remove file &#34;&#34;&#34;
         try:
-                if (useful.ismicropython() or force) and simulate == False:
+                if (filesystem.ismicropython() or force) and simulate is False:
                         uos.remove(filename)
-                if quiet == False:
+                if quiet is False:
                         print(&#34;rm &#39;%s&#39;&#34;%(filename))
         except:
                 print(&#34;rm &#39;%s&#39; not removed&#34;%(filename))</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.searchfile"><code class="name flex">
+<span>def <span class="ident">searchfile</span></span>(<span>file, recursive, obj=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Search file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def searchfile(file, recursive, obj = None):
+        &#34;&#34;&#34; Search file &#34;&#34;&#34;
+        p = filesystem.abspath(uos.getcwd(), file)
+        filenames = []
+        try:
+                if file == &#34;&#34;:
+                        _,filenames = filesystem.scandir(uos.getcwd(), &#34;*&#34;, recursive, obj)
+                elif filesystem.isfile(p):
+                        if obj is not None:
+                                obj.show_dir(False)
+                                obj.show(p)
+                        filenames = [p]
+                elif filesystem.isdir(p):
+                        _, filenames = filesystem.scandir(p, &#34;*&#34;, recursive, obj)
+                else:
+                        path, pattern = filesystem.split(p)
+                        if obj is not None:
+                                obj.show_dir(False)
+                        _, filenames = filesystem.scandir(path, pattern, recursive, obj)
+        except:
+                pass
+        if len(filenames) == 0 and file != &#34;&#34;:
+                print(&#34;%s : No such file or directory&#34;%file)
+        return filenames</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.setdate"><code class="name flex">
@@ -1805,14 +2053,14 @@ if __name__ == &#34;__main__&#34;:
                         failed = True
         except Exception as err:
                 failed = True
-                useful.syslog(err)
+                logger.syslog(err)
 
-        if failed == True:
+        if failed is True:
                 print(&#39;Expected format &#34;YYYY/MM/DD hh:mm:ss&#34;&#39;)</code></pre>
 </details>
 </dd>
-<dt id="lib.shell.shell.shell"><code class="name flex">
-<span>def <span class="ident">shell</span></span>(<span>)</span>
+<dt id="lib.shell.shell.sh"><code class="name flex">
+<span>def <span class="ident">sh</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Start the shell</p></div>
@@ -1820,12 +2068,12 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def shell():
+<pre><code class="python">def sh():
         &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
         global shell_exited
 
         shell_exited = False
-        while shell_exited == False:
+        while shell_exited is False:
                 try:
                         commandLine = &#34;&#34;
                         commandLine = input(&#34;%s=&gt; &#34;%os.getcwd())
@@ -1852,7 +2100,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def temperature():
         &#34;&#34;&#34; Get the internal temperature &#34;&#34;&#34;
-        celcius, farenheit = useful.temperature()
+        celcius, farenheit = info.temperature()
         print(&#34;%.2f°C, %d°F&#34;%(celcius, farenheit))</code></pre>
 </details>
 </dd>
@@ -1885,7 +2133,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def uptime():
         &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
-        print(useful.uptime())</code></pre>
+        print(info.uptime())</code></pre>
 </details>
 </dd>
 </dl>
@@ -1893,6 +2141,101 @@ if __name__ == &#34;__main__&#34;:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="lib.shell.shell.Exporter"><code class="flex name class">
+<span>class <span class="ident">Exporter</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Exporter file to camflasher </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Exporter:
+        &#34;&#34;&#34; Exporter file to camflasher &#34;&#34;&#34;
+        def __init__(self):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+
+        def send_file(self, path):
+                &#34;&#34;&#34; Send the file &#34;&#34;&#34;
+                result = True
+                fileinfo = filesystem.fileinfo(path)
+
+                # If a file
+                if fileinfo[0] &amp; 0x4000 != 0x4000:
+                        file_write = exchange.FileWriter()
+                        if filesystem.exists(path):
+                                sys.stdout.buffer.write(&#34;࿊&#34;.encode(&#34;utf8&#34;))
+                                result = file_write.write(path, sys.stdin.buffer, sys.stdout.buffer)
+                return result
+
+        def show(self, path):
+                &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
+                for _ in range(3):
+                        # If the send successful exit, else retry three time
+                        if self.send_file(path) is True:
+                                break
+
+        def show_dir(self, state):
+                &#34;&#34;&#34; Indicates if the directory must show &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.shell.shell.Exporter.send_file"><code class="name flex">
+<span>def <span class="ident">send_file</span></span>(<span>self, path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send the file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_file(self, path):
+        &#34;&#34;&#34; Send the file &#34;&#34;&#34;
+        result = True
+        fileinfo = filesystem.fileinfo(path)
+
+        # If a file
+        if fileinfo[0] &amp; 0x4000 != 0x4000:
+                file_write = exchange.FileWriter()
+                if filesystem.exists(path):
+                        sys.stdout.buffer.write(&#34;࿊&#34;.encode(&#34;utf8&#34;))
+                        result = file_write.write(path, sys.stdin.buffer, sys.stdout.buffer)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.Exporter.show"><code class="name flex">
+<span>def <span class="ident">show</span></span>(<span>self, path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Show the information of a file or directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def show(self, path):
+        &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
+        for _ in range(3):
+                # If the send successful exit, else retry three time
+                if self.send_file(path) is True:
+                        break</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.Exporter.show_dir"><code class="name flex">
+<span>def <span class="ident">show_dir</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the directory must show</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def show_dir(self, state):
+        &#34;&#34;&#34; Indicates if the directory must show &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="lib.shell.shell.LsDisplayer"><code class="flex name class">
 <span>class <span class="ident">LsDisplayer</span></span>
 <span>(</span><span>path, showdir, long)</span>
@@ -1908,7 +2251,7 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Ls displayer class &#34;&#34;&#34;
         def __init__(self, path, showdir, long):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.height, self.width = useful.get_screen_size()
+                self.height, self.width = terminal.get_screen_size()
                 self.count = 1
                 self.long = long
                 self.path = path
@@ -1925,7 +2268,7 @@ if __name__ == &#34;__main__&#34;:
 
         def show(self, path):
                 &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
-                fileinfo = useful.fileinfo(path)
+                fileinfo = filesystem.fileinfo(path)
                 date_ = fileinfo[8]
                 size = fileinfo[6]
 
@@ -1933,19 +2276,23 @@ if __name__ == &#34;__main__&#34;:
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
                                 if self.long:
-                                        message = &#34;%s %s [%s]&#34;%(useful.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
+                                        message = &#34;%s %s [%s]&#34;%(strings.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
                                 else:
                                         message = &#34;[%s]&#34;%self.purge_path(path)
                                 self.count = print_part(message, self.width, self.height, self.count)
                 else:
                         if self.long:
-                                fileinfo = useful.fileinfo(path)
+                                fileinfo = filesystem.fileinfo(path)
                                 date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                message = &#34;%s %s %s&#34;%(useful.date_to_string(date_),useful.size_to_string(size),self.purge_path(path))
+                                message = &#34;%s %s %s&#34;%(strings.date_to_string(date_),strings.size_to_string(size),self.purge_path(path))
                         else:
                                 message = self.purge_path(path)
-                        self.count = print_part(message, self.width, self.height, self.count)</code></pre>
+                        self.count = print_part(message, self.width, self.height, self.count)
+
+        def show_dir(self, state):
+                &#34;&#34;&#34; Indicates if the directory must show &#34;&#34;&#34;
+                self.showdir = state</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -1979,7 +2326,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def show(self, path):
         &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
-        fileinfo = useful.fileinfo(path)
+        fileinfo = filesystem.fileinfo(path)
         date_ = fileinfo[8]
         size = fileinfo[6]
 
@@ -1987,19 +2334,33 @@ if __name__ == &#34;__main__&#34;:
         if fileinfo[0] &amp; 0x4000 == 0x4000:
                 if self.showdir:
                         if self.long:
-                                message = &#34;%s %s [%s]&#34;%(useful.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
+                                message = &#34;%s %s [%s]&#34;%(strings.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
                         else:
                                 message = &#34;[%s]&#34;%self.purge_path(path)
                         self.count = print_part(message, self.width, self.height, self.count)
         else:
                 if self.long:
-                        fileinfo = useful.fileinfo(path)
+                        fileinfo = filesystem.fileinfo(path)
                         date_ = fileinfo[8]
                         size = fileinfo[6]
-                        message = &#34;%s %s %s&#34;%(useful.date_to_string(date_),useful.size_to_string(size),self.purge_path(path))
+                        message = &#34;%s %s %s&#34;%(strings.date_to_string(date_),strings.size_to_string(size),self.purge_path(path))
                 else:
                         message = self.purge_path(path)
                 self.count = print_part(message, self.width, self.height, self.count)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.LsDisplayer.show_dir"><code class="name flex">
+<span>def <span class="ident">show_dir</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the directory must show</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def show_dir(self, state):
+        &#34;&#34;&#34; Indicates if the directory must show &#34;&#34;&#34;
+        self.showdir = state</code></pre>
 </details>
 </dd>
 </dl>
@@ -2023,6 +2384,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.async_shell" href="#lib.shell.shell.async_shell">async_shell</a></code></li>
 <li><code><a title="lib.shell.shell.cat" href="#lib.shell.shell.cat">cat</a></code></li>
 <li><code><a title="lib.shell.shell.cd" href="#lib.shell.shell.cd">cd</a></code></li>
+<li><code><a title="lib.shell.shell.check_cam_flasher" href="#lib.shell.shell.check_cam_flasher">check_cam_flasher</a></code></li>
 <li><code><a title="lib.shell.shell.cls" href="#lib.shell.shell.cls">cls</a></code></li>
 <li><code><a title="lib.shell.shell.copyfile" href="#lib.shell.shell.copyfile">copyfile</a></code></li>
 <li><code><a title="lib.shell.shell.cp" href="#lib.shell.shell.cp">cp</a></code></li>
@@ -2035,13 +2397,16 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.exec_" href="#lib.shell.shell.exec_">exec_</a></code></li>
 <li><code><a title="lib.shell.shell.exec_command" href="#lib.shell.shell.exec_command">exec_command</a></code></li>
 <li><code><a title="lib.shell.shell.exit" href="#lib.shell.shell.exit">exit</a></code></li>
+<li><code><a title="lib.shell.shell.exporter" href="#lib.shell.shell.exporter">exporter</a></code></li>
 <li><code><a title="lib.shell.shell.find" href="#lib.shell.shell.find">find</a></code></li>
 <li><code><a title="lib.shell.shell.gc" href="#lib.shell.shell.gc">gc</a></code></li>
 <li><code><a title="lib.shell.shell.get_command" href="#lib.shell.shell.get_command">get_command</a></code></li>
 <li><code><a title="lib.shell.shell.grep" href="#lib.shell.shell.grep">grep</a></code></li>
 <li><code><a title="lib.shell.shell.help" href="#lib.shell.shell.help">help</a></code></li>
 <li><code><a title="lib.shell.shell.host2ip" href="#lib.shell.shell.host2ip">host2ip</a></code></li>
+<li><code><a title="lib.shell.shell.importer" href="#lib.shell.shell.importer">importer</a></code></li>
 <li><code><a title="lib.shell.shell.ip2host" href="#lib.shell.shell.ip2host">ip2host</a></code></li>
+<li><code><a title="lib.shell.shell.ll" href="#lib.shell.shell.ll">ll</a></code></li>
 <li><code><a title="lib.shell.shell.ls" href="#lib.shell.shell.ls">ls</a></code></li>
 <li><code><a title="lib.shell.shell.man" href="#lib.shell.shell.man">man</a></code></li>
 <li><code><a title="lib.shell.shell.man_one" href="#lib.shell.shell.man_one">man_one</a></code></li>
@@ -2057,8 +2422,9 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.rm" href="#lib.shell.shell.rm">rm</a></code></li>
 <li><code><a title="lib.shell.shell.rmdir" href="#lib.shell.shell.rmdir">rmdir</a></code></li>
 <li><code><a title="lib.shell.shell.rmfile" href="#lib.shell.shell.rmfile">rmfile</a></code></li>
+<li><code><a title="lib.shell.shell.searchfile" href="#lib.shell.shell.searchfile">searchfile</a></code></li>
 <li><code><a title="lib.shell.shell.setdate" href="#lib.shell.shell.setdate">setdate</a></code></li>
-<li><code><a title="lib.shell.shell.shell" href="#lib.shell.shell.shell">shell</a></code></li>
+<li><code><a title="lib.shell.shell.sh" href="#lib.shell.shell.sh">sh</a></code></li>
 <li><code><a title="lib.shell.shell.temperature" href="#lib.shell.shell.temperature">temperature</a></code></li>
 <li><code><a title="lib.shell.shell.umountsd" href="#lib.shell.shell.umountsd">umountsd</a></code></li>
 <li><code><a title="lib.shell.shell.uptime" href="#lib.shell.shell.uptime">uptime</a></code></li>
@@ -2067,10 +2433,19 @@ if __name__ == &#34;__main__&#34;:
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="lib.shell.shell.Exporter" href="#lib.shell.shell.Exporter">Exporter</a></code></h4>
+<ul class="">
+<li><code><a title="lib.shell.shell.Exporter.send_file" href="#lib.shell.shell.Exporter.send_file">send_file</a></code></li>
+<li><code><a title="lib.shell.shell.Exporter.show" href="#lib.shell.shell.Exporter.show">show</a></code></li>
+<li><code><a title="lib.shell.shell.Exporter.show_dir" href="#lib.shell.shell.Exporter.show_dir">show_dir</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="lib.shell.shell.LsDisplayer" href="#lib.shell.shell.LsDisplayer">LsDisplayer</a></code></h4>
 <ul class="">
 <li><code><a title="lib.shell.shell.LsDisplayer.purge_path" href="#lib.shell.shell.LsDisplayer.purge_path">purge_path</a></code></li>
 <li><code><a title="lib.shell.shell.LsDisplayer.show" href="#lib.shell.shell.LsDisplayer.show">show</a></code></li>
+<li><code><a title="lib.shell.shell.LsDisplayer.show_dir" href="#lib.shell.shell.LsDisplayer.show_dir">show_dir</a></code></li>
 </ul>
 </li>
 </ul>

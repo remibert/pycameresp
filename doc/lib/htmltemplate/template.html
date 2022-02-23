@@ -30,7 +30,7 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Base class of html templates &#34;&#34;&#34;
-from tools import useful
+from tools import logger
 
 class Template:
         &#34;&#34;&#34; Base class of html templates &#34;&#34;&#34;
@@ -69,7 +69,7 @@ class Template:
                                                                 await item.write(file)
                         await file.write(self.get_end(self))
                 except Exception as err:
-                        await file.write(useful.html_exception(err))</code></pre>
+                        await file.write(logger.html_exception(err))</code></pre>
 </details>
 </section>
 <section>
@@ -128,7 +128,7 @@ class Template:
                                                                 await item.write(file)
                         await file.write(self.get_end(self))
                 except Exception as err:
-                        await file.write(useful.html_exception(err))</code></pre>
+                        await file.write(logger.html_exception(err))</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -176,7 +176,7 @@ class Template:
                                                         await item.write(file)
                 await file.write(self.get_end(self))
         except Exception as err:
-                await file.write(useful.html_exception(err))</code></pre>
+                await file.write(logger.html_exception(err))</code></pre>
 </details>
 </dd>
 </dl>

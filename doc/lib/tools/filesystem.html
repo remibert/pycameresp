@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.tools.filesystem API documentation</title>
+<meta name="description" content="Miscellaneous path functions" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.tools.filesystem</code></h1>
+</header>
+<section id="section-intro">
+<p>Miscellaneous path functions</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+&#34;&#34;&#34; Miscellaneous path functions &#34;&#34;&#34;
+import os
+import sys
+
+try:
+        import fnmatch
+except:
+        from tools import fnmatch
+
+try:
+        import uos
+except:
+        pass
+
+def exists(filename):
+        &#34;&#34;&#34; Test if the filename existing &#34;&#34;&#34;
+        try:
+                _ = os.lstat(filename)
+                return True
+        except:
+                try:
+                        _ = os.stat(filename)
+                        return True
+                except:
+                        pass
+        return False
+
+previousFileInfo = []
+def fileinfo(path):
+        &#34;&#34;&#34; Get the file informations &#34;&#34;&#34;
+        global previousFileInfo
+        if len(previousFileInfo) == 0:
+                previousFileInfo = [path, os.stat(path)]
+        elif previousFileInfo[0] != path:
+                previousFileInfo = [path, os.stat(path)]
+        return previousFileInfo[1]
+
+def isdir(path):
+        &#34;&#34;&#34; Indicates if the path is a directory &#34;&#34;&#34;
+        try:
+                if fileinfo(path)[0] &amp; 0x4000 == 0x4000:
+                        return True
+        except:
+                pass
+        return False
+
+def isfile(path):
+        &#34;&#34;&#34; Indicates if the path is a file &#34;&#34;&#34;
+        try:
+                if fileinfo(path)[0] &amp; 0x4000 == 0:
+                        return True
+        except:
+                pass
+        return False
+
+def filesize(path):
+        &#34;&#34;&#34; Get the file size &#34;&#34;&#34;
+        info = fileinfo(path)
+        return info[6]
+
+def filetime(path):
+        &#34;&#34;&#34; Get the file modified time &#34;&#34;&#34;
+        return fileinfo(path)[8]
+
+def splitext(p):
+        &#34;&#34;&#34; Split file extension &#34;&#34;&#34;
+        sep=&#39;\\&#39;
+        altsep = &#39;/&#39;
+        extsep = &#39;.&#39;
+        sepIndex = p.rfind(sep)
+        if altsep:
+                altsepIndex = p.rfind(altsep)
+                sepIndex = max(sepIndex, altsepIndex)
+
+        dotIndex = p.rfind(extsep)
+        if dotIndex &gt; sepIndex:
+                filenameIndex = sepIndex + 1
+                while filenameIndex &lt; dotIndex:
+                        if p[filenameIndex:filenameIndex+1] != extsep:
+                                return p[:dotIndex], p[dotIndex:]
+                        filenameIndex += 1
+        return p, p[:0]
+
+def split(p):
+        &#34;&#34;&#34; Split file &#34;&#34;&#34;
+        sep = &#34;/&#34;
+        i = p.rfind(sep) + 1
+        head, tail = p[:i], p[i:]
+        if head and head != sep*len(head):
+                head = head.rstrip(sep)
+        return head, tail
+
+def makedir(directory, recursive=False):
+        &#34;&#34;&#34; Make directory recursively &#34;&#34;&#34;
+        if recursive is False:
+                os.mkdir(directory)
+        else:
+                directories = [directory]
+                while 1:
+                        parts = split(directory)
+                        if parts[1] == &#34;&#34; or parts[0] == &#34;&#34;:
+                                break
+                        directories.append(parts[0])
+                        directory = parts[0]
+
+                directories.reverse()
+                for d in directories:
+                        if not(exists(d)):
+                                os.mkdir(d)
+
+def abspath(cwd, payload):
+        &#34;&#34;&#34; Get the absolute path &#34;&#34;&#34;
+        # Just a few special cases &#34;..&#34;, &#34;.&#34; and &#34;&#34;
+        # If payload start&#39;s with /, set cwd to /
+        # and consider the remainder a relative path
+        if payload.startswith(&#39;/&#39;):
+                cwd = &#34;/&#34;
+        for token in payload.split(&#34;/&#34;):
+                if token == &#39;..&#39;:
+                        if cwd != &#39;/&#39;:
+                                cwd = &#39;/&#39;.join(cwd.split(&#39;/&#39;)[:-1])
+                                if cwd == &#39;&#39;:
+                                        cwd = &#39;/&#39;
+                elif token != &#39;.&#39; and token != &#39;&#39;:
+                        if cwd == &#39;/&#39;:
+                                cwd += token
+                        else:
+                                cwd = cwd + &#39;/&#39; + token
+        return cwd
+
+def abspathbytes(cwd, payload):
+        &#34;&#34;&#34; Get the absolute path into a bytes &#34;&#34;&#34;
+        # Just a few special cases &#34;..&#34;, &#34;.&#34; and &#34;&#34;
+        # If payload start&#39;s with /, set cwd to /
+        # and consider the remainder a relative path
+        if payload.startswith(b&#39;/&#39;):
+                cwd = b&#34;/&#34;
+        for token in payload.split(b&#34;/&#34;):
+                if token == b&#39;..&#39;:
+                        if cwd != b&#39;/&#39;:
+                                cwd = b&#39;/&#39;.join(cwd.split(b&#39;/&#39;)[:-1])
+                                if cwd == b&#39;&#39;:
+                                        cwd = b&#39;/&#39;
+                elif token != b&#39;.&#39; and token != b&#39;&#39;:
+                        if cwd == b&#39;/&#39;:
+                                cwd += token
+                        else:
+                                cwd = cwd + b&#39;/&#39; + token
+        return cwd
+
+def remove(filename):
+        &#34;&#34;&#34; Remove file existing &#34;&#34;&#34;
+        try:
+                uos.remove(filename)
+        except:
+                pass
+
+def rename(old, new):
+        &#34;&#34;&#34; Rename file &#34;&#34;&#34;
+        if exists(new):
+                remove(new)
+        try:
+                uos.rename(old, new)
+        except:
+                pass
+
+def ismicropython():
+        &#34;&#34;&#34; Indicates if the python is micropython &#34;&#34;&#34;
+        if sys.implementation.name == &#34;micropython&#34;:
+                return True
+        return False
+
+def scandir(path, pattern, recursive, displayer=None):
+        &#34;&#34;&#34; Scan recursively a directory &#34;&#34;&#34;
+        filenames   = []
+        directories = []
+        if path == &#34;&#34;:
+                path = &#34;.&#34;
+        if path is not None and pattern is not None:
+                for file in os.listdir(path):
+                        if path != &#34;&#34;:
+                                filename = path + &#34;/&#34; + file
+                        else:
+                                filename = file
+                        filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                        filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                        if isdir(filename):
+                                if displayer:
+                                        displayer.show(filename)
+                                else:
+                                        directories.append(filename)
+                                if recursive:
+                                        dirs,fils = scandir(filename, pattern, recursive, displayer)
+                                        filenames += fils
+                                        directories += dirs
+                        else:
+                                if fnmatch.fnmatch(file, pattern):
+                                        if displayer:
+                                                displayer.show(filename)
+                                                filenames = [&#34;&#34;]
+                                        else:
+                                                filenames.append(filename)
+        return directories, filenames
+
+def prefix(files):
+        &#34;&#34;&#34; Get the common prefix of all files &#34;&#34;&#34;
+        # Initializes counters
+        counters = []
+
+        # For all files
+        for file in files:
+                # Split the file name into a piece
+                paths = file.split(&#34;/&#34;)
+
+                # For each piece
+                length = len(paths)
+                for i in range(0,length):
+                        try:
+                                try:
+                                        # Test if counters exist
+                                        counters[i][paths[i]] += 1
+                                except:
+                                        # Creates a path counters
+                                        counters[i][paths[i]] = 1
+                        except:
+                                # Adds a new level of depth
+                                counters.append({paths[i] : 1})
+
+        # Constructs the prefix of the list of files
+        try:
+                result = &#34;&#34;
+                amount = list(counters[0].values())[0]
+                for counter in counters:
+                        if len(counter.keys()) == 1 and list(counter.values())[0] == amount:
+                                result += list(counter.keys())[0] + &#34;/&#34;
+                        else:
+                                return result [:-1]
+                return result
+        except IndexError:
+                return &#34;&#34;
+
+def normpath(path):
+        # Extract from https://github.com/python/cpython/blob/main/Lib/posixpath.py
+        &#34;&#34;&#34;Normalize path, eliminating double slashes, etc.&#34;&#34;&#34;
+        # path = os.fspath(path)
+        if isinstance(path, bytes):
+                sep = b&#39;/&#39;
+                empty = b&#39;&#39;
+                dot = b&#39;.&#39;
+                dotdot = b&#39;..&#39;
+        else:
+                sep = &#39;/&#39;
+                empty = &#39;&#39;
+                dot = &#39;.&#39;
+                dotdot = &#39;..&#39;
+        if path == empty:
+                return dot
+        initial_slashes = path.startswith(sep)
+        # POSIX allows one or two initial slashes, but treats three or more
+        # as single slash.
+        # (see http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_13)
+        if (initial_slashes and
+                path.startswith(sep*2) and not path.startswith(sep*3)):
+                initial_slashes = 2
+        comps = path.split(sep)
+        new_comps = []
+        for comp in comps:
+                if comp in (empty, dot):
+                        continue
+                if (comp != dotdot or (not initial_slashes and not new_comps) or
+                                (new_comps and new_comps[-1] == dotdot)):
+                        new_comps.append(comp)
+                elif new_comps:
+                        new_comps.pop()
+        comps = new_comps
+        path = sep.join(comps)
+        if initial_slashes:
+                path = sep*initial_slashes + path
+        return path or dot</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.tools.filesystem.abspath"><code class="name flex">
+<span>def <span class="ident">abspath</span></span>(<span>cwd, payload)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the absolute path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def abspath(cwd, payload):
+        &#34;&#34;&#34; Get the absolute path &#34;&#34;&#34;
+        # Just a few special cases &#34;..&#34;, &#34;.&#34; and &#34;&#34;
+        # If payload start&#39;s with /, set cwd to /
+        # and consider the remainder a relative path
+        if payload.startswith(&#39;/&#39;):
+                cwd = &#34;/&#34;
+        for token in payload.split(&#34;/&#34;):
+                if token == &#39;..&#39;:
+                        if cwd != &#39;/&#39;:
+                                cwd = &#39;/&#39;.join(cwd.split(&#39;/&#39;)[:-1])
+                                if cwd == &#39;&#39;:
+                                        cwd = &#39;/&#39;
+                elif token != &#39;.&#39; and token != &#39;&#39;:
+                        if cwd == &#39;/&#39;:
+                                cwd += token
+                        else:
+                                cwd = cwd + &#39;/&#39; + token
+        return cwd</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.abspathbytes"><code class="name flex">
+<span>def <span class="ident">abspathbytes</span></span>(<span>cwd, payload)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the absolute path into a bytes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def abspathbytes(cwd, payload):
+        &#34;&#34;&#34; Get the absolute path into a bytes &#34;&#34;&#34;
+        # Just a few special cases &#34;..&#34;, &#34;.&#34; and &#34;&#34;
+        # If payload start&#39;s with /, set cwd to /
+        # and consider the remainder a relative path
+        if payload.startswith(b&#39;/&#39;):
+                cwd = b&#34;/&#34;
+        for token in payload.split(b&#34;/&#34;):
+                if token == b&#39;..&#39;:
+                        if cwd != b&#39;/&#39;:
+                                cwd = b&#39;/&#39;.join(cwd.split(b&#39;/&#39;)[:-1])
+                                if cwd == b&#39;&#39;:
+                                        cwd = b&#39;/&#39;
+                elif token != b&#39;.&#39; and token != b&#39;&#39;:
+                        if cwd == b&#39;/&#39;:
+                                cwd += token
+                        else:
+                                cwd = cwd + b&#39;/&#39; + token
+        return cwd</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.exists"><code class="name flex">
+<span>def <span class="ident">exists</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Test if the filename existing</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exists(filename):
+        &#34;&#34;&#34; Test if the filename existing &#34;&#34;&#34;
+        try:
+                _ = os.lstat(filename)
+                return True
+        except:
+                try:
+                        _ = os.stat(filename)
+                        return True
+                except:
+                        pass
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.fileinfo"><code class="name flex">
+<span>def <span class="ident">fileinfo</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the file informations</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def fileinfo(path):
+        &#34;&#34;&#34; Get the file informations &#34;&#34;&#34;
+        global previousFileInfo
+        if len(previousFileInfo) == 0:
+                previousFileInfo = [path, os.stat(path)]
+        elif previousFileInfo[0] != path:
+                previousFileInfo = [path, os.stat(path)]
+        return previousFileInfo[1]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.filesize"><code class="name flex">
+<span>def <span class="ident">filesize</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the file size</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filesize(path):
+        &#34;&#34;&#34; Get the file size &#34;&#34;&#34;
+        info = fileinfo(path)
+        return info[6]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.filetime"><code class="name flex">
+<span>def <span class="ident">filetime</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the file modified time</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filetime(path):
+        &#34;&#34;&#34; Get the file modified time &#34;&#34;&#34;
+        return fileinfo(path)[8]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.isdir"><code class="name flex">
+<span>def <span class="ident">isdir</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the path is a directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isdir(path):
+        &#34;&#34;&#34; Indicates if the path is a directory &#34;&#34;&#34;
+        try:
+                if fileinfo(path)[0] &amp; 0x4000 == 0x4000:
+                        return True
+        except:
+                pass
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.isfile"><code class="name flex">
+<span>def <span class="ident">isfile</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the path is a file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def isfile(path):
+        &#34;&#34;&#34; Indicates if the path is a file &#34;&#34;&#34;
+        try:
+                if fileinfo(path)[0] &amp; 0x4000 == 0:
+                        return True
+        except:
+                pass
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.ismicropython"><code class="name flex">
+<span>def <span class="ident">ismicropython</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the python is micropython</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ismicropython():
+        &#34;&#34;&#34; Indicates if the python is micropython &#34;&#34;&#34;
+        if sys.implementation.name == &#34;micropython&#34;:
+                return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.makedir"><code class="name flex">
+<span>def <span class="ident">makedir</span></span>(<span>directory, recursive=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Make directory recursively</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def makedir(directory, recursive=False):
+        &#34;&#34;&#34; Make directory recursively &#34;&#34;&#34;
+        if recursive is False:
+                os.mkdir(directory)
+        else:
+                directories = [directory]
+                while 1:
+                        parts = split(directory)
+                        if parts[1] == &#34;&#34; or parts[0] == &#34;&#34;:
+                                break
+                        directories.append(parts[0])
+                        directory = parts[0]
+
+                directories.reverse()
+                for d in directories:
+                        if not(exists(d)):
+                                os.mkdir(d)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.normpath"><code class="name flex">
+<span>def <span class="ident">normpath</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Normalize path, eliminating double slashes, etc.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def normpath(path):
+        # Extract from https://github.com/python/cpython/blob/main/Lib/posixpath.py
+        &#34;&#34;&#34;Normalize path, eliminating double slashes, etc.&#34;&#34;&#34;
+        # path = os.fspath(path)
+        if isinstance(path, bytes):
+                sep = b&#39;/&#39;
+                empty = b&#39;&#39;
+                dot = b&#39;.&#39;
+                dotdot = b&#39;..&#39;
+        else:
+                sep = &#39;/&#39;
+                empty = &#39;&#39;
+                dot = &#39;.&#39;
+                dotdot = &#39;..&#39;
+        if path == empty:
+                return dot
+        initial_slashes = path.startswith(sep)
+        # POSIX allows one or two initial slashes, but treats three or more
+        # as single slash.
+        # (see http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_13)
+        if (initial_slashes and
+                path.startswith(sep*2) and not path.startswith(sep*3)):
+                initial_slashes = 2
+        comps = path.split(sep)
+        new_comps = []
+        for comp in comps:
+                if comp in (empty, dot):
+                        continue
+                if (comp != dotdot or (not initial_slashes and not new_comps) or
+                                (new_comps and new_comps[-1] == dotdot)):
+                        new_comps.append(comp)
+                elif new_comps:
+                        new_comps.pop()
+        comps = new_comps
+        path = sep.join(comps)
+        if initial_slashes:
+                path = sep*initial_slashes + path
+        return path or dot</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.prefix"><code class="name flex">
+<span>def <span class="ident">prefix</span></span>(<span>files)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the common prefix of all files</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def prefix(files):
+        &#34;&#34;&#34; Get the common prefix of all files &#34;&#34;&#34;
+        # Initializes counters
+        counters = []
+
+        # For all files
+        for file in files:
+                # Split the file name into a piece
+                paths = file.split(&#34;/&#34;)
+
+                # For each piece
+                length = len(paths)
+                for i in range(0,length):
+                        try:
+                                try:
+                                        # Test if counters exist
+                                        counters[i][paths[i]] += 1
+                                except:
+                                        # Creates a path counters
+                                        counters[i][paths[i]] = 1
+                        except:
+                                # Adds a new level of depth
+                                counters.append({paths[i] : 1})
+
+        # Constructs the prefix of the list of files
+        try:
+                result = &#34;&#34;
+                amount = list(counters[0].values())[0]
+                for counter in counters:
+                        if len(counter.keys()) == 1 and list(counter.values())[0] == amount:
+                                result += list(counter.keys())[0] + &#34;/&#34;
+                        else:
+                                return result [:-1]
+                return result
+        except IndexError:
+                return &#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.remove"><code class="name flex">
+<span>def <span class="ident">remove</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Remove file existing</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove(filename):
+        &#34;&#34;&#34; Remove file existing &#34;&#34;&#34;
+        try:
+                uos.remove(filename)
+        except:
+                pass</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.rename"><code class="name flex">
+<span>def <span class="ident">rename</span></span>(<span>old, new)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Rename file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def rename(old, new):
+        &#34;&#34;&#34; Rename file &#34;&#34;&#34;
+        if exists(new):
+                remove(new)
+        try:
+                uos.rename(old, new)
+        except:
+                pass</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.scandir"><code class="name flex">
+<span>def <span class="ident">scandir</span></span>(<span>path, pattern, recursive, displayer=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Scan recursively a directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def scandir(path, pattern, recursive, displayer=None):
+        &#34;&#34;&#34; Scan recursively a directory &#34;&#34;&#34;
+        filenames   = []
+        directories = []
+        if path == &#34;&#34;:
+                path = &#34;.&#34;
+        if path is not None and pattern is not None:
+                for file in os.listdir(path):
+                        if path != &#34;&#34;:
+                                filename = path + &#34;/&#34; + file
+                        else:
+                                filename = file
+                        filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                        filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                        if isdir(filename):
+                                if displayer:
+                                        displayer.show(filename)
+                                else:
+                                        directories.append(filename)
+                                if recursive:
+                                        dirs,fils = scandir(filename, pattern, recursive, displayer)
+                                        filenames += fils
+                                        directories += dirs
+                        else:
+                                if fnmatch.fnmatch(file, pattern):
+                                        if displayer:
+                                                displayer.show(filename)
+                                                filenames = [&#34;&#34;]
+                                        else:
+                                                filenames.append(filename)
+        return directories, filenames</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.split"><code class="name flex">
+<span>def <span class="ident">split</span></span>(<span>p)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Split file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def split(p):
+        &#34;&#34;&#34; Split file &#34;&#34;&#34;
+        sep = &#34;/&#34;
+        i = p.rfind(sep) + 1
+        head, tail = p[:i], p[i:]
+        if head and head != sep*len(head):
+                head = head.rstrip(sep)
+        return head, tail</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.filesystem.splitext"><code class="name flex">
+<span>def <span class="ident">splitext</span></span>(<span>p)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Split file extension</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def splitext(p):
+        &#34;&#34;&#34; Split file extension &#34;&#34;&#34;
+        sep=&#39;\\&#39;
+        altsep = &#39;/&#39;
+        extsep = &#39;.&#39;
+        sepIndex = p.rfind(sep)
+        if altsep:
+                altsepIndex = p.rfind(altsep)
+                sepIndex = max(sepIndex, altsepIndex)
+
+        dotIndex = p.rfind(extsep)
+        if dotIndex &gt; sepIndex:
+                filenameIndex = sepIndex + 1
+                while filenameIndex &lt; dotIndex:
+                        if p[filenameIndex:filenameIndex+1] != extsep:
+                                return p[:dotIndex], p[dotIndex:]
+                        filenameIndex += 1
+        return p, p[:0]</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.tools" href="index.html">lib.tools</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="lib.tools.filesystem.abspath" href="#lib.tools.filesystem.abspath">abspath</a></code></li>
+<li><code><a title="lib.tools.filesystem.abspathbytes" href="#lib.tools.filesystem.abspathbytes">abspathbytes</a></code></li>
+<li><code><a title="lib.tools.filesystem.exists" href="#lib.tools.filesystem.exists">exists</a></code></li>
+<li><code><a title="lib.tools.filesystem.fileinfo" href="#lib.tools.filesystem.fileinfo">fileinfo</a></code></li>
+<li><code><a title="lib.tools.filesystem.filesize" href="#lib.tools.filesystem.filesize">filesize</a></code></li>
+<li><code><a title="lib.tools.filesystem.filetime" href="#lib.tools.filesystem.filetime">filetime</a></code></li>
+<li><code><a title="lib.tools.filesystem.isdir" href="#lib.tools.filesystem.isdir">isdir</a></code></li>
+<li><code><a title="lib.tools.filesystem.isfile" href="#lib.tools.filesystem.isfile">isfile</a></code></li>
+<li><code><a title="lib.tools.filesystem.ismicropython" href="#lib.tools.filesystem.ismicropython">ismicropython</a></code></li>
+<li><code><a title="lib.tools.filesystem.makedir" href="#lib.tools.filesystem.makedir">makedir</a></code></li>
+<li><code><a title="lib.tools.filesystem.normpath" href="#lib.tools.filesystem.normpath">normpath</a></code></li>
+<li><code><a title="lib.tools.filesystem.prefix" href="#lib.tools.filesystem.prefix">prefix</a></code></li>
+<li><code><a title="lib.tools.filesystem.remove" href="#lib.tools.filesystem.remove">remove</a></code></li>
+<li><code><a title="lib.tools.filesystem.rename" href="#lib.tools.filesystem.rename">rename</a></code></li>
+<li><code><a title="lib.tools.filesystem.scandir" href="#lib.tools.filesystem.scandir">scandir</a></code></li>
+<li><code><a title="lib.tools.filesystem.split" href="#lib.tools.filesystem.split">split</a></code></li>
+<li><code><a title="lib.tools.filesystem.splitext" href="#lib.tools.filesystem.splitext">splitext</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

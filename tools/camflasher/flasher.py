@@ -333,7 +333,8 @@ class Flasher(threading.Thread):
 							last_i = i
 							break
 					elif length < 0:
-						char = bytes([self.waiting_data[i]]).decode("latin-1")
+						# char = bytes([self.waiting_data[i]]).decode("latin-1")
+						char = ""
 						result += char
 						i += 1
 			else:

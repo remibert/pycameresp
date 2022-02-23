@@ -40,7 +40,7 @@ from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
 from video.video     import Camera
-from tools import useful, jsonconfig, lang, linearfunction, tasking
+from tools import logger,jsonconfig,lang,linearfunction,tasking,strings
 
 class MotionConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Configuration class of motion detection &#34;&#34;&#34;
@@ -73,8 +73,11 @@ class MotionConfig(jsonconfig.JsonConfig):
                 # Turn on the led flash when the light goes down
                 self.light_compensation = True
 
-                # Notify motion
+                # Notify motion detection or problem to save on sd card
                 self.notify = True
+
+                # Notify motion state change
+                self.notify_state = True
 
                 # Empty mask is equal disable masking
                 self.mask = b&#34;&#34;
@@ -92,9 +95,9 @@ class ImageMotion:
                 self.index    = self.baseIndex[0]
                 self.filename = None
                 self.motion_id = None
-                self.date     = useful.date_to_string()
-                self.filename = useful.date_to_filename()
-                path = useful.date_to_path()[:-1]
+                self.date     = strings.date_to_string()
+                self.filename = strings.date_to_filename()
+                path = strings.date_to_path()[:-1]
                 if path[-1] in [0x30,0x31,0x32]:
                         path = path[:-1] + b&#34;00&#34;
                 else:
@@ -133,7 +136,7 @@ class ImageMotion:
 
         def get_message(self):
                 &#34;&#34;&#34; Get the message of motion &#34;&#34;&#34;
-                return &#34;%s %s D=%d&#34;%(useful.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+                return &#34;%s %s D=%d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
         def get_informations(self):
                 &#34;&#34;&#34; Return the informations of motion &#34;&#34;&#34;
@@ -150,11 +153,11 @@ class ImageMotion:
 
         async def save(self):
                 &#34;&#34;&#34; Save the image on sd card &#34;&#34;&#34;
-                return await Historic.add_motion(useful.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
+                return await Historic.add_motion(strings.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
 
-        def compare(self, previous, extractShape=True):
+        def compare(self, previous):
                 &#34;&#34;&#34; Compare two motion images to get differences &#34;&#34;&#34;
-                res = self.motion.compare(previous.motion, extractShape)
+                res = self.motion.compare(previous.motion)
                 self.comparison = res
                 return res
 
@@ -203,7 +206,7 @@ class ImageMotion:
         def refresh_config(self):
                 &#34;&#34;&#34; Refresh the motion detection configuration &#34;&#34;&#34;
                 if self.motion is not None:
-                        mask = useful.tobytes(self.config.mask)
+                        mask = strings.tobytes(self.config.mask)
                         if not b&#34;/&#34; in mask:
                                 mask = b&#34;&#34;
                         errorLight = linearfunction.get_fx(self.config.sensitivity, linearfunction.get_linear(100,8,0,64))
@@ -294,6 +297,32 @@ class Motion:
                 if detected is False:
                         self.cleanup()
 
+        def manage_flash(self, motion):
+                &#34;&#34;&#34; Manage the flash level is low light &#34;&#34;&#34;
+                # Light can be compensed with flash led
+                if self.config.light_compensation:
+                        # If it has enough light
+                        if motion.get_light() &gt;= 50:
+                                # If flash led working
+                                if self.flash_level &gt; 8:
+                                        # Reduce light of flash led
+                                        self.flash_level -= 2
+                                        video.Camera.flash(self.flash_level)
+                        # If it has not enough light
+                        elif motion.get_light() &lt;= 40:
+                                # If flash to low
+                                if self.flash_level &lt;= 192:
+                                        # Increase the light of flash led
+                                        self.flash_level += 2
+                                        video.Camera.flash(self.flash_level)
+                        # If low level for flash
+                        if self.flash_level &lt; 8:
+                                # Show motion started indicator
+                                self.flash_level = 8
+                                video.Camera.flash(self.flash_level)
+                else:
+                        self.stop_light()
+
         async def capture(self):
                 &#34;&#34;&#34; Capture motion image &#34;&#34;&#34;
                 result = None
@@ -316,29 +345,7 @@ class Motion:
                                 self.deinit_image(image)
 
                 motion = video.Camera.motion()
-
-                # Light can be compensed with flash led
-                if self.config.light_compensation:
-                        # If it has enough light
-                        if motion.get_light() &gt;= 45:
-                                # If flash led working
-                                if self.flash_level &gt; 8:
-                                        # Reduce light of flash led
-                                        self.flash_level -= 2
-                                        video.Camera.flash(self.flash_level)
-                        # If it has not enough light
-                        elif motion.get_light() &lt;= 35:
-                                # If flash to low
-                                if self.flash_level &lt;= 192:
-                                        # Increase the light of flash led
-                                        self.flash_level += 2
-                                        video.Camera.flash(self.flash_level)
-                        if self.flash_level &lt; 8:
-                                self.flash_level = 8
-                                video.Camera.flash(self.flash_level)
-                else:
-                        self.stop_light()
-
+                self.manage_flash(motion)
                 image = ImageMotion(motion, self.config)
                 if self.must_refresh_config:
                         image.refresh_config()
@@ -410,7 +417,7 @@ class Motion:
                         # Compute the motion identifier
                         for previous in self.images[1:]:
                                 # # If image not already compared
-                                comparison = current.compare(previous, False)
+                                comparison = current.compare(previous)
 
                                 # If camera not stabilized
                                 if self.is_stabilized() is False:
@@ -429,7 +436,7 @@ class Motion:
 
                                 # Compare the image with the background if existing and extract modification
                                 if self.image_background is not None:
-                                        comparison = current.compare(self.image_background, True)
+                                        comparison = current.compare(self.image_background)
 
                         # Compute the list of differences
                         diffs = &#34;&#34;
@@ -445,7 +452,7 @@ class Motion:
                                                 index = image.index
                                         diffs += &#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), chr(0x41 + ((256-image.get_diff_histo())//10)), trace)
                         if display:
-                                sys.stdout.write(&#34;\r%s %s (%d) &#34;%(useful.date_to_string()[12:], diffs, index))
+                                sys.stdout.write(&#34;\r%s %s (%d) &#34;%(strings.date_to_string()[12:], diffs, index))
                 return differences
 
         def deinit_image(self, image):
@@ -526,7 +533,7 @@ class Detection:
                         # If configuration changed
                         if self.motion_config.is_changed():
                                 self.motion_config.load()
-                                useful.syslog(&#34;Change motion config %s&#34;%self.motion_config.to_string(), display=False)
+                                logger.syslog(&#34;Change motion config %s&#34;%self.motion_config.to_string(), display=False)
                                 if self.motion:
                                         self.motion.refresh_config()
                 self.refresh_config_counter += 1
@@ -551,10 +558,7 @@ class Detection:
                 else:
                         if self.motion:
                                 self.motion.stop_light()
-
-                        await uasyncio.sleep(3)
-                        result = True
-
+                        await uasyncio.sleep(10)
                 self.cadencer.refresh()
 
                 # Refresh configuration when it changed
@@ -578,8 +582,11 @@ class Detection:
 
                 # If state of motion changed
                 if self.activated != result:
+                        # Force garbage collection
+                        collect()
+
                         # If notification enabled
-                        if self.motion_config.notify:
+                        if self.motion_config.notify_state:
                                 if result:
                                         await Notifier.notify(lang.motion_detection_on)
                                 else:
@@ -658,7 +665,7 @@ class Detection:
                                                 if self.cadencer.can_notify():
                                                         await Notifier.notify(message, image.get())
                                                 else:
-                                                        useful.syslog(message + &#34; ignored&#34;)
+                                                        logger.syslog(message + &#34; ignored&#34;)
                                 # Detect motion
                                 detected, change_polling = self.motion.detect()
 
@@ -673,7 +680,7 @@ class Detection:
                                         Historic.set_motion_state(False)
                                 result = True
                         else:
-                                if self.motion_config.notify:
+                                if self.motion_config.notify_state:
                                         await Notifier.notify(lang.motion_detection_suspended)
                                 result = True
 
@@ -819,7 +826,7 @@ async def detect_motion(pir_detection):
                         # If configuration changed
                         if self.motion_config.is_changed():
                                 self.motion_config.load()
-                                useful.syslog(&#34;Change motion config %s&#34;%self.motion_config.to_string(), display=False)
+                                logger.syslog(&#34;Change motion config %s&#34;%self.motion_config.to_string(), display=False)
                                 if self.motion:
                                         self.motion.refresh_config()
                 self.refresh_config_counter += 1
@@ -844,10 +851,7 @@ async def detect_motion(pir_detection):
                 else:
                         if self.motion:
                                 self.motion.stop_light()
-
-                        await uasyncio.sleep(3)
-                        result = True
-
+                        await uasyncio.sleep(10)
                 self.cadencer.refresh()
 
                 # Refresh configuration when it changed
@@ -871,8 +875,11 @@ async def detect_motion(pir_detection):
 
                 # If state of motion changed
                 if self.activated != result:
+                        # Force garbage collection
+                        collect()
+
                         # If notification enabled
-                        if self.motion_config.notify:
+                        if self.motion_config.notify_state:
                                 if result:
                                         await Notifier.notify(lang.motion_detection_on)
                                 else:
@@ -951,7 +958,7 @@ async def detect_motion(pir_detection):
                                                 if self.cadencer.can_notify():
                                                         await Notifier.notify(message, image.get())
                                                 else:
-                                                        useful.syslog(message + &#34; ignored&#34;)
+                                                        logger.syslog(message + &#34; ignored&#34;)
                                 # Detect motion
                                 detected, change_polling = self.motion.detect()
 
@@ -966,7 +973,7 @@ async def detect_motion(pir_detection):
                                         Historic.set_motion_state(False)
                                 result = True
                         else:
-                                if self.motion_config.notify:
+                                if self.motion_config.notify_state:
                                         await Notifier.notify(lang.motion_detection_suspended)
                                 result = True
 
@@ -1014,7 +1021,7 @@ async def detect_motion(pir_detection):
                                         if self.cadencer.can_notify():
                                                 await Notifier.notify(message, image.get())
                                         else:
-                                                useful.syslog(message + &#34; ignored&#34;)
+                                                logger.syslog(message + &#34; ignored&#34;)
                         # Detect motion
                         detected, change_polling = self.motion.detect()
 
@@ -1029,7 +1036,7 @@ async def detect_motion(pir_detection):
                                 Historic.set_motion_state(False)
                         result = True
                 else:
-                        if self.motion_config.notify:
+                        if self.motion_config.notify_state:
                                 await Notifier.notify(lang.motion_detection_suspended)
                         result = True
 
@@ -1064,10 +1071,7 @@ async def detect_motion(pir_detection):
         else:
                 if self.motion:
                         self.motion.stop_light()
-
-                await uasyncio.sleep(3)
-                result = True
-
+                await uasyncio.sleep(10)
         self.cadencer.refresh()
 
         # Refresh configuration when it changed
@@ -1130,8 +1134,11 @@ async def detect_motion(pir_detection):
 
         # If state of motion changed
         if self.activated != result:
+                # Force garbage collection
+                collect()
+
                 # If notification enabled
-                if self.motion_config.notify:
+                if self.motion_config.notify_state:
                         if result:
                                 await Notifier.notify(lang.motion_detection_on)
                         else:
@@ -1183,7 +1190,7 @@ async def detect_motion(pir_detection):
                 # If configuration changed
                 if self.motion_config.is_changed():
                         self.motion_config.load()
-                        useful.syslog(&#34;Change motion config %s&#34;%self.motion_config.to_string(), display=False)
+                        logger.syslog(&#34;Change motion config %s&#34;%self.motion_config.to_string(), display=False)
                         if self.motion:
                                 self.motion.refresh_config()
         self.refresh_config_counter += 1</code></pre>
@@ -1252,9 +1259,9 @@ async def detect_motion(pir_detection):
                 self.index    = self.baseIndex[0]
                 self.filename = None
                 self.motion_id = None
-                self.date     = useful.date_to_string()
-                self.filename = useful.date_to_filename()
-                path = useful.date_to_path()[:-1]
+                self.date     = strings.date_to_string()
+                self.filename = strings.date_to_filename()
+                path = strings.date_to_path()[:-1]
                 if path[-1] in [0x30,0x31,0x32]:
                         path = path[:-1] + b&#34;00&#34;
                 else:
@@ -1293,7 +1300,7 @@ async def detect_motion(pir_detection):
 
         def get_message(self):
                 &#34;&#34;&#34; Get the message of motion &#34;&#34;&#34;
-                return &#34;%s %s D=%d&#34;%(useful.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+                return &#34;%s %s D=%d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
         def get_informations(self):
                 &#34;&#34;&#34; Return the informations of motion &#34;&#34;&#34;
@@ -1310,11 +1317,11 @@ async def detect_motion(pir_detection):
 
         async def save(self):
                 &#34;&#34;&#34; Save the image on sd card &#34;&#34;&#34;
-                return await Historic.add_motion(useful.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
+                return await Historic.add_motion(strings.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
 
-        def compare(self, previous, extractShape=True):
+        def compare(self, previous):
                 &#34;&#34;&#34; Compare two motion images to get differences &#34;&#34;&#34;
-                res = self.motion.compare(previous.motion, extractShape)
+                res = self.motion.compare(previous.motion)
                 self.comparison = res
                 return res
 
@@ -1363,7 +1370,7 @@ async def detect_motion(pir_detection):
         def refresh_config(self):
                 &#34;&#34;&#34; Refresh the motion detection configuration &#34;&#34;&#34;
                 if self.motion is not None:
-                        mask = useful.tobytes(self.config.mask)
+                        mask = strings.tobytes(self.config.mask)
                         if not b&#34;/&#34; in mask:
                                 mask = b&#34;&#34;
                         errorLight = linearfunction.get_fx(self.config.sensitivity, linearfunction.get_linear(100,8,0,64))
@@ -1392,7 +1399,7 @@ async def detect_motion(pir_detection):
 <h3>Methods</h3>
 <dl>
 <dt id="lib.motion.motion.ImageMotion.compare"><code class="name flex">
-<span>def <span class="ident">compare</span></span>(<span>self, previous, extractShape=True)</span>
+<span>def <span class="ident">compare</span></span>(<span>self, previous)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compare two motion images to get differences</p></div>
@@ -1400,9 +1407,9 @@ async def detect_motion(pir_detection):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compare(self, previous, extractShape=True):
+<pre><code class="python">def compare(self, previous):
         &#34;&#34;&#34; Compare two motion images to get differences &#34;&#34;&#34;
-        res = self.motion.compare(previous.motion, extractShape)
+        res = self.motion.compare(previous.motion)
         self.comparison = res
         return res</code></pre>
 </details>
@@ -1549,7 +1556,7 @@ async def detect_motion(pir_detection):
 </summary>
 <pre><code class="python">def get_message(self):
         &#34;&#34;&#34; Get the message of motion &#34;&#34;&#34;
-        return &#34;%s %s D=%d&#34;%(useful.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())</code></pre>
+        return &#34;%s %s D=%d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.ImageMotion.get_motion_detected"><code class="name flex">
@@ -1606,7 +1613,7 @@ async def detect_motion(pir_detection):
 <pre><code class="python">def refresh_config(self):
         &#34;&#34;&#34; Refresh the motion detection configuration &#34;&#34;&#34;
         if self.motion is not None:
-                mask = useful.tobytes(self.config.mask)
+                mask = strings.tobytes(self.config.mask)
                 if not b&#34;/&#34; in mask:
                         mask = b&#34;&#34;
                 errorLight = linearfunction.get_fx(self.config.sensitivity, linearfunction.get_linear(100,8,0,64))
@@ -1643,7 +1650,7 @@ async def detect_motion(pir_detection):
 </summary>
 <pre><code class="python">async def save(self):
         &#34;&#34;&#34; Save the image on sd card &#34;&#34;&#34;
-        return await Historic.add_motion(useful.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())</code></pre>
+        return await Historic.add_motion(strings.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.ImageMotion.set_motion_detected"><code class="name flex">
@@ -1743,6 +1750,32 @@ async def detect_motion(pir_detection):
                 if detected is False:
                         self.cleanup()
 
+        def manage_flash(self, motion):
+                &#34;&#34;&#34; Manage the flash level is low light &#34;&#34;&#34;
+                # Light can be compensed with flash led
+                if self.config.light_compensation:
+                        # If it has enough light
+                        if motion.get_light() &gt;= 50:
+                                # If flash led working
+                                if self.flash_level &gt; 8:
+                                        # Reduce light of flash led
+                                        self.flash_level -= 2
+                                        video.Camera.flash(self.flash_level)
+                        # If it has not enough light
+                        elif motion.get_light() &lt;= 40:
+                                # If flash to low
+                                if self.flash_level &lt;= 192:
+                                        # Increase the light of flash led
+                                        self.flash_level += 2
+                                        video.Camera.flash(self.flash_level)
+                        # If low level for flash
+                        if self.flash_level &lt; 8:
+                                # Show motion started indicator
+                                self.flash_level = 8
+                                video.Camera.flash(self.flash_level)
+                else:
+                        self.stop_light()
+
         async def capture(self):
                 &#34;&#34;&#34; Capture motion image &#34;&#34;&#34;
                 result = None
@@ -1765,29 +1798,7 @@ async def detect_motion(pir_detection):
                                 self.deinit_image(image)
 
                 motion = video.Camera.motion()
-
-                # Light can be compensed with flash led
-                if self.config.light_compensation:
-                        # If it has enough light
-                        if motion.get_light() &gt;= 45:
-                                # If flash led working
-                                if self.flash_level &gt; 8:
-                                        # Reduce light of flash led
-                                        self.flash_level -= 2
-                                        video.Camera.flash(self.flash_level)
-                        # If it has not enough light
-                        elif motion.get_light() &lt;= 35:
-                                # If flash to low
-                                if self.flash_level &lt;= 192:
-                                        # Increase the light of flash led
-                                        self.flash_level += 2
-                                        video.Camera.flash(self.flash_level)
-                        if self.flash_level &lt; 8:
-                                self.flash_level = 8
-                                video.Camera.flash(self.flash_level)
-                else:
-                        self.stop_light()
-
+                self.manage_flash(motion)
                 image = ImageMotion(motion, self.config)
                 if self.must_refresh_config:
                         image.refresh_config()
@@ -1859,7 +1870,7 @@ async def detect_motion(pir_detection):
                         # Compute the motion identifier
                         for previous in self.images[1:]:
                                 # # If image not already compared
-                                comparison = current.compare(previous, False)
+                                comparison = current.compare(previous)
 
                                 # If camera not stabilized
                                 if self.is_stabilized() is False:
@@ -1878,7 +1889,7 @@ async def detect_motion(pir_detection):
 
                                 # Compare the image with the background if existing and extract modification
                                 if self.image_background is not None:
-                                        comparison = current.compare(self.image_background, True)
+                                        comparison = current.compare(self.image_background)
 
                         # Compute the list of differences
                         diffs = &#34;&#34;
@@ -1894,7 +1905,7 @@ async def detect_motion(pir_detection):
                                                 index = image.index
                                         diffs += &#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), chr(0x41 + ((256-image.get_diff_histo())//10)), trace)
                         if display:
-                                sys.stdout.write(&#34;\r%s %s (%d) &#34;%(useful.date_to_string()[12:], diffs, index))
+                                sys.stdout.write(&#34;\r%s %s (%d) &#34;%(strings.date_to_string()[12:], diffs, index))
                 return differences
 
         def deinit_image(self, image):
@@ -2007,29 +2018,7 @@ async def detect_motion(pir_detection):
                         self.deinit_image(image)
 
         motion = video.Camera.motion()
-
-        # Light can be compensed with flash led
-        if self.config.light_compensation:
-                # If it has enough light
-                if motion.get_light() &gt;= 45:
-                        # If flash led working
-                        if self.flash_level &gt; 8:
-                                # Reduce light of flash led
-                                self.flash_level -= 2
-                                video.Camera.flash(self.flash_level)
-                # If it has not enough light
-                elif motion.get_light() &lt;= 35:
-                        # If flash to low
-                        if self.flash_level &lt;= 192:
-                                # Increase the light of flash led
-                                self.flash_level += 2
-                                video.Camera.flash(self.flash_level)
-                if self.flash_level &lt; 8:
-                        self.flash_level = 8
-                        video.Camera.flash(self.flash_level)
-        else:
-                self.stop_light()
-
+        self.manage_flash(motion)
         image = ImageMotion(motion, self.config)
         if self.must_refresh_config:
                 image.refresh_config()
@@ -2079,7 +2068,7 @@ async def detect_motion(pir_detection):
                 # Compute the motion identifier
                 for previous in self.images[1:]:
                         # # If image not already compared
-                        comparison = current.compare(previous, False)
+                        comparison = current.compare(previous)
 
                         # If camera not stabilized
                         if self.is_stabilized() is False:
@@ -2098,7 +2087,7 @@ async def detect_motion(pir_detection):
 
                         # Compare the image with the background if existing and extract modification
                         if self.image_background is not None:
-                                comparison = current.compare(self.image_background, True)
+                                comparison = current.compare(self.image_background)
 
                 # Compute the list of differences
                 diffs = &#34;&#34;
@@ -2114,7 +2103,7 @@ async def detect_motion(pir_detection):
                                         index = image.index
                                 diffs += &#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), chr(0x41 + ((256-image.get_diff_histo())//10)), trace)
                 if display:
-                        sys.stdout.write(&#34;\r%s %s (%d) &#34;%(useful.date_to_string()[12:], diffs, index))
+                        sys.stdout.write(&#34;\r%s %s (%d) &#34;%(strings.date_to_string()[12:], diffs, index))
         return differences</code></pre>
 </details>
 </dd>
@@ -2223,6 +2212,42 @@ async def detect_motion(pir_detection):
         else:
                 stabilized = True
         return stabilized</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.motion.Motion.manage_flash"><code class="name flex">
+<span>def <span class="ident">manage_flash</span></span>(<span>self, motion)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage the flash level is low light</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def manage_flash(self, motion):
+        &#34;&#34;&#34; Manage the flash level is low light &#34;&#34;&#34;
+        # Light can be compensed with flash led
+        if self.config.light_compensation:
+                # If it has enough light
+                if motion.get_light() &gt;= 50:
+                        # If flash led working
+                        if self.flash_level &gt; 8:
+                                # Reduce light of flash led
+                                self.flash_level -= 2
+                                video.Camera.flash(self.flash_level)
+                # If it has not enough light
+                elif motion.get_light() &lt;= 40:
+                        # If flash to low
+                        if self.flash_level &lt;= 192:
+                                # Increase the light of flash led
+                                self.flash_level += 2
+                                video.Camera.flash(self.flash_level)
+                # If low level for flash
+                if self.flash_level &lt; 8:
+                        # Show motion started indicator
+                        self.flash_level = 8
+                        video.Camera.flash(self.flash_level)
+        else:
+                self.stop_light()</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.Motion.open"><code class="name flex">
@@ -2343,8 +2368,11 @@ async def detect_motion(pir_detection):
                 # Turn on the led flash when the light goes down
                 self.light_compensation = True
 
-                # Notify motion
+                # Notify motion detection or problem to save on sd card
                 self.notify = True
+
+                # Notify motion state change
+                self.notify_state = True
 
                 # Empty mask is equal disable masking
                 self.mask = b&#34;&#34;</code></pre>
@@ -2677,6 +2705,7 @@ def get(width=None, height=None):
 <li><code><a title="lib.motion.motion.Motion.detect" href="#lib.motion.motion.Motion.detect">detect</a></code></li>
 <li><code><a title="lib.motion.motion.Motion.is_detected" href="#lib.motion.motion.Motion.is_detected">is_detected</a></code></li>
 <li><code><a title="lib.motion.motion.Motion.is_stabilized" href="#lib.motion.motion.Motion.is_stabilized">is_stabilized</a></code></li>
+<li><code><a title="lib.motion.motion.Motion.manage_flash" href="#lib.motion.motion.Motion.manage_flash">manage_flash</a></code></li>
 <li><code><a title="lib.motion.motion.Motion.open" href="#lib.motion.motion.Motion.open">open</a></code></li>
 <li><code><a title="lib.motion.motion.Motion.refresh_config" href="#lib.motion.motion.Motion.refresh_config">refresh_config</a></code></li>
 <li><code><a title="lib.motion.motion.Motion.resume" href="#lib.motion.motion.Motion.resume">resume</a></code></li>

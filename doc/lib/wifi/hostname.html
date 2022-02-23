@@ -30,7 +30,7 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Manage the host name &#34;&#34;&#34;
-from tools import useful
+from tools import strings
 
 class Hostname:
         &#34;&#34;&#34; Manage the host name &#34;&#34;&#34;
@@ -46,7 +46,7 @@ class Hostname:
                         mac = &#34;&#34;
                         for i in ident:
                                 mac += &#34;%02X&#34;%i
-                        Hostname.number[0] = useful.compute_hash(mac)
+                        Hostname.number[0] = strings.compute_hash(mac)
                         del wlan
                 return Hostname.number[0]</code></pre>
 </details>
@@ -83,7 +83,7 @@ class Hostname:
                         mac = &#34;&#34;
                         for i in ident:
                                 mac += &#34;%02X&#34;%i
-                        Hostname.number[0] = useful.compute_hash(mac)
+                        Hostname.number[0] = strings.compute_hash(mac)
                         del wlan
                 return Hostname.number[0]</code></pre>
 </details>
@@ -115,7 +115,7 @@ def get_number():
                 mac = &#34;&#34;
                 for i in ident:
                         mac += &#34;%02X&#34;%i
-                Hostname.number[0] = useful.compute_hash(mac)
+                Hostname.number[0] = strings.compute_hash(mac)
                 del wlan
         return Hostname.number[0]</code></pre>
 </details>

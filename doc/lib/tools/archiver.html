@@ -30,136 +30,65 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Archiver files functions &#34;&#34;&#34;
-from tools import useful
+from tools import logger,filesystem
+from tools.exchange import FileReader, FileWriter
 
-HEADER_FILE=b&#34;## PYCAMERESP ##\r\n&#34;
 def export_files(export_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
         &#34;&#34;&#34; Exports many file into only one file &#34;&#34;&#34;
         result = True
 
-        print(&#34;Export %s&#34;%export_filename)
-        useful.remove(export_filename)
+        logger.syslog(&#34;Export %s&#34;%export_filename)
+        filesystem.remove(export_filename)
 
         # Scan directory with pattern
-        dirs, files = useful.scandir(path=path, pattern=pattern, recursive=recursive)
+        _, files = filesystem.scandir(path=path, pattern=pattern, recursive=recursive)
 
         try:
                 # Open out file
-                out = open(export_filename,&#34;wb&#34;)
+                out_file = open(export_filename,&#34;wb&#34;)
 
-                # Write type of file
-                out.write(HEADER_FILE)
-
+                file_write = FileWriter()
                 # For all files found
                 for filename in files:
                         # All files except .tmp and sdcard
                         if filename[-4:] != &#34;.tmp&#34; and filename[:4] != &#34;/sd/&#34; and filename[5:] != &#34;./sd/&#34;:
-                                # Write file header
-                                size = useful.filesize(filename)
-                                out.write(b&#34;# %d:%s\r\n&#34;%(size, useful.tobytes(filename)))
-
-                                print(&#34;  Export &#39;%s&#39; size=%d&#34;%(filename, size))
-                                try:
-                                        # Write file
-                                        content = open(filename,&#34;rb&#34;)
-                                        while size &gt; 0:
-                                                data = content.read(2048)
-                                                out.write(data)
-                                                size -= len(data)
-
-                                        # Write end of file
-                                        out.write(b&#34;\r\n\r\n&#34;)
-                                except Exception as err:
-                                        useful.syslog(err)
+                                logger.syslog(&#34;  Export &#39;%s&#39;&#34;%(filename))
+                                if file_write.write(filename, None, out_file) is False:
                                         result = False
                                         break
-                                finally:
-                                        content.close()
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
                 result = False
         finally:
-                print(&#34;Export %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
-                out.close()
+                logger.syslog(&#34;Export %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                out_file.close()
         return result
 
-def import_files(import_filename, simulated=False):
+def import_files(import_filename, directory=&#34;/&#34;):
         &#34;&#34;&#34; Import files and write all files &#34;&#34;&#34;
         result = True
-        print(&#34;Import %s&#34;%import_filename)
+        logger.syslog(&#34;Import %s&#34;%import_filename)
         try:
-                readSize = useful.filesize(import_filename)
-                imported = open(import_filename,&#34;rb&#34;)
-                if not useful.ismicropython():
+                in_file = open(import_filename,&#34;rb&#34;)
+                if filesystem.ismicropython():
+                        simulated = False
+                else:
                         simulated = True
 
-                # Read the type of file
-                if imported.read(len(HEADER_FILE)) != HEADER_FILE:
-                        result = False
-                else:
-                        while imported.tell() &lt; readSize:
-                                # Read the start of file
-                                comment = imported.read(2)
-                                if comment != b&#34;# &#34;:
-                                        result = False
-                                        break
+                read_size = filesystem.filesize(import_filename)
 
-                                # Read the file size
-                                size = b&#34;&#34;
-                                while True:
-                                        char = imported.read(1)
-                                        if char == b&#34;:&#34;:
-                                                break
-                                        elif not char in b&#34;0123456789&#34;:
-                                                result = False
-                                                break
-                                        size += char
-                                if result is False:
-                                        break
-                                size = eval(size)
+                while in_file.tell() &lt; read_size:
+                        file_reader = FileReader(simulated)
+                        res = file_reader.read(directory, in_file)
+                        logger.syslog(&#34;Import %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 
-                                # Read filename
-                                filename = b&#34;&#34;
-                                while True:
-                                        char = imported.read(1)
-                                        if char == b&#34;\r&#34;:
-                                                break
-                                        filename += char
-                                filename = useful.tostrings(filename)
-                                char = imported.read(1)
-                                if char != b&#34;\n&#34;:
-                                        result = False
-                                        break
-
-                                # Read the file
-                                print(&#34;  Import &#39;%s&#39; size=%d&#34;%(filename, size))
-
-                                try:
-                                        if simulated is False:
-                                                content = open(filename,&#34;wb&#34;)
-                                        while size &gt; 0:
-                                                data = imported.read(size if size &lt; 2048 else 2048)
-                                                if simulated is False:
-                                                        content.write(data)
-                                                size -= len(data)
-                                except Exception as err:
-                                        useful.syslog(err)
-                                        result = False
-                                finally:
-                                        if simulated is False:
-                                                content.close()
-
-                                # Read the end of file
-                                if imported.read(4) != b&#34;\r\n\r\n&#34;:
-                                        result = False
-                                        break
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
                 result = False
         finally:
-                print(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
-                imported.close()
-        useful.remove(import_filename)
+                logger.syslog(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                in_file.close()
+        filesystem.remove(import_filename)
         return result</code></pre>
 </details>
 </section>
@@ -183,55 +112,36 @@ def import_files(import_filename, simulated=False):
         &#34;&#34;&#34; Exports many file into only one file &#34;&#34;&#34;
         result = True
 
-        print(&#34;Export %s&#34;%export_filename)
-        useful.remove(export_filename)
+        logger.syslog(&#34;Export %s&#34;%export_filename)
+        filesystem.remove(export_filename)
 
         # Scan directory with pattern
-        dirs, files = useful.scandir(path=path, pattern=pattern, recursive=recursive)
+        _, files = filesystem.scandir(path=path, pattern=pattern, recursive=recursive)
 
         try:
                 # Open out file
-                out = open(export_filename,&#34;wb&#34;)
+                out_file = open(export_filename,&#34;wb&#34;)
 
-                # Write type of file
-                out.write(HEADER_FILE)
-
+                file_write = FileWriter()
                 # For all files found
                 for filename in files:
                         # All files except .tmp and sdcard
                         if filename[-4:] != &#34;.tmp&#34; and filename[:4] != &#34;/sd/&#34; and filename[5:] != &#34;./sd/&#34;:
-                                # Write file header
-                                size = useful.filesize(filename)
-                                out.write(b&#34;# %d:%s\r\n&#34;%(size, useful.tobytes(filename)))
-
-                                print(&#34;  Export &#39;%s&#39; size=%d&#34;%(filename, size))
-                                try:
-                                        # Write file
-                                        content = open(filename,&#34;rb&#34;)
-                                        while size &gt; 0:
-                                                data = content.read(2048)
-                                                out.write(data)
-                                                size -= len(data)
-
-                                        # Write end of file
-                                        out.write(b&#34;\r\n\r\n&#34;)
-                                except Exception as err:
-                                        useful.syslog(err)
+                                logger.syslog(&#34;  Export &#39;%s&#39;&#34;%(filename))
+                                if file_write.write(filename, None, out_file) is False:
                                         result = False
                                         break
-                                finally:
-                                        content.close()
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
                 result = False
         finally:
-                print(&#34;Export %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
-                out.close()
+                logger.syslog(&#34;Export %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                out_file.close()
         return result</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.archiver.import_files"><code class="name flex">
-<span>def <span class="ident">import_files</span></span>(<span>import_filename, simulated=False)</span>
+<span>def <span class="ident">import_files</span></span>(<span>import_filename, directory='/')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Import files and write all files</p></div>
@@ -239,83 +149,31 @@ def import_files(import_filename, simulated=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def import_files(import_filename, simulated=False):
+<pre><code class="python">def import_files(import_filename, directory=&#34;/&#34;):
         &#34;&#34;&#34; Import files and write all files &#34;&#34;&#34;
         result = True
-        print(&#34;Import %s&#34;%import_filename)
+        logger.syslog(&#34;Import %s&#34;%import_filename)
         try:
-                readSize = useful.filesize(import_filename)
-                imported = open(import_filename,&#34;rb&#34;)
-                if not useful.ismicropython():
+                in_file = open(import_filename,&#34;rb&#34;)
+                if filesystem.ismicropython():
+                        simulated = False
+                else:
                         simulated = True
 
-                # Read the type of file
-                if imported.read(len(HEADER_FILE)) != HEADER_FILE:
-                        result = False
-                else:
-                        while imported.tell() &lt; readSize:
-                                # Read the start of file
-                                comment = imported.read(2)
-                                if comment != b&#34;# &#34;:
-                                        result = False
-                                        break
+                read_size = filesystem.filesize(import_filename)
 
-                                # Read the file size
-                                size = b&#34;&#34;
-                                while True:
-                                        char = imported.read(1)
-                                        if char == b&#34;:&#34;:
-                                                break
-                                        elif not char in b&#34;0123456789&#34;:
-                                                result = False
-                                                break
-                                        size += char
-                                if result is False:
-                                        break
-                                size = eval(size)
+                while in_file.tell() &lt; read_size:
+                        file_reader = FileReader(simulated)
+                        res = file_reader.read(directory, in_file)
+                        logger.syslog(&#34;Import %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 
-                                # Read filename
-                                filename = b&#34;&#34;
-                                while True:
-                                        char = imported.read(1)
-                                        if char == b&#34;\r&#34;:
-                                                break
-                                        filename += char
-                                filename = useful.tostrings(filename)
-                                char = imported.read(1)
-                                if char != b&#34;\n&#34;:
-                                        result = False
-                                        break
-
-                                # Read the file
-                                print(&#34;  Import &#39;%s&#39; size=%d&#34;%(filename, size))
-
-                                try:
-                                        if simulated is False:
-                                                content = open(filename,&#34;wb&#34;)
-                                        while size &gt; 0:
-                                                data = imported.read(size if size &lt; 2048 else 2048)
-                                                if simulated is False:
-                                                        content.write(data)
-                                                size -= len(data)
-                                except Exception as err:
-                                        useful.syslog(err)
-                                        result = False
-                                finally:
-                                        if simulated is False:
-                                                content.close()
-
-                                # Read the end of file
-                                if imported.read(4) != b&#34;\r\n\r\n&#34;:
-                                        result = False
-                                        break
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
                 result = False
         finally:
-                print(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
-                imported.close()
-        useful.remove(import_filename)
+                logger.syslog(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                in_file.close()
+        filesystem.remove(import_filename)
         return result</code></pre>
 </details>
 </dd>

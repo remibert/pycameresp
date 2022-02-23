@@ -31,7 +31,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Manage the battery &#34;&#34;&#34;
 import machine
-from tools import jsonconfig, useful
+from tools import jsonconfig,logger
 
 class BatteryConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Battery configuration &#34;&#34;&#34;
@@ -97,9 +97,9 @@ class Battery:
                                                 level = 100
                                         else:
                                                 level = int(level)
-                                useful.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
+                                logger.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
                         except Exception as err:
-                                useful.syslog(err,&#34;Cannot read battery status&#34;)
+                                logger.syslog(err,&#34;Cannot read battery status&#34;)
                         Battery.level[0] = level
                 return Battery.level[0]
 
@@ -128,7 +128,7 @@ class Battery:
                 Battery.init()
                 Battery.keep_reset_cause()
                 if Battery.manage_level() or Battery.is_too_many_brownout():
-                        useful.syslog(&#34;Sleep infinite&#34;)
+                        logger.syslog(&#34;Sleep infinite&#34;)
                         machine.deepsleep()
 
         @staticmethod
@@ -149,7 +149,7 @@ class Battery:
                         # Case the battery has not enough current and must be protected
                         if battery_protect:
                                 deepsleep = True
-                                useful.syslog(&#34;Battery too low %d %%&#34;%battery_level)
+                                logger.syslog(&#34;Battery too low %d %%&#34;%battery_level)
                 return deepsleep
 
         @staticmethod
@@ -163,9 +163,9 @@ class Battery:
                         machine.SOFT_RESET      : &#34;Soft&#34;,
                         machine.BROWNOUT_RESET  : &#34;Brownout&#34;,
                 }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
-                useful.syslog(&#34; &#34;)
-                useful.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
-                useful.syslog(&#34;%s reset&#34;%causes)
+                logger.syslog(&#34; &#34;)
+                logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
+                logger.syslog(&#34;%s reset&#34;%causes)
 
         @staticmethod
         def is_too_many_brownout():
@@ -187,7 +187,7 @@ class Battery:
                         # if the number of consecutive brownout resets is too high
                         if Battery.config.brownout_count &gt; 32:
                                 # Battery too low, save the battery status
-                                useful.syslog(&#34;Too many successive brownout reset&#34;)
+                                logger.syslog(&#34;Too many successive brownout reset&#34;)
                                 deepsleep = True
                 return deepsleep
 
@@ -272,9 +272,9 @@ class Battery:
                                                 level = 100
                                         else:
                                                 level = int(level)
-                                useful.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
+                                logger.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
                         except Exception as err:
-                                useful.syslog(err,&#34;Cannot read battery status&#34;)
+                                logger.syslog(err,&#34;Cannot read battery status&#34;)
                         Battery.level[0] = level
                 return Battery.level[0]
 
@@ -303,7 +303,7 @@ class Battery:
                 Battery.init()
                 Battery.keep_reset_cause()
                 if Battery.manage_level() or Battery.is_too_many_brownout():
-                        useful.syslog(&#34;Sleep infinite&#34;)
+                        logger.syslog(&#34;Sleep infinite&#34;)
                         machine.deepsleep()
 
         @staticmethod
@@ -324,7 +324,7 @@ class Battery:
                         # Case the battery has not enough current and must be protected
                         if battery_protect:
                                 deepsleep = True
-                                useful.syslog(&#34;Battery too low %d %%&#34;%battery_level)
+                                logger.syslog(&#34;Battery too low %d %%&#34;%battery_level)
                 return deepsleep
 
         @staticmethod
@@ -338,9 +338,9 @@ class Battery:
                         machine.SOFT_RESET      : &#34;Soft&#34;,
                         machine.BROWNOUT_RESET  : &#34;Brownout&#34;,
                 }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
-                useful.syslog(&#34; &#34;)
-                useful.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
-                useful.syslog(&#34;%s reset&#34;%causes)
+                logger.syslog(&#34; &#34;)
+                logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
+                logger.syslog(&#34;%s reset&#34;%causes)
 
         @staticmethod
         def is_too_many_brownout():
@@ -362,7 +362,7 @@ class Battery:
                         # if the number of consecutive brownout resets is too high
                         if Battery.config.brownout_count &gt; 32:
                                 # Battery too low, save the battery status
-                                useful.syslog(&#34;Too many successive brownout reset&#34;)
+                                logger.syslog(&#34;Too many successive brownout reset&#34;)
                                 deepsleep = True
                 return deepsleep
 
@@ -464,9 +464,9 @@ def get_level():
                                         level = 100
                                 else:
                                         level = int(level)
-                        useful.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
+                        logger.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
                 except Exception as err:
-                        useful.syslog(err,&#34;Cannot read battery status&#34;)
+                        logger.syslog(err,&#34;Cannot read battery status&#34;)
                 Battery.level[0] = level
         return Battery.level[0]</code></pre>
 </details>
@@ -537,7 +537,7 @@ def is_too_many_brownout():
                 # if the number of consecutive brownout resets is too high
                 if Battery.config.brownout_count &gt; 32:
                         # Battery too low, save the battery status
-                        useful.syslog(&#34;Too many successive brownout reset&#34;)
+                        logger.syslog(&#34;Too many successive brownout reset&#34;)
                         deepsleep = True
         return deepsleep</code></pre>
 </details>
@@ -562,9 +562,9 @@ def keep_reset_cause():
                 machine.SOFT_RESET      : &#34;Soft&#34;,
                 machine.BROWNOUT_RESET  : &#34;Brownout&#34;,
         }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
-        useful.syslog(&#34; &#34;)
-        useful.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
-        useful.syslog(&#34;%s reset&#34;%causes)</code></pre>
+        logger.syslog(&#34; &#34;)
+        logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
+        logger.syslog(&#34;%s reset&#34;%causes)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.battery.Battery.manage"><code class="name flex">
@@ -619,7 +619,7 @@ def manage_level():
                 # Case the battery has not enough current and must be protected
                 if battery_protect:
                         deepsleep = True
-                        useful.syslog(&#34;Battery too low %d %%&#34;%battery_level)
+                        logger.syslog(&#34;Battery too low %d %%&#34;%battery_level)
         return deepsleep</code></pre>
 </details>
 </dd>
@@ -638,7 +638,7 @@ def protect():
         Battery.init()
         Battery.keep_reset_cause()
         if Battery.manage_level() or Battery.is_too_many_brownout():
-                useful.syslog(&#34;Sleep infinite&#34;)
+                logger.syslog(&#34;Sleep infinite&#34;)
                 machine.deepsleep()</code></pre>
 </details>
 </dd>

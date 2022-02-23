@@ -1,0 +1,2096 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>lib.tools.exchange API documentation</title>
+<meta name="description" content="Classes for exchanging files between the device and the computer" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.tools.exchange</code></h1>
+</header>
+<section id="section-intro">
+<p>Classes for exchanging files between the device and the computer</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+&#34;&#34;&#34; Classes for exchanging files between the device and the computer &#34;&#34;&#34;
+import time
+import os
+import io
+from binascii import crc32
+try:
+        import filesystem
+except:
+        from tools import filesystem
+if filesystem.ismicropython():
+        # pylint:disable=import-error
+        import micropython
+
+CHUNK_SIZE=256
+ACK=b&#34;\x06&#34;
+NAK=b&#34;\x15&#34;
+
+class FileError(Exception):
+        &#34;&#34;&#34; File reader exception &#34;&#34;&#34;
+        # pylint:disable=super-init-not-called
+        def __init__(self, message = &#34;&#34;):
+                &#34;&#34;&#34; File exception constructor &#34;&#34;&#34;
+                self.message = message
+
+class Reader:
+        &#34;&#34;&#34; Abstract reader class &#34;&#34;&#34;
+        def __init__(self):
+                self.value = None
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read one byte &#34;&#34;&#34;
+                return None
+
+        def get(self):
+                &#34;&#34;&#34; Get the value completly read or None &#34;&#34;&#34;
+                return self.value
+
+        def set(self, value):
+                &#34;&#34;&#34; Set the value &#34;&#34;&#34;
+                self.value = value
+
+class IntReader(Reader):
+        &#34;&#34;&#34; Integer reader &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D#&#34;, length=10):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+                self.length= length
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read the integer byte by byte &#34;&#34;&#34;
+                if len(self.data) &lt;= self.length:
+                        if byte in self.ignore:
+                                pass
+                        elif byte in self.terminator:
+                                if len(self.data) &gt; 0:
+                                        self.value = int(self.data)
+                                        return self.value
+                                else:
+                                        raise FileError(&#34;Integer empty&#34;)
+                        elif byte in b&#34;0123456789 &#34;:
+                                if byte not in b&#34; &#34;:
+                                        self.data += byte
+                        else:
+                                raise FileError(&#34;Not an integer&#34;)
+                else:
+                        raise FileError(&#34;Integer too long&#34;)
+
+class DateReader(Reader):
+        &#34;&#34;&#34; Read formated date &#39;YYYY/MM/DD hh:mm:ss&#39;  &#34;&#34;&#34;
+        def __init__(self):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.year   = IntReader(terminator = b&#34;/&#34;, length=4)
+                self.month  = IntReader(terminator = b&#34;/&#34;, length=2)
+                self.day    = IntReader(terminator = b&#34; &#34;, length=2)
+                self.hour   = IntReader(terminator = b&#34;:&#34;, ignore=b&#34; &#34;, length=2)
+                self.minute = IntReader(terminator = b&#34;:&#34;, length=2)
+                self.second = IntReader(length=2)
+                self.read_byte = self.read_year
+
+        def read_year(self, byte):
+                &#34;&#34;&#34; Read year &#34;&#34;&#34;
+                if self.year.read_byte(byte) is not None:
+                        self.read_byte = self.read_month
+
+        def read_month(self, byte):
+                &#34;&#34;&#34; Read month &#34;&#34;&#34;
+                if self.month.read_byte(byte) is not None:
+                        self.read_byte = self.read_day
+
+        def read_day(self, byte):
+                &#34;&#34;&#34; Read day &#34;&#34;&#34;
+                if self.day.read_byte(byte) is not None:
+                        self.read_byte = self.read_hour
+
+        def read_hour(self, byte):
+                &#34;&#34;&#34; Read hour &#34;&#34;&#34;
+                if self.hour.read_byte(byte) is not None:
+                        self.read_byte = self.read_minute
+
+        def read_minute(self, byte):
+                &#34;&#34;&#34; Read minute &#34;&#34;&#34;
+                if self.minute.read_byte(byte) is not None:
+                        self.read_byte = self.read_second
+
+        def read_second(self, byte):
+                &#34;&#34;&#34; Read second &#34;&#34;&#34;
+                if self.second.read_byte(byte) is not None:
+                        date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+                        self.value = time.mktime(tuple(date))
+                        return self.value
+
+class FilenameReader(Reader):
+        &#34;&#34;&#34; Read filename &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D#&#34;, length=256):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+                self.length= length
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read filename byte by byte &#34;&#34;&#34;
+                if len(self.data) &lt;= self.length:
+                        if byte in self.ignore:
+                                pass
+                        # Ignore white space in start of line
+                        elif byte in b&#34; &#34;:
+                                if len(self.data) &gt; 0:
+                                        self.data += byte
+                        elif byte in self.terminator:
+                                if len(self.data) &gt; 0:
+                                        self.value = self.data.decode(&#34;utf8&#34;)
+                                        return self.value
+                                else:
+                                        raise FileError(&#34;Filename empty&#34;)
+                        elif byte not in b&#39;^&lt;&gt;:;,?&#34;*|&#39;:
+                                self.data += byte
+                        else:
+                                raise FileError(&#34;Not a filename&#34;)
+                else:
+                        raise FileError(&#34;Filename too long&#34;)
+
+class PatternReader(Reader):
+        &#34;&#34;&#34; Read file pattern &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D#&#34;, length=256):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+                self.length= length
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read pattern byte by byte &#34;&#34;&#34;
+                if len(self.data) &lt;= self.length:
+                        if byte in self.ignore:
+                                pass
+                        # Ignore white space in start of line
+                        elif byte in b&#34; &#34;:
+                                if len(self.data) &gt; 0:
+                                        self.data += byte
+                        elif byte in self.terminator:
+                                if len(self.data) &gt; 0:
+                                        self.value = self.data.decode(&#34;utf8&#34;)
+                                        return self.value
+                                else:
+                                        raise FileError(&#34;Filename empty&#34;)
+                        elif byte not in b&#39;^&lt;&gt;:;,&#34;|&#39;:
+                                self.data += byte
+                        else:
+                                raise FileError(&#34;Not a pattern&#34;)
+                else:
+                        raise FileError(&#34;Pattern too long&#34;)
+
+class BlankLineReader(Reader):
+        &#34;&#34;&#34; Read blank line &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D&#34;):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read blank line byte by byte &#34;&#34;&#34;
+                if byte in self.ignore:
+                        pass
+                elif byte in self.terminator:
+                        self.value = self.data.decode(&#34;utf8&#34;)
+                        return self.value
+                else:
+                        self.data += byte
+
+class BinaryReader(Reader):
+        &#34;&#34;&#34; Read binary &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D&#34;, length=256):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+                self.length= length
+
+        def set_length(self, length):
+                &#34;&#34;&#34; Set the length of binary content &#34;&#34;&#34;
+                self.length = length
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read filename byte by byte &#34;&#34;&#34;
+                if len(self.data) &lt; self.length:
+                        self.data += byte
+                elif len(self.data) == self.length:
+                        if byte in self.ignore:
+                                pass
+                        elif byte in self.terminator:
+                                self.value = self.data
+                                return self.value
+                        else:
+                                raise FileError(&#34;Bad binary terminator&#34;)
+
+class FileReader:
+        &#34;&#34;&#34; File reader &#34;&#34;&#34;
+        def __init__(self, simulated=False):
+                self.blank    = BlankLineReader()
+                self.date     = DateReader()
+                self.filename = FilenameReader()
+                self.size     = IntReader()
+                self.content  = BinaryReader()
+                self.blank_content = BlankLineReader()
+                self.crc      = IntReader()
+                self.crc_computed = 0
+                self.read_byte  = self.read_blank
+                self.start_content = False
+                self.simulated = simulated
+                self.read_count = 0
+
+        def read_blank(self, byte):
+                &#34;&#34;&#34; Read blank line &#34;&#34;&#34;
+                if self.blank.read_byte(byte) is not None:
+                        self.read_byte = self.read_filename
+                return None
+
+        def read_blank_content(self, byte):
+                &#34;&#34;&#34; Read blank line after content &#34;&#34;&#34;
+                if self.blank_content.read_byte(byte) is not None:
+                        self.read_byte = self.read_crc
+                return None
+
+        def read_filename(self, byte):
+                &#34;&#34;&#34; Read filename &#34;&#34;&#34;
+                if self.filename.read_byte(byte) is not None:
+                        self.read_byte = self.read_date
+                return None
+
+        def read_date(self, byte):
+                &#34;&#34;&#34; Read date &#34;&#34;&#34;
+                if self.date.read_byte(byte) is not None:
+                        self.read_byte = self.read_size
+                return None
+
+        def read_size(self, byte):
+                &#34;&#34;&#34; Read size of content &#34;&#34;&#34;
+                if self.size.read_byte(byte) is not None:
+                        self.content.set_length(self.size.get())
+                        self.read_byte = self.read_content
+                        self.start_content = True
+
+        def read_content(self, byte):
+                &#34;&#34;&#34; Read content &#34;&#34;&#34;
+                self.read_count += 1
+                if self.content.read_byte(byte) is not None:
+                        self.read_byte = self.read_crc
+
+        def read_crc(self, byte):
+                &#34;&#34;&#34; Read crc&#34;&#34;&#34;
+                if self.crc.read_byte(byte) is not None:
+                        if self.crc.get() in [self.crc_computed,0]:
+                                return self.crc_computed
+                        else:
+                                return -1
+
+        def read(self, directory, in_file, out_file=None):
+                &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
+                try:
+                        # Disable the Ctr-C
+                        if filesystem.ismicropython() and out_file is not None:
+                                micropython.kbd_intr(-1)
+
+                        result = None
+                        while result is None and self.blank.get() != &#34;exit&#34;:
+                                if self.start_content is False:
+                                        byte = in_file.read(1)
+                                        # pylint:disable=assignment-from-none
+                                        result = self.read_byte(byte)
+                                else:
+                                        send_ack(out_file,ACK)
+
+                                        # Create directory
+                                        filename = filesystem.normpath(directory + &#34;/&#34; + self.filename.get())
+                                        filesystem.makedir(filesystem.split(filename)[0], True)
+
+                                        # Write file
+                                        self.write_file(filename, self.size.get(), in_file, out_file)
+
+                                        # Set time of file
+                                        try:
+                                                os.utime(filename,(self.date.get(), self.date.get()))
+                                        except:
+                                                pass
+
+                                        self.read_byte = self.read_blank_content
+                                        self.start_content = False
+
+                        if self.blank.get() != &#34;exit&#34;:
+                                if result is not None:
+                                        # If crc is not correct
+                                        if result == -1:
+                                                send_ack(out_file,NAK)
+                                                result = True
+                                        else:
+                                                send_ack(out_file,ACK)
+                                                result = True
+                        else:
+                                result = False
+                finally:
+                        # Enable the Ctr-C
+                        if filesystem.ismicropython() and out_file is not None:
+                                micropython.kbd_intr(3)
+                return result
+
+        def write_file(self, filename, size, in_file, out_file):
+                &#34;&#34;&#34; Write the file on disk &#34;&#34;&#34;
+                file = None
+                try:
+                        if self.simulated:
+                                file = io.BytesIO()
+                        else:
+                                file = open(filename, &#34;wb&#34;)
+                        chunk = bytearray(CHUNK_SIZE)
+
+                        if size &lt;= 0:
+                                send_ack(out_file,ACK)
+                        else:
+                                while size &gt; 0:
+                                        # Receive content part
+                                        if filesystem.ismicropython():
+                                                length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
+                                        else:
+                                                chunk = bytearray(min(size, CHUNK_SIZE))
+                                                length = in_file.readinto(chunk)
+                                        # Send ack
+                                        send_ack(out_file,ACK)
+
+                                        # Compute crc
+                                        self.crc_computed = crc32(chunk[:length], self.crc_computed)
+
+                                        # Write content part received
+                                        file.write(chunk[:length])
+
+                                        # Decrease the remaining size
+                                        size -= length
+                finally:
+                        if file is not None:
+                                file.close()
+
+
+class FileWriter:
+        &#34;&#34;&#34; File writer &#34;&#34;&#34;
+        def write(self, filename, in_file, out_file, directory=None):
+                &#34;&#34;&#34; Write file &#34;&#34;&#34;
+                result = False
+
+                # If file existing
+                if filesystem.exists(filename) and filesystem.isfile(filename):
+                        size = filesystem.filesize(filename)
+
+                        # Send blank line
+                        out_file.write(b&#34;\x0D\x0A&#34;)
+
+                        # Send the filename
+                        if directory is not None:
+                                filename_ = filename.replace(directory, &#34;&#34;)
+                        else:
+                                filename_ = filename
+                        out_file.write(b&#34;# %s\x0D\x0A&#34;%filename_.encode(&#34;utf8&#34;))
+
+                        # Send the file date
+                        year,month,day,hour,minute,second,_,_ = time.localtime(filesystem.filetime(filename))[:8]
+                        out_file.write(b&#34;# %04d/%02d/%02d %02d:%02d:%02d\x0D\x0A&#34;%(year,month,day,hour,minute,second))
+
+                        # Send the file size
+                        out_file.write(b&#34;# %d\x0D\x0A&#34;%(size))
+
+                        # Wait confirmation to send content file
+                        if wait_ack(in_file):
+                                crc = 0
+
+                                # If file empty
+                                if size &lt;= 0:
+                                        # Wait reception ack
+                                        wait_ack(in_file)
+                                else:
+                                        # Open file
+                                        with open(filename, &#34;rb&#34;) as file:
+                                                chunk = bytearray(CHUNK_SIZE)
+                                                while size &gt; 0:
+                                                        # Read file part
+                                                        length = file.readinto(chunk)
+
+                                                        # Send part
+                                                        out_file.write(chunk[:length])
+
+                                                        # Compute the remaining size
+                                                        size -= length
+
+                                                        # Compte crc
+                                                        crc = crc32(chunk[:length], crc)
+
+                                                        # Wait reception ack
+                                                        wait_ack(in_file)
+
+                                # Send file content terminator
+                                out_file.write(b&#34;\x0D\x0A&#34;)
+
+                                # Write crc32 and file terminator
+                                out_file.write(b&#34;# %d\x0D\x0A&#34;%crc)
+
+                                # Waits for confirmation that the file has been received wit success or not
+                                result = wait_ack(in_file, True)
+                return result
+
+def wait_ack(in_file, nak=False):
+        &#34;&#34;&#34; Wait acquittement from file sender &#34;&#34;&#34;
+        result = True
+        buffer = b&#34;&#34;
+        # If flow control activated
+        if in_file is not None:
+                result = False
+                while True:
+                        r = in_file.read(1)
+                        buffer += r
+                        # If aquittement
+                        if r == ACK:
+                                result = True
+                                break
+                        # If not acquittement and nak can be received
+                        elif r == NAK and nak:
+                                result = False
+                                break
+                        # If communication failed
+                        elif r != b&#34;&#34;:
+                                raise FileError(&#34;Transmission error&#34;)
+        return result
+
+def send_ack(out_file, buffer):
+        &#34;&#34;&#34; Send ack or nak &#34;&#34;&#34;
+        if out_file is not None:
+                out_file.write(buffer)
+
+class ImporterCommand:
+        &#34;&#34;&#34; Importer command &#34;&#34;&#34;
+        def __init__(self, directory):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.pattern   = PatternReader()
+                self.path      = FilenameReader()
+                self.recursive = IntReader()
+                self.directory = directory
+                self.read_byte   = self.read_pattern
+
+        def read_pattern(self, byte):
+                &#34;&#34;&#34; Read pattern &#34;&#34;&#34;
+                if self.pattern.read_byte(byte) is not None:
+                        self.read_byte = self.read_path
+                return None
+
+        def read_path(self, byte):
+                &#34;&#34;&#34; Read path &#34;&#34;&#34;
+                if self.path.read_byte(byte) is not None:
+                        self.read_byte = self.read_recursive
+                return None
+
+        def read_recursive(self, byte):
+                &#34;&#34;&#34; Read recursive &#34;&#34;&#34;
+                if self.recursive.read_byte(byte) is not None:
+                        return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)
+
+        def write(self, file, recursive, in_file, out_file):
+                &#34;&#34;&#34; Write exporter command &#34;&#34;&#34;
+                out_file.write(&#34;࿋&#34;.encode(&#34;utf8&#34;))
+                wait_ack(in_file)
+                out_file.write(b&#34;# %s\r\n&#34;%file.encode(&#34;utf8&#34;))
+                out_file.write(b&#34;# %s\r\n&#34;%self.directory.encode(&#34;utf8&#34;))
+                out_file.write(b&#34;# %d\r\n&#34;%(1 if recursive else 0))
+                wait_ack(in_file)
+
+        def read(self, in_file, out_file):
+                &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
+                send_ack(out_file, ACK)
+                result = None
+                while result is None:
+                        byte = in_file.read(1)
+                        # pylint:disable=assignment-from-none
+                        result = self.read_byte(byte)
+                send_ack(out_file, ACK)
+                return result</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.tools.exchange.send_ack"><code class="name flex">
+<span>def <span class="ident">send_ack</span></span>(<span>out_file, buffer)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send ack or nak</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_ack(out_file, buffer):
+        &#34;&#34;&#34; Send ack or nak &#34;&#34;&#34;
+        if out_file is not None:
+                out_file.write(buffer)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.wait_ack"><code class="name flex">
+<span>def <span class="ident">wait_ack</span></span>(<span>in_file, nak=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Wait acquittement from file sender</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def wait_ack(in_file, nak=False):
+        &#34;&#34;&#34; Wait acquittement from file sender &#34;&#34;&#34;
+        result = True
+        buffer = b&#34;&#34;
+        # If flow control activated
+        if in_file is not None:
+                result = False
+                while True:
+                        r = in_file.read(1)
+                        buffer += r
+                        # If aquittement
+                        if r == ACK:
+                                result = True
+                                break
+                        # If not acquittement and nak can be received
+                        elif r == NAK and nak:
+                                result = False
+                                break
+                        # If communication failed
+                        elif r != b&#34;&#34;:
+                                raise FileError(&#34;Transmission error&#34;)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.tools.exchange.BinaryReader"><code class="flex name class">
+<span>class <span class="ident">BinaryReader</span></span>
+<span>(</span><span>terminator=b'\n', ignore=b'\r', length=256)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read binary </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BinaryReader(Reader):
+        &#34;&#34;&#34; Read binary &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D&#34;, length=256):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+                self.length= length
+
+        def set_length(self, length):
+                &#34;&#34;&#34; Set the length of binary content &#34;&#34;&#34;
+                self.length = length
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read filename byte by byte &#34;&#34;&#34;
+                if len(self.data) &lt; self.length:
+                        self.data += byte
+                elif len(self.data) == self.length:
+                        if byte in self.ignore:
+                                pass
+                        elif byte in self.terminator:
+                                self.value = self.data
+                                return self.value
+                        else:
+                                raise FileError(&#34;Bad binary terminator&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.BinaryReader.read_byte"><code class="name flex">
+<span>def <span class="ident">read_byte</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read filename byte by byte</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_byte(self, byte):
+        &#34;&#34;&#34; Read filename byte by byte &#34;&#34;&#34;
+        if len(self.data) &lt; self.length:
+                self.data += byte
+        elif len(self.data) == self.length:
+                if byte in self.ignore:
+                        pass
+                elif byte in self.terminator:
+                        self.value = self.data
+                        return self.value
+                else:
+                        raise FileError(&#34;Bad binary terminator&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.BinaryReader.set_length"><code class="name flex">
+<span>def <span class="ident">set_length</span></span>(<span>self, length)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the length of binary content</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_length(self, length):
+        &#34;&#34;&#34; Set the length of binary content &#34;&#34;&#34;
+        self.length = length</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.tools.exchange.Reader.get" href="#lib.tools.exchange.Reader.get">get</a></code></li>
+<li><code><a title="lib.tools.exchange.Reader.set" href="#lib.tools.exchange.Reader.set">set</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.tools.exchange.BlankLineReader"><code class="flex name class">
+<span>class <span class="ident">BlankLineReader</span></span>
+<span>(</span><span>terminator=b'\n', ignore=b'\r')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read blank line </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BlankLineReader(Reader):
+        &#34;&#34;&#34; Read blank line &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D&#34;):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read blank line byte by byte &#34;&#34;&#34;
+                if byte in self.ignore:
+                        pass
+                elif byte in self.terminator:
+                        self.value = self.data.decode(&#34;utf8&#34;)
+                        return self.value
+                else:
+                        self.data += byte</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.BlankLineReader.read_byte"><code class="name flex">
+<span>def <span class="ident">read_byte</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read blank line byte by byte</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_byte(self, byte):
+        &#34;&#34;&#34; Read blank line byte by byte &#34;&#34;&#34;
+        if byte in self.ignore:
+                pass
+        elif byte in self.terminator:
+                self.value = self.data.decode(&#34;utf8&#34;)
+                return self.value
+        else:
+                self.data += byte</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.tools.exchange.Reader.get" href="#lib.tools.exchange.Reader.get">get</a></code></li>
+<li><code><a title="lib.tools.exchange.Reader.set" href="#lib.tools.exchange.Reader.set">set</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.tools.exchange.DateReader"><code class="flex name class">
+<span>class <span class="ident">DateReader</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read formated date 'YYYY/MM/DD hh:mm:ss'
+</p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DateReader(Reader):
+        &#34;&#34;&#34; Read formated date &#39;YYYY/MM/DD hh:mm:ss&#39;  &#34;&#34;&#34;
+        def __init__(self):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.year   = IntReader(terminator = b&#34;/&#34;, length=4)
+                self.month  = IntReader(terminator = b&#34;/&#34;, length=2)
+                self.day    = IntReader(terminator = b&#34; &#34;, length=2)
+                self.hour   = IntReader(terminator = b&#34;:&#34;, ignore=b&#34; &#34;, length=2)
+                self.minute = IntReader(terminator = b&#34;:&#34;, length=2)
+                self.second = IntReader(length=2)
+                self.read_byte = self.read_year
+
+        def read_year(self, byte):
+                &#34;&#34;&#34; Read year &#34;&#34;&#34;
+                if self.year.read_byte(byte) is not None:
+                        self.read_byte = self.read_month
+
+        def read_month(self, byte):
+                &#34;&#34;&#34; Read month &#34;&#34;&#34;
+                if self.month.read_byte(byte) is not None:
+                        self.read_byte = self.read_day
+
+        def read_day(self, byte):
+                &#34;&#34;&#34; Read day &#34;&#34;&#34;
+                if self.day.read_byte(byte) is not None:
+                        self.read_byte = self.read_hour
+
+        def read_hour(self, byte):
+                &#34;&#34;&#34; Read hour &#34;&#34;&#34;
+                if self.hour.read_byte(byte) is not None:
+                        self.read_byte = self.read_minute
+
+        def read_minute(self, byte):
+                &#34;&#34;&#34; Read minute &#34;&#34;&#34;
+                if self.minute.read_byte(byte) is not None:
+                        self.read_byte = self.read_second
+
+        def read_second(self, byte):
+                &#34;&#34;&#34; Read second &#34;&#34;&#34;
+                if self.second.read_byte(byte) is not None:
+                        date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+                        self.value = time.mktime(tuple(date))
+                        return self.value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.DateReader.read_day"><code class="name flex">
+<span>def <span class="ident">read_day</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read day</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_day(self, byte):
+        &#34;&#34;&#34; Read day &#34;&#34;&#34;
+        if self.day.read_byte(byte) is not None:
+                self.read_byte = self.read_hour</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.DateReader.read_hour"><code class="name flex">
+<span>def <span class="ident">read_hour</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read hour</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_hour(self, byte):
+        &#34;&#34;&#34; Read hour &#34;&#34;&#34;
+        if self.hour.read_byte(byte) is not None:
+                self.read_byte = self.read_minute</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.DateReader.read_minute"><code class="name flex">
+<span>def <span class="ident">read_minute</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read minute</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_minute(self, byte):
+        &#34;&#34;&#34; Read minute &#34;&#34;&#34;
+        if self.minute.read_byte(byte) is not None:
+                self.read_byte = self.read_second</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.DateReader.read_month"><code class="name flex">
+<span>def <span class="ident">read_month</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read month</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_month(self, byte):
+        &#34;&#34;&#34; Read month &#34;&#34;&#34;
+        if self.month.read_byte(byte) is not None:
+                self.read_byte = self.read_day</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.DateReader.read_second"><code class="name flex">
+<span>def <span class="ident">read_second</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read second</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_second(self, byte):
+        &#34;&#34;&#34; Read second &#34;&#34;&#34;
+        if self.second.read_byte(byte) is not None:
+                date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+                self.value = time.mktime(tuple(date))
+                return self.value</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.DateReader.read_year"><code class="name flex">
+<span>def <span class="ident">read_year</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read year</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_year(self, byte):
+        &#34;&#34;&#34; Read year &#34;&#34;&#34;
+        if self.year.read_byte(byte) is not None:
+                self.read_byte = self.read_month</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.tools.exchange.Reader.get" href="#lib.tools.exchange.Reader.get">get</a></code></li>
+<li><code><a title="lib.tools.exchange.Reader.read_byte" href="#lib.tools.exchange.Reader.read_byte">read_byte</a></code></li>
+<li><code><a title="lib.tools.exchange.Reader.set" href="#lib.tools.exchange.Reader.set">set</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.tools.exchange.FileError"><code class="flex name class">
+<span>class <span class="ident">FileError</span></span>
+<span>(</span><span>message='')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>File reader exception </p>
+<p>File exception constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FileError(Exception):
+        &#34;&#34;&#34; File reader exception &#34;&#34;&#34;
+        # pylint:disable=super-init-not-called
+        def __init__(self, message = &#34;&#34;):
+                &#34;&#34;&#34; File exception constructor &#34;&#34;&#34;
+                self.message = message</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="lib.tools.exchange.FileReader"><code class="flex name class">
+<span>class <span class="ident">FileReader</span></span>
+<span>(</span><span>simulated=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>File reader</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FileReader:
+        &#34;&#34;&#34; File reader &#34;&#34;&#34;
+        def __init__(self, simulated=False):
+                self.blank    = BlankLineReader()
+                self.date     = DateReader()
+                self.filename = FilenameReader()
+                self.size     = IntReader()
+                self.content  = BinaryReader()
+                self.blank_content = BlankLineReader()
+                self.crc      = IntReader()
+                self.crc_computed = 0
+                self.read_byte  = self.read_blank
+                self.start_content = False
+                self.simulated = simulated
+                self.read_count = 0
+
+        def read_blank(self, byte):
+                &#34;&#34;&#34; Read blank line &#34;&#34;&#34;
+                if self.blank.read_byte(byte) is not None:
+                        self.read_byte = self.read_filename
+                return None
+
+        def read_blank_content(self, byte):
+                &#34;&#34;&#34; Read blank line after content &#34;&#34;&#34;
+                if self.blank_content.read_byte(byte) is not None:
+                        self.read_byte = self.read_crc
+                return None
+
+        def read_filename(self, byte):
+                &#34;&#34;&#34; Read filename &#34;&#34;&#34;
+                if self.filename.read_byte(byte) is not None:
+                        self.read_byte = self.read_date
+                return None
+
+        def read_date(self, byte):
+                &#34;&#34;&#34; Read date &#34;&#34;&#34;
+                if self.date.read_byte(byte) is not None:
+                        self.read_byte = self.read_size
+                return None
+
+        def read_size(self, byte):
+                &#34;&#34;&#34; Read size of content &#34;&#34;&#34;
+                if self.size.read_byte(byte) is not None:
+                        self.content.set_length(self.size.get())
+                        self.read_byte = self.read_content
+                        self.start_content = True
+
+        def read_content(self, byte):
+                &#34;&#34;&#34; Read content &#34;&#34;&#34;
+                self.read_count += 1
+                if self.content.read_byte(byte) is not None:
+                        self.read_byte = self.read_crc
+
+        def read_crc(self, byte):
+                &#34;&#34;&#34; Read crc&#34;&#34;&#34;
+                if self.crc.read_byte(byte) is not None:
+                        if self.crc.get() in [self.crc_computed,0]:
+                                return self.crc_computed
+                        else:
+                                return -1
+
+        def read(self, directory, in_file, out_file=None):
+                &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
+                try:
+                        # Disable the Ctr-C
+                        if filesystem.ismicropython() and out_file is not None:
+                                micropython.kbd_intr(-1)
+
+                        result = None
+                        while result is None and self.blank.get() != &#34;exit&#34;:
+                                if self.start_content is False:
+                                        byte = in_file.read(1)
+                                        # pylint:disable=assignment-from-none
+                                        result = self.read_byte(byte)
+                                else:
+                                        send_ack(out_file,ACK)
+
+                                        # Create directory
+                                        filename = filesystem.normpath(directory + &#34;/&#34; + self.filename.get())
+                                        filesystem.makedir(filesystem.split(filename)[0], True)
+
+                                        # Write file
+                                        self.write_file(filename, self.size.get(), in_file, out_file)
+
+                                        # Set time of file
+                                        try:
+                                                os.utime(filename,(self.date.get(), self.date.get()))
+                                        except:
+                                                pass
+
+                                        self.read_byte = self.read_blank_content
+                                        self.start_content = False
+
+                        if self.blank.get() != &#34;exit&#34;:
+                                if result is not None:
+                                        # If crc is not correct
+                                        if result == -1:
+                                                send_ack(out_file,NAK)
+                                                result = True
+                                        else:
+                                                send_ack(out_file,ACK)
+                                                result = True
+                        else:
+                                result = False
+                finally:
+                        # Enable the Ctr-C
+                        if filesystem.ismicropython() and out_file is not None:
+                                micropython.kbd_intr(3)
+                return result
+
+        def write_file(self, filename, size, in_file, out_file):
+                &#34;&#34;&#34; Write the file on disk &#34;&#34;&#34;
+                file = None
+                try:
+                        if self.simulated:
+                                file = io.BytesIO()
+                        else:
+                                file = open(filename, &#34;wb&#34;)
+                        chunk = bytearray(CHUNK_SIZE)
+
+                        if size &lt;= 0:
+                                send_ack(out_file,ACK)
+                        else:
+                                while size &gt; 0:
+                                        # Receive content part
+                                        if filesystem.ismicropython():
+                                                length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
+                                        else:
+                                                chunk = bytearray(min(size, CHUNK_SIZE))
+                                                length = in_file.readinto(chunk)
+                                        # Send ack
+                                        send_ack(out_file,ACK)
+
+                                        # Compute crc
+                                        self.crc_computed = crc32(chunk[:length], self.crc_computed)
+
+                                        # Write content part received
+                                        file.write(chunk[:length])
+
+                                        # Decrease the remaining size
+                                        size -= length
+                finally:
+                        if file is not None:
+                                file.close()</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.FileReader.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, directory, in_file, out_file=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read the file completly</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self, directory, in_file, out_file=None):
+        &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
+        try:
+                # Disable the Ctr-C
+                if filesystem.ismicropython() and out_file is not None:
+                        micropython.kbd_intr(-1)
+
+                result = None
+                while result is None and self.blank.get() != &#34;exit&#34;:
+                        if self.start_content is False:
+                                byte = in_file.read(1)
+                                # pylint:disable=assignment-from-none
+                                result = self.read_byte(byte)
+                        else:
+                                send_ack(out_file,ACK)
+
+                                # Create directory
+                                filename = filesystem.normpath(directory + &#34;/&#34; + self.filename.get())
+                                filesystem.makedir(filesystem.split(filename)[0], True)
+
+                                # Write file
+                                self.write_file(filename, self.size.get(), in_file, out_file)
+
+                                # Set time of file
+                                try:
+                                        os.utime(filename,(self.date.get(), self.date.get()))
+                                except:
+                                        pass
+
+                                self.read_byte = self.read_blank_content
+                                self.start_content = False
+
+                if self.blank.get() != &#34;exit&#34;:
+                        if result is not None:
+                                # If crc is not correct
+                                if result == -1:
+                                        send_ack(out_file,NAK)
+                                        result = True
+                                else:
+                                        send_ack(out_file,ACK)
+                                        result = True
+                else:
+                        result = False
+        finally:
+                # Enable the Ctr-C
+                if filesystem.ismicropython() and out_file is not None:
+                        micropython.kbd_intr(3)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.FileReader.read_blank"><code class="name flex">
+<span>def <span class="ident">read_blank</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read blank line</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_blank(self, byte):
+        &#34;&#34;&#34; Read blank line &#34;&#34;&#34;
+        if self.blank.read_byte(byte) is not None:
+                self.read_byte = self.read_filename
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.FileReader.read_blank_content"><code class="name flex">
+<span>def <span class="ident">read_blank_content</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read blank line after content</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_blank_content(self, byte):
+        &#34;&#34;&#34; Read blank line after content &#34;&#34;&#34;
+        if self.blank_content.read_byte(byte) is not None:
+                self.read_byte = self.read_crc
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.FileReader.read_content"><code class="name flex">
+<span>def <span class="ident">read_content</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read content</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_content(self, byte):
+        &#34;&#34;&#34; Read content &#34;&#34;&#34;
+        self.read_count += 1
+        if self.content.read_byte(byte) is not None:
+                self.read_byte = self.read_crc</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.FileReader.read_crc"><code class="name flex">
+<span>def <span class="ident">read_crc</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read crc</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_crc(self, byte):
+        &#34;&#34;&#34; Read crc&#34;&#34;&#34;
+        if self.crc.read_byte(byte) is not None:
+                if self.crc.get() in [self.crc_computed,0]:
+                        return self.crc_computed
+                else:
+                        return -1</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.FileReader.read_date"><code class="name flex">
+<span>def <span class="ident">read_date</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read date</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_date(self, byte):
+        &#34;&#34;&#34; Read date &#34;&#34;&#34;
+        if self.date.read_byte(byte) is not None:
+                self.read_byte = self.read_size
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.FileReader.read_filename"><code class="name flex">
+<span>def <span class="ident">read_filename</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read filename</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_filename(self, byte):
+        &#34;&#34;&#34; Read filename &#34;&#34;&#34;
+        if self.filename.read_byte(byte) is not None:
+                self.read_byte = self.read_date
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.FileReader.read_size"><code class="name flex">
+<span>def <span class="ident">read_size</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read size of content</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_size(self, byte):
+        &#34;&#34;&#34; Read size of content &#34;&#34;&#34;
+        if self.size.read_byte(byte) is not None:
+                self.content.set_length(self.size.get())
+                self.read_byte = self.read_content
+                self.start_content = True</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.FileReader.write_file"><code class="name flex">
+<span>def <span class="ident">write_file</span></span>(<span>self, filename, size, in_file, out_file)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write the file on disk</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_file(self, filename, size, in_file, out_file):
+        &#34;&#34;&#34; Write the file on disk &#34;&#34;&#34;
+        file = None
+        try:
+                if self.simulated:
+                        file = io.BytesIO()
+                else:
+                        file = open(filename, &#34;wb&#34;)
+                chunk = bytearray(CHUNK_SIZE)
+
+                if size &lt;= 0:
+                        send_ack(out_file,ACK)
+                else:
+                        while size &gt; 0:
+                                # Receive content part
+                                if filesystem.ismicropython():
+                                        length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
+                                else:
+                                        chunk = bytearray(min(size, CHUNK_SIZE))
+                                        length = in_file.readinto(chunk)
+                                # Send ack
+                                send_ack(out_file,ACK)
+
+                                # Compute crc
+                                self.crc_computed = crc32(chunk[:length], self.crc_computed)
+
+                                # Write content part received
+                                file.write(chunk[:length])
+
+                                # Decrease the remaining size
+                                size -= length
+        finally:
+                if file is not None:
+                        file.close()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.tools.exchange.FileWriter"><code class="flex name class">
+<span>class <span class="ident">FileWriter</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>File writer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FileWriter:
+        &#34;&#34;&#34; File writer &#34;&#34;&#34;
+        def write(self, filename, in_file, out_file, directory=None):
+                &#34;&#34;&#34; Write file &#34;&#34;&#34;
+                result = False
+
+                # If file existing
+                if filesystem.exists(filename) and filesystem.isfile(filename):
+                        size = filesystem.filesize(filename)
+
+                        # Send blank line
+                        out_file.write(b&#34;\x0D\x0A&#34;)
+
+                        # Send the filename
+                        if directory is not None:
+                                filename_ = filename.replace(directory, &#34;&#34;)
+                        else:
+                                filename_ = filename
+                        out_file.write(b&#34;# %s\x0D\x0A&#34;%filename_.encode(&#34;utf8&#34;))
+
+                        # Send the file date
+                        year,month,day,hour,minute,second,_,_ = time.localtime(filesystem.filetime(filename))[:8]
+                        out_file.write(b&#34;# %04d/%02d/%02d %02d:%02d:%02d\x0D\x0A&#34;%(year,month,day,hour,minute,second))
+
+                        # Send the file size
+                        out_file.write(b&#34;# %d\x0D\x0A&#34;%(size))
+
+                        # Wait confirmation to send content file
+                        if wait_ack(in_file):
+                                crc = 0
+
+                                # If file empty
+                                if size &lt;= 0:
+                                        # Wait reception ack
+                                        wait_ack(in_file)
+                                else:
+                                        # Open file
+                                        with open(filename, &#34;rb&#34;) as file:
+                                                chunk = bytearray(CHUNK_SIZE)
+                                                while size &gt; 0:
+                                                        # Read file part
+                                                        length = file.readinto(chunk)
+
+                                                        # Send part
+                                                        out_file.write(chunk[:length])
+
+                                                        # Compute the remaining size
+                                                        size -= length
+
+                                                        # Compte crc
+                                                        crc = crc32(chunk[:length], crc)
+
+                                                        # Wait reception ack
+                                                        wait_ack(in_file)
+
+                                # Send file content terminator
+                                out_file.write(b&#34;\x0D\x0A&#34;)
+
+                                # Write crc32 and file terminator
+                                out_file.write(b&#34;# %d\x0D\x0A&#34;%crc)
+
+                                # Waits for confirmation that the file has been received wit success or not
+                                result = wait_ack(in_file, True)
+                return result</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.FileWriter.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self, filename, in_file, out_file, directory=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write(self, filename, in_file, out_file, directory=None):
+        &#34;&#34;&#34; Write file &#34;&#34;&#34;
+        result = False
+
+        # If file existing
+        if filesystem.exists(filename) and filesystem.isfile(filename):
+                size = filesystem.filesize(filename)
+
+                # Send blank line
+                out_file.write(b&#34;\x0D\x0A&#34;)
+
+                # Send the filename
+                if directory is not None:
+                        filename_ = filename.replace(directory, &#34;&#34;)
+                else:
+                        filename_ = filename
+                out_file.write(b&#34;# %s\x0D\x0A&#34;%filename_.encode(&#34;utf8&#34;))
+
+                # Send the file date
+                year,month,day,hour,minute,second,_,_ = time.localtime(filesystem.filetime(filename))[:8]
+                out_file.write(b&#34;# %04d/%02d/%02d %02d:%02d:%02d\x0D\x0A&#34;%(year,month,day,hour,minute,second))
+
+                # Send the file size
+                out_file.write(b&#34;# %d\x0D\x0A&#34;%(size))
+
+                # Wait confirmation to send content file
+                if wait_ack(in_file):
+                        crc = 0
+
+                        # If file empty
+                        if size &lt;= 0:
+                                # Wait reception ack
+                                wait_ack(in_file)
+                        else:
+                                # Open file
+                                with open(filename, &#34;rb&#34;) as file:
+                                        chunk = bytearray(CHUNK_SIZE)
+                                        while size &gt; 0:
+                                                # Read file part
+                                                length = file.readinto(chunk)
+
+                                                # Send part
+                                                out_file.write(chunk[:length])
+
+                                                # Compute the remaining size
+                                                size -= length
+
+                                                # Compte crc
+                                                crc = crc32(chunk[:length], crc)
+
+                                                # Wait reception ack
+                                                wait_ack(in_file)
+
+                        # Send file content terminator
+                        out_file.write(b&#34;\x0D\x0A&#34;)
+
+                        # Write crc32 and file terminator
+                        out_file.write(b&#34;# %d\x0D\x0A&#34;%crc)
+
+                        # Waits for confirmation that the file has been received wit success or not
+                        result = wait_ack(in_file, True)
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.tools.exchange.FilenameReader"><code class="flex name class">
+<span>class <span class="ident">FilenameReader</span></span>
+<span>(</span><span>terminator=b'\n', ignore=b'\r#', length=256)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read filename </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FilenameReader(Reader):
+        &#34;&#34;&#34; Read filename &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D#&#34;, length=256):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+                self.length= length
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read filename byte by byte &#34;&#34;&#34;
+                if len(self.data) &lt;= self.length:
+                        if byte in self.ignore:
+                                pass
+                        # Ignore white space in start of line
+                        elif byte in b&#34; &#34;:
+                                if len(self.data) &gt; 0:
+                                        self.data += byte
+                        elif byte in self.terminator:
+                                if len(self.data) &gt; 0:
+                                        self.value = self.data.decode(&#34;utf8&#34;)
+                                        return self.value
+                                else:
+                                        raise FileError(&#34;Filename empty&#34;)
+                        elif byte not in b&#39;^&lt;&gt;:;,?&#34;*|&#39;:
+                                self.data += byte
+                        else:
+                                raise FileError(&#34;Not a filename&#34;)
+                else:
+                        raise FileError(&#34;Filename too long&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.FilenameReader.read_byte"><code class="name flex">
+<span>def <span class="ident">read_byte</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read filename byte by byte</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_byte(self, byte):
+        &#34;&#34;&#34; Read filename byte by byte &#34;&#34;&#34;
+        if len(self.data) &lt;= self.length:
+                if byte in self.ignore:
+                        pass
+                # Ignore white space in start of line
+                elif byte in b&#34; &#34;:
+                        if len(self.data) &gt; 0:
+                                self.data += byte
+                elif byte in self.terminator:
+                        if len(self.data) &gt; 0:
+                                self.value = self.data.decode(&#34;utf8&#34;)
+                                return self.value
+                        else:
+                                raise FileError(&#34;Filename empty&#34;)
+                elif byte not in b&#39;^&lt;&gt;:;,?&#34;*|&#39;:
+                        self.data += byte
+                else:
+                        raise FileError(&#34;Not a filename&#34;)
+        else:
+                raise FileError(&#34;Filename too long&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.tools.exchange.Reader.get" href="#lib.tools.exchange.Reader.get">get</a></code></li>
+<li><code><a title="lib.tools.exchange.Reader.set" href="#lib.tools.exchange.Reader.set">set</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.tools.exchange.ImporterCommand"><code class="flex name class">
+<span>class <span class="ident">ImporterCommand</span></span>
+<span>(</span><span>directory)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Importer command </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ImporterCommand:
+        &#34;&#34;&#34; Importer command &#34;&#34;&#34;
+        def __init__(self, directory):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.pattern   = PatternReader()
+                self.path      = FilenameReader()
+                self.recursive = IntReader()
+                self.directory = directory
+                self.read_byte   = self.read_pattern
+
+        def read_pattern(self, byte):
+                &#34;&#34;&#34; Read pattern &#34;&#34;&#34;
+                if self.pattern.read_byte(byte) is not None:
+                        self.read_byte = self.read_path
+                return None
+
+        def read_path(self, byte):
+                &#34;&#34;&#34; Read path &#34;&#34;&#34;
+                if self.path.read_byte(byte) is not None:
+                        self.read_byte = self.read_recursive
+                return None
+
+        def read_recursive(self, byte):
+                &#34;&#34;&#34; Read recursive &#34;&#34;&#34;
+                if self.recursive.read_byte(byte) is not None:
+                        return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)
+
+        def write(self, file, recursive, in_file, out_file):
+                &#34;&#34;&#34; Write exporter command &#34;&#34;&#34;
+                out_file.write(&#34;࿋&#34;.encode(&#34;utf8&#34;))
+                wait_ack(in_file)
+                out_file.write(b&#34;# %s\r\n&#34;%file.encode(&#34;utf8&#34;))
+                out_file.write(b&#34;# %s\r\n&#34;%self.directory.encode(&#34;utf8&#34;))
+                out_file.write(b&#34;# %d\r\n&#34;%(1 if recursive else 0))
+                wait_ack(in_file)
+
+        def read(self, in_file, out_file):
+                &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
+                send_ack(out_file, ACK)
+                result = None
+                while result is None:
+                        byte = in_file.read(1)
+                        # pylint:disable=assignment-from-none
+                        result = self.read_byte(byte)
+                send_ack(out_file, ACK)
+                return result</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.ImporterCommand.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, in_file, out_file)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read the file completly</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self, in_file, out_file):
+        &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
+        send_ack(out_file, ACK)
+        result = None
+        while result is None:
+                byte = in_file.read(1)
+                # pylint:disable=assignment-from-none
+                result = self.read_byte(byte)
+        send_ack(out_file, ACK)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.ImporterCommand.read_path"><code class="name flex">
+<span>def <span class="ident">read_path</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_path(self, byte):
+        &#34;&#34;&#34; Read path &#34;&#34;&#34;
+        if self.path.read_byte(byte) is not None:
+                self.read_byte = self.read_recursive
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.ImporterCommand.read_pattern"><code class="name flex">
+<span>def <span class="ident">read_pattern</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read pattern</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_pattern(self, byte):
+        &#34;&#34;&#34; Read pattern &#34;&#34;&#34;
+        if self.pattern.read_byte(byte) is not None:
+                self.read_byte = self.read_path
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.ImporterCommand.read_recursive"><code class="name flex">
+<span>def <span class="ident">read_recursive</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read recursive</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_recursive(self, byte):
+        &#34;&#34;&#34; Read recursive &#34;&#34;&#34;
+        if self.recursive.read_byte(byte) is not None:
+                return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.ImporterCommand.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self, file, recursive, in_file, out_file)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write exporter command</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write(self, file, recursive, in_file, out_file):
+        &#34;&#34;&#34; Write exporter command &#34;&#34;&#34;
+        out_file.write(&#34;࿋&#34;.encode(&#34;utf8&#34;))
+        wait_ack(in_file)
+        out_file.write(b&#34;# %s\r\n&#34;%file.encode(&#34;utf8&#34;))
+        out_file.write(b&#34;# %s\r\n&#34;%self.directory.encode(&#34;utf8&#34;))
+        out_file.write(b&#34;# %d\r\n&#34;%(1 if recursive else 0))
+        wait_ack(in_file)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.tools.exchange.IntReader"><code class="flex name class">
+<span>class <span class="ident">IntReader</span></span>
+<span>(</span><span>terminator=b'\n', ignore=b'\r#', length=10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Integer reader </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IntReader(Reader):
+        &#34;&#34;&#34; Integer reader &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D#&#34;, length=10):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+                self.length= length
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read the integer byte by byte &#34;&#34;&#34;
+                if len(self.data) &lt;= self.length:
+                        if byte in self.ignore:
+                                pass
+                        elif byte in self.terminator:
+                                if len(self.data) &gt; 0:
+                                        self.value = int(self.data)
+                                        return self.value
+                                else:
+                                        raise FileError(&#34;Integer empty&#34;)
+                        elif byte in b&#34;0123456789 &#34;:
+                                if byte not in b&#34; &#34;:
+                                        self.data += byte
+                        else:
+                                raise FileError(&#34;Not an integer&#34;)
+                else:
+                        raise FileError(&#34;Integer too long&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.IntReader.read_byte"><code class="name flex">
+<span>def <span class="ident">read_byte</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read the integer byte by byte</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_byte(self, byte):
+        &#34;&#34;&#34; Read the integer byte by byte &#34;&#34;&#34;
+        if len(self.data) &lt;= self.length:
+                if byte in self.ignore:
+                        pass
+                elif byte in self.terminator:
+                        if len(self.data) &gt; 0:
+                                self.value = int(self.data)
+                                return self.value
+                        else:
+                                raise FileError(&#34;Integer empty&#34;)
+                elif byte in b&#34;0123456789 &#34;:
+                        if byte not in b&#34; &#34;:
+                                self.data += byte
+                else:
+                        raise FileError(&#34;Not an integer&#34;)
+        else:
+                raise FileError(&#34;Integer too long&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.tools.exchange.Reader.get" href="#lib.tools.exchange.Reader.get">get</a></code></li>
+<li><code><a title="lib.tools.exchange.Reader.set" href="#lib.tools.exchange.Reader.set">set</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.tools.exchange.PatternReader"><code class="flex name class">
+<span>class <span class="ident">PatternReader</span></span>
+<span>(</span><span>terminator=b'\n', ignore=b'\r#', length=256)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read file pattern </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PatternReader(Reader):
+        &#34;&#34;&#34; Read file pattern &#34;&#34;&#34;
+        def __init__(self, terminator=b&#34;\x0A&#34;, ignore=b&#34;\x0D#&#34;, length=256):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                Reader.__init__(self)
+                self.data = b&#34;&#34;
+                self.terminator = terminator
+                self.ignore = ignore
+                self.length= length
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read pattern byte by byte &#34;&#34;&#34;
+                if len(self.data) &lt;= self.length:
+                        if byte in self.ignore:
+                                pass
+                        # Ignore white space in start of line
+                        elif byte in b&#34; &#34;:
+                                if len(self.data) &gt; 0:
+                                        self.data += byte
+                        elif byte in self.terminator:
+                                if len(self.data) &gt; 0:
+                                        self.value = self.data.decode(&#34;utf8&#34;)
+                                        return self.value
+                                else:
+                                        raise FileError(&#34;Filename empty&#34;)
+                        elif byte not in b&#39;^&lt;&gt;:;,&#34;|&#39;:
+                                self.data += byte
+                        else:
+                                raise FileError(&#34;Not a pattern&#34;)
+                else:
+                        raise FileError(&#34;Pattern too long&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.PatternReader.read_byte"><code class="name flex">
+<span>def <span class="ident">read_byte</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read pattern byte by byte</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_byte(self, byte):
+        &#34;&#34;&#34; Read pattern byte by byte &#34;&#34;&#34;
+        if len(self.data) &lt;= self.length:
+                if byte in self.ignore:
+                        pass
+                # Ignore white space in start of line
+                elif byte in b&#34; &#34;:
+                        if len(self.data) &gt; 0:
+                                self.data += byte
+                elif byte in self.terminator:
+                        if len(self.data) &gt; 0:
+                                self.value = self.data.decode(&#34;utf8&#34;)
+                                return self.value
+                        else:
+                                raise FileError(&#34;Filename empty&#34;)
+                elif byte not in b&#39;^&lt;&gt;:;,&#34;|&#39;:
+                        self.data += byte
+                else:
+                        raise FileError(&#34;Not a pattern&#34;)
+        else:
+                raise FileError(&#34;Pattern too long&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.tools.exchange.Reader.get" href="#lib.tools.exchange.Reader.get">get</a></code></li>
+<li><code><a title="lib.tools.exchange.Reader.set" href="#lib.tools.exchange.Reader.set">set</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.tools.exchange.Reader"><code class="flex name class">
+<span>class <span class="ident">Reader</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Abstract reader class</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Reader:
+        &#34;&#34;&#34; Abstract reader class &#34;&#34;&#34;
+        def __init__(self):
+                self.value = None
+
+        def read_byte(self, byte):
+                &#34;&#34;&#34; Read one byte &#34;&#34;&#34;
+                return None
+
+        def get(self):
+                &#34;&#34;&#34; Get the value completly read or None &#34;&#34;&#34;
+                return self.value
+
+        def set(self, value):
+                &#34;&#34;&#34; Set the value &#34;&#34;&#34;
+                self.value = value</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="lib.tools.exchange.BinaryReader" href="#lib.tools.exchange.BinaryReader">BinaryReader</a></li>
+<li><a title="lib.tools.exchange.BlankLineReader" href="#lib.tools.exchange.BlankLineReader">BlankLineReader</a></li>
+<li><a title="lib.tools.exchange.DateReader" href="#lib.tools.exchange.DateReader">DateReader</a></li>
+<li><a title="lib.tools.exchange.FilenameReader" href="#lib.tools.exchange.FilenameReader">FilenameReader</a></li>
+<li><a title="lib.tools.exchange.IntReader" href="#lib.tools.exchange.IntReader">IntReader</a></li>
+<li><a title="lib.tools.exchange.PatternReader" href="#lib.tools.exchange.PatternReader">PatternReader</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.Reader.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the value completly read or None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self):
+        &#34;&#34;&#34; Get the value completly read or None &#34;&#34;&#34;
+        return self.value</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.Reader.read_byte"><code class="name flex">
+<span>def <span class="ident">read_byte</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read one byte</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_byte(self, byte):
+        &#34;&#34;&#34; Read one byte &#34;&#34;&#34;
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.Reader.set"><code class="name flex">
+<span>def <span class="ident">set</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the value</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set(self, value):
+        &#34;&#34;&#34; Set the value &#34;&#34;&#34;
+        self.value = value</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.tools" href="index.html">lib.tools</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.tools.exchange.send_ack" href="#lib.tools.exchange.send_ack">send_ack</a></code></li>
+<li><code><a title="lib.tools.exchange.wait_ack" href="#lib.tools.exchange.wait_ack">wait_ack</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.tools.exchange.BinaryReader" href="#lib.tools.exchange.BinaryReader">BinaryReader</a></code></h4>
+<ul class="">
+<li><code><a title="lib.tools.exchange.BinaryReader.read_byte" href="#lib.tools.exchange.BinaryReader.read_byte">read_byte</a></code></li>
+<li><code><a title="lib.tools.exchange.BinaryReader.set_length" href="#lib.tools.exchange.BinaryReader.set_length">set_length</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.BlankLineReader" href="#lib.tools.exchange.BlankLineReader">BlankLineReader</a></code></h4>
+<ul class="">
+<li><code><a title="lib.tools.exchange.BlankLineReader.read_byte" href="#lib.tools.exchange.BlankLineReader.read_byte">read_byte</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.DateReader" href="#lib.tools.exchange.DateReader">DateReader</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.tools.exchange.DateReader.read_day" href="#lib.tools.exchange.DateReader.read_day">read_day</a></code></li>
+<li><code><a title="lib.tools.exchange.DateReader.read_hour" href="#lib.tools.exchange.DateReader.read_hour">read_hour</a></code></li>
+<li><code><a title="lib.tools.exchange.DateReader.read_minute" href="#lib.tools.exchange.DateReader.read_minute">read_minute</a></code></li>
+<li><code><a title="lib.tools.exchange.DateReader.read_month" href="#lib.tools.exchange.DateReader.read_month">read_month</a></code></li>
+<li><code><a title="lib.tools.exchange.DateReader.read_second" href="#lib.tools.exchange.DateReader.read_second">read_second</a></code></li>
+<li><code><a title="lib.tools.exchange.DateReader.read_year" href="#lib.tools.exchange.DateReader.read_year">read_year</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.FileError" href="#lib.tools.exchange.FileError">FileError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.FileReader" href="#lib.tools.exchange.FileReader">FileReader</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.tools.exchange.FileReader.read" href="#lib.tools.exchange.FileReader.read">read</a></code></li>
+<li><code><a title="lib.tools.exchange.FileReader.read_blank" href="#lib.tools.exchange.FileReader.read_blank">read_blank</a></code></li>
+<li><code><a title="lib.tools.exchange.FileReader.read_blank_content" href="#lib.tools.exchange.FileReader.read_blank_content">read_blank_content</a></code></li>
+<li><code><a title="lib.tools.exchange.FileReader.read_content" href="#lib.tools.exchange.FileReader.read_content">read_content</a></code></li>
+<li><code><a title="lib.tools.exchange.FileReader.read_crc" href="#lib.tools.exchange.FileReader.read_crc">read_crc</a></code></li>
+<li><code><a title="lib.tools.exchange.FileReader.read_date" href="#lib.tools.exchange.FileReader.read_date">read_date</a></code></li>
+<li><code><a title="lib.tools.exchange.FileReader.read_filename" href="#lib.tools.exchange.FileReader.read_filename">read_filename</a></code></li>
+<li><code><a title="lib.tools.exchange.FileReader.read_size" href="#lib.tools.exchange.FileReader.read_size">read_size</a></code></li>
+<li><code><a title="lib.tools.exchange.FileReader.write_file" href="#lib.tools.exchange.FileReader.write_file">write_file</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.FileWriter" href="#lib.tools.exchange.FileWriter">FileWriter</a></code></h4>
+<ul class="">
+<li><code><a title="lib.tools.exchange.FileWriter.write" href="#lib.tools.exchange.FileWriter.write">write</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.FilenameReader" href="#lib.tools.exchange.FilenameReader">FilenameReader</a></code></h4>
+<ul class="">
+<li><code><a title="lib.tools.exchange.FilenameReader.read_byte" href="#lib.tools.exchange.FilenameReader.read_byte">read_byte</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.ImporterCommand" href="#lib.tools.exchange.ImporterCommand">ImporterCommand</a></code></h4>
+<ul class="">
+<li><code><a title="lib.tools.exchange.ImporterCommand.read" href="#lib.tools.exchange.ImporterCommand.read">read</a></code></li>
+<li><code><a title="lib.tools.exchange.ImporterCommand.read_path" href="#lib.tools.exchange.ImporterCommand.read_path">read_path</a></code></li>
+<li><code><a title="lib.tools.exchange.ImporterCommand.read_pattern" href="#lib.tools.exchange.ImporterCommand.read_pattern">read_pattern</a></code></li>
+<li><code><a title="lib.tools.exchange.ImporterCommand.read_recursive" href="#lib.tools.exchange.ImporterCommand.read_recursive">read_recursive</a></code></li>
+<li><code><a title="lib.tools.exchange.ImporterCommand.write" href="#lib.tools.exchange.ImporterCommand.write">write</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.IntReader" href="#lib.tools.exchange.IntReader">IntReader</a></code></h4>
+<ul class="">
+<li><code><a title="lib.tools.exchange.IntReader.read_byte" href="#lib.tools.exchange.IntReader.read_byte">read_byte</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.PatternReader" href="#lib.tools.exchange.PatternReader">PatternReader</a></code></h4>
+<ul class="">
+<li><code><a title="lib.tools.exchange.PatternReader.read_byte" href="#lib.tools.exchange.PatternReader.read_byte">read_byte</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.Reader" href="#lib.tools.exchange.Reader">Reader</a></code></h4>
+<ul class="">
+<li><code><a title="lib.tools.exchange.Reader.get" href="#lib.tools.exchange.Reader.get">get</a></code></li>
+<li><code><a title="lib.tools.exchange.Reader.read_byte" href="#lib.tools.exchange.Reader.read_byte">read_byte</a></code></li>
+<li><code><a title="lib.tools.exchange.Reader.set" href="#lib.tools.exchange.Reader.set">set</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

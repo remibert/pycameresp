@@ -44,7 +44,7 @@ The core of the server is in the other class HttpServerCore, which is loaded int
 It takes a little while the first time you connect, but limits memory consumption if not in use.
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True. &#34;&#34;&#34;
 import re
-from tools import useful
+from tools import logger,filesystem,strings
 
 class HttpServer:
         &#34;&#34;&#34; Http main class &#34;&#34;&#34;
@@ -62,7 +62,7 @@ class HttpServer:
                 if preload:
                         self.preload()
                 else:
-                        useful.syslog(&#34;Http waiting on %d&#34;%self.port)
+                        logger.syslog(&#34;Http waiting on %d&#34;%self.port)
 
         def preload(self):
                 &#34;&#34;&#34; Method used to preload page template.
@@ -71,34 +71,34 @@ class HttpServer:
 
                 if self.loader:
                         from htmltemplate import WWW_DIR
-                        useful.syslog(&#34;Html load pages&#34;)
+                        logger.syslog(&#34;Html load pages&#34;)
                         self.loader()
                         self.loader = None
                         HttpServer.www_dir = WWW_DIR
                         loaded = True
 
                 if self.server is None:
-                        useful.syslog(&#34;Http start server&#34;)
+                        logger.syslog(&#34;Http start server&#34;)
                         from server.httpservercore import HttpServerCore
                         self.server = HttpServerCore(self.port, self.name)
                         loaded = True
 
                 if loaded:
-                        useful.syslog(&#34;Http ready on %d&#34;%self.port)
+                        logger.syslog(&#34;Http ready on %d&#34;%self.port)
 
         @staticmethod
         def add_route(url, **kwargs):
                 &#34;&#34;&#34; Add a route to select an html page.
                 For the server to know the pages, it must imperatively use this decorator &#34;&#34;&#34;
                 def add_route(function):
-                        if useful.tobytes(url[-1]) == ord(b&#34;*&#34;):
-                                HttpServer.wildroutes.append([useful.tobytes(url),(function, kwargs)])
+                        if strings.tobytes(url[-1]) == ord(b&#34;*&#34;):
+                                HttpServer.wildroutes.append([strings.tobytes(url),(function, kwargs)])
                         else:
                                 kwargs[&#34;index&#34;] = len(HttpServer.menus)
-                                HttpServer.routes[useful.tobytes(url)] = (function, kwargs)
+                                HttpServer.routes[strings.tobytes(url)] = (function, kwargs)
                         if kwargs.get(&#34;available&#34;, True):
                                 if &#34;item&#34; in kwargs and &#34;menu&#34; in kwargs:
-                                        HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), useful.tobytes(url)])
+                                        HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), strings.tobytes(url)])
                                         HttpServer.menus.sort()
                         return function
                 return add_route
@@ -134,8 +134,8 @@ class HttpServer:
                 function, args = None, None
 
                 if request.method == b&#34;PUT&#34;:
-                        directory, file = useful.split(useful.tostrings(request.path))
-                        found = HttpServer.routes.get(useful.tobytes(directory),None)
+                        directory, file = filesystem.split(strings.tostrings(request.path))
+                        found = HttpServer.routes.get(strings.tobytes(directory),None)
                         if found:
                                 function, args = found
                         return function, args
@@ -143,12 +143,12 @@ class HttpServer:
                         found = HttpServer.routes.get(request.path,None)
                         if found is None:
                                 for route, func in HttpServer.wildroutes:
-                                        if re.match(useful.tostrings(route), useful.tostrings(request.path)):
+                                        if re.match(strings.tostrings(route), strings.tostrings(request.path)):
                                                 found = func
                                                 break
                                 if found is None:
-                                        staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
-                                        if staticRe.match(useful.tostrings(request.path)):
+                                        staticRe = re.compile(&#34;^/(&#34;+strings.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
+                                        if staticRe.match(strings.tostrings(request.path)):
                                                 function, args = HttpServer.static_pages, {}
                                 else:
                                         function, args = found
@@ -159,7 +159,7 @@ class HttpServer:
         @staticmethod
         async def static_pages(request, response, args):
                 &#34;&#34;&#34; Treat the case of static pages &#34;&#34;&#34;
-                path = useful.tobytes(HttpServer.www_dir) + request.path
+                path = strings.tobytes(HttpServer.www_dir) + request.path
                 path = path.replace(b&#34;//&#34;,b&#34;/&#34;)
 
                 if b&#34;..&#34; in path:
@@ -176,7 +176,7 @@ class HttpServer:
                         # Call on connection method
                         await self.server.on_connection(reader, writer)
                 except Exception as err:
-                        useful.syslog(err)
+                        logger.syslog(err)
 
 def start(loop=None, port=80, loader=None, preload=False, name=&#34;&#34;):
         &#34;&#34;&#34; Start http server.
@@ -271,7 +271,7 @@ preload : True = preload the server at the start, False = load the server at the
                 if preload:
                         self.preload()
                 else:
-                        useful.syslog(&#34;Http waiting on %d&#34;%self.port)
+                        logger.syslog(&#34;Http waiting on %d&#34;%self.port)
 
         def preload(self):
                 &#34;&#34;&#34; Method used to preload page template.
@@ -280,34 +280,34 @@ preload : True = preload the server at the start, False = load the server at the
 
                 if self.loader:
                         from htmltemplate import WWW_DIR
-                        useful.syslog(&#34;Html load pages&#34;)
+                        logger.syslog(&#34;Html load pages&#34;)
                         self.loader()
                         self.loader = None
                         HttpServer.www_dir = WWW_DIR
                         loaded = True
 
                 if self.server is None:
-                        useful.syslog(&#34;Http start server&#34;)
+                        logger.syslog(&#34;Http start server&#34;)
                         from server.httpservercore import HttpServerCore
                         self.server = HttpServerCore(self.port, self.name)
                         loaded = True
 
                 if loaded:
-                        useful.syslog(&#34;Http ready on %d&#34;%self.port)
+                        logger.syslog(&#34;Http ready on %d&#34;%self.port)
 
         @staticmethod
         def add_route(url, **kwargs):
                 &#34;&#34;&#34; Add a route to select an html page.
                 For the server to know the pages, it must imperatively use this decorator &#34;&#34;&#34;
                 def add_route(function):
-                        if useful.tobytes(url[-1]) == ord(b&#34;*&#34;):
-                                HttpServer.wildroutes.append([useful.tobytes(url),(function, kwargs)])
+                        if strings.tobytes(url[-1]) == ord(b&#34;*&#34;):
+                                HttpServer.wildroutes.append([strings.tobytes(url),(function, kwargs)])
                         else:
                                 kwargs[&#34;index&#34;] = len(HttpServer.menus)
-                                HttpServer.routes[useful.tobytes(url)] = (function, kwargs)
+                                HttpServer.routes[strings.tobytes(url)] = (function, kwargs)
                         if kwargs.get(&#34;available&#34;, True):
                                 if &#34;item&#34; in kwargs and &#34;menu&#34; in kwargs:
-                                        HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), useful.tobytes(url)])
+                                        HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), strings.tobytes(url)])
                                         HttpServer.menus.sort()
                         return function
                 return add_route
@@ -343,8 +343,8 @@ preload : True = preload the server at the start, False = load the server at the
                 function, args = None, None
 
                 if request.method == b&#34;PUT&#34;:
-                        directory, file = useful.split(useful.tostrings(request.path))
-                        found = HttpServer.routes.get(useful.tobytes(directory),None)
+                        directory, file = filesystem.split(strings.tostrings(request.path))
+                        found = HttpServer.routes.get(strings.tobytes(directory),None)
                         if found:
                                 function, args = found
                         return function, args
@@ -352,12 +352,12 @@ preload : True = preload the server at the start, False = load the server at the
                         found = HttpServer.routes.get(request.path,None)
                         if found is None:
                                 for route, func in HttpServer.wildroutes:
-                                        if re.match(useful.tostrings(route), useful.tostrings(request.path)):
+                                        if re.match(strings.tostrings(route), strings.tostrings(request.path)):
                                                 found = func
                                                 break
                                 if found is None:
-                                        staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
-                                        if staticRe.match(useful.tostrings(request.path)):
+                                        staticRe = re.compile(&#34;^/(&#34;+strings.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
+                                        if staticRe.match(strings.tostrings(request.path)):
                                                 function, args = HttpServer.static_pages, {}
                                 else:
                                         function, args = found
@@ -368,7 +368,7 @@ preload : True = preload the server at the start, False = load the server at the
         @staticmethod
         async def static_pages(request, response, args):
                 &#34;&#34;&#34; Treat the case of static pages &#34;&#34;&#34;
-                path = useful.tobytes(HttpServer.www_dir) + request.path
+                path = strings.tobytes(HttpServer.www_dir) + request.path
                 path = path.replace(b&#34;//&#34;,b&#34;/&#34;)
 
                 if b&#34;..&#34; in path:
@@ -385,7 +385,7 @@ preload : True = preload the server at the start, False = load the server at the
                         # Call on connection method
                         await self.server.on_connection(reader, writer)
                 except Exception as err:
-                        useful.syslog(err)</code></pre>
+                        logger.syslog(err)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -423,14 +423,14 @@ def add_route(url, **kwargs):
         &#34;&#34;&#34; Add a route to select an html page.
         For the server to know the pages, it must imperatively use this decorator &#34;&#34;&#34;
         def add_route(function):
-                if useful.tobytes(url[-1]) == ord(b&#34;*&#34;):
-                        HttpServer.wildroutes.append([useful.tobytes(url),(function, kwargs)])
+                if strings.tobytes(url[-1]) == ord(b&#34;*&#34;):
+                        HttpServer.wildroutes.append([strings.tobytes(url),(function, kwargs)])
                 else:
                         kwargs[&#34;index&#34;] = len(HttpServer.menus)
-                        HttpServer.routes[useful.tobytes(url)] = (function, kwargs)
+                        HttpServer.routes[strings.tobytes(url)] = (function, kwargs)
                 if kwargs.get(&#34;available&#34;, True):
                         if &#34;item&#34; in kwargs and &#34;menu&#34; in kwargs:
-                                HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), useful.tobytes(url)])
+                                HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), strings.tobytes(url)])
                                 HttpServer.menus.sort()
                 return function
         return add_route</code></pre>
@@ -496,8 +496,8 @@ def search_route(request):
         function, args = None, None
 
         if request.method == b&#34;PUT&#34;:
-                directory, file = useful.split(useful.tostrings(request.path))
-                found = HttpServer.routes.get(useful.tobytes(directory),None)
+                directory, file = filesystem.split(strings.tostrings(request.path))
+                found = HttpServer.routes.get(strings.tobytes(directory),None)
                 if found:
                         function, args = found
                 return function, args
@@ -505,12 +505,12 @@ def search_route(request):
                 found = HttpServer.routes.get(request.path,None)
                 if found is None:
                         for route, func in HttpServer.wildroutes:
-                                if re.match(useful.tostrings(route), useful.tostrings(request.path)):
+                                if re.match(strings.tostrings(route), strings.tostrings(request.path)):
                                         found = func
                                         break
                         if found is None:
-                                staticRe = re.compile(&#34;^/(&#34;+useful.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
-                                if staticRe.match(useful.tostrings(request.path)):
+                                staticRe = re.compile(&#34;^/(&#34;+strings.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
+                                if staticRe.match(strings.tostrings(request.path)):
                                         function, args = HttpServer.static_pages, {}
                         else:
                                 function, args = found
@@ -531,7 +531,7 @@ def search_route(request):
 <pre><code class="python">@staticmethod
 async def static_pages(request, response, args):
         &#34;&#34;&#34; Treat the case of static pages &#34;&#34;&#34;
-        path = useful.tobytes(HttpServer.www_dir) + request.path
+        path = strings.tobytes(HttpServer.www_dir) + request.path
         path = path.replace(b&#34;//&#34;,b&#34;/&#34;)
 
         if b&#34;..&#34; in path:
@@ -561,7 +561,7 @@ async def static_pages(request, response, args):
                 # Call on connection method
                 await self.server.on_connection(reader, writer)
         except Exception as err:
-                useful.syslog(err)</code></pre>
+                logger.syslog(err)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.httpserver.HttpServer.preload"><code class="name flex">
@@ -581,20 +581,20 @@ You must define the content of a callback, which only import the python module w
 
         if self.loader:
                 from htmltemplate import WWW_DIR
-                useful.syslog(&#34;Html load pages&#34;)
+                logger.syslog(&#34;Html load pages&#34;)
                 self.loader()
                 self.loader = None
                 HttpServer.www_dir = WWW_DIR
                 loaded = True
 
         if self.server is None:
-                useful.syslog(&#34;Http start server&#34;)
+                logger.syslog(&#34;Http start server&#34;)
                 from server.httpservercore import HttpServerCore
                 self.server = HttpServerCore(self.port, self.name)
                 loaded = True
 
         if loaded:
-                useful.syslog(&#34;Http ready on %d&#34;%self.port)</code></pre>
+                logger.syslog(&#34;Http ready on %d&#34;%self.port)</code></pre>
 </details>
 </dd>
 </dl>

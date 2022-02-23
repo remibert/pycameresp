@@ -1538,7 +1538,7 @@ class Editor:
 			else:
 				end = "Read only" if self.edit.text.read_only else ""
 
-			header = "\x1B[7m %s%s%s \x1B[m"%(filename_, " "*(self.edit.view.width - len(filename_) - len(end)-2), end)
+			header = "\x1B[7m %s%s%s \x1B[m"%(filename_, " "*(self.edit.view.width - len(filename_) - len(end)-1), end)
 			self.edit.view.write(header)
 			self.edit.view.move_cursor()
 			self.is_refresh_header = False

@@ -35,7 +35,7 @@ from server.server     import Server
 from wifi.station      import Station
 from htmltemplate      import *
 from webpage.mainpage  import main_frame
-from tools             import useful,lang,archiver
+from tools             import lang,archiver,filesystem,logger,system
 
 @HttpServer.add_route(b&#39;/system&#39;, menu=lang.menu_system, item=lang.item_system)
 async def system_page(request, response, args):
@@ -60,7 +60,8 @@ async def system_page(request, response, args):
 async def import_config(request, response, args):
         &#34;&#34;&#34; Import configuration &#34;&#34;&#34;
         Server.slow_down()
-        useful.import_files(request.get_content_filename())
+        file = request.get_content_filename()
+        archiver.import_files(file)
         await response.send_ok()
 
 @HttpServer.add_route(b&#39;/system/export_config&#39;)
@@ -69,13 +70,13 @@ async def export_config(request, response, args):
         Server.slow_down()
         archiver.export_files(&#34;config.cfg&#34;, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False)
         await response.send_file(b&#34;config.cfg&#34;, headers=request.headers)
-        useful.remove(&#34;config.cfg&#34;)
+        filesystem.remove(&#34;config.cfg&#34;)
 
 @HttpServer.add_route(b&#39;/system/import_file_system&#39;)
 async def import_file_system(request, response, args):
         &#34;&#34;&#34; Import file system &#34;&#34;&#34;
         Server.slow_down()
-        useful.import_files(request.get_content_filename())
+        archiver.import_files(request.get_content_filename())
         await reboot(request, response, args)
 
 @HttpServer.add_route(b&#39;/system/export_file_system&#39;)
@@ -84,7 +85,7 @@ async def export_file_system(request, response, args):
         Server.slow_down()
         archiver.export_files(&#34;fileSystem.cfs&#34;, path=&#34;./&#34;,pattern=&#34;*.*&#34;, recursive=True)
         await response.send_file(b&#34;fileSystem.cfs&#34;, headers=request.headers)
-        useful.remove(&#34;fileSystem.cfs&#34;)
+        filesystem.remove(&#34;fileSystem.cfs&#34;)
 
 @HttpServer.add_route(b&#39;/system/export_syslog&#39;)
 async def export_syslog(request, response, args):
@@ -98,11 +99,11 @@ async def reboot(request, response, args):
         try:
                 await response.send_ok()
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
         try:
-                useful.reboot(&#34;Reboot asked on system html page&#34;)
+                system.reboot(&#34;Reboot asked on system html page&#34;)
         except Exception as err:
-                useful.syslog(err)</code></pre>
+                logger.syslog(err)</code></pre>
 </details>
 </section>
 <section>
@@ -127,7 +128,7 @@ async def export_config(request, response, args):
         Server.slow_down()
         archiver.export_files(&#34;config.cfg&#34;, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False)
         await response.send_file(b&#34;config.cfg&#34;, headers=request.headers)
-        useful.remove(&#34;config.cfg&#34;)</code></pre>
+        filesystem.remove(&#34;config.cfg&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.webpage.systempage.export_file_system"><code class="name flex">
@@ -145,7 +146,7 @@ async def export_file_system(request, response, args):
         Server.slow_down()
         archiver.export_files(&#34;fileSystem.cfs&#34;, path=&#34;./&#34;,pattern=&#34;*.*&#34;, recursive=True)
         await response.send_file(b&#34;fileSystem.cfs&#34;, headers=request.headers)
-        useful.remove(&#34;fileSystem.cfs&#34;)</code></pre>
+        filesystem.remove(&#34;fileSystem.cfs&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.webpage.systempage.export_syslog"><code class="name flex">
@@ -177,7 +178,8 @@ async def export_syslog(request, response, args):
 async def import_config(request, response, args):
         &#34;&#34;&#34; Import configuration &#34;&#34;&#34;
         Server.slow_down()
-        useful.import_files(request.get_content_filename())
+        file = request.get_content_filename()
+        archiver.import_files(file)
         await response.send_ok()</code></pre>
 </details>
 </dd>
@@ -194,7 +196,7 @@ async def import_config(request, response, args):
 async def import_file_system(request, response, args):
         &#34;&#34;&#34; Import file system &#34;&#34;&#34;
         Server.slow_down()
-        useful.import_files(request.get_content_filename())
+        archiver.import_files(request.get_content_filename())
         await reboot(request, response, args)</code></pre>
 </details>
 </dd>
@@ -213,11 +215,11 @@ async def reboot(request, response, args):
         try:
                 await response.send_ok()
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
         try:
-                useful.reboot(&#34;Reboot asked on system html page&#34;)
+                system.reboot(&#34;Reboot asked on system html page&#34;)
         except Exception as err:
-                useful.syslog(err)</code></pre>
+                logger.syslog(err)</code></pre>
 </details>
 </dd>
 <dt id="lib.webpage.systempage.system_page"><code class="name flex">

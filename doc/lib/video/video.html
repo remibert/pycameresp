@@ -44,7 +44,7 @@ as well as a lot of adjustment on the camera, not available on the other firmwar
 import time
 import camera
 import uasyncio
-from tools import useful,jsonconfig
+from tools import system,jsonconfig,logger
 
 class CameraConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Class that collects the camera rendering configuration &#34;&#34;&#34;
@@ -76,9 +76,9 @@ class Motion:
                 &#34;&#34;&#34; Extract the full content of motion &#34;&#34;&#34;
                 return self.motion.extract()
 
-        def compare(self, other, extractShape):
+        def compare(self, other):
                 &#34;&#34;&#34; Compare image to detect motion &#34;&#34;&#34;
-                return self.motion.compare(other.motion, extractShape)
+                return self.motion.compare(other.motion)
 
         def configure(self, param):
                 &#34;&#34;&#34; Configure the motion detection &#34;&#34;&#34;
@@ -249,7 +249,7 @@ class Camera:
                         retry = 10
                         while 1:
                                 if retry &lt;= 0:
-                                        useful.reboot(&#34;Reboot forced after camera problem&#34;)
+                                        system.reboot(&#34;Reboot forced after camera problem&#34;)
                                 try:
                                         result = callback()
                                         Camera.success[0] += 1
@@ -258,7 +258,7 @@ class Camera:
                                         Camera.failed[0] += 1
                                         Camera.newFailed[0] += 1
                                         if retry &lt;= 3:
-                                                useful.syslog(&#34;Failed to get image %d retry before reset&#34;%retry)
+                                                logger.syslog(&#34;Failed to get image %d retry before reset&#34;%retry)
                                         retry -= 1
                                         time.sleep(0.5)
                         total = Camera.success[0] + Camera.failed[0]
@@ -270,7 +270,7 @@ class Camera:
                                 else:
                                         newFailed = 0.
                                         failed    = 0.
-                                useful.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(newFailed, failed, total))
+                                logger.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(newFailed, failed, total))
                                 Camera.newFailed[0] = 0
                 return result
 
@@ -310,7 +310,7 @@ class Camera:
                 if resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
                 if resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
                 if Camera.opened and val is not None:
-                        # print(&#34;Framesize %s&#34;%useful.tostrings(resolution))
+                        # print(&#34;Framesize %s&#34;%strings.tostrings(resolution))
                         camera.framesize(val)
                 # else:
                         # print(&#34;Framesize not set&#34;)
@@ -329,7 +329,7 @@ class Camera:
                 if format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
                 if format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
                 if Camera.opened and val is not None:
-                        # print(&#34;Pixformat %s&#34;%useful.tostrings(format_))
+                        # print(&#34;Pixformat %s&#34;%strings.tostrings(format_))
                         camera.pixformat(val)
                 # else:
                         # print(&#34;Pixformat not set&#34;)
@@ -349,10 +349,7 @@ class Camera:
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Brightness %d&#34;%val)
-                        if camera.brightness() != val:
-                                return camera.brightness(val)
-                        else:
-                                return val
+                        return camera.brightness(val)
                 return None
 
         @staticmethod
@@ -361,10 +358,7 @@ class Camera:
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Contrast %d&#34;%val)
-                        if camera.contrast() != val:
-                                return camera.contrast(val)
-                        else:
-                                return val
+                        return camera.contrast(val)
                 return None
 
         @staticmethod
@@ -373,10 +367,7 @@ class Camera:
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Saturation %d&#34;%val)
-                        if camera.saturation() != val:
-                                return camera.saturation(val)
-                        else:
-                                return val
+                        return camera.saturation(val)
                 return None
 
         @staticmethod
@@ -545,7 +536,7 @@ class Camera:
                         retry = 10
                         while 1:
                                 if retry &lt;= 0:
-                                        useful.reboot(&#34;Reboot forced after camera problem&#34;)
+                                        system.reboot(&#34;Reboot forced after camera problem&#34;)
                                 try:
                                         result = callback()
                                         Camera.success[0] += 1
@@ -554,7 +545,7 @@ class Camera:
                                         Camera.failed[0] += 1
                                         Camera.newFailed[0] += 1
                                         if retry &lt;= 3:
-                                                useful.syslog(&#34;Failed to get image %d retry before reset&#34;%retry)
+                                                logger.syslog(&#34;Failed to get image %d retry before reset&#34;%retry)
                                         retry -= 1
                                         time.sleep(0.5)
                         total = Camera.success[0] + Camera.failed[0]
@@ -566,7 +557,7 @@ class Camera:
                                 else:
                                         newFailed = 0.
                                         failed    = 0.
-                                useful.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(newFailed, failed, total))
+                                logger.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(newFailed, failed, total))
                                 Camera.newFailed[0] = 0
                 return result
 
@@ -606,7 +597,7 @@ class Camera:
                 if resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
                 if resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
                 if Camera.opened and val is not None:
-                        # print(&#34;Framesize %s&#34;%useful.tostrings(resolution))
+                        # print(&#34;Framesize %s&#34;%strings.tostrings(resolution))
                         camera.framesize(val)
                 # else:
                         # print(&#34;Framesize not set&#34;)
@@ -625,7 +616,7 @@ class Camera:
                 if format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
                 if format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
                 if Camera.opened and val is not None:
-                        # print(&#34;Pixformat %s&#34;%useful.tostrings(format_))
+                        # print(&#34;Pixformat %s&#34;%strings.tostrings(format_))
                         camera.pixformat(val)
                 # else:
                         # print(&#34;Pixformat not set&#34;)
@@ -645,10 +636,7 @@ class Camera:
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Brightness %d&#34;%val)
-                        if camera.brightness() != val:
-                                return camera.brightness(val)
-                        else:
-                                return val
+                        return camera.brightness(val)
                 return None
 
         @staticmethod
@@ -657,10 +645,7 @@ class Camera:
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Contrast %d&#34;%val)
-                        if camera.contrast() != val:
-                                return camera.contrast(val)
-                        else:
-                                return val
+                        return camera.contrast(val)
                 return None
 
         @staticmethod
@@ -669,10 +654,7 @@ class Camera:
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Saturation %d&#34;%val)
-                        if camera.saturation() != val:
-                                return camera.saturation(val)
-                        else:
-                                return val
+                        return camera.saturation(val)
                 return None
 
         @staticmethod
@@ -790,10 +772,7 @@ def brightness(val=None):
         Camera.modified[0] = True
         if Camera.opened:
                 # print(&#34;Brightness %d&#34;%val)
-                if camera.brightness() != val:
-                        return camera.brightness(val)
-                else:
-                        return val
+                return camera.brightness(val)
         return None</code></pre>
 </details>
 </dd>
@@ -883,10 +862,7 @@ def contrast(val=None):
         Camera.modified[0] = True
         if Camera.opened:
                 # print(&#34;Contrast %d&#34;%val)
-                if camera.contrast() != val:
-                        return camera.contrast(val)
-                else:
-                        return val
+                return camera.contrast(val)
         return None</code></pre>
 </details>
 </dd>
@@ -929,7 +905,7 @@ def framesize(resolution):
         if resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
         if resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
         if Camera.opened and val is not None:
-                # print(&#34;Framesize %s&#34;%useful.tostrings(resolution))
+                # print(&#34;Framesize %s&#34;%strings.tostrings(resolution))
                 camera.framesize(val)
         # else:
                 # print(&#34;Framesize not set&#34;)</code></pre>
@@ -1116,7 +1092,7 @@ def pixformat(format_):
         if format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
         if format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
         if Camera.opened and val is not None:
-                # print(&#34;Pixformat %s&#34;%useful.tostrings(format_))
+                # print(&#34;Pixformat %s&#34;%strings.tostrings(format_))
                 camera.pixformat(val)
         # else:
                 # print(&#34;Pixformat not set&#34;)</code></pre>
@@ -1192,7 +1168,7 @@ def retry(callback):
                 retry = 10
                 while 1:
                         if retry &lt;= 0:
-                                useful.reboot(&#34;Reboot forced after camera problem&#34;)
+                                system.reboot(&#34;Reboot forced after camera problem&#34;)
                         try:
                                 result = callback()
                                 Camera.success[0] += 1
@@ -1201,7 +1177,7 @@ def retry(callback):
                                 Camera.failed[0] += 1
                                 Camera.newFailed[0] += 1
                                 if retry &lt;= 3:
-                                        useful.syslog(&#34;Failed to get image %d retry before reset&#34;%retry)
+                                        logger.syslog(&#34;Failed to get image %d retry before reset&#34;%retry)
                                 retry -= 1
                                 time.sleep(0.5)
                 total = Camera.success[0] + Camera.failed[0]
@@ -1213,7 +1189,7 @@ def retry(callback):
                         else:
                                 newFailed = 0.
                                 failed    = 0.
-                        useful.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(newFailed, failed, total))
+                        logger.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(newFailed, failed, total))
                         Camera.newFailed[0] = 0
         return result</code></pre>
 </details>
@@ -1233,10 +1209,7 @@ def saturation(val=None):
         Camera.modified[0] = True
         if Camera.opened:
                 # print(&#34;Saturation %d&#34;%val)
-                if camera.saturation() != val:
-                        return camera.saturation(val)
-                else:
-                        return val
+                return camera.saturation(val)
         return None</code></pre>
 </details>
 </dd>
@@ -1351,9 +1324,9 @@ def vflip(val=None):
                 &#34;&#34;&#34; Extract the full content of motion &#34;&#34;&#34;
                 return self.motion.extract()
 
-        def compare(self, other, extractShape):
+        def compare(self, other):
                 &#34;&#34;&#34; Compare image to detect motion &#34;&#34;&#34;
-                return self.motion.compare(other.motion, extractShape)
+                return self.motion.compare(other.motion)
 
         def configure(self, param):
                 &#34;&#34;&#34; Configure the motion detection &#34;&#34;&#34;
@@ -1366,7 +1339,7 @@ def vflip(val=None):
 <h3>Methods</h3>
 <dl>
 <dt id="lib.video.video.Motion.compare"><code class="name flex">
-<span>def <span class="ident">compare</span></span>(<span>self, other, extractShape)</span>
+<span>def <span class="ident">compare</span></span>(<span>self, other)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compare image to detect motion</p></div>
@@ -1374,9 +1347,9 @@ def vflip(val=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def compare(self, other, extractShape):
+<pre><code class="python">def compare(self, other):
         &#34;&#34;&#34; Compare image to detect motion &#34;&#34;&#34;
-        return self.motion.compare(other.motion, extractShape)</code></pre>
+        return self.motion.compare(other.motion)</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Motion.configure"><code class="name flex">

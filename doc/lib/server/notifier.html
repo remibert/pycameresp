@@ -32,7 +32,7 @@
 &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
 # pylint:disable=consider-using-enumerate
 import wifi
-from tools import useful
+from tools import logger,strings
 
 class Notifier:
         &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
@@ -63,7 +63,7 @@ class Notifier:
         async def notify(message, image = None, forced=False, display=True):
                 &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
                 result = True
-                useful.syslog(&#34;Notification &#39;%s&#39;&#34;%useful.tostrings(message), display=display)
+                logger.syslog(&#34;Notification &#39;%s&#39;&#34;%strings.tostrings(message), display=display)
 
                 # Add message into postponed list
                 Notifier.postponed.append([message, image, forced, display])
@@ -79,7 +79,7 @@ class Notifier:
                 if len(Notifier.postponed) &gt; 10:
                         # Remove older
                         message, image, forced, display = Notifier.postponed[0]
-                        useful.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%useful.tostrings(message), display=display)
+                        logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(message), display=display)
                         del Notifier.postponed[0]
 
                 # If wan available
@@ -110,7 +110,7 @@ class Notifier:
                         if result:
                                 Notifier.postponed.clear()
                         else:
-                                useful.syslog(&#34;Cannot send notification&#34;)
+                                logger.syslog(&#34;Cannot send notification&#34;)
                 return result</code></pre>
 </details>
 </section>
@@ -161,7 +161,7 @@ class Notifier:
         async def notify(message, image = None, forced=False, display=True):
                 &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
                 result = True
-                useful.syslog(&#34;Notification &#39;%s&#39;&#34;%useful.tostrings(message), display=display)
+                logger.syslog(&#34;Notification &#39;%s&#39;&#34;%strings.tostrings(message), display=display)
 
                 # Add message into postponed list
                 Notifier.postponed.append([message, image, forced, display])
@@ -177,7 +177,7 @@ class Notifier:
                 if len(Notifier.postponed) &gt; 10:
                         # Remove older
                         message, image, forced, display = Notifier.postponed[0]
-                        useful.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%useful.tostrings(message), display=display)
+                        logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(message), display=display)
                         del Notifier.postponed[0]
 
                 # If wan available
@@ -208,7 +208,7 @@ class Notifier:
                         if result:
                                 Notifier.postponed.clear()
                         else:
-                                useful.syslog(&#34;Cannot send notification&#34;)
+                                logger.syslog(&#34;Cannot send notification&#34;)
                 return result</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -256,7 +256,7 @@ async def flush():
         if len(Notifier.postponed) &gt; 10:
                 # Remove older
                 message, image, forced, display = Notifier.postponed[0]
-                useful.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%useful.tostrings(message), display=display)
+                logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(message), display=display)
                 del Notifier.postponed[0]
 
         # If wan available
@@ -287,7 +287,7 @@ async def flush():
                 if result:
                         Notifier.postponed.clear()
                 else:
-                        useful.syslog(&#34;Cannot send notification&#34;)
+                        logger.syslog(&#34;Cannot send notification&#34;)
         return result</code></pre>
 </details>
 </dd>
@@ -321,7 +321,7 @@ def is_empty():
 async def notify(message, image = None, forced=False, display=True):
         &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
         result = True
-        useful.syslog(&#34;Notification &#39;%s&#39;&#34;%useful.tostrings(message), display=display)
+        logger.syslog(&#34;Notification &#39;%s&#39;&#34;%strings.tostrings(message), display=display)
 
         # Add message into postponed list
         Notifier.postponed.append([message, image, forced, display])

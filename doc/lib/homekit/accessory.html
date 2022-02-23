@@ -62,14 +62,14 @@ class Accessory:
                         Parameters : name(string), manufacturer(string), model(string), serialNumber(string), firmwareRevision(string), hardwareRevision(string), productVersion(string), productData (string with 8 bytes required)&#34;&#34;&#34;
                 import homekit_
                 self.accessory = homekit_.Accessory(\
-                        cid              = cid, \
-                        name             = kwargs.get(&#34;name&#34;             , &#34;NoName&#34;), \
-                        manufacturer     = kwargs.get(&#34;manufacturer&#34;     , &#34;Manufacturer&#34;), \
-                        model            = kwargs.get(&#34;model&#34;            , &#34;ESP32&#34;), \
-                        serialNumber     = kwargs.get(&#34;serial_number&#34;    , &#34;0000000000&#34;), \
-                        firmwareRevision = kwargs.get(&#34;firmware_revision&#34;, &#34;1.0&#34;), \
-                        hardwareRevision = kwargs.get(&#34;hardware_revision&#34;, &#34;1.0&#34;), \
-                        productVersion   = kwargs.get(&#34;product_version&#34;  , &#34;1.0&#34;))
+                        cid               = cid, \
+                        name              = kwargs.get(&#34;name&#34;             , &#34;NoName&#34;), \
+                        manufacturer      = kwargs.get(&#34;manufacturer&#34;     , &#34;Manufacturer&#34;), \
+                        model             = kwargs.get(&#34;model&#34;            , &#34;ESP32&#34;), \
+                        serial_number     = kwargs.get(&#34;serial_number&#34;    , &#34;0000000000&#34;), \
+                        firmware_revision = kwargs.get(&#34;firmware_revision&#34;, &#34;1.0&#34;), \
+                        hardware_revision = kwargs.get(&#34;hardware_revision&#34;, &#34;1.0&#34;), \
+                        product_version   = kwargs.get(&#34;product_version&#34;  , &#34;1.0&#34;))
                 self.accessory.set_product_data(kwargs.get(&#34;product_data&#34;,&#34;01234568&#34;))
 
         def __del__(self):
@@ -141,14 +141,14 @@ Parameters : name(string), manufacturer(string), model(string), serialNumber(str
                         Parameters : name(string), manufacturer(string), model(string), serialNumber(string), firmwareRevision(string), hardwareRevision(string), productVersion(string), productData (string with 8 bytes required)&#34;&#34;&#34;
                 import homekit_
                 self.accessory = homekit_.Accessory(\
-                        cid              = cid, \
-                        name             = kwargs.get(&#34;name&#34;             , &#34;NoName&#34;), \
-                        manufacturer     = kwargs.get(&#34;manufacturer&#34;     , &#34;Manufacturer&#34;), \
-                        model            = kwargs.get(&#34;model&#34;            , &#34;ESP32&#34;), \
-                        serialNumber     = kwargs.get(&#34;serial_number&#34;    , &#34;0000000000&#34;), \
-                        firmwareRevision = kwargs.get(&#34;firmware_revision&#34;, &#34;1.0&#34;), \
-                        hardwareRevision = kwargs.get(&#34;hardware_revision&#34;, &#34;1.0&#34;), \
-                        productVersion   = kwargs.get(&#34;product_version&#34;  , &#34;1.0&#34;))
+                        cid               = cid, \
+                        name              = kwargs.get(&#34;name&#34;             , &#34;NoName&#34;), \
+                        manufacturer      = kwargs.get(&#34;manufacturer&#34;     , &#34;Manufacturer&#34;), \
+                        model             = kwargs.get(&#34;model&#34;            , &#34;ESP32&#34;), \
+                        serial_number     = kwargs.get(&#34;serial_number&#34;    , &#34;0000000000&#34;), \
+                        firmware_revision = kwargs.get(&#34;firmware_revision&#34;, &#34;1.0&#34;), \
+                        hardware_revision = kwargs.get(&#34;hardware_revision&#34;, &#34;1.0&#34;), \
+                        product_version   = kwargs.get(&#34;product_version&#34;  , &#34;1.0&#34;))
                 self.accessory.set_product_data(kwargs.get(&#34;product_data&#34;,&#34;01234568&#34;))
 
         def __del__(self):

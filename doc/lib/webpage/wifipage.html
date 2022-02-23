@@ -34,8 +34,7 @@ from server.httpserver        import HttpServer
 from htmltemplate.htmlclasses import *
 from webpage.mainpage         import main_frame, manage_default_button
 import wifi
-from tools.useful             import *
-from tools                    import useful,lang
+from tools                    import lang,strings,logger
 
 def static_ip_html(config, disabled):
         &#34;&#34;&#34; Html to get static ip &#34;&#34;&#34;
@@ -57,7 +56,7 @@ def select_network(increase=0, reparse=False):
                 current_networks = current_network.list_known()
         current = 0
         for network in current_networks:
-                searched = useful.tobytes(useful.tofilename(current_network.ssid))
+                searched = strings.tobytes(strings.tofilename(current_network.ssid))
                 if searched == network:
                         break
                 current += 1
@@ -76,7 +75,7 @@ def select_network(increase=0, reparse=False):
                         part_filename = b&#34;&#34;
                 current_network.load(part_filename = part_filename)
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
         return current_network
 
 @HttpServer.add_route(b&#39;/wifi&#39;, menu=lang.menu_network, item=lang.item_wifi)
@@ -134,7 +133,7 @@ async def wifi_config(request, response, args):
                 network.forget()
                 network = select_network(-1,True)
         elif action == b&#34;default&#34;:
-                config.default = useful.tostrings(network.ssid)
+                config.default = strings.tostrings(network.ssid)
                 config.save()
         if forced == b&#34;none&#34;:
                 dynamic = network.dynamic
@@ -168,7 +167,7 @@ async def wifi_config(request, response, args):
                 Switch(text=lang.fallback_to_the, name=b&#34;fallback&#34;, checked=config.fallback, disabled=disabled),Br(),
                 Card(
                         [
-                                CardHeader(text= lang.wifi if useful.tostrings(network.ssid) != useful.tostrings(config.default) else lang.wifi_default),
+                                CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
                                 CardBody([
                                         ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b&#34;ssid&#34;, value=network.ssid, disabled=disabled),
                                         Edit(text=lang.password,    name=b&#34;wifi_password&#34;, placeholder=lang.enter_password,      type=b&#34;password&#34;,value=network.wifi_password, disabled=disabled),
@@ -289,7 +288,7 @@ async def access_point(request, response, args):
                 current_networks = current_network.list_known()
         current = 0
         for network in current_networks:
-                searched = useful.tobytes(useful.tofilename(current_network.ssid))
+                searched = strings.tobytes(strings.tofilename(current_network.ssid))
                 if searched == network:
                         break
                 current += 1
@@ -308,7 +307,7 @@ async def access_point(request, response, args):
                         part_filename = b&#34;&#34;
                 current_network.load(part_filename = part_filename)
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
         return current_network</code></pre>
 </details>
 </dd>
@@ -395,7 +394,7 @@ async def wifi_config(request, response, args):
                 network.forget()
                 network = select_network(-1,True)
         elif action == b&#34;default&#34;:
-                config.default = useful.tostrings(network.ssid)
+                config.default = strings.tostrings(network.ssid)
                 config.save()
         if forced == b&#34;none&#34;:
                 dynamic = network.dynamic
@@ -429,7 +428,7 @@ async def wifi_config(request, response, args):
                 Switch(text=lang.fallback_to_the, name=b&#34;fallback&#34;, checked=config.fallback, disabled=disabled),Br(),
                 Card(
                         [
-                                CardHeader(text= lang.wifi if useful.tostrings(network.ssid) != useful.tostrings(config.default) else lang.wifi_default),
+                                CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
                                 CardBody([
                                         ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b&#34;ssid&#34;, value=network.ssid, disabled=disabled),
                                         Edit(text=lang.password,    name=b&#34;wifi_password&#34;, placeholder=lang.enter_password,      type=b&#34;password&#34;,value=network.wifi_password, disabled=disabled),

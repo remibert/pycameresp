@@ -36,13 +36,13 @@ import socket
 import errno
 from io import IOBase
 from server.user import User
-from tools import useful
+from tools import logger,strings
 
 try:
         import wifi
-        hostname = useful.tobytes(wifi.Station.get_hostname())
+        hostname = strings.tobytes(wifi.Station.get_hostname())
 except:
-        hostname = useful.tobytes(sys.platform)
+        hostname = strings.tobytes(sys.platform)
 last_client_socket = None
 server_socket = None
 
@@ -193,7 +193,7 @@ def accept_telnet_connect(telnet_server):
                 uos.dupterm(None)
                 last_client_socket.close()
         last_client_socket, remote_addr = telnet_server.accept()
-        useful.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
+        logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
         last_client_socket.setblocking(False)
         last_client_socket.setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
 
@@ -228,10 +228,10 @@ def start(port=23):
                 server_socket.listen(1)
                 server_socket.setsockopt(socket.SOL_SOCKET, 20, accept_telnet_connect)
 
-                useful.syslog(&#34;Telnet start %d&#34;%port)
+                logger.syslog(&#34;Telnet start %d&#34;%port)
 
         except Exception as err:
-                useful.syslog(&#34;Telnet not available &#39;%s&#39;&#34;%str(err))</code></pre>
+                logger.syslog(&#34;Telnet not available &#39;%s&#39;&#34;%str(err))</code></pre>
 </details>
 </section>
 <section>
@@ -260,7 +260,7 @@ def start(port=23):
                 uos.dupterm(None)
                 last_client_socket.close()
         last_client_socket, remote_addr = telnet_server.accept()
-        useful.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
+        logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
         last_client_socket.setblocking(False)
         last_client_socket.setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
 
@@ -294,10 +294,10 @@ def start(port=23):
                 server_socket.listen(1)
                 server_socket.setsockopt(socket.SOL_SOCKET, 20, accept_telnet_connect)
 
-                useful.syslog(&#34;Telnet start %d&#34;%port)
+                logger.syslog(&#34;Telnet start %d&#34;%port)
 
         except Exception as err:
-                useful.syslog(&#34;Telnet not available &#39;%s&#39;&#34;%str(err))</code></pre>
+                logger.syslog(&#34;Telnet not available &#39;%s&#39;&#34;%str(err))</code></pre>
 </details>
 </dd>
 <dt id="lib.server.telnet.stop"><code class="name flex">

@@ -35,7 +35,7 @@ import wifi
 from server.ping import async_ping
 from server.notifier import Notifier
 from server.server import Server
-from tools import useful, jsonconfig, lang, tasking
+from tools import logger,jsonconfig,lang,tasking
 
 class PresenceConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Configuration class of presence detection &#34;&#34;&#34;
@@ -90,11 +90,11 @@ class Presence:
                 &#34;&#34;&#34; Run the task &#34;&#34;&#34;
                 # If configuration must be read
                 if Presence.config:
-                        if Presence.configRefreshCounter % 7 == 0:
+                        if Presence.configRefreshCounter % 7 == 0 or Presence.pollingDuration == Presence.SLOW_POLLING:
                                 if Presence.config.is_changed():
                                         if Presence.config.load() is False:
                                                 Presence.config.save()
-                                        useful.syslog(&#34;Change presence config %s&#34;%Presence.config.to_string(), display=False)
+                                        logger.syslog(&#34;Change presence config %s&#34;%Presence.config.to_string(), display=False)
                         Presence.configRefreshCounter += 1
 
                 if Presence.config.activated is True and wifi.Wifi.is_lan_available():
@@ -258,11 +258,11 @@ async def detect_presence():
                 &#34;&#34;&#34; Run the task &#34;&#34;&#34;
                 # If configuration must be read
                 if Presence.config:
-                        if Presence.configRefreshCounter % 7 == 0:
+                        if Presence.configRefreshCounter % 7 == 0 or Presence.pollingDuration == Presence.SLOW_POLLING:
                                 if Presence.config.is_changed():
                                         if Presence.config.load() is False:
                                                 Presence.config.save()
-                                        useful.syslog(&#34;Change presence config %s&#34;%Presence.config.to_string(), display=False)
+                                        logger.syslog(&#34;Change presence config %s&#34;%Presence.config.to_string(), display=False)
                         Presence.configRefreshCounter += 1
 
                 if Presence.config.activated is True and wifi.Wifi.is_lan_available():
@@ -447,11 +447,11 @@ async def task():
         &#34;&#34;&#34; Run the task &#34;&#34;&#34;
         # If configuration must be read
         if Presence.config:
-                if Presence.configRefreshCounter % 7 == 0:
+                if Presence.configRefreshCounter % 7 == 0 or Presence.pollingDuration == Presence.SLOW_POLLING:
                         if Presence.config.is_changed():
                                 if Presence.config.load() is False:
                                         Presence.config.save()
-                                useful.syslog(&#34;Change presence config %s&#34;%Presence.config.to_string(), display=False)
+                                logger.syslog(&#34;Change presence config %s&#34;%Presence.config.to_string(), display=False)
                 Presence.configRefreshCounter += 1
 
         if Presence.config.activated is True and wifi.Wifi.is_lan_available():

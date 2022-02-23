@@ -33,14 +33,12 @@ See <a href="https://www.pushover.net">https://www.pushover.net</a></p>
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; These classes are used to send notifications to smartphones, via the pushover application.
 See https://www.pushover.net &#34;&#34;&#34;
-
-import sys
-sys.path.append(&#34;lib&#34;)
+# pylint:disable=wrong-import-position
 import uasyncio
 from server.stream import *
 from server.httprequest import *
 import wifi
-from tools import useful, jsonconfig
+from tools import logger,jsonconfig,strings
 
 class PushOverConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Configuration of the pushover &#34;&#34;&#34;
@@ -73,7 +71,7 @@ class Notification:
                         try:
                                 streamio = None
                                 # Open pushover connection
-                                reader,writer = await uasyncio.open_connection(useful.tostrings(self.host), self.port)
+                                reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
                                 streamio = Stream(reader, writer)
 
                                 # Create multipart request
@@ -113,23 +111,23 @@ class Notification:
                                 # If response failed
                                 if response.status != b&#34;200&#34;:
                                         # Print error
-                                        useful.syslog(&#34;Notification failed to sent&#34;, display=display)
+                                        logger.syslog(&#34;Notification failed to sent&#34;, display=display)
 
                                 # Close all connection with push over server
                                 result = True
                         except Exception as err:
-                                useful.syslog(err)
+                                logger.syslog(err)
                         finally:
                                 if streamio:
                                         await streamio.close()
                 else:
-                        useful.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
+                        logger.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
                 return result
 
 async def async_notify(user, token, message, image=None, display=True):
         &#34;&#34;&#34; Asyncio notification function (only in asyncio) &#34;&#34;&#34;
         notification = Notification(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
-        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.get_hostname(), useful.tobytes(message)), image, display)
+        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.get_hostname(), strings.tobytes(message)), image, display)
 
 def notify(user, token, message, image=None):
         &#34;&#34;&#34; Notification function &#34;&#34;&#34;
@@ -168,7 +166,7 @@ async def notify_message(message, image = None, forced=False, display=True):
 <pre><code class="python">async def async_notify(user, token, message, image=None, display=True):
         &#34;&#34;&#34; Asyncio notification function (only in asyncio) &#34;&#34;&#34;
         notification = Notification(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
-        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.get_hostname(), useful.tobytes(message)), image, display)</code></pre>
+        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.get_hostname(), strings.tobytes(message)), image, display)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.pushover.notify"><code class="name flex">
@@ -250,7 +248,7 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
                         try:
                                 streamio = None
                                 # Open pushover connection
-                                reader,writer = await uasyncio.open_connection(useful.tostrings(self.host), self.port)
+                                reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
                                 streamio = Stream(reader, writer)
 
                                 # Create multipart request
@@ -290,17 +288,17 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
                                 # If response failed
                                 if response.status != b&#34;200&#34;:
                                         # Print error
-                                        useful.syslog(&#34;Notification failed to sent&#34;, display=display)
+                                        logger.syslog(&#34;Notification failed to sent&#34;, display=display)
 
                                 # Close all connection with push over server
                                 result = True
                         except Exception as err:
-                                useful.syslog(err)
+                                logger.syslog(err)
                         finally:
                                 if streamio:
                                         await streamio.close()
                 else:
-                        useful.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
+                        logger.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
                 return result</code></pre>
 </details>
 <h3>Methods</h3>
@@ -325,7 +323,7 @@ image : the jpeg image or nothing (bytes field)</p></div>
                 try:
                         streamio = None
                         # Open pushover connection
-                        reader,writer = await uasyncio.open_connection(useful.tostrings(self.host), self.port)
+                        reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
                         streamio = Stream(reader, writer)
 
                         # Create multipart request
@@ -365,17 +363,17 @@ image : the jpeg image or nothing (bytes field)</p></div>
                         # If response failed
                         if response.status != b&#34;200&#34;:
                                 # Print error
-                                useful.syslog(&#34;Notification failed to sent&#34;, display=display)
+                                logger.syslog(&#34;Notification failed to sent&#34;, display=display)
 
                         # Close all connection with push over server
                         result = True
                 except Exception as err:
-                        useful.syslog(err)
+                        logger.syslog(err)
                 finally:
                         if streamio:
                                 await streamio.close()
         else:
-                useful.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
+                logger.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
         return result</code></pre>
 </details>
 </dd>

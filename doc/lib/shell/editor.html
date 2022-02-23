@@ -57,7 +57,7 @@ This editor allows script execution, and displays errors and execution time.</p>
 <br> - <b>Execute
 </b>: F5</p>
 <p>This editor also works on linux and osx, and can also be used autonomously,
-you need to add the useful.py script to its side.
+you need to add the useful.py,logger.py,strings.py,terminal.py script to its side.
 All the keyboard shortcuts are at the start of the script.</p>
 <p>On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.</p>
 <details class="source">
@@ -67,6 +67,8 @@ All the keyboard shortcuts are at the start of the script.</p>
 <pre><code class="python">#!/usr/bin/python3
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=multiple-statements
+# pylint:disable=too-many-lines
 &#34;&#34;&#34; Class defining a VT100 text editor.
 This editor works directly in the board.
 This allows you to make quick and easy changes directly on the board, without having to use synchronization tools.
@@ -89,63 +91,68 @@ Editor shortcuts :
 &lt;br&gt; - &lt;b&gt;Execute       &lt;/b&gt;: F5
 
 This editor also works on linux and osx, and can also be used autonomously,
-you need to add the useful.py script to its side.
+you need to add the useful.py,logger.py,strings.py,terminal.py script to its side.
 All the keyboard shortcuts are at the start of the script.
 
 On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.
 &#34;&#34;&#34;
 import sys
+
+from . import filesystem
 sys.path.append(&#34;lib&#34;)
 sys.path.append(&#34;lib/tools&#34;)
 try:
-        from tools import useful
+        from tools import useful,logger,strings,terminal
 except:
-        import useful
+        # pylint:disable=multiple-imports
+        import useful,logger,strings,terminal
 
 TABSIZE = 4          # Tabulation size
 HORIZONTAL_MOVE=8    # Scrolling minimal deplacement
 
-ESCAPE           = &#34;\x1B&#34;
+ESCAPE           = &#34;\x1b&#34;
 
 # Move shortcuts
-UP               = [&#34;\x1B[A&#34;]
-DOWN             = [&#34;\x1B[B&#34;]
-RIGHT            = [&#34;\x1B[C&#34;]
-LEFT             = [&#34;\x1B[D&#34;]
-HOME             = [&#34;\x1B[1;3D&#34;, &#34;\x1B[H&#34;, &#34;\x1B\x1B[D&#34;, &#34;\x1B[1~&#34;, &#34;\x1Bb&#34;]
-END              = [&#34;\x1B[1;3C&#34;, &#34;\x1B[F&#34;, &#34;\x1B\x1B[C&#34;, &#34;\x1B[4~&#34;, &#34;\x1Bf&#34;]
-PAGE_UP          = [&#34;\x1B[1;3A&#34;, &#34;\x1B[A&#34;, &#34;\x1B\x1B[A&#34;, &#34;\x1B[5~&#34;]
-PAGE_DOWN        = [&#34;\x1B[1;3B&#34;, &#34;\x1B[B&#34;, &#34;\x1B\x1B[B&#34;, &#34;\x1B[6~&#34;]
-TOP              = [&#34;\x1B[1;5H&#34;]
-BOTTOM           = [&#34;\x1B[1;5F&#34;]
-NEXT_WORD        = [&#34;\x1B[1;5C&#34;]
-PREVIOUS_WORD    = [&#34;\x1B[1;5D&#34;]
+UP               = [&#34;\x1b[A&#34;]
+DOWN             = [&#34;\x1b[B&#34;]
+RIGHT            = [&#34;\x1b[C&#34;]
+LEFT             = [&#34;\x1b[D&#34;]
+HOME             = [&#34;\x1b[1;3D&#34;, &#34;\x1b[H&#34;, &#34;\x1b\x1b[D&#34;, &#34;\x1b[1~&#34;, &#34;\x1bb&#34;]
+END              = [&#34;\x1b[1;3C&#34;, &#34;\x1b[F&#34;, &#34;\x1b\x1b[C&#34;, &#34;\x1b[4~&#34;, &#34;\x1bf&#34;]
+PAGE_UP          = [&#34;\x1b[1;3A&#34;, &#34;\x1b[A&#34;, &#34;\x1b\x1b[A&#34;, &#34;\x1b[5~&#34;]
+PAGE_DOWN        = [&#34;\x1b[1;3B&#34;, &#34;\x1b[B&#34;, &#34;\x1b\x1b[B&#34;, &#34;\x1b[6~&#34;]
+TOP              = [&#34;\x1b[1;5H&#34;]
+BOTTOM           = [&#34;\x1b[1;5F&#34;]
+NEXT_WORD        = [&#34;\x1b[1;5C&#34;]
+PREVIOUS_WORD    = [&#34;\x1b[1;5D&#34;]
 
 # Selection shortcuts
-SELECT_UP        = [&#34;\x1B[1;2A&#34;]
-SELECT_DOWN      = [&#34;\x1B[1;2B&#34;]
-SELECT_RIGHT     = [&#34;\x1B[1;2C&#34;]
-SELECT_LEFT      = [&#34;\x1B[1;2D&#34;]
-SELECT_PAGE_UP   = [&#34;\x1B[1;10A&#34;,&#34;\x1B[1;4A&#34;,&#34;\x1B[5;2~&#34;]
-SELECT_PAGE_DOWN = [&#34;\x1B[1;10B&#34;,&#34;\x1B[1;4B&#34;,&#34;\x1B[6;2~&#34;]
-SELECT_HOME      = [&#34;\x1B[1;2H&#34;,&#34;\x1B[1;10D&#34;]
-SELECT_END       = [&#34;\x1B[1;2F&#34;,&#34;\x1B[1;10C&#34;]
+SELECT_UP        = [&#34;\x1b[1;2A&#34;]
+SELECT_DOWN      = [&#34;\x1b[1;2B&#34;]
+SELECT_RIGHT     = [&#34;\x1b[1;2C&#34;]
+SELECT_LEFT      = [&#34;\x1b[1;2D&#34;]
+SELECT_PAGE_UP   = [&#34;\x1b[1;10A&#34;,&#34;\x1b[1;4A&#34;,&#34;\x1b[5;2~&#34;]
+SELECT_PAGE_DOWN = [&#34;\x1b[1;10B&#34;,&#34;\x1b[1;4B&#34;,&#34;\x1b[6;2~&#34;]
+SELECT_HOME      = [&#34;\x1b[1;2H&#34;,&#34;\x1b[1;10D&#34;]
+SELECT_END       = [&#34;\x1b[1;2F&#34;,&#34;\x1b[1;10C&#34;]
+SELECT_TOP       = [&#34;\x1b[1;6H&#34;]
+SELECT_BOTTOM    = [&#34;\x1b[1;6F&#34;]
 SELECT_ALL       = [&#34;\x01&#34;]
-SELECT_NEXT_WORD = [&#34;\x1B[1;6C&#34;,&#34;\x1B[1;4C&#34;]
-SELECT_PREV_WORD = [&#34;\x1B[1;6D&#34;,&#34;\x1B[1;4D&#34;]
+SELECT_NEXT_WORD = [&#34;\x1b[1;6C&#34;,&#34;\x1b[1;4C&#34;]
+SELECT_PREV_WORD = [&#34;\x1b[1;6D&#34;,&#34;\x1b[1;4D&#34;]
 
 # Clipboard shortcuts
-CUT              = [&#34;\x18&#34;,&#34;\x1Bx&#34;]                      # Cut
-COPY             = [&#34;\x03&#34;,&#34;\x1Bc&#34;]                      # Copy
-PASTE            = [&#34;\x16&#34;,&#34;\x1Bv&#34;]                      # Paste
+CUT              = [&#34;\x18&#34;,&#34;\x1bx&#34;]                      # Cut
+COPY             = [&#34;\x03&#34;,&#34;\x1bc&#34;]                      # Copy
+PASTE            = [&#34;\x16&#34;,&#34;\x1bv&#34;]                      # Paste
 
 # Selection modification shortcut
 INDENT           = [&#34;\t&#34;]                                # Indent
-UNINDENT         = [&#34;\x1B[Z&#34;]                            # Unindent
+UNINDENT         = [&#34;\x1b[Z&#34;]                            # Unindent
 CHANGE_CASE      = [&#34;\x15&#34;]                              # Change case
 COMMENT          = [&#34;\x11&#34;]                              # Comment block
 
-DELETE           = [&#34;\x1B[3~&#34;]                           # Delete pressed
+DELETE           = [&#34;\x1b[3~&#34;]                           # Delete pressed
 BACKSPACE        = [&#34;\x7F&#34;]                              # Backspace pressed
 NEW_LINE         = [&#34;\n&#34;, &#34;\r&#34;]                          # New line pressed
 
@@ -155,11 +162,11 @@ FIND             = [&#34;\x06&#34;]                              # Find
 FIND_NEXT        = [&#34;\x1bOR&#34;]                            # Find next
 FIND_PREVIOUS    = [&#34;\x1b[1;2R&#34;]                         # Find previous
 GOTO             = [&#34;\x07&#34;]                              # Goto line
-SAVE             = [&#34;\x13&#34;,&#34;\x1Bs&#34;]                      # Save
+SAVE             = [&#34;\x13&#34;,&#34;\x1bs&#34;]                      # Save
 DELETE_LINE      = [&#34;\x0C&#34;]                              # Delete line
 REPLACE          = [&#34;\x08&#34;]                              # Replace
 REPLACE_CURRENT  = [&#34;\x12&#34;]                              # Replace the selection
-EXECUTE          = [&#34;\x1B[15~&#34;]                          # Execute script
+EXECUTE          = [&#34;\x1b[15~&#34;]                          # Execute script
 
 class View:
         &#34;&#34;&#34; Class which manage the view of the edit field &#34;&#34;&#34;
@@ -206,7 +213,7 @@ class View:
 
         def reset(self):
                 &#34;&#34;&#34; Reset VT100 &#34;&#34;&#34;
-                self.write(&#34;\x1b&#34;&#34;c&#34;)
+                self.write(&#34;\x1B&#34;&#34;c&#34;)
                 self.flush()
 
         def reset_scroll_region(self):
@@ -511,7 +518,7 @@ class View:
 
         def get_screen_size(self):
                 &#34;&#34;&#34; Get the screen size &#34;&#34;&#34;
-                height, width = useful.get_screen_size()
+                height, width = terminal.get_screen_size()
                 self.screen_height = height
                 self.screen_width = width
                 self.height = height-self.top-1
@@ -707,7 +714,7 @@ class Text:
                         self.lines = [&#34;&#34;]
                         # File not existing
                 except Exception as err:
-                        useful.syslog(err)
+                        logger.syslog(err)
                         self.lines = [&#34;&#34;]
 
         def save(self):
@@ -723,7 +730,7 @@ class Text:
                                         self.modified = False
                                         result = True
                                 except Exception as err:
-                                        useful.syslog(err)
+                                        logger.syslog(err)
                 return result
 
         def change_line(self, moveLine):
@@ -1013,6 +1020,16 @@ class Text:
                 self.open_selection()
                 self.move_word(-1)
 
+        def select_top(self):
+                &#34;&#34;&#34; Manage select to the first line of text &#34;&#34;&#34;
+                self.open_selection()
+                self.change_line(-100000000000)
+
+        def select_bottom(self):
+                &#34;&#34;&#34; Manage select to the last line of text &#34;&#34;&#34;
+                self.open_selection()
+                self.change_line(100000000000)
+
         def page_up(self, keys):
                 &#34;&#34;&#34; Manage page up key &#34;&#34;&#34;
                 self.hide_selection()
@@ -1037,17 +1054,17 @@ class Text:
                 &#34;&#34;&#34; Manage other key, add character &#34;&#34;&#34;
                 result = False
 
-                if useful.isascii(keys[0]):
+                if strings.isascii(keys[0]):
                         self.remove_selection()
                         for char in keys:
-                                if useful.isascii(char):
+                                if strings.isascii(char):
                                         if self.replace_mode:
                                                 self.replace_char(char)
                                         else:
                                                 self.insert_char(char)
                                         result = True
                 # if result is False:
-                        # print(useful.dump(keys[0]))
+                        # print(strings.dump(keys[0]))
                 return result
 
         def find_next(self, text):
@@ -1279,14 +1296,15 @@ class Text:
                         isUpper = None
                         for line in selection:
                                 for char in line:
-                                        if useful.isupper(char):
+                                        if strings.isupper(char):
                                                 isUpper = True
                                                 break
-                                        elif useful.islower(char):
+                                        elif strings.islower(char):
                                                 isUpper = False
                                                 break
                                 if isUpper is not None:
                                         break
+                        # pylint:disable=consider-using-enumerate
                         for line in range(len(selection)):
                                 if isUpper:
                                         selection[line] = selection[line].lower()
@@ -1304,8 +1322,8 @@ class Text:
                 # If selection
                 if self.selection_start is not None:
                         selection_start, selection_end = self.get_selection()
-                        sel_column_start, sel_line_start, dummy = selection_start
-                        sel_column_end,   sel_line_end,   dummy = selection_end
+                        _, sel_line_start, _ = selection_start
+                        _, sel_line_end,   _ = selection_end
 
                         # Add tabulation
                         for line in range(sel_line_start, sel_line_end+1):
@@ -1453,17 +1471,17 @@ class Text:
                         current_char = self.get_cursor_char()
                         if current_char is None:
                                 break
-                        elif useful.ispunctuation(current_char):
+                        elif strings.ispunctuation(current_char):
                                 if state == 0:
                                         state = 2
                                 elif state == 1:
                                         break
-                        elif useful.isalpha(current_char):
+                        elif strings.isalpha(current_char):
                                 if state == 0:
                                         state = 1
                                 elif state == 2:
                                         break
-                        elif useful.isspace(current_char):
+                        elif strings.isspace(current_char):
                                 if state == 1:
                                         break
                                 if state == 2:
@@ -1521,6 +1539,8 @@ class Text:
                         elif keys[0] in SELECT_LEFT:     self.select_left(keys)
                         elif keys[0] in SELECT_HOME:     self.select_home()
                         elif keys[0] in SELECT_END:      self.select_end()
+                        elif keys[0] in SELECT_TOP:      self.select_top()
+                        elif keys[0] in SELECT_BOTTOM:   self.select_bottom()
                         elif keys[0] in SELECT_PAGE_UP:  self.select_page_up(keys)
                         elif keys[0] in SELECT_PAGE_DOWN:self.select_page_down(keys)
                         elif keys[0] in SELECT_ALL:      self.select_all()
@@ -1559,7 +1579,7 @@ class Editor:
         def __init__(self, filename_, read_only=False):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.file = filename_
-                self.filename = useful.split(filename_)[1]
+                self.filename = filesystem.split(filename_)[1]
                 self.edit = Edit(read_only=read_only)
                 self.edit.text.load(filename_)
                 self.is_refresh_header = True
@@ -1568,7 +1588,7 @@ class Editor:
                 self.keys= []
                 self.loop = None
 
-                if (not useful.exists(filename_) and read_only is True) or useful.isdir(filename_):
+                if (not filesystem.exists(filename_) and read_only is True) or filesystem.isdir(filename_):
                         print(&#34;Cannot open &#39;%s&#39;&#34;%self.filename)
                 else:
                         self.run()
@@ -1584,7 +1604,7 @@ class Editor:
                         else:
                                 end = &#34;Read only&#34; if self.edit.text.read_only else &#34;&#34;
 
-                        header = &#34;\x1B[7m %s%s%s \x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)-2), end)
+                        header = &#34;\x1B[7m %s%s%s \x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)-1), end)
                         self.edit.view.write(header)
                         self.edit.view.move_cursor()
                         self.is_refresh_header = False
@@ -1614,7 +1634,7 @@ class Editor:
                         self.edit.view.write(&#34;\nSave file &#39;%s&#39; (\x1b[7mY\x1b[m:Yes, \x1b[7mN\x1b[m:No, \x1b[7mEsc\x1b[m:Cancel) : &#34;%self.filename)
                         self.edit.view.flush()
                         while 1:
-                                key = useful.getch()
+                                key = terminal.getch()
                                 if key == &#34;Y&#34; or key == &#34;y&#34;:
                                         if self.edit.text.save():
                                                 self.edit.view.write(&#34;Saved\n&#34;)
@@ -1708,7 +1728,7 @@ class Editor:
                         if self.keys[0] == result[0]:
                                 result.append(self.keys.pop(0))
                         else:
-                                if useful.isascii(result[0]) and useful.isascii(self.keys[0]):
+                                if strings.isascii(result[0]) and strings.isascii(self.keys[0]):
                                         result.append(self.keys.pop(0))
                                 else:
                                         break
@@ -1719,11 +1739,11 @@ class Editor:
                 if len(self.keys) == 0:
                         while True:
                                 try:
-                                        key = useful.getch()
+                                        key = terminal.getch()
                                 except KeyboardInterrupt:
                                         key = &#34;\x03&#34;
                                 self.keys.append(key)
-                                if useful.kbhit() is False or len(self.keys) &gt; 5:
+                                if terminal.kbhit() is False or len(self.keys) &gt; 5:
                                         break
                 return self.group_key()
 
@@ -1735,13 +1755,12 @@ class Editor:
                         self.edit.view.reset_scroll_region()
                         self.edit.view.cls()
                         self.edit.view.flush()
-                        startTime = useful.ticks()
+                        startTime = strings.ticks()
                         try:
-                                useful.log(None)
-                                useful.import_(self.filename)
+                                useful.run(self.filename)
                         except KeyboardInterrupt:
                                 pass
-                        endTime = useful.ticks()
+                        endTime = strings.ticks()
                         print( &#34;\x1B[7mTime: %d.%03d s Press enter to stop\x1B[m&#34;%((endTime-startTime)/1000, (endTime-startTime)%1000))
                         while 1:
                                 keys = self.get_key()
@@ -1751,7 +1770,7 @@ class Editor:
                                 elif keys[0] in EXECUTE:
                                         break
                                 # else:
-                                        # print(useful.dump(keys[0]))
+                                        # print(strings.dump(keys[0]))
                 self.edit.view.cls()
                 self.edit.view.set_refresh_all()
                 self.is_refresh_header = True
@@ -1839,7 +1858,7 @@ if __name__ == &#34;__main__&#34;:
         def __init__(self, filename_, read_only=False):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.file = filename_
-                self.filename = useful.split(filename_)[1]
+                self.filename = filesystem.split(filename_)[1]
                 self.edit = Edit(read_only=read_only)
                 self.edit.text.load(filename_)
                 self.is_refresh_header = True
@@ -1848,7 +1867,7 @@ if __name__ == &#34;__main__&#34;:
                 self.keys= []
                 self.loop = None
 
-                if (not useful.exists(filename_) and read_only is True) or useful.isdir(filename_):
+                if (not filesystem.exists(filename_) and read_only is True) or filesystem.isdir(filename_):
                         print(&#34;Cannot open &#39;%s&#39;&#34;%self.filename)
                 else:
                         self.run()
@@ -1864,7 +1883,7 @@ if __name__ == &#34;__main__&#34;:
                         else:
                                 end = &#34;Read only&#34; if self.edit.text.read_only else &#34;&#34;
 
-                        header = &#34;\x1B[7m %s%s%s \x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)-2), end)
+                        header = &#34;\x1B[7m %s%s%s \x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)-1), end)
                         self.edit.view.write(header)
                         self.edit.view.move_cursor()
                         self.is_refresh_header = False
@@ -1894,7 +1913,7 @@ if __name__ == &#34;__main__&#34;:
                         self.edit.view.write(&#34;\nSave file &#39;%s&#39; (\x1b[7mY\x1b[m:Yes, \x1b[7mN\x1b[m:No, \x1b[7mEsc\x1b[m:Cancel) : &#34;%self.filename)
                         self.edit.view.flush()
                         while 1:
-                                key = useful.getch()
+                                key = terminal.getch()
                                 if key == &#34;Y&#34; or key == &#34;y&#34;:
                                         if self.edit.text.save():
                                                 self.edit.view.write(&#34;Saved\n&#34;)
@@ -1988,7 +2007,7 @@ if __name__ == &#34;__main__&#34;:
                         if self.keys[0] == result[0]:
                                 result.append(self.keys.pop(0))
                         else:
-                                if useful.isascii(result[0]) and useful.isascii(self.keys[0]):
+                                if strings.isascii(result[0]) and strings.isascii(self.keys[0]):
                                         result.append(self.keys.pop(0))
                                 else:
                                         break
@@ -1999,11 +2018,11 @@ if __name__ == &#34;__main__&#34;:
                 if len(self.keys) == 0:
                         while True:
                                 try:
-                                        key = useful.getch()
+                                        key = terminal.getch()
                                 except KeyboardInterrupt:
                                         key = &#34;\x03&#34;
                                 self.keys.append(key)
-                                if useful.kbhit() is False or len(self.keys) &gt; 5:
+                                if terminal.kbhit() is False or len(self.keys) &gt; 5:
                                         break
                 return self.group_key()
 
@@ -2015,13 +2034,12 @@ if __name__ == &#34;__main__&#34;:
                         self.edit.view.reset_scroll_region()
                         self.edit.view.cls()
                         self.edit.view.flush()
-                        startTime = useful.ticks()
+                        startTime = strings.ticks()
                         try:
-                                useful.log(None)
-                                useful.import_(self.filename)
+                                useful.run(self.filename)
                         except KeyboardInterrupt:
                                 pass
-                        endTime = useful.ticks()
+                        endTime = strings.ticks()
                         print( &#34;\x1B[7mTime: %d.%03d s Press enter to stop\x1B[m&#34;%((endTime-startTime)/1000, (endTime-startTime)%1000))
                         while 1:
                                 keys = self.get_key()
@@ -2031,7 +2049,7 @@ if __name__ == &#34;__main__&#34;:
                                 elif keys[0] in EXECUTE:
                                         break
                                 # else:
-                                        # print(useful.dump(keys[0]))
+                                        # print(strings.dump(keys[0]))
                 self.edit.view.cls()
                 self.edit.view.set_refresh_all()
                 self.is_refresh_header = True
@@ -2084,13 +2102,12 @@ if __name__ == &#34;__main__&#34;:
                 self.edit.view.reset_scroll_region()
                 self.edit.view.cls()
                 self.edit.view.flush()
-                startTime = useful.ticks()
+                startTime = strings.ticks()
                 try:
-                        useful.log(None)
-                        useful.import_(self.filename)
+                        useful.run(self.filename)
                 except KeyboardInterrupt:
                         pass
-                endTime = useful.ticks()
+                endTime = strings.ticks()
                 print( &#34;\x1B[7mTime: %d.%03d s Press enter to stop\x1B[m&#34;%((endTime-startTime)/1000, (endTime-startTime)%1000))
                 while 1:
                         keys = self.get_key()
@@ -2100,7 +2117,7 @@ if __name__ == &#34;__main__&#34;:
                         elif keys[0] in EXECUTE:
                                 break
                         # else:
-                                # print(useful.dump(keys[0]))
+                                # print(strings.dump(keys[0]))
         self.edit.view.cls()
         self.edit.view.set_refresh_all()
         self.is_refresh_header = True</code></pre>
@@ -2122,7 +2139,7 @@ if __name__ == &#34;__main__&#34;:
                 self.edit.view.write(&#34;\nSave file &#39;%s&#39; (\x1b[7mY\x1b[m:Yes, \x1b[7mN\x1b[m:No, \x1b[7mEsc\x1b[m:Cancel) : &#34;%self.filename)
                 self.edit.view.flush()
                 while 1:
-                        key = useful.getch()
+                        key = terminal.getch()
                         if key == &#34;Y&#34; or key == &#34;y&#34;:
                                 if self.edit.text.save():
                                         self.edit.view.write(&#34;Saved\n&#34;)
@@ -2206,11 +2223,11 @@ if __name__ == &#34;__main__&#34;:
         if len(self.keys) == 0:
                 while True:
                         try:
-                                key = useful.getch()
+                                key = terminal.getch()
                         except KeyboardInterrupt:
                                 key = &#34;\x03&#34;
                         self.keys.append(key)
-                        if useful.kbhit() is False or len(self.keys) &gt; 5:
+                        if terminal.kbhit() is False or len(self.keys) &gt; 5:
                                 break
         return self.group_key()</code></pre>
 </details>
@@ -2252,7 +2269,7 @@ if __name__ == &#34;__main__&#34;:
                 if self.keys[0] == result[0]:
                         result.append(self.keys.pop(0))
                 else:
-                        if useful.isascii(result[0]) and useful.isascii(self.keys[0]):
+                        if strings.isascii(result[0]) and strings.isascii(self.keys[0]):
                                 result.append(self.keys.pop(0))
                         else:
                                 break
@@ -2325,7 +2342,7 @@ if __name__ == &#34;__main__&#34;:
                 else:
                         end = &#34;Read only&#34; if self.edit.text.read_only else &#34;&#34;
 
-                header = &#34;\x1B[7m %s%s%s \x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)-2), end)
+                header = &#34;\x1B[7m %s%s%s \x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)-1), end)
                 self.edit.view.write(header)
                 self.edit.view.move_cursor()
                 self.is_refresh_header = False</code></pre>
@@ -2636,7 +2653,7 @@ if __name__ == &#34;__main__&#34;:
                         self.lines = [&#34;&#34;]
                         # File not existing
                 except Exception as err:
-                        useful.syslog(err)
+                        logger.syslog(err)
                         self.lines = [&#34;&#34;]
 
         def save(self):
@@ -2652,7 +2669,7 @@ if __name__ == &#34;__main__&#34;:
                                         self.modified = False
                                         result = True
                                 except Exception as err:
-                                        useful.syslog(err)
+                                        logger.syslog(err)
                 return result
 
         def change_line(self, moveLine):
@@ -2942,6 +2959,16 @@ if __name__ == &#34;__main__&#34;:
                 self.open_selection()
                 self.move_word(-1)
 
+        def select_top(self):
+                &#34;&#34;&#34; Manage select to the first line of text &#34;&#34;&#34;
+                self.open_selection()
+                self.change_line(-100000000000)
+
+        def select_bottom(self):
+                &#34;&#34;&#34; Manage select to the last line of text &#34;&#34;&#34;
+                self.open_selection()
+                self.change_line(100000000000)
+
         def page_up(self, keys):
                 &#34;&#34;&#34; Manage page up key &#34;&#34;&#34;
                 self.hide_selection()
@@ -2966,17 +2993,17 @@ if __name__ == &#34;__main__&#34;:
                 &#34;&#34;&#34; Manage other key, add character &#34;&#34;&#34;
                 result = False
 
-                if useful.isascii(keys[0]):
+                if strings.isascii(keys[0]):
                         self.remove_selection()
                         for char in keys:
-                                if useful.isascii(char):
+                                if strings.isascii(char):
                                         if self.replace_mode:
                                                 self.replace_char(char)
                                         else:
                                                 self.insert_char(char)
                                         result = True
                 # if result is False:
-                        # print(useful.dump(keys[0]))
+                        # print(strings.dump(keys[0]))
                 return result
 
         def find_next(self, text):
@@ -3208,14 +3235,15 @@ if __name__ == &#34;__main__&#34;:
                         isUpper = None
                         for line in selection:
                                 for char in line:
-                                        if useful.isupper(char):
+                                        if strings.isupper(char):
                                                 isUpper = True
                                                 break
-                                        elif useful.islower(char):
+                                        elif strings.islower(char):
                                                 isUpper = False
                                                 break
                                 if isUpper is not None:
                                         break
+                        # pylint:disable=consider-using-enumerate
                         for line in range(len(selection)):
                                 if isUpper:
                                         selection[line] = selection[line].lower()
@@ -3233,8 +3261,8 @@ if __name__ == &#34;__main__&#34;:
                 # If selection
                 if self.selection_start is not None:
                         selection_start, selection_end = self.get_selection()
-                        sel_column_start, sel_line_start, dummy = selection_start
-                        sel_column_end,   sel_line_end,   dummy = selection_end
+                        _, sel_line_start, _ = selection_start
+                        _, sel_line_end,   _ = selection_end
 
                         # Add tabulation
                         for line in range(sel_line_start, sel_line_end+1):
@@ -3382,17 +3410,17 @@ if __name__ == &#34;__main__&#34;:
                         current_char = self.get_cursor_char()
                         if current_char is None:
                                 break
-                        elif useful.ispunctuation(current_char):
+                        elif strings.ispunctuation(current_char):
                                 if state == 0:
                                         state = 2
                                 elif state == 1:
                                         break
-                        elif useful.isalpha(current_char):
+                        elif strings.isalpha(current_char):
                                 if state == 0:
                                         state = 1
                                 elif state == 2:
                                         break
-                        elif useful.isspace(current_char):
+                        elif strings.isspace(current_char):
                                 if state == 1:
                                         break
                                 if state == 2:
@@ -3450,6 +3478,8 @@ if __name__ == &#34;__main__&#34;:
                         elif keys[0] in SELECT_LEFT:     self.select_left(keys)
                         elif keys[0] in SELECT_HOME:     self.select_home()
                         elif keys[0] in SELECT_END:      self.select_end()
+                        elif keys[0] in SELECT_TOP:      self.select_top()
+                        elif keys[0] in SELECT_BOTTOM:   self.select_bottom()
                         elif keys[0] in SELECT_PAGE_UP:  self.select_page_up(keys)
                         elif keys[0] in SELECT_PAGE_DOWN:self.select_page_down(keys)
                         elif keys[0] in SELECT_ALL:      self.select_all()
@@ -3489,17 +3519,17 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Manage other key, add character &#34;&#34;&#34;
         result = False
 
-        if useful.isascii(keys[0]):
+        if strings.isascii(keys[0]):
                 self.remove_selection()
                 for char in keys:
-                        if useful.isascii(char):
+                        if strings.isascii(char):
                                 if self.replace_mode:
                                         self.replace_char(char)
                                 else:
                                         self.insert_char(char)
                                 result = True
         # if result is False:
-                # print(useful.dump(keys[0]))
+                # print(strings.dump(keys[0]))
         return result</code></pre>
 </details>
 </dd>
@@ -3632,14 +3662,15 @@ if __name__ == &#34;__main__&#34;:
                 isUpper = None
                 for line in selection:
                         for char in line:
-                                if useful.isupper(char):
+                                if strings.isupper(char):
                                         isUpper = True
                                         break
-                                elif useful.islower(char):
+                                elif strings.islower(char):
                                         isUpper = False
                                         break
                         if isUpper is not None:
                                 break
+                # pylint:disable=consider-using-enumerate
                 for line in range(len(selection)):
                         if isUpper:
                                 selection[line] = selection[line].lower()
@@ -3780,8 +3811,8 @@ if __name__ == &#34;__main__&#34;:
         # If selection
         if self.selection_start is not None:
                 selection_start, selection_end = self.get_selection()
-                sel_column_start, sel_line_start, dummy = selection_start
-                sel_column_end,   sel_line_end,   dummy = selection_end
+                _, sel_line_start, _ = selection_start
+                _, sel_line_end,   _ = selection_end
 
                 # Add tabulation
                 for line in range(sel_line_start, sel_line_end+1):
@@ -4405,7 +4436,7 @@ if __name__ == &#34;__main__&#34;:
                 self.lines = [&#34;&#34;]
                 # File not existing
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
                 self.lines = [&#34;&#34;]</code></pre>
 </details>
 </dd>
@@ -4442,17 +4473,17 @@ if __name__ == &#34;__main__&#34;:
                 current_char = self.get_cursor_char()
                 if current_char is None:
                         break
-                elif useful.ispunctuation(current_char):
+                elif strings.ispunctuation(current_char):
                         if state == 0:
                                 state = 2
                         elif state == 1:
                                 break
-                elif useful.isalpha(current_char):
+                elif strings.isalpha(current_char):
                         if state == 0:
                                 state = 1
                         elif state == 2:
                                 break
-                elif useful.isspace(current_char):
+                elif strings.isspace(current_char):
                         if state == 1:
                                 break
                         if state == 2:
@@ -4725,7 +4756,7 @@ if __name__ == &#34;__main__&#34;:
                                 self.modified = False
                                 result = True
                         except Exception as err:
-                                useful.syslog(err)
+                                logger.syslog(err)
         return result</code></pre>
 </details>
 </dd>
@@ -4746,6 +4777,21 @@ if __name__ == &#34;__main__&#34;:
         self.move_cursor(lastLine, lastColumn)
         self.selection_end  = [lastColumn, lastLine, self.get_tab_cursor(lastLine, lastColumn)]
         self.view.set_refresh_all()</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.editor.Text.select_bottom"><code class="name flex">
+<span>def <span class="ident">select_bottom</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage select to the last line of text</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def select_bottom(self):
+        &#34;&#34;&#34; Manage select to the last line of text &#34;&#34;&#34;
+        self.open_selection()
+        self.change_line(100000000000)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_down"><code class="name flex">
@@ -4883,6 +4929,21 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Manage select right key &#34;&#34;&#34;
         self.open_selection()
         self.change_column(len(keys))</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.editor.Text.select_top"><code class="name flex">
+<span>def <span class="ident">select_top</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage select to the first line of text</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def select_top(self):
+        &#34;&#34;&#34; Manage select to the first line of text &#34;&#34;&#34;
+        self.open_selection()
+        self.change_line(-100000000000)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_up"><code class="name flex">
@@ -5038,6 +5099,8 @@ if __name__ == &#34;__main__&#34;:
                 elif keys[0] in SELECT_LEFT:     self.select_left(keys)
                 elif keys[0] in SELECT_HOME:     self.select_home()
                 elif keys[0] in SELECT_END:      self.select_end()
+                elif keys[0] in SELECT_TOP:      self.select_top()
+                elif keys[0] in SELECT_BOTTOM:   self.select_bottom()
                 elif keys[0] in SELECT_PAGE_UP:  self.select_page_up(keys)
                 elif keys[0] in SELECT_PAGE_DOWN:self.select_page_down(keys)
                 elif keys[0] in SELECT_ALL:      self.select_all()
@@ -5178,7 +5241,7 @@ if __name__ == &#34;__main__&#34;:
 
         def reset(self):
                 &#34;&#34;&#34; Reset VT100 &#34;&#34;&#34;
-                self.write(&#34;\x1b&#34;&#34;c&#34;)
+                self.write(&#34;\x1B&#34;&#34;c&#34;)
                 self.flush()
 
         def reset_scroll_region(self):
@@ -5483,7 +5546,7 @@ if __name__ == &#34;__main__&#34;:
 
         def get_screen_size(self):
                 &#34;&#34;&#34; Get the screen size &#34;&#34;&#34;
-                height, width = useful.get_screen_size()
+                height, width = terminal.get_screen_size()
                 self.screen_height = height
                 self.screen_width = width
                 self.height = height-self.top-1
@@ -5570,7 +5633,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def get_screen_size(self):
         &#34;&#34;&#34; Get the screen size &#34;&#34;&#34;
-        height, width = useful.get_screen_size()
+        height, width = terminal.get_screen_size()
         self.screen_height = height
         self.screen_width = width
         self.height = height-self.top-1
@@ -5815,7 +5878,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def reset(self):
         &#34;&#34;&#34; Reset VT100 &#34;&#34;&#34;
-        self.write(&#34;\x1b&#34;&#34;c&#34;)
+        self.write(&#34;\x1B&#34;&#34;c&#34;)
         self.flush()</code></pre>
 </details>
 </dd>
@@ -6188,6 +6251,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.editor.Text.replace_char" href="#lib.shell.editor.Text.replace_char">replace_char</a></code></li>
 <li><code><a title="lib.shell.editor.Text.save" href="#lib.shell.editor.Text.save">save</a></code></li>
 <li><code><a title="lib.shell.editor.Text.select_all" href="#lib.shell.editor.Text.select_all">select_all</a></code></li>
+<li><code><a title="lib.shell.editor.Text.select_bottom" href="#lib.shell.editor.Text.select_bottom">select_bottom</a></code></li>
 <li><code><a title="lib.shell.editor.Text.select_down" href="#lib.shell.editor.Text.select_down">select_down</a></code></li>
 <li><code><a title="lib.shell.editor.Text.select_end" href="#lib.shell.editor.Text.select_end">select_end</a></code></li>
 <li><code><a title="lib.shell.editor.Text.select_home" href="#lib.shell.editor.Text.select_home">select_home</a></code></li>
@@ -6197,6 +6261,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.editor.Text.select_page_up" href="#lib.shell.editor.Text.select_page_up">select_page_up</a></code></li>
 <li><code><a title="lib.shell.editor.Text.select_previous_word" href="#lib.shell.editor.Text.select_previous_word">select_previous_word</a></code></li>
 <li><code><a title="lib.shell.editor.Text.select_right" href="#lib.shell.editor.Text.select_right">select_right</a></code></li>
+<li><code><a title="lib.shell.editor.Text.select_top" href="#lib.shell.editor.Text.select_top">select_top</a></code></li>
 <li><code><a title="lib.shell.editor.Text.select_up" href="#lib.shell.editor.Text.select_up">select_up</a></code></li>
 <li><code><a title="lib.shell.editor.Text.set_cursor_column" href="#lib.shell.editor.Text.set_cursor_column">set_cursor_column</a></code></li>
 <li><code><a title="lib.shell.editor.Text.set_view" href="#lib.shell.editor.Text.set_view">set_view</a></code></li>

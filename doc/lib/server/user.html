@@ -30,7 +30,7 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Class used to manage a username and a password &#34;&#34;&#34;
-from tools import useful,jsonconfig,encryption
+from tools import logger,jsonconfig,encryption,strings
 
 EMPTY_PASSWORD = b&#34;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&#34; # empty password
 
@@ -79,12 +79,12 @@ class User:
                         else:
                                 if log is True:
                                         User.login_state[0] = False
-                                        useful.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%useful.tostrings(user))
+                                        logger.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%strings.tostrings(user))
                 else:
                         if user != b&#34;&#34;:
                                 if log is True:
                                         User.login_state[0] = False
-                                        useful.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%useful.tostrings(user))
+                                        logger.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%strings.tostrings(user))
                 return False
 
         @staticmethod
@@ -176,12 +176,12 @@ class User:
                         else:
                                 if log is True:
                                         User.login_state[0] = False
-                                        useful.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%useful.tostrings(user))
+                                        logger.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%strings.tostrings(user))
                 else:
                         if user != b&#34;&#34;:
                                 if log is True:
                                         User.login_state[0] = False
-                                        useful.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%useful.tostrings(user))
+                                        logger.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%strings.tostrings(user))
                 return False
 
         @staticmethod
@@ -288,12 +288,12 @@ def check(user, password, log=True):
                 else:
                         if log is True:
                                 User.login_state[0] = False
-                                useful.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%useful.tostrings(user))
+                                logger.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%strings.tostrings(user))
         else:
                 if user != b&#34;&#34;:
                         if log is True:
                                 User.login_state[0] = False
-                                useful.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%useful.tostrings(user))
+                                logger.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%strings.tostrings(user))
         return False</code></pre>
 </details>
 </dd>

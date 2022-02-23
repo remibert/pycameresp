@@ -36,7 +36,7 @@ from server.server      import Server
 from htmltemplate       import *
 from video              import Camera
 import uasyncio
-from tools              import useful, tasking
+from tools              import logger,tasking,info
 
 class Streaming:
         &#34;&#34;&#34; Management class of video streaming of the camera via an html page &#34;&#34;&#34;
@@ -105,7 +105,7 @@ class Streaming:
                 &#34;&#34;&#34; Return the current streaming id &#34;&#34;&#34;
                 return Streaming.streaming_id[0]
 
-@HttpServer.add_route(b&#39;/camera/start&#39;, available=useful.iscamera() and Camera.is_activated())
+@HttpServer.add_route(b&#39;/camera/start&#39;, available=info.iscamera() and Camera.is_activated())
 async def camera_start_streaming(request, response, args):
         &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
         Server.slow_down()
@@ -130,7 +130,7 @@ async def camera_start_streaming(request, response, args):
                         identifier = b&#34;\r\n%x\r\n\r\n--%s\r\n\r\n&#34;%(len(response.identifier) + 6, response.identifier)
                         frame = b&#39;%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n&#39;
 
-                        if useful.ismicropython():
+                        if filesystem.ismicropython():
                                 micropython = True
                         else:
                                 micropython = False
@@ -161,7 +161,7 @@ async def camera_start_streaming(request, response, args):
                                 if micropython is False:
                                         await uasyncio.sleep(0.1)
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
         finally:
                 if reserved:
                         # print(&#34;End streaming %d&#34;%currentstreaming_id)
@@ -186,7 +186,7 @@ async def camera_start_streaming(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.add_route(b&#39;/camera/start&#39;, available=useful.iscamera() and Camera.is_activated())
+<pre><code class="python">@HttpServer.add_route(b&#39;/camera/start&#39;, available=info.iscamera() and Camera.is_activated())
 async def camera_start_streaming(request, response, args):
         &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
         Server.slow_down()
@@ -211,7 +211,7 @@ async def camera_start_streaming(request, response, args):
                         identifier = b&#34;\r\n%x\r\n\r\n--%s\r\n\r\n&#34;%(len(response.identifier) + 6, response.identifier)
                         frame = b&#39;%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n&#39;
 
-                        if useful.ismicropython():
+                        if filesystem.ismicropython():
                                 micropython = True
                         else:
                                 micropython = False
@@ -242,7 +242,7 @@ async def camera_start_streaming(request, response, args):
                                 if micropython is False:
                                         await uasyncio.sleep(0.1)
         except Exception as err:
-                useful.syslog(err)
+                logger.syslog(err)
         finally:
                 if reserved:
                         # print(&#34;End streaming %d&#34;%currentstreaming_id)

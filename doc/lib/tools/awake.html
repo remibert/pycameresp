@@ -32,7 +32,7 @@
 &#34;&#34;&#34; Manage the battery &#34;&#34;&#34;
 import machine
 import esp32
-from tools import jsonconfig, useful
+from tools import jsonconfig,logger
 
 class AwakeConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Awake configuration &#34;&#34;&#34;
@@ -72,12 +72,12 @@ class Awake:
                         if Awake.config.wake_up_gpio != 0:
                                 wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
                                 esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                                useful.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
+                                logger.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
                         else:
-                                useful.syslog(&#34;Pin wake up disabled&#34;)
+                                logger.syslog(&#34;Pin wake up disabled&#34;)
                         return True
                 except Exception as err:
-                        useful.syslog(err,&#34;Cannot set wake up&#34;)
+                        logger.syslog(err,&#34;Cannot set wake up&#34;)
                 return False
 
         @staticmethod
@@ -110,7 +110,7 @@ class Awake:
                 if Awake.config.activated:
                         Awake.awake_counter[0] -= 1
                         if Awake.awake_counter[0] &lt;= 0:
-                                useful.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
+                                logger.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
 
                                 # Set the wake up on PIR detection
                                 Awake.set_pin_wake_up()
@@ -161,12 +161,12 @@ class Awake:
                         if Awake.config.wake_up_gpio != 0:
                                 wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
                                 esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                                useful.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
+                                logger.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
                         else:
-                                useful.syslog(&#34;Pin wake up disabled&#34;)
+                                logger.syslog(&#34;Pin wake up disabled&#34;)
                         return True
                 except Exception as err:
-                        useful.syslog(err,&#34;Cannot set wake up&#34;)
+                        logger.syslog(err,&#34;Cannot set wake up&#34;)
                 return False
 
         @staticmethod
@@ -199,7 +199,7 @@ class Awake:
                 if Awake.config.activated:
                         Awake.awake_counter[0] -= 1
                         if Awake.awake_counter[0] &lt;= 0:
-                                useful.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
+                                logger.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
 
                                 # Set the wake up on PIR detection
                                 Awake.set_pin_wake_up()
@@ -303,7 +303,7 @@ def manage():
         if Awake.config.activated:
                 Awake.awake_counter[0] -= 1
                 if Awake.awake_counter[0] &lt;= 0:
-                        useful.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
+                        logger.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
 
                         # Set the wake up on PIR detection
                         Awake.set_pin_wake_up()
@@ -327,12 +327,12 @@ def set_pin_wake_up():
                 if Awake.config.wake_up_gpio != 0:
                         wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
                         esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                        useful.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
+                        logger.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
                 else:
-                        useful.syslog(&#34;Pin wake up disabled&#34;)
+                        logger.syslog(&#34;Pin wake up disabled&#34;)
                 return True
         except Exception as err:
-                useful.syslog(err,&#34;Cannot set wake up&#34;)
+                logger.syslog(err,&#34;Cannot set wake up&#34;)
         return False</code></pre>
 </details>
 </dd>

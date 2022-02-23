@@ -32,7 +32,7 @@
 &#34;&#34;&#34; Encryption utility functions &#34;&#34;&#34;
 from binascii import hexlify, b2a_base64, a2b_base64
 import hashlib
-from tools import useful
+from tools import strings
 
 aes_ = None
 def aes(key, mode):
@@ -43,7 +43,7 @@ def aes(key, mode):
                 aes_ = cryptolib.aes
         if len(key) % 16 != 0:
                 key = (key*16)[:16]
-        return  aes_(useful.tobytes(key), mode)
+        return  aes_(strings.tobytes(key), mode)
 
 def encrypt(buffer, key):
         &#34;&#34;&#34; AES encryption of buffer &#34;&#34;&#34;
@@ -51,12 +51,12 @@ def encrypt(buffer, key):
         data = data.rstrip()
         if len(data) % 16 != 0:
                 data = data + b&#34;=&#34;*(16-len(data)%16)
-        return aes(key,1).encrypt(useful.tobytes(data))
+        return aes(key,1).encrypt(strings.tobytes(data))
 
 def decrypt(buffer, key):
         &#34;&#34;&#34; AES decryption of buffer &#34;&#34;&#34;
         data = aes(key, 1).decrypt(buffer)
-        data = a2b_base64(useful.tobytes(data))
+        data = a2b_base64(strings.tobytes(data))
         return data
 
 def gethash(password):
@@ -90,7 +90,7 @@ def gethash(password):
                 aes_ = cryptolib.aes
         if len(key) % 16 != 0:
                 key = (key*16)[:16]
-        return  aes_(useful.tobytes(key), mode)</code></pre>
+        return  aes_(strings.tobytes(key), mode)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.encryption.decrypt"><code class="name flex">
@@ -105,7 +105,7 @@ def gethash(password):
 <pre><code class="python">def decrypt(buffer, key):
         &#34;&#34;&#34; AES decryption of buffer &#34;&#34;&#34;
         data = aes(key, 1).decrypt(buffer)
-        data = a2b_base64(useful.tobytes(data))
+        data = a2b_base64(strings.tobytes(data))
         return data</code></pre>
 </details>
 </dd>
@@ -124,7 +124,7 @@ def gethash(password):
         data = data.rstrip()
         if len(data) % 16 != 0:
                 data = data + b&#34;=&#34;*(16-len(data)%16)
-        return aes(key,1).encrypt(useful.tobytes(data))</code></pre>
+        return aes(key,1).encrypt(strings.tobytes(data))</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.encryption.gethash"><code class="name flex">

@@ -31,7 +31,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function which sets the internal clock of the card based on an ntp server &#34;&#34;&#34;
 import time
-from tools import useful
+from tools import logger,strings
 def get_ntp_time():
         &#34;&#34;&#34; Return the time from a NTP server &#34;&#34;&#34;
         try:
@@ -63,7 +63,7 @@ def set_time(currenttime):
                 import machine
                 machine.RTC().datetime((year, month, day, weekday + 1, hour, minute, second, 0))
         except Exception as exc:
-                useful.syslog(&#34;Cannot set time &#39;%s&#39;&#34;%exc)
+                logger.syslog(&#34;Cannot set time &#39;%s&#39;&#34;%exc)
 
 def calc_local_time(currenttime, offsetTime=+1, dst=True):
         &#34;&#34;&#34; Calculate the local time &#34;&#34;&#34;
@@ -88,7 +88,7 @@ def set_date(offsetTime=+1, dst=True, display=False):
                 if currenttime &gt; 0:
                         set_time(currenttime)
                         if display:
-                                useful.syslog(&#34;Date updated : %s&#34;%(useful.date_to_string()))
+                                logger.syslog(&#34;Date updated : %s&#34;%(strings.date_to_string()))
                         return currenttime
         return 0</code></pre>
 </details>
@@ -174,7 +174,7 @@ def set_date(offsetTime=+1, dst=True, display=False):
                 if currenttime &gt; 0:
                         set_time(currenttime)
                         if display:
-                                useful.syslog(&#34;Date updated : %s&#34;%(useful.date_to_string()))
+                                logger.syslog(&#34;Date updated : %s&#34;%(strings.date_to_string()))
                         return currenttime
         return 0</code></pre>
 </details>
@@ -197,7 +197,7 @@ def set_date(offsetTime=+1, dst=True, display=False):
                 import machine
                 machine.RTC().datetime((year, month, day, weekday + 1, hour, minute, second, 0))
         except Exception as exc:
-                useful.syslog(&#34;Cannot set time &#39;%s&#39;&#34;%exc)</code></pre>
+                logger.syslog(&#34;Cannot set time &#39;%s&#39;&#34;%exc)</code></pre>
 </details>
 </dd>
 </dl>

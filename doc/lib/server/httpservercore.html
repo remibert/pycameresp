@@ -38,7 +38,7 @@ Http server core, it instanciated only if a connection is done to the asynchrono
 from server.httpserver import HttpServer
 from server.httprequest import HttpRequest, HttpResponse
 from server.stream import Stream
-from tools import useful
+from tools import logger,strings
 
 class HttpServerCore:
         &#34;&#34;&#34; Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
@@ -68,9 +68,9 @@ class HttpServerCore:
                                 # Ignore error
                                 pass
                         else:
-                                await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                                await response.send_error(status=b&#34;404&#34;, content=strings.tobytes(logger.exception(err)))
                 except Exception as err:
-                        await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                        await response.send_error(status=b&#34;404&#34;, content=strings.tobytes(logger.exception(err)))
                 finally:
                         await stream.close()</code></pre>
 </details>
@@ -124,9 +124,9 @@ if the server not used, it not consum memory </p>
                                 # Ignore error
                                 pass
                         else:
-                                await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                                await response.send_error(status=b&#34;404&#34;, content=strings.tobytes(logger.exception(err)))
                 except Exception as err:
-                        await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                        await response.send_error(status=b&#34;404&#34;, content=strings.tobytes(logger.exception(err)))
                 finally:
                         await stream.close()</code></pre>
 </details>
@@ -161,9 +161,9 @@ if the server not used, it not consum memory </p>
                         # Ignore error
                         pass
                 else:
-                        await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                        await response.send_error(status=b&#34;404&#34;, content=strings.tobytes(logger.exception(err)))
         except Exception as err:
-                await response.send_error(status=b&#34;404&#34;, content=useful.tobytes(useful.exception(err)))
+                await response.send_error(status=b&#34;404&#34;, content=strings.tobytes(logger.exception(err)))
         finally:
                 await stream.close()</code></pre>
 </details>
