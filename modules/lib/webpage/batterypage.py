@@ -4,7 +4,8 @@
 from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import main_frame, manage_default_button
-from tools             import BatteryConfig,lang
+from tools.battery     import BatteryConfig
+from tools import lang
 
 @HttpServer.add_route(b'/battery', menu=lang.menu_system, item=lang.item_battery)
 async def battery(request, response, args):

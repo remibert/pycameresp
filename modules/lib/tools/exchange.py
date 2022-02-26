@@ -7,8 +7,9 @@ import io
 from binascii import crc32
 try:
 	import filesystem
+	import strings
 except:
-	from tools import filesystem
+	from tools import filesystem, strings
 if filesystem.ismicropython():
 	# pylint:disable=import-error
 	import micropython
@@ -247,12 +248,6 @@ class FileReader:
 			self.read_byte = self.read_filename
 		return None
 
-	def read_blank_content(self, byte):
-		""" Read blank line after content """
-		if self.blank_content.read_byte(byte) is not None:
-			self.read_byte = self.read_crc
-		return None
-
 	def read_filename(self, byte):
 		""" Read filename """
 		if self.filename.read_byte(byte) is not None:
@@ -277,6 +272,12 @@ class FileReader:
 		self.read_count += 1
 		if self.content.read_byte(byte) is not None:
 			self.read_byte = self.read_crc
+
+	def read_blank_content(self, byte):
+		""" Read blank line after content """
+		if self.blank_content.read_byte(byte) is not None:
+			self.read_byte = self.read_crc
+		return None
 
 	def read_crc(self, byte):
 		""" Read crc"""
@@ -392,7 +393,7 @@ class FileWriter:
 			out_file.write(b"# %s\x0D\x0A"%filename_.encode("utf8"))
 
 			# Send the file date
-			year,month,day,hour,minute,second,_,_ = time.localtime(filesystem.filetime(filename))[:8]
+			year,month,day,hour,minute,second,_,_ = strings.local_time(filesystem.filetime(filename))[:8]
 			out_file.write(b"# %04d/%02d/%02d %02d:%02d:%02d\x0D\x0A"%(year,month,day,hour,minute,second))
 
 			# Send the file size

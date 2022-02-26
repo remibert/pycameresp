@@ -6,7 +6,6 @@
 """ Ftp server implementation core class """
 import socket
 import os
-import time
 import uos
 from server import stream
 from server.server import Server
@@ -77,7 +76,7 @@ class FtpServerCore:
 		if full:
 			file_permissions = b"drwxr-xr-x" if (typ & 0xF000 == 0x4000) else b"-rw-r--r--"
 
-			d = time.localtime(date)
+			d = strings.local_time(date)
 			year,month,day,hour,minute,_,_,_ = d[:8]
 
 			if year != now[0] and month != now[1]:
@@ -130,7 +129,7 @@ class FtpServerCore:
 
 	def send_file_list(self, path, stream_, full):
 		""" Send the list of file """
-		now = time.localtime()
+		now = strings.local_time()
 		try:
 			self.send_file_list_with_pattern(path, stream_, full, now)
 		except Exception as err:

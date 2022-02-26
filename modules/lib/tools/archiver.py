@@ -1,8 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Archiver files functions """
-from tools import logger,filesystem
-from tools.exchange import FileReader, FileWriter
+from tools import logger,filesystem,exchange
 
 def export_files(export_filename, path="./config",pattern="*.json", recursive=False):
 	""" Exports many file into only one file """
@@ -18,7 +17,7 @@ def export_files(export_filename, path="./config",pattern="*.json", recursive=Fa
 		# Open out file
 		out_file = open(export_filename,"wb")
 
-		file_write = FileWriter()
+		file_write = exchange.FileWriter()
 		# For all files found
 		for filename in files:
 			# All files except .tmp and sdcard
@@ -49,7 +48,7 @@ def import_files(import_filename, directory="/"):
 		read_size = filesystem.filesize(import_filename)
 
 		while in_file.tell() < read_size:
-			file_reader = FileReader(simulated)
+			file_reader = exchange.FileReader(simulated)
 			res = file_reader.read(directory, in_file)
 			logger.syslog("Import %s %s"%(file_reader.filename.get(), "" if res else "failed"))
 

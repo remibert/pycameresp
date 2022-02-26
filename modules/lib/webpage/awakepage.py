@@ -4,12 +4,12 @@
 from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import main_frame, manage_default_button
-from tools             import AwakeConfig,lang
+from tools             import awake, lang
 
 @HttpServer.add_route(b'/wakeup', menu=lang.menu_system, item=lang.item_wakeup)
 async def wakeup(request, response, args):
 	""" Wake uo configuration web page """
-	config = AwakeConfig()
+	config = awake.AwakeConfig()
 	disabled, action, submit = manage_default_button(request, config)
 
 	page = main_frame(request, response, args, lang.gpio_wake_up,

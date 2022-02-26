@@ -8,7 +8,7 @@ import serial
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
-from strings import get_utf8_length
+from strings import get_utf8_length, dump
 from exchange import FileReader, FileWriter, ImporterCommand
 from filesystem import scandir
 
@@ -24,7 +24,7 @@ class SerialLogger(serial.Serial):
 	""" Serial with log exchange """
 	def __init__(self, *args, **params):
 		if "stdout" in params:
-			# self.stdout = params["stdout"]
+			self.stdout = params["stdout"]
 			self.stdout = None
 			del params["stdout"]
 		else:
@@ -33,19 +33,40 @@ class SerialLogger(serial.Serial):
 		self.latence = 0
 		self.data_written = 0
 		self.data_read = 0
+		self.received = b""
+		self.sent = b""
 
 	def write(self, data):
 		""" Write buffer to serial link """
 		self.data_written += len(data)
+		self.sent += data
+		self.show_received()
+		self.show_sent()
 		return serial.Serial.write(self, data)
+
+	def show_received(self):
+		""" Show data received """
+		if self.stdout is not None:
+			if self.received != b"":
+				self.stdout.write("<-%s\n"%dump(self.received, False))
+				self.received = b""
+
+	def show_sent(self):
+		""" Show data sent """
+		if self.stdout is not None:
+			if self.sent != b"":
+				self.stdout.write("->%s\n"%dump(self.sent))
+				self.sent = b""
 
 	def read(self, size=1):
 		""" Read length from serial link """
 		data = serial.Serial.read(self, size)
 		if len(data) == 0:
 			self.latence += 1
+			self.show_received()
 		else:
 			self.data_read += len(data)
+			self.received += data
 		return data
 
 	def clear_stat(self):
@@ -53,6 +74,11 @@ class SerialLogger(serial.Serial):
 		self.latence = 0
 		self.data_read = 0
 		self.data_written = 0
+
+	def clear_exchange(self):
+		""" Clear the exchange """
+		self.received = b""
+		self.sent = b""
 
 	def get_stat(self):
 		""" Get statistic counters """
@@ -70,12 +96,12 @@ class ThreadSerial(threading.Thread):
 		self.loop = True
 		self.buffer = b""
 
-		self.CONNECT = 0
+		self.CONNECT    = 0
 		self.DISCONNECT = 1
 		self.WRITE_DATA = 2
-		self.WRITE_FILE =3
-		self.READ_FILE = 4
-		self.QUIT = 5
+		self.WRITE_FILE = 3
+		self.READ_FILE  = 4
+		self.QUIT       = 5
 		self.stdout = stdout
 		self.start()
 
@@ -159,11 +185,15 @@ class ThreadSerial(threading.Thread):
 	def on_read_file(self, command, directory):
 		""" Treat the read file command """
 		if command == self.READ_FILE:
-			file_reader = FileReader()
-			if file_reader.read(directory, self.serial, self.serial) != -1:
-				self.print("  %s\n"%file_reader.filename.get())
-			else:
-				self.print("  %s bad crc\n"%file_reader.filename.get())
+			try:
+				self.serial.clear_exchange()
+				file_reader = FileReader()
+				if file_reader.read(directory, self.serial, self.serial) != -1:
+					self.print("  %s\n"%file_reader.filename.get())
+				else:
+					self.print("  %s bad crc\n"%file_reader.filename.get())
+			except Exception as err:
+				self.print("Exporter error")
 
 	def on_write(self, command, data):
 		""" Treat write command """

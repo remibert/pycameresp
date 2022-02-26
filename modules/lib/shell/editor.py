@@ -32,14 +32,13 @@ On the boards with low memory, it may work, but on very small files, otherwise i
 """
 import sys
 
-from . import filesystem
 sys.path.append("lib")
 sys.path.append("lib/tools")
 try:
-	from tools import useful,logger,strings,terminal
+	from tools import useful,logger,strings,terminal,filesystem
 except:
 	# pylint:disable=multiple-imports
-	import useful,logger,strings,terminal
+	import useful,logger,strings,terminal,filesystem
 
 TABSIZE = 4          # Tabulation size
 HORIZONTAL_MOVE=8    # Scrolling minimal deplacement
@@ -1531,14 +1530,14 @@ class Editor:
 		""" Refresh the header of editor """
 		if self.is_refresh_header:
 			self.edit.view.move_cursor(0, 0)
-			filename_ = "File: %s"%(self.filename)
+			filename_ = " File: %s"%(self.filename)
 			if self.edit.text.read_only is False:
 				filename_ += " (*)" if self.edit.text.modified else ""
-				end = "Mode: %s"%("Replace" if self.edit.text.replace_mode else "Insert")
+				end = " Mode: %s "%("Replace" if self.edit.text.replace_mode else "Insert")
 			else:
-				end = "Read only" if self.edit.text.read_only else ""
+				end = " Read only " if self.edit.text.read_only else ""
 
-			header = "\x1B[7m %s%s%s \x1B[m"%(filename_, " "*(self.edit.view.width - len(filename_) - len(end)-1), end)
+			header = "\x1B[7m%s%s%s\x1B[m"%(filename_, " "*(self.edit.view.width - len(filename_) - len(end)), end)
 			self.edit.view.write(header)
 			self.edit.view.move_cursor()
 			self.is_refresh_header = False

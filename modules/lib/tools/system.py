@@ -7,8 +7,8 @@ from tools import filesystem, logger
 def reboot(message="Reboot"):
 	""" Reboot command """
 	logger.syslog(message)
-	from tools.lang import RegionConfig
-	region_config = RegionConfig()
+	from tools import lang
+	region_config = lang.RegionConfig()
 	if region_config.load():
 		region_config.current_time = time.time() + 8
 		region_config.save()

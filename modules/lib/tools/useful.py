@@ -2,7 +2,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Miscellaneous utility functions """
 import sys
-from tools import filesystem, logger
+try:
+	from tools import logger,filesystem
+except:
+	# pylint:disable=multiple-imports
+	import logger,filesystem
 
 def run(filename):
 	""" Import and execute python file """

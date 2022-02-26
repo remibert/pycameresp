@@ -57,7 +57,7 @@ from tools import useful,logger,sdcard,tasking,filesystem,exchange,info,strings,
 def cd(directory = "/"):
 	""" Change directory """
 	try:
-		uos.chdir(directory)
+		uos.chdir(filesystem.normpath(directory))
 	except:
 		print("No such file or directory '%s'"%directory)
 
@@ -70,7 +70,7 @@ def mkdir(directory, recursive=False, quiet=False):
 	try:
 		if quiet is False:
 			print("mkdir '%s'"%directory)
-		filesystem.makedir(directory, recursive)
+		filesystem.makedir(filesystem.normpath(directory), recursive)
 	except:
 		print("Cannot mkdir '%s'"%directory)
 
@@ -88,6 +88,7 @@ def removedir(directory, force=False, quiet=False, simulate=False):
 
 def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 	""" Remove directory """
+	directory = filesystem.normpath(directory)
 	if recursive is False:
 		removedir(directory, force=force, quiet=quiet, simulate=simulate)
 	else:
@@ -110,7 +111,7 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 def mv(source, destination):
 	""" Move or rename file """
 	try:
-		uos.rename(source,destination)
+		uos.rename(filesystem.normpath(source),filesystem.normpath(destination))
 	except:
 		print("Cannot mv '%s'->'%s'"%(source,destination))
 
@@ -140,6 +141,8 @@ def copyfile(src,dst,quiet):
 
 def cp(source, destination, recursive=False, quiet=False):
 	""" Copy file command """
+	source = filesystem.normpath(source)
+	destination = filesystem.normpath(destination)
 	if filesystem.isfile(source):
 		copyfile(source,destination,quiet)
 	else:
@@ -159,7 +162,7 @@ def rmfile(filename, quiet=False, force=False, simulate=False):
 	""" Remove file """
 	try:
 		if (filesystem.ismicropython() or force) and simulate is False:
-			uos.remove(filename)
+			uos.remove(filesystem.normpath(filename))
 		if quiet is False:
 			print("rm '%s'"%(filename))
 	except:
@@ -167,6 +170,7 @@ def rmfile(filename, quiet=False, force=False, simulate=False):
 
 def rm(file, recursive=False, quiet=False, force=False, simulate=False):
 	""" Remove file command """
+	file = filesystem.normpath(file)
 	filenames   = []
 	directories = []
 
@@ -258,6 +262,7 @@ def ll(file="", recursive=False):
 
 def searchfile(file, recursive, obj = None):
 	""" Search file """
+	file = filesystem.normpath(file)
 	p = filesystem.abspath(uos.getcwd(), file)
 	filenames = []
 	try:
@@ -307,6 +312,7 @@ def print_part(message, width, height, count):
 def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 	""" Grep command """
 	from re import search
+	file = filesystem.normpath(file)
 	def __search(text, content, ignorecase, regexp):
 		if ignorecase:
 			content  = content.lower()
@@ -585,9 +591,11 @@ def importer(file="", recursive=False):
 			while result:
 				file_reader = exchange.FileReader()
 				result = file_reader.read(uos.getcwd(), sys.stdin.buffer, sys.stdout.buffer)
-			print ("Importer end")
+				tasking.WatchDog.feed()
+			print("Importer end")
 		except Exception as err:
-			logger.syslog(err)
+			logger.syslog(err, display=False)
+			print("Importer failed")
 	else:
 		print("CamFlasher application required for this command")
 
@@ -607,6 +615,7 @@ class Exporter:
 			if filesystem.exists(path):
 				sys.stdout.buffer.write("࿊".encode("utf8"))
 				result = file_write.write(path, sys.stdin.buffer, sys.stdout.buffer)
+				tasking.WatchDog.feed()
 		return result
 
 	def show(self, path):
@@ -626,8 +635,9 @@ def exporter(file="", recursive=False):
 		try:
 			searchfile(file, recursive, Exporter())
 			print ("Exporter end")
-		except exchange.FileError as err:
-			print("Exporter failed : %s"%err.message)
+		except Exception as err:
+			logger.syslog(err, display=False)
+			print("Exporter failed")
 	else:
 		print("CamFlasher application required for this command")
 

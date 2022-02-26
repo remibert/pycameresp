@@ -9,7 +9,7 @@ It offer the possibility to access the esp32 shell, edit files from esp32 and ex
 
 It is also a VT100 console which allows to operate the text editor, and to display colored texts thanks to the VT100 escape sequences. Not all VT100 commands are supported, but the most common ones are available.
 
-Camflasher with shell commands **importer** and **exporter**, allows to inject or retrieve files easily and quickly from the device.
+Camflasher with shell commands **importer** and **exporter**, allows to inject or extract files easily from the device (6 times faster than rshell copy).
 
 
 

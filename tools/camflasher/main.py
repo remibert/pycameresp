@@ -289,7 +289,7 @@ class CamFlasher(QMainWindow):
 
 		# Deduce the size of console visible in the window
 		width  = (self.window.output.contentsRect().width()  * 200)// size.width() -  1
-		height = (self.window.output.contentsRect().height() * 200)// size.height()
+		height = int((self.window.output.contentsRect().height() * 200)/ size.height() - 0.3)
 		self.console.set_size(width, height)
 
 	def moveEvent(self, _):
@@ -309,6 +309,7 @@ class CamFlasher(QMainWindow):
 			settings = QSettings()
 			self.flasher.set_directory(settings.value(WORKING_DIRECTORY,"."))
 			self.update_font()
+			self.resize_console()
 
 	def on_refresh_port(self):
 		""" Refresh the combobox content with the serial ports detected """

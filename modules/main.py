@@ -1,27 +1,38 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-""" Main pycameresp module """
 # pylint:disable=wrong-import-position
 # pylint:disable=wrong-import-order
-import sys
+# pylint:disable=ungrouped-imports
+""" Main pycameresp module """
 try:
-	import uasyncio
+	import machine
+
+	# Force high frequency of esp32
+	machine.freq(240000000)
 except:
+	import sys
 	sys.path.append("lib")
 	sys.path.append("simul")
-sys.path.append("sample")
+	sys.path.append("sample")
+
+# Check the battery level and force deepsleep if it is too low
+from tools.battery import Battery
+Battery.protect()
+
+# Check if the wakeup was caused by a pin state change
+from tools.awake import Awake
+pin_wake_up = Awake.is_pin_wake_up()
+
+# Create asyncio loop
 import uasyncio
-import machine
-from tools import battery, awake, logger, system, info
+loop = uasyncio.get_event_loop()
 
-# Force high frequency of esp32
-machine.freq(240000000)
-
-# Check the battery level and force deepsleep is to low
-battery.Battery.protect()
-
-# Can only be done once at boot before start of the camera and sd card
-pinWakeUp = awake.Awake.is_pin_wake_up()
+# If camera is available (required specific firmware)
+from tools.info import iscamera
+if iscamera():
+	# Start motion detection (can be only used with ESP32CAM)
+	import motion
+	motion.start(loop, pin_wake_up)
 
 def html_page_loader():
 	""" Html pages loader """
@@ -38,18 +49,9 @@ def html_page_loader():
 	except ImportError as err:
 		pass
 
-# Create asyncio loop
-loop = uasyncio.get_event_loop()
-
 # Start all servers Http, Ftp, Telnet and wifi manager
 import server
 server.init(loop=loop, page_loader=html_page_loader)
-
-# If camera is available (required specific firmware)
-if info.iscamera():
-	# Start motion detection (can be only used with ESP32CAM)
-	import motion
-	motion.start(loop, pinWakeUp)
 
 # Add shell asynchronous task (press any key to get shell prompt)
 # pylint:disable=unused-import
@@ -60,7 +62,9 @@ try:
 	# Run asyncio for ever
 	loop.run_forever()
 except KeyboardInterrupt:
-	logger.syslog("Control C in main")
+	from tools import logger
+	logger.syslog("Ctr-C in main")
 except Exception as err:
+	from tools import logger, system
 	logger.syslog(err)
 	system.reboot("Crash in main")

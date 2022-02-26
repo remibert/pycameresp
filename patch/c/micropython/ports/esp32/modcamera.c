@@ -296,26 +296,34 @@ STATIC mp_obj_t camera_isavailable()
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_isavailable_obj, camera_isavailable);
 
 #ifdef CONFIG_ESP32CAM
+static bool camera_initialized = false;
 STATIC mp_obj_t camera_init()
 {
-	esp_err_t err = esp_camera_init(&camera_config);
-	if (err != ESP_OK) 
+	if (camera_initialized == false)
 	{
-		ESP_LOGE(TAG, "Camera init failed");
-		return mp_const_false;
+		esp_err_t err = esp_camera_init(&camera_config);
+		if (err != ESP_OK) 
+		{
+			ESP_LOGE(TAG, "Camera init failed");
+			return mp_const_false;
+		}
+		camera_initialized = true;
 	}
-
 	return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_init_obj, camera_init);
 
 STATIC mp_obj_t camera_deinit()
 {
-	esp_err_t err = esp_camera_deinit();
-	if (err != ESP_OK) 
+	if (camera_initialized == true)
 	{
-		ESP_LOGE(TAG, "Camera deinit failed");
-		return mp_const_false;
+		esp_err_t err = esp_camera_deinit();
+		camera_initialized = false;
+		if (err != ESP_OK) 
+		{
+			ESP_LOGE(TAG, "Camera deinit failed");
+			return mp_const_false;
+		}
 	}
 	return mp_const_true;
 }

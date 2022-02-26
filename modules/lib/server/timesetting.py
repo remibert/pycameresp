@@ -3,6 +3,7 @@
 """ Function which sets the internal clock of the card based on an ntp server """
 import time
 from tools import logger,strings
+
 def get_ntp_time():
 	""" Return the time from a NTP server """
 	try:
@@ -28,7 +29,7 @@ def get_ntp_time():
 def set_time(currenttime):
 	""" Change the current time """
 	try:
-		newtime = time.localtime(currenttime)
+		newtime = strings.local_time(currenttime)
 		year,month,day,hour,minute,second,weekday,yearday = newtime[:8]
 
 		import machine
@@ -38,7 +39,7 @@ def set_time(currenttime):
 
 def calc_local_time(currenttime, offsetTime=+1, dst=True):
 	""" Calculate the local time """
-	year,month,day,hour,minute,second,weekday,yearday = time.localtime(currenttime)[:8]
+	year,month,day,hour,minute,second,weekday,yearday = strings.local_time(currenttime)[:8]
 	startDST = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
 	endDST   = time.mktime((year,10,( 7-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of November change to EST
 	try:
