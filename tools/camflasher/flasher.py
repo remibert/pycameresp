@@ -146,6 +146,7 @@ class ThreadSerial(threading.Thread):
 
 					for filename in filenames:
 						file_writer = FileWriter()
+						filename = filename.replace("\\","/")
 						filename_ = filename.replace(directory, "")
 						if file_writer.write(filename, self.serial, self.serial, directory) is True:
 							self.print("  %s\n"%filename_)

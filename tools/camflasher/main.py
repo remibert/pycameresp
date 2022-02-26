@@ -14,6 +14,7 @@
 import sys
 import os.path
 import os
+from platform import uname
 try:
 	from PyQt6 import uic
 	from PyQt6.QtCore import QTimer, QEvent, Qt, QSettings
@@ -29,6 +30,7 @@ from flasher import Flasher
 from qstdoutvt100 import QStdoutVT100
 
 # Settings
+SETTINGS_FILENAME = "CamFlasher.ini"
 FONT_FAMILY       = "camflasher.font.family"
 FONT_SIZE         = "camflasher.font.size"
 WORKING_DIRECTORY = "camflasher.working_directory"
@@ -51,6 +53,19 @@ class AboutDialog(QDialog):
 		""" Accept about dialog """
 		self.close()
 
+def get_settings():
+	""" Return the QSettings class according to the os """
+	if sys.platform == "darwin":
+		result = QSettings()
+	elif sys.platform == "win32":
+		if uname() == "7":
+			result = QSettings(SETTINGS_FILENAME, QSettings.IniFormat)
+		else:
+			result = QSettings(SETTINGS_FILENAME)
+	else:
+		result = QSettings()#QSettings("."+SETTINGS_FILENAME, QSettings.IniFormat)
+	return result
+
 class FlashDialog(QDialog):
 	""" Dialog box to select firmware """
 	def __init__(self, parent):
@@ -62,7 +77,7 @@ class FlashDialog(QDialog):
 			from dialogflash import Ui_DialogFlash
 			self.dialog = Ui_DialogFlash()
 			self.dialog.setupUi(self)
-		settings = QSettings()
+		settings = get_settings()
 		firmware = settings.value(FIRMWARE_FILENAME, "")
 		if not os.path.exists(firmware):
 			firmware = ""
@@ -84,7 +99,7 @@ class FlashDialog(QDialog):
 			msg.setText("Firmware not found")
 			msg.exec()
 		else:
-			settings = QSettings()
+			settings = get_settings()
 			settings.setValue(FIRMWARE_FILENAME, self.dialog.firmware.text())
 			super().accept()
 
@@ -106,15 +121,15 @@ class OptionDialog(QDialog):
 			self.dialog = Ui_DialogOption()
 			self.dialog.setupUi(self)
 
-		settings = QSettings()
+		settings = get_settings()
 		self.dialog.working_directory.setText(settings.value(WORKING_DIRECTORY,"."))
-		self.dialog.spin_font_size.setValue(settings.value(FONT_SIZE   ,12))
+		self.dialog.spin_font_size.setValue(int(settings.value(FONT_SIZE   ,12)))
 		self.dialog.combo_font.setCurrentFont(QFont(settings.value(FONT_FAMILY ,"Courier")))
 		self.dialog.select_directory.clicked.connect(self.on_directory_clicked)
 
 	def on_directory_clicked(self, event):
 		""" Selection of directory button clicked """
-		settings = QSettings()
+		settings = get_settings()
 		directory = QFileDialog.getExistingDirectory(self, 'Select working directory', directory =settings.value(WORKING_DIRECTORY,"."))
 		if directory != '':
 			self.dialog.working_directory.setText(directory)
@@ -122,7 +137,7 @@ class OptionDialog(QDialog):
 	def accept(self):
 		""" Accept about dialog """
 		font = self.dialog.combo_font.currentFont()
-		settings = QSettings()
+		settings = get_settings()
 		settings.setValue(FONT_FAMILY , font.family())
 		settings.setValue(FONT_SIZE   , self.dialog.spin_font_size.value())
 		settings.setValue(WORKING_DIRECTORY, self.dialog.working_directory.text())
@@ -136,15 +151,17 @@ class CamFlasher(QMainWindow):
 		self.stdout = sys.stdout
 		try:
 			self.window = uic.loadUi('camflasher.ui', self)
+			self.geometry_ = self.window
 		except Exception as err:
 			from camflasher import Ui_CamFlasher
 			self.window = Ui_CamFlasher()
 			self.window.setupUi(self)
+			self.geometry_ = self
 
 		# Select font
 		self.update_font()
-		settings = QSettings()
-		self.window.setGeometry(settings.value(WIN_GEOMETRY, self.window.geometry()))
+		settings = get_settings()
+		self.geometry_.setGeometry(settings.value(WIN_GEOMETRY, self.geometry_.geometry()))
 
 		self.window.output.setAcceptDrops(False)
 		self.window.output.setReadOnly(True)
@@ -195,10 +212,10 @@ class CamFlasher(QMainWindow):
 
 	def update_font(self):
 		""" Update console font """
-		settings = QSettings()
+		settings = get_settings()
 		font = QFont()
 		font.setFamily    (settings.value(FONT_FAMILY ,"Courier"))
-		font.setPointSize (settings.value(FONT_SIZE   ,12))
+		font.setPointSize (int(settings.value(FONT_SIZE   ,12)))
 		self.window.output.setFont(font)
 
 	def on_about_clicked(self):
@@ -277,8 +294,8 @@ class CamFlasher(QMainWindow):
 	def resize_console(self):
 		""" Resize console """
 		# Save the position
-		settings = QSettings()
-		geometry = self.window.geometry()
+		settings = get_settings()
+		geometry = self.geometry_.geometry()
 		settings.setValue(WIN_GEOMETRY, geometry)
 
 		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
@@ -306,7 +323,7 @@ class CamFlasher(QMainWindow):
 		self.option_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
 		result = self.option_dialog.exec()
 		if result == 1:
-			settings = QSettings()
+			settings = get_settings()
 			self.flasher.set_directory(settings.value(WORKING_DIRECTORY,"."))
 			self.update_font()
 			self.resize_console()
