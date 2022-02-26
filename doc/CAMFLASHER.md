@@ -21,20 +21,20 @@ Camflasher with shell commands **importer** and **exporter**, allows to inject o
 
 - Download the firmware associated with your device :
 
-	- [ESP32-CAM, ESP32-CAM-MB](https://github.com/remibert/pycameresp/releases/download/V3/ESP32CAM-firmware.bin)
+	- [ESP32-CAM, ESP32-CAM-MB](https://github.com/remibert/pycameresp/releases/download/V4/ESP32CAM-firmware.bin)
 
-	- [ESP32-NODEMCU, LOLIN32, ESP32 without SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V3/GENERIC-firmware.bin)
+	- [ESP32-NODEMCU, LOLIN32, ESP32 without SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V4/GENERIC-firmware.bin)
 
-	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V3/GENERIC_SPIRAM-firmware.bin)
+	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V4/GENERIC_SPIRAM-firmware.bin)
 
 - Download the camflasher application and unzip it :
-	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V3/CamFlasher_win10_64.zip)
+	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V4/CamFlasher_win10_64.zip)
 
-	- [CamFlasher for Windows seven 64 bits](https://github.com/remibert/pycameresp/releases/download/V3/CamFlasher_win7_64.zip)
+	- [CamFlasher for Windows seven 64 bits](https://github.com/remibert/pycameresp/releases/download/V4/CamFlasher_win7_64.zip)
 
-	- [CamFlasher for OSX Big Sur Intel](https://github.com/remibert/pycameresp/releases/download/V3/CamFlasher_osx.zip)
+	- [CamFlasher for OSX Big Sur Intel](https://github.com/remibert/pycameresp/releases/download/V4/CamFlasher_osx.zip)
 
-	- [CamFlasher for Debian x86_64](https://github.com/remibert/pycameresp/releases/download/V3/CamFlasher_linux.zip)
+	- [CamFlasher for Debian x86_64](https://github.com/remibert/pycameresp/releases/download/V4/CamFlasher_linux.zip)
 
 - Connect the device to the USB port of your computer.
 
