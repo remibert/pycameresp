@@ -289,6 +289,7 @@ class FileReader:
 
 	def read(self, directory, in_file, out_file=None):
 		""" Read the file completly """
+		send_ack(out_file,ACK)
 		try:
 			# Disable the Ctr-C
 			if filesystem.ismicropython() and out_file is not None:
@@ -377,6 +378,8 @@ class FileWriter:
 	def write(self, filename, in_file, out_file, directory=None):
 		""" Write file """
 		result = False
+
+		wait_ack(in_file)
 
 		# If file existing
 		if filesystem.exists(filename) and filesystem.isfile(filename):

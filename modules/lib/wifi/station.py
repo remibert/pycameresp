@@ -33,7 +33,7 @@ class NetworkConfig(jsonconfig.JsonConfig):
 		# result +="   Password   :%s\n"%strings.tostrings(self.wifi_password)
 		return result
 
-	def save(self, file = None):
+	def save(self, file = None, part_filename=None):
 		""" Save wifi configuration """
 		result = jsonconfig.JsonConfig.save(self, file=file, part_filename=self.ssid)
 		return result
@@ -42,7 +42,7 @@ class NetworkConfig(jsonconfig.JsonConfig):
 		""" List all configuration files """
 		return jsonconfig.JsonConfig.list_all(self)
 
-	def forget(self):
+	def forget(self, part_filename=None):
 		""" Forget configuration """
 		return jsonconfig.JsonConfig.forget(self, part_filename=self.ssid)
 

@@ -3,12 +3,13 @@ import threading
 import queue
 import time
 import sys
+import binascii
 import os.path
 import serial
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
-from strings import get_utf8_length, dump
+from strings import get_utf8_length, tostrings
 from exchange import FileReader, FileWriter, ImporterCommand
 from filesystem import scandir
 
@@ -25,64 +26,44 @@ class SerialLogger(serial.Serial):
 	def __init__(self, *args, **params):
 		if "stdout" in params:
 			self.stdout = params["stdout"]
+			# self.stdout = open("/Users/remi/Downloads/trace.py","w")
 			self.stdout = None
 			del params["stdout"]
 		else:
 			self.stdout = None
 		serial.Serial.__init__(*((self,) + args), **params)
-		self.latence = 0
-		self.data_written = 0
-		self.data_read = 0
 		self.received = b""
-		self.sent = b""
 
 	def write(self, data):
 		""" Write buffer to serial link """
-		self.data_written += len(data)
-		self.sent += data
-		self.show_received()
-		self.show_sent()
+		self.log("<-", self.received)
+		self.received = b""
+		self.log("->", data)
 		return serial.Serial.write(self, data)
 
-	def show_received(self):
-		""" Show data received """
+	def log(self, direction, buffer):
+		""" Log exchange on serial link """
 		if self.stdout is not None:
-			if self.received != b"":
-				self.stdout.write("<-%s\n"%dump(self.received, False))
-				self.received = b""
-
-	def show_sent(self):
-		""" Show data sent """
-		if self.stdout is not None:
-			if self.sent != b"":
-				self.stdout.write("->%s\n"%dump(self.sent))
-				self.sent = b""
+			if buffer != b"":
+				message = ""
+				for i in buffer:
+					if i >= 0x20 and  i < 0x7F:
+						message += chr(i)
+					else:
+						message += '.'
+				self.stdout.write("# %s\n"%message)
+				self.stdout.write("('%s',%-5d,'%s'),\n"%(direction, len(buffer),tostrings(binascii.hexlify(buffer, ' ')).upper()))
+				self.stdout.flush()
 
 	def read(self, size=1):
 		""" Read length from serial link """
 		data = serial.Serial.read(self, size)
 		if len(data) == 0:
-			self.latence += 1
-			self.show_received()
+			self.log("<-", self.received)
+			self.received = b""
 		else:
-			self.data_read += len(data)
 			self.received += data
 		return data
-
-	def clear_stat(self):
-		""" Clear statistic counters """
-		self.latence = 0
-		self.data_read = 0
-		self.data_written = 0
-
-	def clear_exchange(self):
-		""" Clear the exchange """
-		self.received = b""
-		self.sent = b""
-
-	def get_stat(self):
-		""" Get statistic counters """
-		return self.data_read, self.data_written, self.latence
 
 class ThreadSerial(threading.Thread):
 	""" Serial thread """
@@ -152,8 +133,6 @@ class ThreadSerial(threading.Thread):
 		""" Treat write file command """
 		if command == self.WRITE_FILE:
 			try:
-				self.serial.clear_stat()
-				start = time.time_ns()
 				command = ImporterCommand(directory)
 				path, pattern, recursive = command.read(self.serial, self.serial)
 				if len(pattern) > 0 and pattern[0] == "/":
@@ -176,9 +155,6 @@ class ThreadSerial(threading.Thread):
 					self.print("'%s' not found\n"%(os.path.normpath(path + "/" + pattern)))
 
 				self.serial.write(b"exit\r\n")
-				stat = self.serial.get_stat()
-				end = time.time_ns()
-				# self.print("read=%d, write=%d, latency=%.2fs, duration=%d\n"%(stat[0],stat[1],stat[2]*0.2, (end-start)//1000//1000))
 			except Exception as err:
 				self.print("Importer error")
 
@@ -186,7 +162,6 @@ class ThreadSerial(threading.Thread):
 		""" Treat the read file command """
 		if command == self.READ_FILE:
 			try:
-				self.serial.clear_exchange()
 				file_reader = FileReader()
 				if file_reader.read(directory, self.serial, self.serial) != -1:
 					self.print("  %s\n"%file_reader.filename.get())
