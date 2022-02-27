@@ -258,30 +258,58 @@ class Line:
 			previous_backcolor = None
 			previous_reverse = None
 			htmlline = ""
+
+			# If the line not content cursor
 			if cursor is None:
-				length = len(self.line.rstrip())
-				if length > len(self.line):
-					length = len(self.line)
+				# The line can be simplified
+				stripped_length = len(self.line.rstrip())
+				length = len(self.line)
+				can_cut = True
+
+				# Search in the end of line if the can be simplified
+				for i in range(stripped_length, length):
+					# If the end of line content reversion
+					if self.reverses[i] is True:
+						can_cut = False
+						break
+					# Or if the end of line content backcolor
+					if self.backcolors[i] != DEFAULT_BACKCOLOR:
+						can_cut = False
+						break
+					# Or if the end of line content forecolor
+					if self.forecolors[i] != DEFAULT_FORECOLOR:
+						can_cut = False
+						break
+				# The line can be simplified to boost performance
+				if can_cut:
+					length = stripped_length
 			else:
 				length = len(self.line)
+
+			# For all character in the line
 			for i in range(length):
 				part = ""
 				changed = False
 
+				# Treat the forecolor case
 				forecolor = self.forecolors[i]
 				if forecolor != previous_forecolor:
 					changed = True
 					previous_forecolor = forecolor
 
+				# Treat the backcolor case
 				backcolor = self.backcolors[i]
 				if backcolor != previous_backcolor:
 					changed = True
 					previous_backcolor = backcolor
 
+				# Treat the reverse case
 				reverse = self.reverses[i]
 				if reverse != previous_reverse:
 					changed = True
+					previous_reverse = reverse
 
+				# In case of reverse
 				if reverse is True:
 					back = forecolor
 					fore = backcolor
@@ -289,15 +317,21 @@ class Line:
 					fore = forecolor
 					back = backcolor
 
+				# If cursor detected
 				if cursor == i:
 					back = 0xcFcFcF
+					changed = True
+					previous_reverse = not previous_reverse
 
+				# The color must be changed
 				if changed:
 					part = '<span style="color:#%06X;background-color:#%06X">'%(fore,back)
 					if i > 0:
 						part = '</span>' + part
 				else:
 					part = ""
+
+				# Treat specials characters
 				char = self.line[i]
 				if   char == " ":
 					char = "&nbsp;"
