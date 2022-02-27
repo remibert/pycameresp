@@ -1,6 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Strings utilities """
+import binascii
 import time
 
 def local_time(date=None):
@@ -235,8 +236,7 @@ def dump_line (data, line = None, width = 0):
 		fill = width-size
 
 	# Displaying values in hex
-	for i in data:
-		line.write(b'%02X ' % i)
+	line.write(binascii.hexlify(data, " ").upper())
 
 	# Filling of vacuum according to the size of the dump
 	line.write(b'   '*fill)
@@ -246,7 +246,7 @@ def dump_line (data, line = None, width = 0):
 
 	for i in data:
 		if i >= 0x20 and  i < 0x7F:
-			line.write(chr(i).encode("utf8"))
+			line.write(i.to_bytes(1,"big"))
 		else:
 			line.write(b'.')
 
