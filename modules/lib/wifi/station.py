@@ -81,7 +81,7 @@ class Station:
 			Station.wlan = WLAN(STA_IF)
 
 	@staticmethod
-	async def connect(network, maxRetry=15):
+	async def connect(network, max_retry=15):
 		""" Connect to wifi hotspot """
 		Station.init()
 		result = False
@@ -90,9 +90,9 @@ class Station:
 			Station.configure(network)
 			Station.wlan.connect(strings.tobytes(network.ssid), strings.tobytes(network.wifi_password))
 			retry = 0
-			while not Station.wlan.isconnected() and retry < maxRetry:
+			while not Station.wlan.isconnected() and retry < max_retry:
 				await uasyncio.sleep(1)
-				logger.syslog ("   %-2d/%d wait connection to %s"%(retry+1, maxRetry, strings.tostrings(network.ssid)))
+				logger.syslog ("   %-2d/%d wait connection to %s"%(retry+1, max_retry, strings.tostrings(network.ssid)))
 				retry += 1
 
 			if Station.wlan.isconnected() is False:
@@ -194,43 +194,58 @@ class Station:
 			return False
 
 	@staticmethod
-	async def select_network(networkName, maxRetry):
+	async def select_network(network_name, max_retry):
 		""" Select the network and try to connect """
 		Station.reload_config()
-		if networkName != b"":
+		if network_name != b"":
 			# Load default network
-			if Station.network.load(part_filename=networkName):
+			if Station.network.load(part_filename=network_name):
 				logger.syslog("Try to connect to %s"%strings.tostrings(Station.network.ssid))
 
 				# If the connection failed
-				if await Station.connect(Station.network, maxRetry) is True:
+				if await Station.connect(Station.network, max_retry) is True:
 					logger.syslog("Connected to %s"%strings.tostrings(Station.network.ssid))
 					print(repr(Station.config) + repr(Station.network))
-					Station.config.default = networkName
+					Station.config.default = network_name
 					Station.config.save()
 					return True
 		return False
 
 	@staticmethod
-	async def scan_networks(maxRetry):
+	async def scan_networks(max_retry):
 		""" Scan networks known """
 		result = False
+		networks = Station.scan()
 		# Scan other networks
-		if len(Station.scan()) > 0:
+		if len(networks) > 0:
 			# List known networks
 			Station.known_network = Station.network.list_known()
 
-			# For all known networks
-			for networkName in Station.known_network:
-				# If the network not already tested
-				if networkName != Station.config.default:
-					result = await Station.select_network(networkName, maxRetry)
-					if result is True:
-						break
+			# If the defaut network not yet initialized
+			if len(Station.config.default) == 0:
+				# For all known networks
+				for network_name in Station.known_network:
+					# Search in detected networks
+					for network in networks:
+						# If the known network is found in detected network
+						if network[0] == network_name:
+							result = await Station.select_network(network_name, max_retry)
+							if result is True:
+								break
+
+			# If wifi not yet found
+			if result is False:
+				# For all known networks
+				for network_name in Station.known_network:
+					# If the network not already tested
+					if network_name != Station.config.default:
+						result = await Station.select_network(network_name, max_retry)
+						if result is True:
+							break
 		return result
 
 	@staticmethod
-	async def choose_network(force=False, maxRetry=15):
+	async def choose_network(force=False, max_retry=15):
 		""" Choose network within reach """
 		result = False
 		Station.reload_config()
@@ -238,9 +253,9 @@ class Station:
 		# Load wifi configuration
 		if Station.config.load():
 			if Station.config.activated or force:
-				result = await Station.select_network(Station.config.default, maxRetry)
+				result = await Station.select_network(Station.config.default, max_retry)
 				if result is False:
-					result = await Station.scan_networks(maxRetry)
+					result = await Station.scan_networks(max_retry)
 			else:
 				logger.syslog("Wifi disabled")
 		else:
@@ -249,13 +264,13 @@ class Station:
 		return result
 
 	@staticmethod
-	async def start(force=False, maxRetry=15):
+	async def start(force=False, max_retry=15):
 		""" Start the wifi according to the configuration. Force is used to skip configuration activation flag """
 		result = False
 		Station.init()
 		if Station.is_active() is False:
 			logger.syslog("Start wifi")
-			if await Station.choose_network(force, maxRetry) is True:
+			if await Station.choose_network(force, max_retry) is True:
 				result = True
 		else:
 			if Station.wlan.isconnected():

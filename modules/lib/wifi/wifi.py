@@ -144,7 +144,7 @@ class Wifi:
 			elif state in [WIFI_OTHER_NETWORK, ACCESS_POINT_FORCED]:
 				if Station.is_activated():
 					Station.stop()
-					if await Station.choose_network(maxRetry=5) is True:
+					if await Station.choose_network(max_retry=5) is True:
 						Wifi.context.dns = Station.get_info()[3]
 						Wifi.context.lan_problem = 0
 						Wifi.context.wan_problem = 0

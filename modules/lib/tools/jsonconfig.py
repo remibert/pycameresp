@@ -164,8 +164,7 @@ class JsonConfig:
 
 	def forget(self, part_filename=""):
 		""" Forget configuration """
-		filename = self.get_pathname(part_filename=part_filename)
-		filesystem.remove(self.config_root()+"/"+filename)
+		filesystem.remove(self.get_pathname(part_filename=part_filename))
 
 	def is_changed(self, part_filename=""):
 		""" Indicates if the configuration changed """
@@ -177,3 +176,7 @@ class JsonConfig:
 		except:
 			pass
 		return False
+
+	def exists(self, part_filename=""):
+		""" Indicates if the configuration file existing """
+		return filesystem.exists(self.get_pathname(strings.tofilename(part_filename)))
