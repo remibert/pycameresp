@@ -2,28 +2,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Miscellaneous utility functions """
 import machine
-from tools import strings,logger,system
-
-LONG_WATCH_DOG=15*60*1000
-SHORT_WATCH_DOG=5*60*1000
-
-class WatchDog:
-	""" Watch dog timer """
-	watchdog = None
-	@staticmethod
-	def start(timeout=LONG_WATCH_DOG):
-		""" Start watch dog """
-		WatchDog.watchdog  = machine.WDT(0, timeout)
-
-	@staticmethod
-	def feed():
-		""" Feed the WDT """
-		if WatchDog.watchdog:
-			WatchDog.watchdog.feed()
+from tools import strings,logger,system,watchdog
 
 class Inactivity:
 	""" Class to manage inactivity timer """
-	def __init__(self, callback, duration=LONG_WATCH_DOG, timer_id=-1):
+	def __init__(self, callback, duration=watchdog.LONG_WATCH_DOG, timer_id=-1):
 		""" Inactivity timer constructor """
 		self.timer = machine.Timer(timer_id)
 		self.duration = duration

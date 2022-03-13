@@ -4,7 +4,6 @@
 import sys
 import gc
 import machine
-import esp
 from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import main_frame
@@ -25,6 +24,7 @@ async def index(request, response, args):
 		mem_free  = lang.unavailable
 		mem_total = lang.unavailable
 	try:
+		import esp
 		flash_user = strings.size_to_bytes(esp.flash_user_start())
 		flash_size = strings.size_to_bytes(esp.flash_size())
 	except:

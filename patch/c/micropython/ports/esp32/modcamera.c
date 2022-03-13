@@ -64,55 +64,53 @@
 	STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_##method##_obj, 0, 1, camera_##method);
 
 //WROVER-KIT PIN Map
+
+// Defaults value for esp32cam
 #define CAM_PIN_PWDN    32 //power down is not used
 #define CAM_PIN_RESET   -1 //software reset will be performed
 #define CAM_PIN_XCLK     0
 #define CAM_PIN_SIOD    26 // SDA
 #define CAM_PIN_SIOC    27 // SCL
-
-#define CAM_PIN_D7      35
-#define CAM_PIN_D6      34
-#define CAM_PIN_D5      39
-#define CAM_PIN_D4      36
-#define CAM_PIN_D3      21
-#define CAM_PIN_D2      19
-#define CAM_PIN_D1      18
-#define CAM_PIN_D0       5
-#define CAM_PIN_VSYNC   25
+#define CAM_PIN_D7      35 // Y9 CSI_D7
+#define CAM_PIN_D6      34 // Y8 CSI_D6
+#define CAM_PIN_D5      39 // Y7 CSI_D5 SENSOR_VN
+#define CAM_PIN_D4      36 // Y6 CSI_D4 SENSOR_VP
+#define CAM_PIN_D3      21 // Y5 CSI_D3
+#define CAM_PIN_D2      19 // Y4 CSI_D2
+#define CAM_PIN_D1      18 // Y3 CSI_D1
+#define CAM_PIN_D0       5 // Y2 CSI_D0
+#define CAM_PIN_VSYNC   25 
 #define CAM_PIN_HREF    23
 #define CAM_PIN_PCLK    22
 
 static camera_config_t camera_config = 
 {
-	.pin_pwdn  = CAM_PIN_PWDN,
-	.pin_reset = CAM_PIN_RESET,
-	.pin_xclk = CAM_PIN_XCLK,
+	.pin_pwdn     = CAM_PIN_PWDN,
+	.pin_reset    = CAM_PIN_RESET,
+	.pin_xclk     = CAM_PIN_XCLK,
 	.pin_sscb_sda = CAM_PIN_SIOD,
 	.pin_sscb_scl = CAM_PIN_SIOC,
-
-	.pin_d7 = CAM_PIN_D7,
-	.pin_d6 = CAM_PIN_D6,
-	.pin_d5 = CAM_PIN_D5,
-	.pin_d4 = CAM_PIN_D4,
-	.pin_d3 = CAM_PIN_D3,
-	.pin_d2 = CAM_PIN_D2,
-	.pin_d1 = CAM_PIN_D1,
-	.pin_d0 = CAM_PIN_D0,
-	.pin_vsync = CAM_PIN_VSYNC,
-	.pin_href = CAM_PIN_HREF,
-	.pin_pclk = CAM_PIN_PCLK,
-
-	//XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
-	.xclk_freq_hz = 20000000,
-	.ledc_timer = LEDC_TIMER_0,
+	.pin_d7       = CAM_PIN_D7,
+	.pin_d6       = CAM_PIN_D6,
+	.pin_d5       = CAM_PIN_D5,
+	.pin_d4       = CAM_PIN_D4,
+	.pin_d3       = CAM_PIN_D3,
+	.pin_d2       = CAM_PIN_D2,
+	.pin_d1       = CAM_PIN_D1,
+	.pin_d0       = CAM_PIN_D0,
+	.pin_vsync    = CAM_PIN_VSYNC,
+	.pin_href     = CAM_PIN_HREF,
+	.pin_pclk     = CAM_PIN_PCLK,
+	.xclk_freq_hz = 20000000,        //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
+	.ledc_timer   = LEDC_TIMER_0,
 	.ledc_channel = LEDC_CHANNEL_0,
-
-	.pixel_format = PIXFORMAT_JPEG,//YUV422,GRAYSCALE,RGB565,JPEG
-	.frame_size = FRAMESIZE_UXGA,//QQVGA-UXGA Do not use sizes above QVGA when not JPEG
-
-	.jpeg_quality = 12, //0-63 lower number means higher quality
-	.fb_count = 1 //if more than one, i2s runs in continuous mode. Use only with JPEG
+	.pixel_format = PIXFORMAT_JPEG,  //YUV422,GRAYSCALE,RGB565,JPEG
+	.frame_size   = FRAMESIZE_UXGA,  //QQVGA-UXGA Do not use sizes above QVGA when not JPEG
+	.jpeg_quality = 12,              //0-63 lower number means higher quality
+	.fb_count     = 1                //if more than one, i2s runs in continuous mode. Use only with JPEG
 };
+
+uint8_t gpio_flash_led = 4;
 #endif
 
 #define MAX_LINES 4
@@ -296,6 +294,98 @@ STATIC mp_obj_t camera_isavailable()
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_isavailable_obj, camera_isavailable);
 
 #ifdef CONFIG_ESP32CAM
+
+// Constructor method
+STATIC mp_obj_t configure_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args)
+{
+	enum 
+	{ 
+		ARG_pwdn         , // 32 //power down is not used
+		ARG_reset        , // -1 //software reset will be performed
+		ARG_xclk         , //  0
+		ARG_siod         , // 26 // SDA
+		ARG_sioc         , // 27 // SCL
+		ARG_d7           , // 35 // Y9 CSI_D7
+		ARG_d6           , // 34 // Y8 CSI_D6
+		ARG_d5           , // 39 // Y7 CSI_D5 SENSOR_VN
+		ARG_d4           , // 36 // Y6 CSI_D4 SENSOR_VP
+		ARG_d3           , // 21 // Y5 CSI_D3
+		ARG_d2           , // 19 // Y4 CSI_D2
+		ARG_d1           , // 18 // Y3 CSI_D1
+		ARG_d0           , //  5 // Y2 CSI_D0
+		ARG_vsync        , // 25 
+		ARG_href         , // 23
+		ARG_pclk         , // 22
+		ARG_freq_hz      , // = 20000000
+		ARG_ledc_timer   , // LEDC_TIMER_0  ,
+		ARG_ledc_channel , // LEDC_CHANNEL_0,
+		ARG_pixel_format , // PIXFORMAT_JPEG,//YUV422,GRAYSCALE,RGB565,JPEG
+		ARG_frame_size   , // FRAMESIZE_UXGA,//QQVGA-UXGA Do not use sizes above QVGA when not JPEG
+		ARG_jpeg_quality , // 12,             //0-63 lower number means higher quality
+		ARG_fb_count     , // 1               //if more than one, i2s runs in continuous mode. Use only with JPEG
+		ARG_flash_led    , // GPIO for flash led
+	};
+
+	// Constructor parameters
+	static const mp_arg_t allowed_args[] = 
+	{
+		// Default value for esp32one see https://www.waveshare.com/esp32-one.htm
+		{ MP_QSTR_pwdn         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  32            } },
+		{ MP_QSTR_reset        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  -1            } },
+		{ MP_QSTR_xclk         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =   4            } },
+		{ MP_QSTR_siod         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  18            } },
+		{ MP_QSTR_sioc         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  23            } },
+		{ MP_QSTR_d7           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  36            } },
+		{ MP_QSTR_d6           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  37            } },
+		{ MP_QSTR_d5           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  38            } },
+		{ MP_QSTR_d4           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  39            } },
+		{ MP_QSTR_d3           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  35            } },
+		{ MP_QSTR_d2           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  14            } },
+		{ MP_QSTR_d1           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  13            } },
+		{ MP_QSTR_d0           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  34            } },
+		{ MP_QSTR_vsync        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  5             } },
+		{ MP_QSTR_href         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  27            } },
+		{ MP_QSTR_pclk         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  25            } },
+		{ MP_QSTR_freq_hz      ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  20000000      } },
+		{ MP_QSTR_ledc_timer   ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  LEDC_TIMER_0  } },
+		{ MP_QSTR_ledc_channel ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  LEDC_CHANNEL_0} },
+		{ MP_QSTR_pixel_format ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  PIXFORMAT_JPEG} },
+		{ MP_QSTR_frame_size   ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  FRAMESIZE_UXGA} },
+		{ MP_QSTR_jpeg_quality ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  12            } },
+		{ MP_QSTR_fb_count     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  1             } },
+		{ MP_QSTR_flash_led    ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  0             } },
+	};
+	
+	// Parsing parameters
+	mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+	mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+	camera_config.pin_pwdn     = args[ARG_pwdn        ].u_int;
+	camera_config.pin_reset    = args[ARG_reset       ].u_int;
+	camera_config.pin_xclk     = args[ARG_xclk        ].u_int;
+	camera_config.pin_sscb_sda = args[ARG_siod        ].u_int;
+	camera_config.pin_sscb_scl = args[ARG_sioc        ].u_int;
+	camera_config.pin_d7       = args[ARG_d7          ].u_int;
+	camera_config.pin_d6       = args[ARG_d6          ].u_int;
+	camera_config.pin_d5       = args[ARG_d5          ].u_int;
+	camera_config.pin_d4       = args[ARG_d4          ].u_int;
+	camera_config.pin_d3       = args[ARG_d3          ].u_int;
+	camera_config.pin_d2       = args[ARG_d2          ].u_int;
+	camera_config.pin_d1       = args[ARG_d1          ].u_int;
+	camera_config.pin_d0       = args[ARG_d0          ].u_int;
+	camera_config.pin_vsync    = args[ARG_vsync       ].u_int;
+	camera_config.pin_href     = args[ARG_href        ].u_int;
+	camera_config.pin_pclk     = args[ARG_pclk        ].u_int;
+	camera_config.xclk_freq_hz = args[ARG_freq_hz     ].u_int;
+	camera_config.ledc_timer   = args[ARG_ledc_timer  ].u_int;
+	camera_config.ledc_channel = args[ARG_ledc_channel].u_int;
+	camera_config.pixel_format = args[ARG_pixel_format].u_int;
+	camera_config.frame_size   = args[ARG_frame_size  ].u_int;
+	camera_config.jpeg_quality = args[ARG_jpeg_quality].u_int;
+	camera_config.fb_count     = args[ARG_fb_count    ].u_int;
+	gpio_flash_led             = args[ARG_flash_led   ].u_int;
+	return mp_const_none;
+}
+
 static bool camera_initialized = false;
 STATIC mp_obj_t camera_init()
 {
@@ -465,44 +555,46 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_motion_detect_obj, camera_motion_detect)
 // Switch on or off the flash led
 STATIC mp_obj_t camera_flash(mp_obj_t level_in)
 {
-	if (mp_obj_is_int(level_in))
+	if (gpio_flash_led != 0)
 	{
-		int level = mp_obj_get_int(level_in);
-		periph_module_enable(PERIPH_LEDC_MODULE);
-
-		// Set up timer
-		ledc_timer_config_t flash_led_timer = 
+		if (mp_obj_is_int(level_in))
 		{
-			// Set timer resolution
-			.duty_resolution = LEDC_TIMER_8_BIT,
+			int level = mp_obj_get_int(level_in);
+			periph_module_enable(PERIPH_LEDC_MODULE);
 
-			// Set timer frequency (high frequency to avoid whistling)
-			.freq_hz = 40000, 
-			.speed_mode = LEDC_LOW_SPEED_MODE,
-			.timer_num = LEDC_TIMER_3,
-		};
-		ledc_timer_config(&flash_led_timer); // Set up GPIO PIN 
+			// Set up timer
+			ledc_timer_config_t flash_led_timer = 
+			{
+				// Set timer resolution
+				.duty_resolution = LEDC_TIMER_8_BIT,
 
-		if (level > 256)
-		{
-			level = 256;
+				// Set timer frequency (high frequency to avoid whistling)
+				.freq_hz = 40000, 
+				.speed_mode = LEDC_LOW_SPEED_MODE,
+				.timer_num = LEDC_TIMER_3,
+			};
+			ledc_timer_config(&flash_led_timer); // Set up GPIO PIN 
+
+			if (level > 256)
+			{
+				level = 256;
+			}
+
+			ledc_channel_config_t channel_config = 
+			{
+				.channel    = LEDC_CHANNEL_7,           // Select available channel
+				.duty       = level/2,                  // Set the level of flash
+				.gpio_num   = gpio_flash_led,           // Flash led gpio
+				.speed_mode = LEDC_LOW_SPEED_MODE,
+				.timer_sel  = LEDC_TIMER_3
+			};
+			ledc_channel_config(&channel_config);
 		}
-
-		ledc_channel_config_t channel_config = 
+		else
 		{
-			.channel    = LEDC_CHANNEL_7,           // Select available channel
-			.duty       = level/2,                  // Set the level of flash
-			.gpio_num   = 4,                        // Flash led gpio
-			.speed_mode = LEDC_LOW_SPEED_MODE,
-			.timer_sel  = LEDC_TIMER_3
-		};
-		ledc_channel_config(&channel_config);
+			mp_raise_TypeError(MP_ERROR_TEXT("Bad flash level parameters"));
+		}
 	}
-	else
-	{
-		mp_raise_TypeError(MP_ERROR_TEXT("Bad flash level parameters"));
-	}
-
 	return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_flash_obj, camera_flash);
@@ -1174,6 +1266,24 @@ const mp_obj_type_t Motion_type =
 	.locals_dict = (mp_obj_t)&Motion_locals_dict,
 };
 
+
+// Methods
+STATIC const mp_rom_map_elem_t configure_locals_dict_table[] = 
+{
+};
+STATIC MP_DEFINE_CONST_DICT(configure_locals_dict, configure_locals_dict_table);
+
+// Class configuration low level camera
+const mp_obj_type_t configure_type = 
+{
+	{ &mp_type_type },
+	.name        = MP_QSTR_configure,
+	.print       = 0,
+	.make_new    = configure_make_new,
+	.locals_dict = (mp_obj_t)&configure_locals_dict,
+};
+
+
 STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR___name__           ), MP_ROM_QSTR(MP_QSTR_camera) },
 	{ MP_ROM_QSTR(MP_QSTR_isavailable        ), MP_ROM_PTR(&camera_isavailable_obj) },
@@ -1245,6 +1355,7 @@ STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RGB555   ), MP_ROM_INT(PIXFORMAT_RGB555   )}, // 3BP2P/RGB555
 #endif
 	{ MP_ROM_QSTR(MP_QSTR_Motion             ), MP_ROM_PTR(&Motion_type) },
+	{ MP_ROM_QSTR(MP_QSTR_configure          ), MP_ROM_PTR(&configure_type) },
 };
 STATIC MP_DEFINE_CONST_DICT(camera_module_globals, camera_module_globals_table);
 

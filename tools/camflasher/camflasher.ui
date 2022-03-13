@@ -20,31 +20,65 @@
   <widget class="QWidget" name="main_layout">
    <layout class="QGridLayout" name="gridLayout">
     <property name="leftMargin">
-     <number>5</number>
+     <number>3</number>
     </property>
     <property name="topMargin">
-     <number>5</number>
+     <number>3</number>
     </property>
     <property name="rightMargin">
-     <number>5</number>
+     <number>3</number>
     </property>
     <property name="bottomMargin">
-     <number>5</number>
+     <number>3</number>
     </property>
-    <item row="0" column="1">
-     <widget class="QComboBox" name="combo_port">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="focusPolicy">
-       <enum>Qt::NoFocus</enum>
-      </property>
-      <property name="toolTip">
-       <string>Select device serial port</string>
-      </property>
-     </widget>
+   
+    <item row="0" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label_port">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Serial port</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="combo_port">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="toolTip">
+         <string>Select device serial port</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="chk_rts_dtr">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
+        </property>
+        <property name="text">
+         <string>RTS/DTR</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-    <item row="1" column="0" colspan="2">
+    <item row="1" column="0">
      <widget class="QTextBrowser" name="output">
       <property name="enabled">
        <bool>true</bool>
@@ -59,19 +93,6 @@
       </property>
       <property name="readOnly">
        <bool>false</bool>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label_port">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>Serial port</string>
       </property>
      </widget>
     </item>

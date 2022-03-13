@@ -2,10 +2,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Manage server class """
 import time
-from video.video import Camera
 import wifi
 import uasyncio
-from tools import jsonconfig,logger,builddate,lang,tasking,info,strings
+from tools import jsonconfig,logger,builddate,lang,watchdog,info,strings
+if info.iscamera():
+	from video.video import Camera
 
 class ServerConfig(jsonconfig.JsonConfig):
 	""" Servers configuration """
@@ -45,6 +46,7 @@ class ServerContext:
 
 		self.server_postponed = self.server_config.server_postponed
 		set_time(self.region_config.current_time)
+
 class Server:
 	""" Class used to manage the servers """
 	suspended = [False]
@@ -109,7 +111,7 @@ class Server:
 				if i % 6 == 0:
 					print("Wait all servers suspended...")
 				await uasyncio.sleep(0.5)
-				tasking.WatchDog.feed()
+				watchdog.WatchDog.feed()
 
 	@staticmethod
 	def init(loop=None, page_loader=None, preload=False, http_port=80):
@@ -120,7 +122,7 @@ class Server:
 		False the load of page is done a the first http connection (Takes time on first connection) """
 		Server.context = ServerContext(loop, page_loader, preload, http_port)
 		logger.syslog(info.sysinfo(display=False))
-		logger.syslog("Firmware build date '%s'"%strings.tostrings(builddate.date))
+		logger.syslog("Build : %s"%strings.tostrings(builddate.date))
 
 		from server.periodic import periodic_task
 		loop.create_task(periodic_task())
@@ -235,9 +237,10 @@ class Server:
 					server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port, name="httpServer")
 
 					# If camera present
-					if info.iscamera() and Camera.is_activated():
-						# Load and start streaming http server
-						server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name="StreamingServer")
+					if info.iscamera():
+						if Camera.is_activated():
+							# Load and start streaming http server
+							server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name="StreamingServer")
 
 				from server.presence import detect_presence
 				Server.context.loop.create_task(detect_presence())

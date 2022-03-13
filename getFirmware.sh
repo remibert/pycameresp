@@ -48,7 +48,6 @@ echo "*************************"
 cd ports/esp32
 git submodule update --init --recursive
 cd $ROOT
-ln -s $ROOT/micropython/ports/esp32 esp32
 
 echo "*************"
 echo "Get espressif"

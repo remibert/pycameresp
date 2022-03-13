@@ -32,6 +32,14 @@ from tools.info import iscamera
 if iscamera():
 	# Start motion detection (can be only used with ESP32CAM)
 	import motion
+	# Uncomment if it is ESP32ONE device
+	# motion.start(loop, pin_wake_up, \
+	# 	pwdn=32,reset=-1,xclk=4,siod=18,sioc=23,d7=36,d6=37,d5=38,d4=39,d3=35,d2=14,d1=13,d0=34,vsync=5,
+	# 	href=27,pclk=25,freq_hz=20000000,ledc_timer=0,ledc_channel=0,pixel_format=3,frame_size=13,jpeg_quality=12,fb_count=1,flash_led=0)
+	# from tools import sdcard
+	# sdcard.SdCard.set_slot(0) # The slot is good but not working I don't know why
+
+	# For ESP32CAM comment if if is not ESP32CAM
 	motion.start(loop, pin_wake_up)
 
 def html_page_loader():

@@ -2,7 +2,6 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Manage the battery """
 import machine
-import esp32
 from tools import jsonconfig,logger
 
 class AwakeConfig(jsonconfig.JsonConfig):
@@ -41,6 +40,7 @@ class Awake:
 		Awake.init()
 		try:
 			if Awake.config.wake_up_gpio != 0:
+				import esp32
 				wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
 				esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
 				logger.syslog("Pin wake up on %d"%Awake.config.wake_up_gpio)

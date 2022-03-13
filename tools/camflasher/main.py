@@ -63,7 +63,7 @@ def get_settings():
 		else:
 			result = QSettings(SETTINGS_FILENAME)
 	else:
-		result = QSettings()#QSettings("."+SETTINGS_FILENAME, QSettings.IniFormat)
+		result = QSettings()
 	return result
 
 class FlashDialog(QDialog):
@@ -209,6 +209,7 @@ class CamFlasher(QMainWindow):
 		self.window.action_flash.triggered.connect(self.on_flash_clicked)
 		self.window.action_about.triggered.connect(self.on_about_clicked)
 		self.window.action_option.triggered.connect(self.on_option_clicked)
+		self.window.chk_rts_dtr.stateChanged.connect(self.on_port_changed)
 
 	def update_font(self):
 		""" Update console font """
@@ -332,28 +333,37 @@ class CamFlasher(QMainWindow):
 		""" Refresh the combobox content with the serial ports detected """
 		# self.console.test()
 		ports = []
-		for port, a, b in sorted(list_ports.comports()):
-			if not "Bluetooth" in port and not "Wireless" in port and "cu.BLTH" not in port and port != "COM1":
+		for port in sorted(list_ports.comports()):
+			if port.hwid != "n/a":
 				ports.append(port)
 
 		# If the list of serial port changed
 		if self.serial_ports != ports:
 			self.serial_ports = ports
 
+			ports_connected = []
+			for port in self.serial_ports:
+				print(port.name, port.hwid)
+				ports_connected.append(port.device)
+
 			for i in range(self.window.combo_port.count()):
-				if not self.window.combo_port.itemText(i) in ports:
+				if not self.window.combo_port.itemText(i) in ports_connected:
 					self.window.combo_port.removeItem(i)
 
 			for port in ports:
 				for i in range(self.window.combo_port.count()):
-					if self.window.combo_port.itemText(i) == port:
+					if self.window.combo_port.itemText(i) == port.device:
 						break
 				else:
-					self.window.combo_port.addItem(port)
+					self.window.combo_port.addItem(port.device)
+
+	def on_rts_dtr_changed(self, event):
+		""" On change of DTR/STR check box """
+		self.flasher.set_info(port = self.get_port(), rts_dtr=self.window.chk_rts_dtr.isChecked())
 
 	def on_port_changed(self, event):
 		""" On port changed event """
-		self.flasher.set_info(port = self.get_port())
+		self.flasher.set_info(port = self.get_port(), rts_dtr=self.window.chk_rts_dtr.isChecked())
 
 	def on_flash_clicked(self, event):
 		""" Flash of firmware button clicked """
@@ -362,11 +372,12 @@ class CamFlasher(QMainWindow):
 		result = self.flash_dialog.exec()
 		if result == 1 and self.window.combo_port.currentText() != "":
 			try:
-				firmware  = self.flash_dialog.dialog.firmware.text()
-				baud      = self.flash_dialog.dialog.baud.currentText()
-				erase     = self.flash_dialog.dialog.erase.isChecked()
 				port      = self.window.combo_port.currentText()
-				self.flasher.flash(port, baud, firmware, erase)
+				baud      = self.flash_dialog.dialog.baud.currentText()
+				rts_dtr   = self.window.chk_rts_dtr.isChecked()
+				firmware  = self.flash_dialog.dialog.firmware.text()
+				erase     = self.flash_dialog.dialog.erase.isChecked()
+				self.flasher.flash(port, baud, rts_dtr, firmware, erase)
 			except Exception as err:
 				print(err)
 

@@ -41,8 +41,8 @@ move_keys = {
 	Qt.Key.Key_Down      : [b"\x1b[B" ,b"\x1b[1;2B",b"\x1b[1;5B",b"\x1b\x1b[B" ,b"\x1b[1;5B" ,b"\x1b[1;2B",b"\x1b[1;6B",b"\x1b[1;6B"],
 	Qt.Key.Key_Right     : [b"\x1b[C" ,b"\x1b[1;2C",b"\x1b[1;5C",b"\x1b\x1b[C" ,b"\x1b[1;5C" ,b"\x1b[1;2C",b"\x1b[1;6C",b"\x1b[1;6C"],
 	Qt.Key.Key_Left      : [b"\x1b[D" ,b"\x1b[1;2D",b"\x1b[1;5D",b"\x1b\x1b[D" ,b"\x1b[1;5D" ,b"\x1b[1;2D",b"\x1b[1;6D",b"\x1b[1;6D"],
-	Qt.Key.Key_Home      : [b"\x1b[H" ,b"\x1b[1;2H",b"\x1b[1;5H",b"\x1b[1;9H"  ,b"\x1b[H"    ,b"\x1b[1;2H",b"\x1b[1;6H",b"\x1b[1;6H"],
-	Qt.Key.Key_End       : [b"\x1b[F" ,b"\x1b[1;2F",b"\x1b[1;5F",b"\x1b[1;9F"  ,b"\x1b[F"    ,b"\x1b[1;2F",b"\x1b[1;6F",b"\x1b[1;6F"],
+	Qt.Key.Key_Home      : [b"\x1b[H" ,b"\x1b[1;2H",b"\x1b[1;5H",b"\x1b[1;9H"  ,b"\x1b[1;5H" ,b"\x1b[1;2H",b"\x1b[1;6H",b"\x1b[1;6H"],
+	Qt.Key.Key_End       : [b"\x1b[F" ,b"\x1b[1;2F",b"\x1b[1;5F",b"\x1b[1;9F"  ,b"\x1b[1;5F" ,b"\x1b[1;2F",b"\x1b[1;6F",b"\x1b[1;6F"],
 	Qt.Key.Key_PageUp    : [b"\x1b[5~",b"\x1b[1;4A",b"\x1b[5~"  ,b"\x1b\x1b[5~",b"\x1b[5~"   ,b"\x1b[5~"  ,b"\x1b[5~"  ,b"\x1b[5~"  ],
 	Qt.Key.Key_PageDown  : [b"\x1b[6~",b"\x1b[1;4B",b"\x1b[6~"  ,b"\x1b\x1b[6~",b"\x1b[6~"   ,b"\x1b[6~"  ,b"\x1b[6~"  ,b"\x1b[6~"  ],
 }

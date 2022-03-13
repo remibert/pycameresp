@@ -220,7 +220,7 @@ class SnapConfig:
 
 class Motion:
 	""" Class to manage the motion capture """
-	def __init__(self, config= None, pir_detection=False):
+	def __init__(self, config= None, pir_detection=False, gpio_config=None):
 		self.images = []
 		self.index  = 0
 		self.config = config
@@ -230,6 +230,7 @@ class Motion:
 		self.quality = 15
 		self.previous_quality = 0
 		self.flash_level = 0
+		self.gpio_config = gpio_config
 
 	def __del__(self):
 		""" Destructor """
@@ -247,6 +248,8 @@ class Motion:
 
 	def open(self):
 		""" Open camera """
+		if self.gpio_config is not None:
+			video.Camera.gpio_config(**self.gpio_config)
 		if video.Camera.open():
 			return True
 		else:
@@ -475,7 +478,7 @@ class Motion:
 
 class Detection:
 	""" Asynchronous motion detection object """
-	def __init__(self, pir_detection):
+	def __init__(self, pir_detection, gpio_config):
 		""" Constructor """
 		self.pir_detection = pir_detection
 		self.load_config()
@@ -489,6 +492,7 @@ class Detection:
 		self.detection = None
 		self.activated = None
 		self.refresh_config_counter = 0
+		self.gpio_config = gpio_config
 		self.cadencer = NotificationCadencer()
 
 	def load_config(self):
@@ -582,7 +586,7 @@ class Detection:
 
 		# If motion not initialized
 		if self.motion is None:
-			self.motion = Motion(self.motion_config, self.pir_detection)
+			self.motion = Motion(self.motion_config, self.pir_detection, self.gpio_config)
 			if self.motion.open() is False:
 				self.motion = None
 				raise Exception("Cannot open camera")
@@ -722,7 +726,7 @@ class NotificationCadencer(MovingCounters):
 			result = False
 		return result
 
-async def detect_motion(pir_detection):
+async def detect_motion(pir_detection, gpio_config):
 	""" Asynchronous motion detection main routine """
-	detection = Detection(pir_detection)
+	detection = Detection(pir_detection, gpio_config)
 	await detection.run()

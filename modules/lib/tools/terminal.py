@@ -5,20 +5,19 @@ import sys
 import os
 import select
 try:
-	from tools import filesystem, strings
+	from tools import filesystem, strings,watchdog
 except:
 	# pylint:disable=multiple-imports
-	import strings,filesystem
+	import strings,filesystem,watchdog
 
 
 if filesystem.ismicropython():
 	# pylint:disable=ungrouped-imports
 	# pylint:disable=consider-using-enumerate
-	from tools import tasking
 	def getch(raw = True, duration=100000000, interchar=0.05):
 		""" Wait a key pressed on keyboard and return it """
 		key = b""
-		tasking.WatchDog.feed()
+		watchdog.WatchDog.feed()
 		while 1:
 			if len(key) == 0:
 				delay = duration

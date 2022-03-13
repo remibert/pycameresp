@@ -12,6 +12,13 @@ class SdCard:
 	""" Manage the sdcard """
 	opened = [False]
 	mountpoint = [""]
+	slot = [1]
+
+	@staticmethod
+	def set_slot(slot):
+		""" Set the default sdcard slot
+		(look doc http://docs.micropython.org/en/latest/library/machine.SDCard.html?highlight=sdcard) """
+		SdCard.slot[0] = slot
 
 	@staticmethod
 	def get_max_size():
@@ -50,7 +57,7 @@ class SdCard:
 				try:
 					# If the sdcard not already mounted
 					if uos.statvfs("/") == uos.statvfs(mountpoint):
-						uos.mount(machine.SDCard(), mountpoint)
+						uos.mount(machine.SDCard(SdCard.slot[0]), mountpoint)
 						SdCard.mountpoint[0] = mountpoint
 						SdCard.opened[0]= True
 						result = True

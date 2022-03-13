@@ -7,7 +7,7 @@ from server.server      import Server
 from htmltemplate       import *
 from video              import Camera
 import uasyncio
-from tools              import logger,tasking,info
+from tools              import logger,tasking,info,watchdog
 
 class Streaming:
 	""" Management class of video streaming of the camera via an html page """
@@ -69,7 +69,7 @@ class Streaming:
 		if Streaming.inactivity[0]:
 			Streaming.inactivity[0].stop()
 			Streaming.inactivity[0] = None
-		Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivity_timeout, duration=tasking.LONG_WATCH_DOG, timer_id=1)
+		Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivity_timeout, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
 
 	@staticmethod
 	def get_streaming_id():

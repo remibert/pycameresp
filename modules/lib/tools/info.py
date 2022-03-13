@@ -3,6 +3,7 @@
 """ Device informations """
 import sys
 import time
+import os
 from tools import strings,filesystem
 try:
 	import machine
@@ -37,7 +38,12 @@ def meminfo(display=True):
 		# pylint: disable=no-member
 		alloc = gc.mem_alloc()
 		free  = gc.mem_free()
-		result = b"Mem alloc=%s free=%s total=%s"%(strings.size_to_bytes(alloc, 1), strings.size_to_bytes(free, 1), strings.size_to_bytes(alloc+free, 1))
+		total = alloc+free
+		result = b"Memory: alloc=%s free=%s total=%s used=%-3.2f%%"%(
+			strings.size_to_bytes(alloc, 1),
+			strings.size_to_bytes(free,  1),
+			strings.size_to_bytes(total, 1),
+			total/free)
 		if display:
 			print(strings.tostrings(result))
 		else:
@@ -45,11 +51,21 @@ def meminfo(display=True):
 	except:
 		return b"Mem unavailable"
 
-def flashinfo(display=True):
+def flashinfo(mountpoint=None, display=True):
 	""" Get flash informations """
 	try:
-		import esp
-		result = b"Flash user=%s size=%s"%(strings.size_to_bytes(esp.flash_user_start(), 1), strings.size_to_bytes(esp.flash_size(), 1))
+		import uos
+		if mountpoint is None:
+			mountpoint = os.getcwd()
+		status = uos.statvfs(mountpoint)
+		free  = status[0]*status[3]
+		total = status[1]*status[2]
+		alloc  = total - free
+		result = b"Flash%s: alloc=%s free=%s total=%s used=%-3.2f%%"%(strings.tobytes(mountpoint),
+			strings.size_to_string(alloc, 1),
+			strings.size_to_string(free,  1),
+			strings.size_to_string(total, 1),
+			total/free)
 		if display:
 			print(strings.tostrings(result))
 		else:
@@ -60,7 +76,7 @@ def flashinfo(display=True):
 def sysinfo(display=True, text=""):
 	""" Get system informations """
 	try:
-		result = b"%s%s %dMhz, %s, %s, %s"%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(False))
+		result = b"Device: %s%s %dMhz\nTime  : %s\n%s\n%s"%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo("/",False))
 		if display:
 			print(strings.tostrings(result))
 		else:

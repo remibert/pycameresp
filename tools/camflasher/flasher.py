@@ -96,20 +96,28 @@ class ThreadSerial(threading.Thread):
 			self.serial.close()
 			self.serial = None
 
-	def on_connect(self, command, port):
+	def on_connect(self, command, data):
 		""" Treat connect command """
 		if command == self.CONNECT:
+			port, rts_dtr = data
 			self.close()
 			try:
 				if port != "":
 					# Open serial console
 					self.serial = SerialLogger(port=port, baudrate=115200, timeout=0.2, stdout=self.stdout)
 
+					# Select RTS/DTR
+					if rts_dtr is True:
+						self.serial.dtr = True
+						self.serial.rts = True
+					else:
+						self.serial.dtr = False
+						self.serial.rts = False
+
 					# Clear input serial buffer
-					self.serial.dtr = False
-					self.serial.rts = False
 					self.serial.reset_input_buffer()
 					self.port = port
+
 					self.print("\n\x1B[42;93mSelect %s\x1B[m\n"%self.port)
 			except:
 				self.close()
@@ -205,6 +213,7 @@ class ThreadSerial(threading.Thread):
 				data = self.serial.read(self.serial.in_waiting or 1)
 				self.receive_callback(data)
 			except Exception as err:
+				print("\n\x1B[93;101mConnection lost\x1B[m\n")
 				self.close()
 
 	def run(self):
@@ -253,9 +262,9 @@ class ThreadSerial(threading.Thread):
 		""" Send read file command to serial thread """
 		self.send((self.READ_FILE,directory))
 
-	def connect(self, port):
+	def connect(self, data):
 		""" Send connect command to serial thread """
-		self.send((self.CONNECT, port))
+		self.send((self.CONNECT, data))
 
 	def disconnect(self):
 		""" Send disconnect command to serial thread """
@@ -301,8 +310,8 @@ class Flasher(threading.Thread):
 			elif command == self.DATA_RECEIVED:
 				print(self.decode(data), end="")
 			elif command == self.FLASH:
-				port, baud, firmware, erase= data
-				self.flasher(port, baud, firmware, erase)
+				port, baud, rts_dtr, firmware, erase= data
+				self.flasher(port, baud, rts_dtr, firmware, erase)
 			elif command == self.SET_INFO:
 				self.serial_thread.connect(data)
 
@@ -354,7 +363,7 @@ class Flasher(threading.Thread):
 			result = data
 		return result
 
-	def flasher(self, port, baud, firmware, erase):
+	def flasher(self, port, baud, rts_dtr, firmware, erase):
 		""" Flasher of firmware it use the esptool.py command """
 		import esptool
 
@@ -378,20 +387,20 @@ class Flasher(threading.Thread):
 			print("\nesptool.py %s" % " ".join(flash_command))
 			esptool.main(flash_command)
 			print("\n\x1B[42;93mFlashed with success. Remove strap and press reset button\x1B[m")
-		except:
+		except Exception as err:
 			print("\n\x1B[93;101mFlash failed\n\x1B[m")
 
 		# Connect serial link
-		self.serial_thread.connect(port)
+		self.serial_thread.connect((port, rts_dtr))
 		self.flashing = False
 
-	def set_info(self, port):
+	def set_info(self, port, rts_dtr):
 		""" Set the information of the flasher """
-		self.command.put((self.SET_INFO, port))
+		self.command.put((self.SET_INFO, (port, rts_dtr)))
 
-	def flash(self, port, baud, firmware, erase):
+	def flash(self, port, baud, rts_dtr, firmware, erase):
 		""" Send flash command to flasher thread """
-		self.command.put((self.FLASH, (port, baud, firmware, erase)))
+		self.command.put((self.FLASH, (port, baud, rts_dtr, firmware, erase)))
 
 	def quit(self):
 		""" Send quit command to flasher thread """

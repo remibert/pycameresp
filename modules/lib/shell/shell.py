@@ -45,21 +45,21 @@ The commands are :
 """
 # pylint:disable=wrong-import-position
 import sys
-
 sys.path.append("lib")
 sys.path.append("simul")
 import io
 import os
 import uos
 import machine
-from tools import useful,logger,sdcard,tasking,filesystem,exchange,info,strings,terminal,system
+from tools import useful,logger,sdcard,filesystem,exchange,info,strings,terminal,watchdog
 
 def cd(directory = "/"):
 	""" Change directory """
 	try:
 		uos.chdir(filesystem.normpath(directory))
 	except:
-		print("No such file or directory '%s'"%directory)
+		if directory != ".":
+			print("No such file or directory '%s'"%directory)
 
 def pwd():
 	""" Display the current directory """
@@ -217,12 +217,9 @@ class LsDisplayer:
 
 	def purge_path(self, path):
 		""" Purge the path for the display """
-		if path != "/" and self.path != "/":
-			path = path.replace(self.path,"")
-		if len(path) >= 2 and path[:2] == "./":
-			path = path[2:]
-		path = path.lstrip("/")
-		return path
+		path = filesystem.normpath(path)
+		prefix = filesystem.prefix([path, self.path])
+		return path[len(prefix):].lstrip("/")
 
 	def show(self, path):
 		""" Show the information of a file or directory """
@@ -282,7 +279,7 @@ def searchfile(file, recursive, obj = None):
 			_, filenames = filesystem.scandir(path, pattern, recursive, obj)
 	except:
 		pass
-	if len(filenames) == 0 and file != "":
+	if len(filenames) == 0 and file != "" and file != ".":
 		print("%s : No such file or directory"%file)
 	return filenames
 
@@ -359,22 +356,31 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 
 def ping(host):
 	""" Ping host """
-	from server.ping import ping as ping_
-	ping_(host, count=4, timeout=1)
+	try:
+		from server.ping import ping as ping_
+		ping_(host, count=4, timeout=1)
+	except:
+		print("Not available")
 
 def ip2host(ip_address):
 	""" Convert ip to hostname """
-	import wifi
-	_, _, _, dns = wifi.Station.get_info()
-	from server.dnsclient import resolve_hostname
-	print(resolve_hostname(dns, ip_address))
+	try:
+		import wifi
+		_, _, _, dns = wifi.Station.get_info()
+		from server.dnsclient import resolve_hostname
+		print(resolve_hostname(dns, ip_address))
+	except:
+		print("Not available")
 
 def host2ip(hostname):
 	""" Convert hostname to ip """
-	import wifi
-	_, _, _, dns = wifi.Station.get_info()
-	from server.dnsclient import resolve_ip_address
-	print(resolve_ip_address(dns, hostname))
+	try:
+		import wifi
+		_, _, _, dns = wifi.Station.get_info()
+		from server.dnsclient import resolve_ip_address
+		print(resolve_ip_address(dns, hostname))
+	except:
+		print("Not available")
 
 def mountsd(mountpoint="/sd"):
 	""" Mount command """
@@ -394,15 +400,18 @@ def umountsd(mountpoint="/sd"):
 
 def date(update=False, offsetUTC=+1, noDst=False):
 	""" Get or set date """
-	from server.timesetting import set_date
-	if update:
-		if noDst:
-			dst = False
-		else:
-			dst = True
-		set_date(offsetUTC, dst)
+	try:
+		from server.timesetting import set_date
+		if update:
+			if noDst:
+				dst = False
+			else:
+				dst = True
+			set_date(offsetUTC, dst)
+		del sys.modules["server.timesetting"]
+	except:
+		pass
 	print(strings.date_to_string())
-	del sys.modules["server.timesetting"]
 
 def setdate(datetime=""):
 	""" Set date and time """
@@ -442,7 +451,11 @@ def setdate(datetime=""):
 
 def reboot():
 	""" Reboot command """
-	system.reboot("Reboot device with command")
+	try:
+		from tools import system
+		system.reboot("Reboot device with command")
+	except:
+		machine.deepsleep(1000)
 
 def deepsleep(seconds=60):
 	""" Deep sleep command """
@@ -478,13 +491,9 @@ def cat(file):
 	except:
 		print("Cannot cat '%s'"%(file))
 
-def df(mountpoint = "/"):
+def df(mountpoint = None):
 	""" Display free disk space """
-	status = uos.statvfs(mountpoint)
-	freeSize  = status[0]*status[3]
-	totalSize = status[1]*status[2]
-	print("Filesystem     Free   Capacity   Used")
-	print("%-10s %-10s %-10s %-3.2f%%"%(mountpoint, strings.size_to_string(freeSize,8),strings.size_to_string(totalSize,), totalSize/freeSize))
+	print(strings.tostrings(info.flashinfo(mountpoint=mountpoint)))
 
 def gc():
 	""" Garbage collector command """
@@ -591,7 +600,7 @@ def importer(file="", recursive=False):
 			while result:
 				file_reader = exchange.FileReader()
 				result = file_reader.read(uos.getcwd(), sys.stdin.buffer, sys.stdout.buffer)
-				tasking.WatchDog.feed()
+				watchdog.WatchDog.feed()
 			print("Importer end")
 		except Exception as err:
 			logger.syslog(err, display=False)
@@ -615,7 +624,7 @@ class Exporter:
 			if filesystem.exists(path):
 				sys.stdout.buffer.write("࿊".encode("utf8"))
 				result = file_write.write(path, sys.stdin.buffer, sys.stdout.buffer)
-				tasking.WatchDog.feed()
+				watchdog.WatchDog.feed()
 		return result
 
 	def show(self, path):
@@ -766,7 +775,7 @@ def sh():
 		try:
 			commandLine = ""
 			commandLine = input("%s=> "%os.getcwd())
-			tasking.WatchDog.feed()
+			watchdog.WatchDog.feed()
 		except EOFError:
 			print("")
 			break
@@ -780,7 +789,10 @@ def sh():
 async def async_shell():
 	""" Asynchronous shell """
 	import uasyncio
-	from server.server import Server
+	try:
+		from server.server import Server
+	except:
+		Server = None
 
 	print("\nPress key to start command line")
 	if filesystem.ismicropython():
@@ -797,13 +809,14 @@ async def async_shell():
 			# Check if character is correct to start shell
 			if not ord(character) in [0,0xA]:
 				# Ask to suspend server during shell
-				Server.suspend()
+				if Server is not None:
+					Server.suspend()
 
-				# Wait all server suspended
-				await Server.wait_all_suspended()
+					# Wait all server suspended
+					await Server.wait_all_suspended()
 
 				# Extend watch dog duration
-				tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
+				watchdog.WatchDog.start(watchdog.LONG_WATCH_DOG*2)
 
 				# Get the size of screen
 				terminal.refresh_screen_size()
@@ -820,10 +833,11 @@ async def async_shell():
 				uos.chdir("/")
 
 				# Resume watch dog duration
-				tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
+				watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
 
 				# Resume server
-				Server.resume()
+				if Server is not None:
+					Server.resume()
 		else:
 			await uasyncio.sleep(polling1)
 

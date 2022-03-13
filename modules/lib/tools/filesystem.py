@@ -233,7 +233,7 @@ def prefix(files):
 		result = ""
 		amount = list(counters[0].values())[0]
 		for counter in counters:
-			if len(counter.keys()) == 1 and list(counter.values())[0] == amount:
+			if len(tuple(counter.keys())) == 1 and list(counter.values())[0] == amount:
 				result += list(counter.keys())[0] + "/"
 			else:
 				return result [:-1]

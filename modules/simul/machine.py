@@ -64,7 +64,7 @@ class Timer:
 	""" Timer """
 	ONE_SHOT = 0
 	PERIODIC = 1
-	def __init__(self, ident):
+	def __init__(self, period=5000, mode=0, callback=None):
 		""" Constructor """
 		self.timer = None
 

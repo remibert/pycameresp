@@ -2,16 +2,6 @@
 	"comment": "For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387",
 	"version": "0.2.0",
 	"configurations": [
-		
-		{
-			"name": "Rtest",
-			"type": "python",
-			"request": "launch",
-			"program": "${workspaceFolder}/tools/test/main.py",
-			"cwd"    : "${workspaceFolder}/tools/test",
-			"args": ["-p","/dev/cu.usbserial-01EECC2F","--debug"],
-			"justMyCode": false
-		},
 		{
 			"name": "Pycameresp",
 			"type": "python",
@@ -33,6 +23,13 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/modules/lib/shell/editor.py",
 			"cwd"    : "${workspaceFolder}/modules",
+		},
+		{
+			"name": "Inject",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/tools/camflasher/inject.py",
+			"cwd"    : "${workspaceFolder}/tools/camflasher",
 		},
 		{
 			"name": "Shell",

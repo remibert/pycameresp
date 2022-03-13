@@ -4,6 +4,11 @@
 import machine
 from tools import jsonconfig,logger
 
+try:
+	BROWNOUT_RESET = machine.BROWNOUT_RESET
+except:
+	BROWNOUT_RESET = 6
+
 class BatteryConfig(jsonconfig.JsonConfig):
 	""" Battery configuration """
 	def __init__(self):
@@ -132,7 +137,7 @@ class Battery:
 			machine.WDT_RESET       : "Watch dog",
 			machine.DEEPSLEEP_RESET : "Deep sleep",
 			machine.SOFT_RESET      : "Soft",
-			machine.BROWNOUT_RESET  : "Brownout",
+			BROWNOUT_RESET          : "Brownout",
 		}.setdefault(machine.reset_cause(), "%d"%machine.reset_cause())
 		logger.syslog(" ")
 		logger.syslog("%s Start %s"%('-'*10,'-'*10), display=False)
@@ -148,7 +153,7 @@ class Battery:
 
 		if Battery.config.brownout_detection:
 			# If the reset can probably due to insufficient battery
-			if machine.reset_cause() == machine.BROWNOUT_RESET:
+			if machine.reset_cause() == BROWNOUT_RESET:
 				Battery.config.brownout_count += 1
 			else:
 				Battery.config.brownout_count = 0

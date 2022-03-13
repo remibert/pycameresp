@@ -4,7 +4,7 @@
 import uasyncio
 from server.server import ServerConfig, Server
 import wifi
-from tools import battery, lang, awake, tasking
+from tools import battery, lang, awake, tasking, watchdog
 
 async def periodic_task():
 	""" Periodic task """
@@ -18,7 +18,7 @@ class Periodic:
 		self.server_config = ServerConfig()
 		self.server_config.load()
 		self.get_login_state = None
-		tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
+		watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
 
 	async def check_login(self):
 		""" Inform that login detected """
@@ -44,7 +44,7 @@ class Periodic:
 		""" Periodic task method """
 		polling_id = 0
 
-		tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
+		watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
 		while True:
 			# Reload server config if changed
 			if polling_id % 5 == 0:
@@ -64,6 +64,6 @@ class Periodic:
 			battery.Battery.manage(wifi.Wifi.is_wan_connected())
 
 			# Reset watch dog
-			tasking.WatchDog.feed()
+			watchdog.WatchDog.feed()
 			await uasyncio.sleep(1)
 			polling_id += 1
