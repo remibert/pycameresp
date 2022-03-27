@@ -44,24 +44,27 @@ def syslog(err, msg="", display=True):
 
 def log(msg):
 	""" Log message in syslog.log file without printing """
-	filename = "syslog.log"
-	if filesystem.ismicropython():
-		filename = "/" + filename
+	try:
+		filename = "syslog.log"
+		if filesystem.ismicropython():
+			filename = "/" + filename
 
-	log_file = open(filename,"a")
-	log_file.seek(0,2)
-
-	if log_file.tell() >32*1024:
-		log_file.close()
-		filesystem.rename(filename + ".3",filename + ".4")
-		filesystem.rename(filename + ".2",filename + ".3")
-		filesystem.rename(filename + ".1",filename + ".2")
-		filesystem.rename(filename       ,filename + ".1")
 		log_file = open(filename,"a")
+		log_file.seek(0,2)
 
-	log_file.write(strings.date_ms_to_string() + " %s\n"%(msg))
-	log_file.flush()
-	log_file.close()
+		if log_file.tell() >32*1024:
+			log_file.close()
+			filesystem.rename(filename + ".3",filename + ".4")
+			filesystem.rename(filename + ".2",filename + ".3")
+			filesystem.rename(filename + ".1",filename + ".2")
+			filesystem.rename(filename       ,filename + ".1")
+			log_file = open(filename,"a")
+
+		log_file.write(strings.date_ms_to_string() + " %s\n"%(msg))
+		log_file.flush()
+		log_file.close()
+	except:
+		print("No space")
 
 
 def html_exception(err):

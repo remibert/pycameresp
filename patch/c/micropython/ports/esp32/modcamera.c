@@ -300,88 +300,90 @@ STATIC mp_obj_t configure_make_new(const mp_obj_type_t *type, size_t n_args, siz
 {
 	enum 
 	{ 
-		ARG_pwdn         , // 32 //power down is not used
-		ARG_reset        , // -1 //software reset will be performed
-		ARG_xclk         , //  0
-		ARG_siod         , // 26 // SDA
-		ARG_sioc         , // 27 // SCL
-		ARG_d7           , // 35 // Y9 CSI_D7
-		ARG_d6           , // 34 // Y8 CSI_D6
-		ARG_d5           , // 39 // Y7 CSI_D5 SENSOR_VN
-		ARG_d4           , // 36 // Y6 CSI_D4 SENSOR_VP
-		ARG_d3           , // 21 // Y5 CSI_D3
-		ARG_d2           , // 19 // Y4 CSI_D2
-		ARG_d1           , // 18 // Y3 CSI_D1
-		ARG_d0           , //  5 // Y2 CSI_D0
-		ARG_vsync        , // 25 
-		ARG_href         , // 23
-		ARG_pclk         , // 22
-		ARG_freq_hz      , // = 20000000
-		ARG_ledc_timer   , // LEDC_TIMER_0  ,
-		ARG_ledc_channel , // LEDC_CHANNEL_0,
-		ARG_pixel_format , // PIXFORMAT_JPEG,//YUV422,GRAYSCALE,RGB565,JPEG
-		ARG_frame_size   , // FRAMESIZE_UXGA,//QQVGA-UXGA Do not use sizes above QVGA when not JPEG
-		ARG_jpeg_quality , // 12,             //0-63 lower number means higher quality
-		ARG_fb_count     , // 1               //if more than one, i2s runs in continuous mode. Use only with JPEG
-		ARG_flash_led    , // GPIO for flash led
+		ARG_pin_pwdn             , // 32 //power down is not used
+		ARG_pin_reset        , // -1 //software reset will be performed
+		ARG_pin_xclk         , //  0
+		ARG_pin_sscb_sda     , // 26 // SDA
+		ARG_pin_sscb_scl     , // 27 // SCL
+		ARG_pin_d7           , // 35 // Y9 CSI_D7
+		ARG_pin_d6           , // 34 // Y8 CSI_D6
+		ARG_pin_d5           , // 39 // Y7 CSI_D5 SENSOR_VN
+		ARG_pin_d4           , // 36 // Y6 CSI_D4 SENSOR_VP
+		ARG_pin_d3           , // 21 // Y5 CSI_D3
+		ARG_pin_d2           , // 19 // Y4 CSI_D2
+		ARG_pin_d1           , // 18 // Y3 CSI_D1
+		ARG_pin_d0           , //  5 // Y2 CSI_D0
+		ARG_pin_vsync        , // 25 
+		ARG_pin_href         , // 23
+		ARG_pin_pclk         , // 22
+		ARG_xclk_freq_hz     , // = 20000000
+		ARG_ledc_timer       , // LEDC_TIMER_0  ,
+		ARG_ledc_channel     , // LEDC_CHANNEL_0,
+		ARG_pixel_format     , // PIXFORMAT_JPEG,//YUV422,GRAYSCALE,RGB565,JPEG
+		ARG_frame_size       , // FRAMESIZE_UXGA,//QQVGA-UXGA Do not use sizes above QVGA when not JPEG
+		ARG_jpeg_quality     , // 12,             //0-63 lower number means higher quality
+		ARG_fb_count         , // 1               //if more than one, i2s runs in continuous mode. Use only with JPEG
+		ARG_flash_led        , // GPIO for flash led
 	};
 
 	// Constructor parameters
 	static const mp_arg_t allowed_args[] = 
 	{
 		// Default value for esp32one see https://www.waveshare.com/esp32-one.htm
-		{ MP_QSTR_pwdn         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  32            } },
-		{ MP_QSTR_reset        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  -1            } },
-		{ MP_QSTR_xclk         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =   4            } },
-		{ MP_QSTR_siod         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  18            } },
-		{ MP_QSTR_sioc         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  23            } },
-		{ MP_QSTR_d7           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  36            } },
-		{ MP_QSTR_d6           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  37            } },
-		{ MP_QSTR_d5           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  38            } },
-		{ MP_QSTR_d4           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  39            } },
-		{ MP_QSTR_d3           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  35            } },
-		{ MP_QSTR_d2           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  14            } },
-		{ MP_QSTR_d1           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  13            } },
-		{ MP_QSTR_d0           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  34            } },
-		{ MP_QSTR_vsync        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  5             } },
-		{ MP_QSTR_href         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  27            } },
-		{ MP_QSTR_pclk         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  25            } },
-		{ MP_QSTR_freq_hz      ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  20000000      } },
-		{ MP_QSTR_ledc_timer   ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  LEDC_TIMER_0  } },
-		{ MP_QSTR_ledc_channel ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  LEDC_CHANNEL_0} },
-		{ MP_QSTR_pixel_format ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  PIXFORMAT_JPEG} },
-		{ MP_QSTR_frame_size   ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  FRAMESIZE_UXGA} },
-		{ MP_QSTR_jpeg_quality ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  12            } },
-		{ MP_QSTR_fb_count     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  1             } },
-		{ MP_QSTR_flash_led    ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  0             } },
+		{ MP_QSTR_pin_pwdn         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  32            } },
+		{ MP_QSTR_pin_reset        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  -1            } },
+		{ MP_QSTR_pin_xclk         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =   4            } },
+		{ MP_QSTR_pin_sscb_sda     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  18            } },
+		{ MP_QSTR_pin_sscb_scl     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  23            } },
+		{ MP_QSTR_pin_d7           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  36            } },
+		{ MP_QSTR_pin_d6           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  37            } },
+		{ MP_QSTR_pin_d5           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  38            } },
+		{ MP_QSTR_pin_d4           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  39            } },
+		{ MP_QSTR_pin_d3           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  35            } },
+		{ MP_QSTR_pin_d2           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  14            } },
+		{ MP_QSTR_pin_d1           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  13            } },
+		{ MP_QSTR_pin_d0           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  34            } },
+		{ MP_QSTR_pin_vsync        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  5             } },
+		{ MP_QSTR_pin_href         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  27            } },
+		{ MP_QSTR_pin_pclk         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  25            } },
+		{ MP_QSTR_xclk_freq_hz     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  20000000      } },
+		{ MP_QSTR_ledc_timer       ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  LEDC_TIMER_0  } },
+		{ MP_QSTR_ledc_channel     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  LEDC_CHANNEL_0} },
+		{ MP_QSTR_pixel_format     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  PIXFORMAT_JPEG} },
+		{ MP_QSTR_frame_size       ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  FRAMESIZE_UXGA} },
+		{ MP_QSTR_jpeg_quality     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  12            } },
+		{ MP_QSTR_fb_count         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  1             } },
+		{ MP_QSTR_flash_led        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  0             } },
 	};
 	
 	// Parsing parameters
 	mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
 	mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
-	camera_config.pin_pwdn     = args[ARG_pwdn        ].u_int;
-	camera_config.pin_reset    = args[ARG_reset       ].u_int;
-	camera_config.pin_xclk     = args[ARG_xclk        ].u_int;
-	camera_config.pin_sscb_sda = args[ARG_siod        ].u_int;
-	camera_config.pin_sscb_scl = args[ARG_sioc        ].u_int;
-	camera_config.pin_d7       = args[ARG_d7          ].u_int;
-	camera_config.pin_d6       = args[ARG_d6          ].u_int;
-	camera_config.pin_d5       = args[ARG_d5          ].u_int;
-	camera_config.pin_d4       = args[ARG_d4          ].u_int;
-	camera_config.pin_d3       = args[ARG_d3          ].u_int;
-	camera_config.pin_d2       = args[ARG_d2          ].u_int;
-	camera_config.pin_d1       = args[ARG_d1          ].u_int;
-	camera_config.pin_d0       = args[ARG_d0          ].u_int;
-	camera_config.pin_vsync    = args[ARG_vsync       ].u_int;
-	camera_config.pin_href     = args[ARG_href        ].u_int;
-	camera_config.pin_pclk     = args[ARG_pclk        ].u_int;
-	camera_config.xclk_freq_hz = args[ARG_freq_hz     ].u_int;
-	camera_config.ledc_timer   = args[ARG_ledc_timer  ].u_int;
-	camera_config.ledc_channel = args[ARG_ledc_channel].u_int;
-	camera_config.pixel_format = args[ARG_pixel_format].u_int;
-	camera_config.frame_size   = args[ARG_frame_size  ].u_int;
-	camera_config.jpeg_quality = args[ARG_jpeg_quality].u_int;
-	camera_config.fb_count     = args[ARG_fb_count    ].u_int;
+#define SET_CONFIG_CAMERA(name) camera_config.name     = args[ARG_##name        ].u_int;
+// ESP_LOGE(TAG, "%s=%d", #name, args[ARG_##name        ].u_int);
+	SET_CONFIG_CAMERA(pin_pwdn     )
+	SET_CONFIG_CAMERA(pin_reset    )
+	SET_CONFIG_CAMERA(pin_xclk     )
+	SET_CONFIG_CAMERA(pin_sscb_sda )
+	SET_CONFIG_CAMERA(pin_sscb_scl )
+	SET_CONFIG_CAMERA(pin_d7       )
+	SET_CONFIG_CAMERA(pin_d6       )
+	SET_CONFIG_CAMERA(pin_d5       )
+	SET_CONFIG_CAMERA(pin_d4       )
+	SET_CONFIG_CAMERA(pin_d3       )
+	SET_CONFIG_CAMERA(pin_d2       )
+	SET_CONFIG_CAMERA(pin_d1       )
+	SET_CONFIG_CAMERA(pin_d0       )
+	SET_CONFIG_CAMERA(pin_vsync    )
+	SET_CONFIG_CAMERA(pin_href     )
+	SET_CONFIG_CAMERA(pin_pclk     )
+	SET_CONFIG_CAMERA(xclk_freq_hz )
+	SET_CONFIG_CAMERA(ledc_timer   )
+	SET_CONFIG_CAMERA(ledc_channel )
+	SET_CONFIG_CAMERA(pixel_format )
+	SET_CONFIG_CAMERA(frame_size   )
+	SET_CONFIG_CAMERA(jpeg_quality )
+	SET_CONFIG_CAMERA(fb_count     )
 	gpio_flash_led             = args[ARG_flash_led   ].u_int;
 	return mp_const_none;
 }

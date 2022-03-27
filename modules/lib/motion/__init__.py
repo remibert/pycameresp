@@ -6,8 +6,8 @@ from motion.historic import *
 from video.video import Camera
 from tools import info
 
-def start(loop=None, pir_detection=False, **gpio_config):
+def start(loop=None, pir_detection=False):
 	""" Start the asynchronous motion detection and presence detection """
 	if info.iscamera() and Camera.is_activated():
-		loop.create_task(detect_motion(pir_detection,gpio_config))
+		loop.create_task(detect_motion(pir_detection))
 		loop.create_task(Historic.periodic_task())

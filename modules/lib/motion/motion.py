@@ -68,11 +68,11 @@ class ImageMotion:
 		self.motion_id = None
 		self.date     = strings.date_to_string()
 		self.filename = strings.date_to_filename()
-		path = strings.date_to_path()[:-1]
-		if path[-1] in [0x30,0x31,0x32]:
-			path = path[:-1] + b"00"
+		path = strings.date_to_path()
+		if path[-1] in [0x30,0x31,0x32,0x33,0x34]:
+			path = path[:-1] + b"0"
 		else:
-			path = path[:-1] + b"30"
+			path = path[:-1] + b"5"
 		self.path     = path
 		self.motion_detected = False
 		self.config = config
@@ -220,7 +220,7 @@ class SnapConfig:
 
 class Motion:
 	""" Class to manage the motion capture """
-	def __init__(self, config= None, pir_detection=False, gpio_config=None):
+	def __init__(self, config= None, pir_detection=False):
 		self.images = []
 		self.index  = 0
 		self.config = config
@@ -230,7 +230,6 @@ class Motion:
 		self.quality = 15
 		self.previous_quality = 0
 		self.flash_level = 0
-		self.gpio_config = gpio_config
 
 	def __del__(self):
 		""" Destructor """
@@ -248,8 +247,6 @@ class Motion:
 
 	def open(self):
 		""" Open camera """
-		if self.gpio_config is not None:
-			video.Camera.gpio_config(**self.gpio_config)
 		if video.Camera.open():
 			return True
 		else:
@@ -478,7 +475,7 @@ class Motion:
 
 class Detection:
 	""" Asynchronous motion detection object """
-	def __init__(self, pir_detection, gpio_config):
+	def __init__(self, pir_detection):
 		""" Constructor """
 		self.pir_detection = pir_detection
 		self.load_config()
@@ -492,7 +489,6 @@ class Detection:
 		self.detection = None
 		self.activated = None
 		self.refresh_config_counter = 0
-		self.gpio_config = gpio_config
 		self.cadencer = NotificationCadencer()
 
 	def load_config(self):
@@ -586,7 +582,7 @@ class Detection:
 
 		# If motion not initialized
 		if self.motion is None:
-			self.motion = Motion(self.motion_config, self.pir_detection, self.gpio_config)
+			self.motion = Motion(self.motion_config, self.pir_detection)
 			if self.motion.open() is False:
 				self.motion = None
 				raise Exception("Cannot open camera")
@@ -726,7 +722,7 @@ class NotificationCadencer(MovingCounters):
 			result = False
 		return result
 
-async def detect_motion(pir_detection, gpio_config):
+async def detect_motion(pir_detection):
 	""" Asynchronous motion detection main routine """
-	detection = Detection(pir_detection, gpio_config)
+	detection = Detection(pir_detection)
 	await detection.run()

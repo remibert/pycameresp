@@ -295,7 +295,11 @@ class CommandLauncher:
 					if output == True:
 						print (message.rstrip())
 				else:
-					output.write(message.rstrip() + "\n")
+					try:
+						output.write(message.rstrip() + "\n")
+					except:
+						message = message.encode('cp850','replace').decode('cp850')
+						output.write(message.rstrip() + "\n")
 					output.flush()
 		
 		self.lines.append("> %s"%command)
@@ -304,12 +308,10 @@ class CommandLauncher:
 		try:
 			timerStarted = 0
 			
-			self.process = Popen(args=command, stdout=PIPE, stderr=PIPE, shell=True)
+			self.process = Popen(args=command, stdout=PIPE, stderr=STDOUT, shell=True)
 			
 			while True:
 				line = self.process.stdout.readline()
-				if len(line) == 0:
-					line = self.process.stderr.readline()
 
 				# Restart the inactivity timer for a group line (avoid cpu load)
 				if timerStarted > 20:
@@ -424,8 +426,8 @@ def get_file_size(filename):
 	"""
 	filename = adapt_path(filename)
 	from os import stat
-	from stat import ST_size
-	return stat(filename)[ST_size]
+	from stat import ST_SIZE
+	return stat(filename)[ST_SIZE]
 
 def del_doublon(values):
 	""" delete duplicated data in list 
@@ -1948,9 +1950,9 @@ class Structure:
 		"string"              : "s",
 		"void *"              : "P",
 	}
-	type = 0
+	TYPE = 0
 	NAME = 1
-	size = 2
+	SIZE = 2
 	VALUE = 3
 	
 	def __init__ (self, structref, byteOrder = "default"):
@@ -2016,14 +2018,14 @@ class Structure:
 		# Built structure used by the struct module
 		for i in self.structref:
 			try:
-				size = i[self.size]
+				size = i[self.SIZE]
 			except IndexError:
 				size = 1
 				
 			if size in (1, None):
-				self.struct = self.struct + self.format [i[self.type]]
+				self.struct = self.struct + self.format [i[self.TYPE]]
 			else:
-				self.struct = self.struct + "%d"%size + self.format [i[self.type]]
+				self.struct = self.struct + "%d"%size + self.format [i[self.TYPE]]
 				
 		# Built structure values
 		self.__dict__["value"] = {}
@@ -2031,7 +2033,7 @@ class Structure:
 			try:
 				self.value[i[self.NAME]] = i[self.VALUE]
 			except IndexError:
-				if i[self.type] in ("char[]", "string"):
+				if i[self.TYPE] in ("char[]", "string"):
 					self.value[i[self.NAME]] = "\0"
 				else:
 					self.value[i[self.NAME]] = 0

@@ -97,3 +97,6 @@ class RTC:
 		return None
 class SDCard:
 	""" Sd card """
+	# pylint:disable=redefined-outer-name
+	def __init__(self, slot=1, width=1, cd=None, wp=None, sck=None, miso=None, mosi=None, cs=None, freq=1):
+		pass

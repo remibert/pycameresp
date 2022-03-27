@@ -92,33 +92,55 @@ def capture():
 		return data
 	return None
 
-def configure(pwdn=32,reset=-1,xclk=4,siod=18,sioc=23,d7=36,d6=37,d5=38,d4=39,d3=35,d2=14,d1=13,d0=34,vsync=5,
-	href=27,pclk=25,freq_hz=20000000,ledc_timer=0,ledc_channel=0,pixel_format=3,frame_size=13,jpeg_quality=12,fb_count=1,flash_led=0):
+def configure(pin_pwdn = 32,
+		pin_reset= -1,
+		pin_xclk =  0,
+		pin_sscb_sda = 26,
+		pin_sscb_scl = 27,
+		pin_d7   = 35,
+		pin_d6   = 34,
+		pin_d5   = 39,
+		pin_d4   = 36,
+		pin_d3   = 21,
+		pin_d2   = 19,
+		pin_d1   = 18,
+		pin_d0   =  5,
+		pin_vsync= 25,
+		pin_href = 23,
+		pin_pclk = 22,
+		xclk_freq_hz=20000000,
+		ledc_timer=0,
+		ledc_channel=0,
+		pixel_format=3,
+		frame_size=13,
+		jpeg_quality=12,
+		fb_count=1,
+		flash_led=4):
 	""" Configure the structure for camera initialization.
-		- pwdn           : GPIO pin for camera power down line
-		- reset          : GPIO pin for camera reset line
-		- xclk           : GPIO pin for camera XCLK line
-		- siod           : GPIO pin for camera SDA line
-		- sioc           : GPIO pin for camera SCL line
-		- d7             : GPIO pin for camera D7 line
-		- d6             : GPIO pin for camera D6 line
-		- d5             : GPIO pin for camera D5 line
-		- d4             : GPIO pin for camera D4 line
-		- d3             : GPIO pin for camera D3 line
-		- d2             : GPIO pin for camera D2 line
-		- d1             : GPIO pin for camera D1 line
-		- d0             : GPIO pin for camera D0 line
-		- vsync          : GPIO pin for camera VSYNC line
-		- href           : GPIO pin for camera HREF line
-		- pclk           : GPIO pin for camera PCLK line
-		- freq_hz        : Frequency of XCLK signal, in Hz. Either 20KHz or 10KHz for OV2640 double FPS (Experimental)
-		- ledc_timer     : LEDC timer to be used for generating XCLK
-		- ledc_channel   : LEDC channel to be used for generating XCLK
-		- pixel_format   : Format of the pixel data: PIXFORMAT_ + YUV422|GRAYSCALE|RGB565|JPEG
-		- frame_size     : Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
-		- jpeg_quality   : Quality of JPEG output. 0-63 lower means higher quality
-		- fb_count       : Number of frame buffers to be allocated. If more than one, then each frame will be acquired (double speed)
-		- flash_led      : GPIO pin for flash led or 0 to disable
+		- pin_pwdn           : GPIO pin for camera power down line
+		- pin_reset          : GPIO pin for camera pin_reset line
+		- pin_xclk           : GPIO pin for camera XCLK line
+		- pin_sscb_sda       : GPIO pin for camera SDA line
+		- pin_sscb_scl       : GPIO pin for camera SCL line
+		- pin_d7             : GPIO pin for camera D7 line
+		- pin_d6             : GPIO pin for camera D6 line
+		- pin_d5             : GPIO pin for camera D5 line
+		- pin_d4             : GPIO pin for camera D4 line
+		- pin_d3             : GPIO pin for camera D3 line
+		- pin_d2             : GPIO pin for camera D2 line
+		- pin_d1             : GPIO pin for camera D1 line
+		- pin_d0             : GPIO pin for camera D0 line
+		- pin_vsync          : GPIO pin for camera VSYNC line
+		- pin_href           : GPIO pin for camera HREF line
+		- pin_pclk           : GPIO pin for camera PCLK line
+		- xclk_freq_hz       : Frequency of XCLK signal, in Hz. Either 20KHz or 10KHz for OV2640 double FPS (Experimental)
+		- ledc_timer         : LEDC timer to be used for generating XCLK
+		- ledc_channel       : LEDC channel to be used for generating XCLK
+		- pixel_format       : Format of the pixel data: PIXFORMAT_ + YUV422|GRAYSCALE|RGB565|JPEG
+		- frame_size         : Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
+		- jpeg_quality       : Quality of JPEG output. 0-63 lower means higher quality
+		- fb_count           : Number of frame buffers to be allocated. If more than one, then each frame will be acquired (double speed)
+		- flash_led          : GPIO pin for flash led or 0 to disable
 	"""
 
 class Motion:

@@ -334,7 +334,7 @@ class CamFlasher(QMainWindow):
 		# self.console.test()
 		ports = []
 		for port in sorted(list_ports.comports()):
-			if port.hwid != "n/a":
+			if port.hwid != "n/a" and port.vid is not None:
 				ports.append(port)
 
 		# If the list of serial port changed
@@ -343,7 +343,7 @@ class CamFlasher(QMainWindow):
 
 			ports_connected = []
 			for port in self.serial_ports:
-				print(port.name, port.hwid)
+				#print(port.name, port.hwid)
 				ports_connected.append(port.device)
 
 			for i in range(self.window.combo_port.count()):

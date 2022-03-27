@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function which sets the internal clock of the card based on an ntp server """
 import time
-from tools import logger,strings
+from tools import logger,strings,filesystem
 
 def get_ntp_time():
 	""" Return the time from a NTP server """
@@ -37,17 +37,33 @@ def set_time(currenttime):
 	except Exception as exc:
 		logger.syslog("Cannot set time '%s'"%exc)
 
+def mktime(t):
+	""" Portable mktime """
+	year,month,day,hour,minute,second,weekday,yearday = t
+	if filesystem.ismicropython():
+		return time.mktime((year, month, day, hour, minute, second, weekday, yearday))
+	else:
+		return time.mktime((year, month, day, hour, minute, second, weekday, yearday, 0))
+
+
 def calc_local_time(currenttime, offsetTime=+1, dst=True):
 	""" Calculate the local time """
 	year,month,day,hour,minute,second,weekday,yearday = strings.local_time(currenttime)[:8]
-	startDST = time.mktime((year,3 ,(14-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of March change to DST
-	endDST   = time.mktime((year,10,( 7-(int(5*year/4+1))%7),1,0,0,0,0,0)) #Time of November change to EST
-	try:
-		now = time.mktime((year,month,day,hour,minute,second,weekday,yearday))
-	except:
-		now = time.mktime((year,month,day,hour,minute,second,weekday,yearday,0))
 
-	if dst and now > startDST and now < endDST : # we are before last sunday of october
+	# Get the day of the last sunday of march
+	march_end_weekday = strings.local_time(mktime((year, 3, 31, 0, 0, 0, 0, 0)))[6]
+	start_day_dst = 31-((1+march_end_weekday)%7)
+
+	# Get the day of the last sunday of october
+	october_end_weekday = strings.local_time(mktime((year,10, 30, 0, 0, 0, 0, 0)))[6]
+	end_day_dst = 30-((1+october_end_weekday)%7)
+
+	start_DST = mktime((year,3 ,start_day_dst,1,0,0,0,0))
+	end_DST   = mktime((year,10,end_day_dst  ,1,0,0,0,0))
+
+	now = mktime((year,month,day,hour,minute,second,weekday,yearday))
+
+	if dst and now > start_DST and now < end_DST : # we are before last sunday of october
 		return now+(offsetTime*3600)+3600 # DST: UTC+dst*H + 1
 	else:
 		return now+(offsetTime*3600) # EST: UTC+dst*H

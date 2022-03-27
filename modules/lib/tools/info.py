@@ -43,7 +43,7 @@ def meminfo(display=True):
 			strings.size_to_bytes(alloc, 1),
 			strings.size_to_bytes(free,  1),
 			strings.size_to_bytes(total, 1),
-			total/free)
+			100-(free*100/total))
 		if display:
 			print(strings.tostrings(result))
 		else:
@@ -59,13 +59,15 @@ def flashinfo(mountpoint=None, display=True):
 			mountpoint = os.getcwd()
 		status = uos.statvfs(mountpoint)
 		free  = status[0]*status[3]
+		if free < 0:
+			free = 0
 		total = status[1]*status[2]
 		alloc  = total - free
 		result = b"Flash%s: alloc=%s free=%s total=%s used=%-3.2f%%"%(strings.tobytes(mountpoint),
 			strings.size_to_string(alloc, 1),
 			strings.size_to_string(free,  1),
 			strings.size_to_string(total, 1),
-			total/free)
+			100-(free*100/total))
 		if display:
 			print(strings.tostrings(result))
 		else:

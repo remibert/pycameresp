@@ -33,7 +33,7 @@ class Historic:
 		return Historic.lock.locked()
 
 	@staticmethod
-	async def get_root():
+	def get_root():
 		""" Get the root path of sdcard and mount it """
 		if sdcard.SdCard.mount():
 			return sdcard.SdCard.get_mountpoint()
@@ -42,7 +42,7 @@ class Historic:
 	@staticmethod
 	async def add_motion(path, name, image, info):
 		""" Add motion detection in the historic """
-		root = await Historic.get_root()
+		root = Historic.get_root()
 		result = False
 		if root:
 			try:
@@ -83,7 +83,7 @@ class Historic:
 	@staticmethod
 	async def build(motions):
 		""" Parse the all motions files to build historic """
-		root = await Historic.get_root()
+		root = Historic.get_root()
 		if root:
 			count = 0
 			try:
@@ -113,7 +113,7 @@ class Historic:
 	@staticmethod
 	async def get_json():
 		""" Read the historic from disk """
-		root = await Historic.get_root()
+		root = Historic.get_root()
 		result = b""
 		if root:
 			try:
@@ -175,7 +175,7 @@ class Historic:
 	async def scan_directories(quantity=10, older=True):
 		""" Get the list of older or older directories in the sd card """
 		motions = []
-		root = await Historic.get_root()
+		root = Historic.get_root()
 		if root:
 			try:
 				await Historic.acquire()
@@ -223,17 +223,20 @@ class Historic:
 		import shell
 		notEmpty = False
 		force = True
+		counter = 0
 		if filesystem.exists(directory):
 			# Parse all directories in sdcard
 			for fileinfo in uos.ilistdir(directory):
 				filename = fileinfo[0]
 				typ      = fileinfo[1]
-				print(filename)
 				# If file found
 				if typ & 0xF000 != 0x4000:
 					shell.rmfile(directory + "/" + filename, simulate=simulate, force=force)
 				else:
 					await Historic.remove_files(directory + "/" + filename)
+
+					# Force the parsing of historic
+					Historic.first_extract[0] = False
 					notEmpty = True
 
 			if notEmpty:
@@ -244,12 +247,21 @@ class Historic:
 			print("Directory not existing '%s'"%directory)
 
 	@staticmethod
+	def is_not_enough_space():
+		""" Indicates if remaining space is not sufficient """
+		free = sdcard.SdCard.get_free_size()
+		total = sdcard.SdCard.get_max_size()
+		if free < 0 or total < 0:
+			return False
+		return ((free * 100 // total) <= 5)
+
+	@staticmethod
 	async def remove_older(force=False):
 		""" Remove older files to make space """
-		root = await Historic.get_root()
+		root = Historic.get_root()
 		if root:
 			# If not enough space available on sdcard
-			if (sdcard.SdCard.get_free_size() * 10000// sdcard.SdCard.get_max_size() <= 5) or force:
+			if Historic.is_not_enough_space() or force:
 				logger.syslog("Start cleanup sd card")
 				olders = await Historic.scan_directories(MAX_REMOVED, True)
 				previous = ""
@@ -264,6 +276,9 @@ class Historic:
 						logger.syslog(err)
 					finally:
 						await Historic.release()
+					if Historic.is_not_enough_space() is False:
+						print("Now enough space")
+						break
 				logger.syslog("End cleanup sd card")
 
 	@staticmethod
@@ -276,10 +291,10 @@ class Historic:
 			await Server.wait_resume(7)
 		if Historic.motion_in_progress[0] is False:
 			if sdcard.SdCard.is_mounted():
-				await Historic.extract()
 				await Historic.remove_older()
+				await Historic.extract()
 			else:
-				await Historic.get_root()
+				Historic.get_root()
 		return True
 
 	@staticmethod

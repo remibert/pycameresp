@@ -42,6 +42,8 @@ def isascii(char):
 
 DEFAULT_BACKCOLOR = 0xFFFFFF
 DEFAULT_FORECOLOR = 0x000000
+CURSOR_BACKCOLOR  = 0xDADADA
+CURSOR_FORECOLOR  = 0x000000
 vga_colors = [
 	#     30,       31,       32,       33,       34,       35,       36,       37,
 	#     40,       41,       42,       43,       44,       45,       46,       47,
@@ -286,6 +288,8 @@ class Line:
 			else:
 				length = len(self.line)
 
+
+			cursor_set = False
 			# For all character in the line
 			for i in range(length):
 				part = ""
@@ -317,19 +321,26 @@ class Line:
 					fore = forecolor
 					back = backcolor
 
-				# If cursor detected
-				if cursor == i:
-					back = 0xcFcFcF
+				# If the previous character is with cursor
+				if cursor_set is True:
+					# Force the change of color
 					changed = True
-					previous_reverse = not previous_reverse
+					cursor_set = False
 
-				# The color must be changed
-				if changed:
-					part = '<span style="color:#%06X;background-color:#%06X">'%(fore,back)
+				# If cursor on this character
+				if cursor == i:
+					part = '<span style="color:#%06X;background-color:#%06X">'%(CURSOR_FORECOLOR,CURSOR_BACKCOLOR)
 					if i > 0:
 						part = '</span>' + part
+					cursor_set = True
 				else:
-					part = ""
+					# The color must be changed
+					if changed:
+						part = '<span style="color:#%06X;background-color:#%06X">'%(fore,back)
+						if i > 0:
+							part = '</span>' + part
+					else:
+						part = ""
 
 				# Treat specials characters
 				char = self.line[i]
@@ -488,6 +499,13 @@ class VT100:
 			result = default
 		return result
 
+	def split(self, value):
+		""" Return the value splited according to the right separator """
+		if ";" in value:
+			return value.split(";")
+		else:
+			return value.split(":")
+
 	def parse_color(self, escape):
 		""" Parse vt100 colors """
 		result = False
@@ -499,7 +517,7 @@ class VT100:
 				reverse = None
 
 				data = escape[2:-1]
-				values = data.split(';')
+				values = self.split(data)
 				# Case clear
 				if len(values) <= 1:
 					if len(values[0]) == 0:
@@ -634,7 +652,7 @@ class VT100:
 				# Set cursor position - pl Line, pc Column
 				elif escape[-1] == "H" or escape[-1] == "f":
 					try:
-						line, column = escape[2:-1].split(";")
+						line, column = self.split(escape[2:-1])
 						self.cursor_column = eval(column)-1
 						self.cursor_line   = eval(line)-1
 					except:
@@ -650,7 +668,7 @@ class VT100:
 			# If scrolling region detected
 			if escape[-1] == "r" and escape[1]=="[":
 				data = escape[2:-1]
-				values = data.split(';')
+				values = self.split(data)
 				if len(values) == 2:
 					self.region_start = self.to_int(values[0], 0)-1
 					self.region_end   = self.to_int(values[1], self.height)-1

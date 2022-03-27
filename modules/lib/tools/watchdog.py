@@ -2,7 +2,10 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Watchdog class """
 import sys
-import machine
+try:
+	import machine
+except:
+	pass
 
 LONG_WATCH_DOG=15*60*1000
 SHORT_WATCH_DOG=5*60*1000

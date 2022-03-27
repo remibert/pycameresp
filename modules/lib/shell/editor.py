@@ -100,7 +100,7 @@ DELETE_LINE      = ["\x0C"]                              # Delete line
 REPLACE          = ["\x08"]                              # Replace
 REPLACE_CURRENT  = ["\x12"]                              # Replace the selection
 EXECUTE          = ["\x1b[15~"]                          # Execute script
-
+SELECT_COLOR = "\x1B[48:5:253m"
 class View:
 	""" Class which manage the view of the edit field """
 	def __init__(self, view_height, view_top):
@@ -110,20 +110,20 @@ class View:
 		if view_height is None:
 			self.height   = 20
 		else:
-			self.height          = view_height
-		self.width               = 80
-		self.top                 = view_top
-		self.is_refresh_all        = True
-		self.is_refresh_line       = False
+			self.height             = view_height
+		self.width                  = 80
+		self.top                    = view_top
+		self.is_refresh_all         = True
+		self.is_refresh_line        = False
 		self.is_refresh_line_before = False
 		self.is_refresh_line_after  = False
-		self.refresh_part         = None
-		self.text                = None
-		self.tab_cursor_column     = 0
-		self.sel_line_start        = None
-		self.sel_line_end          = None
-		self.screen_height = 1
-		self.screen_width = 1
+		self.refresh_part           = None
+		self.text                   = None
+		self.tab_cursor_column      = 0
+		self.sel_line_start         = None
+		self.sel_line_end           = None
+		self.screen_height          = 1
+		self.screen_width           = 1
 
 	def write(self, data):
 		""" Write data to stdout """
@@ -173,7 +173,7 @@ class View:
 		""" Scroll the upper part """
 		line, column = self.get_screen_position()
 		if line < self.height:
-			self.set_scrolling_region(line, self.height+1)
+			self.set_scrolling_region(line +1, self.height+1)
 			self.write("\x1B[1S")
 
 	def scroll_part_down(self):
@@ -235,6 +235,10 @@ class View:
 		""" Indicates that all lines must be refreshed """
 		self.is_refresh_all = True
 
+	def set_refresh_bottom(self, cursor):
+		""" Refresh from the cursor to the end of screen """
+		self.refresh_part = [cursor, cursor+self.height+self.height]
+
 	def show_line(self, current_line, screen_line, selection_start, selection_end, quick=False):
 		""" Show one line """
 		if quick:
@@ -267,7 +271,7 @@ class View:
 						# If the start of selection is on the previous lines
 						if sel_line_start < sel_line_end:
 							# Select the start of line
-							partLine = "\x1B[7m" + partLine[:sel_column_end] + "\x1B[m" + partLine[sel_column_end:]
+							partLine = SELECT_COLOR + partLine[:sel_column_end] + "\x1B[m" + partLine[sel_column_end:]
 						else:
 							# Unselect the end of line
 							partLine = partLine[:sel_column_end] + "\x1B[m" + partLine[sel_column_end:]
@@ -282,14 +286,14 @@ class View:
 						# If the end of selection is on the next lines
 						if sel_line_start < sel_line_end:
 							# Select the end of line
-							partLine = partLine[:sel_column_start] + "\x1B[7m" + partLine[sel_column_start:] + "\x1B[m"
+							partLine = partLine[:sel_column_start] + SELECT_COLOR + partLine[sel_column_start:] + "\x1B[m"
 						else:
 							# Select the start of line
-							partLine = partLine[:sel_column_start] + "\x1B[7m" + partLine[sel_column_start:]
+							partLine = partLine[:sel_column_start] + SELECT_COLOR + partLine[sel_column_start:]
 					# If the line is completly selected
 					if current_line > sel_line_start and current_line < sel_line_end:
 						# Select all the line
-						partLine = "\x1B[7m" + partLine + "\x1B[m"
+						partLine = SELECT_COLOR + partLine + "\x1B[m"
 				else:
 					partLine = ""
 				self.write(line_to_display + partLine)
@@ -353,70 +357,72 @@ class View:
 			# Get the selection
 			dummy, sel_line_start, sel_column_start = selection_start
 			dummy, sel_line_end,   sel_column_end   = selection_end
-			lineStart = sel_line_start
-			lineEnd   = sel_line_end
+			line_start = sel_line_start
+			line_end   = sel_line_end
 			# The aim of this part is to limit the refresh area
 			# If the precedent display show a selection
 			if self.sel_line_end is not None and self.sel_line_start is not None:
 				# If the start and end of selection is on the sames lines
 				if self.sel_line_end == sel_line_end and self.sel_line_start == sel_line_start:
-					lineStart = lineEnd = self.text.get_cursor_line()
+					line_start = line_end = self.text.get_cursor_line()
 				else:
 					# If the end of selection is after the precedent display
 					if self.sel_line_end > sel_line_end:
-						lineEnd = self.sel_line_end
+						line_end = self.sel_line_end
 					# If the end of selection is on the same line than the precedent display
 					elif self.sel_line_end == sel_line_end:
 						# If the start of selection is before the precedent display
 						if self.sel_line_start < sel_line_start:
-							lineEnd = sel_line_start
+							line_end = sel_line_start
 						else:
-							lineEnd = self.sel_line_start
+							line_end = self.sel_line_start
 					# If the start of selection is before the precedent display
 					if self.sel_line_start < sel_line_start:
-						lineStart = self.sel_line_start
+						line_start = self.sel_line_start
 					# If the start of selection is on the same line than the precedent display
 					elif self.sel_line_start == sel_line_start:
 						# If the end of selection is after the precedent display
 						if self.sel_line_end > sel_line_end:
-							lineStart = sel_line_end
+							line_start = sel_line_end
 						else:
-							lineStart = self.sel_line_end
+							line_start = self.sel_line_end
 		else:
-			lineStart = 0
-			lineEnd = self.line + self.height
+			line_start = 0
+			line_end = self.line + self.height
 		current_line = self.line
 		screen_line = self.top
 		if type(all_) == type([]):
-			lineStart, lineEnd = all_
+			line_start, line_end = all_
 			all_ = False
 		count_line = self.text.get_count_lines()
-		maxLine = self.line + self.height
+		max_line = self.line + self.height
 		if all_:
 			# Erase the rest of the screen with empty line (used when the text is shorter than the screen)
 			self.move_cursor(screen_line, 0)
 			self.write("\x1B[J")
 			# Refresh all lines visible
-			while current_line < count_line and current_line <= maxLine:
+			while current_line < count_line and current_line <= max_line:
 				self.show_line(current_line, screen_line, selection_start, selection_end, True)
 				screen_line  += 1
 				current_line += 1
-				if (current_line < count_line and current_line <= maxLine):
+				if (current_line < count_line and current_line <= max_line):
 					self.write("\n\r")
 		else:
 			# Refresh all lines visible
-			while current_line < count_line and current_line <= maxLine:
+			while current_line < count_line and current_line <= max_line:
 				# If the line is in selection or all must be refreshed
-				if lineStart <= current_line <= lineEnd or all_:
+				if line_start <= current_line <= line_end or all_:
 					self.show_line(current_line, screen_line, selection_start, selection_end)
 				screen_line  += 1
 				current_line += 1
+			if line_end > max_line:
+				self.cls_end_screen()
 
 		# If selection present
 		if selection_start is not None:
 			# Save current selection
-			dummy, self.sel_line_start, dummy = selection_start
-			dummy, self.sel_line_end,   dummy   = selection_end
+			_, self.sel_line_start, _ = selection_start
+			_, self.sel_line_end,   _ = selection_end
 
 	def hide_selection(self):
 		""" Hide the selection """
@@ -431,13 +437,13 @@ class View:
 		selection_start, selection_end = self.text.get_selection()
 		if selection_start is not None:
 			# self.is_refresh_all = True
-			lineStart = selection_start[1]
-			if self.sel_line_start < lineStart:
-				lineStart = self.sel_line_start
-			lineEnd = selection_end[1]
-			if self.sel_line_end > lineEnd:
-				lineEnd = self.sel_line_end
-			self.refresh_part = [lineStart, lineEnd]
+			line_start = selection_start[1]
+			if self.sel_line_start < line_start:
+				line_start = self.sel_line_start
+			line_end = selection_end[1]
+			if self.sel_line_end > line_end:
+				line_end = self.sel_line_end
+			self.refresh_part = [line_start, line_end]
 
 	def move_cursor(self, screen_line=None, screen_column=None):
 		""" Move the cursor in the view """
@@ -462,6 +468,10 @@ class View:
 		""" clear the screen """
 		self.write("\x1B[2J")
 		self.move_cursor(0,0)
+
+	def cls_end_screen(self):
+		""" clear the end of screen """
+		self.write("\x1B[0J")
 
 class Text:
 	""" Class which manage the text edition """
@@ -1138,8 +1148,8 @@ class Text:
 		if self.selection_start is not None:
 			self.modified = True
 			selection_start, selection_end = self.get_selection()
-			sel_column_start, sel_line_start, dummy = selection_start
-			sel_column_end,   sel_line_end,   dummy = selection_end
+			sel_column_start, sel_line_start, _ = selection_start
+			sel_column_end,   sel_line_end,   _ = selection_end
 			start = self.lines[sel_line_start][:sel_column_start]
 			end   = self.lines[sel_line_end  ][sel_column_end:]
 			self.lines[sel_line_start] = start + end
@@ -1148,7 +1158,11 @@ class Text:
 					del self.lines[line]
 			self.move_cursor(sel_line_start, sel_column_start)
 			self.hide_selection()
-			self.view.set_refresh_all()
+			if sel_line_end == sel_line_start:
+				self.view.set_refresh_line()
+			else:
+				self.view.set_refresh_bottom(sel_line_start)
+				# self.view.set_refresh_all()
 			return True
 		return False
 
@@ -1690,9 +1704,13 @@ class Editor:
 			self.edit.view.flush()
 			startTime = strings.ticks()
 			try:
-				useful.run(self.filename)
+				error_line = useful.run(self.filename)
 			except KeyboardInterrupt:
-				pass
+				error_line = None
+
+			if error_line is not None:
+				self.edit.text.goto(error_line)
+
 			endTime = strings.ticks()
 			print( "\x1B[7mTime: %d.%03d s Press enter to stop\x1B[m"%((endTime-startTime)/1000, (endTime-startTime)%1000))
 			while 1:
@@ -1742,4 +1760,5 @@ if __name__ == "__main__":
 		filename = sys.argv[1]
 	else:
 		filename = "editor.txt"
+		filename = "teste.py"
 	edit = Editor(filename, read_only=False)

@@ -493,7 +493,7 @@ def cat(file):
 
 def df(mountpoint = None):
 	""" Display free disk space """
-	print(strings.tostrings(info.flashinfo(mountpoint=mountpoint)))
+	print(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))
 
 def gc():
 	""" Garbage collector command """

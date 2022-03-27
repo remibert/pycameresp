@@ -12,7 +12,7 @@ from tools             import lang,info, strings
 @HttpServer.add_route(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=info.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
 	""" Historic motion detection page """
-	await Historic.get_root()
+	Historic.get_root()
 	if len(request.params) == 0:
 		detailled = False
 	else:
