@@ -101,7 +101,7 @@ REPLACE          = ["\x08","\x02"]                       # Replace (^B)
 REPLACE_CURRENT  = ["\x12"]                              # Replace the selection
 EXECUTE          = ["\x1b[15~"]                          # Execute script
 
-SELECTION_BEGIN = b"\x1B[48:5:254m"
+SELECTION_BEGIN = b"\x1B[7m"
 SELECTION_END   = b"\x1B[m"
 class View:
 	""" Class which manage the view of the edit field """

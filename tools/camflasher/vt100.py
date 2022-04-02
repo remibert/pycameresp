@@ -40,10 +40,10 @@ def isascii(char):
 			return True
 	return False
 
-DEFAULT_BACKCOLOR = 0xFFFFFF
-DEFAULT_FORECOLOR = 0x000000
-CURSOR_BACKCOLOR  = 0xAAAAAA
-CURSOR_FORECOLOR  = 0x000000
+DEFAULT_BACKCOLOR = 0xFFFFFFFF
+DEFAULT_FORECOLOR = 0xFF000000
+CURSOR_BACKCOLOR  = 0xFFAAAAAA
+CURSOR_FORECOLOR  = 0xFF000000
 vga_colors = [
 	#     30,       31,       32,       33,       34,       35,       36,       37,
 	#     40,       41,       42,       43,       44,       45,       46,       47,
@@ -359,6 +359,19 @@ class Line:
 			self.htmline = htmlline
 		return self.htmline
 
+	def replace_color(self, backcolor, forecolor):
+		""" Replace the default background color and text color """
+		global DEFAULT_BACKCOLOR, DEFAULT_FORECOLOR
+		# pylint:disable=consider-using-enumerate
+		for i in range(len(self.forecolors)):
+			if self.forecolors[i] == DEFAULT_FORECOLOR:
+				self.forecolors[i] = forecolor
+		for i in range(len(self.backcolors)):
+			if self.backcolors[i] == DEFAULT_BACKCOLOR:
+				self.backcolors[i] = backcolor
+		self.htmline = None
+
+
 class VT100:
 	""" Class which manage the VT100 console """
 	def __init__(self, width = 80, height = 20):
@@ -399,6 +412,18 @@ class VT100:
 		self.cursor_column_saved = None
 		self.cursor_line_saved   = None
 		self.cls()
+
+	def set_color(self, backcolor, forecolor):
+		""" Change the default colors """
+		global DEFAULT_BACKCOLOR, DEFAULT_FORECOLOR
+		for line in self.lines:
+			line.replace_color(backcolor, forecolor)
+
+		DEFAULT_BACKCOLOR = backcolor
+		DEFAULT_FORECOLOR = forecolor
+		self.forecolor = forecolor
+		self.backcolor = backcolor
+		self.modified = True
 
 	def set_size(self, width, height):
 		""" Set the size of console """
@@ -782,7 +807,7 @@ class VT100:
 
 	def to_html(self):
 		""" Get the html content of VT100 """
-		result = ""
+		result = '<body style="background-color:#%08X">'%DEFAULT_BACKCOLOR
 		pos = 0
 		for line in self.lines:
 			if pos == self.cursor_line:
@@ -795,6 +820,7 @@ class VT100:
 				result += text_line + "\n"
 			else:
 				result += text_line + "<br>\n"
+		result += '</body>'
 		self.modified = False
 		return result
 

@@ -104,6 +104,16 @@ class QStdoutVT100:
 			self.output = []
 		return result
 
+	def color_to_int(self, color):
+		""" Convert QtColor into integer """
+		r,g,b,a = color.getRgb()
+		result = a << 24 | r << 16 | g << 8 | b
+		return result
+
+	def set_color(self, backcolor, forecolor):
+		""" Change the default colors """
+		self.vt100.set_color(self.color_to_int(backcolor),self.color_to_int(forecolor))
+
 	def flush(self):
 		""" Flush stdout """
 		# NEVER NEVER REFRESH HERE ELSE IT CRASH.... self.refresh()

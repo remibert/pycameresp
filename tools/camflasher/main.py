@@ -18,13 +18,13 @@ from platform import uname
 try:
 	from PyQt6 import uic
 	from PyQt6.QtCore import QTimer, QEvent, Qt, QSettings
-	from PyQt6.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage
-	from PyQt6.QtGui import QCursor,QAction,QFont
+	from PyQt6.QtWidgets import QFileDialog, QColorDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage
+	from PyQt6.QtGui import QCursor,QAction,QFont,QColor
 except:
 	from PyQt5 import uic
 	from PyQt5.QtCore import QTimer, QEvent, Qt, QSettings
-	from PyQt5.QtWidgets import QFileDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QAction
-	from PyQt5.QtGui import QCursor, QFont
+	from PyQt5.QtWidgets import QFileDialog, QColorDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QAction
+	from PyQt5.QtGui import QCursor, QFont,QColor
 from serial.tools import list_ports
 from flasher import Flasher
 from qstdoutvt100 import QStdoutVT100
@@ -37,12 +37,15 @@ WORKING_DIRECTORY = "camflasher.working_directory"
 WIN_GEOMETRY      = "camflasher.window.geometry"
 FIRMWARE_FILENAME = "camflasher.firmware.filename"
 DEVICE_RTS_DTR    = "camflasher.device.rts_dtr"
+BACKCOLOR         = "camflasher.backcolor"
+FORECOLOR         = "camflasher.forecolor"
 
 class AboutDialog(QDialog):
 	""" Dialog about """
 	def __init__(self, parent):
 		""" Dialog box constructor """
 		QDialog.__init__(self, parent)
+		self.setModal(True)
 		try:
 			self.dialog = uic.loadUi('dialogabout.ui', self)
 		except Exception as err:
@@ -72,6 +75,7 @@ class FlashDialog(QDialog):
 	def __init__(self, parent):
 		""" Dialog box constructor """
 		QDialog.__init__(self, parent)
+		self.setModal(True)
 		try:
 			self.dialog = uic.loadUi('dialogflash.ui', self)
 		except Exception as err:
@@ -115,6 +119,7 @@ class OptionDialog(QDialog):
 	def __init__(self, parent):
 		""" Dialog box constructor """
 		QDialog.__init__(self, parent)
+		self.setModal(True)
 		try:
 			self.dialog = uic.loadUi('dialogoption.ui', self)
 		except Exception as err:
@@ -124,9 +129,30 @@ class OptionDialog(QDialog):
 
 		settings = get_settings()
 		self.dialog.working_directory.setText(settings.value(WORKING_DIRECTORY,"."))
+
 		self.dialog.spin_font_size.setValue(int(settings.value(FONT_SIZE   ,12)))
 		self.dialog.combo_font.setCurrentFont(QFont(settings.value(FONT_FAMILY ,"Courier")))
+		self.backcolor = settings.value(BACKCOLOR,QColor(255,255,255))
+		self.forecolor = settings.value(FORECOLOR,QColor(0,0,0))
+
 		self.dialog.select_directory.clicked.connect(self.on_directory_clicked)
+		self.dialog.button_forecolor.clicked.connect(self.on_forecolor_clicked)
+		self.dialog.button_backcolor.clicked.connect(self.on_backcolor_clicked)
+		self.dialog.combo_font.currentTextChanged.connect(self.on_font_changed)
+		self.spin_font_size.valueChanged.connect(self.on_font_changed)
+		self.refresh_output()
+
+	def refresh_output(self):
+		""" Refresh the output """
+		font_size   = "font-size:%dpx"%(self.dialog.spin_font_size.value())
+		font_family = "font-family:%s"%(self.dialog.combo_font.currentFont().family())
+		backcolor   = "background-color : rgb(%d,%d,%d)"%self.backcolor.getRgb()[:3]
+		forecolor   = "color : rgb(%d,%d,%d)"%self.forecolor.getRgb()[:3]
+		self.label_output.setStyleSheet("QLabel { %s; %s; %s; %s;}"%(font_size, font_family, backcolor, forecolor))
+
+	def on_font_changed(self, event):
+		""" Font family changed """
+		self.refresh_output()
 
 	def on_directory_clicked(self, event):
 		""" Selection of directory button clicked """
@@ -135,6 +161,20 @@ class OptionDialog(QDialog):
 		if directory != '':
 			self.dialog.working_directory.setText(directory)
 
+	def on_forecolor_clicked(self, event):
+		""" Select the forecolor """
+		color = QColorDialog.getColor(parent=self, initial=self.forecolor, title="Text color")
+		if color.isValid():
+			self.forecolor = color
+			self.refresh_output()
+
+	def on_backcolor_clicked(self, event):
+		""" Select the backcolor """
+		color = QColorDialog.getColor(parent=self, initial=self.backcolor, title="Background color")
+		if color.isValid():
+			self.backcolor = color
+			self.refresh_output()
+
 	def accept(self):
 		""" Accept about dialog """
 		font = self.dialog.combo_font.currentFont()
@@ -142,6 +182,8 @@ class OptionDialog(QDialog):
 		settings.setValue(FONT_FAMILY , font.family())
 		settings.setValue(FONT_SIZE   , self.dialog.spin_font_size.value())
 		settings.setValue(WORKING_DIRECTORY, self.dialog.working_directory.text())
+		settings.setValue(FORECOLOR, self.forecolor)
+		settings.setValue(BACKCOLOR, self.backcolor)
 		super().accept()
 
 class Ports:
@@ -362,10 +404,12 @@ class CamFlasher(QMainWindow):
 
 	def resize_console(self):
 		""" Resize console """
+
 		# Save the position
 		settings = get_settings()
 		geometry = self.geometry_.geometry()
 		settings.setValue(WIN_GEOMETRY, geometry)
+		self.console.set_color(settings.value(BACKCOLOR,QColor(255,255,255)),settings.value(FORECOLOR,QColor(0,0,0)))
 
 		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
 		line = "W"*200 + "\n"
@@ -421,8 +465,6 @@ class CamFlasher(QMainWindow):
 
 	def on_port_changed(self, event):
 		""" On port changed event """
-		settings = get_settings()
-		#rts_dtr = eval(settings.value(DEVICE_RTS_DTR,"{}"))
 		rts_dtr = self.ports.get_rts_dtr(self.get_port())
 		self.window.chk_rts_dtr.setChecked(rts_dtr)
 		self.flasher.set_info(port = self.get_port(), rts_dtr=rts_dtr)
