@@ -31,9 +31,17 @@
     <property name="bottomMargin">
      <number>3</number>
     </property>
-   
+    <property name="spacing">
+     <number>0</number>
+    </property>
     <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="spacing">
+       <number>-1</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item>
        <widget class="QLabel" name="label_port">
         <property name="sizePolicy">

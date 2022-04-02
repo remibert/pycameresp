@@ -42,7 +42,7 @@ def isascii(char):
 
 DEFAULT_BACKCOLOR = 0xFFFFFF
 DEFAULT_FORECOLOR = 0x000000
-CURSOR_BACKCOLOR  = 0xDADADA
+CURSOR_BACKCOLOR  = 0xAAAAAA
 CURSOR_FORECOLOR  = 0x000000
 vga_colors = [
 	#     30,       31,       32,       33,       34,       35,       36,       37,

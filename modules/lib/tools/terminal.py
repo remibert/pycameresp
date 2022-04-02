@@ -106,9 +106,8 @@ else:
 	def kbflush(duration=0.5):
 		""" Flush all keys not yet read """
 
-
 screen_size = None
-
+refresh_size = 0
 def refresh_screen_size():
 	""" Refresh the screen size """
 	global screen_size
@@ -137,10 +136,14 @@ def refresh_screen_size():
 	kbflush()
 	return result
 
-def get_screen_size():
+def get_screen_size(force=False):
 	""" Get the VT100 screen size """
-	global screen_size
-	if screen_size is not None:
+	global screen_size, refresh_size
+	refresh_size += 1
+	if refresh_size == 5:
+		force = True
+		refresh_size = 0
+	if screen_size is not None and force is False:
 		return screen_size
 	else:
 		return refresh_screen_size()

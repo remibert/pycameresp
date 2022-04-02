@@ -75,9 +75,9 @@ SELECT_NEXT_WORD = ["\x1b[1;6C","\x1b[1;4C"]
 SELECT_PREV_WORD = ["\x1b[1;6D","\x1b[1;4D"]
 
 # Clipboard shortcuts
-CUT              = ["\x18","\x1bx"]                      # Cut
-COPY             = ["\x03","\x1bc"]                      # Copy
-PASTE            = ["\x16","\x1bv"]                      # Paste
+CUT              = ["\x18","\x1bx","\x0b"]                      # Cut (^K)
+COPY             = ["\x03","\x1bc","\x04"]                      # Copy (^D)
+PASTE            = ["\x16","\x1bv","\x10"]                      # Paste (^P)
 
 # Selection modification shortcut
 INDENT           = ["\t"]                                # Indent
@@ -97,10 +97,12 @@ FIND_PREVIOUS    = ["\x1b[1;2R"]                         # Find previous
 GOTO             = ["\x07"]                              # Goto line
 SAVE             = ["\x13","\x1bs"]                      # Save
 DELETE_LINE      = ["\x0C"]                              # Delete line
-REPLACE          = ["\x08"]                              # Replace
+REPLACE          = ["\x08","\x02"]                       # Replace (^B)
 REPLACE_CURRENT  = ["\x12"]                              # Replace the selection
 EXECUTE          = ["\x1b[15~"]                          # Execute script
-SELECT_COLOR = "\x1B[48:5:253m"
+
+SELECTION_BEGIN = b"\x1B[48:5:254m"
+SELECTION_END   = b"\x1B[m"
 class View:
 	""" Class which manage the view of the edit field """
 	def __init__(self, view_height, view_top):
@@ -124,10 +126,18 @@ class View:
 		self.sel_line_end           = None
 		self.screen_height          = 1
 		self.screen_width           = 1
+		if filesystem.ismicropython():
+			self.write = self.write_byte
+		else:
+			self.write = self.write_string
 
-	def write(self, data):
-		""" Write data to stdout """
+	def write_byte(self, data):
+		""" Write data to stdout in byte (for micropython only) """
 		sys.stdout.write(data)
+
+	def write_string(self, data):
+		""" Write data to stdout """
+		sys.stdout.write(strings.tostrings(data))
 
 	def flush(self):
 		""" Flush text to stdout """
@@ -146,7 +156,7 @@ class View:
 
 	def reset(self):
 		""" Reset VT100 """
-		self.write("\x1B""c")
+		self.write(b"\x1B"+b"c")
 		self.flush()
 
 	def reset_scroll_region(self):
@@ -157,31 +167,31 @@ class View:
 	def set_scrolling_region(self, top_line, bottom_line):
 		""" Define VT100 scroll region """
 		if top_line < bottom_line:
-			self.write("\x1B[%d;%dr"%(top_line+1,bottom_line+1))
+			self.write(b"\x1B[%d;%dr"%(top_line+1,bottom_line+1))
 
 	def scroll_up(self):
 		""" Scroll to up """
 		self.set_scrolling_region(self.top, self.height+1)
-		self.write("\x1B[1S")
+		self.write(b"\x1B[1S")
 
 	def scroll_down(self):
 		""" Scroll to down """
 		self.set_scrolling_region(self.top, self.height+1)
-		self.write("\x1B[1T")
+		self.write(b"\x1B[1T")
 
 	def scroll_part_up(self):
 		""" Scroll the upper part """
 		line, column = self.get_screen_position()
 		if line < self.height:
 			self.set_scrolling_region(line +1, self.height+1)
-			self.write("\x1B[1S")
+			self.write(b"\x1B[1S")
 
 	def scroll_part_down(self):
 		""" Scroll the lower part """
 		line, column = self.get_screen_position()
 		if line < self.height:
 			self.set_scrolling_region(line+1, self.height+1)
-			self.write("\x1B[1T")
+			self.write(b"\x1B[1T")
 		else:
 			self.is_refresh_line_after = True
 
@@ -241,64 +251,71 @@ class View:
 
 	def show_line(self, current_line, screen_line, selection_start, selection_end, quick=False):
 		""" Show one line """
-		if quick:
-			line_to_display = ""
+		if not quick:
+			clear_line = b"\x1B[%d;1f\x1B[K"%(screen_line+1)
 		else:
-			line_to_display = "\x1B[%d;1f\x1B[K"%(screen_line+1)
+			clear_line = b""
 		count_line = self.text.get_count_lines()
 		if current_line < count_line and current_line >= 0:
 			line = self.text.get_tab_line(current_line)
-			partLine = line[self.column:self.column+self.width]
+			part_line = line[self.column:self.column+self.width]
 			# If the line selected
 			if selection_start is not None:
 				# If the line not empty
-				if len(partLine) >= 1:
+				if len(part_line) >= 1:
 					# If the line have carriage return at the end
-					if partLine[-1] == "\n":
+					if part_line[-1] == "\n":
 						# Remove the carriage return
-						partLine = partLine[:-1]
-				if len(partLine) > 0:
+						part_line = part_line[:-1]
+				if len(part_line) > 0:
 					dummy, sel_line_start, sel_column_start = selection_start
 					dummy, sel_line_end,   sel_column_end   = selection_end
-					# If the current line is the end of selection
-					if current_line == sel_line_end:
-						# If the end of selection is outside the visible part
-						if sel_column_end - self.column < 0:
-							sel_column_end = 0
-						else:
-							sel_column_end -= self.column
 
-						# If the start of selection is on the previous lines
-						if sel_line_start < sel_line_end:
-							# Select the start of line
-							partLine = SELECT_COLOR + partLine[:sel_column_end] + "\x1B[m" + partLine[sel_column_end:]
-						else:
-							# Unselect the end of line
-							partLine = partLine[:sel_column_end] + "\x1B[m" + partLine[sel_column_end:]
-					# If the current line is the start of selection
-					if current_line == sel_line_start:
-						# If the start of selection is outside the visible part
-						if sel_column_start - self.column < 0:
-							sel_column_start = 0
-						else:
-							sel_column_start -= self.column
+					# If the end of selection is outside the visible part
+					if sel_column_end - self.column < 0:
+						sel_column_end = 0
+					else:
+						sel_column_end -= self.column
 
-						# If the end of selection is on the next lines
-						if sel_line_start < sel_line_end:
-							# Select the end of line
-							partLine = partLine[:sel_column_start] + SELECT_COLOR + partLine[sel_column_start:] + "\x1B[m"
-						else:
-							# Select the start of line
-							partLine = partLine[:sel_column_start] + SELECT_COLOR + partLine[sel_column_start:]
+					# If the start of selection is outside the visible part
+					if sel_column_start - self.column < 0:
+						sel_column_start = 0
+					else:
+						sel_column_start -= self.column
+
+
+					begin_part    = b""
+					selected_part = b""
+					end_part      = b""
+					selected_start = SELECTION_BEGIN
+					selected_end   = SELECTION_END
+					# If the selection is on alone line
+					if current_line == sel_line_end and current_line == sel_line_start:
+						begin_part    = part_line[:sel_column_start].encode("utf8")
+						selected_part = part_line[sel_column_start:sel_column_end].encode("utf8")
+						end_part      = part_line[sel_column_end:].encode("utf8")
+					# If current line is on the last selection line
+					elif current_line == sel_line_end:
+						selected_part = part_line[:sel_column_end].encode("utf8")
+						end_part      = part_line[sel_column_end:].encode("utf8")
+					# If current line is on the first selection line
+					elif current_line == sel_line_start:
+						begin_part    = part_line[:sel_column_start].encode("utf8")
+						selected_part = part_line[sel_column_start:].encode("utf8")
 					# If the line is completly selected
-					if current_line > sel_line_start and current_line < sel_line_end:
-						# Select all the line
-						partLine = SELECT_COLOR + partLine + "\x1B[m"
+					elif current_line > sel_line_start and current_line < sel_line_end:
+						selected_part = part_line.encode("utf8")
+					# Else the selection is on the entire line
+					else:
+						selected_part = part_line.encode("utf8")
+						selected_start = b""
+						selected_end = b""
+
+					self.write(clear_line+begin_part+selected_start+selected_part+selected_end+end_part)
 				else:
-					partLine = ""
-				self.write(line_to_display + partLine)
+					self.write(clear_line)
 			else:
-				self.write(line_to_display + partLine.rstrip())
+				self.write(clear_line+part_line.encode("utf8").rstrip())
 
 	def refresh_line(self, selection_start, selection_end):
 		""" Refresh line """
@@ -399,14 +416,14 @@ class View:
 		if all_:
 			# Erase the rest of the screen with empty line (used when the text is shorter than the screen)
 			self.move_cursor(screen_line, 0)
-			self.write("\x1B[J")
+			self.write(b"\x1B[J")
 			# Refresh all lines visible
 			while current_line < count_line and current_line <= max_line:
 				self.show_line(current_line, screen_line, selection_start, selection_end, True)
 				screen_line  += 1
 				current_line += 1
 				if (current_line < count_line and current_line <= max_line):
-					self.write("\n\r")
+					self.write(b"\n\r")
 		else:
 			# Refresh all lines visible
 			while current_line < count_line and current_line <= max_line:
@@ -447,17 +464,13 @@ class View:
 
 	def move_cursor(self, screen_line=None, screen_column=None):
 		""" Move the cursor in the view """
-		self.write(self.get_move_cursor(screen_line, screen_column))
-
-	def get_move_cursor(self, screen_line=None, screen_column=None):
-		""" Move the cursor in the view """
 		if screen_line is None and screen_column is None:
 			screen_line, screen_column = self.get_screen_position()
-		return "\x1B[%d;%df"%(screen_line+1,screen_column+1)
+		self.write(b"\x1B[%d;%df"%(screen_line+1, screen_column+1))
 
 	def get_screen_size(self):
 		""" Get the screen size """
-		height, width = terminal.get_screen_size()
+		height, width = terminal.get_screen_size(True)
 		self.screen_height = height
 		self.screen_width = width
 		self.height = height-self.top-1
@@ -466,12 +479,12 @@ class View:
 
 	def cls(self):
 		""" clear the screen """
-		self.write("\x1B[2J")
+		self.write(b"\x1B[2J")
 		self.move_cursor(0,0)
 
 	def cls_end_screen(self):
 		""" clear the end of screen """
-		self.write("\x1B[0J")
+		self.write(b"\x1B[0J")
 
 class Text:
 	""" Class which manage the text edition """
@@ -490,6 +503,9 @@ class Text:
 		self.selection_end   = None
 		self.selection = []
 		self.filename = None
+		self.MOVE_KEYS = UP+DOWN+LEFT+RIGHT+HOME+END+PAGE_UP+PAGE_DOWN+TOP+BOTTOM+NEXT_WORD+PREVIOUS_WORD
+		self.SELECT_KEYS = SELECT_UP+SELECT_DOWN+SELECT_RIGHT+SELECT_LEFT+SELECT_HOME+SELECT_END+SELECT_TOP+SELECT_BOTTOM+SELECT_PAGE_UP+SELECT_PAGE_DOWN+SELECT_ALL+SELECT_NEXT_WORD+SELECT_PREV_WORD
+		self.NOT_READ_ONLY_KEYS = COPY+CUT+PASTE+INDENT+UNINDENT+CHANGE_CASE+COMMENT+BACKSPACE+DELETE+NEW_LINE+DELETE_LINE
 
 	def set_view(self, view):
 		""" Define the view attached to the text """
@@ -513,7 +529,7 @@ class Text:
 		if "\t" in line:
 			tab_cursor_column   = 0
 			column = 0
-			lenLine = len(line)
+			len_line = len(line)
 			while column < cursor_column:
 				if line[column] == "\t":
 					pos = tab_cursor_column%self.tab_size
@@ -524,7 +540,7 @@ class Text:
 					if tab > 0:
 						partSize = tab - column
 					else:
-						partSize = lenLine - column
+						partSize = len_line - column
 					if column + partSize > cursor_column:
 						partSize = cursor_column - column
 					tab_cursor_column += partSize
@@ -539,9 +555,9 @@ class Text:
 		if "\t" in line:
 			tabLine = ""
 			tab_cursor_column   = 0
-			lenLine = len(line)
+			len_line = len(line)
 			column = 0
-			while column < lenLine:
+			while column < len_line:
 				char = line[column]
 				if char == "\t":
 					pos = tab_cursor_column%self.tab_size
@@ -592,9 +608,9 @@ class Text:
 		line = self.lines[self.cursor_line]
 		column = 0
 		tab_cursor_column = 0
-		lenLine = len(line)
+		len_line = len(line)
 		column = 0
-		while column < lenLine:
+		while column < len_line:
 			char = line[column]
 			# If the previous position found exactly in the current line
 			if tab_cursor_column == self.tab_cursor_column:
@@ -694,14 +710,17 @@ class Text:
 			previousLine = self.cursor_line
 			self.cursor_line += moveLine
 			if len(self.lines) - 1 == self.cursor_line:
-				lenLine = len(self.lines[self.cursor_line])
+				len_line = len(self.lines[self.cursor_line])
 			else:
-				lenLine = len(self.lines[self.cursor_line])-1
+				len_line = len(self.lines[self.cursor_line])-1
 
 			self.set_cursor_column()
 			# If the new cursor position is outside the last line of text
-			if self.cursor_column > lenLine:
-				self.cursor_column = lenLine
+			if self.cursor_column > len_line:
+				self.cursor_column = len_line
+			if len(self.lines)-1 == self.cursor_line:
+				if self.cursor_column >= len(self.lines[-1]):
+					self.cursor_column = len(self.lines[-1])-1
 
 		if self.selection_start is not None:
 			self.selection_end = [self.cursor_column, self.cursor_line,self.get_tab_cursor(self.cursor_line)]
@@ -1162,13 +1181,13 @@ class Text:
 				self.view.set_refresh_line()
 			else:
 				self.view.set_refresh_bottom(sel_line_start)
-				# self.view.set_refresh_all()
 			return True
 		return False
 
 	def paste_clipboard(self, selection):
 		""" Paste clipboard at the cursor position """
-		if selection != []:
+		if selection != [] and selection != [""]:
+			start_line = self.cursor_line
 			# Split the line with insertion
 			start = self.lines[self.cursor_line][:self.cursor_column]
 			end   = self.lines[self.cursor_line][self.cursor_column:]
@@ -1185,7 +1204,7 @@ class Text:
 
 			# If the last line of clipboard is not empty
 			if len(selection[-1]) >= 1:
-				# If the last line of clipboard contains new line
+				# If the last line of clipboard contains carriage return at the end
 				if selection[-1][-1] == "\n":
 					if len(selection) > 1:
 						# Add the new line
@@ -1195,15 +1214,25 @@ class Text:
 					# Add the part after the insertion
 					self.lines.insert(self.cursor_line, end)
 					self.cursor_column = 0
+					if len(selection) >= self.view.height:
+						self.view.set_refresh_all()
+					else:
+						self.view.set_refresh_bottom(start_line)
 				else:
+					# If many lines with last line without carriage return at the end
 					if len(selection) > 1:
 						self.lines.insert(self.cursor_line, selection[-1] + end)
 						self.cursor_column = len(selection[-1])
+						if len(selection) >= self.view.height:
+							self.view.set_refresh_all()
+						else:
+							self.view.set_refresh_bottom(start_line)
 					else:
+						# Only one line without carriage return
 						self.cursor_line -= 1
 						self.lines[self.cursor_line] += end
 						self.cursor_column = len(start) + len(selection[-1])
-
+						self.view.set_refresh_line()
 			self.move_cursor(self.cursor_line, self.cursor_column)
 
 	def move_cursor(self, line, column):
@@ -1228,7 +1257,6 @@ class Text:
 		self.modified = True
 		self.remove_selection()
 		self.paste_clipboard(self.selection)
-		self.view.set_refresh_all()
 		self.hide_selection()
 
 	def change_case(self):
@@ -1467,49 +1495,52 @@ class Text:
 		""" Treat keys """
 		if self.treat_char(keys) is False:
 			# Move in the edit field
-			if   keys[0] in UP  :            self.arrow_up(keys)
-			elif keys[0] in DOWN:            self.arrow_down(keys)
-			elif keys[0] in LEFT:            self.arrow_left(keys)
-			elif keys[0] in RIGHT:           self.arrow_right(keys)
-			elif keys[0] in HOME:            self.home()
-			elif keys[0] in END:             self.end()
-			elif keys[0] in PAGE_UP:         self.page_up(keys)
-			elif keys[0] in PAGE_DOWN:       self.page_down(keys)
-			elif keys[0] in TOP:             self.top()
-			elif keys[0] in BOTTOM:          self.bottom()
-			elif keys[0] in NEXT_WORD:       self.next_word()
-			elif keys[0] in PREVIOUS_WORD:   self.previous_word()
-			# Selection the edit field
-			elif keys[0] in SELECT_UP:       self.select_up(keys)
-			elif keys[0] in SELECT_DOWN:     self.select_down(keys)
-			elif keys[0] in SELECT_RIGHT:    self.select_right(keys)
-			elif keys[0] in SELECT_LEFT:     self.select_left(keys)
-			elif keys[0] in SELECT_HOME:     self.select_home()
-			elif keys[0] in SELECT_END:      self.select_end()
-			elif keys[0] in SELECT_TOP:      self.select_top()
-			elif keys[0] in SELECT_BOTTOM:   self.select_bottom()
-			elif keys[0] in SELECT_PAGE_UP:  self.select_page_up(keys)
-			elif keys[0] in SELECT_PAGE_DOWN:self.select_page_down(keys)
-			elif keys[0] in SELECT_ALL:      self.select_all()
-			elif keys[0] in SELECT_NEXT_WORD:self.select_next_word()
-			elif keys[0] in SELECT_PREV_WORD:self.select_previous_word()
+			if keys[0] in self.MOVE_KEYS:
+				if   keys[0] in UP  :            self.arrow_up(keys)
+				elif keys[0] in DOWN:            self.arrow_down(keys)
+				elif keys[0] in LEFT:            self.arrow_left(keys)
+				elif keys[0] in RIGHT:           self.arrow_right(keys)
+				elif keys[0] in HOME:            self.home()
+				elif keys[0] in END:             self.end()
+				elif keys[0] in PAGE_UP:         self.page_up(keys)
+				elif keys[0] in PAGE_DOWN:       self.page_down(keys)
+				elif keys[0] in TOP:             self.top()
+				elif keys[0] in BOTTOM:          self.bottom()
+				elif keys[0] in NEXT_WORD:       self.next_word()
+				elif keys[0] in PREVIOUS_WORD:   self.previous_word()
+			elif keys[0] in self.SELECT_KEYS:
+				# Selection the edit field
+				if   keys[0] in SELECT_UP:       self.select_up(keys)
+				elif keys[0] in SELECT_DOWN:     self.select_down(keys)
+				elif keys[0] in SELECT_RIGHT:    self.select_right(keys)
+				elif keys[0] in SELECT_LEFT:     self.select_left(keys)
+				elif keys[0] in SELECT_HOME:     self.select_home()
+				elif keys[0] in SELECT_END:      self.select_end()
+				elif keys[0] in SELECT_TOP:      self.select_top()
+				elif keys[0] in SELECT_BOTTOM:   self.select_bottom()
+				elif keys[0] in SELECT_PAGE_UP:  self.select_page_up(keys)
+				elif keys[0] in SELECT_PAGE_DOWN:self.select_page_down(keys)
+				elif keys[0] in SELECT_ALL:      self.select_all()
+				elif keys[0] in SELECT_NEXT_WORD:self.select_next_word()
+				elif keys[0] in SELECT_PREV_WORD:self.select_previous_word()
 
 			# If the edit is not in read only
 			elif self.read_only is False:
-				# Modification in the edit field
-				if   keys[0] in COPY:            self.copy()
-				elif keys[0] in CUT:             self.cut()
-				elif keys[0] in PASTE:           self.paste()
+				if keys[0] in self.NOT_READ_ONLY_KEYS:
+					# Modification in the edit field
+					if   keys[0] in COPY:            self.copy()
+					elif keys[0] in CUT:             self.cut()
+					elif keys[0] in PASTE:           self.paste()
 
-				elif keys[0] in INDENT:          self.indent(keys)
-				elif keys[0] in UNINDENT:        self.unindent(keys)
-				elif keys[0] in CHANGE_CASE:     self.change_case()
-				elif keys[0] in COMMENT:         self.comment()
+					elif keys[0] in INDENT:          self.indent(keys)
+					elif keys[0] in UNINDENT:        self.unindent(keys)
+					elif keys[0] in CHANGE_CASE:     self.change_case()
+					elif keys[0] in COMMENT:         self.comment()
 
-				elif keys[0] in BACKSPACE:       self.backspace()
-				elif keys[0] in DELETE:          self.delete()
-				elif keys[0] in NEW_LINE:        self.new_line()
-				elif keys[0] in DELETE_LINE:     self.delete_line()
+					elif keys[0] in BACKSPACE:       self.backspace()
+					elif keys[0] in DELETE:          self.delete()
+					elif keys[0] in NEW_LINE:        self.new_line()
+					elif keys[0] in DELETE_LINE:     self.delete_line()
 			# else: self.add_char(keys)
 
 class Edit:
@@ -1603,14 +1634,17 @@ class Editor:
 		else:
 			self.loop = False
 
-	def input(self, text, help_=""):
+	def input(self, text, help_=None):
 		""" Input value, used to get a line number, or text searched """
-		edit_ = Edit(view_top=2, view_height=1, read_only=False)
+		edit_ = Edit(view_top=4, view_height=1, read_only=False)
 		edit_.view.cls()
-		edit_.view.move_cursor(1,0)
+		edit_.view.move_cursor(3,0)
 		edit_.view.write(text)
-		edit_.view.move_cursor(4,0)
-		edit_.view.write(help_)
+		edit_.view.move_cursor(1,0)
+		if help_ is not None:
+			for item in help_:
+				key, text = item
+				edit_.view.write("\x1B[7m%s\x1B[m:%s \t"%(key, text))
 		result = None
 		while 1:
 			edit_.view.refresh()
@@ -1626,16 +1660,16 @@ class Editor:
 
 	def find(self):
 		""" Find a text """
-		self.find_text = self.input("Find :","\x1B[7mEsc\x1B[m:Abort  \x1B[7m^Left\x1B[m,\x1B[7m^Up\x1B[m:Previous  \x1B[7m^Down\x1B[m,\x1B[7m^Right\x1B[m:Next")
+		self.find_text = self.input("Find :",[("Esc","Abort"),("Shift-F3","Previous"),("F3","Next")])
 		self.find_next()
 		self.edit.view.set_refresh_all()
 		self.is_refresh_header = True
 
 	def replace(self):
 		""" Replace a text """
-		self.find_text    = self.input("Find to replace :","\x1B[7mEsc\x1B[m:Abort")
+		self.find_text    = self.input("Find to replace :",[("Esc","Abort")])
 		if self.find_text:
-			self.replace_text = self.input("Replace with :","\x1B[7mEsc\x1B[m:Abort  \x1B[7m^Left\x1B[m,\x1B[7m^Up\x1B[m:Previous  \x1B[7m^Down\x1B[m,\x1B[7m^Right\x1B[m:Next  \x1B[7m^R\x1B[m:Replace")
+			self.replace_text = self.input("Replace with :",[("Esc","Abort"),("Shift-F3","Previous"),("F3","Next"),("^R","Replace")])
 			self.find_next()
 
 		self.edit.view.set_refresh_all()
@@ -1659,7 +1693,7 @@ class Editor:
 
 	def goto(self):
 		""" Goto line """
-		lineNumber = self.input("Goto line :","\x1B[7mEsc\x1B[m:Abort")
+		lineNumber = self.input("Goto line :",[("Esc","Abort")])
 		try:
 			lineNumber = int(lineNumber)
 			self.edit.text.goto(int(lineNumber))
@@ -1731,22 +1765,24 @@ class Editor:
 		self.edit.view.cls()
 		self.edit.view.get_screen_size()
 		self.loop = True
+		self.EDIT_KEYS = TOGGLE_MODE+FIND+REPLACE+FIND_PREVIOUS+FIND_NEXT+REPLACE_CURRENT+EXIT+GOTO+SAVE+EXECUTE
 		while(self.loop):
 			try:
 				self.refresh()
 				keys = self.get_key()
 				modified = self.edit.text.modified
 				if ord(keys[0][0]) < 0x20:
-					if   keys[0] in TOGGLE_MODE:    self.toggle_mode()
-					elif keys[0] in FIND:           self.find()
-					elif keys[0] in REPLACE:        self.replace()
-					elif keys[0] in FIND_PREVIOUS:  self.find_previous()
-					elif keys[0] in FIND_NEXT:      self.find_next()
-					elif keys[0] in REPLACE_CURRENT:self.replace_current()
-					elif keys[0] in EXIT:           self.exit()
-					elif keys[0] in GOTO:           self.goto()
-					elif keys[0] in SAVE:           self.save()
-					elif keys[0] in EXECUTE:        self.execute()
+					if keys[0] in self.EDIT_KEYS:
+						if   keys[0] in TOGGLE_MODE:    self.toggle_mode()
+						elif keys[0] in FIND:           self.find()
+						elif keys[0] in REPLACE:        self.replace()
+						elif keys[0] in FIND_PREVIOUS:  self.find_previous()
+						elif keys[0] in FIND_NEXT:      self.find_next()
+						elif keys[0] in REPLACE_CURRENT:self.replace_current()
+						elif keys[0] in EXIT:           self.exit()
+						elif keys[0] in GOTO:           self.goto()
+						elif keys[0] in SAVE:           self.save()
+						elif keys[0] in EXECUTE:        self.execute()
 				self.edit.text.treat_key(keys)
 				if modified != self.edit.text.modified:
 					self.is_refresh_header = True

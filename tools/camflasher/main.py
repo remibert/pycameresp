@@ -36,6 +36,7 @@ FONT_SIZE         = "camflasher.font.size"
 WORKING_DIRECTORY = "camflasher.working_directory"
 WIN_GEOMETRY      = "camflasher.window.geometry"
 FIRMWARE_FILENAME = "camflasher.firmware.filename"
+DEVICE_RTS_DTR    = "camflasher.device.rts_dtr"
 
 class AboutDialog(QDialog):
 	""" Dialog about """
@@ -143,6 +144,72 @@ class OptionDialog(QDialog):
 		settings.setValue(WORKING_DIRECTORY, self.dialog.working_directory.text())
 		super().accept()
 
+class Ports:
+	""" List of all serial ports """
+	def __init__(self):
+		""" Constructor """
+		self.rts_dtr = {}
+		self.status = {}
+		self.settings = get_settings()
+		self.rts_dtr = self.settings.value(DEVICE_RTS_DTR,{})
+		for key in self.rts_dtr.keys():
+			self.status[key] = False
+
+	def update(self, detected_ports):
+		""" Update ports with detected connected port """
+		result = False
+		connected = []
+
+		# For all ports connected
+		for detected_port in sorted(detected_ports):
+			# If current port is usb
+			if detected_port.hwid != "n/a" and detected_port.vid is not None:
+				key = (detected_port.device, detected_port.vid, detected_port.pid)
+				if key in self.status:
+					connected.append(detected_port.device)
+					if self.status[key] is False:
+						self.status[key] = True
+						result = True
+				else:
+					# Create new port
+					self.status[key] = True
+					self.rts_dtr[key] = False
+					self.settings.setValue(DEVICE_RTS_DTR,self.rts_dtr)
+					connected.append(detected_port.device)
+					result = True
+
+		# For all ports already registered
+		for key in self.status:
+			# For all ports connected
+			for detected_port in sorted(detected_ports):
+				# If port is yet connected
+				if key[0] == detected_port.device and key[1] == detected_port.vid and key[2] == detected_port.pid:
+					break
+			else:
+				# The port is disconnected
+				self.status[key] = False
+				result = True
+		if result is True:
+			return connected
+		return None
+
+	def get_rts_dtr(self, name):
+		""" Get the value of rts dtr for the selected port """
+		result = False
+		for key in self.rts_dtr:
+			if name == key[0]:
+				result = self.rts_dtr[key]
+				break
+		return result
+
+	def set_rts_dtr(self, name, value):
+		""" Set the value of rts dtr for the selected port """
+		for key in self.rts_dtr:
+			if name == key[0]:
+				self.rts_dtr[key] = value
+				self.settings.setValue(DEVICE_RTS_DTR,self.rts_dtr)
+				break
+
 class CamFlasher(QMainWindow):
 	""" Tools to flash the firmware of pycameresp """
 	def __init__(self):
@@ -209,7 +276,8 @@ class CamFlasher(QMainWindow):
 		self.window.action_flash.triggered.connect(self.on_flash_clicked)
 		self.window.action_about.triggered.connect(self.on_about_clicked)
 		self.window.action_option.triggered.connect(self.on_option_clicked)
-		self.window.chk_rts_dtr.stateChanged.connect(self.on_port_changed)
+		self.window.chk_rts_dtr.stateChanged.connect(self.on_rts_dtr_changed)
+		self.ports = Ports()
 
 	def update_font(self):
 		""" Update console font """
@@ -332,38 +400,32 @@ class CamFlasher(QMainWindow):
 	def on_refresh_port(self):
 		""" Refresh the combobox content with the serial ports detected """
 		# self.console.test()
-		ports = []
-		for port in sorted(list_ports.comports()):
-			if port.hwid != "n/a" and port.vid is not None:
-				ports.append(port)
-
-		# If the list of serial port changed
-		if self.serial_ports != ports:
-			self.serial_ports = ports
-
-			ports_connected = []
-			for port in self.serial_ports:
-				#print(port.name, port.hwid)
-				ports_connected.append(port.device)
-
+		ports_connected = self.ports.update(list_ports.comports())
+		if ports_connected is not None:
 			for i in range(self.window.combo_port.count()):
 				if not self.window.combo_port.itemText(i) in ports_connected:
 					self.window.combo_port.removeItem(i)
 
-			for port in ports:
+			for port in ports_connected:
 				for i in range(self.window.combo_port.count()):
-					if self.window.combo_port.itemText(i) == port.device:
+					if self.window.combo_port.itemText(i) == port:
 						break
 				else:
-					self.window.combo_port.addItem(port.device)
+					self.window.combo_port.addItem(port)
 
 	def on_rts_dtr_changed(self, event):
 		""" On change of DTR/STR check box """
-		self.flasher.set_info(port = self.get_port(), rts_dtr=self.window.chk_rts_dtr.isChecked())
+		rts_dtr = self.window.chk_rts_dtr.isChecked()
+		self.ports.set_rts_dtr(self.get_port(), rts_dtr)
+		self.flasher.set_info(port = self.get_port(), rts_dtr=rts_dtr)
 
 	def on_port_changed(self, event):
 		""" On port changed event """
-		self.flasher.set_info(port = self.get_port(), rts_dtr=self.window.chk_rts_dtr.isChecked())
+		settings = get_settings()
+		#rts_dtr = eval(settings.value(DEVICE_RTS_DTR,"{}"))
+		rts_dtr = self.ports.get_rts_dtr(self.get_port())
+		self.window.chk_rts_dtr.setChecked(rts_dtr)
+		self.flasher.set_info(port = self.get_port(), rts_dtr=rts_dtr)
 
 	def on_flash_clicked(self, event):
 		""" Flash of firmware button clicked """

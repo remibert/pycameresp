@@ -1268,6 +1268,8 @@ const mp_obj_type_t Motion_type =
 	.locals_dict = (mp_obj_t)&Motion_locals_dict,
 };
 
+#ifdef CONFIG_ESP32CAM
+
 
 // Methods
 STATIC const mp_rom_map_elem_t configure_locals_dict_table[] = 
@@ -1284,7 +1286,7 @@ const mp_obj_type_t configure_type =
 	.make_new    = configure_make_new,
 	.locals_dict = (mp_obj_t)&configure_locals_dict,
 };
-
+#endif
 
 STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR___name__           ), MP_ROM_QSTR(MP_QSTR_camera) },
@@ -1355,9 +1357,9 @@ STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RAW      ), MP_ROM_INT(PIXFORMAT_RAW      )}, // RAW
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RGB444   ), MP_ROM_INT(PIXFORMAT_RGB444   )}, // 3BP2P/RGB444
 	{ MP_ROM_QSTR(MP_QSTR_PIXFORMAT_RGB555   ), MP_ROM_INT(PIXFORMAT_RGB555   )}, // 3BP2P/RGB555
+	{ MP_ROM_QSTR(MP_QSTR_configure          ), MP_ROM_PTR(&configure_type) },
 #endif
 	{ MP_ROM_QSTR(MP_QSTR_Motion             ), MP_ROM_PTR(&Motion_type) },
-	{ MP_ROM_QSTR(MP_QSTR_configure          ), MP_ROM_PTR(&configure_type) },
 };
 STATIC MP_DEFINE_CONST_DICT(camera_module_globals, camera_module_globals_table);
 

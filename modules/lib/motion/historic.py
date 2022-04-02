@@ -5,7 +5,7 @@ import re
 import json
 import uasyncio
 import uos
-from tools import logger,sdcard,tasking,filesystem,strings
+from tools import logger,sdcard,tasking,filesystem,strings,info
 
 MAX_DISPLAYED = 100
 MAX_REMOVED   = 100
@@ -143,6 +143,7 @@ class Historic:
 				# Build historic file
 				files = await Historic.build(motions)
 				logger.syslog("End   historic creation")
+				logger.syslog(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False)))
 			except Exception as err:
 				logger.syslog(err)
 
@@ -218,12 +219,11 @@ class Historic:
 		Historic.motion_in_progress[0] = state
 
 	@staticmethod
-	async def remove_files(directory, simulate=False):
+	async def remove_files(directory, simulate=False, force=False):
 		""" Remove all files in the directory """
 		import shell
-		notEmpty = False
+		dir_not_empty = False
 		force = True
-		counter = 0
 		if filesystem.exists(directory):
 			# Parse all directories in sdcard
 			for fileinfo in uos.ilistdir(directory):
@@ -233,13 +233,16 @@ class Historic:
 				if typ & 0xF000 != 0x4000:
 					shell.rmfile(directory + "/" + filename, simulate=simulate, force=force)
 				else:
-					await Historic.remove_files(directory + "/" + filename)
+					await Historic.remove_files(directory + "/" + filename, simulate=simulate, force=force)
 
 					# Force the parsing of historic
 					Historic.first_extract[0] = False
-					notEmpty = True
+					dir_not_empty = True
 
-			if notEmpty:
+				if Historic.is_not_enough_space(low=False) is False:
+					break
+
+			if dir_not_empty:
 				shell.rm(directory, recursive=True, simulate=simulate, force=force)
 			else:
 				shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
@@ -247,13 +250,24 @@ class Historic:
 			print("Directory not existing '%s'"%directory)
 
 	@staticmethod
-	def is_not_enough_space():
+	def is_not_enough_space(low):
 		""" Indicates if remaining space is not sufficient """
 		free = sdcard.SdCard.get_free_size()
 		total = sdcard.SdCard.get_max_size()
+		if low:
+			if sdcard.SdCard.is_available():
+				threshold = 5
+			else:
+				threshold = 5
+		else:
+			if sdcard.SdCard.is_available():
+				threshold = 8
+			else:
+				threshold = 25
+
 		if free < 0 or total < 0:
-			return False
-		return ((free * 100 // total) <= 5)
+			return True
+		return ((free * 100 // total) <= threshold)
 
 	@staticmethod
 	async def remove_older(force=False):
@@ -261,7 +275,7 @@ class Historic:
 		root = Historic.get_root()
 		if root:
 			# If not enough space available on sdcard
-			if Historic.is_not_enough_space() or force:
+			if Historic.is_not_enough_space(low=True) or force:
 				logger.syslog("Start cleanup sd card")
 				olders = await Historic.scan_directories(MAX_REMOVED, True)
 				previous = ""
@@ -270,23 +284,27 @@ class Historic:
 						await Historic.acquire()
 						directory = filesystem.split(motion)[0]
 						if previous != directory:
-							await Historic.remove_files(directory)
+							await Historic.remove_files(directory, simulate=False, force=force)
 							previous = directory
 					except Exception as err:
 						logger.syslog(err)
 					finally:
 						await Historic.release()
-					if Historic.is_not_enough_space() is False:
-						print("Now enough space")
+					if Historic.is_not_enough_space(low=False) is False:
+						logger.syslog("Sd card has enough space")
 						break
 				logger.syslog("End cleanup sd card")
+				logger.syslog(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False)))
 
 	@staticmethod
 	async def periodic():
 		""" Internal periodic task """
 		from server.server import Server
 		if filesystem.ismicropython():
-			await Server.wait_resume(307)
+			if sdcard.SdCard.is_available():
+				await Server.wait_resume(307)
+			else:
+				await Server.wait_resume(71)
 		else:
 			await Server.wait_resume(7)
 		if Historic.motion_in_progress[0] is False:
