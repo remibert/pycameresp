@@ -169,6 +169,7 @@ class Line:
 		self.reverses   = []
 		self.htmline    = None
 		self.cursor     = None
+		self.cursor_on  = False
 		self.clear_line()
 
 	def resize(self, width):
@@ -252,10 +253,11 @@ class Line:
 		""" Get the content of line"""
 		return self.line
 
-	def to_html(self, cursor=None):
+	def to_html(self, cursor=None, cursor_on=False):
 		""" Export line to html with color and reverse video """
-		if self.htmline is None or cursor != self.cursor:
+		if self.htmline is None or cursor != self.cursor or cursor_on != self.cursor_on:
 			self.cursor = cursor
+			self.cursor_on = cursor_on
 			previous_forecolor = None
 			previous_backcolor = None
 			previous_reverse = None
@@ -287,7 +289,6 @@ class Line:
 					length = stripped_length
 			else:
 				length = len(self.line)
-
 
 			cursor_set = False
 			# For all character in the line
@@ -329,7 +330,10 @@ class Line:
 
 				# If cursor on this character
 				if cursor == i:
-					part = '<span style="color:#%06X;background-color:#%06X">'%(CURSOR_FORECOLOR,CURSOR_BACKCOLOR)
+					if cursor_on:
+						part = '<span style="color:#%06X;background-color:#%06X;">'%(CURSOR_FORECOLOR,CURSOR_BACKCOLOR)
+					else:
+						part = '<span style="color:#%06X;background-color:#%06X">'%(fore,back)
 					if i > 0:
 						part = '</span>' + part
 					cursor_set = True
@@ -388,6 +392,8 @@ class VT100:
 
 		self.cursor_line         = 0
 		self.cursor_column       = 0
+		self.previous_line       = -1
+		self.previous_column     = -1
 		self.cursor_column_saved = None
 		self.cursor_line_saved   = None
 
@@ -398,6 +404,7 @@ class VT100:
 		self.cls()
 		self.test_number = 0
 		self.output              = None
+		self.cursor_on           = False
 
 	def reset(self):
 		""" Reset to initial state """
@@ -499,6 +506,16 @@ class VT100:
 	def set_modified(self):
 		""" Force the modification of console """
 		self.modified = True
+
+	def blink_cursor(self):
+		""" Reverse the color of cursor """
+		self.modified = True
+		if self.previous_line != self.cursor_line or self.previous_column != self.cursor_column:
+			self.cursor_on = True
+			self.previous_column = self.cursor_column
+			self.previous_line   = self.cursor_line
+		else:
+			self.cursor_on = not self.cursor_on
 
 	def treat_char(self, char):
 		""" Treat character entered """
@@ -803,6 +820,10 @@ class VT100:
 				self.parse_reset         (escape)
 				self.parse_device_attribut(escape)
 				self.escape = None
+
+		if self.previous_line != self.cursor_line or self.previous_column != self.cursor_column:
+			self.cursor_on = True
+
 		return self.output
 
 	def to_html(self):
@@ -812,10 +833,12 @@ class VT100:
 		for line in self.lines:
 			if pos == self.cursor_line:
 				cursor = self.cursor_column
+				cursor_on = self.cursor_on
 			else:
 				cursor = None
+				cursor_on = None
 			pos += 1
-			text_line = line.to_html(cursor)
+			text_line = line.to_html(cursor, cursor_on)
 			if pos == self.height:
 				result += text_line + "\n"
 			else:

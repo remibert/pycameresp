@@ -13,6 +13,7 @@ else
 	export ROOT=`pwd`/firmware
 fi
 
+export PYCAMERESP_PATH=`pwd`
 export ESPIDF=$ROOT/esp-idf
 export IDF_PATH=$ROOT/esp-idf
 
@@ -65,3 +66,4 @@ echo "**************"
 make BOARD=$BOARD
 cd $ROOT
 cp $ROOT/micropython/ports/esp32/build-$BOARD/firmware.bin $BOARD-firmware.bin
+python3 "$PYCAMERESP_PATH/scripts/zip_mpy.py" $ROOT $BOARD

@@ -3,9 +3,9 @@ import sys
 from threading import Lock
 from vt100 import VT100
 try:
-	from PyQt6.QtCore import Qt
+	from PyQt6.QtCore import Qt,QTimer
 except:
-	from PyQt5.QtCore import Qt
+	from PyQt5.QtCore import Qt,QTimer
 
 # Main keys
 main_keys = {
@@ -57,6 +57,9 @@ class QStdoutVT100:
 		self.output = []
 		self.can_test = False
 		self.stdout = sys.stdout
+		self.cursor_timer = QTimer(active=True, interval=300)
+		self.cursor_timer.timeout.connect(self.on_refresh_cursor)
+		self.cursor_timer.start()
 		sys.stdout = self
 
 	def __del__(self):
@@ -71,6 +74,10 @@ class QStdoutVT100:
 		""" Unitary test """
 		if self.can_test:
 			self.vt100.test()
+
+	def on_refresh_cursor(self):
+		""" Refresh blinking cursor """
+		self.vt100.blink_cursor()
 
 	def write(self, string):
 		""" Write on stdout """
