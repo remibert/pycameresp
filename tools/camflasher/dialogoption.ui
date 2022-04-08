@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>513</width>
-    <height>285</height>
+    <width>633</width>
+    <height>411</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -56,10 +56,17 @@
    </item>
    <item row="2" column="0">
     <widget class="QGroupBox" name="groupBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="font">
       <font>
        <weight>50</weight>
        <bold>false</bold>
+       <underline>false</underline>
       </font>
      </property>
      <property name="contextMenuPolicy">
@@ -75,81 +82,180 @@
       <bool>false</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+       <number>5</number>
+      </property>
+      <property name="topMargin">
+       <number>5</number>
+      </property>
+      <property name="rightMargin">
+       <number>5</number>
+      </property>
+      <property name="bottomMargin">
+       <number>5</number>
+      </property>
       <item row="0" column="0">
-       <widget class="QLabel" name="label_console_font">
+       <widget class="QLabel" name="label_text">
         <property name="text">
-         <string>Font</string>
+         <string>Text</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="2" rowspan="4">
-       <widget class="QLabel" name="label_output">
-        <property name="frameShape">
-         <enum>QFrame::Box</enum>
+      <item row="0" column="2" rowspan="8">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
         </property>
+        <item>
+         <widget class="QTextBrowser" name="label_output">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::Box</enum>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="reset_color">
+          <property name="text">
+           <string>Reset</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QFontComboBox" name="combo_font">
+          <property name="toolTip">
+           <string>Select font family for the output console</string>
+          </property>
+          <property name="editable">
+           <bool>false</bool>
+          </property>
+          <property name="fontFilters">
+           <set>QFontComboBox::MonospacedFonts</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="spin_font_size">
+          <property name="toolTip">
+           <string>Select the font size for the output console</string>
+          </property>
+          <property name="minimum">
+           <number>7</number>
+          </property>
+          <property name="maximum">
+           <number>50</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QPushButton" name="button_backcolor">
+          <property name="toolTip">
+           <string>Select the default background color for the output console</string>
+          </property>
+          <property name="text">
+           <string>Back color</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="button_forecolor">
+          <property name="toolTip">
+           <string>Select the default text color for the output console</string>
+          </property>
+          <property name="text">
+           <string>Text color</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_cursor">
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;def function(self):&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;for j in range(10):&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;print(j)&lt;br&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Cursor</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QFontComboBox" name="combo_font">
-        <property name="toolTip">
-         <string>Select font family for the output console</string>
-        </property>
-        <property name="editable">
-         <bool>false</bool>
-        </property>
-        <property name="fontFilters">
-         <set>QFontComboBox::MonospacedFonts</set>
-        </property>
-       </widget>
+      <item row="4" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QPushButton" name="button_cursor_backcolor">
+          <property name="toolTip">
+           <string>Select the default background color for the output console</string>
+          </property>
+          <property name="text">
+           <string>Back color</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="button_cursor_forecolor">
+          <property name="toolTip">
+           <string>Select the default text color for the output console</string>
+          </property>
+          <property name="text">
+           <string>Text color</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="spin_font_size">
-        <property name="toolTip">
-         <string>Select the font size for the output console</string>
-        </property>
-        <property name="minimum">
-         <number>7</number>
-        </property>
-        <property name="maximum">
-         <number>50</number>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QPushButton" name="button_backcolor">
-        <property name="toolTip">
-         <string>Select the default background color for the output console</string>
-        </property>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_reverse">
         <property name="text">
-         <string>Background color</string>
+         <string>Reverse text</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1" rowspan="2">
-       <spacer name="horizontalSpacer">
+      <item row="6" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QPushButton" name="button_reverse_backcolor">
+          <property name="toolTip">
+           <string>Select the default background color for the output console</string>
+          </property>
+          <property name="text">
+           <string>Back color</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="button_reverse_forecolor">
+          <property name="toolTip">
+           <string>Select the default text color for the output console</string>
+          </property>
+          <property name="text">
+           <string>Text color</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="7" column="1">
+       <spacer name="verticalSpacer">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Vertical</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>148</width>
-          <height>20</height>
+          <width>20</width>
+          <height>11</height>
          </size>
         </property>
        </spacer>
-      </item>
-      <item row="3" column="0">
-       <widget class="QPushButton" name="button_forecolor">
-        <property name="toolTip">
-         <string>Select the default text color for the output console</string>
-        </property>
-        <property name="text">
-         <string>Text color</string>
-        </property>
-       </widget>
       </item>
      </layout>
     </widget>
@@ -169,6 +275,20 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>working_directory</tabstop>
+  <tabstop>select_directory</tabstop>
+  <tabstop>combo_font</tabstop>
+  <tabstop>spin_font_size</tabstop>
+  <tabstop>button_backcolor</tabstop>
+  <tabstop>button_forecolor</tabstop>
+  <tabstop>button_cursor_backcolor</tabstop>
+  <tabstop>button_cursor_forecolor</tabstop>
+  <tabstop>button_reverse_backcolor</tabstop>
+  <tabstop>button_reverse_forecolor</tabstop>
+  <tabstop>reset_color</tabstop>
+  <tabstop>label_output</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

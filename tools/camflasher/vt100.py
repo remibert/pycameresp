@@ -40,8 +40,10 @@ def isascii(char):
 			return True
 	return False
 
-DEFAULT_BACKCOLOR = 0xFFFFFFFF
-DEFAULT_FORECOLOR = 0xFF000000
+TEXT_BACKCOLOR    = 0xFFFFFFFF
+TEXT_FORECOLOR    = 0xFF000000
+REVERSE_BACKCOLOR = 0xFFAAAAAA
+REVERSE_FORECOLOR = 0xFF000000
 CURSOR_BACKCOLOR  = 0xFFAAAAAA
 CURSOR_FORECOLOR  = 0xFF000000
 vga_colors = [
@@ -186,8 +188,8 @@ class Line:
 		if length > len(self.line):
 			delta = length-len(self.line)
 			self.line       += " "*delta
-			self.forecolors += [DEFAULT_FORECOLOR]*delta
-			self.backcolors += [DEFAULT_BACKCOLOR]*delta
+			self.forecolors += [TEXT_FORECOLOR]*delta
+			self.backcolors += [TEXT_BACKCOLOR]*delta
 			self.reverses   += [False]*delta
 			self.htmline    = None
 
@@ -214,8 +216,8 @@ class Line:
 		if cursor_column > len(self.line):
 			delta = (cursor_column-len(self.line))
 			self.line += " "*delta + char
-			self.forecolors += [DEFAULT_FORECOLOR]*delta + [forecolor]*len(char)
-			self.backcolors += [DEFAULT_BACKCOLOR]*delta + [backcolor]*len(char)
+			self.forecolors += [TEXT_FORECOLOR]*delta + [forecolor]*len(char)
+			self.backcolors += [TEXT_BACKCOLOR]*delta + [backcolor]*len(char)
 			self.reverses   += [False]*delta             + [reverse]*len(char)
 		else:
 			self.line       = self.line      [:cursor_column] + char                  + self.line      [cursor_column+1:]
@@ -230,22 +232,22 @@ class Line:
 			# Erase to end of line
 			if direction == "0" or direction == "":
 				self.line       = self.line      [:cursor_column] + " "*delta
-				self.forecolors = self.forecolors[:cursor_column] + [DEFAULT_FORECOLOR]*delta
-				self.backcolors = self.backcolors[:cursor_column] + [DEFAULT_BACKCOLOR]*delta
+				self.forecolors = self.forecolors[:cursor_column] + [TEXT_FORECOLOR]*delta
+				self.backcolors = self.backcolors[:cursor_column] + [TEXT_BACKCOLOR]*delta
 				self.reverses   = self.reverses  [:cursor_column] + [False]*delta
 				self.htmline    = None
 			# Erase to beginning of line
 			elif direction == "1":
 				self.line       =  " "*cursor_column                 + self.line      [cursor_column:]
-				self.forecolors =  [DEFAULT_FORECOLOR]*cursor_column + self.forecolors[cursor_column:]
-				self.backcolors =  [DEFAULT_BACKCOLOR]*cursor_column + self.backcolors[cursor_column:]
+				self.forecolors =  [TEXT_FORECOLOR]*cursor_column + self.forecolors[cursor_column:]
+				self.backcolors =  [TEXT_BACKCOLOR]*cursor_column + self.backcolors[cursor_column:]
 				self.reverses   =  [False]*cursor_column             + self.reverses  [cursor_column:]
 				self.htmline    = None
 			# Erase entire line
 			elif direction == "2":
 				self.line       = " "*self.width
-				self.forecolors += [DEFAULT_FORECOLOR]*self.width
-				self.backcolors += [DEFAULT_BACKCOLOR]*self.width
+				self.forecolors += [TEXT_FORECOLOR]*self.width
+				self.backcolors += [TEXT_BACKCOLOR]*self.width
 				self.reverses   += [False]*self.width
 				self.htmline    = None
 
@@ -277,11 +279,11 @@ class Line:
 						can_cut = False
 						break
 					# Or if the end of line content backcolor
-					if self.backcolors[i] != DEFAULT_BACKCOLOR:
+					if self.backcolors[i] != TEXT_BACKCOLOR:
 						can_cut = False
 						break
 					# Or if the end of line content forecolor
-					if self.forecolors[i] != DEFAULT_FORECOLOR:
+					if self.forecolors[i] != TEXT_FORECOLOR:
 						can_cut = False
 						break
 				# The line can be simplified to boost performance
@@ -316,8 +318,15 @@ class Line:
 
 				# In case of reverse
 				if reverse is True:
-					back = forecolor
-					fore = backcolor
+					if backcolor == TEXT_BACKCOLOR:
+						back = REVERSE_BACKCOLOR
+					else:
+						back = forecolor
+
+					if forecolor == TEXT_FORECOLOR:
+						fore = REVERSE_FORECOLOR
+					else:
+						fore = backcolor
 				else:
 					fore = forecolor
 					back = backcolor
@@ -365,13 +374,13 @@ class Line:
 
 	def replace_color(self, backcolor, forecolor):
 		""" Replace the default background color and text color """
-		global DEFAULT_BACKCOLOR, DEFAULT_FORECOLOR
+		global TEXT_BACKCOLOR, TEXT_FORECOLOR
 		# pylint:disable=consider-using-enumerate
 		for i in range(len(self.forecolors)):
-			if self.forecolors[i] == DEFAULT_FORECOLOR:
+			if self.forecolors[i] == TEXT_FORECOLOR:
 				self.forecolors[i] = forecolor
 		for i in range(len(self.backcolors)):
-			if self.backcolors[i] == DEFAULT_BACKCOLOR:
+			if self.backcolors[i] == TEXT_BACKCOLOR:
 				self.backcolors[i] = backcolor
 		self.htmline = None
 
@@ -384,8 +393,8 @@ class VT100:
 		self.height              = height
 		self.lines               = []
 
-		self.forecolor           = DEFAULT_FORECOLOR
-		self.backcolor           = DEFAULT_BACKCOLOR
+		self.forecolor           = TEXT_FORECOLOR
+		self.backcolor           = TEXT_BACKCOLOR
 		self.reverse             = False
 		self.region_start        = 0
 		self.region_end          = self.height
@@ -408,8 +417,8 @@ class VT100:
 
 	def reset(self):
 		""" Reset to initial state """
-		self.forecolor           = DEFAULT_FORECOLOR
-		self.backcolor           = DEFAULT_BACKCOLOR
+		self.forecolor           = TEXT_FORECOLOR
+		self.backcolor           = TEXT_BACKCOLOR
 		self.reverse             = False
 		self.region_start        = 0
 		self.region_end          = self.height
@@ -420,16 +429,21 @@ class VT100:
 		self.cursor_line_saved   = None
 		self.cls()
 
-	def set_color(self, backcolor, forecolor):
+	def set_color(self, text_backcolor, text_forecolor, cursor_backcolor, cursor_forecolor, reverse_backcolor, reverse_forecolor):
 		""" Change the default colors """
-		global DEFAULT_BACKCOLOR, DEFAULT_FORECOLOR
+		global TEXT_BACKCOLOR, TEXT_FORECOLOR, CURSOR_BACKCOLOR, CURSOR_FORECOLOR, REVERSE_FORECOLOR, REVERSE_BACKCOLOR
 		for line in self.lines:
-			line.replace_color(backcolor, forecolor)
+			line.replace_color(text_backcolor, text_forecolor)
 
-		DEFAULT_BACKCOLOR = backcolor
-		DEFAULT_FORECOLOR = forecolor
-		self.forecolor = forecolor
-		self.backcolor = backcolor
+		TEXT_BACKCOLOR = text_backcolor
+		TEXT_FORECOLOR = text_forecolor
+		CURSOR_BACKCOLOR  = cursor_backcolor
+		CURSOR_FORECOLOR  = cursor_forecolor
+		REVERSE_BACKCOLOR = reverse_backcolor
+		REVERSE_FORECOLOR = reverse_forecolor
+
+		self.forecolor = text_forecolor
+		self.backcolor = text_backcolor
 		self.modified = True
 
 	def set_size(self, width, height):
@@ -564,8 +578,8 @@ class VT100:
 				if len(values) <= 1:
 					if len(values[0]) == 0:
 						reverse = False
-						foreground = DEFAULT_FORECOLOR
-						background = DEFAULT_BACKCOLOR
+						foreground = TEXT_FORECOLOR
+						background = TEXT_BACKCOLOR
 				# Case VT100 large predefined colors
 				if len(values) == 3:
 					if values[0] == '38' and values[1] == '5':
@@ -589,18 +603,18 @@ class VT100:
 					for value in values:
 						value = self.to_int(value)
 						if value == 0:
-							foreground = DEFAULT_FORECOLOR
-							background = DEFAULT_BACKCOLOR
+							foreground = TEXT_FORECOLOR
+							background = TEXT_BACKCOLOR
 						elif value == 7:
 							reverse = True
 						elif value >= 30 and value <= 37:
 							foreground = vga_colors[value-30]
 						elif value == 39:
-							foreground = DEFAULT_FORECOLOR
+							foreground = TEXT_FORECOLOR
 						elif value >= 40 and value <= 47:
 							background = vga_colors[value-40]
 						elif value == 49:
-							background = DEFAULT_BACKCOLOR
+							background = TEXT_BACKCOLOR
 						elif value >= 90 and value <= 97:
 							foreground = vga_colors[value-90+8]
 						elif value >= 100 and value <= 107:
@@ -820,15 +834,11 @@ class VT100:
 				self.parse_reset         (escape)
 				self.parse_device_attribut(escape)
 				self.escape = None
-
-		if self.previous_line != self.cursor_line or self.previous_column != self.cursor_column:
-			self.cursor_on = True
-
 		return self.output
 
 	def to_html(self):
 		""" Get the html content of VT100 """
-		result = '<body style="background-color:#%08X">'%DEFAULT_BACKCOLOR
+		result = '<body style="background-color:#%08X">'%TEXT_BACKCOLOR
 		pos = 0
 		for line in self.lines:
 			if pos == self.cursor_line:

@@ -880,7 +880,7 @@ class Text:
 	def open_selection(self):
 		""" Start a selection """
 		if self.selection_start is None:
-			self.selection_start = [self.cursor_column, self.cursor_line, self.get_tab_cursor(self.cursor_line)]
+			self.selection_start = [self.cursor_column, self.cursor_line, self.get_tab_cursor(self.cursor_line, self.cursor_column)]
 
 	def close_selection(self):
 		""" Terminate selection """

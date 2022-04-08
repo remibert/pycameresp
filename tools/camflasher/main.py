@@ -30,28 +30,53 @@ from flasher import Flasher
 from qstdoutvt100 import QStdoutVT100
 
 # Settings
-SETTINGS_FILENAME = "CamFlasher.ini"
-FONT_FAMILY       = "camflasher.font.family"
-FONT_SIZE         = "camflasher.font.size"
-WORKING_DIRECTORY = "camflasher.working_directory"
-WIN_GEOMETRY      = "camflasher.window.geometry"
-FIRMWARE_FILENAME = "camflasher.firmware.filename"
-DEVICE_RTS_DTR    = "camflasher.device.rts_dtr"
-BACKCOLOR         = "camflasher.backcolor"
-FORECOLOR         = "camflasher.forecolor"
+SETTINGS_FILENAME  = "CamFlasher.ini"
+FONT_FAMILY        = "camflasher.font.family"
+FONT_SIZE          = "camflasher.font.size"
+WORKING_DIRECTORY  = "camflasher.working_directory"
+WIN_GEOMETRY       = "camflasher.window.geometry"
+FIRMWARE_FILENAME  = "camflasher.firmware.filename"
+DEVICE_RTS_DTR     = "camflasher.device.rts_dtr"
+TEXT_BACKCOLOR     = "camflasher.text.backcolor"
+TEXT_FORECOLOR     = "camflasher.text.forecolor"
+CURSOR_BACKCOLOR   = "camflasher.cursor.backcolor"
+CURSOR_FORECOLOR   = "camflasher.cursor.textcolor"
+REVERSE_BACKCOLOR  = "camflasher.reverse.backcolor"
+REVERSE_FORECOLOR  = "camflasher.reverse.textcolor"
+
+DEFAULT_TEXT_BACKCOLOR    = QColor(255,255,255)
+DEFAULT_TEXT_FORECOLOR    = QColor(0,0,0)
+DEFAULT_CURSOR_BACKCOLOR  = QColor(0xAA,0xAA,0XAA)
+DEFAULT_CURSOR_FORECOLOR  = QColor(0,0,0)
+DEFAULT_REVERSE_BACKCOLOR = QColor(0,0,0)
+DEFAULT_REVERSE_FORECOLOR = QColor(255,255,255)
+
+OUTPUT_TEXT = """
+<html>
+	<head/>
+	<body style="background-color : %(text_backcolor)s">
+		<p style="color : %(text_forecolor)s" >	
+			def function(self):<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;for j in range(10):<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(j)<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="background-color : %(cursor_backcolor)s;color : %(cursor_forecolor)s">#</span> &lt;- Cursor <br>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="background-color : %(reverse_backcolor)s;color : %(reverse_forecolor)s"># Text in reverse video</span>
+		</p>
+	</body>
+</html>"""
 
 class AboutDialog(QDialog):
 	""" Dialog about """
 	def __init__(self, parent):
 		""" Dialog box constructor """
 		QDialog.__init__(self, parent)
-		self.setModal(True)
 		try:
 			self.dialog = uic.loadUi('dialogabout.ui', self)
 		except Exception as err:
 			from dialogabout import Ui_DialogAbout
 			self.dialog = Ui_DialogAbout()
 			self.dialog.setupUi(self)
+		self.setModal(True)
 
 	def accept(self):
 		""" Accept about dialog """
@@ -75,7 +100,6 @@ class FlashDialog(QDialog):
 	def __init__(self, parent):
 		""" Dialog box constructor """
 		QDialog.__init__(self, parent)
-		self.setModal(True)
 		try:
 			self.dialog = uic.loadUi('dialogflash.ui', self)
 		except Exception as err:
@@ -90,6 +114,7 @@ class FlashDialog(QDialog):
 		self.dialog.select_firmware.clicked.connect(self.on_firmware_clicked)
 		self.dialog.baud.addItems(["9600","57600","74880","115200","230400","460800"])
 		self.dialog.baud.setCurrentIndex(5)
+		self.setModal(True)
 
 	def accept(self):
 		""" Called when ok pressed """
@@ -119,7 +144,6 @@ class OptionDialog(QDialog):
 	def __init__(self, parent):
 		""" Dialog box constructor """
 		QDialog.__init__(self, parent)
-		self.setModal(True)
 		try:
 			self.dialog = uic.loadUi('dialogoption.ui', self)
 		except Exception as err:
@@ -132,23 +156,51 @@ class OptionDialog(QDialog):
 
 		self.dialog.spin_font_size.setValue(int(settings.value(FONT_SIZE   ,12)))
 		self.dialog.combo_font.setCurrentFont(QFont(settings.value(FONT_FAMILY ,"Courier")))
-		self.backcolor = settings.value(BACKCOLOR,QColor(255,255,255))
-		self.forecolor = settings.value(FORECOLOR,QColor(0,0,0))
+		self.text_backcolor    = settings.value(TEXT_BACKCOLOR   ,DEFAULT_TEXT_BACKCOLOR)
+		self.text_forecolor    = settings.value(TEXT_FORECOLOR   ,DEFAULT_TEXT_FORECOLOR)
+		self.cursor_backcolor  = settings.value(CURSOR_BACKCOLOR ,DEFAULT_CURSOR_BACKCOLOR)
+		self.cursor_forecolor  = settings.value(CURSOR_FORECOLOR ,DEFAULT_CURSOR_FORECOLOR)
+		self.reverse_backcolor = settings.value(REVERSE_BACKCOLOR,DEFAULT_REVERSE_BACKCOLOR)
+		self.reverse_forecolor = settings.value(REVERSE_FORECOLOR,DEFAULT_REVERSE_FORECOLOR)
 
 		self.dialog.select_directory.clicked.connect(self.on_directory_clicked)
 		self.dialog.button_forecolor.clicked.connect(self.on_forecolor_clicked)
 		self.dialog.button_backcolor.clicked.connect(self.on_backcolor_clicked)
+		self.dialog.button_cursor_forecolor.clicked.connect(self.on_cursor_forecolor_clicked)
+		self.dialog.button_cursor_backcolor.clicked.connect(self.on_cursor_backcolor_clicked)
+		self.dialog.button_reverse_forecolor.clicked.connect(self.on_reverse_forecolor_clicked)
+		self.dialog.button_reverse_backcolor.clicked.connect(self.on_reverse_backcolor_clicked)
+		self.dialog.reset_color.clicked.connect(self.on_reset_color_clicked)
+
 		self.dialog.combo_font.currentTextChanged.connect(self.on_font_changed)
-		self.spin_font_size.valueChanged.connect(self.on_font_changed)
+		self.dialog.spin_font_size.valueChanged.connect(self.on_font_changed)
 		self.refresh_output()
+		self.setModal(True)
 
 	def refresh_output(self):
 		""" Refresh the output """
-		font_size   = "font-size:%dpx"%(self.dialog.spin_font_size.value())
-		font_family = "font-family:%s"%(self.dialog.combo_font.currentFont().family())
-		backcolor   = "background-color : rgb(%d,%d,%d)"%self.backcolor.getRgb()[:3]
-		forecolor   = "color : rgb(%d,%d,%d)"%self.forecolor.getRgb()[:3]
-		self.label_output.setStyleSheet("QLabel { %s; %s; %s; %s;}"%(font_size, font_family, backcolor, forecolor))
+		font = QFont()
+		font.setFamily    (self.dialog.combo_font.currentFont().family())
+		font.setPointSize (int(self.dialog.spin_font_size.value()))
+		self.dialog.label_output.setFont(font)
+		# pylint:disable=possibly-unused-variable
+		text_backcolor     = "rgb(%d,%d,%d)"%self.text_backcolor.getRgb()[:3]
+		text_forecolor     = "rgb(%d,%d,%d)"%self.text_forecolor.getRgb()[:3]
+		cursor_backcolor   = "rgb(%d,%d,%d)"%self.cursor_backcolor.getRgb()[:3]
+		cursor_forecolor   = "rgb(%d,%d,%d)"%self.cursor_forecolor.getRgb()[:3]
+		reverse_backcolor  = "rgb(%d,%d,%d)"%self.reverse_backcolor.getRgb()[:3]
+		reverse_forecolor  = "rgb(%d,%d,%d)"%self.reverse_forecolor.getRgb()[:3]
+		self.dialog.label_output.setHtml(OUTPUT_TEXT%locals())
+
+	def on_reset_color_clicked(self):
+		""" Reset the default color """
+		self.text_backcolor    = DEFAULT_TEXT_BACKCOLOR
+		self.text_forecolor    = DEFAULT_TEXT_FORECOLOR
+		self.cursor_backcolor  = DEFAULT_CURSOR_BACKCOLOR
+		self.cursor_forecolor  = DEFAULT_CURSOR_FORECOLOR
+		self.reverse_backcolor = DEFAULT_REVERSE_BACKCOLOR
+		self.reverse_forecolor = DEFAULT_REVERSE_FORECOLOR
+		self.refresh_output()
 
 	def on_font_changed(self, event):
 		""" Font family changed """
@@ -163,16 +215,44 @@ class OptionDialog(QDialog):
 
 	def on_forecolor_clicked(self, event):
 		""" Select the forecolor """
-		color = QColorDialog.getColor(parent=self, initial=self.forecolor, title="Text color")
+		color = QColorDialog.getColor(parent=self, initial=self.text_forecolor, title="Text color")
 		if color.isValid():
-			self.forecolor = color
+			self.text_forecolor = color
 			self.refresh_output()
 
 	def on_backcolor_clicked(self, event):
 		""" Select the backcolor """
-		color = QColorDialog.getColor(parent=self, initial=self.backcolor, title="Background color")
+		color = QColorDialog.getColor(parent=self, initial=self.text_backcolor, title="Background color")
 		if color.isValid():
-			self.backcolor = color
+			self.text_backcolor = color
+			self.refresh_output()
+
+	def on_cursor_forecolor_clicked(self, event):
+		""" Select the cursor forecolor """
+		color = QColorDialog.getColor(parent=self, initial=self.cursor_forecolor, title="Cursor text color")
+		if color.isValid():
+			self.cursor_forecolor = color
+			self.refresh_output()
+
+	def on_cursor_backcolor_clicked(self, event):
+		""" Select the cursor backcolor """
+		color = QColorDialog.getColor(parent=self, initial=self.cursor_backcolor, title="Cursor background color")
+		if color.isValid():
+			self.cursor_backcolor = color
+			self.refresh_output()
+
+	def on_reverse_forecolor_clicked(self, event):
+		""" Select the reverse forecolor """
+		color = QColorDialog.getColor(parent=self, initial=self.reverse_forecolor, title="Reverse text color")
+		if color.isValid():
+			self.reverse_forecolor = color
+			self.refresh_output()
+
+	def on_reverse_backcolor_clicked(self, event):
+		""" Select the reverse backcolor """
+		color = QColorDialog.getColor(parent=self, initial=self.reverse_backcolor, title="Reverse background color")
+		if color.isValid():
+			self.reverse_backcolor = color
 			self.refresh_output()
 
 	def accept(self):
@@ -182,8 +262,12 @@ class OptionDialog(QDialog):
 		settings.setValue(FONT_FAMILY , font.family())
 		settings.setValue(FONT_SIZE   , self.dialog.spin_font_size.value())
 		settings.setValue(WORKING_DIRECTORY, self.dialog.working_directory.text())
-		settings.setValue(FORECOLOR, self.forecolor)
-		settings.setValue(BACKCOLOR, self.backcolor)
+		settings.setValue(TEXT_FORECOLOR   , self.text_forecolor)
+		settings.setValue(TEXT_BACKCOLOR   , self.text_backcolor)
+		settings.setValue(CURSOR_FORECOLOR , self.cursor_forecolor)
+		settings.setValue(CURSOR_BACKCOLOR , self.cursor_backcolor)
+		settings.setValue(REVERSE_FORECOLOR, self.reverse_forecolor)
+		settings.setValue(REVERSE_BACKCOLOR, self.reverse_backcolor)
 		super().accept()
 
 class Ports:
@@ -277,8 +361,6 @@ class CamFlasher(QMainWindow):
 		self.window.output.installEventFilter(self)
 
 		self.flash_dialog = FlashDialog(self)
-		self.about_dialog = AboutDialog(self)
-		self.option_dialog = OptionDialog(self)
 
 		# Start stdout redirection vt100 console
 		self.window.output.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -295,7 +377,7 @@ class CamFlasher(QMainWindow):
 		self.timer_refresh_console.start()
 
 		# Refresher of the list of serial port available
-		self.timer_refresh_port = QTimer(active=True, interval=500)
+		self.timer_refresh_port = QTimer(active=True, interval=1000)
 		self.timer_refresh_port.timeout.connect(self.on_refresh_port)
 		self.timer_refresh_port.start()
 		self.serial_ports = []
@@ -303,23 +385,20 @@ class CamFlasher(QMainWindow):
 		self.port_selected = None
 		self.window.combo_port.currentTextChanged.connect(self.on_port_changed)
 
-		# self.move(10,200)
 		self.show()
 		self.resize_console()
-		self.paused = False
 		self.window.output.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.window.output.customContextMenuRequested.connect(self.context_menu)
 
 		self.window.action_paste.triggered.connect(self.paste)
 		self.window.action_copy.triggered.connect(self.copy)
-		self.window.action_pause.triggered.connect(self.pause)
-		self.window.action_resume.triggered.connect(self.pause)
 		self.window.action_resume.setDisabled(True)
 		self.window.action_flash.triggered.connect(self.on_flash_clicked)
 		self.window.action_about.triggered.connect(self.on_about_clicked)
 		self.window.action_option.triggered.connect(self.on_option_clicked)
 		self.window.chk_rts_dtr.stateChanged.connect(self.on_rts_dtr_changed)
 		self.ports = Ports()
+		self.clear_selection = True
 
 	def update_font(self):
 		""" Update console font """
@@ -331,9 +410,10 @@ class CamFlasher(QMainWindow):
 
 	def on_about_clicked(self):
 		""" About menu clicked """
-		self.about_dialog.show()
-		self.about_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-		self.about_dialog.exec()
+		about_dialog = AboutDialog(self)
+		about_dialog.show()
+		about_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+		about_dialog.exec()
 
 	def context_menu(self, pos):
 		""" Customization of the context menu """
@@ -343,36 +423,14 @@ class CamFlasher(QMainWindow):
 		copy.triggered.connect(self.copy)
 		context.addAction(copy)
 
-		if self.paused is False:
-			paste = QAction("Paste", self)
-			paste.triggered.connect(self.paste)
-			context.addAction(paste)
+		paste = QAction("Paste", self)
+		paste.triggered.connect(self.paste)
+		context.addAction(paste)
 
-			cls = QAction("Cls", self)
-			cls.triggered.connect(self.cls)
-			context.addAction(cls)
-
-			pause = QAction("Pause", self)
-			pause.triggered.connect(self.pause)
-			context.addAction(pause)
-		else:
-			pause = QAction("Resume", self)
-			pause.triggered.connect(self.pause)
-			context.addAction(pause)
-
+		cls = QAction("Cls", self)
+		cls.triggered.connect(self.cls)
+		context.addAction(cls)
 		context.exec(QCursor.pos())
-
-	def pause(self):
-		""" Pause console display """
-		self.paused = not self.paused
-		if self.paused:
-			self.window.action_paste.setDisabled(True)
-			self.window.action_pause.setDisabled(True)
-			self.window.action_resume.setEnabled(True)
-		else:
-			self.window.action_pause.setEnabled(True)
-			self.window.action_paste.setEnabled(True)
-			self.window.action_resume.setDisabled(True)
 
 	def cls(self):
 		""" Clear screen """
@@ -397,19 +455,24 @@ class CamFlasher(QMainWindow):
 		if event.type() == QEvent.Type.KeyPress:
 			key = self.console.convert_key_to_vt100(event)
 			if key is not None:
-				if self.paused is False:
-					self.flasher.send_key(key)
+				self.clear_selection = True
+				self.flasher.send_key(key)
 			return True
 		return super(CamFlasher, self).eventFilter(obj, event)
 
 	def resize_console(self):
 		""" Resize console """
-
 		# Save the position
 		settings = get_settings()
 		geometry = self.geometry_.geometry()
 		settings.setValue(WIN_GEOMETRY, geometry)
-		self.console.set_color(settings.value(BACKCOLOR,QColor(255,255,255)),settings.value(FORECOLOR,QColor(0,0,0)))
+		self.console.set_color(
+			settings.value(TEXT_BACKCOLOR,    DEFAULT_TEXT_BACKCOLOR),
+			settings.value(TEXT_FORECOLOR,    DEFAULT_TEXT_FORECOLOR),
+			settings.value(CURSOR_BACKCOLOR,  DEFAULT_CURSOR_BACKCOLOR),
+			settings.value(CURSOR_FORECOLOR,  DEFAULT_CURSOR_FORECOLOR),
+			settings.value(REVERSE_BACKCOLOR, DEFAULT_REVERSE_BACKCOLOR),
+			settings.value(REVERSE_FORECOLOR, DEFAULT_REVERSE_FORECOLOR))
 
 		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
 		line = "W"*200 + "\n"
@@ -432,9 +495,10 @@ class CamFlasher(QMainWindow):
 
 	def on_option_clicked(self):
 		""" On option menu clicked """
-		self.option_dialog.show()
-		self.option_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-		result = self.option_dialog.exec()
+		option_dialog = OptionDialog(self)
+		option_dialog.show()
+		option_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+		result = option_dialog.exec()
 		if result == 1:
 			settings = get_settings()
 			self.flasher.set_directory(settings.value(WORKING_DIRECTORY,"."))
@@ -472,6 +536,7 @@ class CamFlasher(QMainWindow):
 	def on_flash_clicked(self, event):
 		""" Flash of firmware button clicked """
 		self.flash_dialog.show()
+		self.flash_dialog.dialog.erase.setChecked(False)
 		self.flash_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
 		result = self.flash_dialog.exec()
 		if result == 1 and self.window.combo_port.currentText() != "":
@@ -496,7 +561,13 @@ class CamFlasher(QMainWindow):
 	def on_refresh_console(self):
 		""" Refresh the console content """
 		self.window.output.viewport().setProperty("cursor", QCursor(Qt.CursorShape.ArrowCursor))
-		if self.paused is False:
+		if self.clear_selection is True:
+			cursor = self.window.output.textCursor()
+			cursor.removeSelectedText()
+			self.clear_selection = False
+
+		cursor = self.window.output.textCursor()
+		if cursor.selectionEnd() == cursor.selectionStart():
 			output = self.console.refresh()
 			if output != "":
 				self.flasher.send_key(output.encode("utf-8"))

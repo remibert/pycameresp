@@ -159,5 +159,7 @@ def inject(root, paths):
 	device.close()
 
 if __name__ == "__main__":
-	root = "/Users/remi/Downloads/firmware/micropython/ports/esp32/build-ESP32CAM/frozen_mpy"
+	#~ root = "/Users/remi/Downloads/firmware/micropython/ports/esp32/build-ESP32CAM/frozen_mpy"
+	#~ inject(root, ["shell","tools"])
+	root = "/Users/remi/Downloads/firmware/lib 2"
 	inject(root, ["shell","tools"])

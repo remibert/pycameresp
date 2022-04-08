@@ -1,3 +1,4 @@
+""" Textes en francais """
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 
@@ -57,6 +58,7 @@ notification                            =b"Notifier"
 notification_motion                     =b"Notifier d\xC3\xA9tection de mouvement"
 notification_state                      =b"Notifier changement \xC3\xA9tat"
 suspends_motion_detection               =b"Suspendre la d\xC3\xA9tection de mouvement en pr\xC3\xA9sence d'occupants"
+permanent_detection                     =b"Archiver en permanence toutes les d\xC3\xA9tection de mouvements"
 turn_on_flash                           =b"Allumer le flash LED lorsque la lumi\xC3\xA8re baisse"
 pushover_on                             =b"Notification pushover activ\xC3\xA9e"
 pushover_off                            =b"Notification pushover d\xC3\xA9sactiv\xC3\xA9e"

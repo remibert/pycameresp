@@ -153,19 +153,47 @@ class SdCard:
 		return result
 
 	@staticmethod
+	def is_not_enough_space(low):
+		""" Indicates if remaining space is not sufficient """
+		free = SdCard.get_free_size()
+		total = SdCard.get_max_size()
+		if low:
+			if SdCard.is_available():
+				threshold = 5
+			else:
+				threshold = 5
+		else:
+			if SdCard.is_available():
+				threshold = 8
+			else:
+				threshold = 25
+
+		if free < 0 or total < 0:
+			return True
+
+		if free < 32*1024*4:
+			return True
+		else:
+			return ((free * 100 // total) <= threshold)
+
+	@staticmethod
 	def save(directory, filename, data):
 		""" Save file on sd card """
 		result = False
 		if SdCard.is_mounted():
 			file = None
-			try:
-				file = SdCard.create_file(SdCard.get_mountpoint() + "/" + directory, filename, "w")
-				file.write(data)
-				file.close()
-				result = True
-			except Exception as err:
-				logger.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
-			finally:
-				if file is not None:
+			if SdCard.is_not_enough_space(low=True) is False:
+				try:
+					file = SdCard.create_file(SdCard.get_mountpoint() + "/" + directory, filename, "w")
+					file.write(data)
 					file.close()
+					result = True
+				except Exception as err:
+					logger.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
+				finally:
+					if file is not None:
+						file.close()
+			else:
+				if SdCard.is_available() is False:
+					result = True
 		return result

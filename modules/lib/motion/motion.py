@@ -50,6 +50,10 @@ class MotionConfig(jsonconfig.JsonConfig):
 		# Notify motion state change
 		self.notify_state = True
 
+		# Permanent detection without notification.
+		# To keep all motion detection in the presence of occupants
+		self.permanent_detection = False
+
 		# Empty mask is equal disable masking
 		self.mask = b""
 
@@ -523,9 +527,10 @@ class Detection:
 		self.release_image()
 
 		# If the motion detection activated
-		if await self.is_activated():
+		activated = await self.is_activated()
+		if activated or self.is_pemanent():
 			# Capture motion
-			result = await self.capture()
+			result = await self.capture(activated)
 		else:
 			if self.motion:
 				self.motion.stop_light()
@@ -576,6 +581,16 @@ class Detection:
 			await uasyncio.sleep_ms(500)
 		return result
 
+	def is_pemanent(self):
+		""" Indicates if pemanent detection activated """
+		result = False
+		# If motion activated
+		if self.motion_config.activated:
+			# If detection permanent without notification activated
+			if self.motion_config.permanent_detection:
+				result = True
+		return result
+
 	async def init_motion(self):
 		""" Initialize motion detection """
 		firstInit = False
@@ -608,7 +623,7 @@ class Detection:
 			if self.motion.index %30 == 0:
 				collect()
 
-	async def capture(self):
+	async def capture(self, activated):
 		""" Capture motion """
 		result = False
 
@@ -628,8 +643,8 @@ class Detection:
 				# Capture motion image
 				self.detection = await self.motion.capture()
 
-				# If motion detected
-				if self.detection is not None:
+				# If motion detected and detection activated
+				if self.detection is not None and activated is True:
 					# Notify motion with push over
 					message, image = self.detection
 					if self.motion_config.notify:

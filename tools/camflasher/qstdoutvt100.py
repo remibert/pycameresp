@@ -57,7 +57,7 @@ class QStdoutVT100:
 		self.output = []
 		self.can_test = False
 		self.stdout = sys.stdout
-		self.cursor_timer = QTimer(active=True, interval=300)
+		self.cursor_timer = QTimer(active=True, interval=500)
 		self.cursor_timer.timeout.connect(self.on_refresh_cursor)
 		self.cursor_timer.start()
 		sys.stdout = self
@@ -117,9 +117,11 @@ class QStdoutVT100:
 		result = a << 24 | r << 16 | g << 8 | b
 		return result
 
-	def set_color(self, backcolor, forecolor):
+	def set_color(self, text_backcolor, text_forecolor, cursor_backcolor, cursor_forecolor, reverse_backcolor, reverse_forecolor):
 		""" Change the default colors """
-		self.vt100.set_color(self.color_to_int(backcolor),self.color_to_int(forecolor))
+		self.vt100.set_color(self.color_to_int(text_backcolor), self.color_to_int(text_forecolor),
+			self.color_to_int(cursor_backcolor), self.color_to_int(cursor_forecolor),
+			self.color_to_int(reverse_backcolor), self.color_to_int(reverse_forecolor))
 
 	def flush(self):
 		""" Flush stdout """

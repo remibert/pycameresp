@@ -153,7 +153,8 @@ async def motion(request, response, args):
 		Switch(text=lang.notification_motion, name=b"notify",       checked=config.notify,       disabled=disabled),Br(),
 		Switch(text=lang.notification_state,  name=b"notify_state", checked=config.notify_state, disabled=disabled),Br(),
 		Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence", checked=config.suspend_on_presence, disabled=disabled),Br(),
-		Switch(text=lang.turn_on_flash,                            name=b"light_compensation", checked=config.light_compensation, disabled=disabled),Br(),
+		Switch(text=lang.permanent_detection,                      name=b"permanent_detection", checked=config.permanent_detection, disabled=disabled),Br(),
+		Switch(text=lang.turn_on_flash,                            name=b"light_compensation",  checked=config.light_compensation,  disabled=disabled),Br(),
 		submit)
 	await response.send_page(page)
 
