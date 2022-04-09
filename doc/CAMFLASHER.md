@@ -40,7 +40,7 @@ It is possible to run the shell with editor, or the servers on a standard microp
 - Download the camflasher application and unzip it :
 	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V5/CamFlasher_windows_10_64.zip)
 
-	- [CamFlasher for Windows seven 64 bits](https://github.com/remibert/pycameresp/releases/download/V5/CamFlasher_win7_64.zip)
+	- [CamFlasher for Windows seven 64 bits](https://github.com/remibert/pycameresp/releases/download/V5/CamFlasher_windows_7_64.zip)
 
 	- [CamFlasher for OSX Big Sur Intel](https://github.com/remibert/pycameresp/releases/download/V5/CamFlasher_osx.zip)
 
