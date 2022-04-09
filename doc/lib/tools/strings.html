@@ -30,20 +30,30 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Strings utilities &#34;&#34;&#34;
+import binascii
 import time
+
+def local_time(date=None):
+        &#34;&#34;&#34; Safe local time, it return 2000/1/1 00:00:00 if date can be extracted &#34;&#34;&#34;
+        try:
+                year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
+        except:
+                year,month,day,hour,minute,second,weekday,yearday = 2000,1,1,0,0,0,0,0
+        return year,month,day,hour,minute,second,weekday,yearday
+
 def date_to_string(date = None):
         &#34;&#34;&#34; Get a string with the current date &#34;&#34;&#34;
         return date_to_bytes(date).decode(&#34;utf8&#34;)
 
 def date_to_bytes(date = None):
         &#34;&#34;&#34; Get a bytes with the current date &#34;&#34;&#34;
-        year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
+        year,month,day,hour,minute,second,weekday,yearday = local_time(date)[:8]
         return b&#34;%04d/%02d/%02d  %02d:%02d:%02d&#34;%(year,month,day,hour,minute,second)
 
 def date_ms_to_string():
         &#34;&#34;&#34; Get a string with the current date with ms &#34;&#34;&#34;
         ms = (time.time_ns() // 1000000)%1000
-        year,month,day,hour,minute,second,weekday,yearday = time.localtime(None)[:8]
+        year,month,day,hour,minute,second,weekday,yearday = local_time(None)[:8]
         return &#34;%04d/%02d/%02d %02d:%02d:%02d.%03d&#34;%(year,month,day,hour,minute,second,ms)
 
 def date_to_filename(date = None):
@@ -57,7 +67,7 @@ def date_to_filename(date = None):
 
 def date_to_path(date=None):
         &#34;&#34;&#34; Get a path with year/month/day/hour &#34;&#34;&#34;
-        year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
+        year,month,day,hour,minute,second,weekday,yearday = local_time(date)[:8]
         return b&#34;%04d/%02d/%02d/%02dh%02d&#34;%(year,month,day,hour,minute)
 
 def size_to_string(size, largeur=6):
@@ -76,7 +86,6 @@ def size_to_bytes(size, largeur=6):
                 return b&#34;%*.2fK&#34;%(largeur, size / 1024.)
         else:
                 return b&#34;%*dB&#34;%(largeur, size)
-
 
 def tobytes(datas, encoding=&#34;utf8&#34;):
         &#34;&#34;&#34; Convert data to bytes &#34;&#34;&#34;
@@ -256,8 +265,7 @@ def dump_line (data, line = None, width = 0):
                 fill = width-size
 
         # Displaying values in hex
-        for i in data:
-                line.write(b&#39;%02X &#39; % i)
+        line.write(binascii.hexlify(data, &#34; &#34;).upper())
 
         # Filling of vacuum according to the size of the dump
         line.write(b&#39;   &#39;*fill)
@@ -267,7 +275,7 @@ def dump_line (data, line = None, width = 0):
 
         for i in data:
                 if i &gt;= 0x20 and  i &lt; 0x7F:
-                        line.write(chr(i).encode(&#34;utf8&#34;))
+                        line.write(i.to_bytes(1,&#34;big&#34;))
                 else:
                         line.write(b&#39;.&#39;)
 
@@ -289,7 +297,6 @@ def compute_hash(string):
         for char in string:
                 hash_ = hash_ * 378551 + ord(char)
         return hash_ % 65536
-
 
 try:
         # pylint: disable=no-name-in-module
@@ -383,7 +390,7 @@ def get_utf8_length(data):
 <pre><code class="python">def date_ms_to_string():
         &#34;&#34;&#34; Get a string with the current date with ms &#34;&#34;&#34;
         ms = (time.time_ns() // 1000000)%1000
-        year,month,day,hour,minute,second,weekday,yearday = time.localtime(None)[:8]
+        year,month,day,hour,minute,second,weekday,yearday = local_time(None)[:8]
         return &#34;%04d/%02d/%02d %02d:%02d:%02d.%03d&#34;%(year,month,day,hour,minute,second,ms)</code></pre>
 </details>
 </dd>
@@ -398,7 +405,7 @@ def get_utf8_length(data):
 </summary>
 <pre><code class="python">def date_to_bytes(date = None):
         &#34;&#34;&#34; Get a bytes with the current date &#34;&#34;&#34;
-        year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
+        year,month,day,hour,minute,second,weekday,yearday = local_time(date)[:8]
         return b&#34;%04d/%02d/%02d  %02d:%02d:%02d&#34;%(year,month,day,hour,minute,second)</code></pre>
 </details>
 </dd>
@@ -432,7 +439,7 @@ def get_utf8_length(data):
 </summary>
 <pre><code class="python">def date_to_path(date=None):
         &#34;&#34;&#34; Get a path with year/month/day/hour &#34;&#34;&#34;
-        year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
+        year,month,day,hour,minute,second,weekday,yearday = local_time(date)[:8]
         return b&#34;%04d/%02d/%02d/%02dh%02d&#34;%(year,month,day,hour,minute)</code></pre>
 </details>
 </dd>
@@ -501,8 +508,7 @@ def get_utf8_length(data):
                 fill = width-size
 
         # Displaying values in hex
-        for i in data:
-                line.write(b&#39;%02X &#39; % i)
+        line.write(binascii.hexlify(data, &#34; &#34;).upper())
 
         # Filling of vacuum according to the size of the dump
         line.write(b&#39;   &#39;*fill)
@@ -512,7 +518,7 @@ def get_utf8_length(data):
 
         for i in data:
                 if i &gt;= 0x20 and  i &lt; 0x7F:
-                        line.write(chr(i).encode(&#34;utf8&#34;))
+                        line.write(i.to_bytes(1,&#34;big&#34;))
                 else:
                         line.write(b&#39;.&#39;)
 
@@ -748,6 +754,24 @@ def get_utf8_length(data):
         return False</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.strings.local_time"><code class="name flex">
+<span>def <span class="ident">local_time</span></span>(<span>date=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Safe local time, it return 2000/1/1 00:00:00 if date can be extracted</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def local_time(date=None):
+        &#34;&#34;&#34; Safe local time, it return 2000/1/1 00:00:00 if date can be extracted &#34;&#34;&#34;
+        try:
+                year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
+        except:
+                year,month,day,hour,minute,second,weekday,yearday = 2000,1,1,0,0,0,0,0
+        return year,month,day,hour,minute,second,weekday,yearday</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.strings.size_to_bytes"><code class="name flex">
 <span>def <span class="ident">size_to_bytes</span></span>(<span>size, largeur=6)</span>
 </code></dt>
@@ -928,6 +952,7 @@ def get_utf8_length(data):
 <li><code><a title="lib.tools.strings.ispunctuation" href="#lib.tools.strings.ispunctuation">ispunctuation</a></code></li>
 <li><code><a title="lib.tools.strings.isspace" href="#lib.tools.strings.isspace">isspace</a></code></li>
 <li><code><a title="lib.tools.strings.isupper" href="#lib.tools.strings.isupper">isupper</a></code></li>
+<li><code><a title="lib.tools.strings.local_time" href="#lib.tools.strings.local_time">local_time</a></code></li>
 <li><code><a title="lib.tools.strings.size_to_bytes" href="#lib.tools.strings.size_to_bytes">size_to_bytes</a></code></li>
 <li><code><a title="lib.tools.strings.size_to_string" href="#lib.tools.strings.size_to_string">size_to_string</a></code></li>
 <li><code><a title="lib.tools.strings.ticks" href="#lib.tools.strings.ticks">ticks</a></code></li>

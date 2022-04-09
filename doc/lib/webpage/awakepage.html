@@ -33,12 +33,12 @@
 from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import main_frame, manage_default_button
-from tools             import AwakeConfig,lang
+from tools             import awake, lang
 
 @HttpServer.add_route(b&#39;/wakeup&#39;, menu=lang.menu_system, item=lang.item_wakeup)
 async def wakeup(request, response, args):
         &#34;&#34;&#34; Wake uo configuration web page &#34;&#34;&#34;
-        config = AwakeConfig()
+        config = awake.AwakeConfig()
         disabled, action, submit = manage_default_button(request, config)
 
         page = main_frame(request, response, args, lang.gpio_wake_up,
@@ -70,7 +70,7 @@ async def wakeup(request, response, args):
 <pre><code class="python">@HttpServer.add_route(b&#39;/wakeup&#39;, menu=lang.menu_system, item=lang.item_wakeup)
 async def wakeup(request, response, args):
         &#34;&#34;&#34; Wake uo configuration web page &#34;&#34;&#34;
-        config = AwakeConfig()
+        config = awake.AwakeConfig()
         disabled, action, submit = manage_default_button(request, config)
 
         page = main_frame(request, response, args, lang.gpio_wake_up,

@@ -41,7 +41,7 @@ from tools             import lang,info, strings
 @HttpServer.add_route(b&#39;/historic&#39;, menu=lang.menu_motion, item=lang.item_historic, available=info.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
         &#34;&#34;&#34; Historic motion detection page &#34;&#34;&#34;
-        await Historic.get_root()
+        Historic.get_root()
         if len(request.params) == 0:
                 detailled = False
         else:
@@ -506,7 +506,7 @@ async def download_image(request, response, args):
 <pre><code class="python">@HttpServer.add_route(b&#39;/historic&#39;, menu=lang.menu_motion, item=lang.item_historic, available=info.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
         &#34;&#34;&#34; Historic motion detection page &#34;&#34;&#34;
-        await Historic.get_root()
+        Historic.get_root()
         if len(request.params) == 0:
                 detailled = False
         else:

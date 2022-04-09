@@ -42,8 +42,8 @@ from webpage.presencepage       import *
 from webpage.batterypage        import *
 from webpage.awakepage          import *
 from webpage.systempage         import *
-from tools.info                 import iscamera
-if iscamera():
+from tools                      import info
+if info.iscamera():
         # pylint:disable=ungrouped-imports
         from webpage.streamingpage  import *
         from webpage.camerapage     import *

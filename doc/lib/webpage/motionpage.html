@@ -182,7 +182,8 @@ async def motion(request, response, args):
                 Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),Br(),
                 Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),Br(),
                 Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),Br(),
-                Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;, checked=config.light_compensation, disabled=disabled),Br(),
+                Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;, checked=config.permanent_detection, disabled=disabled),Br(),
+                Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,  checked=config.light_compensation,  disabled=disabled),Br(),
                 submit)
         await response.send_page(page)
 
@@ -243,7 +244,8 @@ async def motion(request, response, args):
                 Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),Br(),
                 Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),Br(),
                 Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),Br(),
-                Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;, checked=config.light_compensation, disabled=disabled),Br(),
+                Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;, checked=config.permanent_detection, disabled=disabled),Br(),
+                Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,  checked=config.light_compensation,  disabled=disabled),Br(),
                 submit)
         await response.send_page(page)</code></pre>
 </details>

@@ -31,10 +31,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Manage server class &#34;&#34;&#34;
 import time
-from video.video import Camera
 import wifi
 import uasyncio
-from tools import jsonconfig,logger,builddate,lang,tasking,info,strings
+from tools import jsonconfig,logger,builddate,lang,watchdog,info,strings
+if info.iscamera():
+        from video.video import Camera
 
 class ServerConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Servers configuration &#34;&#34;&#34;
@@ -74,6 +75,7 @@ class ServerContext:
 
                 self.server_postponed = self.server_config.server_postponed
                 set_time(self.region_config.current_time)
+
 class Server:
         &#34;&#34;&#34; Class used to manage the servers &#34;&#34;&#34;
         suspended = [False]
@@ -138,7 +140,7 @@ class Server:
                                 if i % 6 == 0:
                                         print(&#34;Wait all servers suspended...&#34;)
                                 await uasyncio.sleep(0.5)
-                                tasking.WatchDog.feed()
+                                watchdog.WatchDog.feed()
 
         @staticmethod
         def init(loop=None, page_loader=None, preload=False, http_port=80):
@@ -149,7 +151,7 @@ class Server:
                 False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
                 Server.context = ServerContext(loop, page_loader, preload, http_port)
                 logger.syslog(info.sysinfo(display=False))
-                logger.syslog(&#34;Firmware build date &#39;%s&#39;&#34;%strings.tostrings(builddate.date))
+                logger.syslog(&#34;Build : %s&#34;%strings.tostrings(builddate.date))
 
                 from server.periodic import periodic_task
                 loop.create_task(periodic_task())
@@ -264,9 +266,10 @@ class Server:
                                         server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port, name=&#34;httpServer&#34;)
 
                                         # If camera present
-                                        if info.iscamera() and Camera.is_activated():
-                                                # Load and start streaming http server
-                                                server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)
+                                        if info.iscamera():
+                                                if Camera.is_activated():
+                                                        # Load and start streaming http server
+                                                        server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)
 
                                 from server.presence import detect_presence
                                 Server.context.loop.create_task(detect_presence())
@@ -412,7 +415,7 @@ class Server:
                                 if i % 6 == 0:
                                         print(&#34;Wait all servers suspended...&#34;)
                                 await uasyncio.sleep(0.5)
-                                tasking.WatchDog.feed()
+                                watchdog.WatchDog.feed()
 
         @staticmethod
         def init(loop=None, page_loader=None, preload=False, http_port=80):
@@ -423,7 +426,7 @@ class Server:
                 False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
                 Server.context = ServerContext(loop, page_loader, preload, http_port)
                 logger.syslog(info.sysinfo(display=False))
-                logger.syslog(&#34;Firmware build date &#39;%s&#39;&#34;%strings.tostrings(builddate.date))
+                logger.syslog(&#34;Build : %s&#34;%strings.tostrings(builddate.date))
 
                 from server.periodic import periodic_task
                 loop.create_task(periodic_task())
@@ -538,9 +541,10 @@ class Server:
                                         server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port, name=&#34;httpServer&#34;)
 
                                         # If camera present
-                                        if info.iscamera() and Camera.is_activated():
-                                                # Load and start streaming http server
-                                                server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)
+                                        if info.iscamera():
+                                                if Camera.is_activated():
+                                                        # Load and start streaming http server
+                                                        server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)
 
                                 from server.presence import detect_presence
                                 Server.context.loop.create_task(detect_presence())
@@ -646,7 +650,7 @@ def init(loop=None, page_loader=None, preload=False, http_port=80):
         False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
         Server.context = ServerContext(loop, page_loader, preload, http_port)
         logger.syslog(info.sysinfo(display=False))
-        logger.syslog(&#34;Firmware build date &#39;%s&#39;&#34;%strings.tostrings(builddate.date))
+        logger.syslog(&#34;Build : %s&#34;%strings.tostrings(builddate.date))
 
         from server.periodic import periodic_task
         loop.create_task(periodic_task())</code></pre>
@@ -851,9 +855,10 @@ async def start_server():
                                 server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port, name=&#34;httpServer&#34;)
 
                                 # If camera present
-                                if info.iscamera() and Camera.is_activated():
-                                        # Load and start streaming http server
-                                        server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)
+                                if info.iscamera():
+                                        if Camera.is_activated():
+                                                # Load and start streaming http server
+                                                server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)
 
                         from server.presence import detect_presence
                         Server.context.loop.create_task(detect_presence())</code></pre>
@@ -981,7 +986,7 @@ async def wait_all_suspended():
                         if i % 6 == 0:
                                 print(&#34;Wait all servers suspended...&#34;)
                         await uasyncio.sleep(0.5)
-                        tasking.WatchDog.feed()</code></pre>
+                        watchdog.WatchDog.feed()</code></pre>
 </details>
 </dd>
 <dt id="lib.server.server.Server.wait_resume"><code class="name flex">

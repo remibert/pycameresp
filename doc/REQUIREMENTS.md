@@ -18,3 +18,5 @@ Below are the devices compatible with pycameresp :
 ![ESP32CAM-MB](/images/Device_ESP32CAM-MB.jpg "ESP32CAM-MB")
 ![NODEMCU](/images/Device_NODEMCU.jpg "NODE MCU") ![LOLIN32](/images/Device_LOLIN32.jpg "LOLIN32")
 ![TTGO](/images/Device_TTGO.jpg "TTGO")
+![ESP32ONE](/images/Device_ESP32ONE.jpg "ESP32ONE")
+![M5StackCamera](/images/Device_M5StackCamera.jpg "M5StackCamera")

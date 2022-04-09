@@ -33,16 +33,20 @@
 import sys
 import os
 import select
-from tools import filesystem, strings
+try:
+        from tools import filesystem, strings,watchdog
+except:
+        # pylint:disable=multiple-imports
+        import strings,filesystem,watchdog
+
 
 if filesystem.ismicropython():
         # pylint:disable=ungrouped-imports
         # pylint:disable=consider-using-enumerate
-        from tools.tasking import WatchDog
         def getch(raw = True, duration=100000000, interchar=0.05):
                 &#34;&#34;&#34; Wait a key pressed on keyboard and return it &#34;&#34;&#34;
                 key = b&#34;&#34;
-                WatchDog.feed()
+                watchdog.WatchDog.feed()
                 while 1:
                         if len(key) == 0:
                                 delay = duration
@@ -131,9 +135,8 @@ else:
         def kbflush(duration=0.5):
                 &#34;&#34;&#34; Flush all keys not yet read &#34;&#34;&#34;
 
-
 screen_size = None
-
+refresh_size = 0
 def refresh_screen_size():
         &#34;&#34;&#34; Refresh the screen size &#34;&#34;&#34;
         global screen_size
@@ -162,10 +165,14 @@ def refresh_screen_size():
         kbflush()
         return result
 
-def get_screen_size():
+def get_screen_size(force=False):
         &#34;&#34;&#34; Get the VT100 screen size &#34;&#34;&#34;
-        global screen_size
-        if screen_size is not None:
+        global screen_size, refresh_size
+        refresh_size += 1
+        if refresh_size == 5:
+                force = True
+                refresh_size = 0
+        if screen_size is not None and force is False:
                 return screen_size
         else:
                 return refresh_screen_size()</code></pre>
@@ -195,7 +202,7 @@ def get_screen_size():
 </details>
 </dd>
 <dt id="lib.tools.terminal.get_screen_size"><code class="name flex">
-<span>def <span class="ident">get_screen_size</span></span>(<span>)</span>
+<span>def <span class="ident">get_screen_size</span></span>(<span>force=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the VT100 screen size</p></div>
@@ -203,10 +210,14 @@ def get_screen_size():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_screen_size():
+<pre><code class="python">def get_screen_size(force=False):
         &#34;&#34;&#34; Get the VT100 screen size &#34;&#34;&#34;
-        global screen_size
-        if screen_size is not None:
+        global screen_size, refresh_size
+        refresh_size += 1
+        if refresh_size == 5:
+                force = True
+                refresh_size = 0
+        if screen_size is not None and force is False:
                 return screen_size
         else:
                 return refresh_screen_size()</code></pre>

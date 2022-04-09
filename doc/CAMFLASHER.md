@@ -21,20 +21,30 @@ Camflasher with shell commands **importer** and **exporter**, allows to inject o
 
 - Download the firmware associated with your device :
 
-	- [ESP32-CAM, ESP32-CAM-MB](https://github.com/remibert/pycameresp/releases/download/V4/ESP32CAM-firmware.bin)
+	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V5/ESP32CAM-firmware.bin)
 
-	- [ESP32-NODEMCU, LOLIN32, ESP32 without SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V4/GENERIC-firmware.bin)
+	- [ESP32-NODEMCU, LOLIN32, ESP32 without SPIRAM](https://github.com/remibert/pycameresp/releases/download/V5/GENERIC-firmware.bin)
 
-	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V4/GENERIC_SPIRAM-firmware.bin)
+	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V5/GENERIC_SPIRAM-firmware.bin)
+
+- Or download the zip for standard micropython firmware.
+
+	- [Shell with editor for RP2 pico Pi](https://github.com/remibert/pycameresp/releases/download/V5/shell.zip)
+
+	- [Wifi manager, Http server](https://github.com/remibert/pycameresp/releases/download/V5/server.zip)
+
+It is possible to run the shell with editor, or the servers on a standard micropython platform. The servers, the wifi manager, requires having enough ram and wifi support (ESP32 with SPIRAM for example). Unzip archive and install it with rshell.
+
+
 
 - Download the camflasher application and unzip it :
-	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V4/CamFlasher_win10_64.zip)
+	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V5/CamFlasher_windows_10_64.zip)
 
-	- [CamFlasher for Windows seven 64 bits](https://github.com/remibert/pycameresp/releases/download/V4/CamFlasher_win7_64.zip)
+	- [CamFlasher for Windows seven 64 bits](https://github.com/remibert/pycameresp/releases/download/V5/CamFlasher_win7_64.zip)
 
-	- [CamFlasher for OSX Big Sur Intel](https://github.com/remibert/pycameresp/releases/download/V4/CamFlasher_osx.zip)
+	- [CamFlasher for OSX Big Sur Intel](https://github.com/remibert/pycameresp/releases/download/V5/CamFlasher_osx.zip)
 
-	- [CamFlasher for Debian x86_64](https://github.com/remibert/pycameresp/releases/download/V4/CamFlasher_linux.zip)
+	- [CamFlasher for Debian x86_64](https://github.com/remibert/pycameresp/releases/download/V5/CamFlasher_linux.zip)
 
 - Connect the device to the USB port of your computer.
 
@@ -126,6 +136,10 @@ To do this work permanently, it is necessary to configure your internet box, so 
 
 ![Example of orange box](/images/10_CamFlasher_NamingSmartphone.png)
 
+# Specific configuration
+- For M5Stack with camera, edit the main.py and change the device="ESP32CAM" by device="M5CAMERA-B".
+- For Esp32ONE, edit the main.py and change the device="ESP32CAM" by device="ESP32ONE".
+
 # Shell access
 
 On the CamFlasher application, when the device has finished booting, press any key on the keyboard.
@@ -149,3 +163,11 @@ You can also execute directly from the text editor, the script being edited with
 All this is done directly from the device.
 
 [See text editor](/doc/EDITOR.md)
+
+# Console configuration
+
+You can change the console display colors, as well as the character font. See Console/Option menu.
+
+![Option](/images/14_CamFlasher_Option.jpg)
+
+The working directory, allows you to locate the directory on your computer to exchange files. By using the "exporter" command from the shell, you send the files or the file tree to your computer. The "importer" command is used to inject the files located in this working directory onto the device. The "-r" option offers recursion. Wildcard are supported for these commands.

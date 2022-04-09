@@ -32,6 +32,7 @@
 &#34;&#34;&#34; Device informations &#34;&#34;&#34;
 import sys
 import time
+import os
 from tools import strings,filesystem
 try:
         import machine
@@ -66,7 +67,12 @@ def meminfo(display=True):
                 # pylint: disable=no-member
                 alloc = gc.mem_alloc()
                 free  = gc.mem_free()
-                result = b&#34;Mem alloc=%s free=%s total=%s&#34;%(strings.size_to_bytes(alloc, 1), strings.size_to_bytes(free, 1), strings.size_to_bytes(alloc+free, 1))
+                total = alloc+free
+                result = b&#34;Memory: alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(
+                        strings.size_to_bytes(alloc, 1),
+                        strings.size_to_bytes(free,  1),
+                        strings.size_to_bytes(total, 1),
+                        100-(free*100/total))
                 if display:
                         print(strings.tostrings(result))
                 else:
@@ -74,11 +80,23 @@ def meminfo(display=True):
         except:
                 return b&#34;Mem unavailable&#34;
 
-def flashinfo(display=True):
+def flashinfo(mountpoint=None, display=True):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
         try:
-                import esp
-                result = b&#34;Flash user=%s size=%s&#34;%(strings.size_to_bytes(esp.flash_user_start(), 1), strings.size_to_bytes(esp.flash_size(), 1))
+                import uos
+                if mountpoint is None:
+                        mountpoint = os.getcwd()
+                status = uos.statvfs(mountpoint)
+                free  = status[0]*status[3]
+                if free &lt; 0:
+                        free = 0
+                total = status[1]*status[2]
+                alloc  = total - free
+                result = b&#34;Flash%s: alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(strings.tobytes(mountpoint),
+                        strings.size_to_string(alloc, 1),
+                        strings.size_to_string(free,  1),
+                        strings.size_to_string(total, 1),
+                        100-(free*100/total))
                 if display:
                         print(strings.tostrings(result))
                 else:
@@ -89,7 +107,7 @@ def flashinfo(display=True):
 def sysinfo(display=True, text=&#34;&#34;):
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
         try:
-                result = b&#34;%s%s %dMhz, %s, %s, %s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(False))
+                result = b&#34;Device: %s%s %dMhz\nTime  : %s\n%s\n%s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(&#34;/&#34;,False))
                 if display:
                         print(strings.tostrings(result))
                 else:
@@ -131,7 +149,7 @@ def uptime(text=&#34;days&#34;):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="lib.tools.info.flashinfo"><code class="name flex">
-<span>def <span class="ident">flashinfo</span></span>(<span>display=True)</span>
+<span>def <span class="ident">flashinfo</span></span>(<span>mountpoint=None, display=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get flash informations</p></div>
@@ -139,11 +157,23 @@ def uptime(text=&#34;days&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def flashinfo(display=True):
+<pre><code class="python">def flashinfo(mountpoint=None, display=True):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
         try:
-                import esp
-                result = b&#34;Flash user=%s size=%s&#34;%(strings.size_to_bytes(esp.flash_user_start(), 1), strings.size_to_bytes(esp.flash_size(), 1))
+                import uos
+                if mountpoint is None:
+                        mountpoint = os.getcwd()
+                status = uos.statvfs(mountpoint)
+                free  = status[0]*status[3]
+                if free &lt; 0:
+                        free = 0
+                total = status[1]*status[2]
+                alloc  = total - free
+                result = b&#34;Flash%s: alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(strings.tobytes(mountpoint),
+                        strings.size_to_string(alloc, 1),
+                        strings.size_to_string(free,  1),
+                        strings.size_to_string(total, 1),
+                        100-(free*100/total))
                 if display:
                         print(strings.tostrings(result))
                 else:
@@ -189,7 +219,12 @@ def uptime(text=&#34;days&#34;):
                 # pylint: disable=no-member
                 alloc = gc.mem_alloc()
                 free  = gc.mem_free()
-                result = b&#34;Mem alloc=%s free=%s total=%s&#34;%(strings.size_to_bytes(alloc, 1), strings.size_to_bytes(free, 1), strings.size_to_bytes(alloc+free, 1))
+                total = alloc+free
+                result = b&#34;Memory: alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(
+                        strings.size_to_bytes(alloc, 1),
+                        strings.size_to_bytes(free,  1),
+                        strings.size_to_bytes(total, 1),
+                        100-(free*100/total))
                 if display:
                         print(strings.tostrings(result))
                 else:
@@ -210,7 +245,7 @@ def uptime(text=&#34;days&#34;):
 <pre><code class="python">def sysinfo(display=True, text=&#34;&#34;):
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
         try:
-                result = b&#34;%s%s %dMhz, %s, %s, %s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(False))
+                result = b&#34;Device: %s%s %dMhz\nTime  : %s\n%s\n%s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(&#34;/&#34;,False))
                 if display:
                         print(strings.tostrings(result))
                 else:

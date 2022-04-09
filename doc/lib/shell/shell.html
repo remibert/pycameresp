@@ -155,21 +155,21 @@ The commands are :
 &#34;&#34;&#34;
 # pylint:disable=wrong-import-position
 import sys
-
 sys.path.append(&#34;lib&#34;)
 sys.path.append(&#34;simul&#34;)
 import io
 import os
 import uos
 import machine
-from tools import useful,logger,sdcard,tasking,filesystem,exchange,info,strings,terminal,system
+from tools import useful,logger,sdcard,filesystem,exchange,info,strings,terminal,watchdog
 
 def cd(directory = &#34;/&#34;):
         &#34;&#34;&#34; Change directory &#34;&#34;&#34;
         try:
-                uos.chdir(directory)
+                uos.chdir(filesystem.normpath(directory))
         except:
-                print(&#34;No such file or directory &#39;%s&#39;&#34;%directory)
+                if directory != &#34;.&#34;:
+                        print(&#34;No such file or directory &#39;%s&#39;&#34;%directory)
 
 def pwd():
         &#34;&#34;&#34; Display the current directory &#34;&#34;&#34;
@@ -180,7 +180,7 @@ def mkdir(directory, recursive=False, quiet=False):
         try:
                 if quiet is False:
                         print(&#34;mkdir &#39;%s&#39;&#34;%directory)
-                filesystem.makedir(directory, recursive)
+                filesystem.makedir(filesystem.normpath(directory), recursive)
         except:
                 print(&#34;Cannot mkdir &#39;%s&#39;&#34;%directory)
 
@@ -198,6 +198,7 @@ def removedir(directory, force=False, quiet=False, simulate=False):
 
 def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
+        directory = filesystem.normpath(directory)
         if recursive is False:
                 removedir(directory, force=force, quiet=quiet, simulate=simulate)
         else:
@@ -220,7 +221,7 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 def mv(source, destination):
         &#34;&#34;&#34; Move or rename file &#34;&#34;&#34;
         try:
-                uos.rename(source,destination)
+                uos.rename(filesystem.normpath(source),filesystem.normpath(destination))
         except:
                 print(&#34;Cannot mv &#39;%s&#39;-&gt;&#39;%s&#39;&#34;%(source,destination))
 
@@ -250,6 +251,8 @@ def copyfile(src,dst,quiet):
 
 def cp(source, destination, recursive=False, quiet=False):
         &#34;&#34;&#34; Copy file command &#34;&#34;&#34;
+        source = filesystem.normpath(source)
+        destination = filesystem.normpath(destination)
         if filesystem.isfile(source):
                 copyfile(source,destination,quiet)
         else:
@@ -269,7 +272,7 @@ def rmfile(filename, quiet=False, force=False, simulate=False):
         &#34;&#34;&#34; Remove file &#34;&#34;&#34;
         try:
                 if (filesystem.ismicropython() or force) and simulate is False:
-                        uos.remove(filename)
+                        uos.remove(filesystem.normpath(filename))
                 if quiet is False:
                         print(&#34;rm &#39;%s&#39;&#34;%(filename))
         except:
@@ -277,6 +280,7 @@ def rmfile(filename, quiet=False, force=False, simulate=False):
 
 def rm(file, recursive=False, quiet=False, force=False, simulate=False):
         &#34;&#34;&#34; Remove file command &#34;&#34;&#34;
+        file = filesystem.normpath(file)
         filenames   = []
         directories = []
 
@@ -323,12 +327,9 @@ class LsDisplayer:
 
         def purge_path(self, path):
                 &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
-                if path != &#34;/&#34; and self.path != &#34;/&#34;:
-                        path = path.replace(self.path,&#34;&#34;)
-                if len(path) &gt;= 2 and path[:2] == &#34;./&#34;:
-                        path = path[2:]
-                path = path.lstrip(&#34;/&#34;)
-                return path
+                path = filesystem.normpath(path)
+                prefix = filesystem.prefix([path, self.path])
+                return path[len(prefix):].lstrip(&#34;/&#34;)
 
         def show(self, path):
                 &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
@@ -368,6 +369,7 @@ def ll(file=&#34;&#34;, recursive=False):
 
 def searchfile(file, recursive, obj = None):
         &#34;&#34;&#34; Search file &#34;&#34;&#34;
+        file = filesystem.normpath(file)
         p = filesystem.abspath(uos.getcwd(), file)
         filenames = []
         try:
@@ -387,7 +389,7 @@ def searchfile(file, recursive, obj = None):
                         _, filenames = filesystem.scandir(path, pattern, recursive, obj)
         except:
                 pass
-        if len(filenames) == 0 and file != &#34;&#34;:
+        if len(filenames) == 0 and file != &#34;&#34; and file != &#34;.&#34;:
                 print(&#34;%s : No such file or directory&#34;%file)
         return filenames
 
@@ -417,6 +419,7 @@ def print_part(message, width, height, count):
 def grep(file, text, recursive=False, ignorecase=False, regexp=False):
         &#34;&#34;&#34; Grep command &#34;&#34;&#34;
         from re import search
+        file = filesystem.normpath(file)
         def __search(text, content, ignorecase, regexp):
                 if ignorecase:
                         content  = content.lower()
@@ -463,22 +466,31 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 
 def ping(host):
         &#34;&#34;&#34; Ping host &#34;&#34;&#34;
-        from server.ping import ping as ping_
-        ping_(host, count=4, timeout=1)
+        try:
+                from server.ping import ping as ping_
+                ping_(host, count=4, timeout=1)
+        except:
+                print(&#34;Not available&#34;)
 
 def ip2host(ip_address):
         &#34;&#34;&#34; Convert ip to hostname &#34;&#34;&#34;
-        import wifi
-        _, _, _, dns = wifi.Station.get_info()
-        from server.dnsclient import resolve_hostname
-        print(resolve_hostname(dns, ip_address))
+        try:
+                import wifi
+                _, _, _, dns = wifi.Station.get_info()
+                from server.dnsclient import resolve_hostname
+                print(resolve_hostname(dns, ip_address))
+        except:
+                print(&#34;Not available&#34;)
 
 def host2ip(hostname):
         &#34;&#34;&#34; Convert hostname to ip &#34;&#34;&#34;
-        import wifi
-        _, _, _, dns = wifi.Station.get_info()
-        from server.dnsclient import resolve_ip_address
-        print(resolve_ip_address(dns, hostname))
+        try:
+                import wifi
+                _, _, _, dns = wifi.Station.get_info()
+                from server.dnsclient import resolve_ip_address
+                print(resolve_ip_address(dns, hostname))
+        except:
+                print(&#34;Not available&#34;)
 
 def mountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Mount command &#34;&#34;&#34;
@@ -498,15 +510,18 @@ def umountsd(mountpoint=&#34;/sd&#34;):
 
 def date(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
-        from server.timesetting import set_date
-        if update:
-                if noDst:
-                        dst = False
-                else:
-                        dst = True
-                set_date(offsetUTC, dst)
+        try:
+                from server.timesetting import set_date
+                if update:
+                        if noDst:
+                                dst = False
+                        else:
+                                dst = True
+                        set_date(offsetUTC, dst)
+                del sys.modules[&#34;server.timesetting&#34;]
+        except:
+                pass
         print(strings.date_to_string())
-        del sys.modules[&#34;server.timesetting&#34;]
 
 def setdate(datetime=&#34;&#34;):
         &#34;&#34;&#34; Set date and time &#34;&#34;&#34;
@@ -546,7 +561,11 @@ def setdate(datetime=&#34;&#34;):
 
 def reboot():
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
-        system.reboot(&#34;Reboot device with command&#34;)
+        try:
+                from tools import system
+                system.reboot(&#34;Reboot device with command&#34;)
+        except:
+                machine.deepsleep(1000)
 
 def deepsleep(seconds=60):
         &#34;&#34;&#34; Deep sleep command &#34;&#34;&#34;
@@ -582,13 +601,9 @@ def cat(file):
         except:
                 print(&#34;Cannot cat &#39;%s&#39;&#34;%(file))
 
-def df(mountpoint = &#34;/&#34;):
+def df(mountpoint = None):
         &#34;&#34;&#34; Display free disk space &#34;&#34;&#34;
-        status = uos.statvfs(mountpoint)
-        freeSize  = status[0]*status[3]
-        totalSize = status[1]*status[2]
-        print(&#34;Filesystem     Free   Capacity   Used&#34;)
-        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, strings.size_to_string(freeSize,8),strings.size_to_string(totalSize,), totalSize/freeSize))
+        print(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))
 
 def gc():
         &#34;&#34;&#34; Garbage collector command &#34;&#34;&#34;
@@ -695,9 +710,11 @@ def importer(file=&#34;&#34;, recursive=False):
                         while result:
                                 file_reader = exchange.FileReader()
                                 result = file_reader.read(uos.getcwd(), sys.stdin.buffer, sys.stdout.buffer)
-                        print (&#34;Importer end&#34;)
+                                watchdog.WatchDog.feed()
+                        print(&#34;Importer end&#34;)
                 except Exception as err:
-                        logger.syslog(err)
+                        logger.syslog(err, display=False)
+                        print(&#34;Importer failed&#34;)
         else:
                 print(&#34;CamFlasher application required for this command&#34;)
 
@@ -717,6 +734,7 @@ class Exporter:
                         if filesystem.exists(path):
                                 sys.stdout.buffer.write(&#34;࿊&#34;.encode(&#34;utf8&#34;))
                                 result = file_write.write(path, sys.stdin.buffer, sys.stdout.buffer)
+                                watchdog.WatchDog.feed()
                 return result
 
         def show(self, path):
@@ -736,8 +754,9 @@ def exporter(file=&#34;&#34;, recursive=False):
                 try:
                         searchfile(file, recursive, Exporter())
                         print (&#34;Exporter end&#34;)
-                except exchange.FileError as err:
-                        print(&#34;Exporter failed : %s&#34;%err.message)
+                except Exception as err:
+                        logger.syslog(err, display=False)
+                        print(&#34;Exporter failed&#34;)
         else:
                 print(&#34;CamFlasher application required for this command&#34;)
 
@@ -866,7 +885,7 @@ def sh():
                 try:
                         commandLine = &#34;&#34;
                         commandLine = input(&#34;%s=&gt; &#34;%os.getcwd())
-                        tasking.WatchDog.feed()
+                        watchdog.WatchDog.feed()
                 except EOFError:
                         print(&#34;&#34;)
                         break
@@ -880,7 +899,10 @@ def sh():
 async def async_shell():
         &#34;&#34;&#34; Asynchronous shell &#34;&#34;&#34;
         import uasyncio
-        from server.server import Server
+        try:
+                from server.server import Server
+        except:
+                Server = None
 
         print(&#34;\nPress key to start command line&#34;)
         if filesystem.ismicropython():
@@ -897,13 +919,14 @@ async def async_shell():
                         # Check if character is correct to start shell
                         if not ord(character) in [0,0xA]:
                                 # Ask to suspend server during shell
-                                Server.suspend()
+                                if Server is not None:
+                                        Server.suspend()
 
-                                # Wait all server suspended
-                                await Server.wait_all_suspended()
+                                        # Wait all server suspended
+                                        await Server.wait_all_suspended()
 
                                 # Extend watch dog duration
-                                tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
+                                watchdog.WatchDog.start(watchdog.LONG_WATCH_DOG*2)
 
                                 # Get the size of screen
                                 terminal.refresh_screen_size()
@@ -920,10 +943,11 @@ async def async_shell():
                                 uos.chdir(&#34;/&#34;)
 
                                 # Resume watch dog duration
-                                tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
+                                watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
 
                                 # Resume server
-                                Server.resume()
+                                if Server is not None:
+                                        Server.resume()
                 else:
                         await uasyncio.sleep(polling1)
 
@@ -993,7 +1017,10 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">async def async_shell():
         &#34;&#34;&#34; Asynchronous shell &#34;&#34;&#34;
         import uasyncio
-        from server.server import Server
+        try:
+                from server.server import Server
+        except:
+                Server = None
 
         print(&#34;\nPress key to start command line&#34;)
         if filesystem.ismicropython():
@@ -1010,13 +1037,14 @@ if __name__ == &#34;__main__&#34;:
                         # Check if character is correct to start shell
                         if not ord(character) in [0,0xA]:
                                 # Ask to suspend server during shell
-                                Server.suspend()
+                                if Server is not None:
+                                        Server.suspend()
 
-                                # Wait all server suspended
-                                await Server.wait_all_suspended()
+                                        # Wait all server suspended
+                                        await Server.wait_all_suspended()
 
                                 # Extend watch dog duration
-                                tasking.WatchDog.start(tasking.LONG_WATCH_DOG*2)
+                                watchdog.WatchDog.start(watchdog.LONG_WATCH_DOG*2)
 
                                 # Get the size of screen
                                 terminal.refresh_screen_size()
@@ -1033,10 +1061,11 @@ if __name__ == &#34;__main__&#34;:
                                 uos.chdir(&#34;/&#34;)
 
                                 # Resume watch dog duration
-                                tasking.WatchDog.start(tasking.SHORT_WATCH_DOG)
+                                watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
 
                                 # Resume server
-                                Server.resume()
+                                if Server is not None:
+                                        Server.resume()
                 else:
                         await uasyncio.sleep(polling1)</code></pre>
 </details>
@@ -1081,9 +1110,10 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def cd(directory = &#34;/&#34;):
         &#34;&#34;&#34; Change directory &#34;&#34;&#34;
         try:
-                uos.chdir(directory)
+                uos.chdir(filesystem.normpath(directory))
         except:
-                print(&#34;No such file or directory &#39;%s&#39;&#34;%directory)</code></pre>
+                if directory != &#34;.&#34;:
+                        print(&#34;No such file or directory &#39;%s&#39;&#34;%directory)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.check_cam_flasher"><code class="name flex">
@@ -1168,6 +1198,8 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def cp(source, destination, recursive=False, quiet=False):
         &#34;&#34;&#34; Copy file command &#34;&#34;&#34;
+        source = filesystem.normpath(source)
+        destination = filesystem.normpath(destination)
         if filesystem.isfile(source):
                 copyfile(source,destination,quiet)
         else:
@@ -1195,15 +1227,18 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def date(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
-        from server.timesetting import set_date
-        if update:
-                if noDst:
-                        dst = False
-                else:
-                        dst = True
-                set_date(offsetUTC, dst)
-        print(strings.date_to_string())
-        del sys.modules[&#34;server.timesetting&#34;]</code></pre>
+        try:
+                from server.timesetting import set_date
+                if update:
+                        if noDst:
+                                dst = False
+                        else:
+                                dst = True
+                        set_date(offsetUTC, dst)
+                del sys.modules[&#34;server.timesetting&#34;]
+        except:
+                pass
+        print(strings.date_to_string())</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.deepsleep"><code class="name flex">
@@ -1221,7 +1256,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.shell.df"><code class="name flex">
-<span>def <span class="ident">df</span></span>(<span>mountpoint='/')</span>
+<span>def <span class="ident">df</span></span>(<span>mountpoint=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Display free disk space</p></div>
@@ -1229,13 +1264,9 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def df(mountpoint = &#34;/&#34;):
+<pre><code class="python">def df(mountpoint = None):
         &#34;&#34;&#34; Display free disk space &#34;&#34;&#34;
-        status = uos.statvfs(mountpoint)
-        freeSize  = status[0]*status[3]
-        totalSize = status[1]*status[2]
-        print(&#34;Filesystem     Free   Capacity   Used&#34;)
-        print(&#34;%-10s %-10s %-10s %-3.2f%%&#34;%(mountpoint, strings.size_to_string(freeSize,8),strings.size_to_string(totalSize,), totalSize/freeSize))</code></pre>
+        print(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.dump_"><code class="name flex">
@@ -1409,8 +1440,9 @@ if __name__ == &#34;__main__&#34;:
                 try:
                         searchfile(file, recursive, Exporter())
                         print (&#34;Exporter end&#34;)
-                except exchange.FileError as err:
-                        print(&#34;Exporter failed : %s&#34;%err.message)
+                except Exception as err:
+                        logger.syslog(err, display=False)
+                        print(&#34;Exporter failed&#34;)
         else:
                 print(&#34;CamFlasher application required for this command&#34;)</code></pre>
 </details>
@@ -1486,6 +1518,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def grep(file, text, recursive=False, ignorecase=False, regexp=False):
         &#34;&#34;&#34; Grep command &#34;&#34;&#34;
         from re import search
+        file = filesystem.normpath(file)
         def __search(text, content, ignorecase, regexp):
                 if ignorecase:
                         content  = content.lower()
@@ -1566,10 +1599,13 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def host2ip(hostname):
         &#34;&#34;&#34; Convert hostname to ip &#34;&#34;&#34;
-        import wifi
-        _, _, _, dns = wifi.Station.get_info()
-        from server.dnsclient import resolve_ip_address
-        print(resolve_ip_address(dns, hostname))</code></pre>
+        try:
+                import wifi
+                _, _, _, dns = wifi.Station.get_info()
+                from server.dnsclient import resolve_ip_address
+                print(resolve_ip_address(dns, hostname))
+        except:
+                print(&#34;Not available&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.importer"><code class="name flex">
@@ -1592,9 +1628,11 @@ if __name__ == &#34;__main__&#34;:
                         while result:
                                 file_reader = exchange.FileReader()
                                 result = file_reader.read(uos.getcwd(), sys.stdin.buffer, sys.stdout.buffer)
-                        print (&#34;Importer end&#34;)
+                                watchdog.WatchDog.feed()
+                        print(&#34;Importer end&#34;)
                 except Exception as err:
-                        logger.syslog(err)
+                        logger.syslog(err, display=False)
+                        print(&#34;Importer failed&#34;)
         else:
                 print(&#34;CamFlasher application required for this command&#34;)</code></pre>
 </details>
@@ -1610,10 +1648,13 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def ip2host(ip_address):
         &#34;&#34;&#34; Convert ip to hostname &#34;&#34;&#34;
-        import wifi
-        _, _, _, dns = wifi.Station.get_info()
-        from server.dnsclient import resolve_hostname
-        print(resolve_hostname(dns, ip_address))</code></pre>
+        try:
+                import wifi
+                _, _, _, dns = wifi.Station.get_info()
+                from server.dnsclient import resolve_hostname
+                print(resolve_hostname(dns, ip_address))
+        except:
+                print(&#34;Not available&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.ll"><code class="name flex">
@@ -1697,7 +1738,7 @@ if __name__ == &#34;__main__&#34;:
         try:
                 if quiet is False:
                         print(&#34;mkdir &#39;%s&#39;&#34;%directory)
-                filesystem.makedir(directory, recursive)
+                filesystem.makedir(filesystem.normpath(directory), recursive)
         except:
                 print(&#34;Cannot mkdir &#39;%s&#39;&#34;%directory)</code></pre>
 </details>
@@ -1732,7 +1773,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def mv(source, destination):
         &#34;&#34;&#34; Move or rename file &#34;&#34;&#34;
         try:
-                uos.rename(source,destination)
+                uos.rename(filesystem.normpath(source),filesystem.normpath(destination))
         except:
                 print(&#34;Cannot mv &#39;%s&#39;-&gt;&#39;%s&#39;&#34;%(source,destination))</code></pre>
 </details>
@@ -1800,8 +1841,11 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def ping(host):
         &#34;&#34;&#34; Ping host &#34;&#34;&#34;
-        from server.ping import ping as ping_
-        ping_(host, count=4, timeout=1)</code></pre>
+        try:
+                from server.ping import ping as ping_
+                ping_(host, count=4, timeout=1)
+        except:
+                print(&#34;Not available&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.print_part"><code class="name flex">
@@ -1856,7 +1900,11 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def reboot():
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
-        system.reboot(&#34;Reboot device with command&#34;)</code></pre>
+        try:
+                from tools import system
+                system.reboot(&#34;Reboot device with command&#34;)
+        except:
+                machine.deepsleep(1000)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.removedir"><code class="name flex">
@@ -1892,6 +1940,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def rm(file, recursive=False, quiet=False, force=False, simulate=False):
         &#34;&#34;&#34; Remove file command &#34;&#34;&#34;
+        file = filesystem.normpath(file)
         filenames   = []
         directories = []
 
@@ -1938,6 +1987,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
+        directory = filesystem.normpath(directory)
         if recursive is False:
                 removedir(directory, force=force, quiet=quiet, simulate=simulate)
         else:
@@ -1971,7 +2021,7 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Remove file &#34;&#34;&#34;
         try:
                 if (filesystem.ismicropython() or force) and simulate is False:
-                        uos.remove(filename)
+                        uos.remove(filesystem.normpath(filename))
                 if quiet is False:
                         print(&#34;rm &#39;%s&#39;&#34;%(filename))
         except:
@@ -1989,6 +2039,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def searchfile(file, recursive, obj = None):
         &#34;&#34;&#34; Search file &#34;&#34;&#34;
+        file = filesystem.normpath(file)
         p = filesystem.abspath(uos.getcwd(), file)
         filenames = []
         try:
@@ -2008,7 +2059,7 @@ if __name__ == &#34;__main__&#34;:
                         _, filenames = filesystem.scandir(path, pattern, recursive, obj)
         except:
                 pass
-        if len(filenames) == 0 and file != &#34;&#34;:
+        if len(filenames) == 0 and file != &#34;&#34; and file != &#34;.&#34;:
                 print(&#34;%s : No such file or directory&#34;%file)
         return filenames</code></pre>
 </details>
@@ -2077,7 +2128,7 @@ if __name__ == &#34;__main__&#34;:
                 try:
                         commandLine = &#34;&#34;
                         commandLine = input(&#34;%s=&gt; &#34;%os.getcwd())
-                        tasking.WatchDog.feed()
+                        watchdog.WatchDog.feed()
                 except EOFError:
                         print(&#34;&#34;)
                         break
@@ -2167,6 +2218,7 @@ if __name__ == &#34;__main__&#34;:
                         if filesystem.exists(path):
                                 sys.stdout.buffer.write(&#34;࿊&#34;.encode(&#34;utf8&#34;))
                                 result = file_write.write(path, sys.stdin.buffer, sys.stdout.buffer)
+                                watchdog.WatchDog.feed()
                 return result
 
         def show(self, path):
@@ -2201,6 +2253,7 @@ if __name__ == &#34;__main__&#34;:
                 if filesystem.exists(path):
                         sys.stdout.buffer.write(&#34;࿊&#34;.encode(&#34;utf8&#34;))
                         result = file_write.write(path, sys.stdin.buffer, sys.stdout.buffer)
+                        watchdog.WatchDog.feed()
         return result</code></pre>
 </details>
 </dd>
@@ -2259,12 +2312,9 @@ if __name__ == &#34;__main__&#34;:
 
         def purge_path(self, path):
                 &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
-                if path != &#34;/&#34; and self.path != &#34;/&#34;:
-                        path = path.replace(self.path,&#34;&#34;)
-                if len(path) &gt;= 2 and path[:2] == &#34;./&#34;:
-                        path = path[2:]
-                path = path.lstrip(&#34;/&#34;)
-                return path
+                path = filesystem.normpath(path)
+                prefix = filesystem.prefix([path, self.path])
+                return path[len(prefix):].lstrip(&#34;/&#34;)
 
         def show(self, path):
                 &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
@@ -2307,12 +2357,9 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def purge_path(self, path):
         &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
-        if path != &#34;/&#34; and self.path != &#34;/&#34;:
-                path = path.replace(self.path,&#34;&#34;)
-        if len(path) &gt;= 2 and path[:2] == &#34;./&#34;:
-                path = path[2:]
-        path = path.lstrip(&#34;/&#34;)
-        return path</code></pre>
+        path = filesystem.normpath(path)
+        prefix = filesystem.prefix([path, self.path])
+        return path[len(prefix):].lstrip(&#34;/&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.LsDisplayer.show"><code class="name flex">

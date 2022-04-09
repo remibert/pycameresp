@@ -34,7 +34,7 @@ import re
 import json
 import uasyncio
 import uos
-from tools import logger,sdcard,tasking,filesystem,strings
+from tools import logger,sdcard,tasking,filesystem,strings,info
 
 MAX_DISPLAYED = 100
 MAX_REMOVED   = 100
@@ -62,23 +62,23 @@ class Historic:
                 return Historic.lock.locked()
 
         @staticmethod
-        async def get_root():
+        def get_root():
                 &#34;&#34;&#34; Get the root path of sdcard and mount it &#34;&#34;&#34;
                 if sdcard.SdCard.mount():
                         return sdcard.SdCard.get_mountpoint()
                 return None
 
         @staticmethod
-        async def add_motion(path, name, image, info):
+        async def add_motion(path, name, image, motion_info):
                 &#34;&#34;&#34; Add motion detection in the historic &#34;&#34;&#34;
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 result = False
                 if root:
                         try:
                                 await Historic.acquire()
                                 path = strings.tostrings(path)
                                 name = strings.tostrings(name)
-                                item = Historic.create_item(root + &#34;/&#34; + path + &#34;/&#34; + name +&#34;.json&#34;, info)
+                                item = Historic.create_item(root + &#34;/&#34; + path + &#34;/&#34; + name +&#34;.json&#34;, motion_info)
                                 res1 = sdcard.SdCard.save(path, name + &#34;.jpg&#34; , image)
                                 res2 = sdcard.SdCard.save(path, name + &#34;.json&#34;, json.dumps(item))
                                 Historic.add_item(item)
@@ -90,13 +90,13 @@ class Historic:
                 return result
 
         @staticmethod
-        def create_item(filename, info):
+        def create_item(filename, motion_info):
                 &#34;&#34;&#34; Create historic item &#34;&#34;&#34;
                 name = filesystem.splitext(filename)[0] + &#34;.jpg&#34;
                 result = None
-                if &#34;geometry&#34; in info:
+                if &#34;geometry&#34; in motion_info:
                         # Add json file to the historic
-                        result = [name, info[&#34;geometry&#34;][&#34;width&#34;],info[&#34;geometry&#34;][&#34;height&#34;], info[&#34;diff&#34;][&#34;diffs&#34;], info[&#34;diff&#34;][&#34;squarex&#34;], info[&#34;diff&#34;][&#34;squarey&#34;]]
+                        result = [name, motion_info[&#34;geometry&#34;][&#34;width&#34;],motion_info[&#34;geometry&#34;][&#34;height&#34;], motion_info[&#34;diff&#34;][&#34;diffs&#34;], motion_info[&#34;diff&#34;][&#34;squarex&#34;], motion_info[&#34;diff&#34;][&#34;squarey&#34;]]
                 return result
 
         @staticmethod
@@ -112,7 +112,7 @@ class Historic:
         @staticmethod
         async def build(motions):
                 &#34;&#34;&#34; Parse the all motions files to build historic &#34;&#34;&#34;
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 if root:
                         count = 0
                         try:
@@ -122,12 +122,13 @@ class Historic:
                                 # For all motions
                                 for motion in motions:
                                         path = root + &#34;/&#34; + motion
-
                                         try:
                                                 # Parse json file
                                                 file = None
                                                 file = open(motion, &#34;rb&#34;)
-                                                Historic.add_item(json.load(file))
+                                                motion_item = json.load(file)
+                                                if filesystem.exists(motion_item[0]):
+                                                        Historic.add_item(motion_item)
                                         except Exception as err:
                                                 logger.syslog(err)
                                         finally:
@@ -142,7 +143,7 @@ class Historic:
         @staticmethod
         async def get_json():
                 &#34;&#34;&#34; Read the historic from disk &#34;&#34;&#34;
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 result = b&#34;&#34;
                 if root:
                         try:
@@ -172,6 +173,7 @@ class Historic:
                                 # Build historic file
                                 files = await Historic.build(motions)
                                 logger.syslog(&#34;End   historic creation&#34;)
+                                logger.syslog(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False)))
                         except Exception as err:
                                 logger.syslog(err)
 
@@ -204,7 +206,7 @@ class Historic:
         async def scan_directories(quantity=10, older=True):
                 &#34;&#34;&#34; Get the list of older or older directories in the sd card &#34;&#34;&#34;
                 motions = []
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 if root:
                         try:
                                 await Historic.acquire()
@@ -247,39 +249,51 @@ class Historic:
                 Historic.motion_in_progress[0] = state
 
         @staticmethod
-        async def remove_files(directory, simulate=False):
+        async def remove_files(directory, simulate=False, force=False):
                 &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
                 import shell
-                notEmpty = False
+                dir_not_empty = False
+                enough_space = False
                 force = True
                 if filesystem.exists(directory):
-                        # Parse all directories in sdcard
+                        files_to_remove = []
+                        dirs_to_remove  = []
+
+                        # Parse all directories in sdcard (WARNING : TO AVOID CRASH, NEVER DELETE DIRECTORY OR FILE IN ilistdir LOOP)
                         for fileinfo in uos.ilistdir(directory):
                                 filename = fileinfo[0]
                                 typ      = fileinfo[1]
-                                print(filename)
                                 # If file found
                                 if typ &amp; 0xF000 != 0x4000:
-                                        shell.rmfile(directory + &#34;/&#34; + filename, simulate=simulate, force=force)
+                                        files_to_remove.append(directory + &#34;/&#34; + filename)
                                 else:
-                                        await Historic.remove_files(directory + &#34;/&#34; + filename)
-                                        notEmpty = True
+                                        dirs_to_remove.append(directory + &#34;/&#34; + filename)
+                                dir_not_empty = True
 
-                        if notEmpty:
-                                shell.rm(directory, recursive=True, simulate=simulate, force=force)
-                        else:
-                                shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
-                else:
-                        print(&#34;Directory not existing &#39;%s&#39;&#34;%directory)
+                        for file_to_remove in files_to_remove:
+                                shell.rmfile(file_to_remove, simulate=simulate, force=force)
+                                if sdcard.SdCard.is_not_enough_space(low=False) is False:
+                                        enough_space = True
+                                        break
+
+                        if enough_space is False:
+                                for dir_to_remove in dirs_to_remove:
+                                        await Historic.remove_files(dir_to_remove, simulate=simulate, force=force)
+                                if dir_not_empty:
+                                        shell.rm(directory, recursive=True, simulate=simulate, force=force)
+                                else:
+                                        shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
 
         @staticmethod
         async def remove_older(force=False):
                 &#34;&#34;&#34; Remove older files to make space &#34;&#34;&#34;
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 if root:
                         # If not enough space available on sdcard
-                        if (sdcard.SdCard.get_free_size() * 10000// sdcard.SdCard.get_max_size() &lt;= 5) or force:
-                                logger.syslog(&#34;Start cleanup sd card&#34;)
+                        if sdcard.SdCard.is_not_enough_space(low=True) or force:
+                                logger.syslog(&#34;Start cleanup historic&#34;)
+                                cleaned = &#34;Historic space after cleanup&#34;
+                                Historic.first_extract[0] = False
                                 olders = await Historic.scan_directories(MAX_REMOVED, True)
                                 previous = &#34;&#34;
                                 for motion in olders:
@@ -287,13 +301,18 @@ class Historic:
                                                 await Historic.acquire()
                                                 directory = filesystem.split(motion)[0]
                                                 if previous != directory:
-                                                        await Historic.remove_files(directory)
+                                                        await Historic.remove_files(directory, simulate=False, force=force)
                                                         previous = directory
                                         except Exception as err:
                                                 logger.syslog(err)
                                         finally:
                                                 await Historic.release()
-                                logger.syslog(&#34;End cleanup sd card&#34;)
+                                        if sdcard.SdCard.is_not_enough_space(low=False) is False:
+                                                break
+                                logger.syslog(&#34;End cleanup historic&#34;)
+                        else:
+                                cleaned = &#34;Historic space&#34;
+                        logger.syslog(&#34;%s : %s&#34;%(cleaned, strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
 
         @staticmethod
         async def periodic():
@@ -302,13 +321,14 @@ class Historic:
                 if filesystem.ismicropython():
                         await Server.wait_resume(307)
                 else:
-                        await Server.wait_resume(7)
+                        await Server.wait_resume(17)
+
                 if Historic.motion_in_progress[0] is False:
                         if sdcard.SdCard.is_mounted():
-                                await Historic.extract()
                                 await Historic.remove_older()
+                                await Historic.extract()
                         else:
-                                await Historic.get_root()
+                                Historic.get_root()
                 return True
 
         @staticmethod
@@ -364,23 +384,23 @@ class Historic:
                 return Historic.lock.locked()
 
         @staticmethod
-        async def get_root():
+        def get_root():
                 &#34;&#34;&#34; Get the root path of sdcard and mount it &#34;&#34;&#34;
                 if sdcard.SdCard.mount():
                         return sdcard.SdCard.get_mountpoint()
                 return None
 
         @staticmethod
-        async def add_motion(path, name, image, info):
+        async def add_motion(path, name, image, motion_info):
                 &#34;&#34;&#34; Add motion detection in the historic &#34;&#34;&#34;
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 result = False
                 if root:
                         try:
                                 await Historic.acquire()
                                 path = strings.tostrings(path)
                                 name = strings.tostrings(name)
-                                item = Historic.create_item(root + &#34;/&#34; + path + &#34;/&#34; + name +&#34;.json&#34;, info)
+                                item = Historic.create_item(root + &#34;/&#34; + path + &#34;/&#34; + name +&#34;.json&#34;, motion_info)
                                 res1 = sdcard.SdCard.save(path, name + &#34;.jpg&#34; , image)
                                 res2 = sdcard.SdCard.save(path, name + &#34;.json&#34;, json.dumps(item))
                                 Historic.add_item(item)
@@ -392,13 +412,13 @@ class Historic:
                 return result
 
         @staticmethod
-        def create_item(filename, info):
+        def create_item(filename, motion_info):
                 &#34;&#34;&#34; Create historic item &#34;&#34;&#34;
                 name = filesystem.splitext(filename)[0] + &#34;.jpg&#34;
                 result = None
-                if &#34;geometry&#34; in info:
+                if &#34;geometry&#34; in motion_info:
                         # Add json file to the historic
-                        result = [name, info[&#34;geometry&#34;][&#34;width&#34;],info[&#34;geometry&#34;][&#34;height&#34;], info[&#34;diff&#34;][&#34;diffs&#34;], info[&#34;diff&#34;][&#34;squarex&#34;], info[&#34;diff&#34;][&#34;squarey&#34;]]
+                        result = [name, motion_info[&#34;geometry&#34;][&#34;width&#34;],motion_info[&#34;geometry&#34;][&#34;height&#34;], motion_info[&#34;diff&#34;][&#34;diffs&#34;], motion_info[&#34;diff&#34;][&#34;squarex&#34;], motion_info[&#34;diff&#34;][&#34;squarey&#34;]]
                 return result
 
         @staticmethod
@@ -414,7 +434,7 @@ class Historic:
         @staticmethod
         async def build(motions):
                 &#34;&#34;&#34; Parse the all motions files to build historic &#34;&#34;&#34;
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 if root:
                         count = 0
                         try:
@@ -424,12 +444,13 @@ class Historic:
                                 # For all motions
                                 for motion in motions:
                                         path = root + &#34;/&#34; + motion
-
                                         try:
                                                 # Parse json file
                                                 file = None
                                                 file = open(motion, &#34;rb&#34;)
-                                                Historic.add_item(json.load(file))
+                                                motion_item = json.load(file)
+                                                if filesystem.exists(motion_item[0]):
+                                                        Historic.add_item(motion_item)
                                         except Exception as err:
                                                 logger.syslog(err)
                                         finally:
@@ -444,7 +465,7 @@ class Historic:
         @staticmethod
         async def get_json():
                 &#34;&#34;&#34; Read the historic from disk &#34;&#34;&#34;
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 result = b&#34;&#34;
                 if root:
                         try:
@@ -474,6 +495,7 @@ class Historic:
                                 # Build historic file
                                 files = await Historic.build(motions)
                                 logger.syslog(&#34;End   historic creation&#34;)
+                                logger.syslog(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False)))
                         except Exception as err:
                                 logger.syslog(err)
 
@@ -506,7 +528,7 @@ class Historic:
         async def scan_directories(quantity=10, older=True):
                 &#34;&#34;&#34; Get the list of older or older directories in the sd card &#34;&#34;&#34;
                 motions = []
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 if root:
                         try:
                                 await Historic.acquire()
@@ -549,39 +571,51 @@ class Historic:
                 Historic.motion_in_progress[0] = state
 
         @staticmethod
-        async def remove_files(directory, simulate=False):
+        async def remove_files(directory, simulate=False, force=False):
                 &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
                 import shell
-                notEmpty = False
+                dir_not_empty = False
+                enough_space = False
                 force = True
                 if filesystem.exists(directory):
-                        # Parse all directories in sdcard
+                        files_to_remove = []
+                        dirs_to_remove  = []
+
+                        # Parse all directories in sdcard (WARNING : TO AVOID CRASH, NEVER DELETE DIRECTORY OR FILE IN ilistdir LOOP)
                         for fileinfo in uos.ilistdir(directory):
                                 filename = fileinfo[0]
                                 typ      = fileinfo[1]
-                                print(filename)
                                 # If file found
                                 if typ &amp; 0xF000 != 0x4000:
-                                        shell.rmfile(directory + &#34;/&#34; + filename, simulate=simulate, force=force)
+                                        files_to_remove.append(directory + &#34;/&#34; + filename)
                                 else:
-                                        await Historic.remove_files(directory + &#34;/&#34; + filename)
-                                        notEmpty = True
+                                        dirs_to_remove.append(directory + &#34;/&#34; + filename)
+                                dir_not_empty = True
 
-                        if notEmpty:
-                                shell.rm(directory, recursive=True, simulate=simulate, force=force)
-                        else:
-                                shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
-                else:
-                        print(&#34;Directory not existing &#39;%s&#39;&#34;%directory)
+                        for file_to_remove in files_to_remove:
+                                shell.rmfile(file_to_remove, simulate=simulate, force=force)
+                                if sdcard.SdCard.is_not_enough_space(low=False) is False:
+                                        enough_space = True
+                                        break
+
+                        if enough_space is False:
+                                for dir_to_remove in dirs_to_remove:
+                                        await Historic.remove_files(dir_to_remove, simulate=simulate, force=force)
+                                if dir_not_empty:
+                                        shell.rm(directory, recursive=True, simulate=simulate, force=force)
+                                else:
+                                        shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
 
         @staticmethod
         async def remove_older(force=False):
                 &#34;&#34;&#34; Remove older files to make space &#34;&#34;&#34;
-                root = await Historic.get_root()
+                root = Historic.get_root()
                 if root:
                         # If not enough space available on sdcard
-                        if (sdcard.SdCard.get_free_size() * 10000// sdcard.SdCard.get_max_size() &lt;= 5) or force:
-                                logger.syslog(&#34;Start cleanup sd card&#34;)
+                        if sdcard.SdCard.is_not_enough_space(low=True) or force:
+                                logger.syslog(&#34;Start cleanup historic&#34;)
+                                cleaned = &#34;Historic space after cleanup&#34;
+                                Historic.first_extract[0] = False
                                 olders = await Historic.scan_directories(MAX_REMOVED, True)
                                 previous = &#34;&#34;
                                 for motion in olders:
@@ -589,13 +623,18 @@ class Historic:
                                                 await Historic.acquire()
                                                 directory = filesystem.split(motion)[0]
                                                 if previous != directory:
-                                                        await Historic.remove_files(directory)
+                                                        await Historic.remove_files(directory, simulate=False, force=force)
                                                         previous = directory
                                         except Exception as err:
                                                 logger.syslog(err)
                                         finally:
                                                 await Historic.release()
-                                logger.syslog(&#34;End cleanup sd card&#34;)
+                                        if sdcard.SdCard.is_not_enough_space(low=False) is False:
+                                                break
+                                logger.syslog(&#34;End cleanup historic&#34;)
+                        else:
+                                cleaned = &#34;Historic space&#34;
+                        logger.syslog(&#34;%s : %s&#34;%(cleaned, strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
 
         @staticmethod
         async def periodic():
@@ -604,13 +643,14 @@ class Historic:
                 if filesystem.ismicropython():
                         await Server.wait_resume(307)
                 else:
-                        await Server.wait_resume(7)
+                        await Server.wait_resume(17)
+
                 if Historic.motion_in_progress[0] is False:
                         if sdcard.SdCard.is_mounted():
-                                await Historic.extract()
                                 await Historic.remove_older()
+                                await Historic.extract()
                         else:
-                                await Historic.get_root()
+                                Historic.get_root()
                 return True
 
         @staticmethod
@@ -681,7 +721,7 @@ def add_item(item):
 </details>
 </dd>
 <dt id="lib.motion.historic.Historic.add_motion"><code class="name flex">
-<span>async def <span class="ident">add_motion</span></span>(<span>path, name, image, info)</span>
+<span>async def <span class="ident">add_motion</span></span>(<span>path, name, image, motion_info)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Add motion detection in the historic</p></div>
@@ -690,16 +730,16 @@ def add_item(item):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def add_motion(path, name, image, info):
+async def add_motion(path, name, image, motion_info):
         &#34;&#34;&#34; Add motion detection in the historic &#34;&#34;&#34;
-        root = await Historic.get_root()
+        root = Historic.get_root()
         result = False
         if root:
                 try:
                         await Historic.acquire()
                         path = strings.tostrings(path)
                         name = strings.tostrings(name)
-                        item = Historic.create_item(root + &#34;/&#34; + path + &#34;/&#34; + name +&#34;.json&#34;, info)
+                        item = Historic.create_item(root + &#34;/&#34; + path + &#34;/&#34; + name +&#34;.json&#34;, motion_info)
                         res1 = sdcard.SdCard.save(path, name + &#34;.jpg&#34; , image)
                         res2 = sdcard.SdCard.save(path, name + &#34;.json&#34;, json.dumps(item))
                         Historic.add_item(item)
@@ -723,7 +763,7 @@ async def add_motion(path, name, image, info):
 <pre><code class="python">@staticmethod
 async def build(motions):
         &#34;&#34;&#34; Parse the all motions files to build historic &#34;&#34;&#34;
-        root = await Historic.get_root()
+        root = Historic.get_root()
         if root:
                 count = 0
                 try:
@@ -733,12 +773,13 @@ async def build(motions):
                         # For all motions
                         for motion in motions:
                                 path = root + &#34;/&#34; + motion
-
                                 try:
                                         # Parse json file
                                         file = None
                                         file = open(motion, &#34;rb&#34;)
-                                        Historic.add_item(json.load(file))
+                                        motion_item = json.load(file)
+                                        if filesystem.exists(motion_item[0]):
+                                                Historic.add_item(motion_item)
                                 except Exception as err:
                                         logger.syslog(err)
                                 finally:
@@ -752,7 +793,7 @@ async def build(motions):
 </details>
 </dd>
 <dt id="lib.motion.historic.Historic.create_item"><code class="name flex">
-<span>def <span class="ident">create_item</span></span>(<span>filename, info)</span>
+<span>def <span class="ident">create_item</span></span>(<span>filename, motion_info)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create historic item</p></div>
@@ -761,13 +802,13 @@ async def build(motions):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def create_item(filename, info):
+def create_item(filename, motion_info):
         &#34;&#34;&#34; Create historic item &#34;&#34;&#34;
         name = filesystem.splitext(filename)[0] + &#34;.jpg&#34;
         result = None
-        if &#34;geometry&#34; in info:
+        if &#34;geometry&#34; in motion_info:
                 # Add json file to the historic
-                result = [name, info[&#34;geometry&#34;][&#34;width&#34;],info[&#34;geometry&#34;][&#34;height&#34;], info[&#34;diff&#34;][&#34;diffs&#34;], info[&#34;diff&#34;][&#34;squarex&#34;], info[&#34;diff&#34;][&#34;squarey&#34;]]
+                result = [name, motion_info[&#34;geometry&#34;][&#34;width&#34;],motion_info[&#34;geometry&#34;][&#34;height&#34;], motion_info[&#34;diff&#34;][&#34;diffs&#34;], motion_info[&#34;diff&#34;][&#34;squarex&#34;], motion_info[&#34;diff&#34;][&#34;squarey&#34;]]
         return result</code></pre>
 </details>
 </dd>
@@ -794,6 +835,7 @@ async def extract():
                         # Build historic file
                         files = await Historic.build(motions)
                         logger.syslog(&#34;End   historic creation&#34;)
+                        logger.syslog(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False)))
                 except Exception as err:
                         logger.syslog(err)</code></pre>
 </details>
@@ -810,7 +852,7 @@ async def extract():
 <pre><code class="python">@staticmethod
 async def get_json():
         &#34;&#34;&#34; Read the historic from disk &#34;&#34;&#34;
-        root = await Historic.get_root()
+        root = Historic.get_root()
         result = b&#34;&#34;
         if root:
                 try:
@@ -828,7 +870,7 @@ async def get_json():
 </details>
 </dd>
 <dt id="lib.motion.historic.Historic.get_root"><code class="name flex">
-<span>async def <span class="ident">get_root</span></span>(<span>)</span>
+<span>def <span class="ident">get_root</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the root path of sdcard and mount it</p></div>
@@ -837,7 +879,7 @@ async def get_json():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def get_root():
+def get_root():
         &#34;&#34;&#34; Get the root path of sdcard and mount it &#34;&#34;&#34;
         if sdcard.SdCard.mount():
                 return sdcard.SdCard.get_mountpoint()
@@ -875,13 +917,14 @@ async def periodic():
         if filesystem.ismicropython():
                 await Server.wait_resume(307)
         else:
-                await Server.wait_resume(7)
+                await Server.wait_resume(17)
+
         if Historic.motion_in_progress[0] is False:
                 if sdcard.SdCard.is_mounted():
-                        await Historic.extract()
                         await Historic.remove_older()
+                        await Historic.extract()
                 else:
-                        await Historic.get_root()
+                        Historic.get_root()
         return True</code></pre>
 </details>
 </dd>
@@ -916,7 +959,7 @@ async def release():
 </details>
 </dd>
 <dt id="lib.motion.historic.Historic.remove_files"><code class="name flex">
-<span>async def <span class="ident">remove_files</span></span>(<span>directory, simulate=False)</span>
+<span>async def <span class="ident">remove_files</span></span>(<span>directory, simulate=False, force=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Remove all files in the directory</p></div>
@@ -925,30 +968,40 @@ async def release():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def remove_files(directory, simulate=False):
+async def remove_files(directory, simulate=False, force=False):
         &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
         import shell
-        notEmpty = False
+        dir_not_empty = False
+        enough_space = False
         force = True
         if filesystem.exists(directory):
-                # Parse all directories in sdcard
+                files_to_remove = []
+                dirs_to_remove  = []
+
+                # Parse all directories in sdcard (WARNING : TO AVOID CRASH, NEVER DELETE DIRECTORY OR FILE IN ilistdir LOOP)
                 for fileinfo in uos.ilistdir(directory):
                         filename = fileinfo[0]
                         typ      = fileinfo[1]
-                        print(filename)
                         # If file found
                         if typ &amp; 0xF000 != 0x4000:
-                                shell.rmfile(directory + &#34;/&#34; + filename, simulate=simulate, force=force)
+                                files_to_remove.append(directory + &#34;/&#34; + filename)
                         else:
-                                await Historic.remove_files(directory + &#34;/&#34; + filename)
-                                notEmpty = True
+                                dirs_to_remove.append(directory + &#34;/&#34; + filename)
+                        dir_not_empty = True
 
-                if notEmpty:
-                        shell.rm(directory, recursive=True, simulate=simulate, force=force)
-                else:
-                        shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
-        else:
-                print(&#34;Directory not existing &#39;%s&#39;&#34;%directory)</code></pre>
+                for file_to_remove in files_to_remove:
+                        shell.rmfile(file_to_remove, simulate=simulate, force=force)
+                        if sdcard.SdCard.is_not_enough_space(low=False) is False:
+                                enough_space = True
+                                break
+
+                if enough_space is False:
+                        for dir_to_remove in dirs_to_remove:
+                                await Historic.remove_files(dir_to_remove, simulate=simulate, force=force)
+                        if dir_not_empty:
+                                shell.rm(directory, recursive=True, simulate=simulate, force=force)
+                        else:
+                                shell.rmdir(directory, recursive=True, simulate=simulate, force=force)</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.historic.Historic.remove_older"><code class="name flex">
@@ -963,11 +1016,13 @@ async def remove_files(directory, simulate=False):
 <pre><code class="python">@staticmethod
 async def remove_older(force=False):
         &#34;&#34;&#34; Remove older files to make space &#34;&#34;&#34;
-        root = await Historic.get_root()
+        root = Historic.get_root()
         if root:
                 # If not enough space available on sdcard
-                if (sdcard.SdCard.get_free_size() * 10000// sdcard.SdCard.get_max_size() &lt;= 5) or force:
-                        logger.syslog(&#34;Start cleanup sd card&#34;)
+                if sdcard.SdCard.is_not_enough_space(low=True) or force:
+                        logger.syslog(&#34;Start cleanup historic&#34;)
+                        cleaned = &#34;Historic space after cleanup&#34;
+                        Historic.first_extract[0] = False
                         olders = await Historic.scan_directories(MAX_REMOVED, True)
                         previous = &#34;&#34;
                         for motion in olders:
@@ -975,13 +1030,18 @@ async def remove_older(force=False):
                                         await Historic.acquire()
                                         directory = filesystem.split(motion)[0]
                                         if previous != directory:
-                                                await Historic.remove_files(directory)
+                                                await Historic.remove_files(directory, simulate=False, force=force)
                                                 previous = directory
                                 except Exception as err:
                                         logger.syslog(err)
                                 finally:
                                         await Historic.release()
-                        logger.syslog(&#34;End cleanup sd card&#34;)</code></pre>
+                                if sdcard.SdCard.is_not_enough_space(low=False) is False:
+                                        break
+                        logger.syslog(&#34;End cleanup historic&#34;)
+                else:
+                        cleaned = &#34;Historic space&#34;
+                logger.syslog(&#34;%s : %s&#34;%(cleaned, strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.historic.Historic.scan_dir"><code class="name flex">
@@ -1032,7 +1092,7 @@ async def scan_dir(path, pattern, older=True, directory=True):
 async def scan_directories(quantity=10, older=True):
         &#34;&#34;&#34; Get the list of older or older directories in the sd card &#34;&#34;&#34;
         motions = []
-        root = await Historic.get_root()
+        root = Historic.get_root()
         if root:
                 try:
                         await Historic.acquire()

@@ -197,8 +197,7 @@ class JsonConfig:
 
         def forget(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Forget configuration &#34;&#34;&#34;
-                filename = self.get_pathname(part_filename=part_filename)
-                filesystem.remove(self.config_root()+&#34;/&#34;+filename)
+                filesystem.remove(self.get_pathname(part_filename=part_filename))
 
         def is_changed(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Indicates if the configuration changed &#34;&#34;&#34;
@@ -209,7 +208,11 @@ class JsonConfig:
                                 return True
                 except:
                         pass
-                return False</code></pre>
+                return False
+
+        def exists(self, part_filename=&#34;&#34;):
+                &#34;&#34;&#34; Indicates if the configuration file existing &#34;&#34;&#34;
+                return filesystem.exists(self.get_pathname(strings.tofilename(part_filename)))</code></pre>
 </details>
 </section>
 <section>
@@ -384,8 +387,7 @@ class JsonConfig:
 
         def forget(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Forget configuration &#34;&#34;&#34;
-                filename = self.get_pathname(part_filename=part_filename)
-                filesystem.remove(self.config_root()+&#34;/&#34;+filename)
+                filesystem.remove(self.get_pathname(part_filename=part_filename))
 
         def is_changed(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Indicates if the configuration changed &#34;&#34;&#34;
@@ -396,7 +398,11 @@ class JsonConfig:
                                 return True
                 except:
                         pass
-                return False</code></pre>
+                return False
+
+        def exists(self, part_filename=&#34;&#34;):
+                &#34;&#34;&#34; Indicates if the configuration file existing &#34;&#34;&#34;
+                return filesystem.exists(self.get_pathname(strings.tofilename(part_filename)))</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -417,6 +423,20 @@ class JsonConfig:
                 return &#34;config&#34;</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.jsonconfig.JsonConfig.exists"><code class="name flex">
+<span>def <span class="ident">exists</span></span>(<span>self, part_filename='')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the configuration file existing</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exists(self, part_filename=&#34;&#34;):
+        &#34;&#34;&#34; Indicates if the configuration file existing &#34;&#34;&#34;
+        return filesystem.exists(self.get_pathname(strings.tofilename(part_filename)))</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.jsonconfig.JsonConfig.forget"><code class="name flex">
 <span>def <span class="ident">forget</span></span>(<span>self, part_filename='')</span>
 </code></dt>
@@ -428,8 +448,7 @@ class JsonConfig:
 </summary>
 <pre><code class="python">def forget(self, part_filename=&#34;&#34;):
         &#34;&#34;&#34; Forget configuration &#34;&#34;&#34;
-        filename = self.get_pathname(part_filename=part_filename)
-        filesystem.remove(self.config_root()+&#34;/&#34;+filename)</code></pre>
+        filesystem.remove(self.get_pathname(part_filename=part_filename))</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.jsonconfig.JsonConfig.get_filename"><code class="name flex">
@@ -693,6 +712,7 @@ class JsonConfig:
 <h4><code><a title="lib.tools.jsonconfig.JsonConfig" href="#lib.tools.jsonconfig.JsonConfig">JsonConfig</a></code></h4>
 <ul class="two-column">
 <li><code><a title="lib.tools.jsonconfig.JsonConfig.config_root" href="#lib.tools.jsonconfig.JsonConfig.config_root">config_root</a></code></li>
+<li><code><a title="lib.tools.jsonconfig.JsonConfig.exists" href="#lib.tools.jsonconfig.JsonConfig.exists">exists</a></code></li>
 <li><code><a title="lib.tools.jsonconfig.JsonConfig.forget" href="#lib.tools.jsonconfig.JsonConfig.forget">forget</a></code></li>
 <li><code><a title="lib.tools.jsonconfig.JsonConfig.get_filename" href="#lib.tools.jsonconfig.JsonConfig.get_filename">get_filename</a></code></li>
 <li><code><a title="lib.tools.jsonconfig.JsonConfig.get_pathname" href="#lib.tools.jsonconfig.JsonConfig.get_pathname">get_pathname</a></code></li>

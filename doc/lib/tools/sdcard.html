@@ -41,6 +41,22 @@ class SdCard:
         &#34;&#34;&#34; Manage the sdcard &#34;&#34;&#34;
         opened = [False]
         mountpoint = [&#34;&#34;]
+        slot = [{}]
+
+        @staticmethod
+        def set_slot(**slot):
+                &#34;&#34;&#34; Set the default sdcard slot
+                - slot :  selects which of the available interfaces to use. Leaving this unset will select the default interface.
+                - width : selects the bus width for the SD/MMC interface.
+                - cd : can be used to specify a card-detect pin.
+                - wp : can be used to specify a write-protect pin.
+                - sck : can be used to specify an SPI clock pin.
+                - miso : can be used to specify an SPI miso pin.
+                - mosi : can be used to specify an SPI mosi pin.
+                - cs : can be used to specify an SPI chip select pin.
+                - freq : selects the SD/MMC interface frequency in Hz (only supported on the ESP32).
+                (look doc http://docs.micropython.org/en/latest/library/machine.SDCard.html?highlight=sdcard) &#34;&#34;&#34;
+                SdCard.slot[0] = slot
 
         @staticmethod
         def get_max_size():
@@ -66,6 +82,14 @@ class SdCard:
                 return SdCard.opened[0]
 
         @staticmethod
+        def is_available():
+                &#34;&#34;&#34; Indicates if the sd card is available on device &#34;&#34;&#34;
+                if &#34;slot&#34; in SdCard.slot[0]:
+                        if SdCard.slot[0][&#34;slot&#34;] is None:
+                                return False
+                return True
+
+        @staticmethod
         def get_mountpoint():
                 &#34;&#34;&#34; Return the mount point &#34;&#34;&#34;
                 return SdCard.mountpoint[0]
@@ -75,23 +99,38 @@ class SdCard:
                 &#34;&#34;&#34; Mount sd card &#34;&#34;&#34;
                 result = False
                 if SdCard.is_mounted() is False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
-                        if filesystem.ismicropython():
-                                try:
-                                        # If the sdcard not already mounted
-                                        if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
-                                                uos.mount(machine.SDCard(), mountpoint)
-                                                SdCard.mountpoint[0] = mountpoint
-                                                SdCard.opened[0]= True
-                                                result = True
-                                except Exception as err:
-                                        logger.syslog(&#34;Cannot mount %s&#34;%mountpoint)
+                        if SdCard.is_available():
+                                if filesystem.ismicropython():
+
+                                        try:
+                                                # If the sdcard not already mounted
+                                                if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
+                                                        uos.mount(machine.SDCard(**(SdCard.slot[0])), mountpoint)
+                                                        SdCard.mountpoint[0] = mountpoint
+                                                        SdCard.opened[0]= True
+                                                        result = True
+                                        except Exception as err:
+                                                logger.syslog(&#34;Cannot mount %s&#34;%mountpoint)
+                                else:
+                                        SdCard.mountpoint[0] = mountpoint[1:]
+                                        SdCard.opened[0] = True
+                                        result = True
                         else:
-                                SdCard.mountpoint[0] = mountpoint[1:]
+                                logger.syslog(&#34;SdCard disabled&#34;)
+                                if filesystem.ismicropython():
+                                        SdCard.mountpoint[0] = &#34;/data&#34;
+                                else:
+                                        from os import getcwd
+                                        SdCard.mountpoint[0] = &#34;%s/data&#34;%getcwd()
                                 SdCard.opened[0] = True
+                                filesystem.makedir(SdCard.mountpoint[0], True)
                                 result = True
                 elif SdCard.is_mounted():
                         if filesystem.ismicropython():
-                                if mountpoint == SdCard.get_mountpoint():
+                                if SdCard.is_available():
+                                        if mountpoint == SdCard.get_mountpoint():
+                                                result = True
+                                else:
                                         result = True
                         else:
                                 result = True
@@ -143,21 +182,49 @@ class SdCard:
                 return result
 
         @staticmethod
+        def is_not_enough_space(low):
+                &#34;&#34;&#34; Indicates if remaining space is not sufficient &#34;&#34;&#34;
+                free = SdCard.get_free_size()
+                total = SdCard.get_max_size()
+                if low:
+                        if SdCard.is_available():
+                                threshold = 5
+                        else:
+                                threshold = 5
+                else:
+                        if SdCard.is_available():
+                                threshold = 8
+                        else:
+                                threshold = 25
+
+                if free &lt; 0 or total &lt; 0:
+                        return True
+
+                if free &lt; 32*1024*4:
+                        return True
+                else:
+                        return ((free * 100 // total) &lt;= threshold)
+
+        @staticmethod
         def save(directory, filename, data):
                 &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
                 result = False
                 if SdCard.is_mounted():
                         file = None
-                        try:
-                                file = SdCard.create_file(SdCard.get_mountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
-                                file.write(data)
-                                file.close()
-                                result = True
-                        except Exception as err:
-                                logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
-                        finally:
-                                if file is not None:
+                        if SdCard.is_not_enough_space(low=True) is False:
+                                try:
+                                        file = SdCard.create_file(SdCard.get_mountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
+                                        file.write(data)
                                         file.close()
+                                        result = True
+                                except Exception as err:
+                                        logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
+                                finally:
+                                        if file is not None:
+                                                file.close()
+                        else:
+                                if SdCard.is_available() is False:
+                                        result = True
                 return result</code></pre>
 </details>
 </section>
@@ -183,6 +250,22 @@ class SdCard:
         &#34;&#34;&#34; Manage the sdcard &#34;&#34;&#34;
         opened = [False]
         mountpoint = [&#34;&#34;]
+        slot = [{}]
+
+        @staticmethod
+        def set_slot(**slot):
+                &#34;&#34;&#34; Set the default sdcard slot
+                - slot :  selects which of the available interfaces to use. Leaving this unset will select the default interface.
+                - width : selects the bus width for the SD/MMC interface.
+                - cd : can be used to specify a card-detect pin.
+                - wp : can be used to specify a write-protect pin.
+                - sck : can be used to specify an SPI clock pin.
+                - miso : can be used to specify an SPI miso pin.
+                - mosi : can be used to specify an SPI mosi pin.
+                - cs : can be used to specify an SPI chip select pin.
+                - freq : selects the SD/MMC interface frequency in Hz (only supported on the ESP32).
+                (look doc http://docs.micropython.org/en/latest/library/machine.SDCard.html?highlight=sdcard) &#34;&#34;&#34;
+                SdCard.slot[0] = slot
 
         @staticmethod
         def get_max_size():
@@ -208,6 +291,14 @@ class SdCard:
                 return SdCard.opened[0]
 
         @staticmethod
+        def is_available():
+                &#34;&#34;&#34; Indicates if the sd card is available on device &#34;&#34;&#34;
+                if &#34;slot&#34; in SdCard.slot[0]:
+                        if SdCard.slot[0][&#34;slot&#34;] is None:
+                                return False
+                return True
+
+        @staticmethod
         def get_mountpoint():
                 &#34;&#34;&#34; Return the mount point &#34;&#34;&#34;
                 return SdCard.mountpoint[0]
@@ -217,23 +308,38 @@ class SdCard:
                 &#34;&#34;&#34; Mount sd card &#34;&#34;&#34;
                 result = False
                 if SdCard.is_mounted() is False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
-                        if filesystem.ismicropython():
-                                try:
-                                        # If the sdcard not already mounted
-                                        if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
-                                                uos.mount(machine.SDCard(), mountpoint)
-                                                SdCard.mountpoint[0] = mountpoint
-                                                SdCard.opened[0]= True
-                                                result = True
-                                except Exception as err:
-                                        logger.syslog(&#34;Cannot mount %s&#34;%mountpoint)
+                        if SdCard.is_available():
+                                if filesystem.ismicropython():
+
+                                        try:
+                                                # If the sdcard not already mounted
+                                                if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
+                                                        uos.mount(machine.SDCard(**(SdCard.slot[0])), mountpoint)
+                                                        SdCard.mountpoint[0] = mountpoint
+                                                        SdCard.opened[0]= True
+                                                        result = True
+                                        except Exception as err:
+                                                logger.syslog(&#34;Cannot mount %s&#34;%mountpoint)
+                                else:
+                                        SdCard.mountpoint[0] = mountpoint[1:]
+                                        SdCard.opened[0] = True
+                                        result = True
                         else:
-                                SdCard.mountpoint[0] = mountpoint[1:]
+                                logger.syslog(&#34;SdCard disabled&#34;)
+                                if filesystem.ismicropython():
+                                        SdCard.mountpoint[0] = &#34;/data&#34;
+                                else:
+                                        from os import getcwd
+                                        SdCard.mountpoint[0] = &#34;%s/data&#34;%getcwd()
                                 SdCard.opened[0] = True
+                                filesystem.makedir(SdCard.mountpoint[0], True)
                                 result = True
                 elif SdCard.is_mounted():
                         if filesystem.ismicropython():
-                                if mountpoint == SdCard.get_mountpoint():
+                                if SdCard.is_available():
+                                        if mountpoint == SdCard.get_mountpoint():
+                                                result = True
+                                else:
                                         result = True
                         else:
                                 result = True
@@ -285,21 +391,49 @@ class SdCard:
                 return result
 
         @staticmethod
+        def is_not_enough_space(low):
+                &#34;&#34;&#34; Indicates if remaining space is not sufficient &#34;&#34;&#34;
+                free = SdCard.get_free_size()
+                total = SdCard.get_max_size()
+                if low:
+                        if SdCard.is_available():
+                                threshold = 5
+                        else:
+                                threshold = 5
+                else:
+                        if SdCard.is_available():
+                                threshold = 8
+                        else:
+                                threshold = 25
+
+                if free &lt; 0 or total &lt; 0:
+                        return True
+
+                if free &lt; 32*1024*4:
+                        return True
+                else:
+                        return ((free * 100 // total) &lt;= threshold)
+
+        @staticmethod
         def save(directory, filename, data):
                 &#34;&#34;&#34; Save file on sd card &#34;&#34;&#34;
                 result = False
                 if SdCard.is_mounted():
                         file = None
-                        try:
-                                file = SdCard.create_file(SdCard.get_mountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
-                                file.write(data)
-                                file.close()
-                                result = True
-                        except Exception as err:
-                                logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
-                        finally:
-                                if file is not None:
+                        if SdCard.is_not_enough_space(low=True) is False:
+                                try:
+                                        file = SdCard.create_file(SdCard.get_mountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
+                                        file.write(data)
                                         file.close()
+                                        result = True
+                                except Exception as err:
+                                        logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
+                                finally:
+                                        if file is not None:
+                                                file.close()
+                        else:
+                                if SdCard.is_available() is False:
+                                        result = True
                 return result</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -309,6 +443,10 @@ class SdCard:
 <div class="desc"></div>
 </dd>
 <dt id="lib.tools.sdcard.SdCard.opened"><code class="name">var <span class="ident">opened</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.tools.sdcard.SdCard.slot"><code class="name">var <span class="ident">slot</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -423,6 +561,24 @@ def get_mountpoint():
         return SdCard.mountpoint[0]</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.sdcard.SdCard.is_available"><code class="name flex">
+<span>def <span class="ident">is_available</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the sd card is available on device</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def is_available():
+        &#34;&#34;&#34; Indicates if the sd card is available on device &#34;&#34;&#34;
+        if &#34;slot&#34; in SdCard.slot[0]:
+                if SdCard.slot[0][&#34;slot&#34;] is None:
+                        return False
+        return True</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.sdcard.SdCard.is_mounted"><code class="name flex">
 <span>def <span class="ident">is_mounted</span></span>(<span>)</span>
 </code></dt>
@@ -436,6 +592,40 @@ def get_mountpoint():
 def is_mounted():
         &#34;&#34;&#34; Indicates if the sd card is mounted &#34;&#34;&#34;
         return SdCard.opened[0]</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.sdcard.SdCard.is_not_enough_space"><code class="name flex">
+<span>def <span class="ident">is_not_enough_space</span></span>(<span>low)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if remaining space is not sufficient</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def is_not_enough_space(low):
+        &#34;&#34;&#34; Indicates if remaining space is not sufficient &#34;&#34;&#34;
+        free = SdCard.get_free_size()
+        total = SdCard.get_max_size()
+        if low:
+                if SdCard.is_available():
+                        threshold = 5
+                else:
+                        threshold = 5
+        else:
+                if SdCard.is_available():
+                        threshold = 8
+                else:
+                        threshold = 25
+
+        if free &lt; 0 or total &lt; 0:
+                return True
+
+        if free &lt; 32*1024*4:
+                return True
+        else:
+                return ((free * 100 // total) &lt;= threshold)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.sdcard.SdCard.mount"><code class="name flex">
@@ -452,23 +642,38 @@ def mount(mountpoint = &#34;/sd&#34;):
         &#34;&#34;&#34; Mount sd card &#34;&#34;&#34;
         result = False
         if SdCard.is_mounted() is False and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
-                if filesystem.ismicropython():
-                        try:
-                                # If the sdcard not already mounted
-                                if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
-                                        uos.mount(machine.SDCard(), mountpoint)
-                                        SdCard.mountpoint[0] = mountpoint
-                                        SdCard.opened[0]= True
-                                        result = True
-                        except Exception as err:
-                                logger.syslog(&#34;Cannot mount %s&#34;%mountpoint)
+                if SdCard.is_available():
+                        if filesystem.ismicropython():
+
+                                try:
+                                        # If the sdcard not already mounted
+                                        if uos.statvfs(&#34;/&#34;) == uos.statvfs(mountpoint):
+                                                uos.mount(machine.SDCard(**(SdCard.slot[0])), mountpoint)
+                                                SdCard.mountpoint[0] = mountpoint
+                                                SdCard.opened[0]= True
+                                                result = True
+                                except Exception as err:
+                                        logger.syslog(&#34;Cannot mount %s&#34;%mountpoint)
+                        else:
+                                SdCard.mountpoint[0] = mountpoint[1:]
+                                SdCard.opened[0] = True
+                                result = True
                 else:
-                        SdCard.mountpoint[0] = mountpoint[1:]
+                        logger.syslog(&#34;SdCard disabled&#34;)
+                        if filesystem.ismicropython():
+                                SdCard.mountpoint[0] = &#34;/data&#34;
+                        else:
+                                from os import getcwd
+                                SdCard.mountpoint[0] = &#34;%s/data&#34;%getcwd()
                         SdCard.opened[0] = True
+                        filesystem.makedir(SdCard.mountpoint[0], True)
                         result = True
         elif SdCard.is_mounted():
                 if filesystem.ismicropython():
-                        if mountpoint == SdCard.get_mountpoint():
+                        if SdCard.is_available():
+                                if mountpoint == SdCard.get_mountpoint():
+                                        result = True
+                        else:
                                 result = True
                 else:
                         result = True
@@ -490,17 +695,57 @@ def save(directory, filename, data):
         result = False
         if SdCard.is_mounted():
                 file = None
-                try:
-                        file = SdCard.create_file(SdCard.get_mountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
-                        file.write(data)
-                        file.close()
-                        result = True
-                except Exception as err:
-                        logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
-                finally:
-                        if file is not None:
+                if SdCard.is_not_enough_space(low=True) is False:
+                        try:
+                                file = SdCard.create_file(SdCard.get_mountpoint() + &#34;/&#34; + directory, filename, &#34;w&#34;)
+                                file.write(data)
                                 file.close()
+                                result = True
+                        except Exception as err:
+                                logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
+                        finally:
+                                if file is not None:
+                                        file.close()
+                else:
+                        if SdCard.is_available() is False:
+                                result = True
         return result</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.sdcard.SdCard.set_slot"><code class="name flex">
+<span>def <span class="ident">set_slot</span></span>(<span>**slot)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the default sdcard slot
+- slot :
+selects which of the available interfaces to use. Leaving this unset will select the default interface.
+- width : selects the bus width for the SD/MMC interface.
+- cd : can be used to specify a card-detect pin.
+- wp : can be used to specify a write-protect pin.
+- sck : can be used to specify an SPI clock pin.
+- miso : can be used to specify an SPI miso pin.
+- mosi : can be used to specify an SPI mosi pin.
+- cs : can be used to specify an SPI chip select pin.
+- freq : selects the SD/MMC interface frequency in Hz (only supported on the ESP32).
+(look doc <a href="http://docs.micropython.org/en/latest/library/machine.SDCard.html?highlight=sdcard">http://docs.micropython.org/en/latest/library/machine.SDCard.html?highlight=sdcard</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def set_slot(**slot):
+        &#34;&#34;&#34; Set the default sdcard slot
+        - slot :  selects which of the available interfaces to use. Leaving this unset will select the default interface.
+        - width : selects the bus width for the SD/MMC interface.
+        - cd : can be used to specify a card-detect pin.
+        - wp : can be used to specify a write-protect pin.
+        - sck : can be used to specify an SPI clock pin.
+        - miso : can be used to specify an SPI miso pin.
+        - mosi : can be used to specify an SPI mosi pin.
+        - cs : can be used to specify an SPI chip select pin.
+        - freq : selects the SD/MMC interface frequency in Hz (only supported on the ESP32).
+        (look doc http://docs.micropython.org/en/latest/library/machine.SDCard.html?highlight=sdcard) &#34;&#34;&#34;
+        SdCard.slot[0] = slot</code></pre>
 </details>
 </dd>
 </dl>
@@ -528,11 +773,15 @@ def save(directory, filename, data):
 <li><code><a title="lib.tools.sdcard.SdCard.get_free_size" href="#lib.tools.sdcard.SdCard.get_free_size">get_free_size</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.get_max_size" href="#lib.tools.sdcard.SdCard.get_max_size">get_max_size</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.get_mountpoint" href="#lib.tools.sdcard.SdCard.get_mountpoint">get_mountpoint</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.is_available" href="#lib.tools.sdcard.SdCard.is_available">is_available</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.is_mounted" href="#lib.tools.sdcard.SdCard.is_mounted">is_mounted</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.is_not_enough_space" href="#lib.tools.sdcard.SdCard.is_not_enough_space">is_not_enough_space</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.mount" href="#lib.tools.sdcard.SdCard.mount">mount</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.mountpoint" href="#lib.tools.sdcard.SdCard.mountpoint">mountpoint</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.opened" href="#lib.tools.sdcard.SdCard.opened">opened</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.save" href="#lib.tools.sdcard.SdCard.save">save</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.set_slot" href="#lib.tools.sdcard.SdCard.set_slot">set_slot</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.slot" href="#lib.tools.sdcard.SdCard.slot">slot</a></code></li>
 </ul>
 </li>
 </ul>

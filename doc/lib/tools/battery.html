@@ -33,6 +33,11 @@
 import machine
 from tools import jsonconfig,logger
 
+try:
+        BROWNOUT_RESET = machine.BROWNOUT_RESET
+except:
+        BROWNOUT_RESET = 6
+
 class BatteryConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Battery configuration &#34;&#34;&#34;
         def __init__(self):
@@ -161,7 +166,7 @@ class Battery:
                         machine.WDT_RESET       : &#34;Watch dog&#34;,
                         machine.DEEPSLEEP_RESET : &#34;Deep sleep&#34;,
                         machine.SOFT_RESET      : &#34;Soft&#34;,
-                        machine.BROWNOUT_RESET  : &#34;Brownout&#34;,
+                        BROWNOUT_RESET          : &#34;Brownout&#34;,
                 }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
                 logger.syslog(&#34; &#34;)
                 logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
@@ -177,7 +182,7 @@ class Battery:
 
                 if Battery.config.brownout_detection:
                         # If the reset can probably due to insufficient battery
-                        if machine.reset_cause() == machine.BROWNOUT_RESET:
+                        if machine.reset_cause() == BROWNOUT_RESET:
                                 Battery.config.brownout_count += 1
                         else:
                                 Battery.config.brownout_count = 0
@@ -336,7 +341,7 @@ class Battery:
                         machine.WDT_RESET       : &#34;Watch dog&#34;,
                         machine.DEEPSLEEP_RESET : &#34;Deep sleep&#34;,
                         machine.SOFT_RESET      : &#34;Soft&#34;,
-                        machine.BROWNOUT_RESET  : &#34;Brownout&#34;,
+                        BROWNOUT_RESET          : &#34;Brownout&#34;,
                 }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
                 logger.syslog(&#34; &#34;)
                 logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
@@ -352,7 +357,7 @@ class Battery:
 
                 if Battery.config.brownout_detection:
                         # If the reset can probably due to insufficient battery
-                        if machine.reset_cause() == machine.BROWNOUT_RESET:
+                        if machine.reset_cause() == BROWNOUT_RESET:
                                 Battery.config.brownout_count += 1
                         else:
                                 Battery.config.brownout_count = 0
@@ -527,7 +532,7 @@ def is_too_many_brownout():
 
         if Battery.config.brownout_detection:
                 # If the reset can probably due to insufficient battery
-                if machine.reset_cause() == machine.BROWNOUT_RESET:
+                if machine.reset_cause() == BROWNOUT_RESET:
                         Battery.config.brownout_count += 1
                 else:
                         Battery.config.brownout_count = 0
@@ -560,7 +565,7 @@ def keep_reset_cause():
                 machine.WDT_RESET       : &#34;Watch dog&#34;,
                 machine.DEEPSLEEP_RESET : &#34;Deep sleep&#34;,
                 machine.SOFT_RESET      : &#34;Soft&#34;,
-                machine.BROWNOUT_RESET  : &#34;Brownout&#34;,
+                BROWNOUT_RESET          : &#34;Brownout&#34;,
         }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
         logger.syslog(&#34; &#34;)
         logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)

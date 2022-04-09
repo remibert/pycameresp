@@ -73,24 +73,27 @@ def syslog(err, msg=&#34;&#34;, display=True):
 
 def log(msg):
         &#34;&#34;&#34; Log message in syslog.log file without printing &#34;&#34;&#34;
-        filename = &#34;syslog.log&#34;
-        if filesystem.ismicropython():
-                filename = &#34;/&#34; + filename
+        try:
+                filename = &#34;syslog.log&#34;
+                if filesystem.ismicropython():
+                        filename = &#34;/&#34; + filename
 
-        log_file = open(filename,&#34;a&#34;)
-        log_file.seek(0,2)
-
-        if log_file.tell() &gt;32*1024:
-                log_file.close()
-                filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
-                filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
-                filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
-                filesystem.rename(filename       ,filename + &#34;.1&#34;)
                 log_file = open(filename,&#34;a&#34;)
+                log_file.seek(0,2)
 
-        log_file.write(strings.date_ms_to_string() + &#34; %s\n&#34;%(msg))
-        log_file.flush()
-        log_file.close()
+                if log_file.tell() &gt;32*1024:
+                        log_file.close()
+                        filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
+                        filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
+                        filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
+                        filesystem.rename(filename       ,filename + &#34;.1&#34;)
+                        log_file = open(filename,&#34;a&#34;)
+
+                log_file.write(strings.date_ms_to_string() + &#34; %s\n&#34;%(msg))
+                log_file.flush()
+                log_file.close()
+        except:
+                print(&#34;No space&#34;)
 
 
 def html_exception(err):
@@ -164,24 +167,27 @@ def html_exception(err):
 </summary>
 <pre><code class="python">def log(msg):
         &#34;&#34;&#34; Log message in syslog.log file without printing &#34;&#34;&#34;
-        filename = &#34;syslog.log&#34;
-        if filesystem.ismicropython():
-                filename = &#34;/&#34; + filename
+        try:
+                filename = &#34;syslog.log&#34;
+                if filesystem.ismicropython():
+                        filename = &#34;/&#34; + filename
 
-        log_file = open(filename,&#34;a&#34;)
-        log_file.seek(0,2)
-
-        if log_file.tell() &gt;32*1024:
-                log_file.close()
-                filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
-                filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
-                filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
-                filesystem.rename(filename       ,filename + &#34;.1&#34;)
                 log_file = open(filename,&#34;a&#34;)
+                log_file.seek(0,2)
 
-        log_file.write(strings.date_ms_to_string() + &#34; %s\n&#34;%(msg))
-        log_file.flush()
-        log_file.close()</code></pre>
+                if log_file.tell() &gt;32*1024:
+                        log_file.close()
+                        filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
+                        filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
+                        filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
+                        filesystem.rename(filename       ,filename + &#34;.1&#34;)
+                        log_file = open(filename,&#34;a&#34;)
+
+                log_file.write(strings.date_ms_to_string() + &#34; %s\n&#34;%(msg))
+                log_file.flush()
+                log_file.close()
+        except:
+                print(&#34;No space&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.logger.syslog"><code class="name flex">

@@ -36,8 +36,8 @@ from tools import filesystem, logger
 def reboot(message=&#34;Reboot&#34;):
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
         logger.syslog(message)
-        from tools.lang import RegionConfig
-        region_config = RegionConfig()
+        from tools import lang
+        region_config = lang.RegionConfig()
         if region_config.load():
                 region_config.current_time = time.time() + 8
                 region_config.save()
@@ -73,8 +73,8 @@ def reboot(message=&#34;Reboot&#34;):
 <pre><code class="python">def reboot(message=&#34;Reboot&#34;):
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
         logger.syslog(message)
-        from tools.lang import RegionConfig
-        region_config = RegionConfig()
+        from tools import lang
+        region_config = lang.RegionConfig()
         if region_config.load():
                 region_config.current_time = time.time() + 8
                 region_config.save()

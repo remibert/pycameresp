@@ -31,32 +31,48 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Miscellaneous utility functions &#34;&#34;&#34;
 import sys
-from tools import filesystem, logger
+import io
+try:
+        from tools import logger,filesystem
+except:
+        # pylint:disable=multiple-imports
+        import logger,filesystem
 
 def run(filename):
         &#34;&#34;&#34; Import and execute python file &#34;&#34;&#34;
+        result = None
         path, file = filesystem.split(filename)
-        moduleName, _ = filesystem.splitext(file)
+        module_name, _ = filesystem.splitext(file)
 
         if path not in sys.path:
                 sys.path.append(path)
 
         try:
-                del sys.modules[moduleName]
+                del sys.modules[module_name]
         except:
                 pass
-        try:
-                exec(&#34;import %s&#34;%moduleName)
 
-                for fct in dir(sys.modules[moduleName]):
+        try:
+                exec(&#34;import %s&#34;%module_name)
+                for fct in dir(sys.modules[module_name]):
                         if fct == &#34;main&#34;:
-                                print(&#34;Start main function&#34;)
-                                sys.modules[moduleName].main()
+                                print(&#34;Execute main function&#34;)
+                                sys.modules[module_name].main()
                                 break
         except Exception as err:
+                if filesystem.ismicropython():
+                        out = io.StringIO()
+                        # pylint: disable=no-member
+                        sys.print_exception(err, out)
+                        try:
+                                line_err = out.getvalue().split(&#34;\n&#34;)[-3]
+                                result = int((line_err.split(&#39;,&#39;)[1]).split(&#34; &#34;)[-1])
+                        except:
+                                pass
                 logger.syslog(err)
         except KeyboardInterrupt as err:
-                logger.syslog(err)</code></pre>
+                logger.syslog(err)
+        return result</code></pre>
 </details>
 </section>
 <section>
@@ -77,28 +93,39 @@ def run(filename):
 </summary>
 <pre><code class="python">def run(filename):
         &#34;&#34;&#34; Import and execute python file &#34;&#34;&#34;
+        result = None
         path, file = filesystem.split(filename)
-        moduleName, _ = filesystem.splitext(file)
+        module_name, _ = filesystem.splitext(file)
 
         if path not in sys.path:
                 sys.path.append(path)
 
         try:
-                del sys.modules[moduleName]
+                del sys.modules[module_name]
         except:
                 pass
-        try:
-                exec(&#34;import %s&#34;%moduleName)
 
-                for fct in dir(sys.modules[moduleName]):
+        try:
+                exec(&#34;import %s&#34;%module_name)
+                for fct in dir(sys.modules[module_name]):
                         if fct == &#34;main&#34;:
-                                print(&#34;Start main function&#34;)
-                                sys.modules[moduleName].main()
+                                print(&#34;Execute main function&#34;)
+                                sys.modules[module_name].main()
                                 break
         except Exception as err:
+                if filesystem.ismicropython():
+                        out = io.StringIO()
+                        # pylint: disable=no-member
+                        sys.print_exception(err, out)
+                        try:
+                                line_err = out.getvalue().split(&#34;\n&#34;)[-3]
+                                result = int((line_err.split(&#39;,&#39;)[1]).split(&#34; &#34;)[-1])
+                        except:
+                                pass
                 logger.syslog(err)
         except KeyboardInterrupt as err:
-                logger.syslog(err)</code></pre>
+                logger.syslog(err)
+        return result</code></pre>
 </details>
 </dd>
 </dl>

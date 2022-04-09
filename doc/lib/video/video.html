@@ -42,9 +42,10 @@ as well as a lot of adjustment on the camera, not available on the other firmwar
 &#34;&#34;&#34;
 # pylint: disable=multiple-statements
 import time
-import camera
 import uasyncio
-from tools import system,jsonconfig,logger
+from tools import info,system,jsonconfig,logger
+if info.iscamera():
+        import camera
 
 class CameraConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Class that collects the camera rendering configuration &#34;&#34;&#34;
@@ -175,6 +176,86 @@ class Camera:
         failed  = [0]
         newFailed = [0]
         config = None
+
+        @staticmethod
+        def gpio_config(
+                pin_pwdn     = 32,
+                pin_reset    = -1,
+                pin_xclk     =  0,
+                pin_sscb_sda = 26,
+                pin_sscb_scl = 27,
+                pin_d7       = 35,
+                pin_d6       = 34,
+                pin_d5       = 39,
+                pin_d4       = 36,
+                pin_d3       = 21,
+                pin_d2       = 19,
+                pin_d1       = 18,
+                pin_d0       =  5,
+                pin_vsync    = 25,
+                pin_href     = 23,
+                pin_pclk     = 22,
+                xclk_freq_hz = 20000000,
+                ledc_timer   = 0,
+                ledc_channel = 0,
+                pixel_format = 3,
+                frame_size   = 13,
+                jpeg_quality = 12,
+                fb_count     = 1,
+                flash_led    = 4):
+                &#34;&#34;&#34; Configure the structure for camera initialization. It must be done before the first call of Camera.open.
+                        The defaults values are for ESP32CAM.
+                        - pin_pwdn           : GPIO pin for camera power down line
+                        - pin_reset          : GPIO pin for camera pin_reset line
+                        - pin_xclk           : GPIO pin for camera XCLK line
+                        - pin_sscb_sda       : GPIO pin for camera SDA line (SIOD)
+                        - pin_sscb_scl       : GPIO pin for camera SCL line (SIOC)
+                        - pin_d7             : GPIO pin for camera D7 line
+                        - pin_d6             : GPIO pin for camera D6 line
+                        - pin_d5             : GPIO pin for camera D5 line
+                        - pin_d4             : GPIO pin for camera D4 line
+                        - pin_d3             : GPIO pin for camera D3 line
+                        - pin_d2             : GPIO pin for camera D2 line
+                        - pin_d1             : GPIO pin for camera D1 line
+                        - pin_d0             : GPIO pin for camera D0 line
+                        - pin_vsync          : GPIO pin for camera VSYNC line
+                        - pin_href           : GPIO pin for camera HREF line
+                        - pin_pclk           : GPIO pin for camera PCLK line
+                        - xclk_freq_hz       : Frequency of XCLK signal, in Hz. Either 20KHz or 10KHz for OV2640 double FPS (Experimental)
+                        - ledc_timer         : LEDC timer to be used for generating XCLK
+                        - ledc_channel       : LEDC channel to be used for generating XCLK
+                        - pixel_format       : Format of the pixel data: PIXFORMAT_ + YUV422|GRAYSCALE|RGB565|JPEG
+                        - frame_size         : Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
+                        - jpeg_quality       : Quality of JPEG output. 0-63 lower means higher quality
+                        - fb_count           : Number of frame buffers to be allocated. If more than one, then each frame will be acquired (double speed)
+                        - flash_led          : GPIO pin for flash led or 0 to disable &#34;&#34;&#34;
+                Camera.get_config()
+                if Camera.is_activated():
+                        camera.configure(
+                                pin_pwdn     = pin_pwdn,
+                                pin_reset    = pin_reset,
+                                pin_xclk     = pin_xclk,
+                                pin_sscb_sda = pin_sscb_sda,
+                                pin_sscb_scl = pin_sscb_scl,
+                                pin_d7       = pin_d7,
+                                pin_d6       = pin_d6,
+                                pin_d5       = pin_d5,
+                                pin_d4       = pin_d4,
+                                pin_d3       = pin_d3,
+                                pin_d2       = pin_d2,
+                                pin_d1       = pin_d1,
+                                pin_d0       = pin_d0,
+                                pin_vsync    = pin_vsync,
+                                pin_href     = pin_href,
+                                pin_pclk     = pin_pclk,
+                                xclk_freq_hz = xclk_freq_hz,
+                                ledc_timer   = ledc_timer,
+                                ledc_channel = ledc_channel,
+                                pixel_format = pixel_format,
+                                frame_size   = frame_size,
+                                jpeg_quality = jpeg_quality,
+                                fb_count     = fb_count,
+                                flash_led    = flash_led)
 
         @staticmethod
         def open():
@@ -462,6 +543,86 @@ class Camera:
         failed  = [0]
         newFailed = [0]
         config = None
+
+        @staticmethod
+        def gpio_config(
+                pin_pwdn     = 32,
+                pin_reset    = -1,
+                pin_xclk     =  0,
+                pin_sscb_sda = 26,
+                pin_sscb_scl = 27,
+                pin_d7       = 35,
+                pin_d6       = 34,
+                pin_d5       = 39,
+                pin_d4       = 36,
+                pin_d3       = 21,
+                pin_d2       = 19,
+                pin_d1       = 18,
+                pin_d0       =  5,
+                pin_vsync    = 25,
+                pin_href     = 23,
+                pin_pclk     = 22,
+                xclk_freq_hz = 20000000,
+                ledc_timer   = 0,
+                ledc_channel = 0,
+                pixel_format = 3,
+                frame_size   = 13,
+                jpeg_quality = 12,
+                fb_count     = 1,
+                flash_led    = 4):
+                &#34;&#34;&#34; Configure the structure for camera initialization. It must be done before the first call of Camera.open.
+                        The defaults values are for ESP32CAM.
+                        - pin_pwdn           : GPIO pin for camera power down line
+                        - pin_reset          : GPIO pin for camera pin_reset line
+                        - pin_xclk           : GPIO pin for camera XCLK line
+                        - pin_sscb_sda       : GPIO pin for camera SDA line (SIOD)
+                        - pin_sscb_scl       : GPIO pin for camera SCL line (SIOC)
+                        - pin_d7             : GPIO pin for camera D7 line
+                        - pin_d6             : GPIO pin for camera D6 line
+                        - pin_d5             : GPIO pin for camera D5 line
+                        - pin_d4             : GPIO pin for camera D4 line
+                        - pin_d3             : GPIO pin for camera D3 line
+                        - pin_d2             : GPIO pin for camera D2 line
+                        - pin_d1             : GPIO pin for camera D1 line
+                        - pin_d0             : GPIO pin for camera D0 line
+                        - pin_vsync          : GPIO pin for camera VSYNC line
+                        - pin_href           : GPIO pin for camera HREF line
+                        - pin_pclk           : GPIO pin for camera PCLK line
+                        - xclk_freq_hz       : Frequency of XCLK signal, in Hz. Either 20KHz or 10KHz for OV2640 double FPS (Experimental)
+                        - ledc_timer         : LEDC timer to be used for generating XCLK
+                        - ledc_channel       : LEDC channel to be used for generating XCLK
+                        - pixel_format       : Format of the pixel data: PIXFORMAT_ + YUV422|GRAYSCALE|RGB565|JPEG
+                        - frame_size         : Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
+                        - jpeg_quality       : Quality of JPEG output. 0-63 lower means higher quality
+                        - fb_count           : Number of frame buffers to be allocated. If more than one, then each frame will be acquired (double speed)
+                        - flash_led          : GPIO pin for flash led or 0 to disable &#34;&#34;&#34;
+                Camera.get_config()
+                if Camera.is_activated():
+                        camera.configure(
+                                pin_pwdn     = pin_pwdn,
+                                pin_reset    = pin_reset,
+                                pin_xclk     = pin_xclk,
+                                pin_sscb_sda = pin_sscb_sda,
+                                pin_sscb_scl = pin_sscb_scl,
+                                pin_d7       = pin_d7,
+                                pin_d6       = pin_d6,
+                                pin_d5       = pin_d5,
+                                pin_d4       = pin_d4,
+                                pin_d3       = pin_d3,
+                                pin_d2       = pin_d2,
+                                pin_d1       = pin_d1,
+                                pin_d0       = pin_d0,
+                                pin_vsync    = pin_vsync,
+                                pin_href     = pin_href,
+                                pin_pclk     = pin_pclk,
+                                xclk_freq_hz = xclk_freq_hz,
+                                ledc_timer   = ledc_timer,
+                                ledc_channel = ledc_channel,
+                                pixel_format = pixel_format,
+                                frame_size   = frame_size,
+                                jpeg_quality = jpeg_quality,
+                                fb_count     = fb_count,
+                                flash_led    = flash_led)
 
         @staticmethod
         def open():
@@ -946,6 +1107,145 @@ def get_config():
 def get_stat():
         &#34;&#34;&#34; Statistic &#34;&#34;&#34;
         return Camera.success[0], Camera.failed[0]</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Camera.gpio_config"><code class="name flex">
+<span>def <span class="ident">gpio_config</span></span>(<span>pin_pwdn=32, pin_reset=-1, pin_xclk=0, pin_sscb_sda=26, pin_sscb_scl=27, pin_d7=35, pin_d6=34, pin_d5=39, pin_d4=36, pin_d3=21, pin_d2=19, pin_d1=18, pin_d0=5, pin_vsync=25, pin_href=23, pin_pclk=22, xclk_freq_hz=20000000, ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=12, fb_count=1, flash_led=4)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Configure the structure for camera initialization. It must be done before the first call of Camera.open.
+The defaults values are for ESP32CAM.
+- pin_pwdn
+: GPIO pin for camera power down line
+- pin_reset
+: GPIO pin for camera pin_reset line
+- pin_xclk
+: GPIO pin for camera XCLK line
+- pin_sscb_sda
+: GPIO pin for camera SDA line (SIOD)
+- pin_sscb_scl
+: GPIO pin for camera SCL line (SIOC)
+- pin_d7
+: GPIO pin for camera D7 line
+- pin_d6
+: GPIO pin for camera D6 line
+- pin_d5
+: GPIO pin for camera D5 line
+- pin_d4
+: GPIO pin for camera D4 line
+- pin_d3
+: GPIO pin for camera D3 line
+- pin_d2
+: GPIO pin for camera D2 line
+- pin_d1
+: GPIO pin for camera D1 line
+- pin_d0
+: GPIO pin for camera D0 line
+- pin_vsync
+: GPIO pin for camera VSYNC line
+- pin_href
+: GPIO pin for camera HREF line
+- pin_pclk
+: GPIO pin for camera PCLK line
+- xclk_freq_hz
+: Frequency of XCLK signal, in Hz. Either 20KHz or 10KHz for OV2640 double FPS (Experimental)
+- ledc_timer
+: LEDC timer to be used for generating XCLK
+- ledc_channel
+: LEDC channel to be used for generating XCLK
+- pixel_format
+: Format of the pixel data: PIXFORMAT_ + YUV422|GRAYSCALE|RGB565|JPEG
+- frame_size
+: Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
+- jpeg_quality
+: Quality of JPEG output. 0-63 lower means higher quality
+- fb_count
+: Number of frame buffers to be allocated. If more than one, then each frame will be acquired (double speed)
+- flash_led
+: GPIO pin for flash led or 0 to disable</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def gpio_config(
+        pin_pwdn     = 32,
+        pin_reset    = -1,
+        pin_xclk     =  0,
+        pin_sscb_sda = 26,
+        pin_sscb_scl = 27,
+        pin_d7       = 35,
+        pin_d6       = 34,
+        pin_d5       = 39,
+        pin_d4       = 36,
+        pin_d3       = 21,
+        pin_d2       = 19,
+        pin_d1       = 18,
+        pin_d0       =  5,
+        pin_vsync    = 25,
+        pin_href     = 23,
+        pin_pclk     = 22,
+        xclk_freq_hz = 20000000,
+        ledc_timer   = 0,
+        ledc_channel = 0,
+        pixel_format = 3,
+        frame_size   = 13,
+        jpeg_quality = 12,
+        fb_count     = 1,
+        flash_led    = 4):
+        &#34;&#34;&#34; Configure the structure for camera initialization. It must be done before the first call of Camera.open.
+                The defaults values are for ESP32CAM.
+                - pin_pwdn           : GPIO pin for camera power down line
+                - pin_reset          : GPIO pin for camera pin_reset line
+                - pin_xclk           : GPIO pin for camera XCLK line
+                - pin_sscb_sda       : GPIO pin for camera SDA line (SIOD)
+                - pin_sscb_scl       : GPIO pin for camera SCL line (SIOC)
+                - pin_d7             : GPIO pin for camera D7 line
+                - pin_d6             : GPIO pin for camera D6 line
+                - pin_d5             : GPIO pin for camera D5 line
+                - pin_d4             : GPIO pin for camera D4 line
+                - pin_d3             : GPIO pin for camera D3 line
+                - pin_d2             : GPIO pin for camera D2 line
+                - pin_d1             : GPIO pin for camera D1 line
+                - pin_d0             : GPIO pin for camera D0 line
+                - pin_vsync          : GPIO pin for camera VSYNC line
+                - pin_href           : GPIO pin for camera HREF line
+                - pin_pclk           : GPIO pin for camera PCLK line
+                - xclk_freq_hz       : Frequency of XCLK signal, in Hz. Either 20KHz or 10KHz for OV2640 double FPS (Experimental)
+                - ledc_timer         : LEDC timer to be used for generating XCLK
+                - ledc_channel       : LEDC channel to be used for generating XCLK
+                - pixel_format       : Format of the pixel data: PIXFORMAT_ + YUV422|GRAYSCALE|RGB565|JPEG
+                - frame_size         : Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
+                - jpeg_quality       : Quality of JPEG output. 0-63 lower means higher quality
+                - fb_count           : Number of frame buffers to be allocated. If more than one, then each frame will be acquired (double speed)
+                - flash_led          : GPIO pin for flash led or 0 to disable &#34;&#34;&#34;
+        Camera.get_config()
+        if Camera.is_activated():
+                camera.configure(
+                        pin_pwdn     = pin_pwdn,
+                        pin_reset    = pin_reset,
+                        pin_xclk     = pin_xclk,
+                        pin_sscb_sda = pin_sscb_sda,
+                        pin_sscb_scl = pin_sscb_scl,
+                        pin_d7       = pin_d7,
+                        pin_d6       = pin_d6,
+                        pin_d5       = pin_d5,
+                        pin_d4       = pin_d4,
+                        pin_d3       = pin_d3,
+                        pin_d2       = pin_d2,
+                        pin_d1       = pin_d1,
+                        pin_d0       = pin_d0,
+                        pin_vsync    = pin_vsync,
+                        pin_href     = pin_href,
+                        pin_pclk     = pin_pclk,
+                        xclk_freq_hz = xclk_freq_hz,
+                        ledc_timer   = ledc_timer,
+                        ledc_channel = ledc_channel,
+                        pixel_format = pixel_format,
+                        frame_size   = frame_size,
+                        jpeg_quality = jpeg_quality,
+                        fb_count     = fb_count,
+                        flash_led    = flash_led)</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.hmirror"><code class="name flex">
@@ -1631,6 +1931,7 @@ to the web page. It stop the motion detection during this phase</p></div>
 <li><code><a title="lib.video.video.Camera.framesize" href="#lib.video.video.Camera.framesize">framesize</a></code></li>
 <li><code><a title="lib.video.video.Camera.get_config" href="#lib.video.video.Camera.get_config">get_config</a></code></li>
 <li><code><a title="lib.video.video.Camera.get_stat" href="#lib.video.video.Camera.get_stat">get_stat</a></code></li>
+<li><code><a title="lib.video.video.Camera.gpio_config" href="#lib.video.video.Camera.gpio_config">gpio_config</a></code></li>
 <li><code><a title="lib.video.video.Camera.hmirror" href="#lib.video.video.Camera.hmirror">hmirror</a></code></li>
 <li><code><a title="lib.video.video.Camera.is_activated" href="#lib.video.video.Camera.is_activated">is_activated</a></code></li>
 <li><code><a title="lib.video.video.Camera.is_modified" href="#lib.video.video.Camera.is_modified">is_modified</a></code></li>

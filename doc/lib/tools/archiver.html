@@ -30,8 +30,7 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Archiver files functions &#34;&#34;&#34;
-from tools import logger,filesystem
-from tools.exchange import FileReader, FileWriter
+from tools import logger,filesystem,exchange
 
 def export_files(export_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
         &#34;&#34;&#34; Exports many file into only one file &#34;&#34;&#34;
@@ -47,7 +46,7 @@ def export_files(export_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#3
                 # Open out file
                 out_file = open(export_filename,&#34;wb&#34;)
 
-                file_write = FileWriter()
+                file_write = exchange.FileWriter()
                 # For all files found
                 for filename in files:
                         # All files except .tmp and sdcard
@@ -78,7 +77,7 @@ def import_files(import_filename, directory=&#34;/&#34;):
                 read_size = filesystem.filesize(import_filename)
 
                 while in_file.tell() &lt; read_size:
-                        file_reader = FileReader(simulated)
+                        file_reader = exchange.FileReader(simulated)
                         res = file_reader.read(directory, in_file)
                         logger.syslog(&#34;Import %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 
@@ -122,7 +121,7 @@ def import_files(import_filename, directory=&#34;/&#34;):
                 # Open out file
                 out_file = open(export_filename,&#34;wb&#34;)
 
-                file_write = FileWriter()
+                file_write = exchange.FileWriter()
                 # For all files found
                 for filename in files:
                         # All files except .tmp and sdcard
@@ -163,7 +162,7 @@ def import_files(import_filename, directory=&#34;/&#34;):
                 read_size = filesystem.filesize(import_filename)
 
                 while in_file.tell() &lt; read_size:
-                        file_reader = FileReader(simulated)
+                        file_reader = exchange.FileReader(simulated)
                         res = file_reader.read(directory, in_file)
                         logger.syslog(&#34;Import %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 

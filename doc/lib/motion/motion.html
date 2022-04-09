@@ -79,6 +79,10 @@ class MotionConfig(jsonconfig.JsonConfig):
                 # Notify motion state change
                 self.notify_state = True
 
+                # Permanent detection without notification.
+                # To keep all motion detection in the presence of occupants
+                self.permanent_detection = False
+
                 # Empty mask is equal disable masking
                 self.mask = b&#34;&#34;
 
@@ -97,11 +101,11 @@ class ImageMotion:
                 self.motion_id = None
                 self.date     = strings.date_to_string()
                 self.filename = strings.date_to_filename()
-                path = strings.date_to_path()[:-1]
-                if path[-1] in [0x30,0x31,0x32]:
-                        path = path[:-1] + b&#34;00&#34;
+                path = strings.date_to_path()
+                if path[-1] in [0x30,0x31,0x32,0x33,0x34]:
+                        path = path[:-1] + b&#34;0&#34;
                 else:
-                        path = path[:-1] + b&#34;30&#34;
+                        path = path[:-1] + b&#34;5&#34;
                 self.path     = path
                 self.motion_detected = False
                 self.config = config
@@ -552,9 +556,10 @@ class Detection:
                 self.release_image()
 
                 # If the motion detection activated
-                if await self.is_activated():
+                activated = await self.is_activated()
+                if activated or self.is_pemanent():
                         # Capture motion
-                        result = await self.capture()
+                        result = await self.capture(activated)
                 else:
                         if self.motion:
                                 self.motion.stop_light()
@@ -605,6 +610,16 @@ class Detection:
                         await uasyncio.sleep_ms(500)
                 return result
 
+        def is_pemanent(self):
+                &#34;&#34;&#34; Indicates if pemanent detection activated &#34;&#34;&#34;
+                result = False
+                # If motion activated
+                if self.motion_config.activated:
+                        # If detection permanent without notification activated
+                        if self.motion_config.permanent_detection:
+                                result = True
+                return result
+
         async def init_motion(self):
                 &#34;&#34;&#34; Initialize motion detection &#34;&#34;&#34;
                 firstInit = False
@@ -637,7 +652,7 @@ class Detection:
                         if self.motion.index %30 == 0:
                                 collect()
 
-        async def capture(self):
+        async def capture(self, activated):
                 &#34;&#34;&#34; Capture motion &#34;&#34;&#34;
                 result = False
 
@@ -657,8 +672,8 @@ class Detection:
                                 # Capture motion image
                                 self.detection = await self.motion.capture()
 
-                                # If motion detected
-                                if self.detection is not None:
+                                # If motion detected and detection activated
+                                if self.detection is not None and activated is True:
                                         # Notify motion with push over
                                         message, image = self.detection
                                         if self.motion_config.notify:
@@ -845,9 +860,10 @@ async def detect_motion(pir_detection):
                 self.release_image()
 
                 # If the motion detection activated
-                if await self.is_activated():
+                activated = await self.is_activated()
+                if activated or self.is_pemanent():
                         # Capture motion
-                        result = await self.capture()
+                        result = await self.capture(activated)
                 else:
                         if self.motion:
                                 self.motion.stop_light()
@@ -898,6 +914,16 @@ async def detect_motion(pir_detection):
                         await uasyncio.sleep_ms(500)
                 return result
 
+        def is_pemanent(self):
+                &#34;&#34;&#34; Indicates if pemanent detection activated &#34;&#34;&#34;
+                result = False
+                # If motion activated
+                if self.motion_config.activated:
+                        # If detection permanent without notification activated
+                        if self.motion_config.permanent_detection:
+                                result = True
+                return result
+
         async def init_motion(self):
                 &#34;&#34;&#34; Initialize motion detection &#34;&#34;&#34;
                 firstInit = False
@@ -930,7 +956,7 @@ async def detect_motion(pir_detection):
                         if self.motion.index %30 == 0:
                                 collect()
 
-        async def capture(self):
+        async def capture(self, activated):
                 &#34;&#34;&#34; Capture motion &#34;&#34;&#34;
                 result = False
 
@@ -950,8 +976,8 @@ async def detect_motion(pir_detection):
                                 # Capture motion image
                                 self.detection = await self.motion.capture()
 
-                                # If motion detected
-                                if self.detection is not None:
+                                # If motion detected and detection activated
+                                if self.detection is not None and activated is True:
                                         # Notify motion with push over
                                         message, image = self.detection
                                         if self.motion_config.notify:
@@ -985,7 +1011,7 @@ async def detect_motion(pir_detection):
 <h3>Methods</h3>
 <dl>
 <dt id="lib.motion.motion.Detection.capture"><code class="name flex">
-<span>async def <span class="ident">capture</span></span>(<span>self)</span>
+<span>async def <span class="ident">capture</span></span>(<span>self, activated)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Capture motion</p></div>
@@ -993,7 +1019,7 @@ async def detect_motion(pir_detection):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def capture(self):
+<pre><code class="python">async def capture(self, activated):
         &#34;&#34;&#34; Capture motion &#34;&#34;&#34;
         result = False
 
@@ -1013,8 +1039,8 @@ async def detect_motion(pir_detection):
                         # Capture motion image
                         self.detection = await self.motion.capture()
 
-                        # If motion detected
-                        if self.detection is not None:
+                        # If motion detected and detection activated
+                        if self.detection is not None and activated is True:
                                 # Notify motion with push over
                                 message, image = self.detection
                                 if self.motion_config.notify:
@@ -1065,9 +1091,10 @@ async def detect_motion(pir_detection):
         self.release_image()
 
         # If the motion detection activated
-        if await self.is_activated():
+        activated = await self.is_activated()
+        if activated or self.is_pemanent():
                 # Capture motion
-                result = await self.capture()
+                result = await self.capture(activated)
         else:
                 if self.motion:
                         self.motion.stop_light()
@@ -1155,6 +1182,26 @@ async def detect_motion(pir_detection):
         if result is False:
                 # Wait moment before next loop
                 await uasyncio.sleep_ms(500)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.motion.motion.Detection.is_pemanent"><code class="name flex">
+<span>def <span class="ident">is_pemanent</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if pemanent detection activated</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_pemanent(self):
+        &#34;&#34;&#34; Indicates if pemanent detection activated &#34;&#34;&#34;
+        result = False
+        # If motion activated
+        if self.motion_config.activated:
+                # If detection permanent without notification activated
+                if self.motion_config.permanent_detection:
+                        result = True
         return result</code></pre>
 </details>
 </dd>
@@ -1261,11 +1308,11 @@ async def detect_motion(pir_detection):
                 self.motion_id = None
                 self.date     = strings.date_to_string()
                 self.filename = strings.date_to_filename()
-                path = strings.date_to_path()[:-1]
-                if path[-1] in [0x30,0x31,0x32]:
-                        path = path[:-1] + b&#34;00&#34;
+                path = strings.date_to_path()
+                if path[-1] in [0x30,0x31,0x32,0x33,0x34]:
+                        path = path[:-1] + b&#34;0&#34;
                 else:
-                        path = path[:-1] + b&#34;30&#34;
+                        path = path[:-1] + b&#34;5&#34;
                 self.path     = path
                 self.motion_detected = False
                 self.config = config
@@ -2374,6 +2421,10 @@ async def detect_motion(pir_detection):
                 # Notify motion state change
                 self.notify_state = True
 
+                # Permanent detection without notification.
+                # To keep all motion detection in the presence of occupants
+                self.permanent_detection = False
+
                 # Empty mask is equal disable masking
                 self.mask = b&#34;&#34;</code></pre>
 </details>
@@ -2662,6 +2713,7 @@ def get(width=None, height=None):
 <li><code><a title="lib.motion.motion.Detection.detect" href="#lib.motion.motion.Detection.detect">detect</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.init_motion" href="#lib.motion.motion.Detection.init_motion">init_motion</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.is_activated" href="#lib.motion.motion.Detection.is_activated">is_activated</a></code></li>
+<li><code><a title="lib.motion.motion.Detection.is_pemanent" href="#lib.motion.motion.Detection.is_pemanent">is_pemanent</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.load_config" href="#lib.motion.motion.Detection.load_config">load_config</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.refresh_config" href="#lib.motion.motion.Detection.refresh_config">refresh_config</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.release_image" href="#lib.motion.motion.Detection.release_image">release_image</a></code></li>
