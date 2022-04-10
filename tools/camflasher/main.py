@@ -119,12 +119,7 @@ class FlashDialog(QDialog):
 	def accept(self):
 		""" Called when ok pressed """
 		if os.path.exists(self.dialog.firmware.text()) is False:
-			msg = QMessageBox()
-			w = self.geometry().width()
-			h = self.geometry().height()
-			x = self.geometry().x()
-			y = self.geometry().y()
-			msg.setGeometry(x + w//3,y + h//3,w,h)
+			msg = QMessageBox(parent=self)
 			msg.setIcon(QMessageBox.Icon.Critical)
 			msg.setText("Firmware not found")
 			msg.exec()
@@ -397,6 +392,8 @@ class CamFlasher(QMainWindow):
 		self.window.action_about.triggered.connect(self.on_about_clicked)
 		self.window.action_option.triggered.connect(self.on_option_clicked)
 		self.window.chk_rts_dtr.stateChanged.connect(self.on_rts_dtr_changed)
+		self.window.action_inject_shell.triggered.connect(self.on_inject_shell)
+		self.window.action_inject_server.triggered.connect(self.on_inject_server)
 		self.ports = Ports()
 		self.clear_selection = True
 
@@ -492,6 +489,26 @@ class CamFlasher(QMainWindow):
 	def resizeEvent(self, _):
 		""" Treat the window resize event """
 		self.resize_console()
+
+	def on_inject_server(self):
+		""" On menu inject server clicked """
+		# self.flasher.inject("server.zip")
+		self.inject("server.zip")
+
+	def on_inject_shell(self):
+		""" On menu inject shell clicked """
+		# self.flasher.inject("shell.zip")
+		self.inject("shell.zip")
+
+	def inject(self, filename):
+		""" Inject file from pycameresp github into device """
+		msg = QMessageBox(parent=self)
+		msg.setIcon(QMessageBox.Icon.Question)
+		msg.setStandardButtons(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes)
+		msg.setText("Do you want to inject the latest version of %s from pycameresp github into the device"%filename)
+		if msg.exec() == QMessageBox.StandardButton.Yes:
+			self.flasher.inject(filename)
+
 
 	def on_option_clicked(self):
 		""" On option menu clicked """

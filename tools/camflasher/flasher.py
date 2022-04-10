@@ -6,6 +6,7 @@ import sys
 import binascii
 import os.path
 import serial
+import inject
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
@@ -82,7 +83,8 @@ class ThreadSerial(threading.Thread):
 		self.WRITE_DATA = 2
 		self.WRITE_FILE = 3
 		self.READ_FILE  = 4
-		self.QUIT       = 5
+		self.INJECT_FILE= 5
+		self.QUIT       = 6
 		self.stdout = stdout
 		self.start()
 
@@ -118,13 +120,13 @@ class ThreadSerial(threading.Thread):
 					self.serial.reset_input_buffer()
 					self.port = port
 
-					self.print("\n\x1B[42;93mSelect %s\x1B[m\n"%self.port)
+					self.print("\n\x1B[42;93mSelect %s\x1B[m"%self.port)
 			except:
 				self.close()
 
-	def print(self, message):
+	def print(self, message, end="\n"):
 		""" Print message to console """
-		self.receive_callback(message)
+		self.receive_callback(message + end)
 
 	def on_quit(self, command):
 		""" Treat quit command """
@@ -157,11 +159,11 @@ class ThreadSerial(threading.Thread):
 						filename = filename.replace("\\","/")
 						filename_ = filename.replace(directory, "")
 						if file_writer.write(filename, self.serial, self.serial, directory) is True:
-							self.print("  %s\n"%filename_)
+							self.print("  %s"%filename_)
 						else:
-							self.print("  %s bad crc\n"%filename_)
+							self.print("  %s bad crc"%filename_)
 				else:
-					self.print("'%s' not found\n"%(os.path.normpath(path + "/" + pattern)))
+					self.print("'%s' not found"%(os.path.normpath(path + "/" + pattern)))
 
 				self.serial.write(b"exit\r\n")
 			except Exception as err:
@@ -173,11 +175,18 @@ class ThreadSerial(threading.Thread):
 			try:
 				file_reader = FileReader()
 				if file_reader.read(directory, self.serial, self.serial) != -1:
-					self.print("  %s\n"%file_reader.filename.get())
+					self.print("  %s"%file_reader.filename.get())
 				else:
-					self.print("  %s bad crc\n"%file_reader.filename.get())
+					self.print("  %s bad crc"%file_reader.filename.get())
 			except Exception as err:
 				self.print("Exporter error")
+
+	def on_inject(self, command, filename):
+		""" Treat inject command to device """
+		if command == self.INJECT_FILE:
+			self.print("\nInjection started of %s"%filename)
+			inject.inject_zip_file(inject.GITHUB_HOST, inject.PYCAMERESP_PATH, filename, self.serial, self.print)
+			self.print("Injection terminated\n")
 
 	def on_write(self, command, data):
 		""" Treat write command """
@@ -233,6 +242,7 @@ class ThreadSerial(threading.Thread):
 					self.on_write_file (command, data)
 					self.on_read_file  (command, data)
 					self.on_connect    (command, data)
+					self.on_inject     (command, data)
 					self.on_disconnect (command)
 					self.on_quit       (command)
 				self.receive()
@@ -270,6 +280,10 @@ class ThreadSerial(threading.Thread):
 		""" Send disconnect command to serial thread """
 		self.send((self.DISCONNECT, None))
 
+	def inject(self, filename):
+		""" Send inject command to serial thread """
+		self.send((self.INJECT_FILE, filename))
+
 	def is_disconnected(self):
 		""" Indicates if the serial port is disconnected """
 		return self.serial is None
@@ -286,6 +300,7 @@ class Flasher(threading.Thread):
 		self.SET_INFO      = 3
 		self.DATA_RECEIVED = 4
 		self.FLASH         = 5
+		self.INJECT_FILE   = 6
 
 		self.loop = True
 		self.flashing = False
@@ -314,6 +329,8 @@ class Flasher(threading.Thread):
 				self.flasher(port, baud, rts_dtr, firmware, erase)
 			elif command == self.SET_INFO:
 				self.serial_thread.connect(data)
+			elif command == self.INJECT_FILE:
+				self.serial_thread.inject(data)
 
 	def decode(self, data):
 		""" Decode bytes data into string """
@@ -409,6 +426,10 @@ class Flasher(threading.Thread):
 	def receive(self, data):
 		""" Send receive data to flasher thread """
 		self.command.put((self.DATA_RECEIVED, data))
+
+	def inject(self, filename):
+		""" Send inject command to serial thread """
+		self.command.put((self.INJECT_FILE, filename))
 
 	def send_key(self, key):
 		""" Send key command to flasher thread """

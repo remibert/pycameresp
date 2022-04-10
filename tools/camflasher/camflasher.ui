@@ -37,7 +37,13 @@
     <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="spacing">
-       <number>-1</number>
+       <number>3</number>
+      </property>
+      <property name="leftMargin">
+       <number>3</number>
+      </property>
+      <property name="rightMargin">
+       <number>3</number>
       </property>
       <property name="bottomMargin">
        <number>0</number>
@@ -137,7 +143,15 @@
     </property>
     <addaction name="action_about"/>
    </widget>
+   <widget class="QMenu" name="menu_tools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="action_inject_shell"/>
+    <addaction name="action_inject_server"/>
+   </widget>
    <addaction name="menu_flasher"/>
+   <addaction name="menu_tools"/>
    <addaction name="menu_console"/>
    <addaction name="menu_info"/>
   </widget>
@@ -179,6 +193,16 @@
   <action name="action_option">
    <property name="text">
     <string> Option</string>
+   </property>
+  </action>
+  <action name="action_inject_shell">
+   <property name="text">
+    <string>Inject shell</string>
+   </property>
+  </action>
+  <action name="action_inject_server">
+   <property name="text">
+    <string>Inject server</string>
    </property>
   </action>
  </widget>
