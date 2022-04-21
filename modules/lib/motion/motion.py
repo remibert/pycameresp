@@ -11,7 +11,7 @@ from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
 from video.video     import Camera
-from tools import logger,jsonconfig,lang,linearfunction,tasking,strings
+from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
@@ -414,20 +414,24 @@ class Motion:
 					comparison = current.compare(self.image_background)
 
 			# Compute the list of differences
-			diffs = ""
+			diffs = b""
 			index = 0
 			for image in self.images:
 				differences.setdefault(image.get_motion_id(), []).append(image.get_motion_id())
 				if image.get_motion_id() is not None:
 					if image.index % 10 == 0:
-						trace = "_"
+						trace = b"_"
 					else:
-						trace = " "
+						trace = b" "
 					if image.index > index:
 						index = image.index
-					diffs += "%d:%d%s%s"%(image.get_motion_id(), image.get_diff_count(), chr(0x41 + ((256-image.get_diff_histo())//10)), trace)
+					diffs += b"%d:%d%s%s"%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, 'big'), trace)
 			if display:
-				sys.stdout.write("\r%s %s (%d) "%(strings.date_to_string()[12:], diffs, index))
+				line = b"\r%s %s (%d) "%(strings.date_to_bytes()[12:], bytes(diffs), index)
+				if filesystem.ismicropython():
+					sys.stdout.write(line)
+				else:
+					sys.stdout.write(line.decode("utf8"))
 		return differences
 
 	def deinit_image(self, image):
@@ -576,7 +580,7 @@ class Detection:
 			result = False
 
 		# If motion disabled
-		if result is False:
+		if result is False and self.is_pemanent() is False:
 			# Wait moment before next loop
 			await uasyncio.sleep_ms(500)
 		return result
@@ -629,7 +633,8 @@ class Detection:
 
 		# If camera not stabilized speed start
 		if self.motion and self.motion.is_stabilized() is True:
-			await uasyncio.sleep_ms(self.polling_frequency*500 if Server.is_slow() else self.polling_frequency)
+			frequency = self.polling_frequency*500 if Server.is_slow() else self.polling_frequency
+			await uasyncio.sleep_ms(frequency)
 
 		try:
 			# Waits for the camera's availability

@@ -70,7 +70,7 @@ SELECT_HOME      = ["\x1b[1;2H","\x1b[1;10D"]
 SELECT_END       = ["\x1b[1;2F","\x1b[1;10C"]
 SELECT_TOP       = ["\x1b[1;6H"]
 SELECT_BOTTOM    = ["\x1b[1;6F"]
-SELECT_ALL       = ["\x01"]
+SELECT_ALL       = ["\x01","\x05"] # Select All (^E or ^A)
 SELECT_NEXT_WORD = ["\x1b[1;6C","\x1b[1;4C"]
 SELECT_PREV_WORD = ["\x1b[1;6D","\x1b[1;4D"]
 
@@ -101,7 +101,7 @@ REPLACE          = ["\x08","\x02"]                       # Replace (^B)
 REPLACE_CURRENT  = ["\x12"]                              # Replace the selection
 EXECUTE          = ["\x1b[15~"]                          # Execute script
 
-SELECTION_BEGIN = b"\x1B[7m"
+SELECTION_START = b"\x1B[7m"
 SELECTION_END   = b"\x1B[m"
 class View:
 	""" Class which manage the view of the edit field """
@@ -257,65 +257,48 @@ class View:
 			clear_line = b""
 		count_line = self.text.get_count_lines()
 		if current_line < count_line and current_line >= 0:
-			line = self.text.get_tab_line(current_line)
-			part_line = line[self.column:self.column+self.width]
 			# If the line selected
 			if selection_start is not None:
-				# If the line not empty
-				if len(part_line) >= 1:
-					# If the line have carriage return at the end
-					if part_line[-1] == "\n":
-						# Remove the carriage return
-						part_line = part_line[:-1]
-				if len(part_line) > 0:
-					dummy, sel_line_start, sel_column_start = selection_start
-					dummy, sel_line_end,   sel_column_end   = selection_end
-
-					# If the end of selection is outside the visible part
-					if sel_column_end - self.column < 0:
-						sel_column_end = 0
-					else:
-						sel_column_end -= self.column
-
-					# If the start of selection is outside the visible part
-					if sel_column_start - self.column < 0:
-						sel_column_start = 0
-					else:
-						sel_column_start -= self.column
-
-
-					begin_part    = b""
-					selected_part = b""
-					end_part      = b""
-					selected_start = SELECTION_BEGIN
-					selected_end   = SELECTION_END
-					# If the selection is on alone line
-					if current_line == sel_line_end and current_line == sel_line_start:
-						begin_part    = part_line[:sel_column_start].encode("utf8")
-						selected_part = part_line[sel_column_start:sel_column_end].encode("utf8")
-						end_part      = part_line[sel_column_end:].encode("utf8")
-					# If current line is on the last selection line
-					elif current_line == sel_line_end:
-						selected_part = part_line[:sel_column_end].encode("utf8")
-						end_part      = part_line[sel_column_end:].encode("utf8")
-					# If current line is on the first selection line
-					elif current_line == sel_line_start:
-						begin_part    = part_line[:sel_column_start].encode("utf8")
-						selected_part = part_line[sel_column_start:].encode("utf8")
-					# If the line is completly selected
-					elif current_line > sel_line_start and current_line < sel_line_end:
-						selected_part = part_line.encode("utf8")
-					# Else the selection is on the entire line
-					else:
-						selected_part = part_line.encode("utf8")
-						selected_start = b""
-						selected_end = b""
-
-					self.write(clear_line+begin_part+selected_start+selected_part+selected_end+end_part)
+				_, sel_line_start, sel_column_start = selection_start
+				_, sel_line_end,   sel_column_end   = selection_end
+				# If the line is completly selected
+				if current_line > sel_line_start and current_line < sel_line_end:
+					part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+					self.write(clear_line+SELECTION_START+part_line+SELECTION_END)
+				# If the line is partially selected
 				else:
-					self.write(clear_line)
+					part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, False)
+					# part_line = line[self.column:self.column+self.width]
+					if len(part_line) > 0:
+						# If the end of selection is outside the visible part
+						if sel_column_end - self.column < 0:
+							sel_column_end = 0
+						else:
+							sel_column_end -= self.column
+
+						# If the start of selection is outside the visible part
+						if sel_column_start - self.column < 0:
+							sel_column_start = 0
+						else:
+							sel_column_start -= self.column
+
+						# If the selection is on alone line
+						if current_line == sel_line_end and current_line == sel_line_start:
+							self.write(clear_line+part_line[:sel_column_start].encode("utf8")+SELECTION_START+part_line[sel_column_start:sel_column_end].encode("utf8")+SELECTION_END+part_line[sel_column_end:].encode("utf8"))
+						# If current line is on the last selection line
+						elif current_line == sel_line_end:
+							self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode("utf8")+SELECTION_END+part_line[sel_column_end:].encode("utf8"))
+						# If current line is on the first selection line
+						elif current_line == sel_line_start:
+							self.write(clear_line+part_line[:sel_column_start].encode("utf8")+SELECTION_START+part_line[sel_column_start:].encode("utf8")+SELECTION_END)
+						# Else the line is not selected
+						else:
+							self.write(clear_line+part_line.encode("utf8"))
+					else:
+						self.write(clear_line)
 			else:
-				self.write(clear_line+part_line.encode("utf8").rstrip())
+				part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+				self.write(clear_line+part_line)
 
 	def refresh_line(self, selection_start, selection_end):
 		""" Refresh line """
@@ -549,33 +532,53 @@ class Text:
 		else:
 			return cursor_column
 
-	def get_tab_line(self, current_line = None):
+	def get_tab_line(self, current_line, start_column, end_column, binary = True):
 		""" Get the tabuled line """
+		accent = False
 		line = self.lines[current_line]
 		if "\t" in line:
-			tabLine = ""
-			tab_cursor_column   = 0
+			tab_line = b""
+			cursor   = 0
 			len_line = len(line)
 			column = 0
 			while column < len_line:
 				char = line[column]
 				if char == "\t":
-					pos = tab_cursor_column%self.tab_size
-					tab_cursor_column += self.tab_size-pos
-					tabLine         += " "*(self.tab_size-pos)
-					column          += 1
+					pos = cursor%self.tab_size
+					cursor += self.tab_size-pos
+					tab_line          += b" "*(self.tab_size-pos)
+					column            += 1
 				else:
 					tab = line.find("\t",column)
-					if tab > 0:
-						part = line[column:tab]
-					else:
-						part = line[column:]
-					tab_cursor_column += len(part)
-					tabLine         += part
-					column          += len(part)
+					if tab < 0:
+						tab = len_line
+					part = line[column:tab]
+					cursor += len(part)
+					bin_part = part.encode("utf8")
+					tab_line          += bin_part
+					column            += len(part)
+					if len(part) != len(bin_part):
+						accent = True
+
+			tab_line = tab_line.replace(b"\n",b"")
+			if binary is False:
+				tab_line = tab_line.decode("utf8")
 		else:
-			tabLine = line
-		return tabLine
+			if binary:
+				tab_line = line.encode("utf8")
+				if len(line) != len(tab_line):
+					accent = True
+				tab_line = tab_line.replace(b"\n",b"")
+			else:
+				tab_line = line
+				tab_line = tab_line.replace("\n","")
+
+		if binary and accent:
+			result = tab_line.decode("utf8")[start_column:end_column].encode("utf8")
+		else:
+			result = tab_line[start_column:end_column]
+
+		return result
 
 	def get_tab_cursor_column(self):
 		""" Get the column of cursor in tabuled line """
@@ -707,7 +710,6 @@ class Text:
 			self.change_column(0)
 		# else the cursor is in the lines of text
 		else:
-			previousLine = self.cursor_line
 			self.cursor_line += moveLine
 			if len(self.lines) - 1 == self.cursor_line:
 				len_line = len(self.lines[self.cursor_line])
@@ -1796,5 +1798,5 @@ if __name__ == "__main__":
 		filename = sys.argv[1]
 	else:
 		filename = "editor.txt"
-		filename = "teste.py"
+		filename = "syslog.bug"
 	edit = Editor(filename, read_only=False)

@@ -25,7 +25,7 @@ class Presence:
 	""" Presence detection of smartphones """
 	ABSENCE_TIMEOUT   = 1201
 	NO_ANSWER_TIMEOUT = 607
-	FAST_POLLING      = 2.
+	FAST_POLLING      = 7.
 	SLOW_POLLING      = 53
 	DNS_POLLING       = 67
 

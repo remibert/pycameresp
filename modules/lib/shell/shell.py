@@ -74,7 +74,7 @@ def mkdir(directory, recursive=False, quiet=False):
 	except:
 		print("Cannot mkdir '%s'"%directory)
 
-def removedir(directory, force=False, quiet=False, simulate=False):
+def removedir(directory, force=False, quiet=False, simulate=False, ignore_error=False):
 	""" Remove directory """
 	try:
 		if filesystem.exists(directory+"/.DS_Store"):
@@ -84,13 +84,14 @@ def removedir(directory, force=False, quiet=False, simulate=False):
 		if quiet is False:
 			print("rmdir '%s'"%(directory))
 	except:
-		print("rmdir '%s' not removed"%(directory))
+		if ignore_error is False:
+			print("rmdir '%s' not removed"%(directory))
 
-def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
+def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False, ignore_error=False):
 	""" Remove directory """
 	directory = filesystem.normpath(directory)
 	if recursive is False:
-		removedir(directory, force=force, quiet=quiet, simulate=simulate)
+		removedir(directory, force=force, quiet=quiet, simulate=simulate, ignore_error=ignore_error)
 	else:
 		directories = [directory]
 		d = directory
@@ -106,7 +107,7 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
 			directories.remove(sdcard.SdCard.get_mountpoint())
 		for d in directories:
 			if filesystem.exists(d) and d != ".":
-				removedir(d, force=force, quiet=quiet, simulate=simulate)
+				removedir(d, force=force, quiet=quiet, simulate=simulate, ignore_error=ignore_error)
 
 def mv(source, destination):
 	""" Move or rename file """
@@ -203,7 +204,7 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
 				directories.reverse()
 
 				for directory in directories:
-					rmdir(directory, recursive=recursive, force=force, quiet=quiet, simulate=simulate)
+					rmdir(directory, recursive=recursive, force=force, quiet=quiet, simulate=simulate, ignore_error=True)
 
 class LsDisplayer:
 	""" Ls displayer class """
@@ -217,9 +218,10 @@ class LsDisplayer:
 
 	def purge_path(self, path):
 		""" Purge the path for the display """
+		path = path.encode("utf8")
 		path = filesystem.normpath(path)
-		prefix = filesystem.prefix([path, self.path])
-		return path[len(prefix):].lstrip("/")
+		prefix = filesystem.prefix([path, self.path.encode("utf8")])
+		return path[len(prefix):].lstrip(b"/")
 
 	def show(self, path):
 		""" Show the information of a file or directory """
@@ -231,16 +233,16 @@ class LsDisplayer:
 		if fileinfo[0] & 0x4000 == 0x4000:
 			if self.showdir:
 				if self.long:
-					message = "%s %s [%s]"%(strings.date_to_string(date_)," "*7,self.purge_path(path))
+					message = b"%s %s [%s]"%(strings.date_to_bytes(date_),b" "*7,self.purge_path(path))
 				else:
-					message = "[%s]"%self.purge_path(path)
+					message = b"[%s]"%self.purge_path(path)
 				self.count = print_part(message, self.width, self.height, self.count)
 		else:
 			if self.long:
 				fileinfo = filesystem.fileinfo(path)
 				date_ = fileinfo[8]
 				size = fileinfo[6]
-				message = "%s %s %s"%(strings.date_to_string(date_),strings.size_to_string(size),self.purge_path(path))
+				message = b"%s %s %s"%(strings.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
 			else:
 				message = self.purge_path(path)
 			self.count = print_part(message, self.width, self.height, self.count)
@@ -277,8 +279,8 @@ def searchfile(file, recursive, obj = None):
 			if obj is not None:
 				obj.show_dir(False)
 			_, filenames = filesystem.scandir(path, pattern, recursive, obj)
-	except:
-		pass
+	except Exception as err:
+		print(err)
 	if len(filenames) == 0 and file != "" and file != ".":
 		print("%s : No such file or directory"%file)
 	return filenames
@@ -291,6 +293,8 @@ def find(file):
 
 def print_part(message, width, height, count):
 	""" Print a part of text """
+	if isinstance(message , bytes):
+		message = message.decode("utf8")
 	if count is not None and count >= height:
 		print(message,end="")
 		key = terminal.getch()
@@ -568,7 +572,7 @@ def dump_(filename):
 			break
 		strings.dump_line (data, line, width)
 		offset += width
-		count = print_part(line.getvalue().decode("utf8"), width, height, count)
+		count = print_part(line.getvalue(), width, height, count)
 		if count is None:
 			break
 

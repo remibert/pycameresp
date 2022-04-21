@@ -346,6 +346,8 @@ class CamFlasher(QMainWindow):
 			self.window.setupUi(self)
 			self.geometry_ = self
 
+		self.title = self.window.windowTitle()
+
 		# Select font
 		self.update_font()
 		settings = get_settings()
@@ -384,7 +386,6 @@ class CamFlasher(QMainWindow):
 		self.resize_console()
 		self.window.output.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 		self.window.output.customContextMenuRequested.connect(self.context_menu)
-
 		self.window.action_paste.triggered.connect(self.paste)
 		self.window.action_copy.triggered.connect(self.copy)
 		self.window.action_resume.setDisabled(True)
@@ -480,6 +481,8 @@ class CamFlasher(QMainWindow):
 		# Deduce the size of console visible in the window
 		width  = (self.window.output.contentsRect().width()  * 200)// size.width() -  1
 		height = int((self.window.output.contentsRect().height() * 200)/ size.height() - 0.3)
+
+		self.window.setWindowTitle("%s %dx%d"%(self.title, width, height))
 		self.console.set_size(width, height)
 
 	def moveEvent(self, _):
@@ -492,12 +495,10 @@ class CamFlasher(QMainWindow):
 
 	def on_inject_server(self):
 		""" On menu inject server clicked """
-		# self.flasher.inject("server.zip")
 		self.inject("server.zip")
 
 	def on_inject_shell(self):
 		""" On menu inject shell clicked """
-		# self.flasher.inject("shell.zip")
 		self.inject("shell.zip")
 
 	def inject(self, filename):
@@ -508,7 +509,6 @@ class CamFlasher(QMainWindow):
 		msg.setText("Do you want to inject the latest version of %s from pycameresp github into the device"%filename)
 		if msg.exec() == QMessageBox.StandardButton.Yes:
 			self.flasher.inject(filename)
-
 
 	def on_option_clicked(self):
 		""" On option menu clicked """
@@ -584,6 +584,16 @@ class CamFlasher(QMainWindow):
 			self.clear_selection = False
 
 		cursor = self.window.output.textCursor()
+		# start = cursor.selectionStart()
+		# end   = cursor.selectionEnd()
+		# t = cursor.selectedText()
+		# t = cursor.columnNumber()
+		# bloc = cursor.block()
+		# text = bloc.text()
+		# lc = bloc.lineCount()
+
+		# y = cursor.blockNumber() + 1
+		# x = cursor.columnNumber() + 1
 		if cursor.selectionEnd() == cursor.selectionStart():
 			output = self.console.refresh()
 			if output != "":

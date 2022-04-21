@@ -358,7 +358,7 @@ class Flasher(threading.Thread):
 									char = ""
 								i += length
 							except:
-								char = bytes([self.waiting_data[i]]).decode("latin-1")
+								char = ""#bytes([self.waiting_data[i]]).decode("latin-1")
 								i += 1
 							result += char
 						else:

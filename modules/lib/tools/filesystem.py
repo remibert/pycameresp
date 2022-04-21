@@ -211,8 +211,9 @@ def prefix(files):
 
 	# For all files
 	for file in files:
+		# file = file.encode("utf8")
 		# Split the file name into a piece
-		paths = file.split("/")
+		paths = file.split(b"/")
 
 		# For each piece
 		length = len(paths)
@@ -230,16 +231,16 @@ def prefix(files):
 
 	# Constructs the prefix of the list of files
 	try:
-		result = ""
+		result = b""
 		amount = list(counters[0].values())[0]
 		for counter in counters:
 			if len(tuple(counter.keys())) == 1 and list(counter.values())[0] == amount:
-				result += list(counter.keys())[0] + "/"
+				result += list(counter.keys())[0] + b"/"
 			else:
 				return result [:-1]
 		return result
 	except IndexError:
-		return ""
+		return b""
 
 def normpath(path):
 	# Extract from https://github.com/python/cpython/blob/main/Lib/posixpath.py

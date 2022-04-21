@@ -1,4 +1,5 @@
 """ Class used to manage VT100 """
+# pylint:disable=too-many-lines
 TABSIZE = 4
 BACKSPACE        = "\x7F"
 LINE_FEED        = "\n"
@@ -169,6 +170,7 @@ class Line:
 		self.forecolors = []
 		self.backcolors = []
 		self.reverses   = []
+		self.underlines = []
 		self.htmline    = None
 		self.cursor     = None
 		self.cursor_on  = False
@@ -191,6 +193,7 @@ class Line:
 			self.forecolors += [TEXT_FORECOLOR]*delta
 			self.backcolors += [TEXT_BACKCOLOR]*delta
 			self.reverses   += [False]*delta
+			self.underlines += [False]*delta
 			self.htmline    = None
 
 	def truncate(self, length):
@@ -200,6 +203,7 @@ class Line:
 			self.forecolors = self.forecolors[:length]
 			self.backcolors = self.backcolors[:length]
 			self.reverses   = self.reverses  [:length]
+			self.underlines = self.underlines[:length]
 			self.htmline    = None
 
 	def clear_line(self):
@@ -208,9 +212,10 @@ class Line:
 		self.forecolors = []
 		self.backcolors = []
 		self.reverses   = []
+		self.underlines = []
 		self.fill(self.width)
 
-	def replace_char(self, char, forecolor, backcolor, reverse, cursor_column):
+	def replace_char(self, char, forecolor, backcolor, reverse, underline, cursor_column):
 		""" Replace character """
 		self.htmline = None
 		if cursor_column > len(self.line):
@@ -219,11 +224,13 @@ class Line:
 			self.forecolors += [TEXT_FORECOLOR]*delta + [forecolor]*len(char)
 			self.backcolors += [TEXT_BACKCOLOR]*delta + [backcolor]*len(char)
 			self.reverses   += [False]*delta             + [reverse]*len(char)
+			self.underlines += [False]*delta             + [underline]*len(char)
 		else:
 			self.line       = self.line      [:cursor_column] + char                  + self.line      [cursor_column+1:]
 			self.forecolors = self.forecolors[:cursor_column] + [forecolor]*len(char) + self.forecolors[cursor_column+1:]
 			self.backcolors = self.backcolors[:cursor_column] + [backcolor]*len(char) + self.backcolors[cursor_column+1:]
 			self.reverses   = self.reverses  [:cursor_column] + [reverse  ]*len(char) + self.reverses  [cursor_column+1:]
+			self.underlines = self.underlines[:cursor_column] + [underline]*len(char) + self.underlines[cursor_column+1:]
 
 	def erase_line(self, cursor_column, direction = None):
 		""" Erase the line """
@@ -235,6 +242,7 @@ class Line:
 				self.forecolors = self.forecolors[:cursor_column] + [TEXT_FORECOLOR]*delta
 				self.backcolors = self.backcolors[:cursor_column] + [TEXT_BACKCOLOR]*delta
 				self.reverses   = self.reverses  [:cursor_column] + [False]*delta
+				self.underlines = self.underlines[:cursor_column] + [False]*delta
 				self.htmline    = None
 			# Erase to beginning of line
 			elif direction == "1":
@@ -242,6 +250,7 @@ class Line:
 				self.forecolors =  [TEXT_FORECOLOR]*cursor_column + self.forecolors[cursor_column:]
 				self.backcolors =  [TEXT_BACKCOLOR]*cursor_column + self.backcolors[cursor_column:]
 				self.reverses   =  [False]*cursor_column             + self.reverses  [cursor_column:]
+				self.underlines =  [False]*cursor_column             + self.underlines[cursor_column:]
 				self.htmline    = None
 			# Erase entire line
 			elif direction == "2":
@@ -249,6 +258,7 @@ class Line:
 				self.forecolors += [TEXT_FORECOLOR]*self.width
 				self.backcolors += [TEXT_BACKCOLOR]*self.width
 				self.reverses   += [False]*self.width
+				self.underlines += [False]*self.width
 				self.htmline    = None
 
 	def get(self):
@@ -263,6 +273,7 @@ class Line:
 			previous_forecolor = None
 			previous_backcolor = None
 			previous_reverse = None
+			previous_underline = None
 			htmlline = ""
 
 			# If the line not content cursor
@@ -274,6 +285,10 @@ class Line:
 
 				# Search in the end of line if the can be simplified
 				for i in range(stripped_length, length):
+					# If the end of line content underline
+					if self.underlines[i] is True:
+						can_cut = False
+						break
 					# If the end of line content reversion
 					if self.reverses[i] is True:
 						can_cut = False
@@ -316,6 +331,12 @@ class Line:
 					changed = True
 					previous_reverse = reverse
 
+				# Treat the underline case
+				underline = self.underlines[i]
+				if underline != previous_underline:
+					changed = True
+					previous_underline = underline
+
 				# In case of reverse
 				if reverse is True:
 					if backcolor == TEXT_BACKCOLOR:
@@ -337,19 +358,23 @@ class Line:
 					changed = True
 					cursor_set = False
 
+				if underline:
+					underline_html = "text-decoration: underline;"
+				else:
+					underline_html = ""
 				# If cursor on this character
 				if cursor == i:
 					if cursor_on:
-						part = '<span style="color:#%06X;background-color:#%06X;">'%(CURSOR_FORECOLOR,CURSOR_BACKCOLOR)
+						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(CURSOR_FORECOLOR,CURSOR_BACKCOLOR,underline_html)
 					else:
-						part = '<span style="color:#%06X;background-color:#%06X">'%(fore,back)
+						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(fore,back,underline_html)
 					if i > 0:
 						part = '</span>' + part
 					cursor_set = True
 				else:
 					# The color must be changed
 					if changed:
-						part = '<span style="color:#%06X;background-color:#%06X">'%(fore,back)
+						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(fore,back,underline_html)
 						if i > 0:
 							part = '</span>' + part
 					else:
@@ -396,6 +421,7 @@ class VT100:
 		self.forecolor           = TEXT_FORECOLOR
 		self.backcolor           = TEXT_BACKCOLOR
 		self.reverse             = False
+		self.underline           = False
 		self.region_start        = 0
 		self.region_end          = self.height
 
@@ -420,6 +446,7 @@ class VT100:
 		self.forecolor           = TEXT_FORECOLOR
 		self.backcolor           = TEXT_BACKCOLOR
 		self.reverse             = False
+		self.underline           = False
 		self.region_start        = 0
 		self.region_end          = self.height
 
@@ -540,7 +567,7 @@ class VT100:
 					self.auto_scroll(1)
 				if self.cursor_line >= self.height:
 					self.cursor_line = self.height-1
-				self.lines[self.cursor_line].replace_char(char, self.forecolor, self.backcolor, self.reverse, self.cursor_column)
+				self.lines[self.cursor_line].replace_char(char, self.forecolor, self.backcolor, self.reverse, self.underline, self.cursor_column)
 				self.cursor_column += 1
 				return True
 		except Exception as err:
@@ -571,6 +598,7 @@ class VT100:
 				foreground = None
 				background = None
 				reverse = None
+				underline= None
 
 				data = escape[2:-1]
 				values = self.split(data)
@@ -578,6 +606,7 @@ class VT100:
 				if len(values) <= 1:
 					if len(values[0]) == 0:
 						reverse = False
+						underline = False
 						foreground = TEXT_FORECOLOR
 						background = TEXT_BACKCOLOR
 				# Case VT100 large predefined colors
@@ -598,15 +627,19 @@ class VT100:
 						background = ((self.to_int(values[2]) % 256) << 16) | ((self.to_int(values[3])%256) << 8) | ((self.to_int(values[4])%256))
 
 				# If color not found
-				if foreground is None and background is None and reverse is None:
+				if foreground is None and background is None and reverse is None and underline is None:
 					# Case VT100 reduced predefined colors and reverse
 					for value in values:
 						value = self.to_int(value)
 						if value == 0:
 							foreground = TEXT_FORECOLOR
 							background = TEXT_BACKCOLOR
+							underline = False
+							reverse = False
 						elif value == 7:
 							reverse = True
+						elif value == 4:
+							underline = True
 						elif value >= 30 and value <= 37:
 							foreground = vga_colors[value-30]
 						elif value == 39:
@@ -621,6 +654,7 @@ class VT100:
 							background = vga_colors[value-100+8]
 						elif value == 27:
 							reverse = False
+							underline = False
 
 				# If color modification detected
 				if foreground is not None:
@@ -629,6 +663,8 @@ class VT100:
 					self.backcolor = background
 				if reverse is not None:
 					self.reverse = reverse
+				if underline is not None:
+					self.underline = underline
 				result = True
 		return result
 

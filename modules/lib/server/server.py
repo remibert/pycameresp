@@ -4,7 +4,7 @@
 import time
 import wifi
 import uasyncio
-from tools import jsonconfig,logger,builddate,lang,watchdog,info,strings
+from tools import jsonconfig,logger,builddate,lang,watchdog,info,strings,sdcard
 if info.iscamera():
 	from video.video import Camera
 
@@ -122,7 +122,7 @@ class Server:
 		False the load of page is done a the first http connection (Takes time on first connection) """
 		Server.context = ServerContext(loop, page_loader, preload, http_port)
 		logger.syslog(info.sysinfo(display=False))
-		logger.syslog("Build : %s"%strings.tostrings(builddate.date))
+		logger.syslog("Version: %s"%strings.tostrings(builddate.date))
 
 		from server.periodic import periodic_task
 		loop.create_task(periodic_task())
@@ -146,7 +146,11 @@ class Server:
 				if newWanIp is not None:
 					# If wan ip must be notified
 					if (Server.context.wan_ip != newWanIp or forced):
-						await Server.context.notifier.notify("Lan Ip %s, Wan Ip %s, %s"%(wifi.Station.get_info()[0],newWanIp, info.uptime()))
+						await Server.context.notifier.notify("\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s"%(
+							wifi.Station.get_info()[0],
+							newWanIp,
+							info.uptime(),
+							strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
 					Server.context.wan_ip = newWanIp
 					wifi.Wifi.wan_connected()
 				else:
