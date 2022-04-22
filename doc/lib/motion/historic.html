@@ -36,7 +36,7 @@ import uasyncio
 import uos
 from tools import logger,sdcard,tasking,filesystem,strings,info
 
-MAX_DISPLAYED = 100
+MAX_DISPLAYED = 250
 MAX_REMOVED   = 100
 
 class Historic:
@@ -181,7 +181,6 @@ class Historic:
         async def scan_dir(path, pattern, older=True, directory=True):
                 &#34;&#34;&#34; Scan directory &#34;&#34;&#34;
                 result = []
-                count = 0
                 for fileinfo in uos.ilistdir(path):
                         name = fileinfo[0]
                         typ  = fileinfo[1]
@@ -193,10 +192,7 @@ class Historic:
                                 if typ &amp; 0xF000 != 0x4000:
                                         if re.match(pattern, name):
                                                 result.append(name)
-                        count += 1
-                        if count &gt; 10:
-                                count = 0
-                                await uasyncio.sleep_ms(5)
+                await uasyncio.sleep_ms(5)
                 result.sort()
                 if older is False:
                         result.reverse()
@@ -292,7 +288,6 @@ class Historic:
                         # If not enough space available on sdcard
                         if sdcard.SdCard.is_not_enough_space(low=True) or force:
                                 logger.syslog(&#34;Start cleanup historic&#34;)
-                                cleaned = &#34;Historic space after cleanup&#34;
                                 Historic.first_extract[0] = False
                                 olders = await Historic.scan_directories(MAX_REMOVED, True)
                                 previous = &#34;&#34;
@@ -309,10 +304,7 @@ class Historic:
                                                 await Historic.release()
                                         if sdcard.SdCard.is_not_enough_space(low=False) is False:
                                                 break
-                                logger.syslog(&#34;End cleanup historic&#34;)
-                        else:
-                                cleaned = &#34;Historic space&#34;
-                        logger.syslog(&#34;%s : %s&#34;%(cleaned, strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
+                                logger.syslog(&#34;End cleanup historic : %s&#34;%(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
 
         @staticmethod
         async def periodic():
@@ -503,7 +495,6 @@ class Historic:
         async def scan_dir(path, pattern, older=True, directory=True):
                 &#34;&#34;&#34; Scan directory &#34;&#34;&#34;
                 result = []
-                count = 0
                 for fileinfo in uos.ilistdir(path):
                         name = fileinfo[0]
                         typ  = fileinfo[1]
@@ -515,10 +506,7 @@ class Historic:
                                 if typ &amp; 0xF000 != 0x4000:
                                         if re.match(pattern, name):
                                                 result.append(name)
-                        count += 1
-                        if count &gt; 10:
-                                count = 0
-                                await uasyncio.sleep_ms(5)
+                await uasyncio.sleep_ms(5)
                 result.sort()
                 if older is False:
                         result.reverse()
@@ -614,7 +602,6 @@ class Historic:
                         # If not enough space available on sdcard
                         if sdcard.SdCard.is_not_enough_space(low=True) or force:
                                 logger.syslog(&#34;Start cleanup historic&#34;)
-                                cleaned = &#34;Historic space after cleanup&#34;
                                 Historic.first_extract[0] = False
                                 olders = await Historic.scan_directories(MAX_REMOVED, True)
                                 previous = &#34;&#34;
@@ -631,10 +618,7 @@ class Historic:
                                                 await Historic.release()
                                         if sdcard.SdCard.is_not_enough_space(low=False) is False:
                                                 break
-                                logger.syslog(&#34;End cleanup historic&#34;)
-                        else:
-                                cleaned = &#34;Historic space&#34;
-                        logger.syslog(&#34;%s : %s&#34;%(cleaned, strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
+                                logger.syslog(&#34;End cleanup historic : %s&#34;%(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
 
         @staticmethod
         async def periodic():
@@ -1021,7 +1005,6 @@ async def remove_older(force=False):
                 # If not enough space available on sdcard
                 if sdcard.SdCard.is_not_enough_space(low=True) or force:
                         logger.syslog(&#34;Start cleanup historic&#34;)
-                        cleaned = &#34;Historic space after cleanup&#34;
                         Historic.first_extract[0] = False
                         olders = await Historic.scan_directories(MAX_REMOVED, True)
                         previous = &#34;&#34;
@@ -1038,10 +1021,7 @@ async def remove_older(force=False):
                                         await Historic.release()
                                 if sdcard.SdCard.is_not_enough_space(low=False) is False:
                                         break
-                        logger.syslog(&#34;End cleanup historic&#34;)
-                else:
-                        cleaned = &#34;Historic space&#34;
-                logger.syslog(&#34;%s : %s&#34;%(cleaned, strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))</code></pre>
+                        logger.syslog(&#34;End cleanup historic : %s&#34;%(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.historic.Historic.scan_dir"><code class="name flex">
@@ -1057,7 +1037,6 @@ async def remove_older(force=False):
 async def scan_dir(path, pattern, older=True, directory=True):
         &#34;&#34;&#34; Scan directory &#34;&#34;&#34;
         result = []
-        count = 0
         for fileinfo in uos.ilistdir(path):
                 name = fileinfo[0]
                 typ  = fileinfo[1]
@@ -1069,10 +1048,7 @@ async def scan_dir(path, pattern, older=True, directory=True):
                         if typ &amp; 0xF000 != 0x4000:
                                 if re.match(pattern, name):
                                         result.append(name)
-                count += 1
-                if count &gt; 10:
-                        count = 0
-                        await uasyncio.sleep_ms(5)
+        await uasyncio.sleep_ms(5)
         result.sort()
         if older is False:
                 result.reverse()

@@ -68,7 +68,7 @@ def meminfo(display=True):
                 alloc = gc.mem_alloc()
                 free  = gc.mem_free()
                 total = alloc+free
-                result = b&#34;Memory: alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(
+                result = b&#34;Memory : alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(
                         strings.size_to_bytes(alloc, 1),
                         strings.size_to_bytes(free,  1),
                         strings.size_to_bytes(total, 1),
@@ -92,7 +92,7 @@ def flashinfo(mountpoint=None, display=True):
                         free = 0
                 total = status[1]*status[2]
                 alloc  = total - free
-                result = b&#34;Flash%s: alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(strings.tobytes(mountpoint),
+                result = b&#34;Disk %s : alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(strings.tobytes(mountpoint),
                         strings.size_to_string(alloc, 1),
                         strings.size_to_string(free,  1),
                         strings.size_to_string(total, 1),
@@ -107,7 +107,7 @@ def flashinfo(mountpoint=None, display=True):
 def sysinfo(display=True, text=&#34;&#34;):
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
         try:
-                result = b&#34;Device: %s%s %dMhz\nTime  : %s\n%s\n%s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(&#34;/&#34;,False))
+                result = b&#34;Device : %s%s %dMhz\nTime   : %s\n%s\n%s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(&#34;/&#34;,False))
                 if display:
                         print(strings.tostrings(result))
                 else:
@@ -169,7 +169,7 @@ def uptime(text=&#34;days&#34;):
                         free = 0
                 total = status[1]*status[2]
                 alloc  = total - free
-                result = b&#34;Flash%s: alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(strings.tobytes(mountpoint),
+                result = b&#34;Disk %s : alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(strings.tobytes(mountpoint),
                         strings.size_to_string(alloc, 1),
                         strings.size_to_string(free,  1),
                         strings.size_to_string(total, 1),
@@ -220,7 +220,7 @@ def uptime(text=&#34;days&#34;):
                 alloc = gc.mem_alloc()
                 free  = gc.mem_free()
                 total = alloc+free
-                result = b&#34;Memory: alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(
+                result = b&#34;Memory : alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(
                         strings.size_to_bytes(alloc, 1),
                         strings.size_to_bytes(free,  1),
                         strings.size_to_bytes(total, 1),
@@ -245,7 +245,7 @@ def uptime(text=&#34;days&#34;):
 <pre><code class="python">def sysinfo(display=True, text=&#34;&#34;):
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
         try:
-                result = b&#34;Device: %s%s %dMhz\nTime  : %s\n%s\n%s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(&#34;/&#34;,False))
+                result = b&#34;Device : %s%s %dMhz\nTime   : %s\n%s\n%s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(&#34;/&#34;,False))
                 if display:
                         print(strings.tostrings(result))
                 else:

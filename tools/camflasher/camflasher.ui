@@ -35,9 +35,12 @@
      <number>0</number>
     </property>
     <item row="0" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0">
       <property name="spacing">
        <number>3</number>
+      </property>
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
       </property>
       <property name="leftMargin">
        <number>3</number>
@@ -57,7 +60,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>Serial port</string>
+         <string> Serial port </string>
         </property>
        </widget>
       </item>
@@ -86,7 +89,7 @@
          <enum>Qt::NoFocus</enum>
         </property>
         <property name="text">
-         <string>RTS/DTR</string>
+         <string>RTS/DTR </string>
         </property>
        </widget>
       </item>

@@ -240,8 +240,9 @@ def prefix(files):
 
         # For all files
         for file in files:
+                # file = file.encode(&#34;utf8&#34;)
                 # Split the file name into a piece
-                paths = file.split(&#34;/&#34;)
+                paths = file.split(b&#34;/&#34;)
 
                 # For each piece
                 length = len(paths)
@@ -259,16 +260,16 @@ def prefix(files):
 
         # Constructs the prefix of the list of files
         try:
-                result = &#34;&#34;
+                result = b&#34;&#34;
                 amount = list(counters[0].values())[0]
                 for counter in counters:
                         if len(tuple(counter.keys())) == 1 and list(counter.values())[0] == amount:
-                                result += list(counter.keys())[0] + &#34;/&#34;
+                                result += list(counter.keys())[0] + b&#34;/&#34;
                         else:
                                 return result [:-1]
                 return result
         except IndexError:
-                return &#34;&#34;
+                return b&#34;&#34;
 
 def normpath(path):
         # Extract from https://github.com/python/cpython/blob/main/Lib/posixpath.py
@@ -595,8 +596,9 @@ def normpath(path):
 
         # For all files
         for file in files:
+                # file = file.encode(&#34;utf8&#34;)
                 # Split the file name into a piece
-                paths = file.split(&#34;/&#34;)
+                paths = file.split(b&#34;/&#34;)
 
                 # For each piece
                 length = len(paths)
@@ -614,16 +616,16 @@ def normpath(path):
 
         # Constructs the prefix of the list of files
         try:
-                result = &#34;&#34;
+                result = b&#34;&#34;
                 amount = list(counters[0].values())[0]
                 for counter in counters:
                         if len(tuple(counter.keys())) == 1 and list(counter.values())[0] == amount:
-                                result += list(counter.keys())[0] + &#34;/&#34;
+                                result += list(counter.keys())[0] + b&#34;/&#34;
                         else:
                                 return result [:-1]
                 return result
         except IndexError:
-                return &#34;&#34;</code></pre>
+                return b&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.filesystem.remove"><code class="name flex">

@@ -8,7 +8,9 @@ try:
 	from tools import filesystem, strings,watchdog
 except:
 	# pylint:disable=multiple-imports
-	import strings,filesystem,watchdog
+	import strings,filesystem
+	if filesystem.ismicropython():
+		import watchdog
 
 
 if filesystem.ismicropython():

@@ -4,6 +4,7 @@ from platform import uname
 from sys import platform
 from shutil import rmtree, copyfile
 from os import remove
+from zipfile import ZipFile
 
 NAME="CamFlasher"
 
@@ -52,12 +53,15 @@ if platform == "win32":
 	TARGET = "windows_%s_%d"%(uname()[2], version)
 	if uname()[2] == "7":
 		UIC = 5
+	EXE = "%(NAME)s.exe"%globals()
 elif platform == "linux":
 	ICONS = "icons/camflasher.ico"
 	TARGET = "linux"
+	EXE = "%(NAME)s"%globals()
 elif platform == "darwin":
 	ICONS = "icons/camflasher.icns"
 	TARGET = "osx"
+	EXE = "%(NAME)s.dmg"%globals()
 
 execute("pyuic%(UIC)s camflasher.ui -o camflasher.py"%globals())
 execute("pyuic%(UIC)s dialogflash.ui -o dialogflash.py"%globals())
@@ -77,10 +81,13 @@ execute("pyinstaller --log-level=DEBUG --noconfirm --distpath dist/%(TARGET)s --
 if platform == "darwin":
 	execute("create-dmg dist/%(TARGET)s/%(NAME)s.dmg dist/%(TARGET)s/%(NAME)s.app --volicon %(ICONS)s"%(globals()))
 
+zip_filename = "dist/%(NAME)s_%(TARGET)s.zip"%globals()
+with ZipFile(zip_filename, 'w') as myzip:
+	myzip.write("dist/%(TARGET)s/%(EXE)s"%globals(), EXE)
+
 rmtree("build")
-
+rmtree("dist/%(TARGET)s"%globals())
 remove("build-%(TARGET)s.spec"%globals())
-
 remove("strings.py")
 remove("filesystem.py")
 remove("exchange.py")

@@ -136,7 +136,7 @@ SELECT_HOME      = [&#34;\x1b[1;2H&#34;,&#34;\x1b[1;10D&#34;]
 SELECT_END       = [&#34;\x1b[1;2F&#34;,&#34;\x1b[1;10C&#34;]
 SELECT_TOP       = [&#34;\x1b[1;6H&#34;]
 SELECT_BOTTOM    = [&#34;\x1b[1;6F&#34;]
-SELECT_ALL       = [&#34;\x01&#34;]
+SELECT_ALL       = [&#34;\x01&#34;,&#34;\x05&#34;] # Select All (^E or ^A)
 SELECT_NEXT_WORD = [&#34;\x1b[1;6C&#34;,&#34;\x1b[1;4C&#34;]
 SELECT_PREV_WORD = [&#34;\x1b[1;6D&#34;,&#34;\x1b[1;4D&#34;]
 
@@ -167,7 +167,7 @@ REPLACE          = [&#34;\x08&#34;,&#34;\x02&#34;]                       # Repla
 REPLACE_CURRENT  = [&#34;\x12&#34;]                              # Replace the selection
 EXECUTE          = [&#34;\x1b[15~&#34;]                          # Execute script
 
-SELECTION_BEGIN = b&#34;\x1B[7m&#34;
+SELECTION_START = b&#34;\x1B[7m&#34;
 SELECTION_END   = b&#34;\x1B[m&#34;
 class View:
         &#34;&#34;&#34; Class which manage the view of the edit field &#34;&#34;&#34;
@@ -323,65 +323,48 @@ class View:
                         clear_line = b&#34;&#34;
                 count_line = self.text.get_count_lines()
                 if current_line &lt; count_line and current_line &gt;= 0:
-                        line = self.text.get_tab_line(current_line)
-                        part_line = line[self.column:self.column+self.width]
                         # If the line selected
                         if selection_start is not None:
-                                # If the line not empty
-                                if len(part_line) &gt;= 1:
-                                        # If the line have carriage return at the end
-                                        if part_line[-1] == &#34;\n&#34;:
-                                                # Remove the carriage return
-                                                part_line = part_line[:-1]
-                                if len(part_line) &gt; 0:
-                                        dummy, sel_line_start, sel_column_start = selection_start
-                                        dummy, sel_line_end,   sel_column_end   = selection_end
-
-                                        # If the end of selection is outside the visible part
-                                        if sel_column_end - self.column &lt; 0:
-                                                sel_column_end = 0
-                                        else:
-                                                sel_column_end -= self.column
-
-                                        # If the start of selection is outside the visible part
-                                        if sel_column_start - self.column &lt; 0:
-                                                sel_column_start = 0
-                                        else:
-                                                sel_column_start -= self.column
-
-
-                                        begin_part    = b&#34;&#34;
-                                        selected_part = b&#34;&#34;
-                                        end_part      = b&#34;&#34;
-                                        selected_start = SELECTION_BEGIN
-                                        selected_end   = SELECTION_END
-                                        # If the selection is on alone line
-                                        if current_line == sel_line_end and current_line == sel_line_start:
-                                                begin_part    = part_line[:sel_column_start].encode(&#34;utf8&#34;)
-                                                selected_part = part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)
-                                                end_part      = part_line[sel_column_end:].encode(&#34;utf8&#34;)
-                                        # If current line is on the last selection line
-                                        elif current_line == sel_line_end:
-                                                selected_part = part_line[:sel_column_end].encode(&#34;utf8&#34;)
-                                                end_part      = part_line[sel_column_end:].encode(&#34;utf8&#34;)
-                                        # If current line is on the first selection line
-                                        elif current_line == sel_line_start:
-                                                begin_part    = part_line[:sel_column_start].encode(&#34;utf8&#34;)
-                                                selected_part = part_line[sel_column_start:].encode(&#34;utf8&#34;)
-                                        # If the line is completly selected
-                                        elif current_line &gt; sel_line_start and current_line &lt; sel_line_end:
-                                                selected_part = part_line.encode(&#34;utf8&#34;)
-                                        # Else the selection is on the entire line
-                                        else:
-                                                selected_part = part_line.encode(&#34;utf8&#34;)
-                                                selected_start = b&#34;&#34;
-                                                selected_end = b&#34;&#34;
-
-                                        self.write(clear_line+begin_part+selected_start+selected_part+selected_end+end_part)
+                                _, sel_line_start, sel_column_start = selection_start
+                                _, sel_line_end,   sel_column_end   = selection_end
+                                # If the line is completly selected
+                                if current_line &gt; sel_line_start and current_line &lt; sel_line_end:
+                                        part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+                                        self.write(clear_line+SELECTION_START+part_line+SELECTION_END)
+                                # If the line is partially selected
                                 else:
-                                        self.write(clear_line)
+                                        part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, False)
+                                        # part_line = line[self.column:self.column+self.width]
+                                        if len(part_line) &gt; 0:
+                                                # If the end of selection is outside the visible part
+                                                if sel_column_end - self.column &lt; 0:
+                                                        sel_column_end = 0
+                                                else:
+                                                        sel_column_end -= self.column
+
+                                                # If the start of selection is outside the visible part
+                                                if sel_column_start - self.column &lt; 0:
+                                                        sel_column_start = 0
+                                                else:
+                                                        sel_column_start -= self.column
+
+                                                # If the selection is on alone line
+                                                if current_line == sel_line_end and current_line == sel_line_start:
+                                                        self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                # If current line is on the last selection line
+                                                elif current_line == sel_line_end:
+                                                        self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                # If current line is on the first selection line
+                                                elif current_line == sel_line_start:
+                                                        self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                # Else the line is not selected
+                                                else:
+                                                        self.write(clear_line+part_line.encode(&#34;utf8&#34;))
+                                        else:
+                                                self.write(clear_line)
                         else:
-                                self.write(clear_line+part_line.encode(&#34;utf8&#34;).rstrip())
+                                part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+                                self.write(clear_line+part_line)
 
         def refresh_line(self, selection_start, selection_end):
                 &#34;&#34;&#34; Refresh line &#34;&#34;&#34;
@@ -615,33 +598,53 @@ class Text:
                 else:
                         return cursor_column
 
-        def get_tab_line(self, current_line = None):
+        def get_tab_line(self, current_line, start_column, end_column, binary = True):
                 &#34;&#34;&#34; Get the tabuled line &#34;&#34;&#34;
+                accent = False
                 line = self.lines[current_line]
                 if &#34;\t&#34; in line:
-                        tabLine = &#34;&#34;
-                        tab_cursor_column   = 0
+                        tab_line = b&#34;&#34;
+                        cursor   = 0
                         len_line = len(line)
                         column = 0
                         while column &lt; len_line:
                                 char = line[column]
                                 if char == &#34;\t&#34;:
-                                        pos = tab_cursor_column%self.tab_size
-                                        tab_cursor_column += self.tab_size-pos
-                                        tabLine         += &#34; &#34;*(self.tab_size-pos)
-                                        column          += 1
+                                        pos = cursor%self.tab_size
+                                        cursor += self.tab_size-pos
+                                        tab_line          += b&#34; &#34;*(self.tab_size-pos)
+                                        column            += 1
                                 else:
                                         tab = line.find(&#34;\t&#34;,column)
-                                        if tab &gt; 0:
-                                                part = line[column:tab]
-                                        else:
-                                                part = line[column:]
-                                        tab_cursor_column += len(part)
-                                        tabLine         += part
-                                        column          += len(part)
+                                        if tab &lt; 0:
+                                                tab = len_line
+                                        part = line[column:tab]
+                                        cursor += len(part)
+                                        bin_part = part.encode(&#34;utf8&#34;)
+                                        tab_line          += bin_part
+                                        column            += len(part)
+                                        if len(part) != len(bin_part):
+                                                accent = True
+
+                        tab_line = tab_line.replace(b&#34;\n&#34;,b&#34;&#34;)
+                        if binary is False:
+                                tab_line = tab_line.decode(&#34;utf8&#34;)
                 else:
-                        tabLine = line
-                return tabLine
+                        if binary:
+                                tab_line = line.encode(&#34;utf8&#34;)
+                                if len(line) != len(tab_line):
+                                        accent = True
+                                tab_line = tab_line.replace(b&#34;\n&#34;,b&#34;&#34;)
+                        else:
+                                tab_line = line
+                                tab_line = tab_line.replace(&#34;\n&#34;,&#34;&#34;)
+
+                if binary and accent:
+                        result = tab_line.decode(&#34;utf8&#34;)[start_column:end_column].encode(&#34;utf8&#34;)
+                else:
+                        result = tab_line[start_column:end_column]
+
+                return result
 
         def get_tab_cursor_column(self):
                 &#34;&#34;&#34; Get the column of cursor in tabuled line &#34;&#34;&#34;
@@ -773,7 +776,6 @@ class Text:
                         self.change_column(0)
                 # else the cursor is in the lines of text
                 else:
-                        previousLine = self.cursor_line
                         self.cursor_line += moveLine
                         if len(self.lines) - 1 == self.cursor_line:
                                 len_line = len(self.lines[self.cursor_line])
@@ -1862,7 +1864,7 @@ if __name__ == &#34;__main__&#34;:
                 filename = sys.argv[1]
         else:
                 filename = &#34;editor.txt&#34;
-                filename = &#34;teste.py&#34;
+                filename = &#34;syslog.bug&#34;
         edit = Editor(filename, read_only=False)</code></pre>
 </details>
 </section>
@@ -2604,33 +2606,53 @@ if __name__ == &#34;__main__&#34;:
                 else:
                         return cursor_column
 
-        def get_tab_line(self, current_line = None):
+        def get_tab_line(self, current_line, start_column, end_column, binary = True):
                 &#34;&#34;&#34; Get the tabuled line &#34;&#34;&#34;
+                accent = False
                 line = self.lines[current_line]
                 if &#34;\t&#34; in line:
-                        tabLine = &#34;&#34;
-                        tab_cursor_column   = 0
+                        tab_line = b&#34;&#34;
+                        cursor   = 0
                         len_line = len(line)
                         column = 0
                         while column &lt; len_line:
                                 char = line[column]
                                 if char == &#34;\t&#34;:
-                                        pos = tab_cursor_column%self.tab_size
-                                        tab_cursor_column += self.tab_size-pos
-                                        tabLine         += &#34; &#34;*(self.tab_size-pos)
-                                        column          += 1
+                                        pos = cursor%self.tab_size
+                                        cursor += self.tab_size-pos
+                                        tab_line          += b&#34; &#34;*(self.tab_size-pos)
+                                        column            += 1
                                 else:
                                         tab = line.find(&#34;\t&#34;,column)
-                                        if tab &gt; 0:
-                                                part = line[column:tab]
-                                        else:
-                                                part = line[column:]
-                                        tab_cursor_column += len(part)
-                                        tabLine         += part
-                                        column          += len(part)
+                                        if tab &lt; 0:
+                                                tab = len_line
+                                        part = line[column:tab]
+                                        cursor += len(part)
+                                        bin_part = part.encode(&#34;utf8&#34;)
+                                        tab_line          += bin_part
+                                        column            += len(part)
+                                        if len(part) != len(bin_part):
+                                                accent = True
+
+                        tab_line = tab_line.replace(b&#34;\n&#34;,b&#34;&#34;)
+                        if binary is False:
+                                tab_line = tab_line.decode(&#34;utf8&#34;)
                 else:
-                        tabLine = line
-                return tabLine
+                        if binary:
+                                tab_line = line.encode(&#34;utf8&#34;)
+                                if len(line) != len(tab_line):
+                                        accent = True
+                                tab_line = tab_line.replace(b&#34;\n&#34;,b&#34;&#34;)
+                        else:
+                                tab_line = line
+                                tab_line = tab_line.replace(&#34;\n&#34;,&#34;&#34;)
+
+                if binary and accent:
+                        result = tab_line.decode(&#34;utf8&#34;)[start_column:end_column].encode(&#34;utf8&#34;)
+                else:
+                        result = tab_line[start_column:end_column]
+
+                return result
 
         def get_tab_cursor_column(self):
                 &#34;&#34;&#34; Get the column of cursor in tabuled line &#34;&#34;&#34;
@@ -2762,7 +2784,6 @@ if __name__ == &#34;__main__&#34;:
                         self.change_column(0)
                 # else the cursor is in the lines of text
                 else:
-                        previousLine = self.cursor_line
                         self.cursor_line += moveLine
                         if len(self.lines) - 1 == self.cursor_line:
                                 len_line = len(self.lines[self.cursor_line])
@@ -3857,7 +3878,6 @@ if __name__ == &#34;__main__&#34;:
                 self.change_column(0)
         # else the cursor is in the lines of text
         else:
-                previousLine = self.cursor_line
                 self.cursor_line += moveLine
                 if len(self.lines) - 1 == self.cursor_line:
                         len_line = len(self.lines[self.cursor_line])
@@ -4340,7 +4360,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.get_tab_line"><code class="name flex">
-<span>def <span class="ident">get_tab_line</span></span>(<span>self, current_line=None)</span>
+<span>def <span class="ident">get_tab_line</span></span>(<span>self, current_line, start_column, end_column, binary=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get the tabuled line</p></div>
@@ -4348,33 +4368,53 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_tab_line(self, current_line = None):
+<pre><code class="python">def get_tab_line(self, current_line, start_column, end_column, binary = True):
         &#34;&#34;&#34; Get the tabuled line &#34;&#34;&#34;
+        accent = False
         line = self.lines[current_line]
         if &#34;\t&#34; in line:
-                tabLine = &#34;&#34;
-                tab_cursor_column   = 0
+                tab_line = b&#34;&#34;
+                cursor   = 0
                 len_line = len(line)
                 column = 0
                 while column &lt; len_line:
                         char = line[column]
                         if char == &#34;\t&#34;:
-                                pos = tab_cursor_column%self.tab_size
-                                tab_cursor_column += self.tab_size-pos
-                                tabLine         += &#34; &#34;*(self.tab_size-pos)
-                                column          += 1
+                                pos = cursor%self.tab_size
+                                cursor += self.tab_size-pos
+                                tab_line          += b&#34; &#34;*(self.tab_size-pos)
+                                column            += 1
                         else:
                                 tab = line.find(&#34;\t&#34;,column)
-                                if tab &gt; 0:
-                                        part = line[column:tab]
-                                else:
-                                        part = line[column:]
-                                tab_cursor_column += len(part)
-                                tabLine         += part
-                                column          += len(part)
+                                if tab &lt; 0:
+                                        tab = len_line
+                                part = line[column:tab]
+                                cursor += len(part)
+                                bin_part = part.encode(&#34;utf8&#34;)
+                                tab_line          += bin_part
+                                column            += len(part)
+                                if len(part) != len(bin_part):
+                                        accent = True
+
+                tab_line = tab_line.replace(b&#34;\n&#34;,b&#34;&#34;)
+                if binary is False:
+                        tab_line = tab_line.decode(&#34;utf8&#34;)
         else:
-                tabLine = line
-        return tabLine</code></pre>
+                if binary:
+                        tab_line = line.encode(&#34;utf8&#34;)
+                        if len(line) != len(tab_line):
+                                accent = True
+                        tab_line = tab_line.replace(b&#34;\n&#34;,b&#34;&#34;)
+                else:
+                        tab_line = line
+                        tab_line = tab_line.replace(&#34;\n&#34;,&#34;&#34;)
+
+        if binary and accent:
+                result = tab_line.decode(&#34;utf8&#34;)[start_column:end_column].encode(&#34;utf8&#34;)
+        else:
+                result = tab_line[start_column:end_column]
+
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.goto"><code class="name flex">
@@ -5463,65 +5503,48 @@ if __name__ == &#34;__main__&#34;:
                         clear_line = b&#34;&#34;
                 count_line = self.text.get_count_lines()
                 if current_line &lt; count_line and current_line &gt;= 0:
-                        line = self.text.get_tab_line(current_line)
-                        part_line = line[self.column:self.column+self.width]
                         # If the line selected
                         if selection_start is not None:
-                                # If the line not empty
-                                if len(part_line) &gt;= 1:
-                                        # If the line have carriage return at the end
-                                        if part_line[-1] == &#34;\n&#34;:
-                                                # Remove the carriage return
-                                                part_line = part_line[:-1]
-                                if len(part_line) &gt; 0:
-                                        dummy, sel_line_start, sel_column_start = selection_start
-                                        dummy, sel_line_end,   sel_column_end   = selection_end
-
-                                        # If the end of selection is outside the visible part
-                                        if sel_column_end - self.column &lt; 0:
-                                                sel_column_end = 0
-                                        else:
-                                                sel_column_end -= self.column
-
-                                        # If the start of selection is outside the visible part
-                                        if sel_column_start - self.column &lt; 0:
-                                                sel_column_start = 0
-                                        else:
-                                                sel_column_start -= self.column
-
-
-                                        begin_part    = b&#34;&#34;
-                                        selected_part = b&#34;&#34;
-                                        end_part      = b&#34;&#34;
-                                        selected_start = SELECTION_BEGIN
-                                        selected_end   = SELECTION_END
-                                        # If the selection is on alone line
-                                        if current_line == sel_line_end and current_line == sel_line_start:
-                                                begin_part    = part_line[:sel_column_start].encode(&#34;utf8&#34;)
-                                                selected_part = part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)
-                                                end_part      = part_line[sel_column_end:].encode(&#34;utf8&#34;)
-                                        # If current line is on the last selection line
-                                        elif current_line == sel_line_end:
-                                                selected_part = part_line[:sel_column_end].encode(&#34;utf8&#34;)
-                                                end_part      = part_line[sel_column_end:].encode(&#34;utf8&#34;)
-                                        # If current line is on the first selection line
-                                        elif current_line == sel_line_start:
-                                                begin_part    = part_line[:sel_column_start].encode(&#34;utf8&#34;)
-                                                selected_part = part_line[sel_column_start:].encode(&#34;utf8&#34;)
-                                        # If the line is completly selected
-                                        elif current_line &gt; sel_line_start and current_line &lt; sel_line_end:
-                                                selected_part = part_line.encode(&#34;utf8&#34;)
-                                        # Else the selection is on the entire line
-                                        else:
-                                                selected_part = part_line.encode(&#34;utf8&#34;)
-                                                selected_start = b&#34;&#34;
-                                                selected_end = b&#34;&#34;
-
-                                        self.write(clear_line+begin_part+selected_start+selected_part+selected_end+end_part)
+                                _, sel_line_start, sel_column_start = selection_start
+                                _, sel_line_end,   sel_column_end   = selection_end
+                                # If the line is completly selected
+                                if current_line &gt; sel_line_start and current_line &lt; sel_line_end:
+                                        part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+                                        self.write(clear_line+SELECTION_START+part_line+SELECTION_END)
+                                # If the line is partially selected
                                 else:
-                                        self.write(clear_line)
+                                        part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, False)
+                                        # part_line = line[self.column:self.column+self.width]
+                                        if len(part_line) &gt; 0:
+                                                # If the end of selection is outside the visible part
+                                                if sel_column_end - self.column &lt; 0:
+                                                        sel_column_end = 0
+                                                else:
+                                                        sel_column_end -= self.column
+
+                                                # If the start of selection is outside the visible part
+                                                if sel_column_start - self.column &lt; 0:
+                                                        sel_column_start = 0
+                                                else:
+                                                        sel_column_start -= self.column
+
+                                                # If the selection is on alone line
+                                                if current_line == sel_line_end and current_line == sel_line_start:
+                                                        self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                # If current line is on the last selection line
+                                                elif current_line == sel_line_end:
+                                                        self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                # If current line is on the first selection line
+                                                elif current_line == sel_line_start:
+                                                        self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                # Else the line is not selected
+                                                else:
+                                                        self.write(clear_line+part_line.encode(&#34;utf8&#34;))
+                                        else:
+                                                self.write(clear_line)
                         else:
-                                self.write(clear_line+part_line.encode(&#34;utf8&#34;).rstrip())
+                                part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+                                self.write(clear_line+part_line)
 
         def refresh_line(self, selection_start, selection_end):
                 &#34;&#34;&#34; Refresh line &#34;&#34;&#34;
@@ -6240,65 +6263,48 @@ if __name__ == &#34;__main__&#34;:
                 clear_line = b&#34;&#34;
         count_line = self.text.get_count_lines()
         if current_line &lt; count_line and current_line &gt;= 0:
-                line = self.text.get_tab_line(current_line)
-                part_line = line[self.column:self.column+self.width]
                 # If the line selected
                 if selection_start is not None:
-                        # If the line not empty
-                        if len(part_line) &gt;= 1:
-                                # If the line have carriage return at the end
-                                if part_line[-1] == &#34;\n&#34;:
-                                        # Remove the carriage return
-                                        part_line = part_line[:-1]
-                        if len(part_line) &gt; 0:
-                                dummy, sel_line_start, sel_column_start = selection_start
-                                dummy, sel_line_end,   sel_column_end   = selection_end
-
-                                # If the end of selection is outside the visible part
-                                if sel_column_end - self.column &lt; 0:
-                                        sel_column_end = 0
-                                else:
-                                        sel_column_end -= self.column
-
-                                # If the start of selection is outside the visible part
-                                if sel_column_start - self.column &lt; 0:
-                                        sel_column_start = 0
-                                else:
-                                        sel_column_start -= self.column
-
-
-                                begin_part    = b&#34;&#34;
-                                selected_part = b&#34;&#34;
-                                end_part      = b&#34;&#34;
-                                selected_start = SELECTION_BEGIN
-                                selected_end   = SELECTION_END
-                                # If the selection is on alone line
-                                if current_line == sel_line_end and current_line == sel_line_start:
-                                        begin_part    = part_line[:sel_column_start].encode(&#34;utf8&#34;)
-                                        selected_part = part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)
-                                        end_part      = part_line[sel_column_end:].encode(&#34;utf8&#34;)
-                                # If current line is on the last selection line
-                                elif current_line == sel_line_end:
-                                        selected_part = part_line[:sel_column_end].encode(&#34;utf8&#34;)
-                                        end_part      = part_line[sel_column_end:].encode(&#34;utf8&#34;)
-                                # If current line is on the first selection line
-                                elif current_line == sel_line_start:
-                                        begin_part    = part_line[:sel_column_start].encode(&#34;utf8&#34;)
-                                        selected_part = part_line[sel_column_start:].encode(&#34;utf8&#34;)
-                                # If the line is completly selected
-                                elif current_line &gt; sel_line_start and current_line &lt; sel_line_end:
-                                        selected_part = part_line.encode(&#34;utf8&#34;)
-                                # Else the selection is on the entire line
-                                else:
-                                        selected_part = part_line.encode(&#34;utf8&#34;)
-                                        selected_start = b&#34;&#34;
-                                        selected_end = b&#34;&#34;
-
-                                self.write(clear_line+begin_part+selected_start+selected_part+selected_end+end_part)
+                        _, sel_line_start, sel_column_start = selection_start
+                        _, sel_line_end,   sel_column_end   = selection_end
+                        # If the line is completly selected
+                        if current_line &gt; sel_line_start and current_line &lt; sel_line_end:
+                                part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+                                self.write(clear_line+SELECTION_START+part_line+SELECTION_END)
+                        # If the line is partially selected
                         else:
-                                self.write(clear_line)
+                                part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, False)
+                                # part_line = line[self.column:self.column+self.width]
+                                if len(part_line) &gt; 0:
+                                        # If the end of selection is outside the visible part
+                                        if sel_column_end - self.column &lt; 0:
+                                                sel_column_end = 0
+                                        else:
+                                                sel_column_end -= self.column
+
+                                        # If the start of selection is outside the visible part
+                                        if sel_column_start - self.column &lt; 0:
+                                                sel_column_start = 0
+                                        else:
+                                                sel_column_start -= self.column
+
+                                        # If the selection is on alone line
+                                        if current_line == sel_line_end and current_line == sel_line_start:
+                                                self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                        # If current line is on the last selection line
+                                        elif current_line == sel_line_end:
+                                                self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                        # If current line is on the first selection line
+                                        elif current_line == sel_line_start:
+                                                self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:].encode(&#34;utf8&#34;)+SELECTION_END)
+                                        # Else the line is not selected
+                                        else:
+                                                self.write(clear_line+part_line.encode(&#34;utf8&#34;))
+                                else:
+                                        self.write(clear_line)
                 else:
-                        self.write(clear_line+part_line.encode(&#34;utf8&#34;).rstrip())</code></pre>
+                        part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+                        self.write(clear_line+part_line)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.View.write_byte"><code class="name flex">

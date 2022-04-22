@@ -40,7 +40,7 @@ from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
 from video.video     import Camera
-from tools import logger,jsonconfig,lang,linearfunction,tasking,strings
+from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem
 
 class MotionConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Configuration class of motion detection &#34;&#34;&#34;
@@ -443,20 +443,24 @@ class Motion:
                                         comparison = current.compare(self.image_background)
 
                         # Compute the list of differences
-                        diffs = &#34;&#34;
+                        diffs = b&#34;&#34;
                         index = 0
                         for image in self.images:
                                 differences.setdefault(image.get_motion_id(), []).append(image.get_motion_id())
                                 if image.get_motion_id() is not None:
                                         if image.index % 10 == 0:
-                                                trace = &#34;_&#34;
+                                                trace = b&#34;_&#34;
                                         else:
-                                                trace = &#34; &#34;
+                                                trace = b&#34; &#34;
                                         if image.index &gt; index:
                                                 index = image.index
-                                        diffs += &#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), chr(0x41 + ((256-image.get_diff_histo())//10)), trace)
+                                        diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                         if display:
-                                sys.stdout.write(&#34;\r%s %s (%d) &#34;%(strings.date_to_string()[12:], diffs, index))
+                                line = b&#34;\r%s %s (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), index)
+                                if filesystem.ismicropython():
+                                        sys.stdout.write(line)
+                                else:
+                                        sys.stdout.write(line.decode(&#34;utf8&#34;))
                 return differences
 
         def deinit_image(self, image):
@@ -605,7 +609,7 @@ class Detection:
                         result = False
 
                 # If motion disabled
-                if result is False:
+                if result is False and self.is_pemanent() is False:
                         # Wait moment before next loop
                         await uasyncio.sleep_ms(500)
                 return result
@@ -658,7 +662,8 @@ class Detection:
 
                 # If camera not stabilized speed start
                 if self.motion and self.motion.is_stabilized() is True:
-                        await uasyncio.sleep_ms(self.polling_frequency*500 if Server.is_slow() else self.polling_frequency)
+                        frequency = self.polling_frequency*500 if Server.is_slow() else self.polling_frequency
+                        await uasyncio.sleep_ms(frequency)
 
                 try:
                         # Waits for the camera&#39;s availability
@@ -909,7 +914,7 @@ async def detect_motion(pir_detection):
                         result = False
 
                 # If motion disabled
-                if result is False:
+                if result is False and self.is_pemanent() is False:
                         # Wait moment before next loop
                         await uasyncio.sleep_ms(500)
                 return result
@@ -962,7 +967,8 @@ async def detect_motion(pir_detection):
 
                 # If camera not stabilized speed start
                 if self.motion and self.motion.is_stabilized() is True:
-                        await uasyncio.sleep_ms(self.polling_frequency*500 if Server.is_slow() else self.polling_frequency)
+                        frequency = self.polling_frequency*500 if Server.is_slow() else self.polling_frequency
+                        await uasyncio.sleep_ms(frequency)
 
                 try:
                         # Waits for the camera&#39;s availability
@@ -1025,7 +1031,8 @@ async def detect_motion(pir_detection):
 
         # If camera not stabilized speed start
         if self.motion and self.motion.is_stabilized() is True:
-                await uasyncio.sleep_ms(self.polling_frequency*500 if Server.is_slow() else self.polling_frequency)
+                frequency = self.polling_frequency*500 if Server.is_slow() else self.polling_frequency
+                await uasyncio.sleep_ms(frequency)
 
         try:
                 # Waits for the camera&#39;s availability
@@ -1179,7 +1186,7 @@ async def detect_motion(pir_detection):
                 result = False
 
         # If motion disabled
-        if result is False:
+        if result is False and self.is_pemanent() is False:
                 # Wait moment before next loop
                 await uasyncio.sleep_ms(500)
         return result</code></pre>
@@ -1939,20 +1946,24 @@ async def detect_motion(pir_detection):
                                         comparison = current.compare(self.image_background)
 
                         # Compute the list of differences
-                        diffs = &#34;&#34;
+                        diffs = b&#34;&#34;
                         index = 0
                         for image in self.images:
                                 differences.setdefault(image.get_motion_id(), []).append(image.get_motion_id())
                                 if image.get_motion_id() is not None:
                                         if image.index % 10 == 0:
-                                                trace = &#34;_&#34;
+                                                trace = b&#34;_&#34;
                                         else:
-                                                trace = &#34; &#34;
+                                                trace = b&#34; &#34;
                                         if image.index &gt; index:
                                                 index = image.index
-                                        diffs += &#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), chr(0x41 + ((256-image.get_diff_histo())//10)), trace)
+                                        diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                         if display:
-                                sys.stdout.write(&#34;\r%s %s (%d) &#34;%(strings.date_to_string()[12:], diffs, index))
+                                line = b&#34;\r%s %s (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), index)
+                                if filesystem.ismicropython():
+                                        sys.stdout.write(line)
+                                else:
+                                        sys.stdout.write(line.decode(&#34;utf8&#34;))
                 return differences
 
         def deinit_image(self, image):
@@ -2137,20 +2148,24 @@ async def detect_motion(pir_detection):
                                 comparison = current.compare(self.image_background)
 
                 # Compute the list of differences
-                diffs = &#34;&#34;
+                diffs = b&#34;&#34;
                 index = 0
                 for image in self.images:
                         differences.setdefault(image.get_motion_id(), []).append(image.get_motion_id())
                         if image.get_motion_id() is not None:
                                 if image.index % 10 == 0:
-                                        trace = &#34;_&#34;
+                                        trace = b&#34;_&#34;
                                 else:
-                                        trace = &#34; &#34;
+                                        trace = b&#34; &#34;
                                 if image.index &gt; index:
                                         index = image.index
-                                diffs += &#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), chr(0x41 + ((256-image.get_diff_histo())//10)), trace)
+                                diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                 if display:
-                        sys.stdout.write(&#34;\r%s %s (%d) &#34;%(strings.date_to_string()[12:], diffs, index))
+                        line = b&#34;\r%s %s (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), index)
+                        if filesystem.ismicropython():
+                                sys.stdout.write(line)
+                        else:
+                                sys.stdout.write(line.decode(&#34;utf8&#34;))
         return differences</code></pre>
 </details>
 </dd>

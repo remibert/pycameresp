@@ -87,9 +87,11 @@ class PythonPrompt:
 		self.data = b""
 		self.device.write(b"%s\x0D"%strings.tobytes(cmd))
 
+		line = b""
 		for _ in range(max_count):
 			data = self.device.read(1)
 			if data != b"":
+				line += data
 				if self.read_byte(data) is not None:
 					break
 		result = self.epurate()
@@ -147,9 +149,17 @@ class PythonPrompt:
 						break
 		return result
 
-	def exit_shell(self):
-		""" Send exit command """
-		self.command("exit")
+	def is_python_prompt(self):
+		""" Check if the python prompt available """
+		self.device.write(b"\x0D")
+		line = b""
+		for i in range(6):
+			data = self.device.read(1)
+			if data != b"":
+				line += data
+		if line == b"\r\n>>> ":
+			return True
+		return False
 
 	def set_date(self, date = None):
 		""" Set date time in device """
@@ -165,7 +175,7 @@ class PythonPrompt:
 		result = True
 		directory, _ = os.path.split(target_filename)
 		if self.makedir(directory):
-			self.print(target_filename, end="")
+			self.print("  %s"%target_filename, end="")
 			self.command("import binascii")
 			self.command("import machine")
 			self.command('def w(f,d,s): return f.write(binascii.a2b_base64(d)) == s')
@@ -217,24 +227,31 @@ def get_url_filename(host, path, filename):
 def download_last_release(host, path, filename):
 	""" Download file last release of file from github """
 	result = None
-	filepath = get_url_filename(host, path, filename)
-	if filepath is not None:
-		response = requests.get(host + filepath, allow_redirects=True)
-		result = response.content
+	try:
+		filepath = get_url_filename(host, path, filename)
+		if filepath is not None:
+			response = requests.get(host + filepath, allow_redirects=True)
+			result = response.content
+	except:
+		pass
 	return result
 
 def inject_zip_file(host, path, filename, serial_port, printer=None):
 	""" Inject file read from github into device """
-	zip_file = download_last_release(host, path, filename)
-
-	if zip_file is not None:
-		prompt = PythonPrompt(serial_port)
-		prompt.exit_shell()
-		with zipfile.ZipFile(io.BytesIO(zip_file),"r") as zip_ref:
-			for file in zip_ref.infolist():
-				file_in = ZipReader(zip_ref.read(file.filename), file.date_time)
-				prompt.copy_file(file_in, file.filename)
-		prompt.set_date()
+	result = None
+	prompt = PythonPrompt(serial_port)
+	if prompt.is_python_prompt():
+		zip_file = download_last_release(host, path, filename)
+		if zip_file is not None:
+			with zipfile.ZipFile(io.BytesIO(zip_file),"r") as zip_ref:
+				for file in zip_ref.infolist():
+					file_in = ZipReader(zip_ref.read(file.filename), file.date_time)
+					prompt.copy_file(file_in, file.filename)
+			prompt.set_date()
+			result = True
+	else:
+		result = False
+	return result
 
 def test():
 	""" Test with server.zip """

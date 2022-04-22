@@ -184,9 +184,15 @@ class ThreadSerial(threading.Thread):
 	def on_inject(self, command, filename):
 		""" Treat inject command to device """
 		if command == self.INJECT_FILE:
-			self.print("\nInjection started of %s"%filename)
-			inject.inject_zip_file(inject.GITHUB_HOST, inject.PYCAMERESP_PATH, filename, self.serial, self.print)
-			self.print("Injection terminated\n")
+			
+			self.print("\n\x1B[42;93mInject %s\x1B[m"%filename)
+			res = inject.inject_zip_file(inject.GITHUB_HOST, inject.PYCAMERESP_PATH, filename, self.serial, self.print)
+			if res is True:
+				self.print("\x1B[42;93mSuccess\x1B[m")
+			elif res is False:
+				self.print("\x1B[93;101mPrompt python not available\x1B[m")
+			else:
+				self.print("\x1B[93;101mZip on github not reachable\x1B[m")
 
 	def on_write(self, command, data):
 		""" Treat write command """

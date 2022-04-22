@@ -44,12 +44,12 @@ CURSOR_FORECOLOR   = "camflasher.cursor.textcolor"
 REVERSE_BACKCOLOR  = "camflasher.reverse.backcolor"
 REVERSE_FORECOLOR  = "camflasher.reverse.textcolor"
 
-DEFAULT_TEXT_BACKCOLOR    = QColor(255,255,255)
-DEFAULT_TEXT_FORECOLOR    = QColor(0,0,0)
-DEFAULT_CURSOR_BACKCOLOR  = QColor(0xAA,0xAA,0XAA)
-DEFAULT_CURSOR_FORECOLOR  = QColor(0,0,0)
-DEFAULT_REVERSE_BACKCOLOR = QColor(0,0,0)
-DEFAULT_REVERSE_FORECOLOR = QColor(255,255,255)
+DEFAULT_TEXT_BACKCOLOR    = QColor(0xFF,0xFA,0xE6)
+DEFAULT_TEXT_FORECOLOR    = QColor(0x4D,0x47,0x00)
+DEFAULT_CURSOR_BACKCOLOR  = QColor(0x64,0x5D,0x00)
+DEFAULT_CURSOR_FORECOLOR  = QColor(0xFF,0xFC,0xD9)
+DEFAULT_REVERSE_BACKCOLOR = QColor(0xDF,0xD9,0xA8)
+DEFAULT_REVERSE_FORECOLOR = QColor(0x32,0x2D,0x00)
 
 OUTPUT_TEXT = """
 <html>
@@ -346,7 +346,7 @@ class CamFlasher(QMainWindow):
 			self.window.setupUi(self)
 			self.geometry_ = self
 
-		self.title = self.window.windowTitle()
+		self.title = self.windowTitle()
 
 		# Select font
 		self.update_font()
@@ -482,7 +482,7 @@ class CamFlasher(QMainWindow):
 		width  = (self.window.output.contentsRect().width()  * 200)// size.width() -  1
 		height = int((self.window.output.contentsRect().height() * 200)/ size.height() - 0.3)
 
-		self.window.setWindowTitle("%s %dx%d"%(self.title, width, height))
+		self.setWindowTitle("%s %dx%d"%(self.title, width, height))
 		self.console.set_size(width, height)
 
 	def moveEvent(self, _):

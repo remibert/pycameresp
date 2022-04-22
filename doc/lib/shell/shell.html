@@ -184,7 +184,7 @@ def mkdir(directory, recursive=False, quiet=False):
         except:
                 print(&#34;Cannot mkdir &#39;%s&#39;&#34;%directory)
 
-def removedir(directory, force=False, quiet=False, simulate=False):
+def removedir(directory, force=False, quiet=False, simulate=False, ignore_error=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         try:
                 if filesystem.exists(directory+&#34;/.DS_Store&#34;):
@@ -194,13 +194,14 @@ def removedir(directory, force=False, quiet=False, simulate=False):
                 if quiet is False:
                         print(&#34;rmdir &#39;%s&#39;&#34;%(directory))
         except:
-                print(&#34;rmdir &#39;%s&#39; not removed&#34;%(directory))
+                if ignore_error is False:
+                        print(&#34;rmdir &#39;%s&#39; not removed&#34;%(directory))
 
-def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
+def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False, ignore_error=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         directory = filesystem.normpath(directory)
         if recursive is False:
-                removedir(directory, force=force, quiet=quiet, simulate=simulate)
+                removedir(directory, force=force, quiet=quiet, simulate=simulate, ignore_error=ignore_error)
         else:
                 directories = [directory]
                 d = directory
@@ -216,7 +217,7 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
                         directories.remove(sdcard.SdCard.get_mountpoint())
                 for d in directories:
                         if filesystem.exists(d) and d != &#34;.&#34;:
-                                removedir(d, force=force, quiet=quiet, simulate=simulate)
+                                removedir(d, force=force, quiet=quiet, simulate=simulate, ignore_error=ignore_error)
 
 def mv(source, destination):
         &#34;&#34;&#34; Move or rename file &#34;&#34;&#34;
@@ -313,7 +314,7 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
                                 directories.reverse()
 
                                 for directory in directories:
-                                        rmdir(directory, recursive=recursive, force=force, quiet=quiet, simulate=simulate)
+                                        rmdir(directory, recursive=recursive, force=force, quiet=quiet, simulate=simulate, ignore_error=True)
 
 class LsDisplayer:
         &#34;&#34;&#34; Ls displayer class &#34;&#34;&#34;
@@ -327,9 +328,10 @@ class LsDisplayer:
 
         def purge_path(self, path):
                 &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
+                path = path.encode(&#34;utf8&#34;)
                 path = filesystem.normpath(path)
-                prefix = filesystem.prefix([path, self.path])
-                return path[len(prefix):].lstrip(&#34;/&#34;)
+                prefix = filesystem.prefix([path, self.path.encode(&#34;utf8&#34;)])
+                return path[len(prefix):].lstrip(b&#34;/&#34;)
 
         def show(self, path):
                 &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
@@ -341,16 +343,16 @@ class LsDisplayer:
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
                                 if self.long:
-                                        message = &#34;%s %s [%s]&#34;%(strings.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
+                                        message = b&#34;%s %s [%s]&#34;%(strings.date_to_bytes(date_),b&#34; &#34;*7,self.purge_path(path))
                                 else:
-                                        message = &#34;[%s]&#34;%self.purge_path(path)
+                                        message = b&#34;[%s]&#34;%self.purge_path(path)
                                 self.count = print_part(message, self.width, self.height, self.count)
                 else:
                         if self.long:
                                 fileinfo = filesystem.fileinfo(path)
                                 date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                message = &#34;%s %s %s&#34;%(strings.date_to_string(date_),strings.size_to_string(size),self.purge_path(path))
+                                message = b&#34;%s %s %s&#34;%(strings.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
                         else:
                                 message = self.purge_path(path)
                         self.count = print_part(message, self.width, self.height, self.count)
@@ -387,8 +389,8 @@ def searchfile(file, recursive, obj = None):
                         if obj is not None:
                                 obj.show_dir(False)
                         _, filenames = filesystem.scandir(path, pattern, recursive, obj)
-        except:
-                pass
+        except Exception as err:
+                print(err)
         if len(filenames) == 0 and file != &#34;&#34; and file != &#34;.&#34;:
                 print(&#34;%s : No such file or directory&#34;%file)
         return filenames
@@ -401,6 +403,8 @@ def find(file):
 
 def print_part(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
+        if isinstance(message , bytes):
+                message = message.decode(&#34;utf8&#34;)
         if count is not None and count &gt;= height:
                 print(message,end=&#34;&#34;)
                 key = terminal.getch()
@@ -678,7 +682,7 @@ def dump_(filename):
                         break
                 strings.dump_line (data, line, width)
                 offset += width
-                count = print_part(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
+                count = print_part(line.getvalue(), width, height, count)
                 if count is None:
                         break
 
@@ -1294,7 +1298,7 @@ if __name__ == &#34;__main__&#34;:
                         break
                 strings.dump_line (data, line, width)
                 offset += width
-                count = print_part(line.getvalue().decode(&#34;utf8&#34;), width, height, count)
+                count = print_part(line.getvalue(), width, height, count)
                 if count is None:
                         break</code></pre>
 </details>
@@ -1859,6 +1863,8 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def print_part(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
+        if isinstance(message , bytes):
+                message = message.decode(&#34;utf8&#34;)
         if count is not None and count &gt;= height:
                 print(message,end=&#34;&#34;)
                 key = terminal.getch()
@@ -1908,7 +1914,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.shell.removedir"><code class="name flex">
-<span>def <span class="ident">removedir</span></span>(<span>directory, force=False, quiet=False, simulate=False)</span>
+<span>def <span class="ident">removedir</span></span>(<span>directory, force=False, quiet=False, simulate=False, ignore_error=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Remove directory</p></div>
@@ -1916,7 +1922,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def removedir(directory, force=False, quiet=False, simulate=False):
+<pre><code class="python">def removedir(directory, force=False, quiet=False, simulate=False, ignore_error=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         try:
                 if filesystem.exists(directory+&#34;/.DS_Store&#34;):
@@ -1926,7 +1932,8 @@ if __name__ == &#34;__main__&#34;:
                 if quiet is False:
                         print(&#34;rmdir &#39;%s&#39;&#34;%(directory))
         except:
-                print(&#34;rmdir &#39;%s&#39; not removed&#34;%(directory))</code></pre>
+                if ignore_error is False:
+                        print(&#34;rmdir &#39;%s&#39; not removed&#34;%(directory))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.rm"><code class="name flex">
@@ -1973,11 +1980,11 @@ if __name__ == &#34;__main__&#34;:
                                 directories.reverse()
 
                                 for directory in directories:
-                                        rmdir(directory, recursive=recursive, force=force, quiet=quiet, simulate=simulate)</code></pre>
+                                        rmdir(directory, recursive=recursive, force=force, quiet=quiet, simulate=simulate, ignore_error=True)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.rmdir"><code class="name flex">
-<span>def <span class="ident">rmdir</span></span>(<span>directory, recursive=False, force=False, quiet=False, simulate=False)</span>
+<span>def <span class="ident">rmdir</span></span>(<span>directory, recursive=False, force=False, quiet=False, simulate=False, ignore_error=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Remove directory</p></div>
@@ -1985,11 +1992,11 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False):
+<pre><code class="python">def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False, ignore_error=False):
         &#34;&#34;&#34; Remove directory &#34;&#34;&#34;
         directory = filesystem.normpath(directory)
         if recursive is False:
-                removedir(directory, force=force, quiet=quiet, simulate=simulate)
+                removedir(directory, force=force, quiet=quiet, simulate=simulate, ignore_error=ignore_error)
         else:
                 directories = [directory]
                 d = directory
@@ -2005,7 +2012,7 @@ if __name__ == &#34;__main__&#34;:
                         directories.remove(sdcard.SdCard.get_mountpoint())
                 for d in directories:
                         if filesystem.exists(d) and d != &#34;.&#34;:
-                                removedir(d, force=force, quiet=quiet, simulate=simulate)</code></pre>
+                                removedir(d, force=force, quiet=quiet, simulate=simulate, ignore_error=ignore_error)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.rmfile"><code class="name flex">
@@ -2057,8 +2064,8 @@ if __name__ == &#34;__main__&#34;:
                         if obj is not None:
                                 obj.show_dir(False)
                         _, filenames = filesystem.scandir(path, pattern, recursive, obj)
-        except:
-                pass
+        except Exception as err:
+                print(err)
         if len(filenames) == 0 and file != &#34;&#34; and file != &#34;.&#34;:
                 print(&#34;%s : No such file or directory&#34;%file)
         return filenames</code></pre>
@@ -2312,9 +2319,10 @@ if __name__ == &#34;__main__&#34;:
 
         def purge_path(self, path):
                 &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
+                path = path.encode(&#34;utf8&#34;)
                 path = filesystem.normpath(path)
-                prefix = filesystem.prefix([path, self.path])
-                return path[len(prefix):].lstrip(&#34;/&#34;)
+                prefix = filesystem.prefix([path, self.path.encode(&#34;utf8&#34;)])
+                return path[len(prefix):].lstrip(b&#34;/&#34;)
 
         def show(self, path):
                 &#34;&#34;&#34; Show the information of a file or directory &#34;&#34;&#34;
@@ -2326,16 +2334,16 @@ if __name__ == &#34;__main__&#34;:
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
                                 if self.long:
-                                        message = &#34;%s %s [%s]&#34;%(strings.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
+                                        message = b&#34;%s %s [%s]&#34;%(strings.date_to_bytes(date_),b&#34; &#34;*7,self.purge_path(path))
                                 else:
-                                        message = &#34;[%s]&#34;%self.purge_path(path)
+                                        message = b&#34;[%s]&#34;%self.purge_path(path)
                                 self.count = print_part(message, self.width, self.height, self.count)
                 else:
                         if self.long:
                                 fileinfo = filesystem.fileinfo(path)
                                 date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                message = &#34;%s %s %s&#34;%(strings.date_to_string(date_),strings.size_to_string(size),self.purge_path(path))
+                                message = b&#34;%s %s %s&#34;%(strings.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
                         else:
                                 message = self.purge_path(path)
                         self.count = print_part(message, self.width, self.height, self.count)
@@ -2357,9 +2365,10 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def purge_path(self, path):
         &#34;&#34;&#34; Purge the path for the display &#34;&#34;&#34;
+        path = path.encode(&#34;utf8&#34;)
         path = filesystem.normpath(path)
-        prefix = filesystem.prefix([path, self.path])
-        return path[len(prefix):].lstrip(&#34;/&#34;)</code></pre>
+        prefix = filesystem.prefix([path, self.path.encode(&#34;utf8&#34;)])
+        return path[len(prefix):].lstrip(b&#34;/&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.LsDisplayer.show"><code class="name flex">
@@ -2381,16 +2390,16 @@ if __name__ == &#34;__main__&#34;:
         if fileinfo[0] &amp; 0x4000 == 0x4000:
                 if self.showdir:
                         if self.long:
-                                message = &#34;%s %s [%s]&#34;%(strings.date_to_string(date_),&#34; &#34;*7,self.purge_path(path))
+                                message = b&#34;%s %s [%s]&#34;%(strings.date_to_bytes(date_),b&#34; &#34;*7,self.purge_path(path))
                         else:
-                                message = &#34;[%s]&#34;%self.purge_path(path)
+                                message = b&#34;[%s]&#34;%self.purge_path(path)
                         self.count = print_part(message, self.width, self.height, self.count)
         else:
                 if self.long:
                         fileinfo = filesystem.fileinfo(path)
                         date_ = fileinfo[8]
                         size = fileinfo[6]
-                        message = &#34;%s %s %s&#34;%(strings.date_to_string(date_),strings.size_to_string(size),self.purge_path(path))
+                        message = b&#34;%s %s %s&#34;%(strings.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
                 else:
                         message = self.purge_path(path)
                 self.count = print_part(message, self.width, self.height, self.count)</code></pre>
