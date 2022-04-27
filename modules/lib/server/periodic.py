@@ -33,12 +33,10 @@ class Periodic:
 		# If login detected
 		if login is not None:
 			from server.notifier import Notifier
-			# If notification must be send
-			if self.server_config.notify:
-				if login:
-					await Notifier.notify(lang.login_success_detected, display=False)
-				else:
-					await Notifier.notify(lang.login_failed_detected, display=False)
+			if login:
+				await Notifier.notify(lang.login_success_detected, display=False, enabled=self.server_config.notify)
+			else:
+				await Notifier.notify(lang.login_failed_detected,  display=False, enabled=self.server_config.notify)
 
 	async def task(self):
 		""" Periodic task method """

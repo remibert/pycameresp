@@ -218,7 +218,7 @@ def get_url_filename(host, path, filename):
 	lines = response.content.decode("utf8").split("\n")
 	for line in lines:
 		if filename in line and "href" in line:
-			spl = split(r'.*<a href="([a-zA-Z0-9/\.]*)".*>.*',line)
+			spl = split(r'.*<a href="([a-zA-Z0-9/\.\-_]*)".*>.*',line)
 			if len(spl) > 0:
 				result = spl[1]
 				break

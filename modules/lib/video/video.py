@@ -308,7 +308,7 @@ class Camera:
 					retry -= 1
 					time.sleep(0.5)
 			total = Camera.success[0] + Camera.failed[0]
-			STAT_CAMERA=5000
+			STAT_CAMERA=20000
 			if (total % STAT_CAMERA) == 0:
 				if Camera.success[0] != 0:
 					newFailed = 100.-((Camera.newFailed[0]*100)/STAT_CAMERA)

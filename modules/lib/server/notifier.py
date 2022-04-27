@@ -31,16 +31,18 @@ class Notifier:
 		return False
 
 	@staticmethod
-	async def notify(message, image = None, forced=False, display=True):
+	async def notify(message, image=None, forced=False, display=True, enabled=True):
 		""" Notify message for all notifier registered """
-		result = True
-		logger.syslog("Notification '%s'"%strings.tostrings(message), display=display)
+		logger.syslog("Notification %s'%s' "%("" if enabled else "disabled ", strings.tostrings(message)), display=display)
 
-		# Add message into postponed list
-		Notifier.postponed.append([message, image, forced, display])
+		if enabled or forced:
+			# Add message into postponed list
+			Notifier.postponed.append([message, image, forced, display])
 
-		# Try to send all message postponed
-		return await Notifier.flush()
+			# Try to send all message postponed
+			return await Notifier.flush()
+		else:
+			return True
 
 	@staticmethod
 	async def flush():

@@ -270,7 +270,7 @@ class Server:
 						Server.context.flushed = True
 
 			# Polling for time synchronisation
-			if polling_id % 3607 == 0:
+			if polling_id % 21601 == 0:
 				await Server.synchronize_time()
 
 			# Polling for get wan ip
@@ -279,7 +279,7 @@ class Server:
 			else:
 				forced = False
 
-			if polling_id % 3593 == 0 or forced:
+			if polling_id % 21599 == 0 or forced:
 				await Server.synchronize_wan_ip(forced)
 
 			# Save current time

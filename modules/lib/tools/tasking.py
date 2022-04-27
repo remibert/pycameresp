@@ -55,7 +55,6 @@ async def task_monitoring(task):
 
 	config = ServerConfig()
 	config.load()
-	if config.notify:
-		from tools import lang
-		await Notifier.notify(lang.reboot_after_many%strings.tobytes(lastError))
+	from tools import lang
+	await Notifier.notify(lang.reboot_after_many%strings.tobytes(lastError), enabled=config.notify)
 	system.reboot()

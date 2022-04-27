@@ -436,7 +436,6 @@ class View:
 		""" Indicates that the selection must be refreshed """
 		selection_start, selection_end = self.text.get_selection()
 		if selection_start is not None:
-			# self.is_refresh_all = True
 			line_start = selection_start[1]
 			if self.sel_line_start < line_start:
 				line_start = self.sel_line_start
@@ -1498,10 +1497,10 @@ class Text:
 		if self.treat_char(keys) is False:
 			# Move in the edit field
 			if keys[0] in self.MOVE_KEYS:
-				if   keys[0] in UP  :            self.arrow_up(keys)
-				elif keys[0] in DOWN:            self.arrow_down(keys)
-				elif keys[0] in LEFT:            self.arrow_left(keys)
+				if   keys[0] in LEFT:            self.arrow_left(keys)
 				elif keys[0] in RIGHT:           self.arrow_right(keys)
+				elif keys[0] in UP  :            self.arrow_up(keys)
+				elif keys[0] in DOWN:            self.arrow_down(keys)
 				elif keys[0] in HOME:            self.home()
 				elif keys[0] in END:             self.end()
 				elif keys[0] in PAGE_UP:         self.page_up(keys)
@@ -1512,10 +1511,10 @@ class Text:
 				elif keys[0] in PREVIOUS_WORD:   self.previous_word()
 			elif keys[0] in self.SELECT_KEYS:
 				# Selection the edit field
-				if   keys[0] in SELECT_UP:       self.select_up(keys)
-				elif keys[0] in SELECT_DOWN:     self.select_down(keys)
-				elif keys[0] in SELECT_RIGHT:    self.select_right(keys)
+				if   keys[0] in SELECT_RIGHT:    self.select_right(keys)
 				elif keys[0] in SELECT_LEFT:     self.select_left(keys)
+				elif keys[0] in SELECT_UP:       self.select_up(keys)
+				elif keys[0] in SELECT_DOWN:     self.select_down(keys)
 				elif keys[0] in SELECT_HOME:     self.select_home()
 				elif keys[0] in SELECT_END:      self.select_end()
 				elif keys[0] in SELECT_TOP:      self.select_top()
@@ -1798,5 +1797,4 @@ if __name__ == "__main__":
 		filename = sys.argv[1]
 	else:
 		filename = "editor.txt"
-		filename = "syslog.bug"
 	edit = Editor(filename, read_only=False)

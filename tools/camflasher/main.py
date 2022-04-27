@@ -35,7 +35,7 @@ FONT_FAMILY        = "camflasher.font.family"
 FONT_SIZE          = "camflasher.font.size"
 WORKING_DIRECTORY  = "camflasher.working_directory"
 WIN_GEOMETRY       = "camflasher.window.geometry"
-FIRMWARE_FILENAME  = "camflasher.firmware.filename"
+FIRMWARE_FILENAMES = "camflasher.firmware.filenames"
 DEVICE_RTS_DTR     = "camflasher.device.rts_dtr"
 TEXT_BACKCOLOR     = "camflasher.text.backcolor"
 TEXT_FORECOLOR     = "camflasher.text.forecolor"
@@ -50,6 +50,8 @@ DEFAULT_CURSOR_BACKCOLOR  = QColor(0x64,0x5D,0x00)
 DEFAULT_CURSOR_FORECOLOR  = QColor(0xFF,0xFC,0xD9)
 DEFAULT_REVERSE_BACKCOLOR = QColor(0xDF,0xD9,0xA8)
 DEFAULT_REVERSE_FORECOLOR = QColor(0x32,0x2D,0x00)
+
+DOWNLOAD_VERSION = "Download the lastest version of :"
 
 OUTPUT_TEXT = """
 <html>
@@ -106,33 +108,64 @@ class FlashDialog(QDialog):
 			from dialogflash import Ui_DialogFlash
 			self.dialog = Ui_DialogFlash()
 			self.dialog.setupUi(self)
-		settings = get_settings()
-		firmware = settings.value(FIRMWARE_FILENAME, "")
-		if not os.path.exists(firmware):
-			firmware = ""
-		self.dialog.firmware.setText(firmware)
-		self.dialog.select_firmware.clicked.connect(self.on_firmware_clicked)
-		self.dialog.baud.addItems(["9600","57600","74880","115200","230400","460800"])
-		self.dialog.baud.setCurrentIndex(5)
+		self.initialized = False
 		self.setModal(True)
+
+	def showEvent(self, event):
+		""" On window shown """
+		if self.initialized is False:
+			self.initialized = True
+			settings = get_settings( )
+			firmwares = []
+			for firmware in settings.value(FIRMWARE_FILENAMES, []):
+				if os.path.exists(firmware):
+					firmwares.append(firmware)
+
+			firmwares.append(DOWNLOAD_VERSION + "ESP32CAM-firmware.bin")
+			firmwares.append(DOWNLOAD_VERSION + "GENERIC_SPIRAM-firmware.bin")
+			firmwares.append(DOWNLOAD_VERSION + "GENERIC-firmware.bin")
+			self.dialog.firmware.addItems(firmwares)
+			self.dialog.firmware.setCurrentIndex(0)
+			self.dialog.select_firmware.clicked.connect(self.on_firmware_clicked)
+			self.dialog.baud.addItems(["9600","57600","74880","115200","230400","460800"])
+			self.dialog.baud.setCurrentIndex(5)
+
+	def save_firmwares_list(self, firmware):
+		settings = get_settings()
+		firmwares = [firmware]
+		for i in range(self.dialog.firmware.count()):
+			if self.dialog.firmware.itemText(i) != self.dialog.firmware.currentText():
+				firmwares.append(self.dialog.firmware.itemText(i))
+		settings.setValue(FIRMWARE_FILENAMES, firmwares)
 
 	def accept(self):
 		""" Called when ok pressed """
-		if os.path.exists(self.dialog.firmware.text()) is False:
+		firmware = self.dialog.firmware.currentText()
+		if  os.path.exists(firmware) or firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
+			# firmware = firmware[len(DOWNLOAD_VERSION):]
+			# firmware = inject.get_url_filename(inject.GITHUB_HOST, inject.PYCAMERESP_PATH, firmware)
+			self.save_firmwares_list(firmware)
+			super().accept()
+		elif os.path.exists(firmware) is False:
 			msg = QMessageBox(parent=self)
 			msg.setIcon(QMessageBox.Icon.Critical)
-			msg.setText("Firmware not found")
+			msg.setText("Firmware file does not exist")
 			msg.exec()
-		else:
-			settings = get_settings()
-			settings.setValue(FIRMWARE_FILENAME, self.dialog.firmware.text())
-			super().accept()
+		# else:
+		# 	self.save_firmwares_list(firmware)
+		# 	super().accept()
 
 	def on_firmware_clicked(self, event):
 		""" Selection of firmware button clicked """
 		firmware = QFileDialog.getOpenFileName(self, 'Select firmware file', '',"Firmware files (*.bin)")
 		if firmware != ('', ''):
-			self.dialog.firmware.setText(firmware[0])
+			for i in range(self.dialog.firmware.count()):
+				if self.dialog.firmware.itemText(i) == firmware[0]:
+					self.dialog.firmware.setCurrentIndex(i)
+					break
+			else:
+				self.dialog.firmware.addItem(firmware[0])
+				self.dialog.firmware.setCurrentIndex(self.dialog.firmware.count()-1)
 
 class OptionDialog(QDialog):
 	""" Dialog for options """
@@ -347,6 +380,7 @@ class CamFlasher(QMainWindow):
 			self.geometry_ = self
 
 		self.title = self.windowTitle()
+		self.hide_size = 0
 
 		# Select font
 		self.update_font()
@@ -482,6 +516,7 @@ class CamFlasher(QMainWindow):
 		width  = (self.window.output.contentsRect().width()  * 200)// size.width() -  1
 		height = int((self.window.output.contentsRect().height() * 200)/ size.height() - 0.3)
 
+		self.hide_size = 0
 		self.setWindowTitle("%s %dx%d"%(self.title, width, height))
 		self.console.set_size(width, height)
 
@@ -525,6 +560,10 @@ class CamFlasher(QMainWindow):
 	def on_refresh_port(self):
 		""" Refresh the combobox content with the serial ports detected """
 		# self.console.test()
+		self.hide_size += 1
+		if self.hide_size > 3:
+			self.setWindowTitle(self.title)
+
 		ports_connected = self.ports.update(list_ports.comports())
 		if ports_connected is not None:
 			for i in range(self.window.combo_port.count()):
@@ -558,10 +597,12 @@ class CamFlasher(QMainWindow):
 		result = self.flash_dialog.exec()
 		if result == 1 and self.window.combo_port.currentText() != "":
 			try:
+				firmware = self.flash_dialog.firmware.currentText()
+				if firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
+					firmware = (firmware[len(DOWNLOAD_VERSION):],)
 				port      = self.window.combo_port.currentText()
 				baud      = self.flash_dialog.dialog.baud.currentText()
 				rts_dtr   = self.window.chk_rts_dtr.isChecked()
-				firmware  = self.flash_dialog.dialog.firmware.text()
 				erase     = self.flash_dialog.dialog.erase.isChecked()
 				self.flasher.flash(port, baud, rts_dtr, firmware, erase)
 			except Exception as err:
@@ -611,6 +652,7 @@ def except_hook(cls, exception, traceback):
 	""" Exception hook """
 	from traceback import extract_tb
 	msg = QErrorMessage()
+	msg.setModal(True)
 	text = '<code>' + str(exception) + "<br>"
 	for filename, line, method, content in extract_tb(traceback) :
 		text += '&nbsp;&nbsp;&nbsp;&nbsp;<FONT COLOR="#ff0000">File "%s", line %d, in %s</FONT><br>'%(filename,line,method)

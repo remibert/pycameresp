@@ -107,11 +107,11 @@ class ImageMotion:
 
 	def get_filename(self):
 		""" Get the storage filename """
-		return "%s Id=%d D=%d"%(self.filename, self.index, self.get_diff_count())
+		return "%s Id=%d D=%2d"%(self.filename, self.index, self.get_diff_count())
 
 	def get_message(self):
 		""" Get the message of motion """
-		return "%s %s D=%d"%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+		return "%s %s D=%2d"%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
 	def get_informations(self):
 		""" Return the informations of motion """
@@ -313,8 +313,7 @@ class Motion:
 
 				# Save image to sdcard
 				if await image.save() is False:
-					if self.config.notify:
-						await Notifier.notify(lang.failed_to_save)
+					await Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
 			else:
 				# Destroy image
 				self.deinit_image(image)
@@ -565,12 +564,10 @@ class Detection:
 			# Force garbage collection
 			collect()
 
-			# If notification enabled
-			if self.motion_config.notify_state:
-				if result:
-					await Notifier.notify(lang.motion_detection_on)
-				else:
-					await Notifier.notify(lang.motion_detection_off)
+			if result:
+				await Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
+			else:
+				await Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
 			self.activated = result
 
 		# If camera activated and motion activated
@@ -652,11 +649,12 @@ class Detection:
 				if self.detection is not None and activated is True:
 					# Notify motion with push over
 					message, image = self.detection
-					if self.motion_config.notify:
-						if self.cadencer.can_notify():
-							await Notifier.notify(message, image.get())
-						else:
-							logger.syslog(message + " ignored")
+
+					# If the notifications are not too frequent
+					if self.cadencer.can_notify():
+						await Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
+					else:
+						logger.syslog("Notification '%s' too frequent ignored" %message)
 				# Detect motion
 				detected, change_polling = self.motion.detect()
 
@@ -671,8 +669,7 @@ class Detection:
 					Historic.set_motion_state(False)
 				result = True
 			else:
-				if self.motion_config.notify_state:
-					await Notifier.notify(lang.motion_detection_suspended)
+				await Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
 				result = True
 
 		finally:

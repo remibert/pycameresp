@@ -1,5 +1,6 @@
 """ Micropython firmware flasher for esp32 """
 import threading
+import tempfile
 import queue
 import time
 import sys
@@ -401,15 +402,30 @@ class Flasher(threading.Thread):
 					break
 				time.sleep(0.1)
 
-			# Start flasher
 			print("\x1B[48;5;229m\x1B[38;5;243m")
-			flash_command = ["--port", port, "--baud", baud, "--chip", "auto", "write_flash", "0x1000", firmware]
+			if type(firmware) == type((0,)):
+				firmware = firmware[0]
+				print("\nDownload last version of %s"%firmware)
+				content = inject.download_last_release(inject.GITHUB_HOST, inject.PYCAMERESP_PATH, firmware)
+				if content is not None:
+					directory = tempfile.TemporaryDirectory()
+					firmware = "%s/%s"%(directory.name, firmware)
+					file = open(firmware, "wb")
+					file.write(content)
+					file.close()
+					print("\nFirmware download success")
+				else:
+					print("\n\x1B[93;101mFirmware download failed\n\x1B[m")
+					firmware = None
 
-			if erase:
-				flash_command.append("--erase-all")
-			print("\nesptool.py %s" % " ".join(flash_command))
-			esptool.main(flash_command)
-			print("\n\x1B[42;93mFlashed with success. Remove strap and press reset button\x1B[m")
+			if firmware is not None:
+				# Start flasher
+				flash_command = ["--port", port, "--baud", baud, "--chip", "auto", "write_flash", "0x1000", firmware]
+				if erase:
+					flash_command.append("--erase-all")
+				print("\nesptool.py %s" % " ".join(flash_command))
+				esptool.main(flash_command)
+				print("\n\x1B[42;93mFlashed with success. Remove strap and press reset button\x1B[m")
 		except Exception as err:
 			print("\n\x1B[93;101mFlash failed\n\x1B[m")
 
