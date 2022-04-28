@@ -37,7 +37,7 @@ async def task_monitoring(task):
 	retry = 0
 	lastError = ""
 
-	while retry < 40:
+	while retry < 20:
 		try:
 			while True:
 				if await task():

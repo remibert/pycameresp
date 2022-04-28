@@ -33,7 +33,7 @@ class Notifier:
 	@staticmethod
 	async def notify(message, image=None, forced=False, display=True, enabled=True):
 		""" Notify message for all notifier registered """
-		logger.syslog("Notification %s'%s' "%("" if enabled else "disabled ", strings.tostrings(message)), display=display)
+		logger.syslog("Notification '%s' %s"%(strings.tostrings(message), "" if enabled else "not sent"), display=display)
 
 		if enabled or forced:
 			# Add message into postponed list
