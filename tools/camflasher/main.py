@@ -14,6 +14,8 @@
 import sys
 import os.path
 import os
+import socket
+import ipaddress
 from platform import uname
 try:
 	from PyQt6 import uic
@@ -36,6 +38,7 @@ FONT_SIZE          = "camflasher.font.size"
 WORKING_DIRECTORY  = "camflasher.working_directory"
 WIN_GEOMETRY       = "camflasher.window.geometry"
 FIRMWARE_FILENAMES = "camflasher.firmware.filenames"
+TELNET_HOSTS       = "camflasher.telnet.host"
 DEVICE_RTS_DTR     = "camflasher.device.rts_dtr"
 TEXT_BACKCOLOR     = "camflasher.text.backcolor"
 TEXT_FORECOLOR     = "camflasher.text.forecolor"
@@ -131,6 +134,7 @@ class FlashDialog(QDialog):
 			self.dialog.baud.setCurrentIndex(5)
 
 	def save_firmwares_list(self, firmware):
+		""" Save list in registry """
 		settings = get_settings()
 		firmwares = [firmware]
 		for i in range(self.dialog.firmware.count()):
@@ -142,8 +146,6 @@ class FlashDialog(QDialog):
 		""" Called when ok pressed """
 		firmware = self.dialog.firmware.currentText()
 		if  os.path.exists(firmware) or firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
-			# firmware = firmware[len(DOWNLOAD_VERSION):]
-			# firmware = inject.get_url_filename(inject.GITHUB_HOST, inject.PYCAMERESP_PATH, firmware)
 			self.save_firmwares_list(firmware)
 			super().accept()
 		elif os.path.exists(firmware) is False:
@@ -151,9 +153,6 @@ class FlashDialog(QDialog):
 			msg.setIcon(QMessageBox.Icon.Critical)
 			msg.setText("Firmware file does not exist")
 			msg.exec()
-		# else:
-		# 	self.save_firmwares_list(firmware)
-		# 	super().accept()
 
 	def on_firmware_clicked(self, event):
 		""" Selection of firmware button clicked """
@@ -379,6 +378,12 @@ class CamFlasher(QMainWindow):
 			self.window.setupUi(self)
 			self.geometry_ = self
 
+
+		self.DISCONNECTED = 0
+		self.CONNECT_IN_PROGRESS = 1
+		self.CONNECTED = 2
+		self.previous_state = self.DISCONNECTED
+
 		self.title = self.windowTitle()
 		self.hide_size = 0
 
@@ -415,6 +420,20 @@ class CamFlasher(QMainWindow):
 
 		self.port_selected = None
 		self.window.combo_port.currentTextChanged.connect(self.on_port_changed)
+		settings = get_settings()
+		self.telnet_hosts = settings.value(TELNET_HOSTS,[])
+		hosts = []
+		for host, _ in self.telnet_hosts:
+			if host not in hosts:
+				hosts.append(host)
+			if len(hosts) > 20:
+				break
+
+		self.window.combo_telnet_host.addItems(hosts)
+		self.window.combo_telnet_host.setCurrentIndex(0)
+		if len(self.telnet_hosts) > 0:
+			host, port = self.telnet_hosts[0]
+			self.window.edit_telnet_port.setValue(port)
 
 		self.show()
 		self.resize_console()
@@ -429,6 +448,10 @@ class CamFlasher(QMainWindow):
 		self.window.chk_rts_dtr.stateChanged.connect(self.on_rts_dtr_changed)
 		self.window.action_inject_shell.triggered.connect(self.on_inject_shell)
 		self.window.action_inject_server.triggered.connect(self.on_inject_server)
+		self.window.tabs_link.currentChanged.connect(self.on_tabs_link_changed)
+		self.window.button_telnet_connect.clicked.connect(self.on_telnet_connect)
+		self.window.combo_telnet_host.currentIndexChanged.connect(self.on_telnet_host_changed)
+		self.window.tabs_link.setCurrentIndex(1)
 		self.ports = Ports()
 		self.clear_selection = True
 
@@ -528,6 +551,15 @@ class CamFlasher(QMainWindow):
 		""" Treat the window resize event """
 		self.resize_console()
 
+	def on_tabs_link_changed(self):
+		if self.window.tabs_link.currentIndex() == 0:
+			self.flasher.disconnect()
+			rts_dtr = self.ports.get_rts_dtr(self.get_port())
+			self.window.chk_rts_dtr.setChecked(rts_dtr)
+			self.flasher.connect_serial(port = self.get_port(), rts_dtr=rts_dtr)
+		else:
+			self.flasher.disconnect()
+
 	def on_inject_server(self):
 		""" On menu inject server clicked """
 		self.inject("server.zip")
@@ -547,15 +579,16 @@ class CamFlasher(QMainWindow):
 
 	def on_option_clicked(self):
 		""" On option menu clicked """
-		option_dialog = OptionDialog(self)
-		option_dialog.show()
-		option_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-		result = option_dialog.exec()
-		if result == 1:
-			settings = get_settings()
-			self.flasher.set_directory(settings.value(WORKING_DIRECTORY,"."))
-			self.update_font()
-			self.resize_console()
+		if self.window.tabs_link.currentIndex() == 0:
+			option_dialog = OptionDialog(self)
+			option_dialog.show()
+			option_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+			result = option_dialog.exec()
+			if result == 1:
+				settings = get_settings()
+				self.flasher.set_directory(settings.value(WORKING_DIRECTORY,"."))
+				self.update_font()
+				self.resize_console()
 
 	def on_refresh_port(self):
 		""" Refresh the combobox content with the serial ports detected """
@@ -577,36 +610,115 @@ class CamFlasher(QMainWindow):
 				else:
 					self.window.combo_port.addItem(port)
 
+	def connection_state(self):
+		""" Manage the connection state """
+		state = self.flasher.get_state()
+		if state != self.previous_state:
+			self.previous_state = state
+			if state == self.DISCONNECTED:
+				self.window.button_telnet_connect.setText("Connect")
+				self.window.combo_telnet_host.setEnabled(True)
+				self.window.edit_telnet_port.setEnabled(True)
+			elif state == self.CONNECT_IN_PROGRESS:
+				self.window.button_telnet_connect.setText("Connection")
+				self.window.combo_telnet_host.setEnabled(False)
+				self.window.edit_telnet_port.setEnabled(False)
+			elif state == self.CONNECTED:
+				self.window.button_telnet_connect.setText("Disconnect")
+				self.window.combo_telnet_host.setEnabled(False)
+				self.window.edit_telnet_port.setEnabled(False)
+		
+		if state in [self.CONNECTED, self.CONNECT_IN_PROGRESS]:
+			self.window.output.setFocus()
+
+	def on_telnet_host_changed(self, event):
+		""" Event combo telnet host changed """
+		for host, port in self.telnet_hosts:
+			if host == self.window.combo_telnet_host.currentText():
+				self.window.edit_telnet_port.setValue(port)
+
+
+	def on_telnet_connect(self, event):
+		""" Click on telnet button connection """
+		if self.window.tabs_link.currentIndex() == 1:
+			self.connection_state()
+			if self.previous_state in [self.CONNECTED, self.CONNECT_IN_PROGRESS] :
+				self.flasher.disconnect()
+			else:
+				host = self.window.combo_telnet_host.currentText()
+				port  = self.window.edit_telnet_port.value()
+				validated = False
+				try:
+					ipaddress.ip_network(host)
+					validated = True
+				except:
+					pass
+
+				if validated is False:
+					try:
+						res = socket.gethostbyaddr(host)
+						if len(res) == 3:
+							validated = True
+					except:
+						pass
+
+				if validated:
+					new_telnet_hosts = [[host, port]]
+					hosts =[host]
+
+					for h,p  in self.telnet_hosts:
+						if h != host:
+							new_telnet_hosts.append([h,p])
+						elif len(new_telnet_hosts) > 20:
+							break
+						if h not in hosts:
+							hosts.append(h)
+
+					self.telnet_hosts = new_telnet_hosts
+					settings = get_settings()
+					self.window.combo_telnet_host.clear()
+					self.window.combo_telnet_host.addItems(hosts)
+					self.window.combo_telnet_host.setCurrentIndex(0)
+					settings.setValue(TELNET_HOSTS, self.telnet_hosts)
+					self.flasher.connect_telnet(host,port)
+				else:
+					print("Invalid host ip address '%s:%d'"%(host,port))
+
 	def on_rts_dtr_changed(self, event):
 		""" On change of DTR/STR check box """
-		rts_dtr = self.window.chk_rts_dtr.isChecked()
-		self.ports.set_rts_dtr(self.get_port(), rts_dtr)
-		self.flasher.set_info(port = self.get_port(), rts_dtr=rts_dtr)
+		if self.window.tabs_link.currentIndex() == 0:
+			rts_dtr = self.window.chk_rts_dtr.isChecked()
+			self.ports.set_rts_dtr(self.get_port(), rts_dtr)
+			self.flasher.connect_serial(port=self.get_port(), rts_dtr=rts_dtr)
 
 	def on_port_changed(self, event):
 		""" On port changed event """
-		rts_dtr = self.ports.get_rts_dtr(self.get_port())
-		self.window.chk_rts_dtr.setChecked(rts_dtr)
-		self.flasher.set_info(port = self.get_port(), rts_dtr=rts_dtr)
+		if self.window.tabs_link.currentIndex() == 0:
+			rts_dtr = self.ports.get_rts_dtr(self.get_port())
+			self.window.chk_rts_dtr.setChecked(rts_dtr)
+			self.flasher.connect_serial(port=self.get_port(), rts_dtr=rts_dtr)
 
 	def on_flash_clicked(self, event):
 		""" Flash of firmware button clicked """
-		self.flash_dialog.show()
-		self.flash_dialog.dialog.erase.setChecked(False)
-		self.flash_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-		result = self.flash_dialog.exec()
-		if result == 1 and self.window.combo_port.currentText() != "":
-			try:
-				firmware = self.flash_dialog.firmware.currentText()
-				if firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
-					firmware = (firmware[len(DOWNLOAD_VERSION):],)
-				port      = self.window.combo_port.currentText()
-				baud      = self.flash_dialog.dialog.baud.currentText()
-				rts_dtr   = self.window.chk_rts_dtr.isChecked()
-				erase     = self.flash_dialog.dialog.erase.isChecked()
-				self.flasher.flash(port, baud, rts_dtr, firmware, erase)
-			except Exception as err:
-				print(err)
+		if self.window.tabs_link.currentIndex() == 0:
+			self.flash_dialog.show()
+			self.flash_dialog.dialog.erase.setChecked(False)
+			self.flash_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+			result = self.flash_dialog.exec()
+			if result == 1 and self.window.combo_port.currentText() != "":
+				try:
+					firmware = self.flash_dialog.firmware.currentText()
+					if firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
+						firmware = (firmware[len(DOWNLOAD_VERSION):],)
+					port      = self.window.combo_port.currentText()
+					baud      = self.flash_dialog.dialog.baud.currentText()
+					rts_dtr   = self.window.chk_rts_dtr.isChecked()
+					erase     = self.flash_dialog.dialog.erase.isChecked()
+					self.flasher.flash(port, baud, rts_dtr, firmware, erase)
+				except Exception as err:
+					print(err)
+		else:
+			pass
 
 	def get_port(self):
 		""" Get the name of serial port """
@@ -618,6 +730,8 @@ class CamFlasher(QMainWindow):
 
 	def on_refresh_console(self):
 		""" Refresh the console content """
+		self.connection_state()
+
 		self.window.output.viewport().setProperty("cursor", QCursor(Qt.CursorShape.ArrowCursor))
 		if self.clear_selection is True:
 			cursor = self.window.output.textCursor()
@@ -625,16 +739,6 @@ class CamFlasher(QMainWindow):
 			self.clear_selection = False
 
 		cursor = self.window.output.textCursor()
-		# start = cursor.selectionStart()
-		# end   = cursor.selectionEnd()
-		# t = cursor.selectedText()
-		# t = cursor.columnNumber()
-		# bloc = cursor.block()
-		# text = bloc.text()
-		# lc = bloc.lineCount()
-
-		# y = cursor.blockNumber() + 1
-		# x = cursor.columnNumber() + 1
 		if cursor.selectionEnd() == cursor.selectionStart():
 			output = self.console.refresh()
 			if output != "":

@@ -18,6 +18,14 @@
 			"cwd": "${workspaceFolder}/tools/camflasher",
 		},
 		{
+			"name": "CamFlasher with trace",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/tools/camflasher/main.py",
+			"cwd": "${workspaceFolder}/tools/camflasher",
+			"args": ["-stdout","-file"]
+		},
+		{
 			"name": "Editor",
 			"type": "python",
 			"request": "launch",

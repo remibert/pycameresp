@@ -351,12 +351,22 @@ class FileReader:
 				send_ack(out_file,ACK)
 			else:
 				while size > 0:
-					# Receive content part
-					if filesystem.ismicropython():
-						length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
-					else:
-						chunk = bytearray(min(size, CHUNK_SIZE))
-						length = in_file.readinto(chunk)
+					count = 0
+					while True:
+						# Receive content part
+						if filesystem.ismicropython():
+							length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
+						else:
+							chunk = bytearray(min(size, CHUNK_SIZE))
+							length = in_file.readinto(chunk)
+
+						if length == 0:
+							count += 1
+							time.sleep(0.01)
+							if count > 300:
+								raise FileError("Transmission error")
+						else:
+							break
 					# Send ack
 					send_ack(out_file,ACK)
 
