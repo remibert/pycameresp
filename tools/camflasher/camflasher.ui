@@ -92,7 +92,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string> Port </string>
+           <string>  Port  </string>
           </property>
          </widget>
         </item>
@@ -100,6 +100,12 @@
          <widget class="QComboBox" name="combo_port">
           <property name="enabled">
            <bool>true</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
           <property name="minimumSize">
            <size>
@@ -115,7 +121,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
+        <item row="0" column="3">
          <widget class="QCheckBox" name="chk_rts_dtr">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -127,9 +133,25 @@
            <enum>Qt::NoFocus</enum>
           </property>
           <property name="text">
-           <string>RTS/DTR </string>
+           <string>  RTS/DTR </string>
           </property>
          </widget>
+        </item>
+        <item row="0" column="2">
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Minimum</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>
@@ -139,6 +161,9 @@
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
        </property>
        <attribute name="title">
         <string>Telnet</string>
@@ -156,6 +181,22 @@
         <property name="bottomMargin">
          <number>0</number>
         </property>
+        <item row="0" column="5">
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Minimum</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_telnet_host">
           <property name="sizePolicy">
@@ -165,27 +206,27 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Host</string>
+           <string>  Host </string>
           </property>
          </widget>
         </item>
         <item row="0" column="1">
          <widget class="QComboBox" name="combo_telnet_host">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="focusPolicy">
-           <enum>Qt::NoFocus</enum>
+           <enum>Qt::TabFocus</enum>
           </property>
           <property name="editable">
            <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
+        <item row="0" column="3">
          <widget class="QLabel" name="label_telnet_port">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
@@ -204,7 +245,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="3">
+        <item row="0" column="4">
          <widget class="QSpinBox" name="edit_telnet_port">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
@@ -232,7 +273,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="4">
+        <item row="0" column="6">
          <widget class="QPushButton" name="button_telnet_connect">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -247,6 +288,22 @@
            <string>Connect</string>
           </property>
          </widget>
+        </item>
+        <item row="0" column="2">
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Minimum</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>

@@ -33,11 +33,11 @@
 			"cwd"    : "${workspaceFolder}/modules",
 		},
 		{
-			"name": "Inject",
+			"name": "Telnet",
 			"type": "python",
 			"request": "launch",
-			"program": "${workspaceFolder}/tools/camflasher/inject.py",
-			"cwd"    : "${workspaceFolder}/tools/camflasher",
+			"program": "${workspaceFolder}/modules/lib/server/telnet.py",
+			"cwd"    : "${workspaceFolder}/modules",
 		},
 		{
 			"name": "Shell",
@@ -45,14 +45,6 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/modules/lib/shell/shell.py",
 			"cwd"    : "${workspaceFolder}/modules",
-		},
-		{
-			"name": "TsNode",
-			"type": "node",
-			"request": "launch",
-			"program": "${workspaceFolder}/modules/www/mlx90640.ts",
-			"preLaunchTask": "tsc: build - tsconfig.json",
-			"outFiles": ["${workspaceFolder}/out/**/*.js"]
 		}
 	]
 }

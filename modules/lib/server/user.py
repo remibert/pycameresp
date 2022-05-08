@@ -34,7 +34,7 @@ class User:
 		return result
 
 	@staticmethod
-	def check(user, password, log=True):
+	def check(user, password, log=True, display=True):
 		""" Check the user and password """
 		User.init()
 
@@ -50,12 +50,12 @@ class User:
 			else:
 				if log is True:
 					User.login_state[0] = False
-					logger.syslog("Login failed, wrong password for user '%s'"%strings.tostrings(user))
+					logger.syslog("Login failed, wrong password for user '%s'"%strings.tostrings(user), display=display)
 		else:
 			if user != b"":
 				if log is True:
 					User.login_state[0] = False
-					logger.syslog("Login failed, unkwnon user '%s'"%strings.tostrings(user))
+					logger.syslog("Login failed, unkwnon user '%s'"%strings.tostrings(user), display=display)
 		return False
 
 	@staticmethod

@@ -1,5 +1,6 @@
 """ Inject files read from github into device, using python prompt """
 import sys
+import time
 import os.path
 import binascii
 import io
@@ -66,42 +67,38 @@ class PythonPrompt:
 		self.data = b""
 		self.device = device
 		self.verbose = verbose
+		# self.verbose = True
 		self.printer  = printer
 
-	def read_byte(self, byte):
-		""" Read byte and analyse response """
-		self.data += byte
-		# self.print(self.data)
-		if self.data[-3:] == b"=> ":
-			raise Exception("Shell already existing")
-		if self.data[-4:] == b">>> ":
-			return self.data
-		elif self.data[-6:] == b"\r\n... ":
-			self.device.write(b"\x0D")
-		return None
+	def read(self, length):
+		""" Read data from device and wait if data not received """
+		result = b""
+		count = 0
+		while len(result) < length and count < 50:
+			data = self.device.read(length - len(result))
+			if data == b"":
+				count += 1
+				time.sleep(0.01)
+			else:
+				result += data
+			if len(result) >= 6:
+				if result[-6:] == b"\r\n>>> ":
+					break
+		if self.verbose:
+			self.print(strings.tostrings(result),end="")
+
+		if len(result) >= 6:
+			if result[-6:] == b"\r\n... ":
+				raise Exception("Abort")
+		return result
 
 	def command(self, cmd="", timeout=None, max_count=256):
 		""" Send command line to python prompt and return result get """
 		if timeout is not None:
 			self.device.timeout = timeout
-		self.data = b""
 		self.device.write(b"%s\x0D"%strings.tobytes(cmd))
-
-		line = b""
-		for _ in range(max_count):
-			data = self.device.read(1)
-			if data != b"":
-				line += data
-				if self.read_byte(data) is not None:
-					break
+		self.data = self.read(max_count)
 		result = self.epurate()
-		if self.verbose:
-			self.print('>>> %s'%cmd)
-		if result is not None:
-			if self.verbose:
-				self.print(result)
-		if self.verbose:
-			self.print(self.data)
 		return result
 
 	def print(self, message, end="\n"):
@@ -152,12 +149,7 @@ class PythonPrompt:
 	def is_python_prompt(self):
 		""" Check if the python prompt available """
 		self.device.write(b"\x0D")
-		line = b""
-		for i in range(6):
-			data = self.device.read(1)
-			if data != b"":
-				line += data
-		if line == b"\r\n>>> ":
+		if self.read(6) == b"\r\n>>> ":
 			return True
 		return False
 
@@ -173,41 +165,46 @@ class PythonPrompt:
 	def copy_file(self, in_file, target_filename):
 		""" Copy file into device with target filename """
 		result = True
-		directory, _ = os.path.split(target_filename)
-		if self.makedir(directory):
-			self.print("  %s"%target_filename, end="")
-			self.command("import binascii")
-			self.command("import machine")
-			self.command('def w(f,d,s): return f.write(binascii.a2b_base64(d)) == s')
-			current_date = None
-			if self.command("f=open('%s','wb')"%target_filename) is None:
-				file_date = in_file.get_date_time()
-				chunk = bytearray(160)
-				size = in_file.get_size()
-				while size > 0:
-					length = in_file.readinto(chunk)
-					size -= length
-					part = binascii.b2a_base64(chunk[:length])
-					if size <= len(chunk):
-						current_date = self.command("machine.RTC().datetime()")
-						year,month,day,hour,minute,second = file_date[:6]
-						if self.command("machine.RTC().datetime((%d,%d,%d,%d,%d,%d,%d,%d))"%(year, month, day, 0, hour, minute, second, 0)) is not None:
+
+		try:
+			directory, _ = os.path.split(target_filename)
+			if self.makedir(directory):
+				self.print("  %s"%target_filename, end="")
+				self.command("import binascii")
+				self.command("import machine")
+				self.command('def w(f,d,s): return f.write(binascii.a2b_base64(d)) == s\r\n')
+				current_date = None
+				if self.command("f=open('%s','wb')"%target_filename) is None:
+					file_date = in_file.get_date_time()
+					chunk = bytearray(160)
+					size = in_file.get_size()
+					while size > 0:
+						length = in_file.readinto(chunk)
+						if size <= len(chunk):
+							current_date = self.command("machine.RTC().datetime()")
+							year,month,day,hour,minute,second = file_date[:6]
+							if self.command("machine.RTC().datetime((%d,%d,%d,%d,%d,%d,%d,%d))"%(year, month, day, 0, hour, minute, second, 0)) is not None:
+								result = False
+								break
+						size -= length
+						part = binascii.b2a_base64(chunk[:length])
+						if self.command('w(f,%s,%d)'%(part, length)) is False:
 							result = False
 							break
-					if self.command('w(f,%s,%d)'%(part, length)) is False:
-						result = False
-						break
-				self.command("f.close()")
-				if current_date is not None:
-					self.command("machine.RTC().datetime(%s)"%repr(current_date))
-			if result:
-				self.print(" Ok")
+					self.command("f.close()")
+					if current_date is not None:
+						self.command("machine.RTC().datetime(%s)"%repr(current_date))
+				if result:
+					self.print(" Ok")
+				else:
+					result = False
+					self.print(" FAILED")
 			else:
 				result = False
-				self.print(" FAILED")
-		else:
+				self.print("! Cannot create directory '%s'"%directory)
+		except Exception as err:
 			result = False
-			self.print("! Cannot create directory '%s'"%directory)
+			self.print(" ABORTED")
 		return result
 
 def get_url_filename(host, path, filename):
@@ -246,7 +243,8 @@ def inject_zip_file(host, path, filename, serial_port, printer=None):
 			with zipfile.ZipFile(io.BytesIO(zip_file),"r") as zip_ref:
 				for file in zip_ref.infolist():
 					file_in = ZipReader(zip_ref.read(file.filename), file.date_time)
-					prompt.copy_file(file_in, file.filename)
+					if prompt.copy_file(file_in, file.filename) is False:
+						break
 			prompt.set_date()
 			result = True
 	else:

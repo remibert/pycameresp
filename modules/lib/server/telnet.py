@@ -6,6 +6,7 @@ import sys
 import socket
 import errno
 from io import IOBase
+import time
 from server.user import User
 from tools import logger,strings
 
@@ -17,6 +18,115 @@ except:
 last_client_socket = None
 server_socket = None
 
+class TelnetLogin:
+	""" Class to manage the username and password """
+	count_failed = [0]
+	def __init__(self, output):
+		""" Constructor """
+		self.output = output
+		if User.is_empty():
+			self.footer()
+			self.state = 2
+		else:
+			self.state = 0
+		self.clean()
+		self.header()
+		self.refresh()
+
+	def header(self):
+		""" Show header """
+		message = b"# Telnet on '%s' started #"%hostname
+		self.output.write(b"\r\n%s\r\n%s\r\n%s\r\n"%(b"#"*len(message), message, b"#"*len(message)))
+
+	def footer(self):
+		""" Show footer """
+		self.output.write(b"\r\n%s\r\n"%(b"-"*30))
+
+	def clean(self):
+		""" Clean the login """
+		self.input_buffer = b""
+		self.input_char   = b""
+		self.password     = b""
+		self.login        = b""
+
+	def input(self, b):
+		""" Input value """
+		# pylint:disable=attribute-defined-outside-init
+		result = None
+		self.input_char += b[0].to_bytes(1,"little")
+
+		# Check if the character is complete
+		if strings.is_key_ended(self.input_char):
+			# If escape sequence detected
+			if self.input_char[0] == 0x1B:
+				# Ignore escape sequence
+				self.input_char = b""
+			# If return detected
+			elif self.input_char[0] == 0x0D or self.input_char[0] == 0x0A:
+				result = self.input_buffer
+				self.input_buffer = b""
+				self.input_char = b""
+			# If delete detected
+			elif self.input_char[0] == 0x7F:
+				if len(self.input_buffer) > 0:
+					self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
+				self.input_char = b""
+			# Else other character
+			else:
+				self.input_buffer += self.input_char
+				self.input_char = b""
+		return result
+
+	def refresh(self):
+		""" Refresh the line displayed """
+		if self.state == 0:
+			self.output.write(strings.tostrings(b"\x1B[2K\rUsername : %s"%self.input_buffer))
+		elif self.state == 1:
+			self.output.write(strings.tostrings(b"\x1B[2K\rPassword : %s"%(b"*"*len(strings.tostrings(self.input_buffer)))))
+
+	def valid(self, buffer):
+		""" Valid data entered """
+		result = False
+		# pylint:disable=attribute-defined-outside-init
+		if self.state == 0:
+			self.login = buffer
+			self.state += 1
+			self.output.write("\n")
+		elif self.state == 1:
+			self.password = buffer
+			self.state += 1
+			self.output.write("\r\n")
+			# If password is a success
+			if User.check(self.login, self.password, display=False):
+				if self.count_failed[0] >> 2:
+					time.sleep(15)
+				self.output.write(b"Login successful\r\n")
+				self.footer()
+				self.state += 1
+				self.count_failed[0] = 0
+				result = True
+			else:
+				self.count_failed[0] += 1
+				duration = 3 + (30*(self.count_failed[0] >> 2))
+				time.sleep(duration)
+				self.output.write(b"Login failed\r\n")
+				self.state = 0
+			self.clean()
+		return result
+
+	def manage(self, character):
+		""" Manage the login """
+		result = False
+		buffer = self.input(character)
+		if buffer is not None:
+			result = self.valid(buffer)
+		self.refresh()
+		return result
+
+	def is_logged(self):
+		""" Indicates if the login successful """
+		return self.state >= 2
+
 # Provide necessary functions for dupterm and replace telnet control characters that come in.
 class TelnetWrapper(IOBase):
 	""" Telnet wrapper class """
@@ -24,11 +134,7 @@ class TelnetWrapper(IOBase):
 		# pylint: disable=super-init-not-called
 		self.socket = sock
 		self.discard_count = 0
-		self.state = 0
-		self.password = b""
-		self.login = b""
-		self.data_entered = False
-		self.get_login()
+		self.login = TelnetLogin(sock)
 
 	def readinto(self, b):
 		""" Read into the buffer """
@@ -56,86 +162,16 @@ class TelnetWrapper(IOBase):
 						return readbytes
 				else:
 					raise
-		if self.state < 3:
-			self.get_login(b)
+		if self.login.is_logged() is False:
+			self.login.manage(b)
 			b[0] = 0
 		return readbytes
-
-	def get_login(self, b=None):
-		""" Get login """
-		global hostname
-		result = b
-		# Init state
-		if self.state == 0:
-			message = b"# Telnet on '%s' started #"%hostname
-			self.socket.write(b"\r\n%s\r\n%s\r\n%s\r\n"%(b"#"*len(message), message, b"#"*len(message)))
-			# If login password not defined
-			if User.is_empty():
-				self.state = 3
-			else:
-				# Display enter password
-				self.socket.write(b"Username :")
-				self.state = 1
-		# Login state
-		elif self.state == 1:
-			# If validation
-			if b[0] == 0x0D or b[0] == 0x0A:
-				if self.data_entered is True:
-					self.socket.write(b"\r\nPassword :")
-					self.data_entered = False
-					self.state = 2
-			# If backspace
-			elif b[0] == 0x7F:
-				if len(self.login) >= 1:
-					self.login = self.login[:-1]
-				self.socket.write("\r"+" "*80)
-				self.socket.write("\rUsername :" + "*"*len(self.login))
-				self.data_entered = True
-			# If character ignored
-			elif b[0] < 0x20 or b[0] > 0x7F:
-				self.data_entered = True
-			else:
-				self.data_entered = True
-				self.login += bytes([b[0]])
-				self.socket.write("*")
-		# Password state
-		elif self.state == 2:
-			# If validation
-			if b[0] == 0x0D or b[0] == 0x0A:
-				if self.data_entered is True:
-					self.data_entered = False
-					# If password is a success
-					if User.check(self.login, self.password):
-						self.state = 3
-						self.password = b""
-						self.login = b""
-						self.socket.write(b"\r\n%s\r\n"%(b"-"*30))
-					else:
-						self.state = 1
-						self.socket.write(b"\n\r\nUsername :")
-						self.password = b""
-						self.login = b""
-			# If backspace
-			elif b[0] == 0x7F:
-				self.data_entered = True
-				if len(self.password) >= 1:
-					self.password = self.password[:-1]
-				self.socket.write("\r"+" "*80)
-				self.socket.write("\rPassword :" + "*"*len(self.password))
-			# If character ignored
-			elif b[0] < 0x20 or b[0] > 0x7F:
-				self.data_entered = True
-			else:
-				self.data_entered = True
-				self.password += bytes([b[0]])
-				self.socket.write("*")
-		return result
 
 	def write(self, data):
 		""" Write data """
 		# we need to write all the data but it's a non-blocking socket
 		# so loop until it's all written eating EAGAIN exceptions
-		if self.state >= 3:
+		if self.login.is_logged():
 			while len(data) > 0:
 				try:
 					written_bytes = self.socket.write(data)

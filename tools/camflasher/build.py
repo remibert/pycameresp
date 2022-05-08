@@ -76,7 +76,7 @@ spec_file = open("build-%(TARGET)s.spec"%globals(),"w")
 spec_file.write(spec%globals())
 spec_file.close()
 
-execute("pyinstaller --log-level=DEBUG --noconfirm --distpath dist/%(TARGET)s --windowed build-%(TARGET)s.spec"%globals())
+execute("pyinstaller --log-level=DEBUG --noconfirm --distpath dist/%(TARGET)s build-%(TARGET)s.spec"%globals())
 
 if platform == "darwin":
 	execute("create-dmg dist/%(TARGET)s/%(NAME)s.dmg dist/%(TARGET)s/%(NAME)s.app --volicon %(ICONS)s"%(globals()))
@@ -86,7 +86,7 @@ with ZipFile(zip_filename, 'w') as myzip:
 	myzip.write("dist/%(TARGET)s/%(EXE)s"%globals(), EXE)
 
 rmtree("build")
-rmtree("dist/%(TARGET)s"%globals())
+# rmtree("dist/%(TARGET)s"%globals())
 remove("build-%(TARGET)s.spec"%globals())
 remove("strings.py")
 remove("filesystem.py")

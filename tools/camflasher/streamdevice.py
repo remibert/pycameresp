@@ -237,7 +237,7 @@ class StreamThread(threading.Thread):
 					self.stream.reset_input_buffer()
 					self.port = port
 
-					self.print("\n\x1B[42;93mOpen serial link %s\x1B[m"%self.port)
+					self.print("\n\x1B[42;93mConnect serial link %s\x1B[m"%self.port)
 			except Exception as err:
 				self.close()
 
@@ -393,9 +393,10 @@ class StreamThread(threading.Thread):
 							self.print("\x1B[42;93mConnected\x1B[m")
 						self.state = self.CONNECTED
 					else:
-						progress = ["/","-","\\","|"]
+						progress = [" |*-----|"," |-*----|"," |--*---|"," |---*--|", " |----*-|", " |-----*|"]
+						self.print(progress[current%len(progress)], end="\r")
 						current += 1
-						self.print(progress[current%len(progress)]*10, end="\r")
+						time.sleep(0.1)
 				else:
 					self.state = self.DISCONNECTED
 			elif self.state == self.CONNECTED:

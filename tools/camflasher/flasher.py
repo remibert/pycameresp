@@ -114,6 +114,10 @@ class Flasher(threading.Thread):
 			result = ""
 		return result
 
+	def is_flashing(self):
+		""" Indicates if the firmware flash is in progress """
+		return self.flashing
+
 	def flasher(self, port, baud, rts_dtr, firmware, erase):
 		""" Flasher of firmware it use the esptool.py command """
 		import esptool

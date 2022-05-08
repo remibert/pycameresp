@@ -42,13 +42,13 @@ class MotionConfig(jsonconfig.JsonConfig):
 		self.stabilization_camera=8
 
 		# Turn on the led flash when the light goes down
-		self.light_compensation = True
+		self.light_compensation = False
 
 		# Notify motion detection or problem to save on sd card
 		self.notify = True
 
 		# Notify motion state change
-		self.notify_state = True
+		self.notify_state = False
 
 		# Permanent detection without notification.
 		# To keep all motion detection in the presence of occupants

@@ -94,19 +94,18 @@ def uptime(text="days"):
 	global up_last, up_total
 	try:
 		# pylint: disable=no-member
-		up = time.ticks_ms()
+		up = time.ticks_ms()//1000
 	except:
-		up = time.time() * 1000
+		up = time.time()
 
 	if up_last > up:
-		up_total += 1^30
+		up_total += (2^30)//1000
 
 	up_last = up
 	up += up_total
 
-	_       = (up%1000)
-	seconds = (up/1000)%60
-	mins    = (up/1000/60)%60
-	hours   = (up/1000/3600)%24
-	days    = (up/1000/86400)
+	seconds = (up)%60
+	mins    = (up/60)%60
+	hours   = (up/3600)%24
+	days    = (up/86400)
 	return "%d %s, %d:%02d:%02d"%(days, strings.tostrings(text),hours,mins,seconds)

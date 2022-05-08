@@ -7,3 +7,4 @@ errors.log
 *.log.3
 *.log.4
 test.txt
+tmp

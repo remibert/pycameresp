@@ -19,7 +19,7 @@ class PresenceConfig(jsonconfig.JsonConfig):
 		self.smartphones = [b"",b"",b"",b"",b""]
 
 		# Notify presence
-		self.notify = True
+		self.notify = False
 
 class Presence:
 	""" Presence detection of smartphones """
