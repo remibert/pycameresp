@@ -36,25 +36,36 @@ async def task_monitoring(task):
 	import uasyncio
 	retry = 0
 	lastError = ""
+	memory_error_count = 0
+	try:
+		while retry < 20:
+			try:
+				while True:
+					if await task():
+						retry = 0
+			except MemoryError as err:
+				lastError = logger.syslog(err, "Memory error")
+				from gc import collect
+				collect()
+				memory_error_count += 1
+				if memory_error_count > 10:
+					logger.syslog("Too many memory error")
+					break
+				retry += 1
+				await uasyncio.sleep_ms(6000)
+			except Exception as err:
+				lastError = logger.syslog(err, "Task error")
+				retry += 1
+				await uasyncio.sleep_ms(6000)
+			logger.syslog("Task retry %d"%retry)
+		logger.syslog("Too many task error reboot")
 
-	while retry < 20:
-		try:
-			while True:
-				if await task():
-					retry = 0
+		from server.server import ServerConfig
+		from server.notifier import Notifier
 
-		except Exception as err:
-			lastError = logger.syslog(err, "Task error")
-			retry += 1
-			await uasyncio.sleep_ms(6000)
-		logger.syslog("Task retry %d"%retry)
-	logger.syslog("Too many task error reboot")
-
-	from server.server import ServerConfig
-	from server.notifier import Notifier
-
-	config = ServerConfig()
-	config.load()
-	from tools import lang
-	await Notifier.notify(lang.reboot_after_many%strings.tobytes(lastError), enabled=config.notify)
-	system.reboot()
+		config = ServerConfig()
+		config.load()
+		from tools import lang
+		await Notifier.notify(lang.reboot_after_many%strings.tobytes(lastError), enabled=config.notify)
+	finally:
+		system.reboot()

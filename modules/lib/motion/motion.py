@@ -532,8 +532,13 @@ class Detection:
 		# If the motion detection activated
 		activated = await self.is_activated()
 		if activated or self.is_pemanent():
-			# Capture motion
-			result = await self.capture(activated)
+			try:
+				# Capture motion
+				result = await self.capture(activated)
+			finally:
+				# Release previously alocated image
+				self.release_image()
+
 		else:
 			if self.motion:
 				self.motion.stop_light()

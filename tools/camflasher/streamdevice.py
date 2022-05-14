@@ -390,7 +390,7 @@ class StreamThread(threading.Thread):
 				if self.stream is not None:
 					if self.stream.is_opened():
 						if isinstance(self.stream, StreamTelnet):
-							self.print("\x1B[42;93mConnected\x1B[m")
+							self.print("\x1B[42;93mConnected waiting for answer\x1B[m")
 						self.state = self.CONNECTED
 					else:
 						progress = [" |*-----|"," |-*----|"," |--*---|"," |---*--|", " |----*-|", " |-----*|"]

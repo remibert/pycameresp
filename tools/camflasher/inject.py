@@ -1,13 +1,14 @@
 """ Inject files read from github into device, using python prompt """
 import sys
 import time
+import queue
+
 import os.path
 import binascii
 import io
 import zipfile
 from re import split
 import requests
-import serial
 from serial.tools import list_ports
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=import-error
@@ -61,45 +62,174 @@ class ZipReader:
 		""" Return the tuple with date and time of file """
 		return self.date_time
 
+class PromptCommand:
+	""" Manage the command entered on python prompt """
+	def __init__(self, command, awaited_response=None):
+		""" Constructor """
+		self.command = command
+		self.response = None
+		self.awaited_response = awaited_response
+
+	def set_response(self, response):
+		""" Set the response completed """
+		self.response = response
+
+	def get_value(self):
+		""" Epurate python response """
+		lines = strings.tostrings(self.response).split("\n")[1:-1]
+		result = []
+		for line in lines:
+			try:
+				result.append(eval(line.strip()))
+			except:
+				result.append(Exception(line.strip()))
+
+		if len(result) == 0:
+			result = None
+		else:
+			result = result[-1]
+		return result
+
+	def is_awaited_response(self):
+		""" Indicates to the expected response """
+		if self.awaited_response is None:
+			return True
+		elif self.awaited_response == self.get_value():
+			return True
+		else:
+			return False
+
+class CommandExecutor:
+	""" Command executor with waiting for response """
+	def __init__(self, device, printer):
+		""" Constructor """
+		self.device           = device
+		self.commands         = queue.Queue()
+		self.responses        = queue.Queue()
+		self.reception_buffer = b""
+		self.written_length   = 0
+		self.printer = printer
+
+	def receive(self):
+		""" Receive data from device """
+		# If data received
+		length = self.device.get_in_waiting()
+		if length > 0:
+			# Add data received to reception buffer
+			self.reception_buffer += self.device.read(length)
+
+		# If one response is complete
+		pos = self.reception_buffer.find(b"\r\n>>> ")
+		if pos >= 0:
+			# Extract response
+			response = self.reception_buffer[:pos+6]
+
+			if self.printer is not None:
+				self.printer(strings.tostrings(response), end="")
+
+			# Remove reponse from reception buffer
+			self.reception_buffer = self.reception_buffer[pos + 6:]
+
+			# If command has been placed
+			if self.commands.empty() is False:
+				# Set the response
+				command = self.commands.get()
+				command.set_response(response)
+
+				# Push response in stack
+				self.responses.put(command)
+
+	def wait_response(self, synchrone, prompt_command):
+		""" Wait response of command """
+		result = None
+		# If synchrone response awaited
+		if synchrone:
+			while True:
+				# Receive response
+				self.receive()
+
+				# If a response is pending
+				if self.responses.empty() is False:
+					# Extract response
+					prompt_response = self.responses.get()
+
+					# Decrease the written data counter
+					self.written_length -= (len(prompt_response.command) + 6)
+
+					# Checks if the response matches the command
+					if id(prompt_response) == id(prompt_command):
+						# Return response
+						result = prompt_response.get_value()
+						break
+					# checks if the response matches to the response awaited
+					elif prompt_response.is_awaited_response() is False:
+						raise Exception("Unexpected response")
+		# Else asynchrone response awaited
+		else:
+			# Receive response
+			self.receive()
+
+			# If a response is pending
+			if self.responses.empty() is False:
+				# Extract response
+				prompt_response = self.responses.get()
+
+				# Decrease the written data counter
+				self.written_length -= (len(prompt_response.command) + 6)
+
+				# checks if the response matches to the response awaited
+				if prompt_response.is_awaited_response() is False:
+					raise Exception("Unexpected response")
+		return result
+
+	def execute(self, command, awaited_response=None, synchrone=False):
+		""" Send command to the reception thread """
+		# Flush responses if too many commands sent
+		while len(command) + self.written_length >= 256:
+			self.wait_response(False, None)
+
+		# Write command
+		self.device.write(b"%s\x0D"%strings.tobytes(command))
+
+		# Calculate the written size approximately (6 is length of "\r\n>>> ")
+		self.written_length += len(command) + 6
+
+		# Create command object
+		prompt_command = PromptCommand(command, awaited_response=awaited_response)
+
+		# Adds the command to the awaiting response list
+		self.commands.put(prompt_command)
+
+		# Wait for a response if needed
+		return self.wait_response(synchrone, prompt_command)
+
+	def wait_python_prompt(self):
+		""" Wait the python prompt """
+		result = False
+		reception_buffer = b""
+		self.device.write(b"\x0D")
+		for i in range(200):
+			length = self.device.get_in_waiting()
+			if length > 0:
+				reception_buffer += self.device.read(length)
+				pos = reception_buffer.find(b"\r\n>>> ")
+				if pos >= 0:
+					result = True
+			else:
+				time.sleep(0.01)
+		return result
+
 class PythonPrompt:
 	""" Class to send command to python prompt """
 	def __init__(self, device, printer=None, verbose=False):
-		self.data = b""
 		self.device = device
-		self.verbose = verbose
-		# self.verbose = True
+		# verbose = True
 		self.printer  = printer
+		self.executor = CommandExecutor(device, self.print if verbose else None)
 
-	def read(self, length):
-		""" Read data from device and wait if data not received """
-		result = b""
-		count = 0
-		while len(result) < length and count < 50:
-			data = self.device.read(length - len(result))
-			if data == b"":
-				count += 1
-				time.sleep(0.01)
-			else:
-				result += data
-			if len(result) >= 6:
-				if result[-6:] == b"\r\n>>> ":
-					break
-		if self.verbose:
-			self.print(strings.tostrings(result),end="")
-
-		if len(result) >= 6:
-			if result[-6:] == b"\r\n... ":
-				raise Exception("Abort")
-		return result
-
-	def command(self, cmd="", timeout=None, max_count=256):
-		""" Send command line to python prompt and return result get """
-		if timeout is not None:
-			self.device.timeout = timeout
-		self.device.write(b"%s\x0D"%strings.tobytes(cmd))
-		self.data = self.read(max_count)
-		result = self.epurate()
-		return result
+	def is_python_prompt(self):
+		""" Check if the python prompt available """
+		return self.executor.wait_python_prompt()
 
 	def print(self, message, end="\n"):
 		""" Print message """
@@ -107,21 +237,6 @@ class PythonPrompt:
 			print(message, end=end)
 		else:
 			self.printer(message, end)
-
-	def epurate(self):
-		""" Epurate python response """
-		lines = strings.tostrings(self.data).split("\n")[1:-1]
-		result = []
-
-		for line in lines:
-			try:
-				result.append(eval(line.strip()))
-			except:
-				result.append(Exception(line.strip()))
-		if len(result) == 0:
-			return None
-		else:
-			return result[-1]
 
 	def makedir(self, directory):
 		""" Make directory recursively """
@@ -134,33 +249,30 @@ class PythonPrompt:
 			directories.append(parts[0])
 			directory = parts[0]
 
-		self.command("import os")
+		self.executor.execute("import os")
 		directories.reverse()
 		for d in directories:
 			if d != "/":
-				res = self.command("os.stat('%s')"%d)
+				res = self.executor.execute("os.stat('%s')"%d, synchrone=True)
 				if type(res) != type((0,)):
-					res = self.command("os.mkdir('%s')"%d)
+					res = self.executor.execute("os.mkdir('%s')"%d, synchrone=True)
 					if res is not None:
 						result = False
 						break
 		return result
 
-	def is_python_prompt(self):
-		""" Check if the python prompt available """
-		self.device.write(b"\x0D")
-		if self.read(6) == b"\r\n>>> ":
-			return True
-		return False
-
 	def set_date(self, date = None):
 		""" Set date time in device """
 		result = True
-		if self.command("import machine") is None:
-			year,month,day,hour,minute,second = strings.local_time(date)[:6]
-			if self.command("machine.RTC().datetime((%d,%d,%d,%d,%d,%d,%d,%d))"%(year, month, day, 0, hour, minute, second, 0)) is not None:
-				result = False
+		self.executor.execute("import machine")
+		year,month,day,hour,minute,second = strings.local_time(date)[:6]
+		if self.executor.execute("machine.RTC().datetime((%d,%d,%d,%d,%d,%d,%d,%d))"%(year, month, day, 0, hour, minute, second, 0), synchrone=True) is not None:
+			result = False
 		return result
+
+	def terminate(self):
+		""" Terminate """
+		self.device.write(b"\x0D")
 
 	def copy_file(self, in_file, target_filename):
 		""" Copy file into device with target filename """
@@ -169,31 +281,32 @@ class PythonPrompt:
 		try:
 			directory, _ = os.path.split(target_filename)
 			if self.makedir(directory):
-				self.print("  %s"%target_filename, end="")
-				self.command("import binascii")
-				self.command("import machine")
-				self.command('def w(f,d,s): return f.write(binascii.a2b_base64(d)) == s\r\n')
+				self.print("  %s "%target_filename, end="")
+				self.executor.execute("import binascii")
+				self.executor.execute("import machine")
+				self.executor.execute('def w(f,d,s): return f.write(binascii.a2b_base64(d)) == s\r\n')
 				current_date = None
-				if self.command("f=open('%s','wb')"%target_filename) is None:
+				if self.executor.execute("f=open('%s','wb')"%target_filename, synchrone=True) is None:
 					file_date = in_file.get_date_time()
 					chunk = bytearray(160)
 					size = in_file.get_size()
 					while size > 0:
 						length = in_file.readinto(chunk)
 						if size <= len(chunk):
-							current_date = self.command("machine.RTC().datetime()")
+							current_date = self.executor.execute("machine.RTC().datetime()", synchrone=True)
 							year,month,day,hour,minute,second = file_date[:6]
-							if self.command("machine.RTC().datetime((%d,%d,%d,%d,%d,%d,%d,%d))"%(year, month, day, 0, hour, minute, second, 0)) is not None:
+							if self.executor.execute("machine.RTC().datetime((%d,%d,%d,%d,%d,%d,%d,%d))"%(year, month, day, 0, hour, minute, second, 0), synchrone=True) is not None:
 								result = False
 								break
 						size -= length
 						part = binascii.b2a_base64(chunk[:length])
-						if self.command('w(f,%s,%d)'%(part, length)) is False:
+						if self.executor.execute('w(f,%s,%d)'%(part, length), awaited_response=True) is False:
 							result = False
 							break
-					self.command("f.close()")
+						self.print(".",end="")
+					self.executor.execute("f.close()", synchrone=True)
 					if current_date is not None:
-						self.command("machine.RTC().datetime(%s)"%repr(current_date))
+						self.executor.execute("machine.RTC().datetime(%s)"%repr(current_date), synchrone=True)
 				if result:
 					self.print(" Ok")
 				else:
@@ -246,6 +359,7 @@ def inject_zip_file(host, path, filename, serial_port, printer=None):
 					if prompt.copy_file(file_in, file.filename) is False:
 						break
 			prompt.set_date()
+			prompt.terminate()
 			result = True
 	else:
 		result = False
@@ -253,16 +367,19 @@ def inject_zip_file(host, path, filename, serial_port, printer=None):
 
 def test():
 	""" Test with server.zip """
+	import streamdevice
 	ports = []
 	for port, a, b in sorted(list_ports.comports()):
 		if not "Bluetooth" in port and not "Wireless" in port and "cu.BLTH" not in port and port != "COM1":
 			ports.append(port)
-	serial_port = serial.Serial(port=ports[0], baudrate=115200, timeout=1)
-	while len(serial_port.read(1)) >= 1:
-		pass
-	serial_port.reset_input_buffer()
-	inject_zip_file(GITHUB_HOST, PYCAMERESP_PATH, "server.zip", serial_port)
-	serial_port.close()
+
+	serial_port = streamdevice.StreamSerial(port=ports[0], baudrate=115200, timeout=2)
+
+	try:
+		inject_zip_file(GITHUB_HOST, PYCAMERESP_PATH, "shell.zip", serial_port)
+
+	finally:
+		serial_port.close()
 
 if __name__ == "__main__":
 	test()

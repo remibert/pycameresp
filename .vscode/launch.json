@@ -26,6 +26,13 @@
 			"args": ["-stdout","-file"]
 		},
 		{
+			"name": "Inject",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/tools/camflasher/inject.py",
+			"cwd": "${workspaceFolder}/tools/camflasher",
+		},
+		{
 			"name": "Editor",
 			"type": "python",
 			"request": "launch",
