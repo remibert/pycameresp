@@ -388,8 +388,8 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <addaction name="action_inject_shell"/>
-    <addaction name="action_inject_server"/>
+    <addaction name="action_upload_shell"/>
+    <addaction name="action_upload_server"/>
    </widget>
    <addaction name="menu_flasher"/>
    <addaction name="menu_tools"/>
@@ -398,7 +398,7 @@
   </widget>
   <action name="action_flash">
    <property name="text">
-    <string>Flash</string>
+    <string>Flash firmware</string>
    </property>
   </action>
   <action name="action_copy">
@@ -436,14 +436,14 @@
     <string> Option</string>
    </property>
   </action>
-  <action name="action_inject_shell">
+  <action name="action_upload_shell">
    <property name="text">
-    <string>Inject shell</string>
+    <string>Upload shell</string>
    </property>
   </action>
-  <action name="action_inject_server">
+  <action name="action_upload_server">
    <property name="text">
-    <string>Inject server</string>
+    <string>Upload server</string>
    </property>
   </action>
  </widget>

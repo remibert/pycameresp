@@ -4,7 +4,7 @@
 import time
 import os
 import io
-from binascii import crc32
+import binascii
 try:
 	import filesystem
 	import strings
@@ -14,9 +14,13 @@ if filesystem.ismicropython():
 	# pylint:disable=import-error
 	import micropython
 
-CHUNK_SIZE=256
+CHUNK_SIZE=192 # The chunk is in base 64 so is 256 in length
 ACK=b"\x06"
 NAK=b"\x15"
+
+def get_b64_size(size):
+	""" Calc size in base64 """
+	return ((size*8)//24)*4 + (4 if ((size*8) % 24) > 0 else 0)
 
 class FileError(Exception):
 	""" File reader exception """
@@ -345,7 +349,7 @@ class FileReader:
 				file = io.BytesIO()
 			else:
 				file = open(filename, "wb")
-			chunk = bytearray(CHUNK_SIZE)
+			chunk = bytearray(get_b64_size(CHUNK_SIZE))
 
 			if size <= 0:
 				send_ack(out_file,ACK)
@@ -353,11 +357,12 @@ class FileReader:
 				while size > 0:
 					count = 0
 					while True:
+						size_to_read = get_b64_size(min(size, CHUNK_SIZE))
 						# Receive content part
 						if filesystem.ismicropython():
-							length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
+							length = in_file.readinto(chunk, size_to_read)
 						else:
-							chunk = bytearray(min(size, CHUNK_SIZE))
+							chunk = bytearray(size_to_read)
 							length = in_file.readinto(chunk)
 
 						if length == 0:
@@ -370,14 +375,17 @@ class FileReader:
 					# Send ack
 					send_ack(out_file,ACK)
 
+					# Convert base64 buffer into binary buffer
+					bin_buffer = binascii.a2b_base64(chunk[:length])
+
 					# Compute crc
-					self.crc_computed = crc32(chunk[:length], self.crc_computed)
+					self.crc_computed = binascii.crc32(bin_buffer, self.crc_computed)
 
 					# Write content part received
-					file.write(chunk[:length])
+					file.write(bin_buffer)
 
 					# Decrease the remaining size
-					size -= length
+					size -= len(bin_buffer)
 		finally:
 			if file is not None:
 				file.close()
@@ -428,14 +436,14 @@ class FileWriter:
 							# Read file part
 							length = file.readinto(chunk)
 
-							# Send part
-							out_file.write(chunk[:length])
+							# Encode in base64 and send chunk
+							out_file.write(binascii.b2a_base64(chunk[:length]).rstrip())
 
 							# Compute the remaining size
 							size -= length
 
 							# Compte crc
-							crc = crc32(chunk[:length], crc)
+							crc = binascii.crc32(chunk[:length], crc)
 
 							# Wait reception ack
 							wait_ack(in_file)
@@ -506,7 +514,7 @@ class ImporterCommand:
 			return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)
 
 	def write(self, file, recursive, in_file, out_file):
-		""" Write exporter command """
+		""" Write download command """
 		out_file.write("࿋".encode("utf8"))
 		wait_ack(in_file)
 		out_file.write(b"# %s\r\n"%file.encode("utf8"))

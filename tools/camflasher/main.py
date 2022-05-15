@@ -440,8 +440,8 @@ class CamFlasher(QMainWindow):
 		self.window.action_about.triggered.connect(self.on_about_clicked)
 		self.window.action_option.triggered.connect(self.on_option_clicked)
 		self.window.chk_rts_dtr.stateChanged.connect(self.on_rts_dtr_changed)
-		self.window.action_inject_shell.triggered.connect(self.on_inject_shell)
-		self.window.action_inject_server.triggered.connect(self.on_inject_server)
+		self.window.action_upload_shell.triggered.connect(self.on_upload_shell)
+		self.window.action_upload_server.triggered.connect(self.on_upload_server)
 		self.window.tabs_link.currentChanged.connect(self.on_tabs_link_changed)
 		self.window.button_telnet_connect.clicked.connect(self.on_telnet_connect)
 		self.window.combo_telnet_host.currentIndexChanged.connect(self.on_telnet_host_changed)
@@ -568,22 +568,22 @@ class CamFlasher(QMainWindow):
 			self.window.combo_telnet_host.setFocus()
 			self.flasher.disconnect()
 
-	def on_inject_server(self):
-		""" On menu inject server clicked """
-		self.inject("server.zip")
+	def on_upload_server(self):
+		""" On menu upload server clicked """
+		self.upload("server.zip")
 
-	def on_inject_shell(self):
-		""" On menu inject shell clicked """
-		self.inject("shell.zip")
+	def on_upload_shell(self):
+		""" On menu upload shell clicked """
+		self.upload("shell.zip")
 
-	def inject(self, filename):
-		""" Inject file from pycameresp github into device """
+	def upload(self, filename):
+		""" Upload file from pycameresp github into device """
 		msg = QMessageBox(parent=self)
 		msg.setIcon(QMessageBox.Icon.Question)
 		msg.setStandardButtons(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes)
-		msg.setText("Do you want to inject the latest version of %s from pycameresp github into the device"%filename)
+		msg.setText("Do you want to upload the latest version of %s from pycameresp github into the device"%filename)
 		if msg.exec() == QMessageBox.StandardButton.Yes:
-			self.flasher.inject(filename)
+			self.flasher.upload(filename)
 
 	def on_option_clicked(self):
 		""" On option menu clicked """

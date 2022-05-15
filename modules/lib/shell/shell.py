@@ -19,8 +19,8 @@ The commands are :
 - uptime      : the amount of time system is running
 - find        : find a file
 - run         : execute python script
-- exporter    : transfer files from device to computer (only available with camflasher)
-- importer    : transfer files from computer to device (only available with camflasher)
+- download    : transfer files from device to computer (only available with camflasher)
+- upload      : transfer files from computer to device (only available with camflasher)
 - edit        : edit a text file
 - exit        : exit of shell
 - gc          : garbage collection
@@ -593,10 +593,10 @@ def check_cam_flasher():
 		return True
 	return False
 
-def importer(file="", recursive=False):
-	""" Importer file from computer to device """
+def upload(file="", recursive=False):
+	""" Upload file from computer to device """
 	if check_cam_flasher():
-		print("Importer start")
+		print("Upload start")
 		try:
 			command = exchange.ImporterCommand(uos.getcwd())
 			command.write(file, recursive, sys.stdin.buffer, sys.stdout.buffer)
@@ -605,10 +605,10 @@ def importer(file="", recursive=False):
 				file_reader = exchange.FileReader()
 				result = file_reader.read(uos.getcwd(), sys.stdin.buffer, sys.stdout.buffer)
 				watchdog.WatchDog.feed()
-			print("Importer end")
+			print("Upload end")
 		except Exception as err:
 			logger.syslog(err, display=False)
-			print("Importer failed")
+			print("Upload failed")
 	else:
 		print("CamFlasher application required for this command")
 
@@ -641,16 +641,16 @@ class Exporter:
 	def show_dir(self, state):
 		""" Indicates if the directory must show """
 
-def exporter(file="", recursive=False):
-	""" Exporter file from device to computer """
+def download(file="", recursive=False):
+	""" Download file from device to computer """
 	if check_cam_flasher():
-		print("Exporter start")
+		print("Download start")
 		try:
 			searchfile(file, recursive, Exporter())
-			print ("Exporter end")
+			print ("Download end")
 		except Exception as err:
 			logger.syslog(err, display=False)
-			print("Exporter failed")
+			print("Download failed")
 	else:
 		print("CamFlasher application required for this command")
 
@@ -863,8 +863,8 @@ shell_commands = \
 	"uptime"     :[uptime                                  ],
 	"find"       :[find            ,"file"                 ],
 	"run"        :[useful.run      ,"filename"             ],
-	"exporter"   :[exporter        ,"file",                  ("-r","recursive",True)],
-	"importer"   :[importer        ,"file",                  ("-r","recursive",True)],
+	"download"   :[download        ,"file",                  ("-r","recursive",True)],
+	"upload"     :[upload          ,"file",                  ("-r","recursive",True)],
 	"edit"       :[edit            ,"file"                 ],
 	"exit"       :[exit                                    ],
 	"gc"         :[gc                                      ],

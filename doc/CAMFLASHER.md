@@ -9,7 +9,7 @@ It offer the possibility to access the esp32 shell, edit files from esp32 and ex
 
 It is also a VT100 console which allows to operate the text editor, and to display colored texts thanks to the VT100 escape sequences. Not all VT100 commands are supported, but the most common ones are available.
 
-Camflasher with shell commands **importer** and **exporter**, allows to inject or extract files easily from the device (6 times faster than rshell copy).
+Camflasher with shell commands **upload** and **download**, allows to upload or download files easily from the device.
 
 
 
@@ -174,4 +174,4 @@ You can change the console display colors, as well as the character font. See Co
 
 ![Option](/images/14_CamFlasher_Option.jpg)
 
-The working directory, allows you to locate the directory on your computer to exchange files. By using the "exporter" command from the shell, you send the files or the file tree to your computer. The "importer" command is used to inject the files located in this working directory onto the device. The "-r" option offers recursion. Wildcard are supported for these commands.
+The working directory, allows you to locate the directory on your computer to exchange files. By using the "download" command from the shell, you send the files or the file tree to your computer. The "upload" command is used to upload the files located in this working directory onto the device. The "-r" option offers recursion. Wildcard are supported for these commands.

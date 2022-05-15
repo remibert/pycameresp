@@ -6,7 +6,7 @@ import sys
 import telnetlib
 import os.path
 import serial
-import inject
+import fileuploader
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
@@ -193,7 +193,7 @@ class StreamThread(threading.Thread):
 		self.WRITE_DATA = 3
 		self.WRITE_FILE = 4
 		self.READ_FILE  = 5
-		self.INJECT_FILE= 6
+		self.UPLOAD_FILE= 6
 		self.QUIT       = 7
 		self.stdout = stdout
 
@@ -321,17 +321,11 @@ class StreamThread(threading.Thread):
 			except Exception as err:
 				self.print("Exporter error")
 
-	def on_inject(self, command, filename):
-		""" Treat inject command to device """
-		if command == self.INJECT_FILE:
-			self.print("\n\x1B[42;93mInject %s\x1B[m"%filename)
-			res = inject.inject_zip_file(inject.GITHUB_HOST, inject.PYCAMERESP_PATH, filename, self.stream, self.print)
-			if res is True:
-				self.print("\x1B[42;93mSuccess\x1B[m")
-			elif res is False:
-				self.print("\x1B[93;101mPrompt python not available\x1B[m")
-			else:
-				self.print("\x1B[93;101mZip on github not reachable\x1B[m")
+	def on_upload(self, command, filename):
+		""" Treat upload command to device """
+		if command == self.UPLOAD_FILE:
+			uploader = fileuploader.PythonUploader(self.print)
+			uploader.upload(self.stream, fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, filename)
 
 	def on_write(self, command, data):
 		""" Treat write command """
@@ -408,7 +402,7 @@ class StreamThread(threading.Thread):
 					self.on_write_file (command, data)
 					self.on_read_file  (command, data)
 					self.on_connect    (command, data)
-					self.on_inject     (command, data)
+					self.on_upload     (command, data)
 					self.on_disconnect (command)
 					self.on_quit       (command)
 				self.receive()
@@ -450,9 +444,9 @@ class StreamThread(threading.Thread):
 		""" Send disconnect command to serial thread """
 		self.send((self.DISCONNECT, None))
 
-	def inject(self, filename):
-		""" Send inject command to serial thread """
-		self.send((self.INJECT_FILE, filename))
+	def upload(self, filename):
+		""" Send upload command to serial thread """
+		self.send((self.UPLOAD_FILE, filename))
 
 	def is_disconnected(self):
 		""" Indicates if the serial port is disconnected """

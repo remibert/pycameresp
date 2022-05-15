@@ -61,14 +61,14 @@ edit        | start editor with selected file
 eval        | evaluation python string
 exec        | execute python string
 exit        | exit of shell
-exporter    | transfer files from device to computer (only available with camflasher)
+download    | transfer files from device to computer (only available with camflasher)
 find        | find a file
 flashinfo   | flash informations
 gc          | garbage collection
 grep        | grep text in many files
 help        | list all command available
 host2ip     | convert hostname in ip address
-importer    | transfer files from computer to device (only available with camflasher)
+upload      | transfer files from computer to device (only available with camflasher)
 ip2host     | convert ip address in hostname
 ll          | list files with details
 ls          | list files

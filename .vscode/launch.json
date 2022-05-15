@@ -29,7 +29,7 @@
 			"name": "Inject",
 			"type": "python",
 			"request": "launch",
-			"program": "${workspaceFolder}/tools/camflasher/inject.py",
+			"program": "${workspaceFolder}/tools/camflasher/fileuploader.py",
 			"cwd": "${workspaceFolder}/tools/camflasher",
 		},
 		{
