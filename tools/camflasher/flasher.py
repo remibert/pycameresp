@@ -4,7 +4,7 @@ import tempfile
 import queue
 import time
 import sys
-import inject
+import fileuploader
 import streamdevice
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
@@ -25,7 +25,7 @@ class Flasher(threading.Thread):
 		self.DISCONNECT      = 5
 		self.DATA_RECEIVED   = 6
 		self.FLASH           = 7
-		self.INJECT_FILE     = 8
+		self.UPLOAD_FILE     = 8
 
 		self.loop = True
 		self.flashing = False
@@ -56,8 +56,8 @@ class Flasher(threading.Thread):
 				self.stream_thread.connect_serial(data)
 			elif command == self.CONNECT_TELNET:
 				self.stream_thread.connect_telnet(data)
-			elif command == self.INJECT_FILE:
-				self.stream_thread.inject(data)
+			elif command == self.UPLOAD_FILE:
+				self.stream_thread.upload(data)
 			elif command == self.DISCONNECT:
 				self.stream_thread.disconnect()
 
@@ -109,7 +109,7 @@ class Flasher(threading.Thread):
 		else:
 			# Else it is standard printing
 			result = data
-		
+
 		if bad_char:
 			result = ""
 		return result
@@ -117,6 +117,10 @@ class Flasher(threading.Thread):
 	def is_flashing(self):
 		""" Indicates if the firmware flash is in progress """
 		return self.flashing
+
+	def print(self, message, end="\n"):
+		""" Print message """
+		print(message, end)
 
 	def flasher(self, port, baud, rts_dtr, firmware, erase):
 		""" Flasher of firmware it use the esptool.py command """
@@ -133,22 +137,21 @@ class Flasher(threading.Thread):
 					break
 				time.sleep(0.1)
 
-			print("\x1B[48;5;229m\x1B[38;5;243m")
 			if type(firmware) == type((0,)):
 				firmware = firmware[0]
-				print("\nDownload last version of %s"%firmware)
-				content = inject.download_last_release(inject.GITHUB_HOST, inject.PYCAMERESP_PATH, firmware)
+				uploader = fileuploader.PythonUploader(self.print)
+				content = uploader.download_last_release(fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, firmware)
 				if content is not None:
 					directory = tempfile.TemporaryDirectory()
 					firmware = "%s/%s"%(directory.name, firmware)
 					file = open(firmware, "wb")
 					file.write(content)
 					file.close()
-					print("\nFirmware download success")
 				else:
 					print("\n\x1B[93;101mFirmware download failed\n\x1B[m")
 					firmware = None
 
+			print("\x1B[48;5;229m\x1B[38;5;243m")
 			if firmware is not None:
 				# Start flasher
 				flash_command = ["--port", port, "--baud", baud, "--chip", "auto", "write_flash", "0x1000", firmware]
@@ -192,9 +195,9 @@ class Flasher(threading.Thread):
 		""" Send receive data to flasher thread """
 		self.command.put((self.DATA_RECEIVED, data))
 
-	def inject(self, filename):
-		""" Send inject command to serial thread """
-		self.command.put((self.INJECT_FILE, filename))
+	def upload(self, filename):
+		""" Send upload command to serial thread """
+		self.command.put((self.UPLOAD_FILE, filename))
 
 	def send_key(self, key):
 		""" Send key command to flasher thread """
