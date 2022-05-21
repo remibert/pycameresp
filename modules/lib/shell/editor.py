@@ -91,7 +91,7 @@ NEW_LINE         = ["\n", "\r"]                          # New line pressed
 
 TOGGLE_MODE      = ["\x14"]                              # Toggle replace/insert mode
 EXIT             = [ESCAPE]                              # Exit
-FIND             = ["\x06"]                              # Find
+FIND             = ["\x06","\x1BOQ"]                              # Find
 FIND_NEXT        = ["\x1bOR"]                            # Find next
 FIND_PREVIOUS    = ["\x1b[1;2R"]                         # Find previous
 GOTO             = ["\x07"]                              # Goto line
@@ -299,7 +299,10 @@ class View:
 						else:
 							self.write(clear_line+part_line.encode("utf8"))
 					else:
-						self.write(clear_line+SELECTION_START+b" "+SELECTION_END)
+						if current_line > sel_line_start and current_line < sel_line_end:
+							self.write(clear_line+SELECTION_START+b" "+SELECTION_END)
+						else:
+							self.write(clear_line)
 			else:
 				part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
 				self.write(clear_line+part_line)
