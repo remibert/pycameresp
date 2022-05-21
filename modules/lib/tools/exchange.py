@@ -356,8 +356,10 @@ class FileReader:
 			else:
 				while size > 0:
 					count = 0
-					while True:
-						size_to_read = get_b64_size(min(size, CHUNK_SIZE))
+					part = b""
+					part_size = get_b64_size(min(size, CHUNK_SIZE))
+					while len(part) < part_size:
+						size_to_read = get_b64_size(min(size, CHUNK_SIZE)) - len(part)
 						# Receive content part
 						if filesystem.ismicropython():
 							length = in_file.readinto(chunk, size_to_read)
@@ -365,18 +367,18 @@ class FileReader:
 							chunk = bytearray(size_to_read)
 							length = in_file.readinto(chunk)
 
+						part += chunk[:length]
 						if length == 0:
 							count += 1
 							time.sleep(0.01)
 							if count > 300:
 								raise FileError("Transmission error")
-						else:
-							break
+
 					# Send ack
 					send_ack(out_file,ACK)
 
 					# Convert base64 buffer into binary buffer
-					bin_buffer = binascii.a2b_base64(chunk[:length])
+					bin_buffer = binascii.a2b_base64(part)
 
 					# Compute crc
 					self.crc_computed = binascii.crc32(bin_buffer, self.crc_computed)

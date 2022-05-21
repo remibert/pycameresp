@@ -11,7 +11,7 @@ sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
 from exchange import FileReader, FileWriter, ImporterCommand
-from filesystem import scandir
+from filesystem import scandir, isdir
 
 
 class FileLogger:
@@ -285,10 +285,10 @@ class StreamThread(threading.Thread):
 			try:
 				command = ImporterCommand(directory)
 				path, pattern, recursive = command.read(self.stream, self.stream)
-				if len(pattern) > 0 and pattern[0] == "/":
-					directory_, pattern_ = os.path.split(os.path.normpath(directory + "/" + pattern))
-				else:
-					directory_, pattern_ = os.path.split(os.path.normpath(directory + "/" + path + "/" + pattern))
+				target_dir = os.path.normpath(directory + "/" + path + "/" + pattern)
+				if isdir(target_dir):
+					target_dir += "/*"
+				directory_, pattern_ = os.path.split(target_dir)
 
 				# If directory can be parsed
 				if directory_.find(os.path.normpath(directory)) == 0 and os.path.exists(directory_):

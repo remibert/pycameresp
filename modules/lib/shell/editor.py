@@ -185,6 +185,8 @@ class View:
 		if line < self.height:
 			self.set_scrolling_region(line +1, self.height+1)
 			self.write(b"\x1B[1S")
+		elif line == self.height:
+			self.write(b"\x1B[%d;1f\x1B[K"%(self.height + 1 + self.top))
 
 	def scroll_part_down(self):
 		""" Scroll the lower part """
@@ -264,6 +266,8 @@ class View:
 				# If the line is completly selected
 				if current_line > sel_line_start and current_line < sel_line_end:
 					part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+					if (len(part_line) == 0):
+						part_line = b" "
 					self.write(clear_line+SELECTION_START+part_line+SELECTION_END)
 				# If the line is partially selected
 				else:
@@ -295,7 +299,7 @@ class View:
 						else:
 							self.write(clear_line+part_line.encode("utf8"))
 					else:
-						self.write(clear_line)
+						self.write(clear_line+SELECTION_START+b" "+SELECTION_END)
 			else:
 				part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
 				self.write(clear_line+part_line)
