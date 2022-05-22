@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!python3
 """ Build standalone executable for camflasher """
 from platform import uname
 from sys import platform

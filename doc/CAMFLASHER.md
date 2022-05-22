@@ -21,34 +21,40 @@ Camflasher with shell commands **upload** and **download**, allows to upload or 
 
 - Download the firmware associated with your device :
 
-	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V6/ESP32CAM-firmware.bin)
+	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V7/ESP32CAM-firmware.bin)
 
-	- [ESP32-NODEMCU, LOLIN32, ESP32 without SPIRAM](https://github.com/remibert/pycameresp/releases/download/V6/GENERIC-firmware.bin)
+	- [ESP32-NODEMCU, LOLIN32, ESP32 without SPIRAM](https://github.com/remibert/pycameresp/releases/download/V7/GENERIC-firmware.bin)
 
-	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V6/GENERIC_SPIRAM-firmware.bin)
+	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V7/GENERIC_SPIRAM-firmware.bin)
 
 - Or download the zip for standard micropython firmware :
 
-	- [Shell with editor for RP2 pico Pi](https://github.com/remibert/pycameresp/releases/download/V6/shell.zip)
+	- [Shell with editor for RP2 pico Pi](https://github.com/remibert/pycameresp/releases/download/V7/shell.zip)
 
-	- [Wifi manager, Http server](https://github.com/remibert/pycameresp/releases/download/V6/server.zip)
+	- [Wifi manager, Http server](https://github.com/remibert/pycameresp/releases/download/V7/server.zip)
 
 - Text editor source files running on python3 and micropython :
 
-	- [Text editor](https://github.com/remibert/pycameresp/releases/download/V6/editor.zip)
+	- [Text editor](https://github.com/remibert/pycameresp/releases/download/V7/editor.zip)
 
 It is possible to run the shell with editor, or the servers on a standard micropython platform. The servers, the wifi manager, requires having enough ram and wifi support (ESP32 with SPIRAM for example). Unzip archive and install it with rshell.
 
 
 
 - Download the camflasher application and unzip it :
-	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V6/CamFlasher_windows_10_64.zip)
+	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V7/CamFlasher_windows_10_64.zip)
 
-	- [CamFlasher for Windows seven 64 bits](https://github.com/remibert/pycameresp/releases/download/V6/CamFlasher_windows_7_64.zip)
+	- [CamFlasher for Windows seven 64 bits](https://github.com/remibert/pycameresp/releases/download/V7/CamFlasher_windows_7_64.zip)
 
-	- [CamFlasher for OSX Big Sur Intel](https://github.com/remibert/pycameresp/releases/download/V6/CamFlasher_osx.zip)
+	- [CamFlasher for OSX Big Sur Intel](https://github.com/remibert/pycameresp/releases/download/V7/CamFlasher_osx.zip)
 
-	- [CamFlasher for Debian x86_64](https://github.com/remibert/pycameresp/releases/download/V6/CamFlasher_linux.zip)
+	- [CamFlasher for Debian 11 x86_64](https://github.com/remibert/pycameresp/releases/download/V7/CamFlasher_linux.zip)
+
+
+On linux to be able to operate without being a super user you must enter the commands :
+
+		- sudo usermod -a -G dialout $USER
+		- sudo chmod 666 /dev/ttyUSB0<br>
 
 - Connect the device to the USB port of your computer.
 
