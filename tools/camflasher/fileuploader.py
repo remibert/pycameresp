@@ -222,7 +222,7 @@ class CommandExecutor:
 		result = False
 		reception_buffer = b""
 		self.device.write(b"\x0D")
-		for i in range(200):
+		for i in range(10):
 			length = self.device.get_in_waiting()
 			if length > 0:
 				reception_buffer += self.device.read(length)
@@ -231,7 +231,10 @@ class CommandExecutor:
 					result = True
 					break
 			else:
-				time.sleep(0.01)
+				time.sleep(0.1)
+				if len(reception_buffer) >= 6 or reception_buffer.find(b"=> ") > 0:
+					result = False
+					break
 		return result
 
 class PythonPrompt:

@@ -13,19 +13,26 @@ from strings import get_utf8_length
 
 class Flasher(threading.Thread):
 	""" Micropython firmware flasher for esp32 """
+	DISCONNECTED      = 0
+	CONNECTING_TELNET = 1
+	TELNET_CONNECTED  = 2
+	SERIAL_CONNECTED  = 3
+	FLASHING          = 4
+
+	CMD_KEY_PRESSED     = 1
+	CMD_QUIT            = 2
+	CMD_CONNECT_SERIAL  = 3
+	CMD_CONNECT_TELNET  = 4
+	CMD_DISCONNECT      = 5
+	CMD_DATA_RECEIVED   = 6
+	CMD_FLASH           = 7
+	CMD_UPLOAD_FILE     = 8
+
 	def __init__(self, stdout, directory):
 		""" Constructor with thread on serial port """
 		threading.Thread.__init__(self)
 		self.command    = queue.Queue()
 
-		self.KEY_PRESSED     = 1
-		self.QUIT            = 2
-		self.CONNECT_SERIAL  = 3
-		self.CONNECT_TELNET  = 4
-		self.DISCONNECT      = 5
-		self.DATA_RECEIVED   = 6
-		self.FLASH           = 7
-		self.UPLOAD_FILE     = 8
 
 		self.loop = True
 		self.flashing = False
@@ -42,23 +49,23 @@ class Flasher(threading.Thread):
 		""" Thread core """
 		while self.loop:
 			command, data = self.command.get()
-			if command == self.QUIT:
+			if command == self.CMD_QUIT:
 				self.stream_thread.quit()
 				self.loop = False
-			elif command == self.KEY_PRESSED:
+			elif command == self.CMD_KEY_PRESSED:
 				self.stream_thread.write(data)
-			elif command == self.DATA_RECEIVED:
+			elif command == self.CMD_DATA_RECEIVED:
 				print(self.decode(data), end="")
-			elif command == self.FLASH:
+			elif command == self.CMD_FLASH:
 				port, baud, rts_dtr, firmware, erase= data
 				self.flasher(port, baud, rts_dtr, firmware, erase)
-			elif command == self.CONNECT_SERIAL:
+			elif command == self.CMD_CONNECT_SERIAL:
 				self.stream_thread.connect_serial(data)
-			elif command == self.CONNECT_TELNET:
+			elif command == self.CMD_CONNECT_TELNET:
 				self.stream_thread.connect_telnet(data)
-			elif command == self.UPLOAD_FILE:
+			elif command == self.CMD_UPLOAD_FILE:
 				self.stream_thread.upload(data)
-			elif command == self.DISCONNECT:
+			elif command == self.CMD_DISCONNECT:
 				self.stream_thread.disconnect()
 
 	def decode(self, data):
@@ -114,10 +121,6 @@ class Flasher(threading.Thread):
 			result = ""
 		return result
 
-	def is_flashing(self):
-		""" Indicates if the firmware flash is in progress """
-		return self.flashing
-
 	def print(self, message, end="\n"):
 		""" Print message """
 		print(message, end)
@@ -169,38 +172,50 @@ class Flasher(threading.Thread):
 
 	def get_state(self):
 		""" Get the current state of the stream """
-		return self.stream_thread.get_state()
+		result = self.CMD_DISCONNECT
+		state = self.stream_thread.get_state()
+		if self.flashing:
+			result = self.FLASHING
+		elif state == self.stream_thread.SERIAL_CONNECTED:
+			result = self.SERIAL_CONNECTED
+		elif state == self.stream_thread.TELNET_CONNECTED:
+			result = self.TELNET_CONNECTED
+		elif state == self.stream_thread.DISCONNECTED:
+			result = self.DISCONNECTED
+		elif state == self.stream_thread.CONNECTING_TELNET:
+			result = self.CONNECTING_TELNET
+		return result
 
 	def connect_serial(self, port, rts_dtr):
 		""" Connect serial link """
-		self.command.put((self.CONNECT_SERIAL, (port, rts_dtr)))
+		self.command.put((self.CMD_CONNECT_SERIAL, (port, rts_dtr)))
 
 	def connect_telnet(self, host, port):
 		""" Connect telnet link """
-		self.command.put((self.CONNECT_TELNET, (host, port)))
+		self.command.put((self.CMD_CONNECT_TELNET, (host, port)))
 
 	def disconnect(self):
 		""" Disconnect link """
-		self.command.put((self.DISCONNECT, None))
+		self.command.put((self.CMD_DISCONNECT, None))
 
 	def flash(self, port, baud, rts_dtr, firmware, erase):
 		""" Send flash command to flasher thread """
-		self.command.put((self.FLASH, (port, baud, rts_dtr, firmware, erase)))
+		self.command.put((self.CMD_FLASH, (port, baud, rts_dtr, firmware, erase)))
 
 	def quit(self):
 		""" Send quit command to flasher thread """
-		self.command.put((self.QUIT,None))
+		self.command.put((self.CMD_QUIT,None))
 
 	def receive(self, data):
 		""" Send receive data to flasher thread """
-		self.command.put((self.DATA_RECEIVED, data))
+		self.command.put((self.CMD_DATA_RECEIVED, data))
 
 	def upload(self, filename):
 		""" Send upload command to serial thread """
-		self.command.put((self.UPLOAD_FILE, filename))
+		self.command.put((self.CMD_UPLOAD_FILE, filename))
 
 	def send_key(self, key):
 		""" Send key command to flasher thread """
 		# If flashing not in progress (in this case the keys are ignored)
 		if self.flashing is False:
-			self.command.put((self.KEY_PRESSED, key))
+			self.command.put((self.CMD_KEY_PRESSED, key))

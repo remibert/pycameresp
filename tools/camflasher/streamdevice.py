@@ -176,6 +176,19 @@ class StreamTelnet:
 
 class StreamThread(threading.Thread):
 	""" Thread of the communication stream with the device """
+	DISCONNECTED      = 0
+	CONNECTING_TELNET = 1
+	TELNET_CONNECTED  = 2
+	SERIAL_CONNECTED  = 3
+
+	CMD_CONNECT_SERIAL = 0
+	CMD_CONNECT_TELNET = 1
+	CMD_DISCONNECT     = 2
+	CMD_WRITE_DATA     = 3
+	CMD_WRITE_FILE     = 4
+	CMD_READ_FILE      = 5
+	CMD_UPLOAD_FILE    = 6
+	CMD_QUIT           = 7
 	def __init__(self, receive_callback, stdout):
 		""" Constructor """
 		threading.Thread.__init__(self)
@@ -187,21 +200,9 @@ class StreamThread(threading.Thread):
 		self.loop = True
 		self.buffer = b""
 
-		self.CONNECT_SERIAL    = 0
-		self.CONNECT_TELNET    = 1
-		self.DISCONNECT = 2
-		self.WRITE_DATA = 3
-		self.WRITE_FILE = 4
-		self.READ_FILE  = 5
-		self.UPLOAD_FILE= 6
-		self.QUIT       = 7
+
 		self.stdout = stdout
-
-		self.DISCONNECTED = 0
-		self.CONNECT_IN_PROGRESS = 1
-		self.CONNECTED = 2
 		self.state = self.DISCONNECTED
-
 		self.start()
 
 	def __del__(self):
@@ -217,7 +218,7 @@ class StreamThread(threading.Thread):
 
 	def on_connect_serial(self, command, data):
 		""" Treat serial connection """
-		if command == self.CONNECT_SERIAL:
+		if command == self.CMD_CONNECT_SERIAL:
 			port, rts_dtr = data
 			self.close()
 			try:
@@ -243,7 +244,7 @@ class StreamThread(threading.Thread):
 
 	def on_connect_telnet(self, command, data):
 		""" Treat telnet connection command """
-		if command == self.CONNECT_TELNET:
+		if command == self.CMD_CONNECT_TELNET:
 			host, port = data
 			self.close()
 			try:
@@ -268,20 +269,20 @@ class StreamThread(threading.Thread):
 
 	def on_quit(self, command):
 		""" Treat quit command """
-		if command == self.QUIT:
+		if command == self.CMD_QUIT:
 			self.loop = False
 			self.close()
 
 	def on_disconnect(self, command):
 		""" Treat disconnect command """
-		if command == self.DISCONNECT:
-			if self.state in [self.CONNECTED, self.CONNECT_IN_PROGRESS]:
+		if command == self.CMD_DISCONNECT:
+			if self.state in [self.TELNET_CONNECTED, self.CONNECTING_TELNET]:
 				self.print("\n\x1B[42;93mDisconnected\x1B[m")
 			self.close()
 
 	def on_write_file(self, command, directory):
 		""" Treat write file command """
-		if command == self.WRITE_FILE:
+		if command == self.CMD_WRITE_FILE:
 			try:
 				command = ImporterCommand(directory)
 				path, pattern, recursive = command.read(self.stream, self.stream)
@@ -311,7 +312,7 @@ class StreamThread(threading.Thread):
 
 	def on_read_file(self, command, directory):
 		""" Treat the read file command """
-		if command == self.READ_FILE:
+		if command == self.CMD_READ_FILE:
 			try:
 				file_reader = FileReader()
 				if file_reader.read(directory, self.stream, self.stream) != -1:
@@ -323,13 +324,13 @@ class StreamThread(threading.Thread):
 
 	def on_upload(self, command, filename):
 		""" Treat upload command to device """
-		if command == self.UPLOAD_FILE:
+		if command == self.CMD_UPLOAD_FILE:
 			uploader = fileuploader.PythonUploader(self.print)
 			uploader.upload(self.stream, fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, filename)
 
 	def on_write(self, command, data):
 		""" Treat write command """
-		if command == self.WRITE_DATA:
+		if command == self.CMD_WRITE_DATA:
 			if self.stream is not None:
 				try:
 					if len(data) > 32:
@@ -372,8 +373,8 @@ class StreamThread(threading.Thread):
 				command, data = self.command.get()
 				self.on_connect(command, data)
 				self.on_quit   (command)
-				self.state = self.CONNECT_IN_PROGRESS
-			elif self.state == self.CONNECT_IN_PROGRESS:
+				self.state = self.CONNECTING_TELNET
+			elif self.state == self.CONNECTING_TELNET:
 				# If command awaited
 				if self.command.qsize() > 0:
 					# read command
@@ -385,7 +386,9 @@ class StreamThread(threading.Thread):
 					if self.stream.is_opened():
 						if isinstance(self.stream, StreamTelnet):
 							self.print("\x1B[42;93mConnected waiting for answer\x1B[m")
-						self.state = self.CONNECTED
+							self.state = self.TELNET_CONNECTED
+						else:
+							self.state = self.SERIAL_CONNECTED
 					else:
 						progress = [" |*-----|"," |-*----|"," |--*---|"," |---*--|", " |----*-|", " |-----*|"]
 						self.print(progress[current%len(progress)], end="\r")
@@ -393,7 +396,7 @@ class StreamThread(threading.Thread):
 						time.sleep(0.1)
 				else:
 					self.state = self.DISCONNECTED
-			elif self.state == self.CONNECTED:
+			elif self.state in [self.TELNET_CONNECTED, self.SERIAL_CONNECTED]:
 				# If command awaited
 				if self.command.qsize() > 0:
 					# read command
@@ -418,35 +421,35 @@ class StreamThread(threading.Thread):
 
 	def quit(self):
 		""" Send quit command to serial thread """
-		self.send((self.QUIT,None))
+		self.send((self.CMD_QUIT,None))
 
 	def write(self, data):
 		""" Send write data command to serial thread """
-		self.send((self.WRITE_DATA,data))
+		self.send((self.CMD_WRITE_DATA,data))
 
 	def write_file(self, directory):
 		""" Send write file command to serial thread """
-		self.send((self.WRITE_FILE,directory))
+		self.send((self.CMD_WRITE_FILE,directory))
 
 	def read_file(self, directory):
 		""" Send read file command to serial thread """
-		self.send((self.READ_FILE,directory))
+		self.send((self.CMD_READ_FILE,directory))
 
 	def connect_serial(self, data):
 		""" Send serial connect command to serial thread """
-		self.send((self.CONNECT_SERIAL, data))
+		self.send((self.CMD_CONNECT_SERIAL, data))
 
 	def connect_telnet(self, data):
 		""" Send telnet connect command to serial thread """
-		self.send((self.CONNECT_TELNET, data))
+		self.send((self.CMD_CONNECT_TELNET, data))
 
 	def disconnect(self):
 		""" Send disconnect command to serial thread """
-		self.send((self.DISCONNECT, None))
+		self.send((self.CMD_DISCONNECT, None))
 
 	def upload(self, filename):
 		""" Send upload command to serial thread """
-		self.send((self.UPLOAD_FILE, filename))
+		self.send((self.CMD_UPLOAD_FILE, filename))
 
 	def is_disconnected(self):
 		""" Indicates if the serial port is disconnected """
