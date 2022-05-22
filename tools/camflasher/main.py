@@ -553,6 +553,10 @@ class CamFlasher(QMainWindow):
 		""" The links tab has changed """
 		settings = get_settings()
 		settings.setValue(TYPE_LINK,self.window.tabs_link.currentIndex())
+		if self.window.tabs_link.currentIndex() == 1 and self.current_state == self.flasher.DISCONNECTED:
+			self.window.combo_telnet_host.setFocus()
+		else:
+			self.window.output.setFocus()
 
 	def on_upload_server(self):
 		""" On menu upload server clicked """
