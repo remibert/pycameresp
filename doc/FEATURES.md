@@ -32,7 +32,6 @@ Below is the list of features supported by the software
 	- Html template engine using <a href="https://jquery.com">jquery</a>, <a href="https://www.w3schools.com/bootstrap4">bootstrap 4</a>
 
 - Micropython firmware patch :
-	- Support ADC for GPIO 0,2,4,12,13,14,15,25,26,27
 	- Support NVS set, get, erase added
 	- Adding reset cause Brownout
 	- Embedding all scripts of this software (Faster loading times, reduce RAM footprint)

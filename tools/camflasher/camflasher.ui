@@ -421,7 +421,7 @@
   </widget>
   <action name="action_flash">
    <property name="text">
-    <string>Flash firmware</string>
+    <string>Flash ESP32 firmware</string>
    </property>
   </action>
   <action name="action_copy">

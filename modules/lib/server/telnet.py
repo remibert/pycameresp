@@ -62,12 +62,15 @@ class TelnetLogin:
 				# Ignore escape sequence
 				self.input_char = b""
 			# If return detected
-			elif self.input_char[0] == 0x0D or self.input_char[0] == 0x0A:
+			elif self.input_char[0] == 0x0D:
 				result = self.input_buffer
 				self.input_buffer = b""
 				self.input_char = b""
+			# If line feed detected
+			elif self.input_char[0] == 0x0A:
+				self.input_char = b""
 			# If delete detected
-			elif self.input_char[0] == 0x7F:
+			elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
 				if len(self.input_buffer) > 0:
 					self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
 				self.input_char = b""

@@ -13,10 +13,12 @@ except:
 		import watchdog
 
 
+MAXINT = 100000000
+
 if filesystem.ismicropython():
 	# pylint:disable=ungrouped-imports
 	# pylint:disable=consider-using-enumerate
-	def getch(raw = True, duration=100000000, interchar=0.05):
+	def getch(raw = True, duration=MAXINT, interchar=0.05):
 		""" Wait a key pressed on keyboard and return it """
 		key = b""
 		watchdog.WatchDog.feed()
@@ -33,6 +35,9 @@ if filesystem.ismicropython():
 			else:
 				if len(key) > 0:
 					break
+				elif delay < MAXINT:
+					break
+
 		try:
 			key = key.decode("utf8")
 		except:
@@ -55,7 +60,7 @@ if filesystem.ismicropython():
 			else:
 				break
 else:
-	def getch(raw = True, duration=100000000, interchar=0.01):
+	def getch(raw = True, duration=MAXINT, interchar=0.01):
 		""" Wait a key pressed on keyboard and return it """
 		return read_keyboard(duration, raw, get_char)
 
@@ -67,7 +72,7 @@ else:
 		""" Get character """
 		if stdins != []:
 			return stdins[0].read()
-		return None
+		return b""
 
 	def test_char(stdins):
 		""" Test a character """
@@ -93,7 +98,7 @@ else:
 
 			if raw:
 				tty.setraw(fd)
-			key = None
+			result = b""
 			try:
 				inp, outp, err = select.select([sys.stdin], [], [], duration)
 			except Exception as err:

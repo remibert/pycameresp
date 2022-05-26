@@ -51,10 +51,10 @@ It is possible to run the shell with editor, or the servers on a standard microp
 	- [CamFlasher for Debian 11 x86_64](https://github.com/remibert/pycameresp/releases/download/V7/CamFlasher_linux.zip)
 
 
-On linux to be able to operate without being a super user you must enter the commands :
+		- On linux to be able to operate without being a super user you must enter the commands :
 
-		- sudo usermod -a -G dialout $USER
-		- sudo chmod 666 /dev/ttyUSB0<br>
+			- sudo usermod -a -G dialout $USER
+			- sudo chmod 666 /dev/ttyUSB0<br>
 
 - Connect the device to the USB port of your computer.
 

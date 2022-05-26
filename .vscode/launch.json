@@ -38,6 +38,7 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/modules/lib/shell/editor.py",
 			"cwd"    : "${workspaceFolder}/modules",
+			"console": "externalTerminal"
 		},
 		{
 			"name": "Telnet",
