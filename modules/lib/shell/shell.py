@@ -596,9 +596,9 @@ def check_cam_flasher():
 def upload(file="", recursive=False):
 	""" Upload file from computer to device """
 	if check_cam_flasher():
-		print("Upload start")
+		print("Upload to device start")
 		try:
-			command = exchange.ImporterCommand(uos.getcwd())
+			command = exchange.UploadCommand(uos.getcwd())
 			command.write(file, recursive, sys.stdin.buffer, sys.stdout.buffer)
 			result = True
 			while result:
@@ -644,7 +644,7 @@ class Exporter:
 def download(file="", recursive=False):
 	""" Download file from device to computer """
 	if check_cam_flasher():
-		print("Download start")
+		print("Download from device start")
 		try:
 			searchfile(file, recursive, Exporter())
 			print ("Download end")

@@ -127,7 +127,7 @@ def refresh_screen_size():
 		except:
 			pass
 
-		size = getch(raw=False, duration=1, interchar=0.2)
+		size = getch(raw=False, duration=2, interchar=0.2)
 		size = size[2:-1].split(";")
 		screen_size = int(size[0]), int(size[1])
 		if screen_size[0] < 5 or screen_size[1] < 5:

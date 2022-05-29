@@ -291,7 +291,7 @@ class FileReader:
 			else:
 				return -1
 
-	def read(self, directory, in_file, out_file=None):
+	def read(self, directory, in_file, out_file=None, printer=None):
 		""" Read the file completly """
 		send_ack(out_file,ACK)
 		try:
@@ -313,7 +313,7 @@ class FileReader:
 					filesystem.makedir(filesystem.split(filename)[0], True)
 
 					# Write file
-					self.write_file(filename, self.size.get(), in_file, out_file)
+					self.write_file(filename, self.size.get(), in_file, out_file, printer)
 
 					# Set time of file
 					try:
@@ -339,9 +339,15 @@ class FileReader:
 			# Enable the Ctr-C
 			if filesystem.ismicropython() and out_file is not None:
 				micropython.kbd_intr(3)
+
+			if printer is not None:
+				if result is True:
+					printer("\r %-40s OK"%self.filename.get())
+				else:
+					printer("\r %-40s FAILED"%self.filename.get())
 		return result
 
-	def write_file(self, filename, size, in_file, out_file):
+	def write_file(self, filename, size, in_file, out_file, printer=None):
 		""" Write the file on disk """
 		file = None
 		try:
@@ -354,10 +360,18 @@ class FileReader:
 			if size <= 0:
 				send_ack(out_file,ACK)
 			else:
+				chunk_id = 0
+				if printer is not None:
+					printer("  %-40s", end="")
 				while size > 0:
 					count = 0
 					part = b""
 					part_size = get_b64_size(min(size, CHUNK_SIZE))
+
+					if printer is not None:
+						chunk_id += 1
+						printer("\r %-40s %s"%(self.filename.get(), ["|","\\","-","/"][chunk_id%4]), end="")
+
 					while len(part) < part_size:
 						size_to_read = get_b64_size(min(size, CHUNK_SIZE)) - len(part)
 						# Receive content part
@@ -395,7 +409,7 @@ class FileReader:
 
 class FileWriter:
 	""" File writer """
-	def write(self, filename, in_file, out_file, directory=None):
+	def write(self, filename, in_file, out_file, directory=None, printer=None):
 		""" Write file """
 		result = False
 
@@ -407,6 +421,12 @@ class FileWriter:
 
 			# Send blank line
 			out_file.write(b"\x0D\x0A")
+
+			chunk_id = 0
+			if printer is not None:
+				chunk_id += 1
+				filename_ = filename.replace(directory, "")
+				printer("\r %-40s %s"%(filename_, ["|","\\","-","/"][chunk_id%4]), end="")
 
 			# Send the filename
 			if directory is not None:
@@ -435,6 +455,9 @@ class FileWriter:
 					with open(filename, "rb") as file:
 						chunk = bytearray(CHUNK_SIZE)
 						while size > 0:
+							if printer is not None:
+								chunk_id += 1
+								printer("\r %-40s %s"%(filename_, ["|","\\","-","/"][chunk_id%4]), end="")
 							# Read file part
 							length = file.readinto(chunk)
 
@@ -458,6 +481,12 @@ class FileWriter:
 
 				# Waits for confirmation that the file has been received wit success or not
 				result = wait_ack(in_file, True)
+
+				if printer is not None:
+					if result is True:
+						printer("\r %-40s OK"%filename_)
+					else:
+						printer("\r %-40s FAILED"%filename_)
 		return result
 
 def wait_ack(in_file, nak=False):
@@ -488,8 +517,8 @@ def send_ack(out_file, buffer):
 	if out_file is not None:
 		out_file.write(buffer)
 
-class ImporterCommand:
-	""" Importer command """
+class UploadCommand:
+	""" Upload command """
 	def __init__(self, directory):
 		""" Constructor """
 		self.pattern   = PatternReader()

@@ -3,26 +3,26 @@
 """ Archiver files functions """
 from tools import logger,filesystem,exchange
 
-def export_files(export_filename, path="./config",pattern="*.json", recursive=False):
-	""" Exports many file into only one file """
+def download_files(download_filename, path="./config",pattern="*.json", recursive=False):
+	""" Download many file into only one file """
 	result = True
 
-	logger.syslog("Export %s"%export_filename)
-	filesystem.remove(export_filename)
+	logger.syslog("Download %s"%download_filename)
+	filesystem.remove(download_filename)
 
 	# Scan directory with pattern
 	_, files = filesystem.scandir(path=path, pattern=pattern, recursive=recursive)
 
 	try:
 		# Open out file
-		out_file = open(export_filename,"wb")
+		out_file = open(download_filename,"wb")
 
 		file_write = exchange.FileWriter()
 		# For all files found
 		for filename in files:
 			# All files except .tmp and sdcard
 			if filename[-4:] != ".tmp" and filename[:4] != "/sd/" and filename[5:] != "./sd/":
-				logger.syslog("  Export '%s'"%(filename))
+				logger.syslog("  Download '%s'"%(filename))
 				if file_write.write(filename, None, out_file) is False:
 					result = False
 					break
@@ -30,33 +30,33 @@ def export_files(export_filename, path="./config",pattern="*.json", recursive=Fa
 		logger.syslog(err)
 		result = False
 	finally:
-		logger.syslog("Export %s"%("success" if result else "failed"))
+		logger.syslog("Download %s"%("success" if result else "failed"))
 		out_file.close()
 	return result
 
-def import_files(import_filename, directory="/"):
-	""" Import files and write all files """
+def upload_files(upload_filename, directory="/"):
+	""" Upload files and write all files """
 	result = True
-	logger.syslog("Import %s"%import_filename)
+	logger.syslog("Upload %s"%upload_filename)
 	try:
-		in_file = open(import_filename,"rb")
+		in_file = open(upload_filename,"rb")
 		if filesystem.ismicropython():
 			simulated = False
 		else:
 			simulated = True
 
-		read_size = filesystem.filesize(import_filename)
+		read_size = filesystem.filesize(upload_filename)
 
 		while in_file.tell() < read_size:
 			file_reader = exchange.FileReader(simulated)
 			res = file_reader.read(directory, in_file)
-			logger.syslog("Import %s %s"%(file_reader.filename.get(), "" if res else "failed"))
+			logger.syslog("  Upload %s %s"%(file_reader.filename.get(), "" if res else "failed"))
 
 	except Exception as err:
 		logger.syslog(err)
 		result = False
 	finally:
-		logger.syslog("Import %s"%("success" if result else "failed"))
+		logger.syslog("Upload %s"%("success" if result else "failed"))
 		in_file.close()
-	filesystem.remove(import_filename)
+	filesystem.remove(upload_filename)
 	return result

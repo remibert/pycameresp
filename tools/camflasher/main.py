@@ -438,6 +438,7 @@ class CamFlasher(QMainWindow):
 		self.window.chk_rts_dtr.stateChanged.connect(self.on_rts_dtr_changed)
 		self.window.action_upload_shell.triggered.connect(self.on_upload_shell)
 		self.window.action_upload_server.triggered.connect(self.on_upload_server)
+		self.window.action_upload_editor.triggered.connect(self.on_upload_editor)
 		self.window.tabs_link.currentChanged.connect(self.on_tabs_link_changed)
 		self.window.button_telnet_connect.clicked.connect(self.on_telnet_connect)
 		self.window.button_serial_open.clicked.connect(self.on_serial_open)
@@ -558,6 +559,10 @@ class CamFlasher(QMainWindow):
 		else:
 			self.window.output.setFocus()
 
+	def on_upload_editor(self):
+		""" On menu upload editor clicked """
+		self.upload("editor.zip")
+
 	def on_upload_server(self):
 		""" On menu upload server clicked """
 		self.upload("server.zip")
@@ -573,7 +578,7 @@ class CamFlasher(QMainWindow):
 		msg.setStandardButtons(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes)
 		msg.setText("Do you want to upload the latest version of %s from pycameresp github into the device"%filename)
 		if msg.exec() == QMessageBox.StandardButton.Yes:
-			self.flasher.upload(filename)
+			self.flasher.upload_prompt(filename)
 
 	def on_option_clicked(self):
 		""" On option menu clicked """

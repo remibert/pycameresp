@@ -33,4 +33,4 @@ excludeds_shell = excludeds + [
 
 useful.zip_dir("%s/shell.zip"%ROOT,MPY_DIRECTORY,  ["*.mpy"], excludeds_shell, True, [["frozen_mpy","lib"]])
 useful.zip_dir("%s/server.zip"%ROOT,MPY_DIRECTORY, ["*.mpy"], excludeds      , True, [["frozen_mpy","lib"]])
-useful.zip_dir("%s/editor.zip"%ROOT,PY_DIRECTORY,  ["*/editor.py","*/filesystem.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py"],[], True, [["shell","editor"],["tools","editor"],["modules",""]])
+useful.zip_dir("%s/editor.zip"%ROOT,PY_DIRECTORY,  ["*/editor.py","*/filesystem.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py"],[], True, [["shell","editor"],["tools","editor"],["modules",""]])

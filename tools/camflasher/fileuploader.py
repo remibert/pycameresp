@@ -364,7 +364,7 @@ class PythonUploader:
 					break
 		return result
 
-	def upload(self, device, host, path, filename):
+	def upload_prompt(self, device, host, path, filename):
 		""" Upload file """
 		self.prompt = PythonPrompt(device)
 		if self.prompt.is_python_prompt() is False:
@@ -377,7 +377,7 @@ class PythonUploader:
 		""" Upload all files contained in zip """
 		if zip_file is not None:
 			try:
-				self.print("\x1B[42;93mUpload start\x1B[m")
+				self.print("\x1B[42;93mUpload to device start\x1B[m")
 				with zipfile.ZipFile(io.BytesIO(zip_file),"r") as zip_ref:
 					for file in zip_ref.infolist():
 						file_in = ZipReader(zip_ref.read(file.filename), file.date_time)
@@ -421,7 +421,7 @@ def test():
 
 	try:
 		uploader = PythonUploader(print)
-		uploader.upload(serial_port, GITHUB_HOST, PYCAMERESP_PATH, "shell.zip")
+		uploader.upload_prompt(serial_port, GITHUB_HOST, PYCAMERESP_PATH, "shell.zip")
 	finally:
 		serial_port.close()
 

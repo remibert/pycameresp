@@ -111,11 +111,11 @@
 			</div>
 			<!--Radio:end-->
 
-			<!--ImportFile:begin-->
-			<input type="file" style="display:none" id="%(id)s" onchange="importFile_%(id)s()" name="%(name)s" accept="%(accept)s" %(disabled)s />
+			<!--UploadFile:begin-->
+			<input type="file" style="display:none" id="%(id)s" onchange="UploadFile_%(id)s()" name="%(name)s" accept="%(accept)s" %(disabled)s />
 			<input type="button" id="label_%(id)s" value="%(text)s" onclick="document.getElementById('%(id)s').click()" class="btn btn-outline-primary " %(disabled)s />
 			<script>
-				function importFile_%(id)s()
+				function UploadFile_%(id)s()
 				{
 					
 					let data = document.getElementById('%(id)s').files[0];
@@ -129,11 +129,11 @@
 					location.reload();
 				}
 			</script>
-			<!--ImportFile:end-->
+			<!--UploadFile:end-->
 			
-			<!--ExportFile:begin-->
+			<!--DownloadFile:begin-->
 			<a href="%(path)s" download="%(filename)s" class="btn btn-outline-primary " name="%(name)s" %(disabled)s>%(text)s</a>
-			<!--ExportFile:end-->
+			<!--DownloadFile:end-->
 
 		</form>
 		<!--Form:end-->

@@ -413,6 +413,7 @@
     </property>
     <addaction name="action_upload_shell"/>
     <addaction name="action_upload_server"/>
+    <addaction name="action_upload_editor"/>
    </widget>
    <addaction name="menu_flasher"/>
    <addaction name="menu_tools"/>
@@ -467,6 +468,11 @@
   <action name="action_upload_server">
    <property name="text">
     <string>Upload server</string>
+   </property>
+  </action>
+  <action name="action_upload_editor">
+   <property name="text">
+    <string>Upload editor</string>
    </property>
   </action>
  </widget>

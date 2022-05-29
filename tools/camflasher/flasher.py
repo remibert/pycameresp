@@ -26,7 +26,7 @@ class Flasher(threading.Thread):
 	CMD_DISCONNECT      = 5
 	CMD_DATA_RECEIVED   = 6
 	CMD_FLASH           = 7
-	CMD_UPLOAD_FILE     = 8
+	CMD_UPLOAD_PROMPT_FILE     = 8
 
 	def __init__(self, stdout, directory):
 		""" Constructor with thread on serial port """
@@ -63,8 +63,8 @@ class Flasher(threading.Thread):
 				self.stream_thread.connect_serial(data)
 			elif command == self.CMD_CONNECT_TELNET:
 				self.stream_thread.connect_telnet(data)
-			elif command == self.CMD_UPLOAD_FILE:
-				self.stream_thread.upload(data)
+			elif command == self.CMD_UPLOAD_PROMPT_FILE:
+				self.stream_thread.upload_prompt(data)
 			elif command == self.CMD_DISCONNECT:
 				self.stream_thread.disconnect()
 
@@ -85,13 +85,13 @@ class Flasher(threading.Thread):
 						if i + length <= len(self.waiting_data):
 							try:
 								char = self.waiting_data[i:i+length].decode("utf-8")
-								# Special char to upload file
+								# Special char to download file
 								if char == "࿊":
-									self.stream_thread.read_file(self.directory)
+									self.stream_thread.download_file(self.directory)
 									char = ""
-								# Special char for download file
+								# Special char for upload file
 								elif char == "࿋":
-									self.stream_thread.write_file(self.directory)
+									self.stream_thread.upload_file(self.directory)
 									char = ""
 								i += length
 							except:
@@ -210,9 +210,9 @@ class Flasher(threading.Thread):
 		""" Send receive data to flasher thread """
 		self.command.put((self.CMD_DATA_RECEIVED, data))
 
-	def upload(self, filename):
+	def upload_prompt(self, filename):
 		""" Send upload command to serial thread """
-		self.command.put((self.CMD_UPLOAD_FILE, filename))
+		self.command.put((self.CMD_UPLOAD_PROMPT_FILE, filename))
 
 	def send_key(self, key):
 		""" Send key command to flasher thread """

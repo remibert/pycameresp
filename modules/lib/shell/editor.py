@@ -15,7 +15,6 @@ All the keyboard shortcuts are at the start of the script.
 On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.
 """
 import sys
-import time
 
 sys.path.append("lib")
 sys.path.append("lib/tools")
@@ -94,16 +93,34 @@ UNINDENT         = ["\x1b[Z"]                            # Unindent
 SELECTION_START = b"\x1B[7m"
 SELECTION_END   = b"\x1B[m"
 
+# Python colorization
+PYTHON_KEYWORDS = b"and as assert break class continue def del elif else except exec finally for from global if import in is lambda None not or pass print raise return try while self as join abs apply bool buffer callable chr cmp coerce compile complex delattr dir dict divmod eval execfile filter float getattr globals hasattr hash hex id input int intern isinstance issubclass len list locals long map max min oct open ord pow range raw_input reduce reload repr round setattr slice str tuple type unichr unicode vars xrange zip with yield True False async await"
+KEYWORD_COLOR  = b"\x1B[38:2:14:14:255m"
+NUMBER_COLOR   = b"\x1B[38:2:14:136:92m"
+STRING_COLOR   = b"\x1B[38:2:177:57:57m"
+NO_COLOR       = b"\x1B[m"
+COMMENT_COLOR  = b"\x1B[38:2:8:131:8m"
+
 class View:
 	""" Class which manage the view of the edit field """
-	def __init__(self, view_height, view_top):
+	def __init__(self, view_height, view_top, extension=None):
 		""" Constructor """
+		keywords = PYTHON_KEYWORDS.split(b" ")
+		keywords.sort()
+		self.lexicon = {}
+		for keyword in keywords:
+			self.lexicon.setdefault(keyword[0],[]).append(keyword)
+
 		self.line     = 0
 		self.column   = 0
 		if view_height is None:
 			self.height   = 20
 		else:
 			self.height             = view_height
+		if extension.lower() == ".py":
+			self.colorize = self.colorize_python
+		else:
+			self.colorize = self.colorize_none
 		self.width                  = 80
 		self.top                    = view_top
 		self.is_refresh_all         = True
@@ -279,16 +296,23 @@ class View:
 
 						# If the selection is on alone line
 						if current_line == sel_line_end and current_line == sel_line_start:
-							self.write(clear_line+part_line[:sel_column_start].encode("utf8")+SELECTION_START+part_line[sel_column_start:sel_column_end].encode("utf8")+SELECTION_END+part_line[sel_column_end:].encode("utf8"))
+							self.write(clear_line)
+							self.colorize(part_line[:sel_column_start].encode("utf8"))
+							self.write(SELECTION_START+part_line[sel_column_start:sel_column_end].encode("utf8")+SELECTION_END)
+							self.colorize(part_line[sel_column_end:].encode("utf8"))
 						# If current line is on the last selection line
 						elif current_line == sel_line_end:
-							self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode("utf8")+SELECTION_END+part_line[sel_column_end:].encode("utf8"))
+							self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode("utf8")+SELECTION_END)
+							self.colorize(part_line[sel_column_end:].encode("utf8"))
 						# If current line is on the first selection line
 						elif current_line == sel_line_start:
-							self.write(clear_line+part_line[:sel_column_start].encode("utf8")+SELECTION_START+part_line[sel_column_start:].encode("utf8")+SELECTION_END)
+							self.write(clear_line)
+							self.colorize(part_line[:sel_column_start].encode("utf8"))
+							self.write(SELECTION_START+part_line[sel_column_start:].encode("utf8")+SELECTION_END)
 						# Else the line is not selected
 						else:
-							self.write(clear_line+part_line.encode("utf8"))
+							self.write(clear_line)
+							self.colorize(part_line.encode("utf8"))
 					else:
 						if current_line >= sel_line_start and current_line <= sel_line_end:
 							self.write(clear_line+SELECTION_START+b" "+SELECTION_END)
@@ -296,7 +320,244 @@ class View:
 							self.write(clear_line)
 			else:
 				part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
-				self.write(clear_line+part_line)
+
+				# self.write(clear_line+part_line)
+				self.write(clear_line)
+				self.colorize(part_line)
+
+	def colorize_none(self, text):
+		""" No colorization """
+		self.write(text)
+
+	def colorize_python(self, text):
+		""" Colorize python file """
+		UNDEFINED=0
+		KEYWORD_IDENTIFICATION=1
+		NUMBER_IDENTIFICATION=4
+		COMMENTARY=5
+		DECIMAL_IDENTIFICATION=6
+		BINARY_NUMBER=7
+		OCTAL_NUMBER=8
+		HEXA_NUMBER=9
+		STRING_STARTED=10
+		STRING_CONTENT=11
+		STRING_ESCAPE=12
+		state = UNDEFINED
+		pos = 0
+		lastpos = 0
+		j = 0
+		previous_char = None
+		for char in text:
+			charactere = char.to_bytes(1,"big")
+			# Word not started
+			if state == UNDEFINED:
+				keyword  = b""
+				keywords = None
+				pos = -1
+				# If a keyword start
+				if char in self.lexicon.keys():
+					pos = j
+					state = KEYWORD_IDENTIFICATION
+					keyword  = charactere
+					keywords = self.lexicon[char]
+				# If decimal number started
+				elif 0x31 <= char <= 0x39:
+					if 0x41 <= previous_char <= 0x5A or 0x61 <= previous_char <= 0x7A or 0x30 <= previous_char <= 0x39 or previous_char == 0x5F:
+						pass
+					else:
+						state = DECIMAL_IDENTIFICATION
+						keyword = charactere
+						pos = j
+				# If base number started
+				elif char == 0x30:
+					if 0x41 <= previous_char <= 0x5A or 0x61 <= previous_char <= 0x7A or 0x30 <= previous_char <= 0x39 or previous_char == 0x5F:
+						pass
+					else:
+						state = NUMBER_IDENTIFICATION
+						keyword = charactere
+						pos = j
+				# If comment detected
+				elif char == 0x23:
+					pos = j
+					state = COMMENTARY
+					self.write(text[lastpos:j]+COMMENT_COLOR+text[j:]+NO_COLOR)
+					lastpos = len(text)
+					break
+				# If string detected
+				elif char == 0x22 or char == 0x27:
+					state = STRING_STARTED
+					keyword = charactere
+					pos = j
+			# If keyword identification started
+			elif state == KEYWORD_IDENTIFICATION:
+				# If a keyword continue
+				if 0x41 <= char <= 0x5A or 0x61 <= char <= 0x7A or char == 0x5F:
+					tmp_keyword = keyword + charactere
+					count = 0
+					for kwd in keywords:
+						if kwd.find(keyword) == 0:
+							count += 1
+					if count > 0:
+						keyword = tmp_keyword
+				else:
+					# If special string detected
+					if (char == 0x27 or char == 0x22) and len(keyword) == 1:
+						# Byte string
+						if keyword[0] == 0x62 or keyword[0] == 0x42:
+							keyword = charactere
+							pos = j
+							state = STRING_STARTED
+						# Regular string
+						elif keyword[0] == 0x52 or keyword[0] == 0x72:
+							keyword = charactere
+							pos = j
+							state = STRING_STARTED
+						# Unicode string
+						elif keyword[0] == 0x55 or keyword[0] == 0x75:
+							keyword = charactere
+							pos = j
+							state = STRING_STARTED
+						else:
+							keyword  = b""
+							state = UNDEFINED
+							keywords = None
+					else:
+						if keyword in keywords:
+							self.write(text[lastpos:pos]+KEYWORD_COLOR+keyword+NO_COLOR)
+							lastpos = j
+							keyword  = b""
+							state = UNDEFINED
+							keywords = None
+						else:
+							keyword  = b""
+							state = UNDEFINED
+							keywords = None
+			# If decimal detected
+			elif state == DECIMAL_IDENTIFICATION:
+				if char >= 0x30 and char <= 0x39 or char == 0x2E:
+					keyword += charactere
+				
+				else:
+					self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
+					lastpos = j
+					state = UNDEFINED
+			# If number detected
+			elif state == NUMBER_IDENTIFICATION:
+				# If hexa number detected
+				if char == 0x58 or char == 0x78:
+					keyword += charactere
+					state = HEXA_NUMBER
+				# If octal number detected
+				elif char == 0x4F or char == 0x6F:
+					keyword += charactere
+					state = OCTAL_NUMBER
+				# If binary number detected
+				elif char == 0x42 or char == 0x62:
+					keyword += charactere
+					state = BINARY_NUMBER
+				else:
+					if char == 0x2E:
+						state = DECIMAL_IDENTIFICATION
+						keyword += charactere
+					elif 0x30 <= char <= 0x39 or 0x41 <= char <= 0x46 or 0x61 <= char <= 0x66 or char == 0x5F:
+						state = UNDEFINED
+						keyword  = b""
+					else:
+						self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
+						lastpos = j
+						state = UNDEFINED
+			# If hexa number
+			elif state == HEXA_NUMBER:
+				# If hexa detected
+				if 0x30 <= char <= 0x39 or 0x41 <= char <= 0x46 or 0x61 <= char <= 0x66:
+					keyword += charactere
+				# If not hexa detected
+				elif 0x47 <= char <= 0x5A or 0x67 <= char <= 0x7A:
+					state = UNDEFINED
+				# If the number ended
+				else:
+					self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
+					lastpos = j
+					state = UNDEFINED
+			# If octal number
+			elif state == OCTAL_NUMBER:
+				# If hexa detected
+				if 0x30 <= char <= 0x37:
+					keyword += charactere
+				# If the number ended
+				else:
+					self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
+					lastpos = j
+					state = UNDEFINED
+			# If binary number
+			elif state == BINARY_NUMBER:
+				# If hexa detected
+				if 0x30 <= char <= 0x31:
+					keyword += charactere
+				# If the number ended
+				else:
+					self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
+					lastpos = j
+					state = UNDEFINED
+			# If string string started
+			elif state == STRING_STARTED:
+				if char == keyword[0]:
+					keyword += charactere
+					if len(keyword) == 3:
+						state = STRING_CONTENT
+				else:
+					if len(keyword) == 2:
+						self.write(text[lastpos:pos]+STRING_COLOR+keyword+NO_COLOR)
+						lastpos = j
+						state = UNDEFINED
+					elif char == 0x5C:
+						keyword += charactere
+						state = STRING_ESCAPE
+					else:
+						keyword += charactere
+						state = STRING_CONTENT
+			# If escape in string
+			elif state == STRING_ESCAPE:
+				keyword += charactere
+				state = STRING_CONTENT
+			# If string content
+			elif state == STRING_CONTENT:
+				# String terminated maybe
+				if keyword[0] == char:
+					keyword += charactere
+					if len(keyword) >= 6:
+						if keyword[:3] == b'"""' or keyword[:3] == b"'''":
+							if keyword[:3] == keyword[-3:]:
+								self.write(text[lastpos:pos]+STRING_COLOR+keyword+NO_COLOR)
+								lastpos = j+1
+								state = UNDEFINED
+						elif keyword[0] == keyword[-1]:
+							self.write(text[lastpos:pos]+STRING_COLOR+keyword+NO_COLOR)
+							lastpos = j+1
+							state = UNDEFINED
+					elif len(keyword) >= 2:
+						if keyword[0] == keyword[-1]:
+							self.write(text[lastpos:pos]+STRING_COLOR+keyword+NO_COLOR)
+							lastpos = j+1
+							state = UNDEFINED
+				elif char == 0x5C:
+					keyword += charactere
+					state = STRING_ESCAPE
+				else:
+					keyword += charactere
+
+			previous_char = char
+			j += 1
+
+		if state in [NUMBER_IDENTIFICATION, HEXA_NUMBER, OCTAL_NUMBER, BINARY_NUMBER, DECIMAL_IDENTIFICATION]:
+			self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
+		elif state == KEYWORD_IDENTIFICATION:
+			if keyword in keywords:
+				self.write(text[lastpos:pos]+KEYWORD_COLOR+keyword+NO_COLOR)
+			else:
+				self.write(text[lastpos:])
+		elif lastpos < len(text):
+			self.write(text[lastpos:])
 
 	def refresh_line(self, selection_start, selection_end):
 		""" Refresh line """
@@ -1553,9 +1814,9 @@ class Text:
 
 class Edit:
 	""" Class which aggregate the View and Text """
-	def __init__(self, view_top=1, view_height=None, read_only=False):
+	def __init__(self, view_top=1, view_height=None, read_only=False, extension=None):
 		""" Constructor """
-		self.view = View(view_height, view_top)
+		self.view = View(view_height, view_top, extension=extension)
 		self.text = Text(read_only)
 		self.text.set_view(self.view)
 		self.view.set_text(self.text)
@@ -1566,7 +1827,7 @@ class Editor:
 		""" Constructor """
 		self.file = filename_
 		self.filename = filesystem.split(filename_)[1]
-		self.edit = Edit(read_only=read_only)
+		self.edit = Edit(read_only=read_only, extension=filesystem.splitext(filename_)[1])
 		self.edit.text.load(filename_)
 		self.is_refresh_header = True
 		self.find_text = None
@@ -1575,6 +1836,10 @@ class Editor:
 		self.loop = None
 		self.key_callback = None
 		self.precedent_callback = None
+		if filesystem.ismicropython() is False:
+			self.trace = open("key.txt","w")
+		else:
+			self.trace = None
 
 		if (not filesystem.exists(filename_) and read_only is True) or filesystem.isdir(filename_):
 			print("Cannot open '%s'"%self.filename)
@@ -1798,12 +2063,16 @@ class Editor:
 		while(self.loop):
 			try:
 				self.refresh()
-				keys = self.get_key(duration=0.2)
+				keys = self.get_key(duration=0.3)
 				if len(keys[0]) == 0:
 					self.is_refresh_header = True
 					self.refresh_header()
 					keys = self.get_key()
 
+				for key in keys:
+					if self.trace is not None:
+						self.trace.write(strings.dump(key, withColor=False) + "\n")
+						self.trace.flush()
 				modified = self.edit.text.modified
 				self.precedent_callback = self.key_callback
 				self.key_callback = None
@@ -1853,4 +2122,5 @@ if __name__ == "__main__":
 		filename = sys.argv[1]
 	else:
 		filename = "editor.txt"
+		filename = "toto.py"
 	edit = Editor(filename, read_only=False)

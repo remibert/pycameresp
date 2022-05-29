@@ -10,7 +10,7 @@ import fileuploader
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
-from exchange import FileReader, FileWriter, ImporterCommand
+from exchange import FileReader, FileWriter, UploadCommand
 from filesystem import scandir, isdir
 
 
@@ -181,14 +181,14 @@ class StreamThread(threading.Thread):
 	TELNET_CONNECTED  = 2
 	SERIAL_CONNECTED  = 3
 
-	CMD_CONNECT_SERIAL = 0
-	CMD_CONNECT_TELNET = 1
-	CMD_DISCONNECT     = 2
-	CMD_WRITE_DATA     = 3
-	CMD_WRITE_FILE     = 4
-	CMD_READ_FILE      = 5
-	CMD_UPLOAD_FILE    = 6
-	CMD_QUIT           = 7
+	CMD_CONNECT_SERIAL     = 0
+	CMD_CONNECT_TELNET     = 1
+	CMD_DISCONNECT         = 2
+	CMD_WRITE_DATA         = 3
+	CMD_UPLOAD_FILE        = 4
+	CMD_DONWLOAD_FILE      = 5
+	CMD_UPLOAD_PROMPT_FILE = 6
+	CMD_QUIT               = 7
 	def __init__(self, receive_callback, stdout):
 		""" Constructor """
 		threading.Thread.__init__(self)
@@ -280,11 +280,11 @@ class StreamThread(threading.Thread):
 				self.print("\n\x1B[42;93mDisconnected\x1B[m")
 			self.close()
 
-	def on_write_file(self, command, directory):
+	def on_upload_file(self, command, directory):
 		""" Treat write file command """
-		if command == self.CMD_WRITE_FILE:
+		if command == self.CMD_UPLOAD_FILE:
 			try:
-				command = ImporterCommand(directory)
+				command = UploadCommand(directory)
 				path, pattern, recursive = command.read(self.stream, self.stream)
 				target_dir = os.path.normpath(directory + "/" + path + "/" + pattern)
 				if isdir(target_dir):
@@ -298,35 +298,28 @@ class StreamThread(threading.Thread):
 					for filename in filenames:
 						file_writer = FileWriter()
 						filename = filename.replace("\\","/")
-						filename_ = filename.replace(directory, "")
-						if file_writer.write(filename, self.stream, self.stream, directory) is True:
-							self.print("  %s"%filename_)
-						else:
-							self.print("  %s bad crc"%filename_)
+						file_writer.write(filename, self.stream, self.stream, directory, self.print)
 				else:
 					self.print("'%s' not found"%(os.path.normpath(path + "/" + pattern)))
 
 				self.stream.write(b"exit\r\n")
 			except Exception as err:
-				self.print("Importer error")
+				self.print("Upload error")
 
-	def on_read_file(self, command, directory):
+	def on_download_file(self, command, directory):
 		""" Treat the read file command """
-		if command == self.CMD_READ_FILE:
+		if command == self.CMD_DONWLOAD_FILE:
 			try:
 				file_reader = FileReader()
-				if file_reader.read(directory, self.stream, self.stream) != -1:
-					self.print("  %s"%file_reader.filename.get())
-				else:
-					self.print("  %s bad crc"%file_reader.filename.get())
+				file_reader.read(directory, self.stream, self.stream, self.print)
 			except Exception as err:
-				self.print("Exporter error")
+				self.print("Download error")
 
-	def on_upload(self, command, filename):
+	def on_upload_prompt(self, command, filename):
 		""" Treat upload command to device """
-		if command == self.CMD_UPLOAD_FILE:
+		if command == self.CMD_UPLOAD_PROMPT_FILE:
 			uploader = fileuploader.PythonUploader(self.print)
-			uploader.upload(self.stream, fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, filename)
+			uploader.upload_prompt(self.stream, fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, filename)
 
 	def on_write(self, command, data):
 		""" Treat write command """
@@ -401,17 +394,17 @@ class StreamThread(threading.Thread):
 				if self.command.qsize() > 0:
 					# read command
 					command,data = self.command.get()
-					self.on_write      (command, data)
-					self.on_write_file (command, data)
-					self.on_read_file  (command, data)
-					self.on_connect    (command, data)
-					self.on_upload     (command, data)
-					self.on_disconnect (command)
-					self.on_quit       (command)
+					self.on_write          (command, data)
+					self.on_upload_file    (command, data)
+					self.on_download_file  (command, data)
+					self.on_connect        (command, data)
+					self.on_upload_prompt  (command, data)
+					self.on_disconnect     (command)
+					self.on_quit           (command)
 				self.receive()
 
 	def send(self, message):
-		""" Send message to serial thread """
+		""" Send message to stream thread """
 		self.command.put(message)
 		if self.stream is not None:
 			try:
@@ -420,36 +413,36 @@ class StreamThread(threading.Thread):
 				pass
 
 	def quit(self):
-		""" Send quit command to serial thread """
+		""" Send quit command to stream thread """
 		self.send((self.CMD_QUIT,None))
 
 	def write(self, data):
-		""" Send write data command to serial thread """
+		""" Send write data command to stream thread """
 		self.send((self.CMD_WRITE_DATA,data))
 
-	def write_file(self, directory):
-		""" Send write file command to serial thread """
-		self.send((self.CMD_WRITE_FILE,directory))
+	def upload_file(self, directory):
+		""" Send upload file command to stream thread """
+		self.send((self.CMD_UPLOAD_FILE,directory))
 
-	def read_file(self, directory):
-		""" Send read file command to serial thread """
-		self.send((self.CMD_READ_FILE,directory))
+	def download_file(self, directory):
+		""" Send download file command to stream thread """
+		self.send((self.CMD_DONWLOAD_FILE,directory))
 
 	def connect_serial(self, data):
-		""" Send serial connect command to serial thread """
+		""" Send serial connect command to stream thread """
 		self.send((self.CMD_CONNECT_SERIAL, data))
 
 	def connect_telnet(self, data):
-		""" Send telnet connect command to serial thread """
+		""" Send telnet connect command to stream thread """
 		self.send((self.CMD_CONNECT_TELNET, data))
 
 	def disconnect(self):
-		""" Send disconnect command to serial thread """
+		""" Send disconnect command to stream thread """
 		self.send((self.CMD_DISCONNECT, None))
 
-	def upload(self, filename):
-		""" Send upload command to serial thread """
-		self.send((self.CMD_UPLOAD_FILE, filename))
+	def upload_prompt(self, filename):
+		""" Send upload file on python prompt to stream thread """
+		self.send((self.CMD_UPLOAD_PROMPT_FILE, filename))
 
 	def is_disconnected(self):
 		""" Indicates if the serial port is disconnected """
