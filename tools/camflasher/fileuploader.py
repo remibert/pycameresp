@@ -1,6 +1,7 @@
 """ Inject files read from github into device, using python prompt """
 import sys
 import time
+import tempfile
 import queue
 import os.path
 import binascii
@@ -14,6 +15,8 @@ sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 import filesystem
 import strings
+import streamdevice
+import vt100
 
 GITHUB_HOST = 'https://github.com'
 PYCAMERESP_PATH = 'remibert/pycameresp/releases'
@@ -217,9 +220,9 @@ class CommandExecutor:
 		# Wait for a response if needed
 		return self.wait_response(synchrone, prompt_command)
 
-	def wait_python_prompt(self):
-		""" Wait the python prompt """
-		result = False
+	def wait_prompt(self):
+		""" Wait the prompt """
+		result = ""
 		reception_buffer = b""
 		self.device.write(b"\x0D")
 		for i in range(10):
@@ -228,12 +231,14 @@ class CommandExecutor:
 				reception_buffer += self.device.read(length)
 				pos = reception_buffer.find(b"\r\n>>> ")
 				if pos >= 0:
-					result = True
+					result = ">>>"
 					break
 			else:
 				time.sleep(0.1)
-				if len(reception_buffer) >= 6 or reception_buffer.find(b"=> ") > 0:
-					result = False
+				if reception_buffer.find(b"=> ") > 0:
+					result = "=>"
+					break
+				elif len(reception_buffer) >= 6:
 					break
 		return result
 
@@ -247,7 +252,11 @@ class PythonPrompt:
 
 	def is_python_prompt(self):
 		""" Check if the python prompt available """
-		return self.executor.wait_python_prompt()
+		return self.executor.wait_prompt() == ">>>"
+
+	def wait_prompt(self):
+		""" Wait the prompt """
+		return self.executor.wait_prompt()
 
 	def print(self, message, end="\n"):
 		""" Print message """
@@ -292,18 +301,18 @@ class PythonPrompt:
 		""" Terminate """
 		self.device.write(b"\x0D")
 
-	def copy_file(self, in_file, target_filename):
+	def copy_file(self, in_file, device_filename):
 		""" Copy file into device with target filename """
 		result = True
 
-		directory, _ = os.path.split(target_filename)
+		directory, _ = os.path.split(device_filename)
 		if self.makedir(directory):
 			progression = 0
 			self.executor.execute("import binascii")
 			self.executor.execute("import machine")
 			self.executor.execute('def w(f,d,s): return f.write(binascii.a2b_base64(d)) == s\r\n')
 			current_date = None
-			if self.executor.execute("f=open('%s','wb')"%target_filename, synchrone=True) is None:
+			if self.executor.execute("f=open('%s','wb')"%device_filename, synchrone=True) is None:
 				file_date = in_file.get_date_time()
 				chunk = bytearray(160)
 				size = in_file.get_size()
@@ -320,17 +329,17 @@ class PythonPrompt:
 					if self.executor.execute('w(f,%s,%d)'%(part, length), awaited_response=True) is False:
 						result = False
 						break
-					self.print("\r  %-40s %s"%(target_filename, ["|","/","-","\\"][progression%4]), end="")
+					self.print("\r  %-40s %s"%(device_filename, ["|","/","-","\\"][progression%4]), end="")
 					progression += 1
 
 				self.executor.execute("f.close()", synchrone=True)
 				if current_date is not None:
 					self.executor.execute("machine.RTC().datetime(%s)"%repr(current_date), synchrone=True)
 			if result:
-				self.print("\r  %-40s OK  "%target_filename)
+				self.print("\r  %-40s OK  "%device_filename)
 			else:
 				result = False
-				self.print("\r  %-40s FAILED  "%target_filename)
+				self.print("\r  %-40s FAILED  "%device_filename)
 		else:
 			result = False
 			self.print("! Cannot create directory '%s'"%directory)
@@ -364,54 +373,103 @@ class PythonUploader:
 					break
 		return result
 
-	def upload_prompt(self, device, host, path, filename):
+	def upload_from_server(self, device, host, path, filename):
 		""" Upload file """
+		if self.check_prompt(device):
+			zip_file = self.download_last_release(host, path, filename)
+			zip_content = tempfile.NamedTemporaryFile(suffix=".zip")
+			zip_content.write(zip_file)
+			self.upload_zip(device, zip_content.name)
+
+	def upload_zip(self, device, zip_filename):
+		""" Upload all files contained in zip """
+		if self.check_prompt(device):
+			self.print(vt100.COLOR_OK+"Upload to device start"+vt100.COLOR_NONE)
+			result = self.prompt_uploader(device, [zip_filename], zip_extract=True)
+			self.display_result(result)
+
+	def prompt_uploader(self, device, filenames, directory="", zip_extract=False):
+		""" Upload file directly on python prompt """
+		result = False
+		if self.check_prompt(device):
+			try:
+				for filename in filenames:
+					result = True
+					# If the content of zip must be extracted
+					if zip_extract and os.path.splitext(filename)[1].lower() == ".zip":
+						with zipfile.ZipFile(filename,"r") as zip_file:
+							for file in zip_file.infolist():
+								file_in = ZipReader(zip_file.read(file.filename), file.date_time)
+								if self.prompt.copy_file(file_in, file.filename) is False:
+									result = False
+									break
+					else:
+						if directory != "":
+							device_filename = filename[len(directory)+1:]
+						else:
+							device_filename = filename
+						in_file = BinaryReader(filename)
+						if self.prompt.copy_file(in_file, device_filename) is False:
+							result = False
+							break
+					if result is False:
+						break
+			except Exception as err:
+				result = False
+		return result
+
+	def upload_files(self, device, filenames, directory="", zip_extract=False):
+		""" Upload all files contained in zip """
+		if self.check_prompt(device):
+			self.print(vt100.COLOR_OK+"Upload to device start"+vt100.COLOR_NONE)
+			result = self.prompt_uploader(device, filenames=filenames, directory=directory, zip_extract=zip_extract)
+			self.display_result(result)
+
+	def wait_prompt(self, device):
+		""" Get the current prompt """
+		self.prompt = PythonPrompt(device)
+		return self.prompt.wait_prompt()
+
+	def check_prompt(self, device):
+		""" Check the python prompt """
+		result = False
 		self.prompt = PythonPrompt(device)
 		if self.prompt.is_python_prompt() is False:
-			self.print("\x1B[93;101mPrompt python not available\x1B[m")
+			self.print(vt100.COLOR_FAILED+"Prompt python not available"+vt100.COLOR_NONE)
 		else:
-			zip_file = self.download_last_release(host, path, filename)
-			self.upload_zip(zip_file)
+			result = True
+		return result
 
-	def upload_zip(self, zip_file):
-		""" Upload all files contained in zip """
-		if zip_file is not None:
-			try:
-				self.print("\x1B[42;93mUpload to device start\x1B[m")
-				with zipfile.ZipFile(io.BytesIO(zip_file),"r") as zip_ref:
-					for file in zip_ref.infolist():
-						file_in = ZipReader(zip_ref.read(file.filename), file.date_time)
-						if self.prompt.copy_file(file_in, file.filename) is False:
-							break
-				self.prompt.set_date()
-				self.print("\x1B[42;93mUpload success\x1B[m")
-				self.prompt.terminate()
-			except Exception as err:
-				self.print("\x1B[93;101mUpload failed\x1B[m")
-				self.prompt.terminate()
+	def display_result(self, state):
+		""" Display the upload result """
+		if state is True:
+			self.prompt.set_date()
+			self.print(vt100.COLOR_OK+"Upload success"+vt100.COLOR_NONE)
+		else:
+			self.print(vt100.COLOR_FAILED+"Upload failed"+vt100.COLOR_NONE)
+		self.prompt.terminate()
 
 	def download_last_release(self, host, path, filename):
 		""" Download file last release of file from github """
 		result   = None
 		filepath = None
 		try:
-			self.print("\n\x1B[42;93mFind the latest version of %s\x1B[m"%filename)
+			self.print("\n"+vt100.COLOR_OK+"Find the latest version of %s"%filename+vt100.COLOR_NONE)
 			filepath = self.get_url_filename(host, path, filename)
 		except Exception as err:
-			self.print("\x1B[93;101mUnable to find the latest version\x1B[m")
+			self.print(vt100.COLOR_FAILED+"Unable to find the latest version"+vt100.COLOR_NONE)
 
 		if filepath is not None:
 			try:
-				self.print("\x1B[42;93mDownload %s\x1B[m"%filepath)
+				self.print(vt100.COLOR_OK+"Download %s"%filepath+vt100.COLOR_NONE)
 				response = requests.get(host + filepath, allow_redirects=True)
 				result = response.content
 			except Exception as err:
-				self.print("\x1B[93;101mDownload failed\x1B[m")
+				self.print(vt100.COLOR_FAILED+"Download failed"+vt100.COLOR_NONE)
 		return result
 
 def test():
 	""" Test with server.zip """
-	import streamdevice
 	ports = []
 	for port, a, b in sorted(list_ports.comports()):
 		if not "Bluetooth" in port and not "Wireless" in port and "cu.BLTH" not in port and port != "COM1":
@@ -421,7 +479,7 @@ def test():
 
 	try:
 		uploader = PythonUploader(print)
-		uploader.upload_prompt(serial_port, GITHUB_HOST, PYCAMERESP_PATH, "shell.zip")
+		uploader.upload_from_server(serial_port, GITHUB_HOST, PYCAMERESP_PATH, "shell.zip")
 	finally:
 		serial_port.close()
 

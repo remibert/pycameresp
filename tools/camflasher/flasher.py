@@ -6,6 +6,7 @@ import time
 import sys
 import fileuploader
 import streamdevice
+import vt100
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
@@ -19,21 +20,20 @@ class Flasher(threading.Thread):
 	SERIAL_CONNECTED  = 3
 	FLASHING          = 4
 
-	CMD_KEY_PRESSED     = 1
-	CMD_QUIT            = 2
-	CMD_CONNECT_SERIAL  = 3
-	CMD_CONNECT_TELNET  = 4
-	CMD_DISCONNECT      = 5
-	CMD_DATA_RECEIVED   = 6
-	CMD_FLASH           = 7
-	CMD_UPLOAD_PROMPT_FILE     = 8
+	CMD_KEY_PRESSED        = 1
+	CMD_QUIT               = 2
+	CMD_CONNECT_SERIAL     = 3
+	CMD_CONNECT_TELNET     = 4
+	CMD_DISCONNECT         = 5
+	CMD_DATA_RECEIVED      = 6
+	CMD_FLASH              = 7
+	CMD_UPLOAD_FROM_SERVER = 8
+	CMD_UPLOAD_FILES       = 10
 
 	def __init__(self, stdout, directory):
 		""" Constructor with thread on serial port """
 		threading.Thread.__init__(self)
 		self.command    = queue.Queue()
-
-
 		self.loop = True
 		self.flashing = False
 		self.waiting_data = b""
@@ -63,8 +63,10 @@ class Flasher(threading.Thread):
 				self.stream_thread.connect_serial(data)
 			elif command == self.CMD_CONNECT_TELNET:
 				self.stream_thread.connect_telnet(data)
-			elif command == self.CMD_UPLOAD_PROMPT_FILE:
-				self.stream_thread.upload_prompt(data)
+			elif command == self.CMD_UPLOAD_FROM_SERVER:
+				self.stream_thread.upload_from_server(data)
+			elif command == self.CMD_UPLOAD_FILES:
+				self.stream_thread.upload_files(data)
 			elif command == self.CMD_DISCONNECT:
 				self.stream_thread.disconnect()
 
@@ -140,6 +142,7 @@ class Flasher(threading.Thread):
 					break
 				time.sleep(0.1)
 
+			print("\x1B[1;1f\x1B[2J")
 			if type(firmware) == type((0,)):
 				firmware = firmware[0]
 				uploader = fileuploader.PythonUploader(self.print)
@@ -160,11 +163,11 @@ class Flasher(threading.Thread):
 				flash_command = ["--port", port, "--baud", baud, "--chip", "auto", "write_flash", "0x1000", firmware]
 				if erase:
 					flash_command.append("--erase-all")
-				print("\nesptool.py %s" % " ".join(flash_command))
+				print("esptool.py %s" % " ".join(flash_command))
 				esptool.main(flash_command)
-				print("\n\x1B[42;93mFlashed with success. Remove strap and press reset button\x1B[m")
+				print("\n"+vt100.COLOR_OK+"Flashed with success. Remove strap and press reset button"+vt100.COLOR_NONE)
 		except Exception as err:
-			print("\n\x1B[93;101mFlash failed\n\x1B[m")
+			print("\n"+vt100.COLOR_FAILED+"Flash failed"+vt100.COLOR_NONE)
 
 		# Connect serial link
 		self.stream_thread.connect_serial((port, rts_dtr))
@@ -210,9 +213,14 @@ class Flasher(threading.Thread):
 		""" Send receive data to flasher thread """
 		self.command.put((self.CMD_DATA_RECEIVED, data))
 
-	def upload_prompt(self, filename):
-		""" Send upload command to serial thread """
-		self.command.put((self.CMD_UPLOAD_PROMPT_FILE, filename))
+	def upload_from_server(self, filename):
+		""" Send upload zip file from server """
+		self.command.put((self.CMD_UPLOAD_FROM_SERVER, filename))
+
+	def upload_files(self, filenames):
+		""" Send upload files """
+		self.command.put((self.CMD_UPLOAD_FILES, filenames))
+
 
 	def send_key(self, key):
 		""" Send key command to flasher thread """

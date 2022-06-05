@@ -18,6 +18,10 @@ import socket
 import ipaddress
 from pathlib import Path
 from platform import uname
+sys.path.append("../../modules/lib/tools")
+# pylint:disable=import-error
+# pylint:disable=wrong-import-position
+
 try:
 	from PyQt6 import uic
 	from PyQt6.QtCore import QTimer, QEvent, Qt, QSettings, QCoreApplication
@@ -438,7 +442,6 @@ class CamFlasher(QMainWindow):
 		self.window.chk_rts_dtr.stateChanged.connect(self.on_rts_dtr_changed)
 		self.window.action_upload_shell.triggered.connect(self.on_upload_shell)
 		self.window.action_upload_server.triggered.connect(self.on_upload_server)
-		self.window.action_upload_editor.triggered.connect(self.on_upload_editor)
 		self.window.tabs_link.currentChanged.connect(self.on_tabs_link_changed)
 		self.window.button_telnet_connect.clicked.connect(self.on_telnet_connect)
 		self.window.button_serial_open.clicked.connect(self.on_serial_open)
@@ -453,6 +456,8 @@ class CamFlasher(QMainWindow):
 		self.timer_refresh_port = QTimer(active=True, interval=1000)
 		self.timer_refresh_port.timeout.connect(self.on_refresh_port)
 		self.timer_refresh_port.start()
+
+		self.window.setAcceptDrops(True)
 
 	def update_font(self):
 		""" Update console font """
@@ -535,7 +540,7 @@ class CamFlasher(QMainWindow):
 		size = self.window.output.fontMetrics().size(Qt.TextFlag.TextWordWrap,line)
 
 		# Deduce the size of console visible in the window
-		width  = (self.window.output.contentsRect().width()  * 200)// size.width() -  1
+		width  = (self.window.output.contentsRect().width()  * 200)// size.width() -  2
 		height = int((self.window.output.contentsRect().height() * 200)/ size.height() - 0.3)
 
 		self.hide_size = 0
@@ -559,26 +564,59 @@ class CamFlasher(QMainWindow):
 		else:
 			self.window.output.setFocus()
 
-	def on_upload_editor(self):
-		""" On menu upload editor clicked """
-		self.upload("editor.zip")
-
 	def on_upload_server(self):
 		""" On menu upload server clicked """
-		self.upload("server.zip")
+		self.upload_from_server("server.zip")
 
 	def on_upload_shell(self):
 		""" On menu upload shell clicked """
-		self.upload("shell.zip")
+		self.upload_from_server("shell.zip")
 
-	def upload(self, filename):
+	def upload_from_server(self, filename):
 		""" Upload file from pycameresp github into device """
 		msg = QMessageBox(parent=self)
 		msg.setIcon(QMessageBox.Icon.Question)
 		msg.setStandardButtons(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes)
 		msg.setText("Do you want to upload the latest version of %s from pycameresp github into the device"%filename)
 		if msg.exec() == QMessageBox.StandardButton.Yes:
-			self.flasher.upload_prompt(filename)
+			self.flasher.upload_from_server(filename)
+
+	def dragEnterEvent(self, e):
+		""" Drag enter event received """
+		self.dragMoveEvent(e)
+
+	def dragMoveEvent(self, e):
+		""" Drag move event received """
+		if e.mimeData().hasUrls():
+			e.accept()
+		else:
+			e.ignore()
+
+	def dropEvent(self, e):
+		if e.mimeData().hasUrls():
+			filenames = []
+
+
+			zip_detected = False
+			for file in e.mimeData().urls():
+				filename = file.toLocalFile()
+				if os.path.splitext(filename)[1].lower() == ".zip":
+					zip_detected = True
+				filenames.append(filename)
+
+			zip_extract = False
+			if zip_detected:
+				msg = QMessageBox(parent=self)
+				msg.setIcon(QMessageBox.Icon.Question)
+				msg.setStandardButtons(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes)
+				msg.setText("Do you want to extract the contents of the zip in the device ?")
+				if msg.exec() == QMessageBox.StandardButton.Yes:
+					zip_extract = True
+
+			self.flasher.upload_files((filenames, zip_extract))
+			self.show()
+			getattr(self, "raise")()
+			self.activateWindow()
 
 	def on_option_clicked(self):
 		""" On option menu clicked """

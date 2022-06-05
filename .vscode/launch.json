@@ -3,36 +3,6 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Pycameresp",
-			"type": "python",
-			"request": "launch",
-			"program": "${workspaceFolder}/modules/main.py",
-			"cwd"    : "${workspaceFolder}/modules",
-			"justMyCode": false
-		},
-		{
-			"name": "CamFlasher",
-			"type": "python",
-			"request": "launch",
-			"program": "${workspaceFolder}/tools/camflasher/main.py",
-			"cwd": "${workspaceFolder}/tools/camflasher",
-		},
-		{
-			"name": "CamFlasher with trace",
-			"type": "python",
-			"request": "launch",
-			"program": "${workspaceFolder}/tools/camflasher/main.py",
-			"cwd": "${workspaceFolder}/tools/camflasher",
-			"args": ["-stdout","-file"]
-		},
-		{
-			"name": "Inject",
-			"type": "python",
-			"request": "launch",
-			"program": "${workspaceFolder}/tools/camflasher/fileuploader.py",
-			"cwd": "${workspaceFolder}/tools/camflasher",
-		},
-		{
 			"name": "Editor",
 			"type": "python",
 			"request": "launch",
@@ -41,17 +11,35 @@
 			"console": "externalTerminal"
 		},
 		{
-			"name": "Telnet",
+			"name": "CamFlasher",
 			"type": "python",
 			"request": "launch",
-			"program": "${workspaceFolder}/modules/lib/server/telnet.py",
-			"cwd"    : "${workspaceFolder}/modules",
+			"program": "${workspaceFolder}/tools/camflasher/main.py",
+			"cwd": "${workspaceFolder}/tools/camflasher",
+			//"args": ["-stdout","-file"]
 		},
 		{
 			"name": "Shell",
 			"type": "python",
 			"request": "launch",
 			"program": "${workspaceFolder}/modules/lib/shell/shell.py",
+			"cwd"    : "${workspaceFolder}/modules",
+			"args": ["${userHome}/Downloads"],
+			"console": "externalTerminal"
+		},
+		{
+			"name": "Pycameresp",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/modules/main.py",
+			"cwd"    : "${workspaceFolder}/modules",
+			"justMyCode": false
+		},
+		{
+			"name": "Telnet",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/modules/lib/server/telnet.py",
 			"cwd"    : "${workspaceFolder}/modules",
 		}
 	]

@@ -53,26 +53,52 @@ import uos
 import machine
 from tools import useful,logger,sdcard,filesystem,exchange,info,strings,terminal,watchdog
 
+stdout_redirected = None
+
+def print_(message, end=None):
+	""" Redirect the print to file """
+	global stdout_redirected
+	if stdout_redirected is None:
+		if end is None:
+			print(message)
+		else:
+			print(message, end=end)
+	else:
+		stdout_redirected.write(message)
+		if end is None:
+			stdout_redirected.write("\n")
+		else:
+			stdout_redirected.write(end)
+
+def get_screen_size():
+	""" Return the screen size and check if output redirected """
+	global stdout_redirected
+	if stdout_redirected is None:
+		height, width = terminal.get_screen_size()
+	else:
+		height, width = terminal.MAXINT, 80
+	return height, width
+
 def cd(directory = "/"):
 	""" Change directory """
 	try:
 		uos.chdir(filesystem.normpath(directory))
 	except:
 		if directory != ".":
-			print("No such file or directory '%s'"%directory)
+			print_("No such file or directory '%s'"%directory)
 
 def pwd():
 	""" Display the current directory """
-	print("%s"%uos.getcwd())
+	print_("%s"%uos.getcwd())
 
 def mkdir(directory, recursive=False, quiet=False):
 	""" Make directory """
 	try:
 		if quiet is False:
-			print("mkdir '%s'"%directory)
+			print_("mkdir '%s'"%directory)
 		filesystem.makedir(filesystem.normpath(directory), recursive)
 	except:
-		print("Cannot mkdir '%s'"%directory)
+		print_("Cannot mkdir '%s'"%directory)
 
 def removedir(directory, force=False, quiet=False, simulate=False, ignore_error=False):
 	""" Remove directory """
@@ -82,10 +108,10 @@ def removedir(directory, force=False, quiet=False, simulate=False, ignore_error=
 		if (filesystem.ismicropython() or force) and simulate is False:
 			uos.rmdir(directory)
 		if quiet is False:
-			print("rmdir '%s'"%(directory))
+			print_("rmdir '%s'"%(directory))
 	except:
 		if ignore_error is False:
-			print("rmdir '%s' not removed"%(directory))
+			print_("rmdir '%s' not removed"%(directory))
 
 def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False, ignore_error=False):
 	""" Remove directory """
@@ -114,7 +140,7 @@ def mv(source, destination):
 	try:
 		uos.rename(filesystem.normpath(source),filesystem.normpath(destination))
 	except:
-		print("Cannot mv '%s'->'%s'"%(source,destination))
+		print_("Cannot mv '%s'->'%s'"%(source,destination))
 
 def copyfile(src,dst,quiet):
 	""" Copy file """
@@ -128,7 +154,7 @@ def copyfile(src,dst,quiet):
 		src_file = open(src, 'rb')
 		dst_file = open(dst, 'wb')
 		if quiet is False:
-			print("cp '%s' -> '%s'"%(src,dst))
+			print_("cp '%s' -> '%s'"%(src,dst))
 		while True:
 			buf = src_file.read(256)
 			if len(buf) > 0:
@@ -138,7 +164,7 @@ def copyfile(src,dst,quiet):
 		src_file.close()
 		dst_file.close()
 	except:
-		print("Cannot cp '%s' -> '%s'"%(src, dst))
+		print_("Cannot cp '%s' -> '%s'"%(src, dst))
 
 def cp(source, destination, recursive=False, quiet=False):
 	""" Copy file command """
@@ -165,9 +191,9 @@ def rmfile(filename, quiet=False, force=False, simulate=False):
 		if (filesystem.ismicropython() or force) and simulate is False:
 			uos.remove(filesystem.normpath(filename))
 		if quiet is False:
-			print("rm '%s'"%(filename))
+			print_("rm '%s'"%(filename))
 	except:
-		print("rm '%s' not removed"%(filename))
+		print_("rm '%s' not removed"%(filename))
 
 def rm(file, recursive=False, quiet=False, force=False, simulate=False):
 	""" Remove file command """
@@ -191,7 +217,7 @@ def rm(file, recursive=False, quiet=False, force=False, simulate=False):
 			path, pattern = filesystem.split(file)
 
 		if path is None:
-			print("Cannot rm '%s'"%file)
+			print_("Cannot rm '%s'"%file)
 		else:
 			dirs, filenames = filesystem.scandir(path, pattern, recursive)
 			directories += dirs
@@ -210,7 +236,7 @@ class LsDisplayer:
 	""" Ls displayer class """
 	def __init__(self, path, showdir, long):
 		""" Constructor """
-		self.height, self.width = terminal.get_screen_size()
+		self.height, self.width = get_screen_size()
 		self.count = 1
 		self.long = long
 		self.path = path
@@ -280,34 +306,38 @@ def searchfile(file, recursive, obj = None):
 				obj.show_dir(False)
 			_, filenames = filesystem.scandir(path, pattern, recursive, obj)
 	except Exception as err:
-		print(err)
+		print_(err)
 	if len(filenames) == 0 and file != "" and file != ".":
-		print("%s : No such file or directory"%file)
+		print_("%s : No such file or directory"%file)
 	return filenames
 
 def find(file):
 	""" Find a file in directories """
 	filenames = searchfile(file, True)
 	for filename in filenames:
-		print(filename)
+		print_(filename)
 
 def print_part(message, width, height, count):
 	""" Print a part of text """
+	global stdout_redirected
 	if isinstance(message , bytes):
 		message = message.decode("utf8")
 	if count is not None and count >= height:
-		print(message,end="")
-		key = terminal.getch()
+		print_(message,end="")
+		if stdout_redirected is None:
+			key = terminal.getch()
+		else:
+			key = " "
 		count = 1
 		if key in ["x","X","q","Q","\x1B"]:
 			return None
-		print("\n", end="")
+		print_("\n", end="")
 	else:
 		if count is None:
 			count = 1
 		else:
 			count += 1
-		print(message)
+		print_(message)
 	return count
 
 def grep(file, text, recursive=False, ignorecase=False, regexp=False):
@@ -338,7 +368,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 						message = message.rstrip()[:width]
 						count = print_part(message, width, height, count)
 						if count is None:
-							print("")
+							print_("")
 							return None
 					lineNumber += 1
 				else:
@@ -351,7 +381,7 @@ def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 		path, pattern = filesystem.split(file)
 		_, filenames = filesystem.scandir(path, pattern, recursive)
 
-	height, width = terminal.get_screen_size()
+	height, width = get_screen_size()
 	count = 1
 	for filename in filenames:
 		count = __grep(text, filename, ignorecase, regexp, width, height, count)
@@ -364,7 +394,7 @@ def ping(host):
 		from server.ping import ping as ping_
 		ping_(host, count=4, timeout=1)
 	except:
-		print("Not available")
+		print_("Not available")
 
 def ip2host(ip_address):
 	""" Convert ip to hostname """
@@ -372,9 +402,9 @@ def ip2host(ip_address):
 		import wifi
 		_, _, _, dns = wifi.Station.get_info()
 		from server.dnsclient import resolve_hostname
-		print(resolve_hostname(dns, ip_address))
+		print_(resolve_hostname(dns, ip_address))
 	except:
-		print("Not available")
+		print_("Not available")
 
 def host2ip(hostname):
 	""" Convert hostname to ip """
@@ -382,25 +412,25 @@ def host2ip(hostname):
 		import wifi
 		_, _, _, dns = wifi.Station.get_info()
 		from server.dnsclient import resolve_ip_address
-		print(resolve_ip_address(dns, hostname))
+		print_(resolve_ip_address(dns, hostname))
 	except:
-		print("Not available")
+		print_("Not available")
 
 def mountsd(mountpoint="/sd"):
 	""" Mount command """
 	try:
 		uos.mount(machine.SDCard(), mountpoint)
-		print("Sd mounted on '%s'"%mountpoint)
+		print_("Sd mounted on '%s'"%mountpoint)
 	except:
-		print("Cannot mount sd on '%s'"%mountpoint)
+		print_("Cannot mount sd on '%s'"%mountpoint)
 
 def umountsd(mountpoint="/sd"):
 	""" Umount command """
 	try:
 		uos.umount(mountpoint)
-		print("Sd umounted from '%s'"%mountpoint)
+		print_("Sd umounted from '%s'"%mountpoint)
 	except:
-		print("Cannot umount sd from '%s'"%mountpoint)
+		print_("Cannot umount sd from '%s'"%mountpoint)
 
 def date(update=False, offsetUTC=+1, noDst=False):
 	""" Get or set date """
@@ -415,7 +445,7 @@ def date(update=False, offsetUTC=+1, noDst=False):
 		del sys.modules["server.timesetting"]
 	except:
 		pass
-	print(strings.date_to_string())
+	print_(strings.date_to_string())
 
 def setdate(datetime=""):
 	""" Set date and time """
@@ -451,7 +481,7 @@ def setdate(datetime=""):
 		logger.syslog(err)
 
 	if failed is True:
-		print('Expected format "YYYY/MM/DD hh:mm:ss"')
+		print_('Expected format "YYYY/MM/DD hh:mm:ss"')
 
 def reboot():
 	""" Reboot command """
@@ -466,22 +496,24 @@ def deepsleep(seconds=60):
 	machine.deepsleep(int(seconds)*1000)
 
 edit_class = None
-def edit(file):
+def edit(file, no_color=False, read_only=False):
 	""" Edit command """
 	global edit_class
-	if edit_class is None:
-		try:
-			from shell.editor import Editor
-		except:
-			from editor import Editor
-		edit_class = Editor
-	edit_class(file)
+	global stdout_redirected
+	if stdout_redirected is None:
+		if edit_class is None:
+			try:
+				from shell.editor import Editor
+			except:
+				from editor import Editor
+			edit_class = Editor
+		edit_class(file, no_color=no_color, read_only=read_only)
 
 def cat(file):
 	""" Cat command """
 	try:
 		f = open(file, "r")
-		height, width = terminal.get_screen_size()
+		height, width = get_screen_size()
 		count = 1
 		while 1:
 			line = f.readline()
@@ -493,11 +525,11 @@ def cat(file):
 				break
 		f.close()
 	except:
-		print("Cannot cat '%s'"%(file))
+		print_("Cannot cat '%s'"%(file))
 
 def df(mountpoint = None):
 	""" Display free disk space """
-	print(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))
+	print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))
 
 def gc():
 	""" Garbage collector command """
@@ -506,11 +538,11 @@ def gc():
 
 def uptime():
 	""" Tell how long the system has been running """
-	print(info.uptime())
+	print_(info.uptime())
 
 def man(command):
 	""" Man command """
-	print(man_one(command))
+	print_(man_one(command))
 
 def man_one(command_name):
 	""" Manual of one command """
@@ -530,7 +562,7 @@ def man_one(command_name):
 # pylint: disable=redefined-builtin
 def help():
 	""" Help command """
-	height, width = terminal.get_screen_size()
+	height, width = get_screen_size()
 	count = 1
 	cmds = list(shell_commands.keys())
 	cmds.sort()
@@ -544,7 +576,7 @@ def help():
 
 def eval_(string):
 	""" Evaluate content of string """
-	print(eval(string))
+	print_(eval(string))
 
 def exec_(string):
 	""" Execute content of string """
@@ -558,8 +590,11 @@ def exit():
 
 def dump_(filename):
 	""" dump file content """
-	height, width = terminal.get_screen_size()
-	width = 16
+	height, width = get_screen_size()
+	if stdout_redirected is None:
+		width = (width - 12)//4
+	else:
+		width = 16
 	offset = 0
 	file = open(filename, "rb")
 	data = b' '
@@ -578,25 +613,27 @@ def dump_(filename):
 
 def cls():
 	""" clear screen """
-	print("\x1B[2J\x1B[0;0f", end="")
+	print_("\x1B[2J\x1B[0;0f", end="")
 
 def check_cam_flasher():
 	""" Check if the terminal is CamFlasher """
-	# Request terminal device attribut
-	sys.stdout.write(b"\x1B[0c")
+	global stdout_redirected
+	if stdout_redirected is None:
+		# Request terminal device attribut
+		sys.stdout.write(b"\x1B[0c")
 
-	# Wait terminal device attribut response
-	response = terminal.getch(duration=1000)
+		# Wait terminal device attribut response
+		response = terminal.getch(duration=1000)
 
-	# If CamFlasher detected
-	if response == "\x1B[?3;2c":
-		return True
+		# If CamFlasher detected
+		if response == "\x1B[?3;2c":
+			return True
 	return False
 
 def upload(file="", recursive=False):
 	""" Upload file from computer to device """
 	if check_cam_flasher():
-		print("Upload to device start")
+		print_("Upload to device start")
 		try:
 			command = exchange.UploadCommand(uos.getcwd())
 			command.write(file, recursive, sys.stdin.buffer, sys.stdout.buffer)
@@ -605,12 +642,12 @@ def upload(file="", recursive=False):
 				file_reader = exchange.FileReader()
 				result = file_reader.read(uos.getcwd(), sys.stdin.buffer, sys.stdout.buffer)
 				watchdog.WatchDog.feed()
-			print("Upload end")
+			print_("Upload end")
 		except Exception as err:
 			logger.syslog(err, display=False)
-			print("Upload failed")
+			print_("Upload failed")
 	else:
-		print("CamFlasher application required for this command")
+		print_("CamFlasher application required for this command")
 
 class Exporter:
 	""" Exporter file to camflasher """
@@ -644,20 +681,32 @@ class Exporter:
 def download(file="", recursive=False):
 	""" Download file from device to computer """
 	if check_cam_flasher():
-		print("Download from device start")
+		print_("Download from device start")
 		try:
 			searchfile(file, recursive, Exporter())
-			print ("Download end")
+			print_ ("Download end")
 		except Exception as err:
 			logger.syslog(err, display=False)
-			print("Download failed")
+			print_("Download failed")
 	else:
-		print("CamFlasher application required for this command")
+		print_("CamFlasher application required for this command")
 
 def temperature():
 	""" Get the internal temperature """
 	celcius, farenheit = info.temperature()
-	print("%.2f°C, %d°F"%(celcius, farenheit))
+	print_("%.2f°C, %d°F"%(celcius, farenheit))
+
+def meminfo():
+	""" Get memory informations """
+	print_(strings.tostrings(info.meminfo(display=False)))
+
+def flashinfo(mountpoint=None):
+	""" Get flash informations """
+	print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))
+
+def sysinfo():
+	""" Get system informations """
+	print_(strings.tostrings(info.sysinfo(display=False)))
 
 def get_command(command_name):
 	""" Get a command callback according to the command name """
@@ -679,10 +728,13 @@ def get_command(command_name):
 
 def exec_command(args):
 	""" Execute command """
+	global stdout_redirected
 	command_name = ""
 	command_function = None
 	command_params = []
 	command_flags = []
+	output_redirection = None
+	output_filename = None
 	try:
 		if len(args) >= 1:
 			paramsCount = 0
@@ -707,26 +759,43 @@ def exec_command(args):
 									break
 							else:
 								raise Exception("Illegal option '%s' for"%arg)
+						elif arg[0] == ">":
+							output_redirection = True
 						else:
-							if paramsCount >= len(command_params):
-								raise Exception("Too many parameters for")
-							else:
-								flags[command_params[paramsCount]] = arg
-								paramsCount += 1
+							if output_redirection is None:
+								if paramsCount >= len(command_params):
+									raise Exception("Too many parameters for")
+								else:
+									flags[command_params[paramsCount]] = arg
+									paramsCount += 1
+							elif output_redirection is True:
+								output_filename = arg
+
 	except Exception as err:
-		# print(logger.syslog(err))
-		print(err)
+		# print_(logger.syslog(err))
+		print_(err)
 		return
+	stdout_redirected = None
 	try:
 		if command_name.strip() != "":
+			if output_filename is not None:
+				try:
+					stdout_redirected = open(output_filename, "w")
+				except:
+					pass
 			command_function(**flags)
 	except TypeError as err:
-		logger.syslog(err, msg="Missing parameters for '%s'"%command_name)
+		logger.syslog(err, display=False)
+		print_("Missing parameters for '%s'"%command_name)
 	except KeyboardInterrupt as err:
 		logger.syslog(err)
-		print(" [Canceled]")
+		print_(" [Canceled]")
 	except Exception as err:
 		logger.syslog(err)
+	finally:
+		if stdout_redirected is not None:
+			stdout_redirected.close()
+		stdout_redirected = None
 
 def parse_command_line(commandLine):
 	""" Parse command line """
@@ -770,9 +839,12 @@ def parse_command_line(commandLine):
 	for command in commands:
 		exec_command(command)
 
-def sh():
+def sh(path=None, throw=False):
 	""" Start the shell """
 	global shell_exited
+
+	if path is not None:
+		uos.chdir(path)
 
 	shell_exited = False
 	while shell_exited is False:
@@ -781,13 +853,16 @@ def sh():
 			commandLine = input("%s=> "%os.getcwd())
 			watchdog.WatchDog.feed()
 		except EOFError:
-			print("")
+			print_("")
 			break
 		except KeyboardInterrupt:
-			print("Ctr-C detected, use 'exit' to restart server or 'quit' to get python prompt")
+			print_("Ctr-C detected, use 'exit' to restart server or 'quit' to get python prompt")
 
 		if commandLine.strip() == "quit":
-			raise KeyboardInterrupt()
+			if throw is True:
+				raise KeyboardInterrupt()
+			else:
+				break
 		parse_command_line(commandLine)
 
 async def async_shell():
@@ -798,7 +873,7 @@ async def async_shell():
 	except:
 		Server = None
 
-	print("\nPress key to start command line")
+	print_("\nPress key to start command line")
 	if filesystem.ismicropython():
 		polling1 = 2
 		polling2 = 0.01
@@ -829,7 +904,7 @@ async def async_shell():
 				print("")
 				logger.syslog("<"*10+" Enter shell " +">"*10)
 				print("Use 'exit' to restart server or 'quit' to get python prompt")
-				sh()
+				sh(throw=True)
 				print("")
 				logger.syslog("<"*10+" Exit  shell " +">"*10)
 
@@ -865,16 +940,16 @@ shell_commands = \
 	"run"        :[useful.run      ,"filename"             ],
 	"download"   :[download        ,"file",                  ("-r","recursive",True)],
 	"upload"     :[upload          ,"file",                  ("-r","recursive",True)],
-	"edit"       :[edit            ,"file"                 ],
+	"edit"       :[edit            ,"file",                  ("-n","no_color",True),("-r","read_only",True)],
 	"exit"       :[exit                                    ],
 	"gc"         :[gc                                      ],
 	"grep"       :[grep            ,"text","file",           ("-r","recursive",True),("-i","ignorecase",True),("-e","regexp",True)],
 	"mount"      :[mountsd         ,"mountpoint"           ],
 	"umount"     :[umountsd        ,"mountpoint"           ],
 	"temperature":[temperature                             ],
-	"meminfo"    :[info.meminfo                            ],
-	"flashinfo"  :[info.flashinfo                          ],
-	"sysinfo"    :[info.sysinfo                            ],
+	"meminfo"    :[meminfo                                 ],
+	"flashinfo"  :[flashinfo                               ],
+	"sysinfo"    :[sysinfo                                 ],
 	"deepsleep"  :[deepsleep       ,"seconds"              ],
 	"ping"       :[ping            ,"host"                 ],
 	"reboot"     :[reboot                                  ],
@@ -889,4 +964,4 @@ shell_commands = \
 }
 
 if __name__ == "__main__":
-	sh()
+	sh(sys.argv[1])

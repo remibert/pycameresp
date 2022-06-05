@@ -29,6 +29,16 @@ class HttpServer:
 		else:
 			logger.syslog("Http waiting on %d"%self.port)
 
+	def call_preload(self, loader):
+		""" Call preload html page callback """
+		if loader is not None:
+			try:
+				loader()
+			except ModuleNotFoundError as err:
+				logger.syslog("Failed to preload html page for module '%s'"%err.name)
+			except Exception as err:
+				logger.syslog(err)
+
 	def preload(self):
 		""" Method used to preload page template.
 		You must define the content of a callback, which only import the python module with your pages """
@@ -37,7 +47,11 @@ class HttpServer:
 		if self.loader:
 			from htmltemplate import WWW_DIR
 			logger.syslog("Html load pages")
-			self.loader()
+			if type(self.loader) == type([]):
+				for loader in self.loader:
+					self.call_preload(loader)
+			else:
+				self.call_preload(self.loader)
 			self.loader = None
 			HttpServer.www_dir = WWW_DIR
 			loaded = True

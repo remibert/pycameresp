@@ -1,6 +1,7 @@
 
 filesToAdd = [
 	("","modules/main.py"),
+	("","modules/pycameresp.py"),
 	("","modules/sample.py"),
 ]
 
@@ -17,7 +18,6 @@ if __name__ == "__main__":
 '''
 	from os.path import split
 	patchIni=""
-	
 	import glob
 	for filename in glob.glob("modules/www/*.css"):
 		if not "bootstrap" in filename:

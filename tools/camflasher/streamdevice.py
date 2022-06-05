@@ -1,18 +1,21 @@
 """ Stream class to communicate with the device """
+import os
+import os.path
 import threading
 import queue
 import time
 import sys
 import telnetlib
-import os.path
+import tempfile
+import zipfile
 import serial
 import fileuploader
+import vt100
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
 from exchange import FileReader, FileWriter, UploadCommand
-from filesystem import scandir, isdir
-
+from filesystem import scandir, isdir, prefix
 
 class FileLogger:
 	""" Class to save and display all log """
@@ -187,8 +190,9 @@ class StreamThread(threading.Thread):
 	CMD_WRITE_DATA         = 3
 	CMD_UPLOAD_FILE        = 4
 	CMD_DONWLOAD_FILE      = 5
-	CMD_UPLOAD_PROMPT_FILE = 6
-	CMD_QUIT               = 7
+	CMD_UPLOAD_FROM_SERVER = 6
+	CMD_UPLOAD_FILES       = 8
+	CMD_QUIT               = 9
 	def __init__(self, receive_callback, stdout):
 		""" Constructor """
 		threading.Thread.__init__(self)
@@ -199,10 +203,11 @@ class StreamThread(threading.Thread):
 		self.host = ""
 		self.loop = True
 		self.buffer = b""
-
-
+		self.drop_directory = ""
+		self.drop_filenames = []
 		self.stdout = stdout
 		self.state = self.DISCONNECTED
+		self.zip_extract = False
 		self.start()
 
 	def __del__(self):
@@ -238,7 +243,7 @@ class StreamThread(threading.Thread):
 					self.stream.reset_input_buffer()
 					self.port = port
 
-					self.print("\n\x1B[42;93mConnect serial link %s\x1B[m"%self.port)
+					self.print("\n"+vt100.COLOR_OK+"Connect serial link %s"%self.port+vt100.COLOR_NONE)
 			except Exception as err:
 				self.close()
 
@@ -254,7 +259,7 @@ class StreamThread(threading.Thread):
 					self.port = port
 					self.host = host
 
-					self.print("\n\x1B[42;93mConnect telnet on %s:%d\x1B[m"%(self.host, self.port))
+					self.print("\n"+vt100.COLOR_OK+"Connect telnet on %s:%d"%(self.host, self.port)+vt100.COLOR_NONE)
 			except Exception as err:
 				self.close()
 
@@ -277,34 +282,68 @@ class StreamThread(threading.Thread):
 		""" Treat disconnect command """
 		if command == self.CMD_DISCONNECT:
 			if self.state in [self.TELNET_CONNECTED, self.CONNECTING_TELNET]:
-				self.print("\n\x1B[42;93mDisconnected\x1B[m")
+				self.print("\n"+vt100.COLOR_OK+"Disconnected"+vt100.COLOR_NONE)
 			self.close()
 
 	def on_upload_file(self, command, directory):
 		""" Treat write file command """
 		if command == self.CMD_UPLOAD_FILE:
-			try:
-				command = UploadCommand(directory)
-				path, pattern, recursive = command.read(self.stream, self.stream)
-				target_dir = os.path.normpath(directory + "/" + path + "/" + pattern)
-				if isdir(target_dir):
-					target_dir += "/*"
-				directory_, pattern_ = os.path.split(target_dir)
+			if len(self.drop_filenames) > 0:
+				self.uploader_drop(directory)
+			else:
+				self.uploader_file(directory)
 
-				# If directory can be parsed
-				if directory_.find(os.path.normpath(directory)) == 0 and os.path.exists(directory_):
-					_, filenames = scandir(directory_, pattern_, recursive)
+	def uploader_file(self, directory):
+		""" Uploader file """
+		try:
+			command = UploadCommand(directory)
+			device_dir, pattern, recursive = command.read(self.stream, self.stream)
+			computer_dir = os.path.normpath(directory + "/" + device_dir + "/" + pattern)
+			if isdir(computer_dir):
+				computer_dir += "/*"
+			directory_, pattern_ = os.path.split(computer_dir)
 
-					for filename in filenames:
-						file_writer = FileWriter()
-						filename = filename.replace("\\","/")
-						file_writer.write(filename, self.stream, self.stream, directory, self.print)
+			# If directory can be parsed
+			if directory_.find(os.path.normpath(directory)) == 0 and os.path.exists(directory_):
+				_, filenames = scandir(directory_, pattern_, recursive)
+				for filename in filenames:
+					file_writer = FileWriter()
+					filename = filename.replace("\\","/")
+					device_filename = filename.replace(directory, "")
+					file_writer.write(filename, self.stream, self.stream, device_filename, self.print)
+			else:
+				self.print("'%s' not found"%(os.path.normpath(device_dir + "/" + pattern)))
+
+			self.stream.write(b"exit\r\n")
+		except Exception as err:
+			self.print("Upload error")
+
+	def uploader_drop(self, directory):
+		""" Uploader from drop file """
+		try:
+			command = UploadCommand(self.drop_directory)
+			path, pattern, recursive = command.read(self.stream, self.stream)
+			file_writer = FileWriter()
+			for filename in self.drop_filenames:
+				filename_ = os.path.join(self.drop_directory,filename)
+				drop_filename = filename[len(self.drop_directory)+1:]
+
+				# If the content of zip must be extracted
+				if self.zip_extract and os.path.splitext(filename_)[1].lower() == ".zip":
+					with zipfile.ZipFile(filename_,"r") as zip_file:
+						for file in zip_file.infolist():
+							zip_content = tempfile.NamedTemporaryFile()
+							zip_content.write(zip_file.read(file.filename))
+							zip_content.flush()
+							file_writer.write(zip_content.name, self.stream, self.stream, file.filename, self.print)
+							zip_content.close()
 				else:
-					self.print("'%s' not found"%(os.path.normpath(path + "/" + pattern)))
-
-				self.stream.write(b"exit\r\n")
-			except Exception as err:
-				self.print("Upload error")
+					file_writer.write(filename_, self.stream, self.stream, drop_filename, self.print)
+			self.stream.write(b"exit\r\n")
+			self.drop_filenames = []
+			self.zip_extract = False
+		except Exception as err:
+			self.print("Upload error")
 
 	def on_download_file(self, command, directory):
 		""" Treat the read file command """
@@ -315,11 +354,54 @@ class StreamThread(threading.Thread):
 			except Exception as err:
 				self.print("Download error")
 
-	def on_upload_prompt(self, command, filename):
+	def on_upload_from_server(self, command, filename):
 		""" Treat upload command to device """
-		if command == self.CMD_UPLOAD_PROMPT_FILE:
+		if command == self.CMD_UPLOAD_FROM_SERVER:
 			uploader = fileuploader.PythonUploader(self.print)
-			uploader.upload_prompt(self.stream, fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, filename)
+			prompt = uploader.wait_prompt(device=self.stream)
+			if prompt == "=>":
+				prompt = ">>>"
+				self.stream.write(b"quit\x0D")
+			if prompt == ">>>":
+				uploader.upload_from_server(self.stream, fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, filename)
+				self.stream.write(b"from shell import sh\x0D")
+				self.stream.write(b"sh()\x0D")
+
+	def create_upload_list(self, filenames):
+		""" Create list with dropped filenames """
+		drop_filenames = []
+		for filename in filenames:
+			if isdir(filename):
+				_, files = scandir(filename, "*", True)
+				for f in files:
+					drop_filenames.append(f)
+			else:
+				drop_filenames.append(filename)
+
+		if len(filenames) == 1:
+			drop_directory = os.path.split(os.path.normpath(filenames[0]))[0]
+		else:
+			if len(drop_filenames) > 1:
+				drop_directory = os.path.normpath(prefix(drop_filenames).decode("utf8"))
+			else:
+				drop_directory = os.path.normpath(os.path.split(os.path.normpath(filenames[0]))[0])
+		return drop_directory, drop_filenames
+
+	def on_upload_files(self, command, filenames):
+		""" Treat upload command to device """
+		if command == self.CMD_UPLOAD_FILES:
+			filenames, zip_extract = filenames
+			uploader = fileuploader.PythonUploader(self.print)
+			prompt = uploader.wait_prompt(device=self.stream)
+			if prompt == ">>>":
+				drop_directory, drop_filenames = self.create_upload_list(filenames)
+				uploader.upload_files(self.stream, drop_filenames, drop_directory, zip_extract)
+			elif prompt == "=>":
+				self.zip_extract = zip_extract
+				self.drop_directory, self.drop_filenames = self.create_upload_list(filenames)
+				current = self.drop_filenames[0]
+				drop_filename = current[len(self.drop_directory)+1:]
+				self.stream.write(("upload %s\x0d"%drop_filename).encode("utf8"))
 
 	def on_write(self, command, data):
 		""" Treat write command """
@@ -355,7 +437,7 @@ class StreamThread(threading.Thread):
 				data = self.stream.read(self.stream.get_in_waiting() or 1)
 				self.receive_callback(data)
 			except Exception as err:
-				self.print("\n\x1B[93;101mConnection lost\x1B[m")
+				self.print("\n"+vt100.COLOR_FAILED+"Connection lost"+vt100.COLOR_NONE)
 				self.close()
 
 	def run(self):
@@ -378,7 +460,7 @@ class StreamThread(threading.Thread):
 				if self.stream is not None:
 					if self.stream.is_opened():
 						if isinstance(self.stream, StreamTelnet):
-							self.print("\x1B[42;93mConnected waiting for answer\x1B[m")
+							self.print(vt100.COLOR_OK+"Connected waiting for answer"+vt100.COLOR_NONE)
 							self.state = self.TELNET_CONNECTED
 						else:
 							self.state = self.SERIAL_CONNECTED
@@ -394,13 +476,14 @@ class StreamThread(threading.Thread):
 				if self.command.qsize() > 0:
 					# read command
 					command,data = self.command.get()
-					self.on_write          (command, data)
-					self.on_upload_file    (command, data)
-					self.on_download_file  (command, data)
-					self.on_connect        (command, data)
-					self.on_upload_prompt  (command, data)
-					self.on_disconnect     (command)
-					self.on_quit           (command)
+					self.on_write               (command, data)
+					self.on_upload_file         (command, data)
+					self.on_download_file       (command, data)
+					self.on_connect             (command, data)
+					self.on_upload_from_server  (command, data)
+					self.on_upload_files        (command, data)
+					self.on_disconnect          (command)
+					self.on_quit                (command)
 				self.receive()
 
 	def send(self, message):
@@ -440,9 +523,13 @@ class StreamThread(threading.Thread):
 		""" Send disconnect command to stream thread """
 		self.send((self.CMD_DISCONNECT, None))
 
-	def upload_prompt(self, filename):
+	def upload_from_server(self, filename):
 		""" Send upload file on python prompt to stream thread """
-		self.send((self.CMD_UPLOAD_PROMPT_FILE, filename))
+		self.send((self.CMD_UPLOAD_FROM_SERVER, filename))
+
+	def upload_files(self, filenames):
+		""" Send upload files on python prompt to stream thread """
+		self.send((self.CMD_UPLOAD_FILES, filenames))
 
 	def is_disconnected(self):
 		""" Indicates if the serial port is disconnected """

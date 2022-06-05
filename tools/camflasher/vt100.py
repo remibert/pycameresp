@@ -41,12 +41,18 @@ def isascii(char):
 			return True
 	return False
 
+
+COLOR_OK    ="\x1B[42;93m"
+COLOR_FAILED="\x1B[93;101m"
+COLOR_NONE  ="\x1B[m"
+
 TEXT_BACKCOLOR    = 0xFFFFFFFF
 TEXT_FORECOLOR    = 0xFF000000
 REVERSE_BACKCOLOR = 0xFFAAAAAA
 REVERSE_FORECOLOR = 0xFF000000
 CURSOR_BACKCOLOR  = 0xFFAAAAAA
 CURSOR_FORECOLOR  = 0xFF000000
+
 vga_colors = [
 	#     30,       31,       32,       33,       34,       35,       36,       37,
 	#     40,       41,       42,       43,       44,       45,       46,       47,

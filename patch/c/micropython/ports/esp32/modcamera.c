@@ -1369,4 +1369,4 @@ const mp_obj_module_t mp_module_camera =
 	.globals = (mp_obj_dict_t*)&camera_module_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_camera, mp_module_camera, 1);
+MP_REGISTER_MODULE(MP_QSTR_camera, mp_module_camera);

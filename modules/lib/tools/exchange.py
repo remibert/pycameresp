@@ -409,7 +409,7 @@ class FileReader:
 
 class FileWriter:
 	""" File writer """
-	def write(self, filename, in_file, out_file, directory=None, printer=None):
+	def write(self, filename, in_file, out_file, device_filename=None, printer=None):
 		""" Write file """
 		result = False
 
@@ -423,14 +423,14 @@ class FileWriter:
 			out_file.write(b"\x0D\x0A")
 
 			chunk_id = 0
-			if printer is not None:
-				chunk_id += 1
-				filename_ = filename.replace(directory, "")
-				printer("\r %-40s %s"%(filename_, ["|","\\","-","/"][chunk_id%4]), end="")
+			# if printer is not None:
+			# 	chunk_id += 1
+			# 	filename_ = filename.replace(directory, "")
+			# 	printer("\r %-40s %s"%(filename_, ["|","\\","-","/"][chunk_id%4]), end="")
 
 			# Send the filename
-			if directory is not None:
-				filename_ = filename.replace(directory, "")
+			if device_filename is not None:
+				filename_ = device_filename
 			else:
 				filename_ = filename
 			out_file.write(b"# %s\x0D\x0A"%filename_.encode("utf8"))

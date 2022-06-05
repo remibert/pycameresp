@@ -24,103 +24,50 @@ except:
 	# pylint:disable=multiple-imports
 	import useful,logger,strings,terminal,filesystem
 
-TABSIZE = 4          # Tabulation size
-HORIZONTAL_MOVE=8    # Scrolling minimal deplacement
+# Load default editor configuration
+try:
+	from editor_config import *
+except:
+	from shell.editor_config import *
 
-ESCAPE           = "\x1b"
-
-# Move shortcuts
-UP               = ["\x1b[A"]
-DOWN             = ["\x1b[B"]
-RIGHT            = ["\x1b[C"]
-LEFT             = ["\x1b[D"]
-HOME             = ["\x1b[1;3D", "\x1b[H", "\x1b\x1b[D", "\x1b[1~", "\x1bb"]
-END              = ["\x1b[1;3C", "\x1b[F", "\x1b\x1b[C", "\x1b[4~", "\x1bf"]
-PAGE_UP          = ["\x1b[1;3A", "\x1b[A", "\x1b\x1b[A", "\x1b[5~"]
-PAGE_DOWN        = ["\x1b[1;3B", "\x1b[B", "\x1b\x1b[B", "\x1b[6~"]
-TOP              = ["\x1b[1;5H"]
-BOTTOM           = ["\x1b[1;5F"]
-NEXT_WORD        = ["\x1b[1;5C"]
-PREVIOUS_WORD    = ["\x1b[1;5D"]
-
-# Selection shortcuts
-SELECT_UP        = ["\x1b[1;2A"]
-SELECT_DOWN      = ["\x1b[1;2B"]
-SELECT_RIGHT     = ["\x1b[1;2C"]
-SELECT_LEFT      = ["\x1b[1;2D"]
-SELECT_PAGE_UP   = ["\x1b[1;10A","\x1b[1;4A","\x1b[5;2~"]
-SELECT_PAGE_DOWN = ["\x1b[1;10B","\x1b[1;4B","\x1b[6;2~"]
-SELECT_HOME      = ["\x1b[1;2H","\x1b[1;10D"]
-SELECT_END       = ["\x1b[1;2F","\x1b[1;10C"]
-SELECT_TOP       = ["\x1b[1;6H"]
-SELECT_BOTTOM    = ["\x1b[1;6F"]
-SELECT_NEXT_WORD = ["\x1b[1;6C","\x1b[1;4C"]
-SELECT_PREV_WORD = ["\x1b[1;6D","\x1b[1;4D"]
-
-
-SELECT_ALL       = ["\x01"]                              # Select All
-# Ctrl-B unused
-COPY             = ["\x03","\x1bc"]                      # Copy
-# Ctrl-D unused
-EXECUTE          = ["\x05", "\x1b[15~"]                  # Execute script
-FIND             = ["\x06", "\x1BOQ"]                    # Find
-GOTO             = ["\x07"]                              # Goto line
-BACKSPACE        = ["\x08","\x7F"]                       # Backspace
-INDENT           = ["\x09"]                              # Indent
-# Line feed reserved
-# Ctrl-K unused
-DELETE_LINE      = ["\x0C"]                              # Delete line
-NEW_LINE         = ["\x0D", "\0x0A"]                     # New line pressed
-FIND_NEXT        = ["\x0E", "\x1bOR"]                    # Find next
-# Ctrl-O unused
-FIND_PREVIOUS    = ["\x10", "\x1b[1;2R"]                 # Find previous
-COMMENT          = ["\x11"]                              # Comment block
-REPLACE          = ["\x12"]                              # Replace
-SAVE             = ["\x13", "\x1bs"]                     # Save
-TOGGLE_MODE      = ["\x14"]                              # Toggle replace/insert mode
-CHANGE_CASE      = ["\x15"]                              # Change case
-PASTE            = ["\x16","\x1bv"]                      # Paste
-# Ctrl-W unused
-CUT              = ["\x18","\x1bx"]                      # Cut
-# Ctrl-Y unused
-# Ctrl-Z unused
-
-EXIT             = [ESCAPE]                              # Exit
-
-DELETE           = ["\x1b[3~"]                           # Delete pressed
-UNINDENT         = ["\x1b[Z"]                            # Unindent
-
-SELECTION_START = b"\x1B[7m"
-SELECTION_END   = b"\x1B[m"
-
-# Python colorization
-PYTHON_KEYWORDS = b"and as assert break class continue def del elif else except exec finally for from global if import in is lambda None not or pass print raise return try while self as join abs apply bool buffer callable chr cmp coerce compile complex delattr dir dict divmod eval execfile filter float getattr globals hasattr hash hex id input int intern isinstance issubclass len list locals long map max min oct open ord pow range raw_input reduce reload repr round setattr slice str tuple type unichr unicode vars xrange zip with yield True False async await"
-KEYWORD_COLOR  = b"\x1B[38:2:14:14:255m"
-NUMBER_COLOR   = b"\x1B[38:2:14:136:92m"
-STRING_COLOR   = b"\x1B[38:2:177:57:57m"
-NO_COLOR       = b"\x1B[m"
-COMMENT_COLOR  = b"\x1B[38:2:8:131:8m"
+def is_enough_memory():
+	""" Indicate if it has enough memory """
+	import gc
+	try:
+		# pylint: disable=no-member
+		memory  = gc.mem_free()
+	except:
+		memory  = 256*1024
+	if memory < 50*1024:
+		return False
+	return True
 
 class View:
 	""" Class which manage the view of the edit field """
 	def __init__(self, view_height, view_top, extension=None):
 		""" Constructor """
-		keywords = PYTHON_KEYWORDS.split(b" ")
-		keywords.sort()
-		self.lexicon = {}
-		for keyword in keywords:
-			self.lexicon.setdefault(keyword[0],[]).append(keyword)
-
 		self.line     = 0
 		self.column   = 0
 		if view_height is None:
 			self.height   = 20
 		else:
 			self.height             = view_height
-		if extension.lower() == ".py":
-			self.colorize = self.colorize_python
-		else:
-			self.colorize = self.colorize_none
+
+		self.colorize = self.colorize_none
+		if is_enough_memory():
+			if extension is not None:
+				if extension.lower() == ".py":
+					# pylint: disable=import-error
+					try:
+						try:
+							from editor_py import Colorizer
+						except:
+							from shell.editor_py import Colorizer
+						self.colorizer = Colorizer()
+						self.colorize = self.colorize_syntax
+					except:
+						pass
+
 		self.width                  = 80
 		self.top                    = view_top
 		self.is_refresh_all         = True
@@ -320,8 +267,6 @@ class View:
 							self.write(clear_line)
 			else:
 				part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
-
-				# self.write(clear_line+part_line)
 				self.write(clear_line)
 				self.colorize(part_line)
 
@@ -329,235 +274,9 @@ class View:
 		""" No colorization """
 		self.write(text)
 
-	def colorize_python(self, text):
-		""" Colorize python file """
-		UNDEFINED=0
-		KEYWORD_IDENTIFICATION=1
-		NUMBER_IDENTIFICATION=4
-		COMMENTARY=5
-		DECIMAL_IDENTIFICATION=6
-		BINARY_NUMBER=7
-		OCTAL_NUMBER=8
-		HEXA_NUMBER=9
-		STRING_STARTED=10
-		STRING_CONTENT=11
-		STRING_ESCAPE=12
-		state = UNDEFINED
-		pos = 0
-		lastpos = 0
-		j = 0
-		previous_char = None
-		for char in text:
-			charactere = char.to_bytes(1,"big")
-			# Word not started
-			if state == UNDEFINED:
-				keyword  = b""
-				keywords = None
-				pos = -1
-				# If a keyword start
-				if char in self.lexicon.keys():
-					pos = j
-					state = KEYWORD_IDENTIFICATION
-					keyword  = charactere
-					keywords = self.lexicon[char]
-				# If decimal number started
-				elif 0x31 <= char <= 0x39:
-					if 0x41 <= previous_char <= 0x5A or 0x61 <= previous_char <= 0x7A or 0x30 <= previous_char <= 0x39 or previous_char == 0x5F:
-						pass
-					else:
-						state = DECIMAL_IDENTIFICATION
-						keyword = charactere
-						pos = j
-				# If base number started
-				elif char == 0x30:
-					if 0x41 <= previous_char <= 0x5A or 0x61 <= previous_char <= 0x7A or 0x30 <= previous_char <= 0x39 or previous_char == 0x5F:
-						pass
-					else:
-						state = NUMBER_IDENTIFICATION
-						keyword = charactere
-						pos = j
-				# If comment detected
-				elif char == 0x23:
-					pos = j
-					state = COMMENTARY
-					self.write(text[lastpos:j]+COMMENT_COLOR+text[j:]+NO_COLOR)
-					lastpos = len(text)
-					break
-				# If string detected
-				elif char == 0x22 or char == 0x27:
-					state = STRING_STARTED
-					keyword = charactere
-					pos = j
-			# If keyword identification started
-			elif state == KEYWORD_IDENTIFICATION:
-				# If a keyword continue
-				if 0x41 <= char <= 0x5A or 0x61 <= char <= 0x7A or char == 0x5F:
-					tmp_keyword = keyword + charactere
-					count = 0
-					for kwd in keywords:
-						if kwd.find(keyword) == 0:
-							count += 1
-					if count > 0:
-						keyword = tmp_keyword
-				else:
-					# If special string detected
-					if (char == 0x27 or char == 0x22) and len(keyword) == 1:
-						# Byte string
-						if keyword[0] == 0x62 or keyword[0] == 0x42:
-							keyword = charactere
-							pos = j
-							state = STRING_STARTED
-						# Regular string
-						elif keyword[0] == 0x52 or keyword[0] == 0x72:
-							keyword = charactere
-							pos = j
-							state = STRING_STARTED
-						# Unicode string
-						elif keyword[0] == 0x55 or keyword[0] == 0x75:
-							keyword = charactere
-							pos = j
-							state = STRING_STARTED
-						else:
-							keyword  = b""
-							state = UNDEFINED
-							keywords = None
-					else:
-						if keyword in keywords:
-							self.write(text[lastpos:pos]+KEYWORD_COLOR+keyword+NO_COLOR)
-							lastpos = j
-							keyword  = b""
-							state = UNDEFINED
-							keywords = None
-						else:
-							keyword  = b""
-							state = UNDEFINED
-							keywords = None
-			# If decimal detected
-			elif state == DECIMAL_IDENTIFICATION:
-				if char >= 0x30 and char <= 0x39 or char == 0x2E:
-					keyword += charactere
-				
-				else:
-					self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
-					lastpos = j
-					state = UNDEFINED
-			# If number detected
-			elif state == NUMBER_IDENTIFICATION:
-				# If hexa number detected
-				if char == 0x58 or char == 0x78:
-					keyword += charactere
-					state = HEXA_NUMBER
-				# If octal number detected
-				elif char == 0x4F or char == 0x6F:
-					keyword += charactere
-					state = OCTAL_NUMBER
-				# If binary number detected
-				elif char == 0x42 or char == 0x62:
-					keyword += charactere
-					state = BINARY_NUMBER
-				else:
-					if char == 0x2E:
-						state = DECIMAL_IDENTIFICATION
-						keyword += charactere
-					elif 0x30 <= char <= 0x39 or 0x41 <= char <= 0x46 or 0x61 <= char <= 0x66 or char == 0x5F:
-						state = UNDEFINED
-						keyword  = b""
-					else:
-						self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
-						lastpos = j
-						state = UNDEFINED
-			# If hexa number
-			elif state == HEXA_NUMBER:
-				# If hexa detected
-				if 0x30 <= char <= 0x39 or 0x41 <= char <= 0x46 or 0x61 <= char <= 0x66:
-					keyword += charactere
-				# If not hexa detected
-				elif 0x47 <= char <= 0x5A or 0x67 <= char <= 0x7A:
-					state = UNDEFINED
-				# If the number ended
-				else:
-					self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
-					lastpos = j
-					state = UNDEFINED
-			# If octal number
-			elif state == OCTAL_NUMBER:
-				# If hexa detected
-				if 0x30 <= char <= 0x37:
-					keyword += charactere
-				# If the number ended
-				else:
-					self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
-					lastpos = j
-					state = UNDEFINED
-			# If binary number
-			elif state == BINARY_NUMBER:
-				# If hexa detected
-				if 0x30 <= char <= 0x31:
-					keyword += charactere
-				# If the number ended
-				else:
-					self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
-					lastpos = j
-					state = UNDEFINED
-			# If string string started
-			elif state == STRING_STARTED:
-				if char == keyword[0]:
-					keyword += charactere
-					if len(keyword) == 3:
-						state = STRING_CONTENT
-				else:
-					if len(keyword) == 2:
-						self.write(text[lastpos:pos]+STRING_COLOR+keyword+NO_COLOR)
-						lastpos = j
-						state = UNDEFINED
-					elif char == 0x5C:
-						keyword += charactere
-						state = STRING_ESCAPE
-					else:
-						keyword += charactere
-						state = STRING_CONTENT
-			# If escape in string
-			elif state == STRING_ESCAPE:
-				keyword += charactere
-				state = STRING_CONTENT
-			# If string content
-			elif state == STRING_CONTENT:
-				# String terminated maybe
-				if keyword[0] == char:
-					keyword += charactere
-					if len(keyword) >= 6:
-						if keyword[:3] == b'"""' or keyword[:3] == b"'''":
-							if keyword[:3] == keyword[-3:]:
-								self.write(text[lastpos:pos]+STRING_COLOR+keyword+NO_COLOR)
-								lastpos = j+1
-								state = UNDEFINED
-						elif keyword[0] == keyword[-1]:
-							self.write(text[lastpos:pos]+STRING_COLOR+keyword+NO_COLOR)
-							lastpos = j+1
-							state = UNDEFINED
-					elif len(keyword) >= 2:
-						if keyword[0] == keyword[-1]:
-							self.write(text[lastpos:pos]+STRING_COLOR+keyword+NO_COLOR)
-							lastpos = j+1
-							state = UNDEFINED
-				elif char == 0x5C:
-					keyword += charactere
-					state = STRING_ESCAPE
-				else:
-					keyword += charactere
-
-			previous_char = char
-			j += 1
-
-		if state in [NUMBER_IDENTIFICATION, HEXA_NUMBER, OCTAL_NUMBER, BINARY_NUMBER, DECIMAL_IDENTIFICATION]:
-			self.write(text[lastpos:pos]+NUMBER_COLOR+keyword+NO_COLOR)
-		elif state == KEYWORD_IDENTIFICATION:
-			if keyword in keywords:
-				self.write(text[lastpos:pos]+KEYWORD_COLOR+keyword+NO_COLOR)
-			else:
-				self.write(text[lastpos:])
-		elif lastpos < len(text):
-			self.write(text[lastpos:])
+	def colorize_syntax(self, text):
+		""" Syntax colorization """
+		self.colorizer.colorize(text, self)
 
 	def refresh_line(self, selection_start, selection_end):
 		""" Refresh line """
@@ -1225,13 +944,13 @@ class Text:
 	def select_page_up(self, keys=None):
 		""" Manage select page up key """
 		self.open_selection()
-		self.change_line((-self.view.height-1) * len(keys))
+		self.change_line((-(self.view.height)) * len(keys))
 		self.change_column(-terminal.MAXINT)
 
 	def select_page_down(self, keys=None):
 		""" Manage select page down key """
 		self.open_selection()
-		self.change_line((self.view.height+1) * len(keys))
+		self.change_line((self.view.height) * len(keys))
 		self.change_column(terminal.MAXINT)
 
 	def select_next_word(self, keys=None):
@@ -1257,12 +976,12 @@ class Text:
 	def page_up(self, keys=None):
 		""" Manage page up key """
 		self.hide_selection()
-		self.change_line((-self.view.height-1) * len(keys))
+		self.change_line((-(self.view.height)) * len(keys))
 
 	def page_down(self, keys=None):
 		""" Manage page down key """
 		self.hide_selection()
-		self.change_line((self.view.height+1) * len(keys))
+		self.change_line((self.view.height) * len(keys))
 
 	def home(self, keys=None):
 		""" Manage home key """
@@ -1823,11 +1542,15 @@ class Edit:
 
 class Editor:
 	""" Class which manage a complete editor """
-	def __init__(self, filename_, read_only=False):
+	def __init__(self, filename_, no_color=False, read_only=False):
 		""" Constructor """
 		self.file = filename_
 		self.filename = filesystem.split(filename_)[1]
-		self.edit = Edit(read_only=read_only, extension=filesystem.splitext(filename_)[1])
+		if no_color:
+			extension = ""
+		else:
+			extension = filesystem.splitext(filename_)[1]
+		self.edit = Edit(read_only=read_only, extension=extension)
 		self.edit.text.load(filename_)
 		self.is_refresh_header = True
 		self.find_text = None
@@ -1846,9 +1569,10 @@ class Editor:
 		else:
 			try:
 				self.run()
-			except:
+			except Exception as err:
 				self.edit.view.cls()
-				print("Cannot edit '%s'"%self.filename)
+				logger.syslog(err)
+				print("Failed edit '%s'"%self.filename)
 
 	def refresh_header(self):
 		""" Refresh the header of editor """
@@ -2121,6 +1845,5 @@ if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		filename = sys.argv[1]
 	else:
-		filename = "editor.txt"
 		filename = "toto.py"
 	edit = Editor(filename, read_only=False)

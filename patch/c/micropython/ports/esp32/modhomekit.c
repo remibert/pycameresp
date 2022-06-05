@@ -145,4 +145,4 @@ const mp_obj_module_t mp_module_homekit =
 	.globals = (mp_obj_dict_t*)&homekit_module_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_homekit_, mp_module_homekit, 1);
+MP_REGISTER_MODULE(MP_QSTR_homekit_, mp_module_homekit);

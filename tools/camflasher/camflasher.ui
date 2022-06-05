@@ -354,6 +354,9 @@
       <property name="focusPolicy">
        <enum>Qt::ClickFocus</enum>
       </property>
+      <property name="acceptDrops">
+       <bool>false</bool>
+      </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
@@ -407,16 +410,15 @@
     </property>
     <addaction name="action_about"/>
    </widget>
-   <widget class="QMenu" name="menu_tools">
+   <widget class="QMenu" name="menu_upload">
     <property name="title">
-     <string>Tools</string>
+     <string>Upload</string>
     </property>
     <addaction name="action_upload_shell"/>
     <addaction name="action_upload_server"/>
-    <addaction name="action_upload_editor"/>
    </widget>
    <addaction name="menu_flasher"/>
-   <addaction name="menu_tools"/>
+   <addaction name="menu_upload"/>
    <addaction name="menu_console"/>
    <addaction name="menu_info"/>
   </widget>
@@ -473,6 +475,16 @@
   <action name="action_upload_editor">
    <property name="text">
     <string>Upload editor</string>
+   </property>
+  </action>
+  <action name="action_upload_files">
+   <property name="text">
+    <string>Upload files</string>
+   </property>
+  </action>
+  <action name="action_upload_zip">
+   <property name="text">
+    <string>Upload zip</string>
    </property>
   </action>
  </widget>

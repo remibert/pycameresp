@@ -211,6 +211,8 @@ def prefix(files):
 
 	# For all files
 	for file in files:
+		if type(file) == type(""):
+			file = file.encode("utf8")
 		# file = file.encode("utf8")
 		# Split the file name into a piece
 		paths = file.split(b"/")

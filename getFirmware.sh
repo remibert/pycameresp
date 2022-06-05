@@ -38,7 +38,7 @@ echo "Get Micropython"
 echo "***************"
 git clone https://github.com/micropython/micropython.git
 cd $ROOT/micropython
-git checkout 7883ae413ddfa6181d784533b236658658383d0c # Version greater than 1.18 OK
+git checkout a1afb337d2629a781cf4e171b7db7f05eeacc78f # Version greater than 1.18 OK
 
 echo "*************************"
 echo "Get micropython submodule"
