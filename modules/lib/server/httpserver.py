@@ -32,10 +32,14 @@ class HttpServer:
 	def call_preload(self, loader):
 		""" Call preload html page callback """
 		if loader is not None:
+			if filesystem.ismicropython():
+				ModuleNotFound = ImportError
+			else:
+				ModuleNotFound = ModuleNotFoundError
 			try:
 				loader()
-			except ModuleNotFoundError as err:
-				logger.syslog("Failed to preload html page for module '%s'"%err.name)
+			except ModuleNotFound as err:
+				logger.syslog("Failed to preload html page, %s"%str(err))
 			except Exception as err:
 				logger.syslog(err)
 

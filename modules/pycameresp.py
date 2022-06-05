@@ -20,10 +20,11 @@ def protect_battery():
 	from tools.battery import Battery
 	Battery.protect()
 
-def add_camera_task(loop, device):
-	""" Add async task for motion detection and camera streaming """
-	# If camera is available (required specific firmware)
+def create_camera_task(loop, device):
+	""" Create async task for motion detection and camera streaming """
 	from tools.info import iscamera
+
+	# If camera is available (required specific firmware)
 	if iscamera():
 		# Check if the wakeup was caused by a pin state change
 		from tools.awake import Awake
@@ -63,16 +64,16 @@ def default_loader():
 	#pylint:disable=unused-import
 	import webpage
 
-def add_servers_task(loop, html_loader = None):
-	""" Start all servers Http, Ftp, Telnet and wifi manager """
+def create_network_task(loop, html_loader = None):
+	""" Create all servers Http, Ftp, Telnet and wifi manager """
 	import server
 	page_loader = [default_loader]
 	if html_loader is not None:
 		page_loader.append(html_loader)
 	server.init(loop=loop, page_loader=page_loader)
 
-def add_shell_task(loop):
-	""" Add shell asynchronous task (press any key to get shell prompt) """
+def create_shell_task(loop):
+	""" Create shell asynchronous task (press any key to get shell prompt) """
 	# pylint:disable=unused-import
 	from shell import async_shell,sh
 	loop.create_task(async_shell())
@@ -89,3 +90,11 @@ def run_tasks(loop):
 		from tools import logger, system
 		logger.syslog(err)
 		system.reboot("Crash in main")
+
+# async def sample_task():
+#     count = 0
+#     while True:
+#         await uasyncio.sleep(10)
+#         print(count)
+#         count += 1
+# loop.create_task(sample_task())

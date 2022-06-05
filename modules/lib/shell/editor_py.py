@@ -1,13 +1,7 @@
-#!/usr/bin/python3
 # Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
 """ Syntax highlight for python in the editor """
 PYTHON_KEYWORDS = b"and as assert break class continue def del elif else except exec finally for from global if import in is lambda None not or pass print raise return try while self as join abs apply bool buffer callable chr cmp coerce compile complex delattr dir dict divmod eval execfile filter float getattr globals hasattr hash hex id input int intern isinstance issubclass len list locals long map max min oct open ord pow range raw_input reduce reload repr round setattr slice str tuple type unichr unicode vars xrange zip with yield True False async await"
-# KEYWORD_COLOR  = b"\x1B[38:2:0:52:247m"
-# NUMBER_COLOR   = b"\x1B[38:2:120:51:241m"
-# STRING_COLOR   = b"\x1B[38:2:167:95:50m"
-# COMMENT_COLOR  = b"\x1B[38:2:0:128:0m"
-# FUNCTION_COLOR = b"\x1B[38:2:2:144:145m"
-# CLASS_COLOR    = b"\x1B[38:2:179:42:197m"
 
 NO_COLOR       = b"\x1B[m"
 STRING_COLOR   = b"\x1B[31m"

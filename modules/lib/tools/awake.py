@@ -73,6 +73,8 @@ class Awake:
 	@staticmethod
 	def manage():
 		""" Manage the awake duration """
+		if Awake.config is None:
+			Awake.init()
 		if Awake.refresh_counter[0] % 10 == 0:
 			if Awake.config.is_changed():
 				Awake.config.load()

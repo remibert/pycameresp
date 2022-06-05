@@ -1,5 +1,5 @@
-#!/usr/bin/python3
 # Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
 """ Editor configuration, contains shortcuts, tab size, scrolling and others """
 TABSIZE = 4          # Tabulation size
 HORIZONTAL_MOVE=8    # Scrolling minimal deplacement

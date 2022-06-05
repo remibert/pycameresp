@@ -19,18 +19,18 @@ pycameresp.protect_battery()
 # Define the type of camera device
 device = "ESP32CAM" # "ESP32ONE" "M5CAMERA-B"
 
-# Add camera and motion detection asynchronous task
-pycameresp.add_camera_task(loop, device)
+# Create camera and motion detection asynchronous task
+pycameresp.create_camera_task(loop, device)
 
 def sample_html_page_loader():
 	""" Html page loader. Html pages are loaded in memory only when the web server is used """
 	import sample
 
-# Add servers and network tools asynchronous task
-pycameresp.add_servers_task(loop, sample_html_page_loader)
+# Create servers, network tools, wifi manager asynchronous task
+pycameresp.create_network_task(loop, sample_html_page_loader)
 
-# Add shell asynchronous task
-pycameresp.add_shell_task(loop)
+# Create shell asynchronous task
+pycameresp.create_shell_task(loop)
 
 # Start all asynchronous tasks
 pycameresp.run_tasks(loop)

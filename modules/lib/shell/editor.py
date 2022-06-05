@@ -1559,10 +1559,10 @@ class Editor:
 		self.loop = None
 		self.key_callback = None
 		self.precedent_callback = None
+		self.trace = None
 		if filesystem.ismicropython() is False:
-			self.trace = open("key.txt","w")
-		else:
-			self.trace = None
+			if filename_ == "toto.py":
+				self.trace = open("key.txt","w")
 
 		if (not filesystem.exists(filename_) and read_only is True) or filesystem.isdir(filename_):
 			print("Cannot open '%s'"%self.filename)
