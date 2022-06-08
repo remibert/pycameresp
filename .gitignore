@@ -8,3 +8,4 @@ errors.log
 *.log.4
 test.txt
 tmp
+modules/lib/config/*.*
