@@ -12,7 +12,6 @@ Below are the directory details :
 - **modules/www** : html page used to create the source file of the html templates.
 - **modules/simul** : python scripts to simulate on linux or osx, it allows debugging on vscode.
 - **modules/lib/shell** : shell and editor python sources
-- **modules/lib/homekit** : homekit python class to interface with homekit firmware
 - **modules/lib/htmltemplate** : html templates python sources
 - **modules/lib/webpage** : web pages python sources
 - **modules/lib/video** : camera python sources

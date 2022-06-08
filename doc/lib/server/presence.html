@@ -48,7 +48,7 @@ class PresenceConfig(jsonconfig.JsonConfig):
                 self.smartphones = [b&#34;&#34;,b&#34;&#34;,b&#34;&#34;,b&#34;&#34;,b&#34;&#34;]
 
                 # Notify presence
-                self.notify = True
+                self.notify = False
 
 class Presence:
         &#34;&#34;&#34; Presence detection of smartphones &#34;&#34;&#34;
@@ -139,16 +139,14 @@ class Presence:
                                         msg = b&#34;&#34;
                                         for present in presents:
                                                 msg += b&#34;%s &#34;%present
-                                        if Presence.config.notify:
-                                                await Notifier.notify(lang.presence_of_s%(msg))
+                                        await Notifier.notify(lang.presence_of_s%(msg), enabled=Presence.config.notify)
                                         Presence.set_detection(True)
                         # If no smartphone detected
                         elif currentDetected is False:
                                 # If smartphone previously detected
                                 if Presence.is_detected() != currentDetected:
                                         # Notify the house in empty
-                                        if Presence.config.notify:
-                                                await Notifier.notify(lang.empty_house)
+                                        await Notifier.notify(lang.empty_house, enabled=Presence.config.notify)
                                         Presence.set_detection(False)
 
                         # If all smartphones not responded during a long time
@@ -164,11 +162,10 @@ class Presence:
 
                 # If the presence detection change
                 if Presence.activated != Presence.config.activated:
-                        if Presence.config.notify:
-                                if Presence.config.activated:
-                                        await Notifier.notify(lang.presence_detection_on)
-                                else:
-                                        await Notifier.notify(lang.presence_detection_off)
+                        if Presence.config.activated:
+                                await Notifier.notify(lang.presence_detection_on, enabled=Presence.config.notify)
+                        else:
+                                await Notifier.notify(lang.presence_detection_off, enabled=Presence.config.notify)
 
                         Presence.activated = Presence.config.activated
 
@@ -307,16 +304,14 @@ async def detect_presence():
                                         msg = b&#34;&#34;
                                         for present in presents:
                                                 msg += b&#34;%s &#34;%present
-                                        if Presence.config.notify:
-                                                await Notifier.notify(lang.presence_of_s%(msg))
+                                        await Notifier.notify(lang.presence_of_s%(msg), enabled=Presence.config.notify)
                                         Presence.set_detection(True)
                         # If no smartphone detected
                         elif currentDetected is False:
                                 # If smartphone previously detected
                                 if Presence.is_detected() != currentDetected:
                                         # Notify the house in empty
-                                        if Presence.config.notify:
-                                                await Notifier.notify(lang.empty_house)
+                                        await Notifier.notify(lang.empty_house, enabled=Presence.config.notify)
                                         Presence.set_detection(False)
 
                         # If all smartphones not responded during a long time
@@ -332,11 +327,10 @@ async def detect_presence():
 
                 # If the presence detection change
                 if Presence.activated != Presence.config.activated:
-                        if Presence.config.notify:
-                                if Presence.config.activated:
-                                        await Notifier.notify(lang.presence_detection_on)
-                                else:
-                                        await Notifier.notify(lang.presence_detection_off)
+                        if Presence.config.activated:
+                                await Notifier.notify(lang.presence_detection_on, enabled=Presence.config.notify)
+                        else:
+                                await Notifier.notify(lang.presence_detection_off, enabled=Presence.config.notify)
 
                         Presence.activated = Presence.config.activated
 
@@ -496,16 +490,14 @@ async def task():
                                 msg = b&#34;&#34;
                                 for present in presents:
                                         msg += b&#34;%s &#34;%present
-                                if Presence.config.notify:
-                                        await Notifier.notify(lang.presence_of_s%(msg))
+                                await Notifier.notify(lang.presence_of_s%(msg), enabled=Presence.config.notify)
                                 Presence.set_detection(True)
                 # If no smartphone detected
                 elif currentDetected is False:
                         # If smartphone previously detected
                         if Presence.is_detected() != currentDetected:
                                 # Notify the house in empty
-                                if Presence.config.notify:
-                                        await Notifier.notify(lang.empty_house)
+                                await Notifier.notify(lang.empty_house, enabled=Presence.config.notify)
                                 Presence.set_detection(False)
 
                 # If all smartphones not responded during a long time
@@ -521,11 +513,10 @@ async def task():
 
         # If the presence detection change
         if Presence.activated != Presence.config.activated:
-                if Presence.config.notify:
-                        if Presence.config.activated:
-                                await Notifier.notify(lang.presence_detection_on)
-                        else:
-                                await Notifier.notify(lang.presence_detection_off)
+                if Presence.config.activated:
+                        await Notifier.notify(lang.presence_detection_on, enabled=Presence.config.notify)
+                else:
+                        await Notifier.notify(lang.presence_detection_off, enabled=Presence.config.notify)
 
                 Presence.activated = Presence.config.activated
 
@@ -557,7 +548,7 @@ async def task():
                 self.smartphones = [b&#34;&#34;,b&#34;&#34;,b&#34;&#34;,b&#34;&#34;,b&#34;&#34;]
 
                 # Notify presence
-                self.notify = True</code></pre>
+                self.notify = False</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

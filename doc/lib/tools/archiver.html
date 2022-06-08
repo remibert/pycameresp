@@ -32,26 +32,26 @@
 &#34;&#34;&#34; Archiver files functions &#34;&#34;&#34;
 from tools import logger,filesystem,exchange
 
-def export_files(export_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
-        &#34;&#34;&#34; Exports many file into only one file &#34;&#34;&#34;
+def download_files(download_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
+        &#34;&#34;&#34; Download many file into only one file &#34;&#34;&#34;
         result = True
 
-        logger.syslog(&#34;Export %s&#34;%export_filename)
-        filesystem.remove(export_filename)
+        logger.syslog(&#34;Download %s&#34;%download_filename)
+        filesystem.remove(download_filename)
 
         # Scan directory with pattern
         _, files = filesystem.scandir(path=path, pattern=pattern, recursive=recursive)
 
         try:
                 # Open out file
-                out_file = open(export_filename,&#34;wb&#34;)
+                out_file = open(download_filename,&#34;wb&#34;)
 
                 file_write = exchange.FileWriter()
                 # For all files found
                 for filename in files:
                         # All files except .tmp and sdcard
                         if filename[-4:] != &#34;.tmp&#34; and filename[:4] != &#34;/sd/&#34; and filename[5:] != &#34;./sd/&#34;:
-                                logger.syslog(&#34;  Export &#39;%s&#39;&#34;%(filename))
+                                logger.syslog(&#34;  Download &#39;%s&#39;&#34;%(filename))
                                 if file_write.write(filename, None, out_file) is False:
                                         result = False
                                         break
@@ -59,35 +59,35 @@ def export_files(export_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#3
                 logger.syslog(err)
                 result = False
         finally:
-                logger.syslog(&#34;Export %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                logger.syslog(&#34;Download %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 out_file.close()
         return result
 
-def import_files(import_filename, directory=&#34;/&#34;):
-        &#34;&#34;&#34; Import files and write all files &#34;&#34;&#34;
+def upload_files(upload_filename, directory=&#34;/&#34;):
+        &#34;&#34;&#34; Upload files and write all files &#34;&#34;&#34;
         result = True
-        logger.syslog(&#34;Import %s&#34;%import_filename)
+        logger.syslog(&#34;Upload %s&#34;%upload_filename)
         try:
-                in_file = open(import_filename,&#34;rb&#34;)
+                in_file = open(upload_filename,&#34;rb&#34;)
                 if filesystem.ismicropython():
                         simulated = False
                 else:
                         simulated = True
 
-                read_size = filesystem.filesize(import_filename)
+                read_size = filesystem.filesize(upload_filename)
 
                 while in_file.tell() &lt; read_size:
                         file_reader = exchange.FileReader(simulated)
                         res = file_reader.read(directory, in_file)
-                        logger.syslog(&#34;Import %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
+                        logger.syslog(&#34;  Upload %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 
         except Exception as err:
                 logger.syslog(err)
                 result = False
         finally:
-                logger.syslog(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                logger.syslog(&#34;Upload %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 in_file.close()
-        filesystem.remove(import_filename)
+        filesystem.remove(upload_filename)
         return result</code></pre>
 </details>
 </section>
@@ -98,35 +98,35 @@ def import_files(import_filename, directory=&#34;/&#34;):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.tools.archiver.export_files"><code class="name flex">
-<span>def <span class="ident">export_files</span></span>(<span>export_filename, path='./config', pattern='*.json', recursive=False)</span>
+<dt id="lib.tools.archiver.download_files"><code class="name flex">
+<span>def <span class="ident">download_files</span></span>(<span>download_filename, path='./config', pattern='*.json', recursive=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Exports many file into only one file</p></div>
+<div class="desc"><p>Download many file into only one file</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def export_files(export_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
-        &#34;&#34;&#34; Exports many file into only one file &#34;&#34;&#34;
+<pre><code class="python">def download_files(download_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
+        &#34;&#34;&#34; Download many file into only one file &#34;&#34;&#34;
         result = True
 
-        logger.syslog(&#34;Export %s&#34;%export_filename)
-        filesystem.remove(export_filename)
+        logger.syslog(&#34;Download %s&#34;%download_filename)
+        filesystem.remove(download_filename)
 
         # Scan directory with pattern
         _, files = filesystem.scandir(path=path, pattern=pattern, recursive=recursive)
 
         try:
                 # Open out file
-                out_file = open(export_filename,&#34;wb&#34;)
+                out_file = open(download_filename,&#34;wb&#34;)
 
                 file_write = exchange.FileWriter()
                 # For all files found
                 for filename in files:
                         # All files except .tmp and sdcard
                         if filename[-4:] != &#34;.tmp&#34; and filename[:4] != &#34;/sd/&#34; and filename[5:] != &#34;./sd/&#34;:
-                                logger.syslog(&#34;  Export &#39;%s&#39;&#34;%(filename))
+                                logger.syslog(&#34;  Download &#39;%s&#39;&#34;%(filename))
                                 if file_write.write(filename, None, out_file) is False:
                                         result = False
                                         break
@@ -134,45 +134,45 @@ def import_files(import_filename, directory=&#34;/&#34;):
                 logger.syslog(err)
                 result = False
         finally:
-                logger.syslog(&#34;Export %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                logger.syslog(&#34;Download %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 out_file.close()
         return result</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.archiver.import_files"><code class="name flex">
-<span>def <span class="ident">import_files</span></span>(<span>import_filename, directory='/')</span>
+<dt id="lib.tools.archiver.upload_files"><code class="name flex">
+<span>def <span class="ident">upload_files</span></span>(<span>upload_filename, directory='/')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Import files and write all files</p></div>
+<div class="desc"><p>Upload files and write all files</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def import_files(import_filename, directory=&#34;/&#34;):
-        &#34;&#34;&#34; Import files and write all files &#34;&#34;&#34;
+<pre><code class="python">def upload_files(upload_filename, directory=&#34;/&#34;):
+        &#34;&#34;&#34; Upload files and write all files &#34;&#34;&#34;
         result = True
-        logger.syslog(&#34;Import %s&#34;%import_filename)
+        logger.syslog(&#34;Upload %s&#34;%upload_filename)
         try:
-                in_file = open(import_filename,&#34;rb&#34;)
+                in_file = open(upload_filename,&#34;rb&#34;)
                 if filesystem.ismicropython():
                         simulated = False
                 else:
                         simulated = True
 
-                read_size = filesystem.filesize(import_filename)
+                read_size = filesystem.filesize(upload_filename)
 
                 while in_file.tell() &lt; read_size:
                         file_reader = exchange.FileReader(simulated)
                         res = file_reader.read(directory, in_file)
-                        logger.syslog(&#34;Import %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
+                        logger.syslog(&#34;  Upload %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 
         except Exception as err:
                 logger.syslog(err)
                 result = False
         finally:
-                logger.syslog(&#34;Import %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                logger.syslog(&#34;Upload %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 in_file.close()
-        filesystem.remove(import_filename)
+        filesystem.remove(upload_filename)
         return result</code></pre>
 </details>
 </dd>
@@ -194,8 +194,8 @@ def import_files(import_filename, directory=&#34;/&#34;):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.tools.archiver.export_files" href="#lib.tools.archiver.export_files">export_files</a></code></li>
-<li><code><a title="lib.tools.archiver.import_files" href="#lib.tools.archiver.import_files">import_files</a></code></li>
+<li><code><a title="lib.tools.archiver.download_files" href="#lib.tools.archiver.download_files">download_files</a></code></li>
+<li><code><a title="lib.tools.archiver.upload_files" href="#lib.tools.archiver.upload_files">upload_files</a></code></li>
 </ul>
 </li>
 </ul>

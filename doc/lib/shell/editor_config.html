@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>lib.shell API documentation</title>
-<meta name="description" content="Class defining a minimalist shell and text editor , directly executable on the board." />
+<title>lib.shell.editor_config API documentation</title>
+<meta name="description" content="Editor configuration, contains shortcuts, tab size, scrolling and others" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,45 +19,90 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>lib.shell</code></h1>
+<h1 class="title">Module <code>lib.shell.editor_config</code></h1>
 </header>
 <section id="section-intro">
-<p>Class defining a minimalist shell and text editor , directly executable on the board.</p>
+<p>Editor configuration, contains shortcuts, tab size, scrolling and others</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-&#34;&#34;&#34; Class defining a minimalist shell and text editor , directly executable on the board. &#34;&#34;&#34;
-# pylint: disable=redefined-builtin
-from shell.shell import *</code></pre>
+&#34;&#34;&#34; Editor configuration, contains shortcuts, tab size, scrolling and others &#34;&#34;&#34;
+TABSIZE = 4          # Tabulation size
+HORIZONTAL_MOVE=8    # Scrolling minimal deplacement
+
+ESCAPE           = &#34;\x1b&#34;
+
+# For the same action several shortcuts can be used
+
+# Move shortcuts
+UP               = [&#34;\x1b[A&#34;]
+DOWN             = [&#34;\x1b[B&#34;]
+RIGHT            = [&#34;\x1b[C&#34;]
+LEFT             = [&#34;\x1b[D&#34;]
+HOME             = [&#34;\x1b[1;3D&#34;, &#34;\x1b[H&#34;, &#34;\x1b\x1b[D&#34;, &#34;\x1b[1~&#34;, &#34;\x1bb&#34;]
+END              = [&#34;\x1b[1;3C&#34;, &#34;\x1b[F&#34;, &#34;\x1b\x1b[C&#34;, &#34;\x1b[4~&#34;, &#34;\x1bf&#34;]
+PAGE_UP          = [&#34;\x1b[1;3A&#34;, &#34;\x1b[A&#34;, &#34;\x1b\x1b[A&#34;, &#34;\x1b[5~&#34;]
+PAGE_DOWN        = [&#34;\x1b[1;3B&#34;, &#34;\x1b[B&#34;, &#34;\x1b\x1b[B&#34;, &#34;\x1b[6~&#34;]
+TOP              = [&#34;\x1b[1;5H&#34;]
+BOTTOM           = [&#34;\x1b[1;5F&#34;]
+NEXT_WORD        = [&#34;\x1b[1;5C&#34;]
+PREVIOUS_WORD    = [&#34;\x1b[1;5D&#34;]
+
+# Selection shortcuts
+SELECT_UP        = [&#34;\x1b[1;2A&#34;]
+SELECT_DOWN      = [&#34;\x1b[1;2B&#34;]
+SELECT_RIGHT     = [&#34;\x1b[1;2C&#34;]
+SELECT_LEFT      = [&#34;\x1b[1;2D&#34;]
+SELECT_PAGE_UP   = [&#34;\x1b[1;10A&#34;,&#34;\x1b[1;4A&#34;,&#34;\x1b[5;2~&#34;]
+SELECT_PAGE_DOWN = [&#34;\x1b[1;10B&#34;,&#34;\x1b[1;4B&#34;,&#34;\x1b[6;2~&#34;]
+SELECT_HOME      = [&#34;\x1b[1;2H&#34;,&#34;\x1b[1;10D&#34;]
+SELECT_END       = [&#34;\x1b[1;2F&#34;,&#34;\x1b[1;10C&#34;]
+SELECT_TOP       = [&#34;\x1b[1;6H&#34;]
+SELECT_BOTTOM    = [&#34;\x1b[1;6F&#34;]
+SELECT_NEXT_WORD = [&#34;\x1b[1;6C&#34;,&#34;\x1b[1;4C&#34;]
+SELECT_PREV_WORD = [&#34;\x1b[1;6D&#34;,&#34;\x1b[1;4D&#34;]
+
+
+SELECT_ALL       = [&#34;\x01&#34;]                              # Select All
+# Ctrl-B unused
+COPY             = [&#34;\x03&#34;,&#34;\x1bc&#34;]                      # Copy
+# Ctrl-D unused
+EXECUTE          = [&#34;\x05&#34;, &#34;\x1b[15~&#34;]                  # Execute script
+FIND             = [&#34;\x06&#34;, &#34;\x1BOQ&#34;]                    # Find
+GOTO             = [&#34;\x07&#34;]                              # Goto line
+BACKSPACE        = [&#34;\x08&#34;,&#34;\x7F&#34;]                       # Backspace
+INDENT           = [&#34;\x09&#34;]                              # Indent
+# Line feed reserved
+# Ctrl-K unused
+DELETE_LINE      = [&#34;\x0C&#34;]                              # Delete line
+NEW_LINE         = [&#34;\x0D&#34;, &#34;\0x0A&#34;]                     # New line pressed
+FIND_NEXT        = [&#34;\x0E&#34;, &#34;\x1bOR&#34;]                    # Find next
+# Ctrl-O unused
+FIND_PREVIOUS    = [&#34;\x10&#34;, &#34;\x1b[1;2R&#34;]                 # Find previous
+COMMENT          = [&#34;\x11&#34;]                              # Comment block
+REPLACE          = [&#34;\x12&#34;]                              # Replace
+SAVE             = [&#34;\x13&#34;, &#34;\x1bs&#34;]                     # Save
+TOGGLE_MODE      = [&#34;\x14&#34;]                              # Toggle replace/insert mode
+CHANGE_CASE      = [&#34;\x15&#34;]                              # Change case
+PASTE            = [&#34;\x16&#34;,&#34;\x1bv&#34;]                      # Paste
+# Ctrl-W unused
+CUT              = [&#34;\x18&#34;,&#34;\x1bx&#34;]                      # Cut
+# Ctrl-Y unused
+# Ctrl-Z unused
+
+EXIT             = [ESCAPE]                              # Exit
+
+DELETE           = [&#34;\x1b[3~&#34;]                           # Delete pressed
+UNINDENT         = [&#34;\x1b[Z&#34;]                            # Unindent
+
+SELECTION_START = b&#34;\x1B[7m&#34;
+SELECTION_END   = b&#34;\x1B[m&#34;</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="lib.shell.editor" href="editor.html">lib.shell.editor</a></code></dt>
-<dd>
-<div class="desc"><p>Class defining a VT100 text editor.
-This editor works directly in the board.
-This allows you to make quick and easy changes directly on the board, …</p></div>
-</dd>
-<dt><code class="name"><a title="lib.shell.editor_config" href="editor_config.html">lib.shell.editor_config</a></code></dt>
-<dd>
-<div class="desc"><p>Editor configuration, contains shortcuts, tab size, scrolling and others</p></div>
-</dd>
-<dt><code class="name"><a title="lib.shell.editor_py" href="editor_py.html">lib.shell.editor_py</a></code></dt>
-<dd>
-<div class="desc"><p>Syntax highlight for python in the editor</p></div>
-</dd>
-<dt><code class="name"><a title="lib.shell.shell" href="shell.html">lib.shell.shell</a></code></dt>
-<dd>
-<div class="desc"><p>Class defining a minimalist shell, directly executable on the board.
-We modify directories, list, delete, move files, edit files &hellip;
-The commands are …</p></div>
-</dd>
-</dl>
 </section>
 <section>
 </section>
@@ -74,15 +119,7 @@ The commands are …</p></div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="lib" href="../index.html">lib</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="lib.shell.editor" href="editor.html">lib.shell.editor</a></code></li>
-<li><code><a title="lib.shell.editor_config" href="editor_config.html">lib.shell.editor_config</a></code></li>
-<li><code><a title="lib.shell.editor_py" href="editor_py.html">lib.shell.editor_py</a></code></li>
-<li><code><a title="lib.shell.shell" href="shell.html">lib.shell.shell</a></code></li>
+<li><code><a title="lib.shell" href="index.html">lib.shell</a></code></li>
 </ul>
 </li>
 </ul>

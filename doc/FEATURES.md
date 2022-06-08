@@ -4,12 +4,16 @@
 
 Below is the list of features supported by the software
 
+- Network :
+	- Wifi configuration
+	- Wifi manager
+	- Manages automatic reconnection
+	- Can connect to several wifi
 - Servers :
 	- HTTP web server
 	- FTP server
 	- Telnet server
 	- Login, password can be defined for servers
-	- Homekit server
 
 - Clients :
 	- NTP synchronization
@@ -19,7 +23,6 @@ Below is the list of features supported by the software
 
 - Web interface
 	- Board informations
-	- Wifi configuration
 	- Access point configuration
 	- Server activation
 	- User and password initialisation
@@ -27,14 +30,13 @@ Below is the list of features supported by the software
 	- Battery mode configuration
 
 - Tools on the boards :
-	- VT100 text editor with python script execution
+	- Text editor with syntax highlight, python script execution directly in device
 	- Shell (cd, pwd, cat, mkdir, mv, cp, rm, ls, find, grep, edit, man, ...)
 	- Html template engine using <a href="https://jquery.com">jquery</a>, <a href="https://www.w3schools.com/bootstrap4">bootstrap 4</a>
 
 - Micropython firmware patch :
-	- Support NVS set, get, erase added
 	- Adding reset cause Brownout
-	- Embedding all scripts of this software (Faster loading times, reduce RAM footprint)
+	- Embedding all scripts of this software (Faster loading times, considerably reduces ram consumption compared to an installation of .py)
 
 - Micropython ESP32CAM firmware specificities :
 	- Full camera support by micropython

@@ -28,37 +28,8 @@ This allows you to make quick and easy changes directly on the board, …" />
 This editor works directly in the board.
 This allows you to make quick and easy changes directly on the board, without having to use synchronization tools.
 This editor allows script execution, and displays errors and execution time.</p>
-<p>Editor shortcuts :
-<br> - <b>Exit
-</b>: Escape
-<br> - <b>Move cursor
-</b>: Arrows, Home, End, PageUp, PageDown, Ctrl-Home, Ctrl-End, Ctrl-Left, Ctrl-Right
-<br> - <b>Selection
-</b>: Shift-Arrows, Shift-Home, Shift-End, Alt-Shift-Arrows, Ctrl-Shift-Left, Ctrl-Shift-Right
-<br> - <b>Clipboard
-</b>: Selection with Ctrl X(Cut), Ctrl-C(Copy), Ctrl-V(Paste)
-<br> - <b>Case change
-</b>: Selection with Ctrl-U(Toggle majuscule, minuscule)
-<br> - <b>Indent
-</b>: Selection with Tab(Indent) or Shift-Tab(Unindent)
-<br> - <b>Comment block </b>: Selection with Ctrl-Q
-<br> - <b>Save
-</b>: Ctrl-S
-<br> - <b>Find
-</b>: Ctrl-F
-<br> - <b>Replace
-</b>: Ctrl-H
-<br> - <b>Toggle mode
-</b>: Ctrl-T (Insertion/Replacement)
-<br> - <b>Delete line
-</b>: Ctrl-L
-<br> - <b>Goto line
-</b>: Ctrl-G
-<br> - <b>Execute
-</b>: F5</p>
-<p>This editor also works on linux and osx, and can also be used autonomously,
-you need to add the useful.py,logger.py,strings.py,terminal.py script to its side.
-All the keyboard shortcuts are at the start of the script.</p>
+<p>It also works on linux and osx, and can also be used autonomously, download the editor.zip and execute editor.py.</p>
+<p>All the keyboard shortcuts are at the start of the script.</p>
 <p>On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.</p>
 <details class="source">
 <summary>
@@ -74,24 +45,8 @@ This editor works directly in the board.
 This allows you to make quick and easy changes directly on the board, without having to use synchronization tools.
 This editor allows script execution, and displays errors and execution time.
 
-Editor shortcuts :
-&lt;br&gt; - &lt;b&gt;Exit          &lt;/b&gt;: Escape
-&lt;br&gt; - &lt;b&gt;Move cursor   &lt;/b&gt;: Arrows, Home, End, PageUp, PageDown, Ctrl-Home, Ctrl-End, Ctrl-Left, Ctrl-Right
-&lt;br&gt; - &lt;b&gt;Selection     &lt;/b&gt;: Shift-Arrows, Shift-Home, Shift-End, Alt-Shift-Arrows, Ctrl-Shift-Left, Ctrl-Shift-Right
-&lt;br&gt; - &lt;b&gt;Clipboard     &lt;/b&gt;: Selection with Ctrl X(Cut), Ctrl-C(Copy), Ctrl-V(Paste)
-&lt;br&gt; - &lt;b&gt;Case change   &lt;/b&gt;: Selection with Ctrl-U(Toggle majuscule, minuscule)
-&lt;br&gt; - &lt;b&gt;Indent        &lt;/b&gt;: Selection with Tab(Indent) or Shift-Tab(Unindent)
-&lt;br&gt; - &lt;b&gt;Comment block &lt;/b&gt;: Selection with Ctrl-Q
-&lt;br&gt; - &lt;b&gt;Save          &lt;/b&gt;: Ctrl-S
-&lt;br&gt; - &lt;b&gt;Find          &lt;/b&gt;: Ctrl-F
-&lt;br&gt; - &lt;b&gt;Replace       &lt;/b&gt;: Ctrl-H
-&lt;br&gt; - &lt;b&gt;Toggle mode   &lt;/b&gt;: Ctrl-T (Insertion/Replacement)
-&lt;br&gt; - &lt;b&gt;Delete line   &lt;/b&gt;: Ctrl-L
-&lt;br&gt; - &lt;b&gt;Goto line     &lt;/b&gt;: Ctrl-G
-&lt;br&gt; - &lt;b&gt;Execute       &lt;/b&gt;: F5
+It also works on linux and osx, and can also be used autonomously, download the editor.zip and execute editor.py.
 
-This editor also works on linux and osx, and can also be used autonomously,
-you need to add the useful.py,logger.py,strings.py,terminal.py script to its side.
 All the keyboard shortcuts are at the start of the script.
 
 On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.
@@ -106,72 +61,27 @@ except:
         # pylint:disable=multiple-imports
         import useful,logger,strings,terminal,filesystem
 
-TABSIZE = 4          # Tabulation size
-HORIZONTAL_MOVE=8    # Scrolling minimal deplacement
+# Load default editor configuration
+try:
+        from editor_config import *
+except:
+        from shell.editor_config import *
 
-ESCAPE           = &#34;\x1b&#34;
+def is_enough_memory():
+        &#34;&#34;&#34; Indicate if it has enough memory &#34;&#34;&#34;
+        import gc
+        try:
+                # pylint: disable=no-member
+                memory  = gc.mem_free()
+        except:
+                memory  = 256*1024
+        if memory &lt; 50*1024:
+                return False
+        return True
 
-# Move shortcuts
-UP               = [&#34;\x1b[A&#34;]
-DOWN             = [&#34;\x1b[B&#34;]
-RIGHT            = [&#34;\x1b[C&#34;]
-LEFT             = [&#34;\x1b[D&#34;]
-HOME             = [&#34;\x1b[1;3D&#34;, &#34;\x1b[H&#34;, &#34;\x1b\x1b[D&#34;, &#34;\x1b[1~&#34;, &#34;\x1bb&#34;]
-END              = [&#34;\x1b[1;3C&#34;, &#34;\x1b[F&#34;, &#34;\x1b\x1b[C&#34;, &#34;\x1b[4~&#34;, &#34;\x1bf&#34;]
-PAGE_UP          = [&#34;\x1b[1;3A&#34;, &#34;\x1b[A&#34;, &#34;\x1b\x1b[A&#34;, &#34;\x1b[5~&#34;]
-PAGE_DOWN        = [&#34;\x1b[1;3B&#34;, &#34;\x1b[B&#34;, &#34;\x1b\x1b[B&#34;, &#34;\x1b[6~&#34;]
-TOP              = [&#34;\x1b[1;5H&#34;]
-BOTTOM           = [&#34;\x1b[1;5F&#34;]
-NEXT_WORD        = [&#34;\x1b[1;5C&#34;]
-PREVIOUS_WORD    = [&#34;\x1b[1;5D&#34;]
-
-# Selection shortcuts
-SELECT_UP        = [&#34;\x1b[1;2A&#34;]
-SELECT_DOWN      = [&#34;\x1b[1;2B&#34;]
-SELECT_RIGHT     = [&#34;\x1b[1;2C&#34;]
-SELECT_LEFT      = [&#34;\x1b[1;2D&#34;]
-SELECT_PAGE_UP   = [&#34;\x1b[1;10A&#34;,&#34;\x1b[1;4A&#34;,&#34;\x1b[5;2~&#34;]
-SELECT_PAGE_DOWN = [&#34;\x1b[1;10B&#34;,&#34;\x1b[1;4B&#34;,&#34;\x1b[6;2~&#34;]
-SELECT_HOME      = [&#34;\x1b[1;2H&#34;,&#34;\x1b[1;10D&#34;]
-SELECT_END       = [&#34;\x1b[1;2F&#34;,&#34;\x1b[1;10C&#34;]
-SELECT_TOP       = [&#34;\x1b[1;6H&#34;]
-SELECT_BOTTOM    = [&#34;\x1b[1;6F&#34;]
-SELECT_ALL       = [&#34;\x01&#34;,&#34;\x05&#34;] # Select All (^E or ^A)
-SELECT_NEXT_WORD = [&#34;\x1b[1;6C&#34;,&#34;\x1b[1;4C&#34;]
-SELECT_PREV_WORD = [&#34;\x1b[1;6D&#34;,&#34;\x1b[1;4D&#34;]
-
-# Clipboard shortcuts
-CUT              = [&#34;\x18&#34;,&#34;\x1bx&#34;,&#34;\x0b&#34;]                      # Cut (^K)
-COPY             = [&#34;\x03&#34;,&#34;\x1bc&#34;,&#34;\x04&#34;]                      # Copy (^D)
-PASTE            = [&#34;\x16&#34;,&#34;\x1bv&#34;,&#34;\x10&#34;]                      # Paste (^P)
-
-# Selection modification shortcut
-INDENT           = [&#34;\t&#34;]                                # Indent
-UNINDENT         = [&#34;\x1b[Z&#34;]                            # Unindent
-CHANGE_CASE      = [&#34;\x15&#34;]                              # Change case
-COMMENT          = [&#34;\x11&#34;]                              # Comment block
-
-DELETE           = [&#34;\x1b[3~&#34;]                           # Delete pressed
-BACKSPACE        = [&#34;\x7F&#34;]                              # Backspace pressed
-NEW_LINE         = [&#34;\n&#34;, &#34;\r&#34;]                          # New line pressed
-
-TOGGLE_MODE      = [&#34;\x14&#34;]                              # Toggle replace/insert mode
-EXIT             = [ESCAPE]                              # Exit
-FIND             = [&#34;\x06&#34;]                              # Find
-FIND_NEXT        = [&#34;\x1bOR&#34;]                            # Find next
-FIND_PREVIOUS    = [&#34;\x1b[1;2R&#34;]                         # Find previous
-GOTO             = [&#34;\x07&#34;]                              # Goto line
-SAVE             = [&#34;\x13&#34;,&#34;\x1bs&#34;]                      # Save
-DELETE_LINE      = [&#34;\x0C&#34;]                              # Delete line
-REPLACE          = [&#34;\x08&#34;,&#34;\x02&#34;]                       # Replace (^B)
-REPLACE_CURRENT  = [&#34;\x12&#34;]                              # Replace the selection
-EXECUTE          = [&#34;\x1b[15~&#34;]                          # Execute script
-
-SELECTION_START = b&#34;\x1B[7m&#34;
-SELECTION_END   = b&#34;\x1B[m&#34;
 class View:
         &#34;&#34;&#34; Class which manage the view of the edit field &#34;&#34;&#34;
-        def __init__(self, view_height, view_top):
+        def __init__(self, view_height, view_top, extension=None):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.line     = 0
                 self.column   = 0
@@ -179,6 +89,22 @@ class View:
                         self.height   = 20
                 else:
                         self.height             = view_height
+
+                self.colorize = self.colorize_none
+                if is_enough_memory():
+                        if extension is not None:
+                                if extension.lower() == &#34;.py&#34;:
+                                        # pylint: disable=import-error
+                                        try:
+                                                try:
+                                                        from editor_py import Colorizer
+                                                except:
+                                                        from shell.editor_py import Colorizer
+                                                self.colorizer = Colorizer()
+                                                self.colorize = self.colorize_syntax
+                                        except:
+                                                pass
+
                 self.width                  = 80
                 self.top                    = view_top
                 self.is_refresh_all         = True
@@ -251,6 +177,8 @@ class View:
                 if line &lt; self.height:
                         self.set_scrolling_region(line +1, self.height+1)
                         self.write(b&#34;\x1B[1S&#34;)
+                elif line == self.height:
+                        self.write(b&#34;\x1B[%d;1f\x1B[K&#34;%(self.height + 1 + self.top))
 
         def scroll_part_down(self):
                 &#34;&#34;&#34; Scroll the lower part &#34;&#34;&#34;
@@ -330,6 +258,8 @@ class View:
                                 # If the line is completly selected
                                 if current_line &gt; sel_line_start and current_line &lt; sel_line_end:
                                         part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+                                        if (len(part_line) == 0):
+                                                part_line = b&#34; &#34;
                                         self.write(clear_line+SELECTION_START+part_line+SELECTION_END)
                                 # If the line is partially selected
                                 else:
@@ -350,21 +280,40 @@ class View:
 
                                                 # If the selection is on alone line
                                                 if current_line == sel_line_end and current_line == sel_line_start:
-                                                        self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                        self.write(clear_line)
+                                                        self.colorize(part_line[:sel_column_start].encode(&#34;utf8&#34;))
+                                                        self.write(SELECTION_START+part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                        self.colorize(part_line[sel_column_end:].encode(&#34;utf8&#34;))
                                                 # If current line is on the last selection line
                                                 elif current_line == sel_line_end:
-                                                        self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                        self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                        self.colorize(part_line[sel_column_end:].encode(&#34;utf8&#34;))
                                                 # If current line is on the first selection line
                                                 elif current_line == sel_line_start:
-                                                        self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                        self.write(clear_line)
+                                                        self.colorize(part_line[:sel_column_start].encode(&#34;utf8&#34;))
+                                                        self.write(SELECTION_START+part_line[sel_column_start:].encode(&#34;utf8&#34;)+SELECTION_END)
                                                 # Else the line is not selected
                                                 else:
-                                                        self.write(clear_line+part_line.encode(&#34;utf8&#34;))
+                                                        self.write(clear_line)
+                                                        self.colorize(part_line.encode(&#34;utf8&#34;))
                                         else:
-                                                self.write(clear_line)
+                                                if current_line &gt;= sel_line_start and current_line &lt;= sel_line_end:
+                                                        self.write(clear_line+SELECTION_START+b&#34; &#34;+SELECTION_END)
+                                                else:
+                                                        self.write(clear_line)
                         else:
                                 part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
-                                self.write(clear_line+part_line)
+                                self.write(clear_line)
+                                self.colorize(part_line)
+
+        def colorize_none(self, text):
+                &#34;&#34;&#34; No colorization &#34;&#34;&#34;
+                self.write(text)
+
+        def colorize_syntax(self, text):
+                &#34;&#34;&#34; Syntax colorization &#34;&#34;&#34;
+                self.colorizer.colorize(text, self)
 
         def refresh_line(self, selection_start, selection_end):
                 &#34;&#34;&#34; Refresh line &#34;&#34;&#34;
@@ -502,13 +451,14 @@ class View:
                 &#34;&#34;&#34; Indicates that the selection must be refreshed &#34;&#34;&#34;
                 selection_start, selection_end = self.text.get_selection()
                 if selection_start is not None:
-                        # self.is_refresh_all = True
                         line_start = selection_start[1]
-                        if self.sel_line_start &lt; line_start:
-                                line_start = self.sel_line_start
+                        if self.sel_line_start is not None:
+                                if self.sel_line_start &lt; line_start:
+                                        line_start = self.sel_line_start
                         line_end = selection_end[1]
-                        if self.sel_line_end &gt; line_end:
-                                line_end = self.sel_line_end
+                        if self.sel_line_end is not None:
+                                if self.sel_line_end &gt; line_end:
+                                        line_end = self.sel_line_end
                         self.refresh_part = [line_start, line_end]
 
         def move_cursor(self, screen_line=None, screen_column=None):
@@ -841,7 +791,7 @@ class Text:
                 else:
                         return True
 
-        def backspace(self):
+        def backspace(self, keys=None):
                 &#34;&#34;&#34; Manage the backspace key &#34;&#34;&#34;
                 self.modified = True
                 if self.remove_selection() is False:
@@ -865,7 +815,7 @@ class Text:
                                         self.view.set_refresh_after()
                                         self.change_column(-1)
 
-        def delete(self):
+        def delete(self, keys=None):
                 &#34;&#34;&#34; Manage the delete key &#34;&#34;&#34;
                 self.modified = True
                 if self.remove_selection() is False:
@@ -887,7 +837,7 @@ class Text:
                                         self.change_column(0)
                                         self.view.is_refresh_line = True
 
-        def delete_line(self):
+        def delete_line(self, keys=None):
                 &#34;&#34;&#34; Manage the delete of line key &#34;&#34;&#34;
                 self.hide_selection()
                 self.modified = True
@@ -909,23 +859,23 @@ class Text:
                         self.change_column(0)
                 self.view.set_refresh_after()
 
-        def new_line(self):
+        def new_line(self, keys=None):
                 &#34;&#34;&#34; Manage the newline key &#34;&#34;&#34;
                 self.modified = True
-                if self.remove_selection() is False:
-                        line1 = self.lines[self.cursor_line][:self.cursor_column]+&#34;\n&#34;
-                        line2 = self.lines[self.cursor_line][self.cursor_column:]
-                        self.lines[self.cursor_line]=line1
-                        self.lines.insert(self.cursor_line+1, line2)
-                        self.view.scroll_part_down()
-                        self.change_column(1)
-                        self.view.set_refresh_before()
+                self.remove_selection()
+                line1 = self.lines[self.cursor_line][:self.cursor_column]+&#34;\n&#34;
+                line2 = self.lines[self.cursor_line][self.cursor_column:]
+                self.lines[self.cursor_line]=line1
+                self.lines.insert(self.cursor_line+1, line2)
+                self.view.scroll_part_down()
+                self.change_column(1)
+                self.view.set_refresh_before()
 
         def insert_char(self, char):
                 &#34;&#34;&#34; Insert character &#34;&#34;&#34;
                 self.modified = True
                 self.lines[self.cursor_line] = self.lines[self.cursor_line][:self.cursor_column] + char + self.lines[self.cursor_line][self.cursor_column:]
-                self.change_column(1)
+                self.change_column(len(char))
                 self.view.set_refresh_line()
 
         def replace_char(self, char):
@@ -955,7 +905,7 @@ class Text:
                 if self.selection_start is not None:
                         self.selection_end = [self.cursor_column, self.cursor_line,self.get_tab_cursor(self.cursor_line)]
 
-        def select_all(self):
+        def select_all(self, keys=None):
                 &#34;&#34;&#34; Do a select all &#34;&#34;&#34;
                 self.selection_start = [0,0,0]
                 lastLine = len(self.lines)-1
@@ -978,109 +928,109 @@ class Text:
                 else:
                         return None, None
 
-        def arrow_up(self, keys):
+        def arrow_up(self, keys=None):
                 &#34;&#34;&#34; Manage arrow up key &#34;&#34;&#34;
                 self.hide_selection()
                 self.change_line(-1)
 
-        def arrow_down(self, keys):
+        def arrow_down(self, keys=None):
                 &#34;&#34;&#34; Manage arrow down key &#34;&#34;&#34;
                 self.hide_selection()
                 self.change_line(1)
 
-        def arrow_left(self, keys):
+        def arrow_left(self, keys=None):
                 &#34;&#34;&#34; Manage arrow left key &#34;&#34;&#34;
                 self.hide_selection()
                 self.change_column(-len(keys))
 
-        def arrow_right(self, keys):
+        def arrow_right(self, keys=None):
                 &#34;&#34;&#34; Manage arrow right key &#34;&#34;&#34;
                 self.hide_selection()
                 self.change_column(len(keys))
 
-        def select_up(self, keys):
+        def select_up(self, keys=None):
                 &#34;&#34;&#34; Manage select up key &#34;&#34;&#34;
                 self.open_selection()
                 self.change_line(-1)
 
-        def select_down(self, keys):
+        def select_down(self, keys=None):
                 &#34;&#34;&#34; Manage select down key &#34;&#34;&#34;
                 self.open_selection()
                 self.change_line(1)
 
-        def select_left(self, keys):
+        def select_left(self, keys=None):
                 &#34;&#34;&#34; Manage select left key &#34;&#34;&#34;
                 self.open_selection()
                 self.change_column(-len(keys))
 
-        def select_right(self, keys):
+        def select_right(self, keys=None):
                 &#34;&#34;&#34; Manage select right key &#34;&#34;&#34;
                 self.open_selection()
                 self.change_column(len(keys))
 
-        def select_home(self):
+        def select_home(self, keys=None):
                 &#34;&#34;&#34; Manage home key &#34;&#34;&#34;
                 self.open_selection()
-                self.change_column(-100000000000)
+                self.change_column(-terminal.MAXINT)
 
-        def select_end(self):
+        def select_end(self, keys=None):
                 &#34;&#34;&#34; Manage end key &#34;&#34;&#34;
                 self.open_selection()
-                self.change_column(100000000000)
+                self.change_column(terminal.MAXINT)
 
-        def select_page_up(self, keys):
+        def select_page_up(self, keys=None):
                 &#34;&#34;&#34; Manage select page up key &#34;&#34;&#34;
                 self.open_selection()
-                self.change_line((-self.view.height-1) * len(keys))
-                self.change_column(-100000000000)
+                self.change_line((-(self.view.height)) * len(keys))
+                self.change_column(-terminal.MAXINT)
 
-        def select_page_down(self, keys):
+        def select_page_down(self, keys=None):
                 &#34;&#34;&#34; Manage select page down key &#34;&#34;&#34;
                 self.open_selection()
-                self.change_line((self.view.height+1) * len(keys))
-                self.change_column(100000000000)
+                self.change_line((self.view.height) * len(keys))
+                self.change_column(terminal.MAXINT)
 
-        def select_next_word(self):
+        def select_next_word(self, keys=None):
                 &#34;&#34;&#34; Manage select next word key &#34;&#34;&#34;
                 self.open_selection()
                 self.move_word(1)
 
-        def select_previous_word(self):
+        def select_previous_word(self, keys=None):
                 &#34;&#34;&#34; Manage select previous word key &#34;&#34;&#34;
                 self.open_selection()
                 self.move_word(-1)
 
-        def select_top(self):
+        def select_top(self, keys=None):
                 &#34;&#34;&#34; Manage select to the first line of text &#34;&#34;&#34;
                 self.open_selection()
-                self.change_line(-100000000000)
+                self.change_line(-terminal.MAXINT)
 
-        def select_bottom(self):
+        def select_bottom(self, keys=None):
                 &#34;&#34;&#34; Manage select to the last line of text &#34;&#34;&#34;
                 self.open_selection()
-                self.change_line(100000000000)
+                self.change_line(terminal.MAXINT)
 
-        def page_up(self, keys):
+        def page_up(self, keys=None):
                 &#34;&#34;&#34; Manage page up key &#34;&#34;&#34;
                 self.hide_selection()
-                self.change_line((-self.view.height-1) * len(keys))
+                self.change_line((-(self.view.height)) * len(keys))
 
-        def page_down(self, keys):
+        def page_down(self, keys=None):
                 &#34;&#34;&#34; Manage page down key &#34;&#34;&#34;
                 self.hide_selection()
-                self.change_line((self.view.height+1) * len(keys))
+                self.change_line((self.view.height) * len(keys))
 
-        def home(self):
+        def home(self, keys=None):
                 &#34;&#34;&#34; Manage home key &#34;&#34;&#34;
                 self.hide_selection()
-                self.change_column(-100000000000)
+                self.change_column(-terminal.MAXINT)
 
-        def end(self):
+        def end(self, keys=None):
                 &#34;&#34;&#34; Manage end key &#34;&#34;&#34;
                 self.hide_selection()
-                self.change_column(100000000000)
+                self.change_column(terminal.MAXINT)
 
-        def add_char(self, keys):
+        def add_char(self, keys=None):
                 &#34;&#34;&#34; Manage other key, add character &#34;&#34;&#34;
                 result = False
 
@@ -1099,6 +1049,7 @@ class Text:
 
         def find_next(self, text):
                 &#34;&#34;&#34; Find next researched text &#34;&#34;&#34;
+                result = False
                 # Get the selection
                 selection_start, selection_end = self.get_selection()
 
@@ -1131,15 +1082,18 @@ class Text:
                                 self.change_column(0)
                                 self.selection_start = [pos, current_line,self.get_tab_cursor(current_line,pos)]
                                 self.selection_end   = [pos + len(text), current_line, self.get_tab_cursor(current_line, pos + len(text))]
+                                result = True
                                 break
                         else:
                                 # Set the search position at the begin of next line
                                 current_column = 0
                                 current_line += 1
                 self.view.move()
+                return result
 
         def find_previous(self, text):
                 &#34;&#34;&#34; Find previous researched text &#34;&#34;&#34;
+                result = False
                 # Get the selection
                 selection_start, selection_end = self.get_selection()
 
@@ -1179,12 +1133,14 @@ class Text:
                                 self.change_column(0)
                                 self.selection_start = [pos, current_line,self.get_tab_cursor(current_line,pos)]
                                 self.selection_end   = [pos + len(text), current_line, self.get_tab_cursor(current_line, pos + len(text))]
+                                result = True
                                 break
                         else:
                                 # Set the search position at the end of line
                                 current_column = -1
                                 current_line -= 1
                 self.view.move()
+                return result
 
         def hide_selection(self):
                 &#34;&#34;&#34; Hide selection &#34;&#34;&#34;
@@ -1310,24 +1266,24 @@ class Text:
                 self.change_column(0)
                 self.get_tab_cursor_column()
 
-        def copy(self):
+        def copy(self, keys=None):
                 &#34;&#34;&#34; Manage copy key &#34;&#34;&#34;
                 self.selection = self.copy_clipboard()
 
-        def cut(self):
+        def cut(self, keys=None):
                 &#34;&#34;&#34; Manage cut key &#34;&#34;&#34;
                 self.modified = True
                 self.selection = self.copy_clipboard()
                 self.remove_selection()
 
-        def paste(self):
+        def paste(self, keys=None):
                 &#34;&#34;&#34; Manage paste key &#34;&#34;&#34;
                 self.modified = True
                 self.remove_selection()
                 self.paste_clipboard(self.selection)
                 self.hide_selection()
 
-        def change_case(self):
+        def change_case(self, keys=None):
                 &#34;&#34;&#34; Change the case of selection &#34;&#34;&#34;
                 selection = self.copy_clipboard()
                 if selection != []:
@@ -1358,7 +1314,7 @@ class Text:
                         self.selection_start = selection_start
                         self.selection_end   = selection_end
 
-        def comment(self):
+        def comment(self, keys=None):
                 &#34;&#34;&#34; Comment the selection &#34;&#34;&#34;
                 self.modified = True
 
@@ -1398,7 +1354,7 @@ class Text:
                                         self.change_column(1)
                         self.view.set_refresh_line()
 
-        def indent(self, keys):
+        def indent(self, keys=None):
                 &#34;&#34;&#34; Manage tabulation key &#34;&#34;&#34;
                 # If nothing selected
                 if self.selection_start is None:
@@ -1442,7 +1398,7 @@ class Text:
                                         self.selection_end  = [0, sel_line_end+1, 0]
                         self.view.set_refresh_selection()
 
-        def unindent(self, keys):
+        def unindent(self, keys=None):
                 &#34;&#34;&#34; Manage the unindentation key &#34;&#34;&#34;
                 # If nothing selected
                 if self.selection_start is None:
@@ -1530,27 +1486,27 @@ class Text:
                                 if state == 2:
                                         break
 
-        def next_word(self):
+        def next_word(self, keys=None):
                 &#34;&#34;&#34; Move the cursor to the next word &#34;&#34;&#34;
                 self.hide_selection()
                 self.move_word(1)
                 self.view.move()
 
-        def previous_word(self):
+        def previous_word(self, keys=None):
                 &#34;&#34;&#34; Move the cursor to the previous word &#34;&#34;&#34;
                 self.hide_selection()
                 self.move_word(-1)
                 self.view.move()
 
-        def top(self):
+        def top(self, keys=None):
                 &#34;&#34;&#34; Move the cursor to the first line of text &#34;&#34;&#34;
                 self.goto(1)
 
-        def bottom(self):
+        def bottom(self, keys=None):
                 &#34;&#34;&#34; Move the cursor to the last line of text &#34;&#34;&#34;
-                self.goto(100000000000)
+                self.goto(terminal.MAXINT)
 
-        def treat_char(self, keys):
+        def treat_char(self, keys=None):
                 &#34;&#34;&#34; Treat character entered &#34;&#34;&#34;
                 char = ord(keys[0][0])
                 if self.read_only is False:
@@ -1559,85 +1515,101 @@ class Text:
                                 return True
                 return False
 
-        def treat_key(self, keys):
+        def treat_key(self, keys=None):
                 &#34;&#34;&#34; Treat keys &#34;&#34;&#34;
+                key_callback = None
                 if self.treat_char(keys) is False:
                         # Move in the edit field
                         if keys[0] in self.MOVE_KEYS:
-                                if   keys[0] in UP  :            self.arrow_up(keys)
-                                elif keys[0] in DOWN:            self.arrow_down(keys)
-                                elif keys[0] in LEFT:            self.arrow_left(keys)
-                                elif keys[0] in RIGHT:           self.arrow_right(keys)
-                                elif keys[0] in HOME:            self.home()
-                                elif keys[0] in END:             self.end()
-                                elif keys[0] in PAGE_UP:         self.page_up(keys)
-                                elif keys[0] in PAGE_DOWN:       self.page_down(keys)
-                                elif keys[0] in TOP:             self.top()
-                                elif keys[0] in BOTTOM:          self.bottom()
-                                elif keys[0] in NEXT_WORD:       self.next_word()
-                                elif keys[0] in PREVIOUS_WORD:   self.previous_word()
+                                if   keys[0] in LEFT:            key_callback = self.arrow_left
+                                elif keys[0] in RIGHT:           key_callback = self.arrow_right
+                                elif keys[0] in UP  :            key_callback = self.arrow_up
+                                elif keys[0] in DOWN:            key_callback = self.arrow_down
+                                elif keys[0] in HOME:            key_callback = self.home
+                                elif keys[0] in END:             key_callback = self.end
+                                elif keys[0] in PAGE_UP:         key_callback = self.page_up
+                                elif keys[0] in PAGE_DOWN:       key_callback = self.page_down
+                                elif keys[0] in TOP:             key_callback = self.top
+                                elif keys[0] in BOTTOM:          key_callback = self.bottom
+                                elif keys[0] in NEXT_WORD:       key_callback = self.next_word
+                                elif keys[0] in PREVIOUS_WORD:   key_callback = self.previous_word
                         elif keys[0] in self.SELECT_KEYS:
                                 # Selection the edit field
-                                if   keys[0] in SELECT_UP:       self.select_up(keys)
-                                elif keys[0] in SELECT_DOWN:     self.select_down(keys)
-                                elif keys[0] in SELECT_RIGHT:    self.select_right(keys)
-                                elif keys[0] in SELECT_LEFT:     self.select_left(keys)
-                                elif keys[0] in SELECT_HOME:     self.select_home()
-                                elif keys[0] in SELECT_END:      self.select_end()
-                                elif keys[0] in SELECT_TOP:      self.select_top()
-                                elif keys[0] in SELECT_BOTTOM:   self.select_bottom()
-                                elif keys[0] in SELECT_PAGE_UP:  self.select_page_up(keys)
-                                elif keys[0] in SELECT_PAGE_DOWN:self.select_page_down(keys)
-                                elif keys[0] in SELECT_ALL:      self.select_all()
-                                elif keys[0] in SELECT_NEXT_WORD:self.select_next_word()
-                                elif keys[0] in SELECT_PREV_WORD:self.select_previous_word()
+                                if   keys[0] in SELECT_RIGHT:    key_callback = self.select_right
+                                elif keys[0] in SELECT_LEFT:     key_callback = self.select_left
+                                elif keys[0] in SELECT_UP:       key_callback = self.select_up
+                                elif keys[0] in SELECT_DOWN:     key_callback = self.select_down
+                                elif keys[0] in SELECT_HOME:     key_callback = self.select_home
+                                elif keys[0] in SELECT_END:      key_callback = self.select_end
+                                elif keys[0] in SELECT_TOP:      key_callback = self.select_top
+                                elif keys[0] in SELECT_BOTTOM:   key_callback = self.select_bottom
+                                elif keys[0] in SELECT_PAGE_UP:  key_callback = self.select_page_up
+                                elif keys[0] in SELECT_PAGE_DOWN:key_callback = self.select_page_down
+                                elif keys[0] in SELECT_ALL:      key_callback = self.select_all
+                                elif keys[0] in SELECT_NEXT_WORD:key_callback = self.select_next_word
+                                elif keys[0] in SELECT_PREV_WORD:key_callback = self.select_previous_word
 
                         # If the edit is not in read only
                         elif self.read_only is False:
                                 if keys[0] in self.NOT_READ_ONLY_KEYS:
                                         # Modification in the edit field
-                                        if   keys[0] in COPY:            self.copy()
-                                        elif keys[0] in CUT:             self.cut()
-                                        elif keys[0] in PASTE:           self.paste()
-
-                                        elif keys[0] in INDENT:          self.indent(keys)
-                                        elif keys[0] in UNINDENT:        self.unindent(keys)
-                                        elif keys[0] in CHANGE_CASE:     self.change_case()
-                                        elif keys[0] in COMMENT:         self.comment()
-
-                                        elif keys[0] in BACKSPACE:       self.backspace()
-                                        elif keys[0] in DELETE:          self.delete()
-                                        elif keys[0] in NEW_LINE:        self.new_line()
-                                        elif keys[0] in DELETE_LINE:     self.delete_line()
+                                        if   keys[0] in COPY:        key_callback = self.copy
+                                        elif keys[0] in CUT:         key_callback = self.cut
+                                        elif keys[0] in PASTE:       key_callback = self.paste
+                                        elif keys[0] in INDENT:      key_callback = self.indent
+                                        elif keys[0] in UNINDENT:    key_callback = self.unindent
+                                        elif keys[0] in CHANGE_CASE: key_callback = self.change_case
+                                        elif keys[0] in COMMENT:     key_callback = self.comment
+                                        elif keys[0] in BACKSPACE:   key_callback = self.backspace
+                                        elif keys[0] in DELETE:      key_callback = self.delete
+                                        elif keys[0] in NEW_LINE:    key_callback = self.new_line
+                                        elif keys[0] in DELETE_LINE: key_callback = self.delete_line
                         # else: self.add_char(keys)
+                        if key_callback is not None:
+                                key_callback(keys)
 
 class Edit:
         &#34;&#34;&#34; Class which aggregate the View and Text &#34;&#34;&#34;
-        def __init__(self, view_top=1, view_height=None, read_only=False):
+        def __init__(self, view_top=1, view_height=None, read_only=False, extension=None):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.view = View(view_height, view_top)
+                self.view = View(view_height, view_top, extension=extension)
                 self.text = Text(read_only)
                 self.text.set_view(self.view)
                 self.view.set_text(self.text)
 
 class Editor:
         &#34;&#34;&#34; Class which manage a complete editor &#34;&#34;&#34;
-        def __init__(self, filename_, read_only=False):
+        def __init__(self, filename_, no_color=False, read_only=False):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.file = filename_
                 self.filename = filesystem.split(filename_)[1]
-                self.edit = Edit(read_only=read_only)
+                if no_color:
+                        extension = &#34;&#34;
+                else:
+                        extension = filesystem.splitext(filename_)[1]
+                self.edit = Edit(read_only=read_only, extension=extension)
                 self.edit.text.load(filename_)
                 self.is_refresh_header = True
                 self.find_text = None
                 self.replace_text = None
                 self.keys= []
                 self.loop = None
+                self.key_callback = None
+                self.precedent_callback = None
+                self.trace = None
+                if filesystem.ismicropython() is False:
+                        if filename_ == &#34;toto.py&#34;:
+                                self.trace = open(&#34;key.txt&#34;,&#34;w&#34;)
 
                 if (not filesystem.exists(filename_) and read_only is True) or filesystem.isdir(filename_):
                         print(&#34;Cannot open &#39;%s&#39;&#34;%self.filename)
                 else:
-                        self.run()
+                        try:
+                                self.run()
+                        except Exception as err:
+                                self.edit.view.cls()
+                                logger.syslog(err)
+                                print(&#34;Failed edit &#39;%s&#39;&#34;%self.filename)
 
         def refresh_header(self):
                 &#34;&#34;&#34; Refresh the header of editor &#34;&#34;&#34;
@@ -1649,6 +1621,7 @@ class Editor:
                                 end = &#34; Mode: %s &#34;%(&#34;Replace&#34; if self.edit.text.replace_mode else &#34;Insert&#34;)
                         else:
                                 end = &#34; Read only &#34; if self.edit.text.read_only else &#34;&#34;
+                        end = &#34;L%d C%d &#34;%(self.edit.text.cursor_line+1, self.edit.text.cursor_column+1) + end
 
                         header = &#34;\x1B[7m%s%s%s\x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)), end)
                         self.edit.view.write(header)
@@ -1660,7 +1633,7 @@ class Editor:
                 self.refresh_header()
                 self.edit.view.refresh()
 
-        def toggle_mode(self):
+        def toggle_mode(self, keys=None):
                 &#34;&#34;&#34; Change the replace mode &#34;&#34;&#34;
                 if self.edit.text.replace_mode:
                         self.edit.text.replace_mode = False
@@ -1668,12 +1641,12 @@ class Editor:
                         self.edit.text.replace_mode = True
                 self.is_refresh_header = True
 
-        def save(self):
+        def save(self, keys=None):
                 &#34;&#34;&#34; Save the file edited &#34;&#34;&#34;
                 self.edit.text.save()
                 self.is_refresh_header = True
 
-        def exit(self):
+        def exit(self, keys=None):
                 &#34;&#34;&#34; Exit from editor &#34;&#34;&#34;
                 self.edit.view.cls()
                 if self.edit.text.modified:
@@ -1726,40 +1699,53 @@ class Editor:
                                 edit_.text.treat_key(key)
                 return result
 
-        def find(self):
+        def find(self, keys=None):
                 &#34;&#34;&#34; Find a text &#34;&#34;&#34;
-                self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3&#34;,&#34;Previous&#34;),(&#34;F3&#34;,&#34;Next&#34;)])
+                self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;)])
                 self.find_next()
                 self.edit.view.set_refresh_all()
                 self.is_refresh_header = True
+                self.replace_text = None
 
-        def replace(self):
+        def replace(self, keys=None):
                 &#34;&#34;&#34; Replace a text &#34;&#34;&#34;
                 self.find_text    = self.input(&#34;Find to replace :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)])
                 if self.find_text:
-                        self.replace_text = self.input(&#34;Replace with :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3&#34;,&#34;Previous&#34;),(&#34;F3&#34;,&#34;Next&#34;),(&#34;^R&#34;,&#34;Replace&#34;)])
+                        self.replace_text = self.input(&#34;Replace with :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;),(&#34;Enter&#34;,&#34;Replace current&#34;)])
                         self.find_next()
 
                 self.edit.view.set_refresh_all()
                 self.is_refresh_header = True
 
-        def replace_current(self):
+        def replace_current(self, keys=None):
                 &#34;&#34;&#34; Replace current &#34;&#34;&#34;
                 if self.find_text and self.replace_text:
                         if self.edit.text.replace(self.find_text, self.replace_text):
                                 self.find_next()
 
-        def find_next(self):
+        def replace_all(self, keys=None):
+                &#34;&#34;&#34; Replace replace all &#34;&#34;&#34;
+                if self.find_text and self.replace_text:
+                        self.edit.text.top()
+                        while self.find_next():
+                                self.edit.text.replace(self.find_text, self.replace_text)
+                        self.edit.view.set_refresh_all()
+
+        def find_next(self, keys=None):
                 &#34;&#34;&#34; Find next text &#34;&#34;&#34;
+                result = False
                 if self.find_text:
-                        self.edit.text.find_next(self.find_text)
+                        result = self.edit.text.find_next(self.find_text)
+                return result
 
-        def find_previous(self):
+        def find_previous(self, keys=None):
                 &#34;&#34;&#34; Find previous text &#34;&#34;&#34;
+                result = False
                 if self.find_text:
-                        self.edit.text.find_previous(self.find_text)
+                        result = self.edit.text.find_previous(self.find_text)
+                return result
 
-        def goto(self):
+        def goto(self, keys=None):
                 &#34;&#34;&#34; Goto line &#34;&#34;&#34;
                 lineNumber = self.input(&#34;Goto line :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)])
                 try:
@@ -1783,20 +1769,21 @@ class Editor:
                                         break
                 return result
 
-        def get_key(self):
+        def get_key(self, duration=terminal.MAXINT):
                 &#34;&#34;&#34; Get a key pressed &#34;&#34;&#34;
                 if len(self.keys) == 0:
                         while True:
                                 try:
-                                        key = terminal.getch()
+                                        key = terminal.getch(duration=duration)
                                 except KeyboardInterrupt:
                                         key = &#34;\x03&#34;
+
                                 self.keys.append(key)
                                 if terminal.kbhit() is False or len(self.keys) &gt; 5:
                                         break
                 return self.group_key()
 
-        def execute(self):
+        def execute(self, keys=None):
                 &#34;&#34;&#34; Execute the python script edited &#34;&#34;&#34;
                 self.save()
                 loop = True
@@ -1833,25 +1820,57 @@ class Editor:
                 self.edit.view.cls()
                 self.edit.view.get_screen_size()
                 self.loop = True
-                self.EDIT_KEYS = TOGGLE_MODE+FIND+REPLACE+FIND_PREVIOUS+FIND_NEXT+REPLACE_CURRENT+EXIT+GOTO+SAVE+EXECUTE
+                self.EDIT_KEYS = TOGGLE_MODE+FIND+REPLACE+FIND_PREVIOUS+FIND_NEXT+EXIT+GOTO+SAVE+EXECUTE
                 while(self.loop):
                         try:
                                 self.refresh()
-                                keys = self.get_key()
+                                keys = self.get_key(duration=0.3)
+                                if len(keys[0]) == 0:
+                                        self.is_refresh_header = True
+                                        self.refresh_header()
+                                        keys = self.get_key()
+
+                                for key in keys:
+                                        if self.trace is not None:
+                                                self.trace.write(strings.dump(key, withColor=False) + &#34;\n&#34;)
+                                                self.trace.flush()
                                 modified = self.edit.text.modified
+                                self.precedent_callback = self.key_callback
+                                self.key_callback = None
+
                                 if ord(keys[0][0]) &lt; 0x20:
                                         if keys[0] in self.EDIT_KEYS:
-                                                if   keys[0] in TOGGLE_MODE:    self.toggle_mode()
-                                                elif keys[0] in FIND:           self.find()
-                                                elif keys[0] in REPLACE:        self.replace()
-                                                elif keys[0] in FIND_PREVIOUS:  self.find_previous()
-                                                elif keys[0] in FIND_NEXT:      self.find_next()
-                                                elif keys[0] in REPLACE_CURRENT:self.replace_current()
-                                                elif keys[0] in EXIT:           self.exit()
-                                                elif keys[0] in GOTO:           self.goto()
-                                                elif keys[0] in SAVE:           self.save()
-                                                elif keys[0] in EXECUTE:        self.execute()
-                                self.edit.text.treat_key(keys)
+                                                if   keys[0] in TOGGLE_MODE:    self.key_callback = self.toggle_mode
+                                                elif keys[0] in FIND:           self.key_callback = self.find
+                                                elif keys[0] in REPLACE:        self.key_callback = self.replace
+                                                elif keys[0] in FIND_PREVIOUS:  self.key_callback = self.find_previous
+                                                elif keys[0] in FIND_NEXT:      self.key_callback = self.find_next
+                                                elif keys[0] in EXIT:           self.key_callback = self.exit
+                                                elif keys[0] in GOTO:           self.key_callback = self.goto
+                                                elif keys[0] in SAVE:           self.key_callback = self.save
+                                                elif keys[0] in EXECUTE:        self.key_callback = self.execute
+
+                                # If a replacement is in progress and new line pressed
+                                if keys[0] in NEW_LINE:
+                                        if self.precedent_callback is not None:
+                                                # The next check is compatible with micropython
+                                                if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
+                                                        if self.replace_text is not None:
+                                                                # Replace current found
+                                                                self.key_callback = self.replace_current
+                                # If a replacement is in progress and select all pressed
+                                if keys[0] in SELECT_ALL:
+                                        if self.precedent_callback is not None:
+                                                # The next check is compatible with micropython
+                                                if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
+                                                        if self.replace_text is not None:
+                                                                # Replace all
+                                                                self.key_callback = self.replace_all
+
+                                if self.key_callback is not None:
+                                        self.key_callback(keys)
+                                else:
+                                        self.edit.text.treat_key(keys)
                                 if modified != self.edit.text.modified:
                                         self.is_refresh_header = True
                         except KeyboardInterrupt:
@@ -1863,8 +1882,7 @@ if __name__ == &#34;__main__&#34;:
         if len(sys.argv) &gt; 1:
                 filename = sys.argv[1]
         else:
-                filename = &#34;editor.txt&#34;
-                filename = &#34;syslog.bug&#34;
+                filename = &#34;toto.py&#34;
         edit = Editor(filename, read_only=False)</code></pre>
 </details>
 </section>
@@ -1873,13 +1891,38 @@ if __name__ == &#34;__main__&#34;:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.shell.editor.is_enough_memory"><code class="name flex">
+<span>def <span class="ident">is_enough_memory</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicate if it has enough memory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_enough_memory():
+        &#34;&#34;&#34; Indicate if it has enough memory &#34;&#34;&#34;
+        import gc
+        try:
+                # pylint: disable=no-member
+                memory  = gc.mem_free()
+        except:
+                memory  = 256*1024
+        if memory &lt; 50*1024:
+                return False
+        return True</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
 <dt id="lib.shell.editor.Edit"><code class="flex name class">
 <span>class <span class="ident">Edit</span></span>
-<span>(</span><span>view_top=1, view_height=None, read_only=False)</span>
+<span>(</span><span>view_top=1, view_height=None, read_only=False, extension=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class which aggregate the View and Text </p>
@@ -1890,9 +1933,9 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">class Edit:
         &#34;&#34;&#34; Class which aggregate the View and Text &#34;&#34;&#34;
-        def __init__(self, view_top=1, view_height=None, read_only=False):
+        def __init__(self, view_top=1, view_height=None, read_only=False, extension=None):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.view = View(view_height, view_top)
+                self.view = View(view_height, view_top, extension=extension)
                 self.text = Text(read_only)
                 self.text.set_view(self.view)
                 self.view.set_text(self.text)</code></pre>
@@ -1900,7 +1943,7 @@ if __name__ == &#34;__main__&#34;:
 </dd>
 <dt id="lib.shell.editor.Editor"><code class="flex name class">
 <span>class <span class="ident">Editor</span></span>
-<span>(</span><span>filename_, read_only=False)</span>
+<span>(</span><span>filename_, no_color=False, read_only=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class which manage a complete editor </p>
@@ -1911,22 +1954,37 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">class Editor:
         &#34;&#34;&#34; Class which manage a complete editor &#34;&#34;&#34;
-        def __init__(self, filename_, read_only=False):
+        def __init__(self, filename_, no_color=False, read_only=False):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.file = filename_
                 self.filename = filesystem.split(filename_)[1]
-                self.edit = Edit(read_only=read_only)
+                if no_color:
+                        extension = &#34;&#34;
+                else:
+                        extension = filesystem.splitext(filename_)[1]
+                self.edit = Edit(read_only=read_only, extension=extension)
                 self.edit.text.load(filename_)
                 self.is_refresh_header = True
                 self.find_text = None
                 self.replace_text = None
                 self.keys= []
                 self.loop = None
+                self.key_callback = None
+                self.precedent_callback = None
+                self.trace = None
+                if filesystem.ismicropython() is False:
+                        if filename_ == &#34;toto.py&#34;:
+                                self.trace = open(&#34;key.txt&#34;,&#34;w&#34;)
 
                 if (not filesystem.exists(filename_) and read_only is True) or filesystem.isdir(filename_):
                         print(&#34;Cannot open &#39;%s&#39;&#34;%self.filename)
                 else:
-                        self.run()
+                        try:
+                                self.run()
+                        except Exception as err:
+                                self.edit.view.cls()
+                                logger.syslog(err)
+                                print(&#34;Failed edit &#39;%s&#39;&#34;%self.filename)
 
         def refresh_header(self):
                 &#34;&#34;&#34; Refresh the header of editor &#34;&#34;&#34;
@@ -1938,6 +1996,7 @@ if __name__ == &#34;__main__&#34;:
                                 end = &#34; Mode: %s &#34;%(&#34;Replace&#34; if self.edit.text.replace_mode else &#34;Insert&#34;)
                         else:
                                 end = &#34; Read only &#34; if self.edit.text.read_only else &#34;&#34;
+                        end = &#34;L%d C%d &#34;%(self.edit.text.cursor_line+1, self.edit.text.cursor_column+1) + end
 
                         header = &#34;\x1B[7m%s%s%s\x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)), end)
                         self.edit.view.write(header)
@@ -1949,7 +2008,7 @@ if __name__ == &#34;__main__&#34;:
                 self.refresh_header()
                 self.edit.view.refresh()
 
-        def toggle_mode(self):
+        def toggle_mode(self, keys=None):
                 &#34;&#34;&#34; Change the replace mode &#34;&#34;&#34;
                 if self.edit.text.replace_mode:
                         self.edit.text.replace_mode = False
@@ -1957,12 +2016,12 @@ if __name__ == &#34;__main__&#34;:
                         self.edit.text.replace_mode = True
                 self.is_refresh_header = True
 
-        def save(self):
+        def save(self, keys=None):
                 &#34;&#34;&#34; Save the file edited &#34;&#34;&#34;
                 self.edit.text.save()
                 self.is_refresh_header = True
 
-        def exit(self):
+        def exit(self, keys=None):
                 &#34;&#34;&#34; Exit from editor &#34;&#34;&#34;
                 self.edit.view.cls()
                 if self.edit.text.modified:
@@ -2015,40 +2074,53 @@ if __name__ == &#34;__main__&#34;:
                                 edit_.text.treat_key(key)
                 return result
 
-        def find(self):
+        def find(self, keys=None):
                 &#34;&#34;&#34; Find a text &#34;&#34;&#34;
-                self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3&#34;,&#34;Previous&#34;),(&#34;F3&#34;,&#34;Next&#34;)])
+                self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;)])
                 self.find_next()
                 self.edit.view.set_refresh_all()
                 self.is_refresh_header = True
+                self.replace_text = None
 
-        def replace(self):
+        def replace(self, keys=None):
                 &#34;&#34;&#34; Replace a text &#34;&#34;&#34;
                 self.find_text    = self.input(&#34;Find to replace :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)])
                 if self.find_text:
-                        self.replace_text = self.input(&#34;Replace with :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3&#34;,&#34;Previous&#34;),(&#34;F3&#34;,&#34;Next&#34;),(&#34;^R&#34;,&#34;Replace&#34;)])
+                        self.replace_text = self.input(&#34;Replace with :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;),(&#34;Enter&#34;,&#34;Replace current&#34;)])
                         self.find_next()
 
                 self.edit.view.set_refresh_all()
                 self.is_refresh_header = True
 
-        def replace_current(self):
+        def replace_current(self, keys=None):
                 &#34;&#34;&#34; Replace current &#34;&#34;&#34;
                 if self.find_text and self.replace_text:
                         if self.edit.text.replace(self.find_text, self.replace_text):
                                 self.find_next()
 
-        def find_next(self):
+        def replace_all(self, keys=None):
+                &#34;&#34;&#34; Replace replace all &#34;&#34;&#34;
+                if self.find_text and self.replace_text:
+                        self.edit.text.top()
+                        while self.find_next():
+                                self.edit.text.replace(self.find_text, self.replace_text)
+                        self.edit.view.set_refresh_all()
+
+        def find_next(self, keys=None):
                 &#34;&#34;&#34; Find next text &#34;&#34;&#34;
+                result = False
                 if self.find_text:
-                        self.edit.text.find_next(self.find_text)
+                        result = self.edit.text.find_next(self.find_text)
+                return result
 
-        def find_previous(self):
+        def find_previous(self, keys=None):
                 &#34;&#34;&#34; Find previous text &#34;&#34;&#34;
+                result = False
                 if self.find_text:
-                        self.edit.text.find_previous(self.find_text)
+                        result = self.edit.text.find_previous(self.find_text)
+                return result
 
-        def goto(self):
+        def goto(self, keys=None):
                 &#34;&#34;&#34; Goto line &#34;&#34;&#34;
                 lineNumber = self.input(&#34;Goto line :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)])
                 try:
@@ -2072,20 +2144,21 @@ if __name__ == &#34;__main__&#34;:
                                         break
                 return result
 
-        def get_key(self):
+        def get_key(self, duration=terminal.MAXINT):
                 &#34;&#34;&#34; Get a key pressed &#34;&#34;&#34;
                 if len(self.keys) == 0:
                         while True:
                                 try:
-                                        key = terminal.getch()
+                                        key = terminal.getch(duration=duration)
                                 except KeyboardInterrupt:
                                         key = &#34;\x03&#34;
+
                                 self.keys.append(key)
                                 if terminal.kbhit() is False or len(self.keys) &gt; 5:
                                         break
                 return self.group_key()
 
-        def execute(self):
+        def execute(self, keys=None):
                 &#34;&#34;&#34; Execute the python script edited &#34;&#34;&#34;
                 self.save()
                 loop = True
@@ -2122,25 +2195,57 @@ if __name__ == &#34;__main__&#34;:
                 self.edit.view.cls()
                 self.edit.view.get_screen_size()
                 self.loop = True
-                self.EDIT_KEYS = TOGGLE_MODE+FIND+REPLACE+FIND_PREVIOUS+FIND_NEXT+REPLACE_CURRENT+EXIT+GOTO+SAVE+EXECUTE
+                self.EDIT_KEYS = TOGGLE_MODE+FIND+REPLACE+FIND_PREVIOUS+FIND_NEXT+EXIT+GOTO+SAVE+EXECUTE
                 while(self.loop):
                         try:
                                 self.refresh()
-                                keys = self.get_key()
+                                keys = self.get_key(duration=0.3)
+                                if len(keys[0]) == 0:
+                                        self.is_refresh_header = True
+                                        self.refresh_header()
+                                        keys = self.get_key()
+
+                                for key in keys:
+                                        if self.trace is not None:
+                                                self.trace.write(strings.dump(key, withColor=False) + &#34;\n&#34;)
+                                                self.trace.flush()
                                 modified = self.edit.text.modified
+                                self.precedent_callback = self.key_callback
+                                self.key_callback = None
+
                                 if ord(keys[0][0]) &lt; 0x20:
                                         if keys[0] in self.EDIT_KEYS:
-                                                if   keys[0] in TOGGLE_MODE:    self.toggle_mode()
-                                                elif keys[0] in FIND:           self.find()
-                                                elif keys[0] in REPLACE:        self.replace()
-                                                elif keys[0] in FIND_PREVIOUS:  self.find_previous()
-                                                elif keys[0] in FIND_NEXT:      self.find_next()
-                                                elif keys[0] in REPLACE_CURRENT:self.replace_current()
-                                                elif keys[0] in EXIT:           self.exit()
-                                                elif keys[0] in GOTO:           self.goto()
-                                                elif keys[0] in SAVE:           self.save()
-                                                elif keys[0] in EXECUTE:        self.execute()
-                                self.edit.text.treat_key(keys)
+                                                if   keys[0] in TOGGLE_MODE:    self.key_callback = self.toggle_mode
+                                                elif keys[0] in FIND:           self.key_callback = self.find
+                                                elif keys[0] in REPLACE:        self.key_callback = self.replace
+                                                elif keys[0] in FIND_PREVIOUS:  self.key_callback = self.find_previous
+                                                elif keys[0] in FIND_NEXT:      self.key_callback = self.find_next
+                                                elif keys[0] in EXIT:           self.key_callback = self.exit
+                                                elif keys[0] in GOTO:           self.key_callback = self.goto
+                                                elif keys[0] in SAVE:           self.key_callback = self.save
+                                                elif keys[0] in EXECUTE:        self.key_callback = self.execute
+
+                                # If a replacement is in progress and new line pressed
+                                if keys[0] in NEW_LINE:
+                                        if self.precedent_callback is not None:
+                                                # The next check is compatible with micropython
+                                                if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
+                                                        if self.replace_text is not None:
+                                                                # Replace current found
+                                                                self.key_callback = self.replace_current
+                                # If a replacement is in progress and select all pressed
+                                if keys[0] in SELECT_ALL:
+                                        if self.precedent_callback is not None:
+                                                # The next check is compatible with micropython
+                                                if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
+                                                        if self.replace_text is not None:
+                                                                # Replace all
+                                                                self.key_callback = self.replace_all
+
+                                if self.key_callback is not None:
+                                        self.key_callback(keys)
+                                else:
+                                        self.edit.text.treat_key(keys)
                                 if modified != self.edit.text.modified:
                                         self.is_refresh_header = True
                         except KeyboardInterrupt:
@@ -2151,7 +2256,7 @@ if __name__ == &#34;__main__&#34;:
 <h3>Methods</h3>
 <dl>
 <dt id="lib.shell.editor.Editor.execute"><code class="name flex">
-<span>def <span class="ident">execute</span></span>(<span>self)</span>
+<span>def <span class="ident">execute</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Execute the python script edited</p></div>
@@ -2159,7 +2264,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def execute(self):
+<pre><code class="python">def execute(self, keys=None):
         &#34;&#34;&#34; Execute the python script edited &#34;&#34;&#34;
         self.save()
         loop = True
@@ -2193,7 +2298,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.exit"><code class="name flex">
-<span>def <span class="ident">exit</span></span>(<span>self)</span>
+<span>def <span class="ident">exit</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Exit from editor</p></div>
@@ -2201,7 +2306,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def exit(self):
+<pre><code class="python">def exit(self, keys=None):
         &#34;&#34;&#34; Exit from editor &#34;&#34;&#34;
         self.edit.view.cls()
         if self.edit.text.modified:
@@ -2232,7 +2337,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.find"><code class="name flex">
-<span>def <span class="ident">find</span></span>(<span>self)</span>
+<span>def <span class="ident">find</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Find a text</p></div>
@@ -2240,16 +2345,17 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find(self):
+<pre><code class="python">def find(self, keys=None):
         &#34;&#34;&#34; Find a text &#34;&#34;&#34;
-        self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3&#34;,&#34;Previous&#34;),(&#34;F3&#34;,&#34;Next&#34;)])
+        self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;)])
         self.find_next()
         self.edit.view.set_refresh_all()
-        self.is_refresh_header = True</code></pre>
+        self.is_refresh_header = True
+        self.replace_text = None</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.find_next"><code class="name flex">
-<span>def <span class="ident">find_next</span></span>(<span>self)</span>
+<span>def <span class="ident">find_next</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Find next text</p></div>
@@ -2257,14 +2363,16 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_next(self):
+<pre><code class="python">def find_next(self, keys=None):
         &#34;&#34;&#34; Find next text &#34;&#34;&#34;
+        result = False
         if self.find_text:
-                self.edit.text.find_next(self.find_text)</code></pre>
+                result = self.edit.text.find_next(self.find_text)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.find_previous"><code class="name flex">
-<span>def <span class="ident">find_previous</span></span>(<span>self)</span>
+<span>def <span class="ident">find_previous</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Find previous text</p></div>
@@ -2272,14 +2380,16 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def find_previous(self):
+<pre><code class="python">def find_previous(self, keys=None):
         &#34;&#34;&#34; Find previous text &#34;&#34;&#34;
+        result = False
         if self.find_text:
-                self.edit.text.find_previous(self.find_text)</code></pre>
+                result = self.edit.text.find_previous(self.find_text)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.get_key"><code class="name flex">
-<span>def <span class="ident">get_key</span></span>(<span>self)</span>
+<span>def <span class="ident">get_key</span></span>(<span>self, duration=100000000)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a key pressed</p></div>
@@ -2287,14 +2397,15 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_key(self):
+<pre><code class="python">def get_key(self, duration=terminal.MAXINT):
         &#34;&#34;&#34; Get a key pressed &#34;&#34;&#34;
         if len(self.keys) == 0:
                 while True:
                         try:
-                                key = terminal.getch()
+                                key = terminal.getch(duration=duration)
                         except KeyboardInterrupt:
                                 key = &#34;\x03&#34;
+
                         self.keys.append(key)
                         if terminal.kbhit() is False or len(self.keys) &gt; 5:
                                 break
@@ -2302,7 +2413,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.goto"><code class="name flex">
-<span>def <span class="ident">goto</span></span>(<span>self)</span>
+<span>def <span class="ident">goto</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Goto line</p></div>
@@ -2310,7 +2421,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def goto(self):
+<pre><code class="python">def goto(self, keys=None):
         &#34;&#34;&#34; Goto line &#34;&#34;&#34;
         lineNumber = self.input(&#34;Goto line :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)])
         try:
@@ -2413,6 +2524,7 @@ if __name__ == &#34;__main__&#34;:
                         end = &#34; Mode: %s &#34;%(&#34;Replace&#34; if self.edit.text.replace_mode else &#34;Insert&#34;)
                 else:
                         end = &#34; Read only &#34; if self.edit.text.read_only else &#34;&#34;
+                end = &#34;L%d C%d &#34;%(self.edit.text.cursor_line+1, self.edit.text.cursor_column+1) + end
 
                 header = &#34;\x1B[7m%s%s%s\x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)), end)
                 self.edit.view.write(header)
@@ -2421,7 +2533,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.replace"><code class="name flex">
-<span>def <span class="ident">replace</span></span>(<span>self)</span>
+<span>def <span class="ident">replace</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Replace a text</p></div>
@@ -2429,19 +2541,37 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def replace(self):
+<pre><code class="python">def replace(self, keys=None):
         &#34;&#34;&#34; Replace a text &#34;&#34;&#34;
         self.find_text    = self.input(&#34;Find to replace :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)])
         if self.find_text:
-                self.replace_text = self.input(&#34;Replace with :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3&#34;,&#34;Previous&#34;),(&#34;F3&#34;,&#34;Next&#34;),(&#34;^R&#34;,&#34;Replace&#34;)])
+                self.replace_text = self.input(&#34;Replace with :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;),(&#34;Enter&#34;,&#34;Replace current&#34;)])
                 self.find_next()
 
         self.edit.view.set_refresh_all()
         self.is_refresh_header = True</code></pre>
 </details>
 </dd>
+<dt id="lib.shell.editor.Editor.replace_all"><code class="name flex">
+<span>def <span class="ident">replace_all</span></span>(<span>self, keys=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replace replace all</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def replace_all(self, keys=None):
+        &#34;&#34;&#34; Replace replace all &#34;&#34;&#34;
+        if self.find_text and self.replace_text:
+                self.edit.text.top()
+                while self.find_next():
+                        self.edit.text.replace(self.find_text, self.replace_text)
+                self.edit.view.set_refresh_all()</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.editor.Editor.replace_current"><code class="name flex">
-<span>def <span class="ident">replace_current</span></span>(<span>self)</span>
+<span>def <span class="ident">replace_current</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Replace current</p></div>
@@ -2449,7 +2579,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def replace_current(self):
+<pre><code class="python">def replace_current(self, keys=None):
         &#34;&#34;&#34; Replace current &#34;&#34;&#34;
         if self.find_text and self.replace_text:
                 if self.edit.text.replace(self.find_text, self.replace_text):
@@ -2470,25 +2600,57 @@ if __name__ == &#34;__main__&#34;:
         self.edit.view.cls()
         self.edit.view.get_screen_size()
         self.loop = True
-        self.EDIT_KEYS = TOGGLE_MODE+FIND+REPLACE+FIND_PREVIOUS+FIND_NEXT+REPLACE_CURRENT+EXIT+GOTO+SAVE+EXECUTE
+        self.EDIT_KEYS = TOGGLE_MODE+FIND+REPLACE+FIND_PREVIOUS+FIND_NEXT+EXIT+GOTO+SAVE+EXECUTE
         while(self.loop):
                 try:
                         self.refresh()
-                        keys = self.get_key()
+                        keys = self.get_key(duration=0.3)
+                        if len(keys[0]) == 0:
+                                self.is_refresh_header = True
+                                self.refresh_header()
+                                keys = self.get_key()
+
+                        for key in keys:
+                                if self.trace is not None:
+                                        self.trace.write(strings.dump(key, withColor=False) + &#34;\n&#34;)
+                                        self.trace.flush()
                         modified = self.edit.text.modified
+                        self.precedent_callback = self.key_callback
+                        self.key_callback = None
+
                         if ord(keys[0][0]) &lt; 0x20:
                                 if keys[0] in self.EDIT_KEYS:
-                                        if   keys[0] in TOGGLE_MODE:    self.toggle_mode()
-                                        elif keys[0] in FIND:           self.find()
-                                        elif keys[0] in REPLACE:        self.replace()
-                                        elif keys[0] in FIND_PREVIOUS:  self.find_previous()
-                                        elif keys[0] in FIND_NEXT:      self.find_next()
-                                        elif keys[0] in REPLACE_CURRENT:self.replace_current()
-                                        elif keys[0] in EXIT:           self.exit()
-                                        elif keys[0] in GOTO:           self.goto()
-                                        elif keys[0] in SAVE:           self.save()
-                                        elif keys[0] in EXECUTE:        self.execute()
-                        self.edit.text.treat_key(keys)
+                                        if   keys[0] in TOGGLE_MODE:    self.key_callback = self.toggle_mode
+                                        elif keys[0] in FIND:           self.key_callback = self.find
+                                        elif keys[0] in REPLACE:        self.key_callback = self.replace
+                                        elif keys[0] in FIND_PREVIOUS:  self.key_callback = self.find_previous
+                                        elif keys[0] in FIND_NEXT:      self.key_callback = self.find_next
+                                        elif keys[0] in EXIT:           self.key_callback = self.exit
+                                        elif keys[0] in GOTO:           self.key_callback = self.goto
+                                        elif keys[0] in SAVE:           self.key_callback = self.save
+                                        elif keys[0] in EXECUTE:        self.key_callback = self.execute
+
+                        # If a replacement is in progress and new line pressed
+                        if keys[0] in NEW_LINE:
+                                if self.precedent_callback is not None:
+                                        # The next check is compatible with micropython
+                                        if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
+                                                if self.replace_text is not None:
+                                                        # Replace current found
+                                                        self.key_callback = self.replace_current
+                        # If a replacement is in progress and select all pressed
+                        if keys[0] in SELECT_ALL:
+                                if self.precedent_callback is not None:
+                                        # The next check is compatible with micropython
+                                        if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
+                                                if self.replace_text is not None:
+                                                        # Replace all
+                                                        self.key_callback = self.replace_all
+
+                        if self.key_callback is not None:
+                                self.key_callback(keys)
+                        else:
+                                self.edit.text.treat_key(keys)
                         if modified != self.edit.text.modified:
                                 self.is_refresh_header = True
                 except KeyboardInterrupt:
@@ -2498,7 +2660,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self)</span>
+<span>def <span class="ident">save</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Save the file edited</p></div>
@@ -2506,14 +2668,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def save(self):
+<pre><code class="python">def save(self, keys=None):
         &#34;&#34;&#34; Save the file edited &#34;&#34;&#34;
         self.edit.text.save()
         self.is_refresh_header = True</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.toggle_mode"><code class="name flex">
-<span>def <span class="ident">toggle_mode</span></span>(<span>self)</span>
+<span>def <span class="ident">toggle_mode</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Change the replace mode</p></div>
@@ -2521,7 +2683,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def toggle_mode(self):
+<pre><code class="python">def toggle_mode(self, keys=None):
         &#34;&#34;&#34; Change the replace mode &#34;&#34;&#34;
         if self.edit.text.replace_mode:
                 self.edit.text.replace_mode = False
@@ -2849,7 +3011,7 @@ if __name__ == &#34;__main__&#34;:
                 else:
                         return True
 
-        def backspace(self):
+        def backspace(self, keys=None):
                 &#34;&#34;&#34; Manage the backspace key &#34;&#34;&#34;
                 self.modified = True
                 if self.remove_selection() is False:
@@ -2873,7 +3035,7 @@ if __name__ == &#34;__main__&#34;:
                                         self.view.set_refresh_after()
                                         self.change_column(-1)
 
-        def delete(self):
+        def delete(self, keys=None):
                 &#34;&#34;&#34; Manage the delete key &#34;&#34;&#34;
                 self.modified = True
                 if self.remove_selection() is False:
@@ -2895,7 +3057,7 @@ if __name__ == &#34;__main__&#34;:
                                         self.change_column(0)
                                         self.view.is_refresh_line = True
 
-        def delete_line(self):
+        def delete_line(self, keys=None):
                 &#34;&#34;&#34; Manage the delete of line key &#34;&#34;&#34;
                 self.hide_selection()
                 self.modified = True
@@ -2917,23 +3079,23 @@ if __name__ == &#34;__main__&#34;:
                         self.change_column(0)
                 self.view.set_refresh_after()
 
-        def new_line(self):
+        def new_line(self, keys=None):
                 &#34;&#34;&#34; Manage the newline key &#34;&#34;&#34;
                 self.modified = True
-                if self.remove_selection() is False:
-                        line1 = self.lines[self.cursor_line][:self.cursor_column]+&#34;\n&#34;
-                        line2 = self.lines[self.cursor_line][self.cursor_column:]
-                        self.lines[self.cursor_line]=line1
-                        self.lines.insert(self.cursor_line+1, line2)
-                        self.view.scroll_part_down()
-                        self.change_column(1)
-                        self.view.set_refresh_before()
+                self.remove_selection()
+                line1 = self.lines[self.cursor_line][:self.cursor_column]+&#34;\n&#34;
+                line2 = self.lines[self.cursor_line][self.cursor_column:]
+                self.lines[self.cursor_line]=line1
+                self.lines.insert(self.cursor_line+1, line2)
+                self.view.scroll_part_down()
+                self.change_column(1)
+                self.view.set_refresh_before()
 
         def insert_char(self, char):
                 &#34;&#34;&#34; Insert character &#34;&#34;&#34;
                 self.modified = True
                 self.lines[self.cursor_line] = self.lines[self.cursor_line][:self.cursor_column] + char + self.lines[self.cursor_line][self.cursor_column:]
-                self.change_column(1)
+                self.change_column(len(char))
                 self.view.set_refresh_line()
 
         def replace_char(self, char):
@@ -2963,7 +3125,7 @@ if __name__ == &#34;__main__&#34;:
                 if self.selection_start is not None:
                         self.selection_end = [self.cursor_column, self.cursor_line,self.get_tab_cursor(self.cursor_line)]
 
-        def select_all(self):
+        def select_all(self, keys=None):
                 &#34;&#34;&#34; Do a select all &#34;&#34;&#34;
                 self.selection_start = [0,0,0]
                 lastLine = len(self.lines)-1
@@ -2986,109 +3148,109 @@ if __name__ == &#34;__main__&#34;:
                 else:
                         return None, None
 
-        def arrow_up(self, keys):
+        def arrow_up(self, keys=None):
                 &#34;&#34;&#34; Manage arrow up key &#34;&#34;&#34;
                 self.hide_selection()
                 self.change_line(-1)
 
-        def arrow_down(self, keys):
+        def arrow_down(self, keys=None):
                 &#34;&#34;&#34; Manage arrow down key &#34;&#34;&#34;
                 self.hide_selection()
                 self.change_line(1)
 
-        def arrow_left(self, keys):
+        def arrow_left(self, keys=None):
                 &#34;&#34;&#34; Manage arrow left key &#34;&#34;&#34;
                 self.hide_selection()
                 self.change_column(-len(keys))
 
-        def arrow_right(self, keys):
+        def arrow_right(self, keys=None):
                 &#34;&#34;&#34; Manage arrow right key &#34;&#34;&#34;
                 self.hide_selection()
                 self.change_column(len(keys))
 
-        def select_up(self, keys):
+        def select_up(self, keys=None):
                 &#34;&#34;&#34; Manage select up key &#34;&#34;&#34;
                 self.open_selection()
                 self.change_line(-1)
 
-        def select_down(self, keys):
+        def select_down(self, keys=None):
                 &#34;&#34;&#34; Manage select down key &#34;&#34;&#34;
                 self.open_selection()
                 self.change_line(1)
 
-        def select_left(self, keys):
+        def select_left(self, keys=None):
                 &#34;&#34;&#34; Manage select left key &#34;&#34;&#34;
                 self.open_selection()
                 self.change_column(-len(keys))
 
-        def select_right(self, keys):
+        def select_right(self, keys=None):
                 &#34;&#34;&#34; Manage select right key &#34;&#34;&#34;
                 self.open_selection()
                 self.change_column(len(keys))
 
-        def select_home(self):
+        def select_home(self, keys=None):
                 &#34;&#34;&#34; Manage home key &#34;&#34;&#34;
                 self.open_selection()
-                self.change_column(-100000000000)
+                self.change_column(-terminal.MAXINT)
 
-        def select_end(self):
+        def select_end(self, keys=None):
                 &#34;&#34;&#34; Manage end key &#34;&#34;&#34;
                 self.open_selection()
-                self.change_column(100000000000)
+                self.change_column(terminal.MAXINT)
 
-        def select_page_up(self, keys):
+        def select_page_up(self, keys=None):
                 &#34;&#34;&#34; Manage select page up key &#34;&#34;&#34;
                 self.open_selection()
-                self.change_line((-self.view.height-1) * len(keys))
-                self.change_column(-100000000000)
+                self.change_line((-(self.view.height)) * len(keys))
+                self.change_column(-terminal.MAXINT)
 
-        def select_page_down(self, keys):
+        def select_page_down(self, keys=None):
                 &#34;&#34;&#34; Manage select page down key &#34;&#34;&#34;
                 self.open_selection()
-                self.change_line((self.view.height+1) * len(keys))
-                self.change_column(100000000000)
+                self.change_line((self.view.height) * len(keys))
+                self.change_column(terminal.MAXINT)
 
-        def select_next_word(self):
+        def select_next_word(self, keys=None):
                 &#34;&#34;&#34; Manage select next word key &#34;&#34;&#34;
                 self.open_selection()
                 self.move_word(1)
 
-        def select_previous_word(self):
+        def select_previous_word(self, keys=None):
                 &#34;&#34;&#34; Manage select previous word key &#34;&#34;&#34;
                 self.open_selection()
                 self.move_word(-1)
 
-        def select_top(self):
+        def select_top(self, keys=None):
                 &#34;&#34;&#34; Manage select to the first line of text &#34;&#34;&#34;
                 self.open_selection()
-                self.change_line(-100000000000)
+                self.change_line(-terminal.MAXINT)
 
-        def select_bottom(self):
+        def select_bottom(self, keys=None):
                 &#34;&#34;&#34; Manage select to the last line of text &#34;&#34;&#34;
                 self.open_selection()
-                self.change_line(100000000000)
+                self.change_line(terminal.MAXINT)
 
-        def page_up(self, keys):
+        def page_up(self, keys=None):
                 &#34;&#34;&#34; Manage page up key &#34;&#34;&#34;
                 self.hide_selection()
-                self.change_line((-self.view.height-1) * len(keys))
+                self.change_line((-(self.view.height)) * len(keys))
 
-        def page_down(self, keys):
+        def page_down(self, keys=None):
                 &#34;&#34;&#34; Manage page down key &#34;&#34;&#34;
                 self.hide_selection()
-                self.change_line((self.view.height+1) * len(keys))
+                self.change_line((self.view.height) * len(keys))
 
-        def home(self):
+        def home(self, keys=None):
                 &#34;&#34;&#34; Manage home key &#34;&#34;&#34;
                 self.hide_selection()
-                self.change_column(-100000000000)
+                self.change_column(-terminal.MAXINT)
 
-        def end(self):
+        def end(self, keys=None):
                 &#34;&#34;&#34; Manage end key &#34;&#34;&#34;
                 self.hide_selection()
-                self.change_column(100000000000)
+                self.change_column(terminal.MAXINT)
 
-        def add_char(self, keys):
+        def add_char(self, keys=None):
                 &#34;&#34;&#34; Manage other key, add character &#34;&#34;&#34;
                 result = False
 
@@ -3107,6 +3269,7 @@ if __name__ == &#34;__main__&#34;:
 
         def find_next(self, text):
                 &#34;&#34;&#34; Find next researched text &#34;&#34;&#34;
+                result = False
                 # Get the selection
                 selection_start, selection_end = self.get_selection()
 
@@ -3139,15 +3302,18 @@ if __name__ == &#34;__main__&#34;:
                                 self.change_column(0)
                                 self.selection_start = [pos, current_line,self.get_tab_cursor(current_line,pos)]
                                 self.selection_end   = [pos + len(text), current_line, self.get_tab_cursor(current_line, pos + len(text))]
+                                result = True
                                 break
                         else:
                                 # Set the search position at the begin of next line
                                 current_column = 0
                                 current_line += 1
                 self.view.move()
+                return result
 
         def find_previous(self, text):
                 &#34;&#34;&#34; Find previous researched text &#34;&#34;&#34;
+                result = False
                 # Get the selection
                 selection_start, selection_end = self.get_selection()
 
@@ -3187,12 +3353,14 @@ if __name__ == &#34;__main__&#34;:
                                 self.change_column(0)
                                 self.selection_start = [pos, current_line,self.get_tab_cursor(current_line,pos)]
                                 self.selection_end   = [pos + len(text), current_line, self.get_tab_cursor(current_line, pos + len(text))]
+                                result = True
                                 break
                         else:
                                 # Set the search position at the end of line
                                 current_column = -1
                                 current_line -= 1
                 self.view.move()
+                return result
 
         def hide_selection(self):
                 &#34;&#34;&#34; Hide selection &#34;&#34;&#34;
@@ -3318,24 +3486,24 @@ if __name__ == &#34;__main__&#34;:
                 self.change_column(0)
                 self.get_tab_cursor_column()
 
-        def copy(self):
+        def copy(self, keys=None):
                 &#34;&#34;&#34; Manage copy key &#34;&#34;&#34;
                 self.selection = self.copy_clipboard()
 
-        def cut(self):
+        def cut(self, keys=None):
                 &#34;&#34;&#34; Manage cut key &#34;&#34;&#34;
                 self.modified = True
                 self.selection = self.copy_clipboard()
                 self.remove_selection()
 
-        def paste(self):
+        def paste(self, keys=None):
                 &#34;&#34;&#34; Manage paste key &#34;&#34;&#34;
                 self.modified = True
                 self.remove_selection()
                 self.paste_clipboard(self.selection)
                 self.hide_selection()
 
-        def change_case(self):
+        def change_case(self, keys=None):
                 &#34;&#34;&#34; Change the case of selection &#34;&#34;&#34;
                 selection = self.copy_clipboard()
                 if selection != []:
@@ -3366,7 +3534,7 @@ if __name__ == &#34;__main__&#34;:
                         self.selection_start = selection_start
                         self.selection_end   = selection_end
 
-        def comment(self):
+        def comment(self, keys=None):
                 &#34;&#34;&#34; Comment the selection &#34;&#34;&#34;
                 self.modified = True
 
@@ -3406,7 +3574,7 @@ if __name__ == &#34;__main__&#34;:
                                         self.change_column(1)
                         self.view.set_refresh_line()
 
-        def indent(self, keys):
+        def indent(self, keys=None):
                 &#34;&#34;&#34; Manage tabulation key &#34;&#34;&#34;
                 # If nothing selected
                 if self.selection_start is None:
@@ -3450,7 +3618,7 @@ if __name__ == &#34;__main__&#34;:
                                         self.selection_end  = [0, sel_line_end+1, 0]
                         self.view.set_refresh_selection()
 
-        def unindent(self, keys):
+        def unindent(self, keys=None):
                 &#34;&#34;&#34; Manage the unindentation key &#34;&#34;&#34;
                 # If nothing selected
                 if self.selection_start is None:
@@ -3538,27 +3706,27 @@ if __name__ == &#34;__main__&#34;:
                                 if state == 2:
                                         break
 
-        def next_word(self):
+        def next_word(self, keys=None):
                 &#34;&#34;&#34; Move the cursor to the next word &#34;&#34;&#34;
                 self.hide_selection()
                 self.move_word(1)
                 self.view.move()
 
-        def previous_word(self):
+        def previous_word(self, keys=None):
                 &#34;&#34;&#34; Move the cursor to the previous word &#34;&#34;&#34;
                 self.hide_selection()
                 self.move_word(-1)
                 self.view.move()
 
-        def top(self):
+        def top(self, keys=None):
                 &#34;&#34;&#34; Move the cursor to the first line of text &#34;&#34;&#34;
                 self.goto(1)
 
-        def bottom(self):
+        def bottom(self, keys=None):
                 &#34;&#34;&#34; Move the cursor to the last line of text &#34;&#34;&#34;
-                self.goto(100000000000)
+                self.goto(terminal.MAXINT)
 
-        def treat_char(self, keys):
+        def treat_char(self, keys=None):
                 &#34;&#34;&#34; Treat character entered &#34;&#34;&#34;
                 char = ord(keys[0][0])
                 if self.read_only is False:
@@ -3567,62 +3735,63 @@ if __name__ == &#34;__main__&#34;:
                                 return True
                 return False
 
-        def treat_key(self, keys):
+        def treat_key(self, keys=None):
                 &#34;&#34;&#34; Treat keys &#34;&#34;&#34;
+                key_callback = None
                 if self.treat_char(keys) is False:
                         # Move in the edit field
                         if keys[0] in self.MOVE_KEYS:
-                                if   keys[0] in UP  :            self.arrow_up(keys)
-                                elif keys[0] in DOWN:            self.arrow_down(keys)
-                                elif keys[0] in LEFT:            self.arrow_left(keys)
-                                elif keys[0] in RIGHT:           self.arrow_right(keys)
-                                elif keys[0] in HOME:            self.home()
-                                elif keys[0] in END:             self.end()
-                                elif keys[0] in PAGE_UP:         self.page_up(keys)
-                                elif keys[0] in PAGE_DOWN:       self.page_down(keys)
-                                elif keys[0] in TOP:             self.top()
-                                elif keys[0] in BOTTOM:          self.bottom()
-                                elif keys[0] in NEXT_WORD:       self.next_word()
-                                elif keys[0] in PREVIOUS_WORD:   self.previous_word()
+                                if   keys[0] in LEFT:            key_callback = self.arrow_left
+                                elif keys[0] in RIGHT:           key_callback = self.arrow_right
+                                elif keys[0] in UP  :            key_callback = self.arrow_up
+                                elif keys[0] in DOWN:            key_callback = self.arrow_down
+                                elif keys[0] in HOME:            key_callback = self.home
+                                elif keys[0] in END:             key_callback = self.end
+                                elif keys[0] in PAGE_UP:         key_callback = self.page_up
+                                elif keys[0] in PAGE_DOWN:       key_callback = self.page_down
+                                elif keys[0] in TOP:             key_callback = self.top
+                                elif keys[0] in BOTTOM:          key_callback = self.bottom
+                                elif keys[0] in NEXT_WORD:       key_callback = self.next_word
+                                elif keys[0] in PREVIOUS_WORD:   key_callback = self.previous_word
                         elif keys[0] in self.SELECT_KEYS:
                                 # Selection the edit field
-                                if   keys[0] in SELECT_UP:       self.select_up(keys)
-                                elif keys[0] in SELECT_DOWN:     self.select_down(keys)
-                                elif keys[0] in SELECT_RIGHT:    self.select_right(keys)
-                                elif keys[0] in SELECT_LEFT:     self.select_left(keys)
-                                elif keys[0] in SELECT_HOME:     self.select_home()
-                                elif keys[0] in SELECT_END:      self.select_end()
-                                elif keys[0] in SELECT_TOP:      self.select_top()
-                                elif keys[0] in SELECT_BOTTOM:   self.select_bottom()
-                                elif keys[0] in SELECT_PAGE_UP:  self.select_page_up(keys)
-                                elif keys[0] in SELECT_PAGE_DOWN:self.select_page_down(keys)
-                                elif keys[0] in SELECT_ALL:      self.select_all()
-                                elif keys[0] in SELECT_NEXT_WORD:self.select_next_word()
-                                elif keys[0] in SELECT_PREV_WORD:self.select_previous_word()
+                                if   keys[0] in SELECT_RIGHT:    key_callback = self.select_right
+                                elif keys[0] in SELECT_LEFT:     key_callback = self.select_left
+                                elif keys[0] in SELECT_UP:       key_callback = self.select_up
+                                elif keys[0] in SELECT_DOWN:     key_callback = self.select_down
+                                elif keys[0] in SELECT_HOME:     key_callback = self.select_home
+                                elif keys[0] in SELECT_END:      key_callback = self.select_end
+                                elif keys[0] in SELECT_TOP:      key_callback = self.select_top
+                                elif keys[0] in SELECT_BOTTOM:   key_callback = self.select_bottom
+                                elif keys[0] in SELECT_PAGE_UP:  key_callback = self.select_page_up
+                                elif keys[0] in SELECT_PAGE_DOWN:key_callback = self.select_page_down
+                                elif keys[0] in SELECT_ALL:      key_callback = self.select_all
+                                elif keys[0] in SELECT_NEXT_WORD:key_callback = self.select_next_word
+                                elif keys[0] in SELECT_PREV_WORD:key_callback = self.select_previous_word
 
                         # If the edit is not in read only
                         elif self.read_only is False:
                                 if keys[0] in self.NOT_READ_ONLY_KEYS:
                                         # Modification in the edit field
-                                        if   keys[0] in COPY:            self.copy()
-                                        elif keys[0] in CUT:             self.cut()
-                                        elif keys[0] in PASTE:           self.paste()
-
-                                        elif keys[0] in INDENT:          self.indent(keys)
-                                        elif keys[0] in UNINDENT:        self.unindent(keys)
-                                        elif keys[0] in CHANGE_CASE:     self.change_case()
-                                        elif keys[0] in COMMENT:         self.comment()
-
-                                        elif keys[0] in BACKSPACE:       self.backspace()
-                                        elif keys[0] in DELETE:          self.delete()
-                                        elif keys[0] in NEW_LINE:        self.new_line()
-                                        elif keys[0] in DELETE_LINE:     self.delete_line()
-                        # else: self.add_char(keys)</code></pre>
+                                        if   keys[0] in COPY:        key_callback = self.copy
+                                        elif keys[0] in CUT:         key_callback = self.cut
+                                        elif keys[0] in PASTE:       key_callback = self.paste
+                                        elif keys[0] in INDENT:      key_callback = self.indent
+                                        elif keys[0] in UNINDENT:    key_callback = self.unindent
+                                        elif keys[0] in CHANGE_CASE: key_callback = self.change_case
+                                        elif keys[0] in COMMENT:     key_callback = self.comment
+                                        elif keys[0] in BACKSPACE:   key_callback = self.backspace
+                                        elif keys[0] in DELETE:      key_callback = self.delete
+                                        elif keys[0] in NEW_LINE:    key_callback = self.new_line
+                                        elif keys[0] in DELETE_LINE: key_callback = self.delete_line
+                        # else: self.add_char(keys)
+                        if key_callback is not None:
+                                key_callback(keys)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="lib.shell.editor.Text.add_char"><code class="name flex">
-<span>def <span class="ident">add_char</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">add_char</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage other key, add character</p></div>
@@ -3630,7 +3799,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def add_char(self, keys):
+<pre><code class="python">def add_char(self, keys=None):
         &#34;&#34;&#34; Manage other key, add character &#34;&#34;&#34;
         result = False
 
@@ -3649,7 +3818,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.arrow_down"><code class="name flex">
-<span>def <span class="ident">arrow_down</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">arrow_down</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage arrow down key</p></div>
@@ -3657,14 +3826,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def arrow_down(self, keys):
+<pre><code class="python">def arrow_down(self, keys=None):
         &#34;&#34;&#34; Manage arrow down key &#34;&#34;&#34;
         self.hide_selection()
         self.change_line(1)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.arrow_left"><code class="name flex">
-<span>def <span class="ident">arrow_left</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">arrow_left</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage arrow left key</p></div>
@@ -3672,14 +3841,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def arrow_left(self, keys):
+<pre><code class="python">def arrow_left(self, keys=None):
         &#34;&#34;&#34; Manage arrow left key &#34;&#34;&#34;
         self.hide_selection()
         self.change_column(-len(keys))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.arrow_right"><code class="name flex">
-<span>def <span class="ident">arrow_right</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">arrow_right</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage arrow right key</p></div>
@@ -3687,14 +3856,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def arrow_right(self, keys):
+<pre><code class="python">def arrow_right(self, keys=None):
         &#34;&#34;&#34; Manage arrow right key &#34;&#34;&#34;
         self.hide_selection()
         self.change_column(len(keys))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.arrow_up"><code class="name flex">
-<span>def <span class="ident">arrow_up</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">arrow_up</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage arrow up key</p></div>
@@ -3702,14 +3871,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def arrow_up(self, keys):
+<pre><code class="python">def arrow_up(self, keys=None):
         &#34;&#34;&#34; Manage arrow up key &#34;&#34;&#34;
         self.hide_selection()
         self.change_line(-1)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.backspace"><code class="name flex">
-<span>def <span class="ident">backspace</span></span>(<span>self)</span>
+<span>def <span class="ident">backspace</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage the backspace key</p></div>
@@ -3717,7 +3886,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def backspace(self):
+<pre><code class="python">def backspace(self, keys=None):
         &#34;&#34;&#34; Manage the backspace key &#34;&#34;&#34;
         self.modified = True
         if self.remove_selection() is False:
@@ -3743,7 +3912,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.bottom"><code class="name flex">
-<span>def <span class="ident">bottom</span></span>(<span>self)</span>
+<span>def <span class="ident">bottom</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Move the cursor to the last line of text</p></div>
@@ -3751,13 +3920,13 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def bottom(self):
+<pre><code class="python">def bottom(self, keys=None):
         &#34;&#34;&#34; Move the cursor to the last line of text &#34;&#34;&#34;
-        self.goto(100000000000)</code></pre>
+        self.goto(terminal.MAXINT)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.change_case"><code class="name flex">
-<span>def <span class="ident">change_case</span></span>(<span>self)</span>
+<span>def <span class="ident">change_case</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Change the case of selection</p></div>
@@ -3765,7 +3934,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def change_case(self):
+<pre><code class="python">def change_case(self, keys=None):
         &#34;&#34;&#34; Change the case of selection &#34;&#34;&#34;
         selection = self.copy_clipboard()
         if selection != []:
@@ -3913,7 +4082,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.comment"><code class="name flex">
-<span>def <span class="ident">comment</span></span>(<span>self)</span>
+<span>def <span class="ident">comment</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Comment the selection</p></div>
@@ -3921,7 +4090,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def comment(self):
+<pre><code class="python">def comment(self, keys=None):
         &#34;&#34;&#34; Comment the selection &#34;&#34;&#34;
         self.modified = True
 
@@ -3963,7 +4132,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.copy"><code class="name flex">
-<span>def <span class="ident">copy</span></span>(<span>self)</span>
+<span>def <span class="ident">copy</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage copy key</p></div>
@@ -3971,7 +4140,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def copy(self):
+<pre><code class="python">def copy(self, keys=None):
         &#34;&#34;&#34; Manage copy key &#34;&#34;&#34;
         self.selection = self.copy_clipboard()</code></pre>
 </details>
@@ -4011,7 +4180,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.cut"><code class="name flex">
-<span>def <span class="ident">cut</span></span>(<span>self)</span>
+<span>def <span class="ident">cut</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage cut key</p></div>
@@ -4019,7 +4188,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def cut(self):
+<pre><code class="python">def cut(self, keys=None):
         &#34;&#34;&#34; Manage cut key &#34;&#34;&#34;
         self.modified = True
         self.selection = self.copy_clipboard()
@@ -4027,7 +4196,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.delete"><code class="name flex">
-<span>def <span class="ident">delete</span></span>(<span>self)</span>
+<span>def <span class="ident">delete</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage the delete key</p></div>
@@ -4035,7 +4204,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def delete(self):
+<pre><code class="python">def delete(self, keys=None):
         &#34;&#34;&#34; Manage the delete key &#34;&#34;&#34;
         self.modified = True
         if self.remove_selection() is False:
@@ -4059,7 +4228,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.delete_line"><code class="name flex">
-<span>def <span class="ident">delete_line</span></span>(<span>self)</span>
+<span>def <span class="ident">delete_line</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage the delete of line key</p></div>
@@ -4067,7 +4236,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def delete_line(self):
+<pre><code class="python">def delete_line(self, keys=None):
         &#34;&#34;&#34; Manage the delete of line key &#34;&#34;&#34;
         self.hide_selection()
         self.modified = True
@@ -4091,7 +4260,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.end"><code class="name flex">
-<span>def <span class="ident">end</span></span>(<span>self)</span>
+<span>def <span class="ident">end</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage end key</p></div>
@@ -4099,10 +4268,10 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def end(self):
+<pre><code class="python">def end(self, keys=None):
         &#34;&#34;&#34; Manage end key &#34;&#34;&#34;
         self.hide_selection()
-        self.change_column(100000000000)</code></pre>
+        self.change_column(terminal.MAXINT)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.find_next"><code class="name flex">
@@ -4116,6 +4285,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def find_next(self, text):
         &#34;&#34;&#34; Find next researched text &#34;&#34;&#34;
+        result = False
         # Get the selection
         selection_start, selection_end = self.get_selection()
 
@@ -4148,12 +4318,14 @@ if __name__ == &#34;__main__&#34;:
                         self.change_column(0)
                         self.selection_start = [pos, current_line,self.get_tab_cursor(current_line,pos)]
                         self.selection_end   = [pos + len(text), current_line, self.get_tab_cursor(current_line, pos + len(text))]
+                        result = True
                         break
                 else:
                         # Set the search position at the begin of next line
                         current_column = 0
                         current_line += 1
-        self.view.move()</code></pre>
+        self.view.move()
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.find_previous"><code class="name flex">
@@ -4167,6 +4339,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def find_previous(self, text):
         &#34;&#34;&#34; Find previous researched text &#34;&#34;&#34;
+        result = False
         # Get the selection
         selection_start, selection_end = self.get_selection()
 
@@ -4206,12 +4379,14 @@ if __name__ == &#34;__main__&#34;:
                         self.change_column(0)
                         self.selection_start = [pos, current_line,self.get_tab_cursor(current_line,pos)]
                         self.selection_end   = [pos + len(text), current_line, self.get_tab_cursor(current_line, pos + len(text))]
+                        result = True
                         break
                 else:
                         # Set the search position at the end of line
                         current_column = -1
                         current_line -= 1
-        self.view.move()</code></pre>
+        self.view.move()
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.get_count_lines"><code class="name flex">
@@ -4458,7 +4633,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.home"><code class="name flex">
-<span>def <span class="ident">home</span></span>(<span>self)</span>
+<span>def <span class="ident">home</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage home key</p></div>
@@ -4466,14 +4641,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def home(self):
+<pre><code class="python">def home(self, keys=None):
         &#34;&#34;&#34; Manage home key &#34;&#34;&#34;
         self.hide_selection()
-        self.change_column(-100000000000)</code></pre>
+        self.change_column(-terminal.MAXINT)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.indent"><code class="name flex">
-<span>def <span class="ident">indent</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">indent</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage tabulation key</p></div>
@@ -4481,7 +4656,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def indent(self, keys):
+<pre><code class="python">def indent(self, keys=None):
         &#34;&#34;&#34; Manage tabulation key &#34;&#34;&#34;
         # If nothing selected
         if self.selection_start is None:
@@ -4539,7 +4714,7 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Insert character &#34;&#34;&#34;
         self.modified = True
         self.lines[self.cursor_line] = self.lines[self.cursor_line][:self.cursor_column] + char + self.lines[self.cursor_line][self.cursor_column:]
-        self.change_column(1)
+        self.change_column(len(char))
         self.view.set_refresh_line()</code></pre>
 </details>
 </dd>
@@ -4628,7 +4803,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.new_line"><code class="name flex">
-<span>def <span class="ident">new_line</span></span>(<span>self)</span>
+<span>def <span class="ident">new_line</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage the newline key</p></div>
@@ -4636,21 +4811,21 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def new_line(self):
+<pre><code class="python">def new_line(self, keys=None):
         &#34;&#34;&#34; Manage the newline key &#34;&#34;&#34;
         self.modified = True
-        if self.remove_selection() is False:
-                line1 = self.lines[self.cursor_line][:self.cursor_column]+&#34;\n&#34;
-                line2 = self.lines[self.cursor_line][self.cursor_column:]
-                self.lines[self.cursor_line]=line1
-                self.lines.insert(self.cursor_line+1, line2)
-                self.view.scroll_part_down()
-                self.change_column(1)
-                self.view.set_refresh_before()</code></pre>
+        self.remove_selection()
+        line1 = self.lines[self.cursor_line][:self.cursor_column]+&#34;\n&#34;
+        line2 = self.lines[self.cursor_line][self.cursor_column:]
+        self.lines[self.cursor_line]=line1
+        self.lines.insert(self.cursor_line+1, line2)
+        self.view.scroll_part_down()
+        self.change_column(1)
+        self.view.set_refresh_before()</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.next_word"><code class="name flex">
-<span>def <span class="ident">next_word</span></span>(<span>self)</span>
+<span>def <span class="ident">next_word</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Move the cursor to the next word</p></div>
@@ -4658,7 +4833,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def next_word(self):
+<pre><code class="python">def next_word(self, keys=None):
         &#34;&#34;&#34; Move the cursor to the next word &#34;&#34;&#34;
         self.hide_selection()
         self.move_word(1)
@@ -4681,7 +4856,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.page_down"><code class="name flex">
-<span>def <span class="ident">page_down</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">page_down</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage page down key</p></div>
@@ -4689,14 +4864,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def page_down(self, keys):
+<pre><code class="python">def page_down(self, keys=None):
         &#34;&#34;&#34; Manage page down key &#34;&#34;&#34;
         self.hide_selection()
-        self.change_line((self.view.height+1) * len(keys))</code></pre>
+        self.change_line((self.view.height) * len(keys))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.page_up"><code class="name flex">
-<span>def <span class="ident">page_up</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">page_up</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage page up key</p></div>
@@ -4704,14 +4879,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def page_up(self, keys):
+<pre><code class="python">def page_up(self, keys=None):
         &#34;&#34;&#34; Manage page up key &#34;&#34;&#34;
         self.hide_selection()
-        self.change_line((-self.view.height-1) * len(keys))</code></pre>
+        self.change_line((-(self.view.height)) * len(keys))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.paste"><code class="name flex">
-<span>def <span class="ident">paste</span></span>(<span>self)</span>
+<span>def <span class="ident">paste</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage paste key</p></div>
@@ -4719,7 +4894,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def paste(self):
+<pre><code class="python">def paste(self, keys=None):
         &#34;&#34;&#34; Manage paste key &#34;&#34;&#34;
         self.modified = True
         self.remove_selection()
@@ -4789,7 +4964,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.previous_word"><code class="name flex">
-<span>def <span class="ident">previous_word</span></span>(<span>self)</span>
+<span>def <span class="ident">previous_word</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Move the cursor to the previous word</p></div>
@@ -4797,7 +4972,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def previous_word(self):
+<pre><code class="python">def previous_word(self, keys=None):
         &#34;&#34;&#34; Move the cursor to the previous word &#34;&#34;&#34;
         self.hide_selection()
         self.move_word(-1)
@@ -4911,7 +5086,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_all"><code class="name flex">
-<span>def <span class="ident">select_all</span></span>(<span>self)</span>
+<span>def <span class="ident">select_all</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Do a select all</p></div>
@@ -4919,7 +5094,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_all(self):
+<pre><code class="python">def select_all(self, keys=None):
         &#34;&#34;&#34; Do a select all &#34;&#34;&#34;
         self.selection_start = [0,0,0]
         lastLine = len(self.lines)-1
@@ -4930,7 +5105,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_bottom"><code class="name flex">
-<span>def <span class="ident">select_bottom</span></span>(<span>self)</span>
+<span>def <span class="ident">select_bottom</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select to the last line of text</p></div>
@@ -4938,14 +5113,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_bottom(self):
+<pre><code class="python">def select_bottom(self, keys=None):
         &#34;&#34;&#34; Manage select to the last line of text &#34;&#34;&#34;
         self.open_selection()
-        self.change_line(100000000000)</code></pre>
+        self.change_line(terminal.MAXINT)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_down"><code class="name flex">
-<span>def <span class="ident">select_down</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">select_down</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select down key</p></div>
@@ -4953,14 +5128,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_down(self, keys):
+<pre><code class="python">def select_down(self, keys=None):
         &#34;&#34;&#34; Manage select down key &#34;&#34;&#34;
         self.open_selection()
         self.change_line(1)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_end"><code class="name flex">
-<span>def <span class="ident">select_end</span></span>(<span>self)</span>
+<span>def <span class="ident">select_end</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage end key</p></div>
@@ -4968,14 +5143,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_end(self):
+<pre><code class="python">def select_end(self, keys=None):
         &#34;&#34;&#34; Manage end key &#34;&#34;&#34;
         self.open_selection()
-        self.change_column(100000000000)</code></pre>
+        self.change_column(terminal.MAXINT)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_home"><code class="name flex">
-<span>def <span class="ident">select_home</span></span>(<span>self)</span>
+<span>def <span class="ident">select_home</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage home key</p></div>
@@ -4983,14 +5158,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_home(self):
+<pre><code class="python">def select_home(self, keys=None):
         &#34;&#34;&#34; Manage home key &#34;&#34;&#34;
         self.open_selection()
-        self.change_column(-100000000000)</code></pre>
+        self.change_column(-terminal.MAXINT)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_left"><code class="name flex">
-<span>def <span class="ident">select_left</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">select_left</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select left key</p></div>
@@ -4998,14 +5173,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_left(self, keys):
+<pre><code class="python">def select_left(self, keys=None):
         &#34;&#34;&#34; Manage select left key &#34;&#34;&#34;
         self.open_selection()
         self.change_column(-len(keys))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_next_word"><code class="name flex">
-<span>def <span class="ident">select_next_word</span></span>(<span>self)</span>
+<span>def <span class="ident">select_next_word</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select next word key</p></div>
@@ -5013,14 +5188,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_next_word(self):
+<pre><code class="python">def select_next_word(self, keys=None):
         &#34;&#34;&#34; Manage select next word key &#34;&#34;&#34;
         self.open_selection()
         self.move_word(1)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_page_down"><code class="name flex">
-<span>def <span class="ident">select_page_down</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">select_page_down</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select page down key</p></div>
@@ -5028,15 +5203,15 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_page_down(self, keys):
+<pre><code class="python">def select_page_down(self, keys=None):
         &#34;&#34;&#34; Manage select page down key &#34;&#34;&#34;
         self.open_selection()
-        self.change_line((self.view.height+1) * len(keys))
-        self.change_column(100000000000)</code></pre>
+        self.change_line((self.view.height) * len(keys))
+        self.change_column(terminal.MAXINT)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_page_up"><code class="name flex">
-<span>def <span class="ident">select_page_up</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">select_page_up</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select page up key</p></div>
@@ -5044,15 +5219,15 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_page_up(self, keys):
+<pre><code class="python">def select_page_up(self, keys=None):
         &#34;&#34;&#34; Manage select page up key &#34;&#34;&#34;
         self.open_selection()
-        self.change_line((-self.view.height-1) * len(keys))
-        self.change_column(-100000000000)</code></pre>
+        self.change_line((-(self.view.height)) * len(keys))
+        self.change_column(-terminal.MAXINT)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_previous_word"><code class="name flex">
-<span>def <span class="ident">select_previous_word</span></span>(<span>self)</span>
+<span>def <span class="ident">select_previous_word</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select previous word key</p></div>
@@ -5060,14 +5235,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_previous_word(self):
+<pre><code class="python">def select_previous_word(self, keys=None):
         &#34;&#34;&#34; Manage select previous word key &#34;&#34;&#34;
         self.open_selection()
         self.move_word(-1)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_right"><code class="name flex">
-<span>def <span class="ident">select_right</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">select_right</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select right key</p></div>
@@ -5075,14 +5250,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_right(self, keys):
+<pre><code class="python">def select_right(self, keys=None):
         &#34;&#34;&#34; Manage select right key &#34;&#34;&#34;
         self.open_selection()
         self.change_column(len(keys))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_top"><code class="name flex">
-<span>def <span class="ident">select_top</span></span>(<span>self)</span>
+<span>def <span class="ident">select_top</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select to the first line of text</p></div>
@@ -5090,14 +5265,14 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_top(self):
+<pre><code class="python">def select_top(self, keys=None):
         &#34;&#34;&#34; Manage select to the first line of text &#34;&#34;&#34;
         self.open_selection()
-        self.change_line(-100000000000)</code></pre>
+        self.change_line(-terminal.MAXINT)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.select_up"><code class="name flex">
-<span>def <span class="ident">select_up</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">select_up</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage select up key</p></div>
@@ -5105,7 +5280,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_up(self, keys):
+<pre><code class="python">def select_up(self, keys=None):
         &#34;&#34;&#34; Manage select up key &#34;&#34;&#34;
         self.open_selection()
         self.change_line(-1)</code></pre>
@@ -5185,7 +5360,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.top"><code class="name flex">
-<span>def <span class="ident">top</span></span>(<span>self)</span>
+<span>def <span class="ident">top</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Move the cursor to the first line of text</p></div>
@@ -5193,13 +5368,13 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def top(self):
+<pre><code class="python">def top(self, keys=None):
         &#34;&#34;&#34; Move the cursor to the first line of text &#34;&#34;&#34;
         self.goto(1)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.treat_char"><code class="name flex">
-<span>def <span class="ident">treat_char</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">treat_char</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Treat character entered</p></div>
@@ -5207,7 +5382,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def treat_char(self, keys):
+<pre><code class="python">def treat_char(self, keys=None):
         &#34;&#34;&#34; Treat character entered &#34;&#34;&#34;
         char = ord(keys[0][0])
         if self.read_only is False:
@@ -5218,7 +5393,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.treat_key"><code class="name flex">
-<span>def <span class="ident">treat_key</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">treat_key</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Treat keys</p></div>
@@ -5226,61 +5401,62 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def treat_key(self, keys):
+<pre><code class="python">def treat_key(self, keys=None):
         &#34;&#34;&#34; Treat keys &#34;&#34;&#34;
+        key_callback = None
         if self.treat_char(keys) is False:
                 # Move in the edit field
                 if keys[0] in self.MOVE_KEYS:
-                        if   keys[0] in UP  :            self.arrow_up(keys)
-                        elif keys[0] in DOWN:            self.arrow_down(keys)
-                        elif keys[0] in LEFT:            self.arrow_left(keys)
-                        elif keys[0] in RIGHT:           self.arrow_right(keys)
-                        elif keys[0] in HOME:            self.home()
-                        elif keys[0] in END:             self.end()
-                        elif keys[0] in PAGE_UP:         self.page_up(keys)
-                        elif keys[0] in PAGE_DOWN:       self.page_down(keys)
-                        elif keys[0] in TOP:             self.top()
-                        elif keys[0] in BOTTOM:          self.bottom()
-                        elif keys[0] in NEXT_WORD:       self.next_word()
-                        elif keys[0] in PREVIOUS_WORD:   self.previous_word()
+                        if   keys[0] in LEFT:            key_callback = self.arrow_left
+                        elif keys[0] in RIGHT:           key_callback = self.arrow_right
+                        elif keys[0] in UP  :            key_callback = self.arrow_up
+                        elif keys[0] in DOWN:            key_callback = self.arrow_down
+                        elif keys[0] in HOME:            key_callback = self.home
+                        elif keys[0] in END:             key_callback = self.end
+                        elif keys[0] in PAGE_UP:         key_callback = self.page_up
+                        elif keys[0] in PAGE_DOWN:       key_callback = self.page_down
+                        elif keys[0] in TOP:             key_callback = self.top
+                        elif keys[0] in BOTTOM:          key_callback = self.bottom
+                        elif keys[0] in NEXT_WORD:       key_callback = self.next_word
+                        elif keys[0] in PREVIOUS_WORD:   key_callback = self.previous_word
                 elif keys[0] in self.SELECT_KEYS:
                         # Selection the edit field
-                        if   keys[0] in SELECT_UP:       self.select_up(keys)
-                        elif keys[0] in SELECT_DOWN:     self.select_down(keys)
-                        elif keys[0] in SELECT_RIGHT:    self.select_right(keys)
-                        elif keys[0] in SELECT_LEFT:     self.select_left(keys)
-                        elif keys[0] in SELECT_HOME:     self.select_home()
-                        elif keys[0] in SELECT_END:      self.select_end()
-                        elif keys[0] in SELECT_TOP:      self.select_top()
-                        elif keys[0] in SELECT_BOTTOM:   self.select_bottom()
-                        elif keys[0] in SELECT_PAGE_UP:  self.select_page_up(keys)
-                        elif keys[0] in SELECT_PAGE_DOWN:self.select_page_down(keys)
-                        elif keys[0] in SELECT_ALL:      self.select_all()
-                        elif keys[0] in SELECT_NEXT_WORD:self.select_next_word()
-                        elif keys[0] in SELECT_PREV_WORD:self.select_previous_word()
+                        if   keys[0] in SELECT_RIGHT:    key_callback = self.select_right
+                        elif keys[0] in SELECT_LEFT:     key_callback = self.select_left
+                        elif keys[0] in SELECT_UP:       key_callback = self.select_up
+                        elif keys[0] in SELECT_DOWN:     key_callback = self.select_down
+                        elif keys[0] in SELECT_HOME:     key_callback = self.select_home
+                        elif keys[0] in SELECT_END:      key_callback = self.select_end
+                        elif keys[0] in SELECT_TOP:      key_callback = self.select_top
+                        elif keys[0] in SELECT_BOTTOM:   key_callback = self.select_bottom
+                        elif keys[0] in SELECT_PAGE_UP:  key_callback = self.select_page_up
+                        elif keys[0] in SELECT_PAGE_DOWN:key_callback = self.select_page_down
+                        elif keys[0] in SELECT_ALL:      key_callback = self.select_all
+                        elif keys[0] in SELECT_NEXT_WORD:key_callback = self.select_next_word
+                        elif keys[0] in SELECT_PREV_WORD:key_callback = self.select_previous_word
 
                 # If the edit is not in read only
                 elif self.read_only is False:
                         if keys[0] in self.NOT_READ_ONLY_KEYS:
                                 # Modification in the edit field
-                                if   keys[0] in COPY:            self.copy()
-                                elif keys[0] in CUT:             self.cut()
-                                elif keys[0] in PASTE:           self.paste()
-
-                                elif keys[0] in INDENT:          self.indent(keys)
-                                elif keys[0] in UNINDENT:        self.unindent(keys)
-                                elif keys[0] in CHANGE_CASE:     self.change_case()
-                                elif keys[0] in COMMENT:         self.comment()
-
-                                elif keys[0] in BACKSPACE:       self.backspace()
-                                elif keys[0] in DELETE:          self.delete()
-                                elif keys[0] in NEW_LINE:        self.new_line()
-                                elif keys[0] in DELETE_LINE:     self.delete_line()
-                # else: self.add_char(keys)</code></pre>
+                                if   keys[0] in COPY:        key_callback = self.copy
+                                elif keys[0] in CUT:         key_callback = self.cut
+                                elif keys[0] in PASTE:       key_callback = self.paste
+                                elif keys[0] in INDENT:      key_callback = self.indent
+                                elif keys[0] in UNINDENT:    key_callback = self.unindent
+                                elif keys[0] in CHANGE_CASE: key_callback = self.change_case
+                                elif keys[0] in COMMENT:     key_callback = self.comment
+                                elif keys[0] in BACKSPACE:   key_callback = self.backspace
+                                elif keys[0] in DELETE:      key_callback = self.delete
+                                elif keys[0] in NEW_LINE:    key_callback = self.new_line
+                                elif keys[0] in DELETE_LINE: key_callback = self.delete_line
+                # else: self.add_char(keys)
+                if key_callback is not None:
+                        key_callback(keys)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.unindent"><code class="name flex">
-<span>def <span class="ident">unindent</span></span>(<span>self, keys)</span>
+<span>def <span class="ident">unindent</span></span>(<span>self, keys=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Manage the unindentation key</p></div>
@@ -5288,7 +5464,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def unindent(self, keys):
+<pre><code class="python">def unindent(self, keys=None):
         &#34;&#34;&#34; Manage the unindentation key &#34;&#34;&#34;
         # If nothing selected
         if self.selection_start is None:
@@ -5340,7 +5516,7 @@ if __name__ == &#34;__main__&#34;:
 </dd>
 <dt id="lib.shell.editor.View"><code class="flex name class">
 <span>class <span class="ident">View</span></span>
-<span>(</span><span>view_height, view_top)</span>
+<span>(</span><span>view_height, view_top, extension=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class which manage the view of the edit field </p>
@@ -5351,7 +5527,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">class View:
         &#34;&#34;&#34; Class which manage the view of the edit field &#34;&#34;&#34;
-        def __init__(self, view_height, view_top):
+        def __init__(self, view_height, view_top, extension=None):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.line     = 0
                 self.column   = 0
@@ -5359,6 +5535,22 @@ if __name__ == &#34;__main__&#34;:
                         self.height   = 20
                 else:
                         self.height             = view_height
+
+                self.colorize = self.colorize_none
+                if is_enough_memory():
+                        if extension is not None:
+                                if extension.lower() == &#34;.py&#34;:
+                                        # pylint: disable=import-error
+                                        try:
+                                                try:
+                                                        from editor_py import Colorizer
+                                                except:
+                                                        from shell.editor_py import Colorizer
+                                                self.colorizer = Colorizer()
+                                                self.colorize = self.colorize_syntax
+                                        except:
+                                                pass
+
                 self.width                  = 80
                 self.top                    = view_top
                 self.is_refresh_all         = True
@@ -5431,6 +5623,8 @@ if __name__ == &#34;__main__&#34;:
                 if line &lt; self.height:
                         self.set_scrolling_region(line +1, self.height+1)
                         self.write(b&#34;\x1B[1S&#34;)
+                elif line == self.height:
+                        self.write(b&#34;\x1B[%d;1f\x1B[K&#34;%(self.height + 1 + self.top))
 
         def scroll_part_down(self):
                 &#34;&#34;&#34; Scroll the lower part &#34;&#34;&#34;
@@ -5510,6 +5704,8 @@ if __name__ == &#34;__main__&#34;:
                                 # If the line is completly selected
                                 if current_line &gt; sel_line_start and current_line &lt; sel_line_end:
                                         part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+                                        if (len(part_line) == 0):
+                                                part_line = b&#34; &#34;
                                         self.write(clear_line+SELECTION_START+part_line+SELECTION_END)
                                 # If the line is partially selected
                                 else:
@@ -5530,21 +5726,40 @@ if __name__ == &#34;__main__&#34;:
 
                                                 # If the selection is on alone line
                                                 if current_line == sel_line_end and current_line == sel_line_start:
-                                                        self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                        self.write(clear_line)
+                                                        self.colorize(part_line[:sel_column_start].encode(&#34;utf8&#34;))
+                                                        self.write(SELECTION_START+part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                        self.colorize(part_line[sel_column_end:].encode(&#34;utf8&#34;))
                                                 # If current line is on the last selection line
                                                 elif current_line == sel_line_end:
-                                                        self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                        self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                        self.colorize(part_line[sel_column_end:].encode(&#34;utf8&#34;))
                                                 # If current line is on the first selection line
                                                 elif current_line == sel_line_start:
-                                                        self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                        self.write(clear_line)
+                                                        self.colorize(part_line[:sel_column_start].encode(&#34;utf8&#34;))
+                                                        self.write(SELECTION_START+part_line[sel_column_start:].encode(&#34;utf8&#34;)+SELECTION_END)
                                                 # Else the line is not selected
                                                 else:
-                                                        self.write(clear_line+part_line.encode(&#34;utf8&#34;))
+                                                        self.write(clear_line)
+                                                        self.colorize(part_line.encode(&#34;utf8&#34;))
                                         else:
-                                                self.write(clear_line)
+                                                if current_line &gt;= sel_line_start and current_line &lt;= sel_line_end:
+                                                        self.write(clear_line+SELECTION_START+b&#34; &#34;+SELECTION_END)
+                                                else:
+                                                        self.write(clear_line)
                         else:
                                 part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
-                                self.write(clear_line+part_line)
+                                self.write(clear_line)
+                                self.colorize(part_line)
+
+        def colorize_none(self, text):
+                &#34;&#34;&#34; No colorization &#34;&#34;&#34;
+                self.write(text)
+
+        def colorize_syntax(self, text):
+                &#34;&#34;&#34; Syntax colorization &#34;&#34;&#34;
+                self.colorizer.colorize(text, self)
 
         def refresh_line(self, selection_start, selection_end):
                 &#34;&#34;&#34; Refresh line &#34;&#34;&#34;
@@ -5682,13 +5897,14 @@ if __name__ == &#34;__main__&#34;:
                 &#34;&#34;&#34; Indicates that the selection must be refreshed &#34;&#34;&#34;
                 selection_start, selection_end = self.text.get_selection()
                 if selection_start is not None:
-                        # self.is_refresh_all = True
                         line_start = selection_start[1]
-                        if self.sel_line_start &lt; line_start:
-                                line_start = self.sel_line_start
+                        if self.sel_line_start is not None:
+                                if self.sel_line_start &lt; line_start:
+                                        line_start = self.sel_line_start
                         line_end = selection_end[1]
-                        if self.sel_line_end &gt; line_end:
-                                line_end = self.sel_line_end
+                        if self.sel_line_end is not None:
+                                if self.sel_line_end &gt; line_end:
+                                        line_end = self.sel_line_end
                         self.refresh_part = [line_start, line_end]
 
         def move_cursor(self, screen_line=None, screen_column=None):
@@ -5744,6 +5960,34 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def cls_end_screen(self):
         &#34;&#34;&#34; clear the end of screen &#34;&#34;&#34;
         self.write(b&#34;\x1B[0J&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.editor.View.colorize_none"><code class="name flex">
+<span>def <span class="ident">colorize_none</span></span>(<span>self, text)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>No colorization</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def colorize_none(self, text):
+        &#34;&#34;&#34; No colorization &#34;&#34;&#34;
+        self.write(text)</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.editor.View.colorize_syntax"><code class="name flex">
+<span>def <span class="ident">colorize_syntax</span></span>(<span>self, text)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Syntax colorization</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def colorize_syntax(self, text):
+        &#34;&#34;&#34; Syntax colorization &#34;&#34;&#34;
+        self.colorizer.colorize(text, self)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.View.flush"><code class="name flex">
@@ -6104,7 +6348,9 @@ if __name__ == &#34;__main__&#34;:
         line, column = self.get_screen_position()
         if line &lt; self.height:
                 self.set_scrolling_region(line +1, self.height+1)
-                self.write(b&#34;\x1B[1S&#34;)</code></pre>
+                self.write(b&#34;\x1B[1S&#34;)
+        elif line == self.height:
+                self.write(b&#34;\x1B[%d;1f\x1B[K&#34;%(self.height + 1 + self.top))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.View.scroll_up"><code class="name flex">
@@ -6207,13 +6453,14 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Indicates that the selection must be refreshed &#34;&#34;&#34;
         selection_start, selection_end = self.text.get_selection()
         if selection_start is not None:
-                # self.is_refresh_all = True
                 line_start = selection_start[1]
-                if self.sel_line_start &lt; line_start:
-                        line_start = self.sel_line_start
+                if self.sel_line_start is not None:
+                        if self.sel_line_start &lt; line_start:
+                                line_start = self.sel_line_start
                 line_end = selection_end[1]
-                if self.sel_line_end &gt; line_end:
-                        line_end = self.sel_line_end
+                if self.sel_line_end is not None:
+                        if self.sel_line_end &gt; line_end:
+                                line_end = self.sel_line_end
                 self.refresh_part = [line_start, line_end]</code></pre>
 </details>
 </dd>
@@ -6270,6 +6517,8 @@ if __name__ == &#34;__main__&#34;:
                         # If the line is completly selected
                         if current_line &gt; sel_line_start and current_line &lt; sel_line_end:
                                 part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
+                                if (len(part_line) == 0):
+                                        part_line = b&#34; &#34;
                                 self.write(clear_line+SELECTION_START+part_line+SELECTION_END)
                         # If the line is partially selected
                         else:
@@ -6290,21 +6539,32 @@ if __name__ == &#34;__main__&#34;:
 
                                         # If the selection is on alone line
                                         if current_line == sel_line_end and current_line == sel_line_start:
-                                                self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                self.write(clear_line)
+                                                self.colorize(part_line[:sel_column_start].encode(&#34;utf8&#34;))
+                                                self.write(SELECTION_START+part_line[sel_column_start:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                self.colorize(part_line[sel_column_end:].encode(&#34;utf8&#34;))
                                         # If current line is on the last selection line
                                         elif current_line == sel_line_end:
-                                                self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END+part_line[sel_column_end:].encode(&#34;utf8&#34;))
+                                                self.write(clear_line+SELECTION_START+part_line[:sel_column_end].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                self.colorize(part_line[sel_column_end:].encode(&#34;utf8&#34;))
                                         # If current line is on the first selection line
                                         elif current_line == sel_line_start:
-                                                self.write(clear_line+part_line[:sel_column_start].encode(&#34;utf8&#34;)+SELECTION_START+part_line[sel_column_start:].encode(&#34;utf8&#34;)+SELECTION_END)
+                                                self.write(clear_line)
+                                                self.colorize(part_line[:sel_column_start].encode(&#34;utf8&#34;))
+                                                self.write(SELECTION_START+part_line[sel_column_start:].encode(&#34;utf8&#34;)+SELECTION_END)
                                         # Else the line is not selected
                                         else:
-                                                self.write(clear_line+part_line.encode(&#34;utf8&#34;))
+                                                self.write(clear_line)
+                                                self.colorize(part_line.encode(&#34;utf8&#34;))
                                 else:
-                                        self.write(clear_line)
+                                        if current_line &gt;= sel_line_start and current_line &lt;= sel_line_end:
+                                                self.write(clear_line+SELECTION_START+b&#34; &#34;+SELECTION_END)
+                                        else:
+                                                self.write(clear_line)
                 else:
                         part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
-                        self.write(clear_line+part_line)</code></pre>
+                        self.write(clear_line)
+                        self.colorize(part_line)</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.View.write_byte"><code class="name flex">
@@ -6351,6 +6611,11 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell" href="index.html">lib.shell</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.shell.editor.is_enough_memory" href="#lib.shell.editor.is_enough_memory">is_enough_memory</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
@@ -6371,6 +6636,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.editor.Editor.refresh" href="#lib.shell.editor.Editor.refresh">refresh</a></code></li>
 <li><code><a title="lib.shell.editor.Editor.refresh_header" href="#lib.shell.editor.Editor.refresh_header">refresh_header</a></code></li>
 <li><code><a title="lib.shell.editor.Editor.replace" href="#lib.shell.editor.Editor.replace">replace</a></code></li>
+<li><code><a title="lib.shell.editor.Editor.replace_all" href="#lib.shell.editor.Editor.replace_all">replace_all</a></code></li>
 <li><code><a title="lib.shell.editor.Editor.replace_current" href="#lib.shell.editor.Editor.replace_current">replace_current</a></code></li>
 <li><code><a title="lib.shell.editor.Editor.run" href="#lib.shell.editor.Editor.run">run</a></code></li>
 <li><code><a title="lib.shell.editor.Editor.save" href="#lib.shell.editor.Editor.save">save</a></code></li>
@@ -6453,6 +6719,8 @@ if __name__ == &#34;__main__&#34;:
 <ul class="">
 <li><code><a title="lib.shell.editor.View.cls" href="#lib.shell.editor.View.cls">cls</a></code></li>
 <li><code><a title="lib.shell.editor.View.cls_end_screen" href="#lib.shell.editor.View.cls_end_screen">cls_end_screen</a></code></li>
+<li><code><a title="lib.shell.editor.View.colorize_none" href="#lib.shell.editor.View.colorize_none">colorize_none</a></code></li>
+<li><code><a title="lib.shell.editor.View.colorize_syntax" href="#lib.shell.editor.View.colorize_syntax">colorize_syntax</a></code></li>
 <li><code><a title="lib.shell.editor.View.flush" href="#lib.shell.editor.View.flush">flush</a></code></li>
 <li><code><a title="lib.shell.editor.View.get_screen_position" href="#lib.shell.editor.View.get_screen_position">get_screen_position</a></code></li>
 <li><code><a title="lib.shell.editor.View.get_screen_size" href="#lib.shell.editor.View.get_screen_size">get_screen_size</a></code></li>

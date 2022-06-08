@@ -21,7 +21,6 @@ excludeds = [
 	"webrepl.*",
 	"websocket_helper.*",
 	"inisetup.*",
-	"*/homekit/*",
 	"*/motion/*",
 	"*/video/*",
 	"*/uasyncio/*"]

@@ -17,53 +17,30 @@ export PYCAMERESP_PATH=`pwd`
 export ESPIDF=$ROOT/esp-idf
 export IDF_PATH=$ROOT/esp-idf
 
-echo "********************"
-echo "Init env micropython"
-echo "********************"
-cd $ROOT/micropython/ports/esp32
-python3 -m venv build-venv
-source build-venv/bin/activate
-
 echo "***************"
-echo "Init virtualenv"
+echo "Install esp-idf"
 echo "***************"
-cd $ROOT
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-	pip3 install --upgrade pip
-	pip3 install -r $ESPIDF/requirements.txt
-	pip3 install virtualenv
-else
-	pip install --upgrade pip
-	pip install -r $ESPIDF/requirements.txt
-	pip install virtualenv
-fi
-
-echo "**************"
-echo "Init export.sh"
-echo "**************"
-cd $ROOT/micropython/ports/esp32
-source $ESPIDF/export.sh
+cd $ESPIDF
+./install.sh
+source export.sh
 
 echo "***************"
 echo "Build mpy-cross"
 echo "***************"
-cd $ROOT/micropython/mpy-cross
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-	make mpy-cross V=1
-else
-	make mpy-cross
-fi
-
-echo "****************"
-echo "Build submodules"
-echo "****************"
-cd $ROOT/micropython/ports/esp32
-make submodules
+cd $ROOT/micropython
+make -C mpy-cross
 
 echo "**************"
 echo "Build " $BOARD
 echo "**************"
+cd $ROOT/micropython/ports/esp32
+make submodules
 make BOARD=$BOARD
 cd $ROOT
 cp $ROOT/micropython/ports/esp32/build-$BOARD/firmware.bin $BOARD-firmware.bin
+
+echo "******************"
+echo "Build install zips"
+echo "******************"
 python3 "$PYCAMERESP_PATH/scripts/zip_mpy.py" $ROOT $BOARD "$PYCAMERESP_PATH"
+

@@ -29,7 +29,6 @@ Other informations :
 
 
 - [Library documentation : ](https://htmlpreview.github.io/?https://raw.githubusercontent.com/remibert/pycameresp/main/doc/lib/index.html)
-	- [Homekit](doc/HOMEKIT.md)
 	- [Html template](https://htmlpreview.github.io/?https://raw.githubusercontent.com/remibert/pycameresp/main/doc/lib/htmltemplate/index.html)
 	- [Motion detection](https://htmlpreview.github.io/?https://raw.githubusercontent.com/remibert/pycameresp/main/doc/lib/motion/index.html)
 	- [Servers](https://htmlpreview.github.io/?https://raw.githubusercontent.com/remibert/pycameresp/main/doc/lib/server/index.html) 

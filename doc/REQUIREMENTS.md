@@ -9,7 +9,6 @@ it is necessary to generate the firmware embedding the python scripts, in this c
 
 For motion capture you absolutely need an ESP32CAM.
 
-Homekit cannot work with the camera on ESP32CAM, problem of insufficient memory to store the stack. Homekit seems to work on Esp32 generic.
 # Devices supported
 
 Below are the devices compatible with pycameresp :

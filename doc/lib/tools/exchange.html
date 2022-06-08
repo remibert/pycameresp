@@ -33,7 +33,7 @@
 import time
 import os
 import io
-from binascii import crc32
+import binascii
 try:
         import filesystem
         import strings
@@ -43,9 +43,13 @@ if filesystem.ismicropython():
         # pylint:disable=import-error
         import micropython
 
-CHUNK_SIZE=256
+CHUNK_SIZE=192 # The chunk is in base 64 so is 256 in length
 ACK=b&#34;\x06&#34;
 NAK=b&#34;\x15&#34;
+
+def get_b64_size(size):
+        &#34;&#34;&#34; Calc size in base64 &#34;&#34;&#34;
+        return ((size*8)//24)*4 + (4 if ((size*8) % 24) &gt; 0 else 0)
 
 class FileError(Exception):
         &#34;&#34;&#34; File reader exception &#34;&#34;&#34;
@@ -316,7 +320,7 @@ class FileReader:
                         else:
                                 return -1
 
-        def read(self, directory, in_file, out_file=None):
+        def read(self, directory, in_file, out_file=None, printer=None):
                 &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
                 send_ack(out_file,ACK)
                 try:
@@ -338,7 +342,7 @@ class FileReader:
                                         filesystem.makedir(filesystem.split(filename)[0], True)
 
                                         # Write file
-                                        self.write_file(filename, self.size.get(), in_file, out_file)
+                                        self.write_file(filename, self.size.get(), in_file, out_file, printer)
 
                                         # Set time of file
                                         try:
@@ -364,9 +368,15 @@ class FileReader:
                         # Enable the Ctr-C
                         if filesystem.ismicropython() and out_file is not None:
                                 micropython.kbd_intr(3)
+
+                        if printer is not None:
+                                if result is True:
+                                        printer(&#34;\r %-40s OK&#34;%self.filename.get())
+                                else:
+                                        printer(&#34;\r %-40s FAILED&#34;%self.filename.get())
                 return result
 
-        def write_file(self, filename, size, in_file, out_file):
+        def write_file(self, filename, size, in_file, out_file, printer=None):
                 &#34;&#34;&#34; Write the file on disk &#34;&#34;&#34;
                 file = None
                 try:
@@ -374,29 +384,53 @@ class FileReader:
                                 file = io.BytesIO()
                         else:
                                 file = open(filename, &#34;wb&#34;)
-                        chunk = bytearray(CHUNK_SIZE)
+                        chunk = bytearray(get_b64_size(CHUNK_SIZE))
 
                         if size &lt;= 0:
                                 send_ack(out_file,ACK)
                         else:
+                                chunk_id = 0
+                                if printer is not None:
+                                        printer(&#34;  %-40s&#34;, end=&#34;&#34;)
                                 while size &gt; 0:
-                                        # Receive content part
-                                        if filesystem.ismicropython():
-                                                length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
-                                        else:
-                                                chunk = bytearray(min(size, CHUNK_SIZE))
-                                                length = in_file.readinto(chunk)
+                                        count = 0
+                                        part = b&#34;&#34;
+                                        part_size = get_b64_size(min(size, CHUNK_SIZE))
+
+                                        if printer is not None:
+                                                chunk_id += 1
+                                                printer(&#34;\r %-40s %s&#34;%(self.filename.get(), [&#34;|&#34;,&#34;\\&#34;,&#34;-&#34;,&#34;/&#34;][chunk_id%4]), end=&#34;&#34;)
+
+                                        while len(part) &lt; part_size:
+                                                size_to_read = get_b64_size(min(size, CHUNK_SIZE)) - len(part)
+                                                # Receive content part
+                                                if filesystem.ismicropython():
+                                                        length = in_file.readinto(chunk, size_to_read)
+                                                else:
+                                                        chunk = bytearray(size_to_read)
+                                                        length = in_file.readinto(chunk)
+
+                                                part += chunk[:length]
+                                                if length == 0:
+                                                        count += 1
+                                                        time.sleep(0.01)
+                                                        if count &gt; 300:
+                                                                raise FileError(&#34;Transmission error&#34;)
+
                                         # Send ack
                                         send_ack(out_file,ACK)
 
+                                        # Convert base64 buffer into binary buffer
+                                        bin_buffer = binascii.a2b_base64(part)
+
                                         # Compute crc
-                                        self.crc_computed = crc32(chunk[:length], self.crc_computed)
+                                        self.crc_computed = binascii.crc32(bin_buffer, self.crc_computed)
 
                                         # Write content part received
-                                        file.write(chunk[:length])
+                                        file.write(bin_buffer)
 
                                         # Decrease the remaining size
-                                        size -= length
+                                        size -= len(bin_buffer)
                 finally:
                         if file is not None:
                                 file.close()
@@ -404,7 +438,7 @@ class FileReader:
 
 class FileWriter:
         &#34;&#34;&#34; File writer &#34;&#34;&#34;
-        def write(self, filename, in_file, out_file, directory=None):
+        def write(self, filename, in_file, out_file, device_filename=None, printer=None):
                 &#34;&#34;&#34; Write file &#34;&#34;&#34;
                 result = False
 
@@ -417,9 +451,15 @@ class FileWriter:
                         # Send blank line
                         out_file.write(b&#34;\x0D\x0A&#34;)
 
+                        chunk_id = 0
+                        # if printer is not None:
+                        #       chunk_id += 1
+                        #       filename_ = filename.replace(directory, &#34;&#34;)
+                        #       printer(&#34;\r %-40s %s&#34;%(filename_, [&#34;|&#34;,&#34;\\&#34;,&#34;-&#34;,&#34;/&#34;][chunk_id%4]), end=&#34;&#34;)
+
                         # Send the filename
-                        if directory is not None:
-                                filename_ = filename.replace(directory, &#34;&#34;)
+                        if device_filename is not None:
+                                filename_ = device_filename
                         else:
                                 filename_ = filename
                         out_file.write(b&#34;# %s\x0D\x0A&#34;%filename_.encode(&#34;utf8&#34;))
@@ -444,17 +484,20 @@ class FileWriter:
                                         with open(filename, &#34;rb&#34;) as file:
                                                 chunk = bytearray(CHUNK_SIZE)
                                                 while size &gt; 0:
+                                                        if printer is not None:
+                                                                chunk_id += 1
+                                                                printer(&#34;\r %-40s %s&#34;%(filename_, [&#34;|&#34;,&#34;\\&#34;,&#34;-&#34;,&#34;/&#34;][chunk_id%4]), end=&#34;&#34;)
                                                         # Read file part
                                                         length = file.readinto(chunk)
 
-                                                        # Send part
-                                                        out_file.write(chunk[:length])
+                                                        # Encode in base64 and send chunk
+                                                        out_file.write(binascii.b2a_base64(chunk[:length]).rstrip())
 
                                                         # Compute the remaining size
                                                         size -= length
 
                                                         # Compte crc
-                                                        crc = crc32(chunk[:length], crc)
+                                                        crc = binascii.crc32(chunk[:length], crc)
 
                                                         # Wait reception ack
                                                         wait_ack(in_file)
@@ -467,6 +510,12 @@ class FileWriter:
 
                                 # Waits for confirmation that the file has been received wit success or not
                                 result = wait_ack(in_file, True)
+
+                                if printer is not None:
+                                        if result is True:
+                                                printer(&#34;\r %-40s OK&#34;%filename_)
+                                        else:
+                                                printer(&#34;\r %-40s FAILED&#34;%filename_)
                 return result
 
 def wait_ack(in_file, nak=False):
@@ -497,8 +546,8 @@ def send_ack(out_file, buffer):
         if out_file is not None:
                 out_file.write(buffer)
 
-class ImporterCommand:
-        &#34;&#34;&#34; Importer command &#34;&#34;&#34;
+class UploadCommand:
+        &#34;&#34;&#34; Upload command &#34;&#34;&#34;
         def __init__(self, directory):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.pattern   = PatternReader()
@@ -525,7 +574,7 @@ class ImporterCommand:
                         return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)
 
         def write(self, file, recursive, in_file, out_file):
-                &#34;&#34;&#34; Write exporter command &#34;&#34;&#34;
+                &#34;&#34;&#34; Write download command &#34;&#34;&#34;
                 out_file.write(&#34;࿋&#34;.encode(&#34;utf8&#34;))
                 wait_ack(in_file)
                 out_file.write(b&#34;# %s\r\n&#34;%file.encode(&#34;utf8&#34;))
@@ -552,6 +601,20 @@ class ImporterCommand:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="lib.tools.exchange.get_b64_size"><code class="name flex">
+<span>def <span class="ident">get_b64_size</span></span>(<span>size)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calc size in base64</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_b64_size(size):
+        &#34;&#34;&#34; Calc size in base64 &#34;&#34;&#34;
+        return ((size*8)//24)*4 + (4 if ((size*8) % 24) &gt; 0 else 0)</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.exchange.send_ack"><code class="name flex">
 <span>def <span class="ident">send_ack</span></span>(<span>out_file, buffer)</span>
 </code></dt>
@@ -1025,7 +1088,7 @@ class ImporterCommand:
                         else:
                                 return -1
 
-        def read(self, directory, in_file, out_file=None):
+        def read(self, directory, in_file, out_file=None, printer=None):
                 &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
                 send_ack(out_file,ACK)
                 try:
@@ -1047,7 +1110,7 @@ class ImporterCommand:
                                         filesystem.makedir(filesystem.split(filename)[0], True)
 
                                         # Write file
-                                        self.write_file(filename, self.size.get(), in_file, out_file)
+                                        self.write_file(filename, self.size.get(), in_file, out_file, printer)
 
                                         # Set time of file
                                         try:
@@ -1073,9 +1136,15 @@ class ImporterCommand:
                         # Enable the Ctr-C
                         if filesystem.ismicropython() and out_file is not None:
                                 micropython.kbd_intr(3)
+
+                        if printer is not None:
+                                if result is True:
+                                        printer(&#34;\r %-40s OK&#34;%self.filename.get())
+                                else:
+                                        printer(&#34;\r %-40s FAILED&#34;%self.filename.get())
                 return result
 
-        def write_file(self, filename, size, in_file, out_file):
+        def write_file(self, filename, size, in_file, out_file, printer=None):
                 &#34;&#34;&#34; Write the file on disk &#34;&#34;&#34;
                 file = None
                 try:
@@ -1083,29 +1152,53 @@ class ImporterCommand:
                                 file = io.BytesIO()
                         else:
                                 file = open(filename, &#34;wb&#34;)
-                        chunk = bytearray(CHUNK_SIZE)
+                        chunk = bytearray(get_b64_size(CHUNK_SIZE))
 
                         if size &lt;= 0:
                                 send_ack(out_file,ACK)
                         else:
+                                chunk_id = 0
+                                if printer is not None:
+                                        printer(&#34;  %-40s&#34;, end=&#34;&#34;)
                                 while size &gt; 0:
-                                        # Receive content part
-                                        if filesystem.ismicropython():
-                                                length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
-                                        else:
-                                                chunk = bytearray(min(size, CHUNK_SIZE))
-                                                length = in_file.readinto(chunk)
+                                        count = 0
+                                        part = b&#34;&#34;
+                                        part_size = get_b64_size(min(size, CHUNK_SIZE))
+
+                                        if printer is not None:
+                                                chunk_id += 1
+                                                printer(&#34;\r %-40s %s&#34;%(self.filename.get(), [&#34;|&#34;,&#34;\\&#34;,&#34;-&#34;,&#34;/&#34;][chunk_id%4]), end=&#34;&#34;)
+
+                                        while len(part) &lt; part_size:
+                                                size_to_read = get_b64_size(min(size, CHUNK_SIZE)) - len(part)
+                                                # Receive content part
+                                                if filesystem.ismicropython():
+                                                        length = in_file.readinto(chunk, size_to_read)
+                                                else:
+                                                        chunk = bytearray(size_to_read)
+                                                        length = in_file.readinto(chunk)
+
+                                                part += chunk[:length]
+                                                if length == 0:
+                                                        count += 1
+                                                        time.sleep(0.01)
+                                                        if count &gt; 300:
+                                                                raise FileError(&#34;Transmission error&#34;)
+
                                         # Send ack
                                         send_ack(out_file,ACK)
 
+                                        # Convert base64 buffer into binary buffer
+                                        bin_buffer = binascii.a2b_base64(part)
+
                                         # Compute crc
-                                        self.crc_computed = crc32(chunk[:length], self.crc_computed)
+                                        self.crc_computed = binascii.crc32(bin_buffer, self.crc_computed)
 
                                         # Write content part received
-                                        file.write(chunk[:length])
+                                        file.write(bin_buffer)
 
                                         # Decrease the remaining size
-                                        size -= length
+                                        size -= len(bin_buffer)
                 finally:
                         if file is not None:
                                 file.close()</code></pre>
@@ -1113,7 +1206,7 @@ class ImporterCommand:
 <h3>Methods</h3>
 <dl>
 <dt id="lib.tools.exchange.FileReader.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self, directory, in_file, out_file=None)</span>
+<span>def <span class="ident">read</span></span>(<span>self, directory, in_file, out_file=None, printer=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Read the file completly</p></div>
@@ -1121,7 +1214,7 @@ class ImporterCommand:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def read(self, directory, in_file, out_file=None):
+<pre><code class="python">def read(self, directory, in_file, out_file=None, printer=None):
         &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
         send_ack(out_file,ACK)
         try:
@@ -1143,7 +1236,7 @@ class ImporterCommand:
                                 filesystem.makedir(filesystem.split(filename)[0], True)
 
                                 # Write file
-                                self.write_file(filename, self.size.get(), in_file, out_file)
+                                self.write_file(filename, self.size.get(), in_file, out_file, printer)
 
                                 # Set time of file
                                 try:
@@ -1169,6 +1262,12 @@ class ImporterCommand:
                 # Enable the Ctr-C
                 if filesystem.ismicropython() and out_file is not None:
                         micropython.kbd_intr(3)
+
+                if printer is not None:
+                        if result is True:
+                                printer(&#34;\r %-40s OK&#34;%self.filename.get())
+                        else:
+                                printer(&#34;\r %-40s FAILED&#34;%self.filename.get())
         return result</code></pre>
 </details>
 </dd>
@@ -1288,7 +1387,7 @@ class ImporterCommand:
 </details>
 </dd>
 <dt id="lib.tools.exchange.FileReader.write_file"><code class="name flex">
-<span>def <span class="ident">write_file</span></span>(<span>self, filename, size, in_file, out_file)</span>
+<span>def <span class="ident">write_file</span></span>(<span>self, filename, size, in_file, out_file, printer=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write the file on disk</p></div>
@@ -1296,7 +1395,7 @@ class ImporterCommand:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write_file(self, filename, size, in_file, out_file):
+<pre><code class="python">def write_file(self, filename, size, in_file, out_file, printer=None):
         &#34;&#34;&#34; Write the file on disk &#34;&#34;&#34;
         file = None
         try:
@@ -1304,29 +1403,53 @@ class ImporterCommand:
                         file = io.BytesIO()
                 else:
                         file = open(filename, &#34;wb&#34;)
-                chunk = bytearray(CHUNK_SIZE)
+                chunk = bytearray(get_b64_size(CHUNK_SIZE))
 
                 if size &lt;= 0:
                         send_ack(out_file,ACK)
                 else:
+                        chunk_id = 0
+                        if printer is not None:
+                                printer(&#34;  %-40s&#34;, end=&#34;&#34;)
                         while size &gt; 0:
-                                # Receive content part
-                                if filesystem.ismicropython():
-                                        length = in_file.readinto(chunk, min(size, CHUNK_SIZE))
-                                else:
-                                        chunk = bytearray(min(size, CHUNK_SIZE))
-                                        length = in_file.readinto(chunk)
+                                count = 0
+                                part = b&#34;&#34;
+                                part_size = get_b64_size(min(size, CHUNK_SIZE))
+
+                                if printer is not None:
+                                        chunk_id += 1
+                                        printer(&#34;\r %-40s %s&#34;%(self.filename.get(), [&#34;|&#34;,&#34;\\&#34;,&#34;-&#34;,&#34;/&#34;][chunk_id%4]), end=&#34;&#34;)
+
+                                while len(part) &lt; part_size:
+                                        size_to_read = get_b64_size(min(size, CHUNK_SIZE)) - len(part)
+                                        # Receive content part
+                                        if filesystem.ismicropython():
+                                                length = in_file.readinto(chunk, size_to_read)
+                                        else:
+                                                chunk = bytearray(size_to_read)
+                                                length = in_file.readinto(chunk)
+
+                                        part += chunk[:length]
+                                        if length == 0:
+                                                count += 1
+                                                time.sleep(0.01)
+                                                if count &gt; 300:
+                                                        raise FileError(&#34;Transmission error&#34;)
+
                                 # Send ack
                                 send_ack(out_file,ACK)
 
+                                # Convert base64 buffer into binary buffer
+                                bin_buffer = binascii.a2b_base64(part)
+
                                 # Compute crc
-                                self.crc_computed = crc32(chunk[:length], self.crc_computed)
+                                self.crc_computed = binascii.crc32(bin_buffer, self.crc_computed)
 
                                 # Write content part received
-                                file.write(chunk[:length])
+                                file.write(bin_buffer)
 
                                 # Decrease the remaining size
-                                size -= length
+                                size -= len(bin_buffer)
         finally:
                 if file is not None:
                         file.close()</code></pre>
@@ -1345,7 +1468,7 @@ class ImporterCommand:
 </summary>
 <pre><code class="python">class FileWriter:
         &#34;&#34;&#34; File writer &#34;&#34;&#34;
-        def write(self, filename, in_file, out_file, directory=None):
+        def write(self, filename, in_file, out_file, device_filename=None, printer=None):
                 &#34;&#34;&#34; Write file &#34;&#34;&#34;
                 result = False
 
@@ -1358,9 +1481,15 @@ class ImporterCommand:
                         # Send blank line
                         out_file.write(b&#34;\x0D\x0A&#34;)
 
+                        chunk_id = 0
+                        # if printer is not None:
+                        #       chunk_id += 1
+                        #       filename_ = filename.replace(directory, &#34;&#34;)
+                        #       printer(&#34;\r %-40s %s&#34;%(filename_, [&#34;|&#34;,&#34;\\&#34;,&#34;-&#34;,&#34;/&#34;][chunk_id%4]), end=&#34;&#34;)
+
                         # Send the filename
-                        if directory is not None:
-                                filename_ = filename.replace(directory, &#34;&#34;)
+                        if device_filename is not None:
+                                filename_ = device_filename
                         else:
                                 filename_ = filename
                         out_file.write(b&#34;# %s\x0D\x0A&#34;%filename_.encode(&#34;utf8&#34;))
@@ -1385,17 +1514,20 @@ class ImporterCommand:
                                         with open(filename, &#34;rb&#34;) as file:
                                                 chunk = bytearray(CHUNK_SIZE)
                                                 while size &gt; 0:
+                                                        if printer is not None:
+                                                                chunk_id += 1
+                                                                printer(&#34;\r %-40s %s&#34;%(filename_, [&#34;|&#34;,&#34;\\&#34;,&#34;-&#34;,&#34;/&#34;][chunk_id%4]), end=&#34;&#34;)
                                                         # Read file part
                                                         length = file.readinto(chunk)
 
-                                                        # Send part
-                                                        out_file.write(chunk[:length])
+                                                        # Encode in base64 and send chunk
+                                                        out_file.write(binascii.b2a_base64(chunk[:length]).rstrip())
 
                                                         # Compute the remaining size
                                                         size -= length
 
                                                         # Compte crc
-                                                        crc = crc32(chunk[:length], crc)
+                                                        crc = binascii.crc32(chunk[:length], crc)
 
                                                         # Wait reception ack
                                                         wait_ack(in_file)
@@ -1408,12 +1540,18 @@ class ImporterCommand:
 
                                 # Waits for confirmation that the file has been received wit success or not
                                 result = wait_ack(in_file, True)
+
+                                if printer is not None:
+                                        if result is True:
+                                                printer(&#34;\r %-40s OK&#34;%filename_)
+                                        else:
+                                                printer(&#34;\r %-40s FAILED&#34;%filename_)
                 return result</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="lib.tools.exchange.FileWriter.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, filename, in_file, out_file, directory=None)</span>
+<span>def <span class="ident">write</span></span>(<span>self, filename, in_file, out_file, device_filename=None, printer=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Write file</p></div>
@@ -1421,7 +1559,7 @@ class ImporterCommand:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def write(self, filename, in_file, out_file, directory=None):
+<pre><code class="python">def write(self, filename, in_file, out_file, device_filename=None, printer=None):
         &#34;&#34;&#34; Write file &#34;&#34;&#34;
         result = False
 
@@ -1434,9 +1572,15 @@ class ImporterCommand:
                 # Send blank line
                 out_file.write(b&#34;\x0D\x0A&#34;)
 
+                chunk_id = 0
+                # if printer is not None:
+                #       chunk_id += 1
+                #       filename_ = filename.replace(directory, &#34;&#34;)
+                #       printer(&#34;\r %-40s %s&#34;%(filename_, [&#34;|&#34;,&#34;\\&#34;,&#34;-&#34;,&#34;/&#34;][chunk_id%4]), end=&#34;&#34;)
+
                 # Send the filename
-                if directory is not None:
-                        filename_ = filename.replace(directory, &#34;&#34;)
+                if device_filename is not None:
+                        filename_ = device_filename
                 else:
                         filename_ = filename
                 out_file.write(b&#34;# %s\x0D\x0A&#34;%filename_.encode(&#34;utf8&#34;))
@@ -1461,17 +1605,20 @@ class ImporterCommand:
                                 with open(filename, &#34;rb&#34;) as file:
                                         chunk = bytearray(CHUNK_SIZE)
                                         while size &gt; 0:
+                                                if printer is not None:
+                                                        chunk_id += 1
+                                                        printer(&#34;\r %-40s %s&#34;%(filename_, [&#34;|&#34;,&#34;\\&#34;,&#34;-&#34;,&#34;/&#34;][chunk_id%4]), end=&#34;&#34;)
                                                 # Read file part
                                                 length = file.readinto(chunk)
 
-                                                # Send part
-                                                out_file.write(chunk[:length])
+                                                # Encode in base64 and send chunk
+                                                out_file.write(binascii.b2a_base64(chunk[:length]).rstrip())
 
                                                 # Compute the remaining size
                                                 size -= length
 
                                                 # Compte crc
-                                                crc = crc32(chunk[:length], crc)
+                                                crc = binascii.crc32(chunk[:length], crc)
 
                                                 # Wait reception ack
                                                 wait_ack(in_file)
@@ -1484,6 +1631,12 @@ class ImporterCommand:
 
                         # Waits for confirmation that the file has been received wit success or not
                         result = wait_ack(in_file, True)
+
+                        if printer is not None:
+                                if result is True:
+                                        printer(&#34;\r %-40s OK&#34;%filename_)
+                                else:
+                                        printer(&#34;\r %-40s FAILED&#34;%filename_)
         return result</code></pre>
 </details>
 </dd>
@@ -1580,155 +1733,6 @@ class ImporterCommand:
 </ul>
 </li>
 </ul>
-</dd>
-<dt id="lib.tools.exchange.ImporterCommand"><code class="flex name class">
-<span>class <span class="ident">ImporterCommand</span></span>
-<span>(</span><span>directory)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Importer command </p>
-<p>Constructor</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class ImporterCommand:
-        &#34;&#34;&#34; Importer command &#34;&#34;&#34;
-        def __init__(self, directory):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.pattern   = PatternReader()
-                self.path      = FilenameReader()
-                self.recursive = IntReader()
-                self.directory = directory
-                self.read_byte   = self.read_pattern
-
-        def read_pattern(self, byte):
-                &#34;&#34;&#34; Read pattern &#34;&#34;&#34;
-                if self.pattern.read_byte(byte) is not None:
-                        self.read_byte = self.read_path
-                return None
-
-        def read_path(self, byte):
-                &#34;&#34;&#34; Read path &#34;&#34;&#34;
-                if self.path.read_byte(byte) is not None:
-                        self.read_byte = self.read_recursive
-                return None
-
-        def read_recursive(self, byte):
-                &#34;&#34;&#34; Read recursive &#34;&#34;&#34;
-                if self.recursive.read_byte(byte) is not None:
-                        return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)
-
-        def write(self, file, recursive, in_file, out_file):
-                &#34;&#34;&#34; Write exporter command &#34;&#34;&#34;
-                out_file.write(&#34;࿋&#34;.encode(&#34;utf8&#34;))
-                wait_ack(in_file)
-                out_file.write(b&#34;# %s\r\n&#34;%file.encode(&#34;utf8&#34;))
-                out_file.write(b&#34;# %s\r\n&#34;%self.directory.encode(&#34;utf8&#34;))
-                out_file.write(b&#34;# %d\r\n&#34;%(1 if recursive else 0))
-                wait_ack(in_file)
-
-        def read(self, in_file, out_file):
-                &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
-                send_ack(out_file, ACK)
-                result = None
-                while result is None:
-                        byte = in_file.read(1)
-                        # pylint:disable=assignment-from-none
-                        result = self.read_byte(byte)
-                send_ack(out_file, ACK)
-                return result</code></pre>
-</details>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.tools.exchange.ImporterCommand.read"><code class="name flex">
-<span>def <span class="ident">read</span></span>(<span>self, in_file, out_file)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Read the file completly</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read(self, in_file, out_file):
-        &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
-        send_ack(out_file, ACK)
-        result = None
-        while result is None:
-                byte = in_file.read(1)
-                # pylint:disable=assignment-from-none
-                result = self.read_byte(byte)
-        send_ack(out_file, ACK)
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.tools.exchange.ImporterCommand.read_path"><code class="name flex">
-<span>def <span class="ident">read_path</span></span>(<span>self, byte)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Read path</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_path(self, byte):
-        &#34;&#34;&#34; Read path &#34;&#34;&#34;
-        if self.path.read_byte(byte) is not None:
-                self.read_byte = self.read_recursive
-        return None</code></pre>
-</details>
-</dd>
-<dt id="lib.tools.exchange.ImporterCommand.read_pattern"><code class="name flex">
-<span>def <span class="ident">read_pattern</span></span>(<span>self, byte)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Read pattern</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_pattern(self, byte):
-        &#34;&#34;&#34; Read pattern &#34;&#34;&#34;
-        if self.pattern.read_byte(byte) is not None:
-                self.read_byte = self.read_path
-        return None</code></pre>
-</details>
-</dd>
-<dt id="lib.tools.exchange.ImporterCommand.read_recursive"><code class="name flex">
-<span>def <span class="ident">read_recursive</span></span>(<span>self, byte)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Read recursive</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_recursive(self, byte):
-        &#34;&#34;&#34; Read recursive &#34;&#34;&#34;
-        if self.recursive.read_byte(byte) is not None:
-                return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)</code></pre>
-</details>
-</dd>
-<dt id="lib.tools.exchange.ImporterCommand.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, file, recursive, in_file, out_file)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Write exporter command</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def write(self, file, recursive, in_file, out_file):
-        &#34;&#34;&#34; Write exporter command &#34;&#34;&#34;
-        out_file.write(&#34;࿋&#34;.encode(&#34;utf8&#34;))
-        wait_ack(in_file)
-        out_file.write(b&#34;# %s\r\n&#34;%file.encode(&#34;utf8&#34;))
-        out_file.write(b&#34;# %s\r\n&#34;%self.directory.encode(&#34;utf8&#34;))
-        out_file.write(b&#34;# %d\r\n&#34;%(1 if recursive else 0))
-        wait_ack(in_file)</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="lib.tools.exchange.IntReader"><code class="flex name class">
 <span>class <span class="ident">IntReader</span></span>
@@ -1989,6 +1993,155 @@ class ImporterCommand:
 </dd>
 </dl>
 </dd>
+<dt id="lib.tools.exchange.UploadCommand"><code class="flex name class">
+<span>class <span class="ident">UploadCommand</span></span>
+<span>(</span><span>directory)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Upload command </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class UploadCommand:
+        &#34;&#34;&#34; Upload command &#34;&#34;&#34;
+        def __init__(self, directory):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.pattern   = PatternReader()
+                self.path      = FilenameReader()
+                self.recursive = IntReader()
+                self.directory = directory
+                self.read_byte   = self.read_pattern
+
+        def read_pattern(self, byte):
+                &#34;&#34;&#34; Read pattern &#34;&#34;&#34;
+                if self.pattern.read_byte(byte) is not None:
+                        self.read_byte = self.read_path
+                return None
+
+        def read_path(self, byte):
+                &#34;&#34;&#34; Read path &#34;&#34;&#34;
+                if self.path.read_byte(byte) is not None:
+                        self.read_byte = self.read_recursive
+                return None
+
+        def read_recursive(self, byte):
+                &#34;&#34;&#34; Read recursive &#34;&#34;&#34;
+                if self.recursive.read_byte(byte) is not None:
+                        return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)
+
+        def write(self, file, recursive, in_file, out_file):
+                &#34;&#34;&#34; Write download command &#34;&#34;&#34;
+                out_file.write(&#34;࿋&#34;.encode(&#34;utf8&#34;))
+                wait_ack(in_file)
+                out_file.write(b&#34;# %s\r\n&#34;%file.encode(&#34;utf8&#34;))
+                out_file.write(b&#34;# %s\r\n&#34;%self.directory.encode(&#34;utf8&#34;))
+                out_file.write(b&#34;# %d\r\n&#34;%(1 if recursive else 0))
+                wait_ack(in_file)
+
+        def read(self, in_file, out_file):
+                &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
+                send_ack(out_file, ACK)
+                result = None
+                while result is None:
+                        byte = in_file.read(1)
+                        # pylint:disable=assignment-from-none
+                        result = self.read_byte(byte)
+                send_ack(out_file, ACK)
+                return result</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.tools.exchange.UploadCommand.read"><code class="name flex">
+<span>def <span class="ident">read</span></span>(<span>self, in_file, out_file)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read the file completly</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read(self, in_file, out_file):
+        &#34;&#34;&#34; Read the file completly &#34;&#34;&#34;
+        send_ack(out_file, ACK)
+        result = None
+        while result is None:
+                byte = in_file.read(1)
+                # pylint:disable=assignment-from-none
+                result = self.read_byte(byte)
+        send_ack(out_file, ACK)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.UploadCommand.read_path"><code class="name flex">
+<span>def <span class="ident">read_path</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read path</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_path(self, byte):
+        &#34;&#34;&#34; Read path &#34;&#34;&#34;
+        if self.path.read_byte(byte) is not None:
+                self.read_byte = self.read_recursive
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.UploadCommand.read_pattern"><code class="name flex">
+<span>def <span class="ident">read_pattern</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read pattern</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_pattern(self, byte):
+        &#34;&#34;&#34; Read pattern &#34;&#34;&#34;
+        if self.pattern.read_byte(byte) is not None:
+                self.read_byte = self.read_path
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.UploadCommand.read_recursive"><code class="name flex">
+<span>def <span class="ident">read_recursive</span></span>(<span>self, byte)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read recursive</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_recursive(self, byte):
+        &#34;&#34;&#34; Read recursive &#34;&#34;&#34;
+        if self.recursive.read_byte(byte) is not None:
+                return (self.path.get(), self.pattern.get(), True if self.recursive.get() == 1 else False)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.exchange.UploadCommand.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self, file, recursive, in_file, out_file)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write download command</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write(self, file, recursive, in_file, out_file):
+        &#34;&#34;&#34; Write download command &#34;&#34;&#34;
+        out_file.write(&#34;࿋&#34;.encode(&#34;utf8&#34;))
+        wait_ack(in_file)
+        out_file.write(b&#34;# %s\r\n&#34;%file.encode(&#34;utf8&#34;))
+        out_file.write(b&#34;# %s\r\n&#34;%self.directory.encode(&#34;utf8&#34;))
+        out_file.write(b&#34;# %d\r\n&#34;%(1 if recursive else 0))
+        wait_ack(in_file)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -2005,6 +2158,7 @@ class ImporterCommand:
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="lib.tools.exchange.get_b64_size" href="#lib.tools.exchange.get_b64_size">get_b64_size</a></code></li>
 <li><code><a title="lib.tools.exchange.send_ack" href="#lib.tools.exchange.send_ack">send_ack</a></code></li>
 <li><code><a title="lib.tools.exchange.wait_ack" href="#lib.tools.exchange.wait_ack">wait_ack</a></code></li>
 </ul>
@@ -2065,16 +2219,6 @@ class ImporterCommand:
 </ul>
 </li>
 <li>
-<h4><code><a title="lib.tools.exchange.ImporterCommand" href="#lib.tools.exchange.ImporterCommand">ImporterCommand</a></code></h4>
-<ul class="">
-<li><code><a title="lib.tools.exchange.ImporterCommand.read" href="#lib.tools.exchange.ImporterCommand.read">read</a></code></li>
-<li><code><a title="lib.tools.exchange.ImporterCommand.read_path" href="#lib.tools.exchange.ImporterCommand.read_path">read_path</a></code></li>
-<li><code><a title="lib.tools.exchange.ImporterCommand.read_pattern" href="#lib.tools.exchange.ImporterCommand.read_pattern">read_pattern</a></code></li>
-<li><code><a title="lib.tools.exchange.ImporterCommand.read_recursive" href="#lib.tools.exchange.ImporterCommand.read_recursive">read_recursive</a></code></li>
-<li><code><a title="lib.tools.exchange.ImporterCommand.write" href="#lib.tools.exchange.ImporterCommand.write">write</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="lib.tools.exchange.IntReader" href="#lib.tools.exchange.IntReader">IntReader</a></code></h4>
 <ul class="">
 <li><code><a title="lib.tools.exchange.IntReader.read_byte" href="#lib.tools.exchange.IntReader.read_byte">read_byte</a></code></li>
@@ -2092,6 +2236,16 @@ class ImporterCommand:
 <li><code><a title="lib.tools.exchange.Reader.get" href="#lib.tools.exchange.Reader.get">get</a></code></li>
 <li><code><a title="lib.tools.exchange.Reader.read_byte" href="#lib.tools.exchange.Reader.read_byte">read_byte</a></code></li>
 <li><code><a title="lib.tools.exchange.Reader.set" href="#lib.tools.exchange.Reader.set">set</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.tools.exchange.UploadCommand" href="#lib.tools.exchange.UploadCommand">UploadCommand</a></code></h4>
+<ul class="">
+<li><code><a title="lib.tools.exchange.UploadCommand.read" href="#lib.tools.exchange.UploadCommand.read">read</a></code></li>
+<li><code><a title="lib.tools.exchange.UploadCommand.read_path" href="#lib.tools.exchange.UploadCommand.read_path">read_path</a></code></li>
+<li><code><a title="lib.tools.exchange.UploadCommand.read_pattern" href="#lib.tools.exchange.UploadCommand.read_pattern">read_pattern</a></code></li>
+<li><code><a title="lib.tools.exchange.UploadCommand.read_recursive" href="#lib.tools.exchange.UploadCommand.read_recursive">read_recursive</a></code></li>
+<li><code><a title="lib.tools.exchange.UploadCommand.write" href="#lib.tools.exchange.UploadCommand.write">write</a></code></li>
 </ul>
 </li>
 </ul>

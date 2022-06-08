@@ -42,10 +42,12 @@ except:
                 import watchdog
 
 
+MAXINT = 100000000
+
 if filesystem.ismicropython():
         # pylint:disable=ungrouped-imports
         # pylint:disable=consider-using-enumerate
-        def getch(raw = True, duration=100000000, interchar=0.05):
+        def getch(raw = True, duration=MAXINT, interchar=0.05):
                 &#34;&#34;&#34; Wait a key pressed on keyboard and return it &#34;&#34;&#34;
                 key = b&#34;&#34;
                 watchdog.WatchDog.feed()
@@ -62,6 +64,9 @@ if filesystem.ismicropython():
                         else:
                                 if len(key) &gt; 0:
                                         break
+                                elif delay &lt; MAXINT:
+                                        break
+
                 try:
                         key = key.decode(&#34;utf8&#34;)
                 except:
@@ -84,7 +89,7 @@ if filesystem.ismicropython():
                         else:
                                 break
 else:
-        def getch(raw = True, duration=100000000, interchar=0.01):
+        def getch(raw = True, duration=MAXINT, interchar=0.01):
                 &#34;&#34;&#34; Wait a key pressed on keyboard and return it &#34;&#34;&#34;
                 return read_keyboard(duration, raw, get_char)
 
@@ -96,7 +101,7 @@ else:
                 &#34;&#34;&#34; Get character &#34;&#34;&#34;
                 if stdins != []:
                         return stdins[0].read()
-                return None
+                return b&#34;&#34;
 
         def test_char(stdins):
                 &#34;&#34;&#34; Test a character &#34;&#34;&#34;
@@ -122,7 +127,7 @@ else:
 
                         if raw:
                                 tty.setraw(fd)
-                        key = None
+                        result = b&#34;&#34;
                         try:
                                 inp, outp, err = select.select([sys.stdin], [], [], duration)
                         except Exception as err:
@@ -151,7 +156,7 @@ def refresh_screen_size():
                 except:
                         pass
 
-                size = getch(raw=False, duration=1, interchar=0.2)
+                size = getch(raw=False, duration=2, interchar=0.2)
                 size = size[2:-1].split(&#34;;&#34;)
                 screen_size = int(size[0]), int(size[1])
                 if screen_size[0] &lt; 5 or screen_size[1] &lt; 5:
@@ -200,7 +205,7 @@ def get_screen_size(force=False):
         &#34;&#34;&#34; Get character &#34;&#34;&#34;
         if stdins != []:
                 return stdins[0].read()
-        return None</code></pre>
+        return b&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.terminal.get_screen_size"><code class="name flex">
@@ -234,7 +239,7 @@ def get_screen_size(force=False):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def getch(raw = True, duration=100000000, interchar=0.01):
+<pre><code class="python">def getch(raw = True, duration=MAXINT, interchar=0.01):
         &#34;&#34;&#34; Wait a key pressed on keyboard and return it &#34;&#34;&#34;
         return read_keyboard(duration, raw, get_char)</code></pre>
 </details>
@@ -293,7 +298,7 @@ def get_screen_size(force=False):
 
                 if raw:
                         tty.setraw(fd)
-                key = None
+                result = b&#34;&#34;
                 try:
                         inp, outp, err = select.select([sys.stdin], [], [], duration)
                 except Exception as err:
@@ -327,7 +332,7 @@ def get_screen_size(force=False):
                 except:
                         pass
 
-                size = getch(raw=False, duration=1, interchar=0.2)
+                size = getch(raw=False, duration=2, interchar=0.2)
                 size = size[2:-1].split(&#34;;&#34;)
                 screen_size = int(size[0]), int(size[1])
                 if screen_size[0] &lt; 5 or screen_size[1] &lt; 5:

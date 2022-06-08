@@ -102,6 +102,8 @@ class Awake:
         @staticmethod
         def manage():
                 &#34;&#34;&#34; Manage the awake duration &#34;&#34;&#34;
+                if Awake.config is None:
+                        Awake.init()
                 if Awake.refresh_counter[0] % 10 == 0:
                         if Awake.config.is_changed():
                                 Awake.config.load()
@@ -192,6 +194,8 @@ class Awake:
         @staticmethod
         def manage():
                 &#34;&#34;&#34; Manage the awake duration &#34;&#34;&#34;
+                if Awake.config is None:
+                        Awake.init()
                 if Awake.refresh_counter[0] % 10 == 0:
                         if Awake.config.is_changed():
                                 Awake.config.load()
@@ -296,6 +300,8 @@ def keep_awake():
 <pre><code class="python">@staticmethod
 def manage():
         &#34;&#34;&#34; Manage the awake duration &#34;&#34;&#34;
+        if Awake.config is None:
+                Awake.init()
         if Awake.refresh_counter[0] % 10 == 0:
                 if Awake.config.is_changed():
                         Awake.config.load()

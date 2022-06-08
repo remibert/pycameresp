@@ -45,10 +45,6 @@ set(MICROPY_SOURCE_DRIVERS
 
 set(MICROPY_SOURCE_PORT
     ${PROJECT_DIR}/modcamera.c
-    ${PROJECT_DIR}/modhomekit.c
-    ${PROJECT_DIR}/modhomekit_charact.c
-    ${PROJECT_DIR}/modhomekit_server.c
-    ${PROJECT_DIR}/modhomekit_accessory.c
     ${PROJECT_DIR}/main.c
     ${PROJECT_DIR}/uart.c
     ${PROJECT_DIR}/usb.c
@@ -100,14 +96,6 @@ set(MICROPY_SOURCE_QSTR
 
 set(IDF_COMPONENTS
     esp32-camera
-    esp_hap_extras
-    esp_hap_apple_profiles
-    esp_hap_platform
-    hkdf-sha
-    json_generator
-    json_parser
-    mu_srp
-    esp_hap_core
     app_update
     bootloader_support
     bt

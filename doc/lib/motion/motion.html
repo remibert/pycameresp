@@ -71,13 +71,13 @@ class MotionConfig(jsonconfig.JsonConfig):
                 self.stabilization_camera=8
 
                 # Turn on the led flash when the light goes down
-                self.light_compensation = True
+                self.light_compensation = False
 
                 # Notify motion detection or problem to save on sd card
                 self.notify = True
 
                 # Notify motion state change
-                self.notify_state = True
+                self.notify_state = False
 
                 # Permanent detection without notification.
                 # To keep all motion detection in the presence of occupants
@@ -136,11 +136,11 @@ class ImageMotion:
 
         def get_filename(self):
                 &#34;&#34;&#34; Get the storage filename &#34;&#34;&#34;
-                return &#34;%s Id=%d D=%d&#34;%(self.filename, self.index, self.get_diff_count())
+                return &#34;%s Id=%d D=%2d&#34;%(self.filename, self.index, self.get_diff_count())
 
         def get_message(self):
                 &#34;&#34;&#34; Get the message of motion &#34;&#34;&#34;
-                return &#34;%s %s D=%d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+                return &#34;%s %s D=%2d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
         def get_informations(self):
                 &#34;&#34;&#34; Return the informations of motion &#34;&#34;&#34;
@@ -342,8 +342,7 @@ class Motion:
 
                                 # Save image to sdcard
                                 if await image.save() is False:
-                                        if self.config.notify:
-                                                await Notifier.notify(lang.failed_to_save)
+                                        await Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
                         else:
                                 # Destroy image
                                 self.deinit_image(image)
@@ -562,8 +561,13 @@ class Detection:
                 # If the motion detection activated
                 activated = await self.is_activated()
                 if activated or self.is_pemanent():
-                        # Capture motion
-                        result = await self.capture(activated)
+                        try:
+                                # Capture motion
+                                result = await self.capture(activated)
+                        finally:
+                                # Release previously alocated image
+                                self.release_image()
+
                 else:
                         if self.motion:
                                 self.motion.stop_light()
@@ -594,12 +598,10 @@ class Detection:
                         # Force garbage collection
                         collect()
 
-                        # If notification enabled
-                        if self.motion_config.notify_state:
-                                if result:
-                                        await Notifier.notify(lang.motion_detection_on)
-                                else:
-                                        await Notifier.notify(lang.motion_detection_off)
+                        if result:
+                                await Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
+                        else:
+                                await Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
                         self.activated = result
 
                 # If camera activated and motion activated
@@ -681,11 +683,12 @@ class Detection:
                                 if self.detection is not None and activated is True:
                                         # Notify motion with push over
                                         message, image = self.detection
-                                        if self.motion_config.notify:
-                                                if self.cadencer.can_notify():
-                                                        await Notifier.notify(message, image.get())
-                                                else:
-                                                        logger.syslog(message + &#34; ignored&#34;)
+
+                                        # If the notifications are not too frequent
+                                        if self.cadencer.can_notify():
+                                                await Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
+                                        else:
+                                                logger.syslog(&#34;Notification &#39;%s&#39; too frequent ignored&#34; %message)
                                 # Detect motion
                                 detected, change_polling = self.motion.detect()
 
@@ -700,8 +703,7 @@ class Detection:
                                         Historic.set_motion_state(False)
                                 result = True
                         else:
-                                if self.motion_config.notify_state:
-                                        await Notifier.notify(lang.motion_detection_suspended)
+                                await Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
                                 result = True
 
                 finally:
@@ -867,8 +869,13 @@ async def detect_motion(pir_detection):
                 # If the motion detection activated
                 activated = await self.is_activated()
                 if activated or self.is_pemanent():
-                        # Capture motion
-                        result = await self.capture(activated)
+                        try:
+                                # Capture motion
+                                result = await self.capture(activated)
+                        finally:
+                                # Release previously alocated image
+                                self.release_image()
+
                 else:
                         if self.motion:
                                 self.motion.stop_light()
@@ -899,12 +906,10 @@ async def detect_motion(pir_detection):
                         # Force garbage collection
                         collect()
 
-                        # If notification enabled
-                        if self.motion_config.notify_state:
-                                if result:
-                                        await Notifier.notify(lang.motion_detection_on)
-                                else:
-                                        await Notifier.notify(lang.motion_detection_off)
+                        if result:
+                                await Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
+                        else:
+                                await Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
                         self.activated = result
 
                 # If camera activated and motion activated
@@ -986,11 +991,12 @@ async def detect_motion(pir_detection):
                                 if self.detection is not None and activated is True:
                                         # Notify motion with push over
                                         message, image = self.detection
-                                        if self.motion_config.notify:
-                                                if self.cadencer.can_notify():
-                                                        await Notifier.notify(message, image.get())
-                                                else:
-                                                        logger.syslog(message + &#34; ignored&#34;)
+
+                                        # If the notifications are not too frequent
+                                        if self.cadencer.can_notify():
+                                                await Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
+                                        else:
+                                                logger.syslog(&#34;Notification &#39;%s&#39; too frequent ignored&#34; %message)
                                 # Detect motion
                                 detected, change_polling = self.motion.detect()
 
@@ -1005,8 +1011,7 @@ async def detect_motion(pir_detection):
                                         Historic.set_motion_state(False)
                                 result = True
                         else:
-                                if self.motion_config.notify_state:
-                                        await Notifier.notify(lang.motion_detection_suspended)
+                                await Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
                                 result = True
 
                 finally:
@@ -1050,11 +1055,12 @@ async def detect_motion(pir_detection):
                         if self.detection is not None and activated is True:
                                 # Notify motion with push over
                                 message, image = self.detection
-                                if self.motion_config.notify:
-                                        if self.cadencer.can_notify():
-                                                await Notifier.notify(message, image.get())
-                                        else:
-                                                logger.syslog(message + &#34; ignored&#34;)
+
+                                # If the notifications are not too frequent
+                                if self.cadencer.can_notify():
+                                        await Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
+                                else:
+                                        logger.syslog(&#34;Notification &#39;%s&#39; too frequent ignored&#34; %message)
                         # Detect motion
                         detected, change_polling = self.motion.detect()
 
@@ -1069,8 +1075,7 @@ async def detect_motion(pir_detection):
                                 Historic.set_motion_state(False)
                         result = True
                 else:
-                        if self.motion_config.notify_state:
-                                await Notifier.notify(lang.motion_detection_suspended)
+                        await Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
                         result = True
 
         finally:
@@ -1100,8 +1105,13 @@ async def detect_motion(pir_detection):
         # If the motion detection activated
         activated = await self.is_activated()
         if activated or self.is_pemanent():
-                # Capture motion
-                result = await self.capture(activated)
+                try:
+                        # Capture motion
+                        result = await self.capture(activated)
+                finally:
+                        # Release previously alocated image
+                        self.release_image()
+
         else:
                 if self.motion:
                         self.motion.stop_light()
@@ -1171,12 +1181,10 @@ async def detect_motion(pir_detection):
                 # Force garbage collection
                 collect()
 
-                # If notification enabled
-                if self.motion_config.notify_state:
-                        if result:
-                                await Notifier.notify(lang.motion_detection_on)
-                        else:
-                                await Notifier.notify(lang.motion_detection_off)
+                if result:
+                        await Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
+                else:
+                        await Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
                 self.activated = result
 
         # If camera activated and motion activated
@@ -1350,11 +1358,11 @@ async def detect_motion(pir_detection):
 
         def get_filename(self):
                 &#34;&#34;&#34; Get the storage filename &#34;&#34;&#34;
-                return &#34;%s Id=%d D=%d&#34;%(self.filename, self.index, self.get_diff_count())
+                return &#34;%s Id=%d D=%2d&#34;%(self.filename, self.index, self.get_diff_count())
 
         def get_message(self):
                 &#34;&#34;&#34; Get the message of motion &#34;&#34;&#34;
-                return &#34;%s %s D=%d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+                return &#34;%s %s D=%2d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
         def get_informations(self):
                 &#34;&#34;&#34; Return the informations of motion &#34;&#34;&#34;
@@ -1573,7 +1581,7 @@ async def detect_motion(pir_detection):
 </summary>
 <pre><code class="python">def get_filename(self):
         &#34;&#34;&#34; Get the storage filename &#34;&#34;&#34;
-        return &#34;%s Id=%d D=%d&#34;%(self.filename, self.index, self.get_diff_count())</code></pre>
+        return &#34;%s Id=%d D=%2d&#34;%(self.filename, self.index, self.get_diff_count())</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.ImageMotion.get_informations"><code class="name flex">
@@ -1610,7 +1618,7 @@ async def detect_motion(pir_detection):
 </summary>
 <pre><code class="python">def get_message(self):
         &#34;&#34;&#34; Get the message of motion &#34;&#34;&#34;
-        return &#34;%s %s D=%d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())</code></pre>
+        return &#34;%s %s D=%2d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.ImageMotion.get_motion_detected"><code class="name flex">
@@ -1845,8 +1853,7 @@ async def detect_motion(pir_detection):
 
                                 # Save image to sdcard
                                 if await image.save() is False:
-                                        if self.config.notify:
-                                                await Notifier.notify(lang.failed_to_save)
+                                        await Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
                         else:
                                 # Destroy image
                                 self.deinit_image(image)
@@ -2069,8 +2076,7 @@ async def detect_motion(pir_detection):
 
                         # Save image to sdcard
                         if await image.save() is False:
-                                if self.config.notify:
-                                        await Notifier.notify(lang.failed_to_save)
+                                await Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
                 else:
                         # Destroy image
                         self.deinit_image(image)
@@ -2428,13 +2434,13 @@ async def detect_motion(pir_detection):
                 self.stabilization_camera=8
 
                 # Turn on the led flash when the light goes down
-                self.light_compensation = True
+                self.light_compensation = False
 
                 # Notify motion detection or problem to save on sd card
                 self.notify = True
 
                 # Notify motion state change
-                self.notify_state = True
+                self.notify_state = False
 
                 # Permanent detection without notification.
                 # To keep all motion detection in the presence of occupants

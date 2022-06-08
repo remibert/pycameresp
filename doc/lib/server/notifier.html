@@ -60,16 +60,18 @@ class Notifier:
                 return False
 
         @staticmethod
-        async def notify(message, image = None, forced=False, display=True):
+        async def notify(message, image=None, forced=False, display=True, enabled=True):
                 &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
-                result = True
-                logger.syslog(&#34;Notification &#39;%s&#39;&#34;%strings.tostrings(message), display=display)
+                logger.syslog(&#34;Notification &#39;%s&#39; %s&#34;%(strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
-                # Add message into postponed list
-                Notifier.postponed.append([message, image, forced, display])
+                if enabled or forced:
+                        # Add message into postponed list
+                        Notifier.postponed.append([message, image, forced, display])
 
-                # Try to send all message postponed
-                return await Notifier.flush()
+                        # Try to send all message postponed
+                        return await Notifier.flush()
+                else:
+                        return True
 
         @staticmethod
         async def flush():
@@ -158,16 +160,18 @@ class Notifier:
                 return False
 
         @staticmethod
-        async def notify(message, image = None, forced=False, display=True):
+        async def notify(message, image=None, forced=False, display=True, enabled=True):
                 &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
-                result = True
-                logger.syslog(&#34;Notification &#39;%s&#39;&#34;%strings.tostrings(message), display=display)
+                logger.syslog(&#34;Notification &#39;%s&#39; %s&#34;%(strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
-                # Add message into postponed list
-                Notifier.postponed.append([message, image, forced, display])
+                if enabled or forced:
+                        # Add message into postponed list
+                        Notifier.postponed.append([message, image, forced, display])
 
-                # Try to send all message postponed
-                return await Notifier.flush()
+                        # Try to send all message postponed
+                        return await Notifier.flush()
+                else:
+                        return True
 
         @staticmethod
         async def flush():
@@ -309,7 +313,7 @@ def is_empty():
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.notify"><code class="name flex">
-<span>async def <span class="ident">notify</span></span>(<span>message, image=None, forced=False, display=True)</span>
+<span>async def <span class="ident">notify</span></span>(<span>message, image=None, forced=False, display=True, enabled=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Notify message for all notifier registered</p></div>
@@ -318,16 +322,18 @@ def is_empty():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def notify(message, image = None, forced=False, display=True):
+async def notify(message, image=None, forced=False, display=True, enabled=True):
         &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
-        result = True
-        logger.syslog(&#34;Notification &#39;%s&#39;&#34;%strings.tostrings(message), display=display)
+        logger.syslog(&#34;Notification &#39;%s&#39; %s&#34;%(strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
-        # Add message into postponed list
-        Notifier.postponed.append([message, image, forced, display])
+        if enabled or forced:
+                # Add message into postponed list
+                Notifier.postponed.append([message, image, forced, display])
 
-        # Try to send all message postponed
-        return await Notifier.flush()</code></pre>
+                # Try to send all message postponed
+                return await Notifier.flush()
+        else:
+                return True</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.remove"><code class="name flex">

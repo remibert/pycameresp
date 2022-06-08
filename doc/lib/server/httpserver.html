@@ -64,6 +64,20 @@ class HttpServer:
                 else:
                         logger.syslog(&#34;Http waiting on %d&#34;%self.port)
 
+        def call_preload(self, loader):
+                &#34;&#34;&#34; Call preload html page callback &#34;&#34;&#34;
+                if loader is not None:
+                        if filesystem.ismicropython():
+                                ModuleNotFound = ImportError
+                        else:
+                                ModuleNotFound = ModuleNotFoundError
+                        try:
+                                loader()
+                        except ModuleNotFound as err:
+                                logger.syslog(&#34;Failed to preload html page, %s&#34;%str(err))
+                        except Exception as err:
+                                logger.syslog(err)
+
         def preload(self):
                 &#34;&#34;&#34; Method used to preload page template.
                 You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
@@ -72,7 +86,11 @@ class HttpServer:
                 if self.loader:
                         from htmltemplate import WWW_DIR
                         logger.syslog(&#34;Html load pages&#34;)
-                        self.loader()
+                        if type(self.loader) == type([]):
+                                for loader in self.loader:
+                                        self.call_preload(loader)
+                        else:
+                                self.call_preload(self.loader)
                         self.loader = None
                         HttpServer.www_dir = WWW_DIR
                         loaded = True
@@ -273,6 +291,20 @@ preload : True = preload the server at the start, False = load the server at the
                 else:
                         logger.syslog(&#34;Http waiting on %d&#34;%self.port)
 
+        def call_preload(self, loader):
+                &#34;&#34;&#34; Call preload html page callback &#34;&#34;&#34;
+                if loader is not None:
+                        if filesystem.ismicropython():
+                                ModuleNotFound = ImportError
+                        else:
+                                ModuleNotFound = ModuleNotFoundError
+                        try:
+                                loader()
+                        except ModuleNotFound as err:
+                                logger.syslog(&#34;Failed to preload html page, %s&#34;%str(err))
+                        except Exception as err:
+                                logger.syslog(err)
+
         def preload(self):
                 &#34;&#34;&#34; Method used to preload page template.
                 You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
@@ -281,7 +313,11 @@ preload : True = preload the server at the start, False = load the server at the
                 if self.loader:
                         from htmltemplate import WWW_DIR
                         logger.syslog(&#34;Html load pages&#34;)
-                        self.loader()
+                        if type(self.loader) == type([]):
+                                for loader in self.loader:
+                                        self.call_preload(loader)
+                        else:
+                                self.call_preload(self.loader)
                         self.loader = None
                         HttpServer.www_dir = WWW_DIR
                         loaded = True
@@ -543,6 +579,30 @@ async def static_pages(request, response, args):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="lib.server.httpserver.HttpServer.call_preload"><code class="name flex">
+<span>def <span class="ident">call_preload</span></span>(<span>self, loader)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Call preload html page callback</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def call_preload(self, loader):
+        &#34;&#34;&#34; Call preload html page callback &#34;&#34;&#34;
+        if loader is not None:
+                if filesystem.ismicropython():
+                        ModuleNotFound = ImportError
+                else:
+                        ModuleNotFound = ModuleNotFoundError
+                try:
+                        loader()
+                except ModuleNotFound as err:
+                        logger.syslog(&#34;Failed to preload html page, %s&#34;%str(err))
+                except Exception as err:
+                        logger.syslog(err)</code></pre>
+</details>
+</dd>
 <dt id="lib.server.httpserver.HttpServer.on_connection"><code class="name flex">
 <span>async def <span class="ident">on_connection</span></span>(<span>self, reader, writer)</span>
 </code></dt>
@@ -582,7 +642,11 @@ You must define the content of a callback, which only import the python module w
         if self.loader:
                 from htmltemplate import WWW_DIR
                 logger.syslog(&#34;Html load pages&#34;)
-                self.loader()
+                if type(self.loader) == type([]):
+                        for loader in self.loader:
+                                self.call_preload(loader)
+                else:
+                        self.call_preload(self.loader)
                 self.loader = None
                 HttpServer.www_dir = WWW_DIR
                 loaded = True
@@ -624,6 +688,7 @@ You must define the content of a callback, which only import the python module w
 <h4><code><a title="lib.server.httpserver.HttpServer" href="#lib.server.httpserver.HttpServer">HttpServer</a></code></h4>
 <ul class="two-column">
 <li><code><a title="lib.server.httpserver.HttpServer.add_route" href="#lib.server.httpserver.HttpServer.add_route">add_route</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.call_preload" href="#lib.server.httpserver.HttpServer.call_preload">call_preload</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.get_menus" href="#lib.server.httpserver.HttpServer.get_menus">get_menus</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.menus" href="#lib.server.httpserver.HttpServer.menus">menus</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.on_connection" href="#lib.server.httpserver.HttpServer.on_connection">on_connection</a></code></li>
