@@ -332,11 +332,13 @@ class StreamThread(threading.Thread):
 				if self.zip_extract and os.path.splitext(filename_)[1].lower() == ".zip":
 					with zipfile.ZipFile(filename_,"r") as zip_file:
 						for file in zip_file.infolist():
-							zip_content = tempfile.NamedTemporaryFile()
+							zip_content = tempfile.NamedTemporaryFile(delete=False)
 							zip_content.write(zip_file.read(file.filename))
-							zip_content.flush()
-							file_writer.write(zip_content.name, self.stream, self.stream, file.filename, self.print)
 							zip_content.close()
+							try:
+								file_writer.write(zip_content.name, self.stream, self.stream, file.filename, self.print)
+							finally:
+								os.unlink(zip_content.name)
 				else:
 					file_writer.write(filename_, self.stream, self.stream, drop_filename, self.print)
 			self.stream.write(b"exit\r\n")
@@ -360,8 +362,9 @@ class StreamThread(threading.Thread):
 			uploader = fileuploader.PythonUploader(self.print)
 			prompt = uploader.wait_prompt(device=self.stream)
 			if prompt == "=>":
-				prompt = ">>>"
 				self.stream.write(b"quit\x0D")
+				time.sleep(0.4)
+				prompt = uploader.wait_prompt(device=self.stream)
 			if prompt == ">>>":
 				uploader.upload_from_server(self.stream, fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, filename)
 				self.stream.write(b"from shell import sh\x0D")
@@ -374,15 +377,15 @@ class StreamThread(threading.Thread):
 			if isdir(filename):
 				_, files = scandir(filename, "*", True)
 				for f in files:
-					drop_filenames.append(f)
+					drop_filenames.append(os.path.normpath(f))
 			else:
-				drop_filenames.append(filename)
+				drop_filenames.append(os.path.normpath(filename))
 
 		if len(filenames) == 1:
 			drop_directory = os.path.split(os.path.normpath(filenames[0]))[0]
 		else:
 			if len(drop_filenames) > 1:
-				drop_directory = os.path.normpath(prefix(drop_filenames).decode("utf8"))
+				drop_directory = os.path.normpath(os.path.commonprefix(drop_filenames))
 			else:
 				drop_directory = os.path.normpath(os.path.split(os.path.normpath(filenames[0]))[0])
 		return drop_directory, drop_filenames

@@ -377,9 +377,13 @@ class PythonUploader:
 		""" Upload file """
 		if self.check_prompt(device):
 			zip_file = self.download_last_release(host, path, filename)
-			zip_content = tempfile.NamedTemporaryFile(suffix=".zip")
+			zip_content = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
 			zip_content.write(zip_file)
-			self.upload_zip(device, zip_content.name)
+			zip_content.close()
+			try:
+				self.upload_zip(device, zip_content.name)
+			finally:
+				os.unlink(zip_content.name)
 
 	def upload_zip(self, device, zip_filename):
 		""" Upload all files contained in zip """

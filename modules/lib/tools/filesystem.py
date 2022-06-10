@@ -184,8 +184,9 @@ def scandir(path, pattern, recursive, displayer=None):
 				filename = path + "/" + file
 			else:
 				filename = file
-			filename = filename.replace("//","/")
-			filename = filename.replace("//","/")
+			if sys.platform != "win32":
+				filename = filename.replace("//","/")
+				filename = filename.replace("//","/")
 			if isdir(filename):
 				if displayer:
 					displayer.show(filename)

@@ -457,8 +457,6 @@ class CamFlasher(QMainWindow):
 		self.timer_refresh_port.timeout.connect(self.on_refresh_port)
 		self.timer_refresh_port.start()
 
-		self.window.setAcceptDrops(True)
-
 	def update_font(self):
 		""" Update console font """
 		settings = get_settings()

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Flash firmware</string>
+   <string>Flash firmware with Esptool</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
@@ -158,7 +158,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>Select esp chip or let auto</string>
+        <string>Select ESP chip or leave auto</string>
        </property>
        <item>
         <property name="text">
