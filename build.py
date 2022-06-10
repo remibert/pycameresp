@@ -7,13 +7,13 @@ import os.path
 import glob
 import argparse
 import fnmatch
-OUTPUT_DIR = os.path.normpath(os.environ.setdefault("PYCAMERESP_FIRMWARE",os.path.dirname(__file__)+os.path.sep+"firmware"))
+OUTPUT_DIR = os.path.abspath(os.path.normpath(os.environ.setdefault("PYCAMERESP_FIRMWARE",os.path.dirname(__file__)+os.path.sep+"firmware")))
 
 if len(sys.argv) > 1:
 	BOARD = sys.argv[1]
 else:
 	BOARD = "ESP32CAM"
-PYCAMERESP_DIR=os.path.normpath(os.path.dirname(__file__))
+PYCAMERESP_DIR=os.path.abspath(os.path.normpath(os.path.dirname(__file__)))
 
 GET_COMMANDS = """
 
@@ -79,6 +79,7 @@ cp "%(OUTPUT_DIR)s/micropython/ports/esp32/build-%(BOARD)s/firmware.bin" "%(OUTP
 ####################
 # Build distri zip #
 ####################
+cd %(PYCAMERESP_DIR)s
 python3 "%(PYCAMERESP_DIR)s/scripts/zip_mpy.py" "%(OUTPUT_DIR)s" "%(BOARD)s" "%(PYCAMERESP_DIR)s"
 '''
 
@@ -195,7 +196,7 @@ def main():
 		parser.print_help()
 	else:
 		if args.outputdir is not None:
-			OUTPUT_DIR = args.outputdir
+			OUTPUT_DIR = os.path.abspath(os.path.normpath(args.outputdir))
 
 		if (args.install or args.all) and sys.platform == "linux":
 			execute(INSTALL_TOOLS_COMMANDS)

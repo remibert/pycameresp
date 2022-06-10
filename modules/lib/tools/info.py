@@ -86,7 +86,7 @@ def sysinfo(display=True, text=""):
 	except:
 		return b"Sysinfo not available"
 
-up_last=0
+up_last=None
 up_total=0
 
 def uptime(text="days"):
@@ -98,8 +98,11 @@ def uptime(text="days"):
 	except:
 		up = time.time()
 
+	if up_last is None:
+		up_last = up
+
 	if up_last > up:
-		up_total += (2^30)//1000
+		up_total += (2<<30)//1000
 
 	up_last = up
 	up += up_total
