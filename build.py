@@ -40,7 +40,8 @@ git clone -b v4.4.1 --recursive https://github.com/espressif/esp-idf.git
 cd "%(OUTPUT_DIR)s"
 git clone https://github.com/espressif/esp32-camera.git esp32-camera
 cd "%(OUTPUT_DIR)s/esp32-camera"
-git checkout 1ac48e5397ee22a59a18a314c4acf44c23dfe946
+git checkout 722497cb19383cd4ee6b5d57bb73148b5af41b24
+
 cd "%(OUTPUT_DIR)s/esp-idf/components"
 ln -s "%(OUTPUT_DIR)s/esp32-camera" esp32-camera"""
 
