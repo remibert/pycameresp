@@ -1,8 +1,9 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Manage the battery """
+import uasyncio
 import machine
-from tools import jsonconfig,logger
+from tools import jsonconfig,logger,tasking
 
 try:
 	BROWNOUT_RESET = machine.BROWNOUT_RESET
@@ -112,6 +113,7 @@ class Battery:
 		""" Checks if the battery level is sufficient.
 			If the battery is too low, we enter indefinite deep sleep to protect the battery """
 		deepsleep = False
+		Battery.init()
 		if Battery.config.activated:
 			# Can only be done once at boot before start the camera and sd card
 			battery_level = Battery.get_level()
@@ -168,15 +170,27 @@ class Battery:
 		return deepsleep
 
 	@staticmethod
-	def manage(resetBrownout=False):
-		""" Manage the battery level duration """
-		if Battery.refresh[0] % 10 == 0:
-			if Battery.config.is_changed():
-				Battery.config.load()
-		Battery.refresh[0] += 1
+	def reset_brownout():
+		""" Reset brownout counter if wifi connected """
+		if Battery.config is not None:
+			if Battery.config.brownout_count > 0:
+				Battery.config.brownout_count = 0
+				Battery.config.save()
 
-		if resetBrownout:
-			if Battery.config.brownout_detection:
-				if Battery.config.brownout_count > 0:
-					Battery.config.brownout_count = 0
-					Battery.config.save()
+	@staticmethod
+	async def periodic():
+		""" Internal periodic task """
+		if Battery.config is not None:
+			if Battery.refresh[0] % 10 == 0:
+				if Battery.config.is_changed():
+					Battery.config.load()
+			Battery.refresh[0] += 1
+		else:
+			Battery.protect()
+		await uasyncio.sleep(11)
+		return True
+
+	@staticmethod
+	async def periodic_task():
+		""" Execute periodic treatment """
+		await tasking.task_monitoring(Battery.periodic)

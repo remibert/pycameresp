@@ -111,6 +111,9 @@
           <property name="enabled">
            <bool>true</bool>
           </property>
+          <property name="toolTip">
+           <string>Show wisiwig</string>
+          </property>
           <property name="frameShape">
            <enum>QFrame::Box</enum>
           </property>
@@ -121,6 +124,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="reset_color">
+          <property name="toolTip">
+           <string>Restore all default colors</string>
+          </property>
           <property name="text">
            <string>Reset</string>
           </property>
@@ -133,7 +139,7 @@
         <item>
          <widget class="QFontComboBox" name="combo_font">
           <property name="toolTip">
-           <string>Select font family for the output console</string>
+           <string>Select text font family</string>
           </property>
           <property name="editable">
            <bool>false</bool>
@@ -146,7 +152,7 @@
         <item>
          <widget class="QSpinBox" name="spin_font_size">
           <property name="toolTip">
-           <string>Select the font size for the output console</string>
+           <string>Select text font size</string>
           </property>
           <property name="minimum">
            <number>7</number>
@@ -163,7 +169,7 @@
         <item>
          <widget class="QPushButton" name="button_backcolor">
           <property name="toolTip">
-           <string>Select the default background color for the output console</string>
+           <string>Select background color</string>
           </property>
           <property name="text">
            <string>Back color</string>
@@ -173,7 +179,7 @@
         <item>
          <widget class="QPushButton" name="button_forecolor">
           <property name="toolTip">
-           <string>Select the default text color for the output console</string>
+           <string>Select text color</string>
           </property>
           <property name="text">
            <string>Text color</string>
@@ -194,7 +200,7 @@
         <item>
          <widget class="QPushButton" name="button_cursor_backcolor">
           <property name="toolTip">
-           <string>Select the default background color for the output console</string>
+           <string>Select cursor background color</string>
           </property>
           <property name="text">
            <string>Back color</string>
@@ -204,7 +210,7 @@
         <item>
          <widget class="QPushButton" name="button_cursor_forecolor">
           <property name="toolTip">
-           <string>Select the default text color for the output console</string>
+           <string>Select cursor text color</string>
           </property>
           <property name="text">
            <string>Text color</string>
@@ -225,7 +231,7 @@
         <item>
          <widget class="QPushButton" name="button_reverse_backcolor">
           <property name="toolTip">
-           <string>Select the default background color for the output console</string>
+           <string>Select reversed background color</string>
           </property>
           <property name="text">
            <string>Back color</string>
@@ -235,7 +241,7 @@
         <item>
          <widget class="QPushButton" name="button_reverse_forecolor">
           <property name="toolTip">
-           <string>Select the default text color for the output console</string>
+           <string>Select reversed text color</string>
           </property>
           <property name="text">
            <string>Text color</string>

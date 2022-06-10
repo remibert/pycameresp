@@ -15,10 +15,11 @@ except:
 	sys.path.append("simul")
 	sys.path.append("sample")
 
-def protect_battery():
-	""" Check the battery level and force deepsleep if it is too low """
+def create_battery_task(loop):
+	""" Create async task for battery level monitoring """
 	from tools.battery import Battery
 	Battery.protect()
+	loop.create_task(Battery.periodic_task())
 
 def create_camera_task(loop, device):
 	""" Create async task for motion detection and camera streaming """

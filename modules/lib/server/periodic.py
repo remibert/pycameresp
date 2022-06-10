@@ -58,8 +58,9 @@ class Periodic:
 			# Manage awake duration
 			awake.Awake.manage()
 
-			# Manage battery level
-			battery.Battery.manage(wifi.Wifi.is_wan_connected())
+			# Reset brownout counter if wifi connected
+			if wifi.Wifi.is_wan_connected():
+				battery.Battery.reset_brownout()
 
 			# Reset watch dog
 			watchdog.WatchDog.feed()

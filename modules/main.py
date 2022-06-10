@@ -13,8 +13,8 @@ import uasyncio
 # Create asynchronous loop for all tasks
 loop = uasyncio.get_event_loop()
 
-# Checks if the battery is not too discharged
-pycameresp.protect_battery()
+# Create battery charge monitoring (Must be always be first)
+pycameresp.create_battery_task(loop)
 
 # Define the type of camera device
 device = "ESP32CAM" # "ESP32ONE" "M5CAMERA-B"

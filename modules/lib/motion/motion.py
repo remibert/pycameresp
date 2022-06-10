@@ -488,7 +488,6 @@ class Detection:
 		self.load_config()
 		self.motion = None
 
-		self.battery_level = -2
 		if self.pir_detection is True:
 			self.polling_frequency = 3
 		else:

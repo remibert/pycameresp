@@ -4,21 +4,37 @@
 
 It is embedded in an improved [micropython](http://micropython.org) firmware. This platform starts automatically after writing the firmware. It works perfectly also on esp32 spiram without camera, and also esp32 without spiram but with more limitation.
 
-Most scripts work on Osx or Linux, I personally use "Visual Studio Code", with python plugins for debugging. 
-Of course, in this case the code specific to the camera or to the ESP32 is simulated (see simul directory).
+# Build firmware for specific board
 
-The first time I had a lot of trouble rebuilding micropython, I ended up creating scripts to make the job easier.
+The build command must be used to get micropython source, patch source, build and install required tools.
 
-These scripts work on a linux kubuntu distribution, however they ask when running to install certain tools, so you will have to enter the super user password.
+These scripts work on a linux debian 11 distribution, however they ask when running to install certain tools, so you will have to enter the super user password.
 
-To generate firmware for ESP32CAM, ESP32_SPIRAM, ESP32_GENERIC, you need to run in order.
+Help of this command :
 
-- **getFirmware.sh** : Get the gits sources, install the necessary tools, position on the right tag
-- **patchCFirmware.sh** : Apply the patch on the C micropython and esp32 sources. This fixes some problem, and it adds missing functionality.
-- **patchPythonFirmware.sh** : Patch the micropython firmware with python scripts, this makes it possible to embed all the scripts of this project in the firmware, and to accelerate the loading time and reduce memory occupation.
-- **buildAllFirmware.sh** : Build the three firmware for the ESP32CAM, ESP32_SPIRAM, ESP32_GENERIC. All firmwares are placed in the firmware directory.
-- **buildDoc.sh** : Build the documentation, requires the installation of pdoc3.
-- **buildFirmware.sh** : Build one firmware, you must specifie the name (ESP32CAM,GENERIC,GENERIC_SPIRAM)
+	usage: build.py [-h] [-i] [-g] [-d] [-p] [-b] [-a] [-c] [-o OUTPUTDIR] [boards [boards ...]]
 
-If you don't want to embed the python scripts in the firmware, just don't run the command patchPythonFirmware.sh.
+	positional arguments:
 
+		boards                Select boards to build micropython firmwares, for all firmwares use "*"
+
+	optional arguments:
+
+		-h, --help            show this help message and exit
+		-i, --install         install the tools required to build the firmware
+		-g, --get             get micropython source from git
+		-d, --doc             build pycameresp html documentation
+		-p, --patch           patch micropython sources with pycameresp patch
+		-b, --build           build selected firmwares
+		-a, --all             install tools, get source, patch, and build selected firmwares
+		-c, --clean           clean micropython sources to remove all patch
+		-o OUTPUTDIR, --outputdir OUTPUTDIR                    output directory
+
+
+The first time use command : 
+- **python3 build.py --all "ESP32CAM"** 
+
+And for uniquely build use command :
+- **python3 build.py --patch --build "ESP32CAM"**
+
+Replace **ESP32CAM** by your prefered firmware, add double quote if you want to use wildcards for build many firmwares.

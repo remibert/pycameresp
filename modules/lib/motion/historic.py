@@ -296,7 +296,7 @@ class Historic:
 
 	@staticmethod
 	async def periodic_task():
-		""" Execute periodic traitment """
+		""" Execute periodic treatment """
 		await tasking.task_monitoring(Historic.periodic)
 
 	@staticmethod

@@ -42,6 +42,9 @@
       <property name="focusPolicy">
        <enum>Qt::ClickFocus</enum>
       </property>
+      <property name="toolTip">
+       <string>Select serial communication or telnet connection</string>
+      </property>
       <property name="tabPosition">
        <enum>QTabWidget::North</enum>
       </property>
@@ -132,6 +135,9 @@
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
           </property>
+          <property name="toolTip">
+           <string>Check this case if the dialog not working (depend of the hardware)</string>
+          </property>
           <property name="text">
            <string>  RTS/DTR </string>
           </property>
@@ -155,6 +161,9 @@
         </item>
         <item row="0" column="5">
          <widget class="QPushButton" name="button_serial_open">
+          <property name="toolTip">
+           <string>Open or close serial port</string>
+          </property>
           <property name="text">
            <string>Open</string>
           </property>
@@ -244,6 +253,9 @@
           <property name="focusPolicy">
            <enum>Qt::TabFocus</enum>
           </property>
+          <property name="toolTip">
+           <string>Ip address, host name to connect to telnet</string>
+          </property>
           <property name="editable">
            <bool>true</bool>
           </property>
@@ -285,6 +297,9 @@
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
           </property>
+          <property name="toolTip">
+           <string>Telnet port</string>
+          </property>
           <property name="minimum">
            <number>10</number>
           </property>
@@ -306,6 +321,9 @@
           </property>
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="toolTip">
+           <string>Connect or disconnect to telnet</string>
           </property>
           <property name="text">
            <string>Connect</string>
@@ -424,7 +442,7 @@
   </widget>
   <action name="action_flash">
    <property name="text">
-    <string>Flash ESP32 firmware</string>
+    <string>Esptool.py</string>
    </property>
   </action>
   <action name="action_copy">

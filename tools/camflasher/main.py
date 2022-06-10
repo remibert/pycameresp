@@ -829,7 +829,9 @@ class CamFlasher(QMainWindow):
 				baud      = self.flash_dialog.dialog.baud.currentText()
 				rts_dtr   = self.window.chk_rts_dtr.isChecked()
 				erase     = self.flash_dialog.dialog.erase.isChecked()
-				self.flasher.flash(port, baud, rts_dtr, firmware, erase)
+				address   = self.flash_dialog.dialog.address.currentText()
+				chip      = self.flash_dialog.dialog.chip.currentText()
+				self.flasher.flash((port, baud, rts_dtr, firmware, erase, address, chip))
 			except Exception as err:
 				print(err)
 

@@ -57,8 +57,7 @@ class Flasher(threading.Thread):
 			elif command == self.CMD_DATA_RECEIVED:
 				print(self.decode(data), end="")
 			elif command == self.CMD_FLASH:
-				port, baud, rts_dtr, firmware, erase= data
-				self.flasher(port, baud, rts_dtr, firmware, erase)
+				self.flasher(data)
 			elif command == self.CMD_CONNECT_SERIAL:
 				self.stream_thread.connect_serial(data)
 			elif command == self.CMD_CONNECT_TELNET:
@@ -127,9 +126,10 @@ class Flasher(threading.Thread):
 		""" Print message """
 		print(message, end)
 
-	def flasher(self, port, baud, rts_dtr, firmware, erase):
+	def flasher(self, data):
 		""" Flasher of firmware it use the esptool.py command """
 		import esptool
+		port, baud, rts_dtr, firmware, erase, address, chip = data
 
 		# Disconnect serial link
 		self.flashing = True
@@ -160,7 +160,7 @@ class Flasher(threading.Thread):
 			print("\x1B[48;5;229m\x1B[38;5;243m")
 			if firmware is not None:
 				# Start flasher
-				flash_command = ["--port", port, "--baud", baud, "--chip", "auto", "write_flash", "0x1000", firmware]
+				flash_command = ["--port", port, "--baud", baud, "--chip", chip, "write_flash", address, firmware]
 				if erase:
 					flash_command.append("--erase-all")
 				print("esptool.py %s" % " ".join(flash_command))
@@ -201,9 +201,9 @@ class Flasher(threading.Thread):
 		""" Disconnect link """
 		self.command.put((self.CMD_DISCONNECT, None))
 
-	def flash(self, port, baud, rts_dtr, firmware, erase):
+	def flash(self, params):
 		""" Send flash command to flasher thread """
-		self.command.put((self.CMD_FLASH, (port, baud, rts_dtr, firmware, erase)))
+		self.command.put((self.CMD_FLASH, params))
 
 	def quit(self):
 		""" Send quit command to flasher thread """
