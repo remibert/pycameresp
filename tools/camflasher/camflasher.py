@@ -13,6 +13,7 @@ class Ui_CamFlasher(object):
     def setupUi(self, CamFlasher):
         CamFlasher.setObjectName("CamFlasher")
         CamFlasher.resize(800, 600)
+        CamFlasher.setAcceptDrops(True)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("icons/camflasher.ico"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         CamFlasher.setWindowIcon(icon)
@@ -227,13 +228,19 @@ class Ui_CamFlasher(object):
     def retranslateUi(self, CamFlasher):
         _translate = QtCore.QCoreApplication.translate
         CamFlasher.setWindowTitle(_translate("CamFlasher", "CamFlasher"))
+        self.tabs_link.setToolTip(_translate("CamFlasher", "Select serial communication or telnet connection"))
         self.label_serial_port.setText(_translate("CamFlasher", "  Port  "))
         self.combo_port.setToolTip(_translate("CamFlasher", "Select device serial port"))
+        self.chk_rts_dtr.setToolTip(_translate("CamFlasher", "Check this case if the dialog not working (depend of the hardware)"))
         self.chk_rts_dtr.setText(_translate("CamFlasher", "  RTS/DTR "))
+        self.button_serial_open.setToolTip(_translate("CamFlasher", "Open or close serial port"))
         self.button_serial_open.setText(_translate("CamFlasher", "Open"))
         self.tabs_link.setTabText(self.tabs_link.indexOf(self.tab_serial), _translate("CamFlasher", "Serial"))
         self.label_telnet_host.setText(_translate("CamFlasher", "  Host "))
+        self.combo_telnet_host.setToolTip(_translate("CamFlasher", "Ip address, host name to connect to telnet"))
         self.label_telnet_port.setText(_translate("CamFlasher", "Port"))
+        self.edit_telnet_port.setToolTip(_translate("CamFlasher", "Telnet port"))
+        self.button_telnet_connect.setToolTip(_translate("CamFlasher", "Connect or disconnect to telnet"))
         self.button_telnet_connect.setText(_translate("CamFlasher", "Connect"))
         self.tabs_link.setTabText(self.tabs_link.indexOf(self.tab_telnet), _translate("CamFlasher", "Telnet"))
         self.menu_flasher.setTitle(_translate("CamFlasher", "Flasher"))

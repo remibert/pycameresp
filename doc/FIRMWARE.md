@@ -8,7 +8,7 @@ It is embedded in an improved [micropython](http://micropython.org) firmware. Th
 
 The build command must be used to get micropython source, patch source, build and install required tools.
 
-These scripts work on a linux debian 11 distribution, however they ask when running to install certain tools, so you will have to enter the super user password.
+The build.py script work on a Debian 11 distribution, however they ask when running to install certain tools, so you will have to enter the super user password.
 
 Help of this command :
 
@@ -31,10 +31,10 @@ Help of this command :
 		-o OUTPUTDIR, --outputdir OUTPUTDIR                    output directory
 
 
-The first time use command : 
+The first time use command (get source, install required software and build firmware) : 
 - **python3 build.py --all "ESP32CAM"** 
 
-And for uniquely build use command :
+And after juste for rebuild use command :
 - **python3 build.py --patch --build "ESP32CAM"**
 
 Replace **ESP32CAM** by your prefered firmware, add double quote if you want to use wildcards for build many firmwares.

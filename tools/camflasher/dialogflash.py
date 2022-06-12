@@ -132,14 +132,15 @@ class Ui_DialogFlash(object):
 
     def retranslateUi(self, DialogFlash):
         _translate = QtCore.QCoreApplication.translate
-        DialogFlash.setWindowTitle(_translate("DialogFlash", "Flash firmware"))
+        DialogFlash.setWindowTitle(_translate("DialogFlash", "Flash firmware with Esptool"))
         self.label_firmware.setText(_translate("DialogFlash", "Firmware"))
+        self.firmware.setToolTip(_translate("DialogFlash", "Select firmware file or choose the firmware download"))
         self.select_firmware.setToolTip(_translate("DialogFlash", "Select firmware file"))
         self.select_firmware.setText(_translate("DialogFlash", "..."))
         self.baud.setToolTip(_translate("DialogFlash", "Select flash baud rate"))
         self.label_baud.setText(_translate("DialogFlash", "Baud rate"))
         self.label_chip.setText(_translate("DialogFlash", "Chip"))
-        self.chip.setToolTip(_translate("DialogFlash", "Select flash baud rate"))
+        self.chip.setToolTip(_translate("DialogFlash", "Select ESP chip or leave auto"))
         self.chip.setItemText(0, _translate("DialogFlash", "auto"))
         self.chip.setItemText(1, _translate("DialogFlash", "esp32"))
         self.chip.setItemText(2, _translate("DialogFlash", "esp32s2"))
@@ -147,7 +148,7 @@ class Ui_DialogFlash(object):
         self.chip.setItemText(4, _translate("DialogFlash", "esp32c2"))
         self.chip.setItemText(5, _translate("DialogFlash", "esp32c3"))
         self.label_address.setText(_translate("DialogFlash", "Address"))
-        self.address.setToolTip(_translate("DialogFlash", "Select flash baud rate"))
+        self.address.setToolTip(_translate("DialogFlash", "Select address to flash (0x1000 for esp32, 0x0 for esp32s3)"))
         self.address.setItemText(0, _translate("DialogFlash", "0x1000"))
         self.address.setItemText(1, _translate("DialogFlash", "0x0"))
         self.erase.setToolTip(_translate("DialogFlash", "Check to erase the flash content before write firmware"))

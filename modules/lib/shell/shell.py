@@ -873,7 +873,7 @@ async def async_shell():
 	except:
 		Server = None
 
-	print_("\nPress key to start command line")
+	print_("\nPress key to start shell")
 	if filesystem.ismicropython():
 		polling1 = 2
 		polling2 = 0.01

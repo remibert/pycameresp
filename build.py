@@ -7,6 +7,16 @@ import os.path
 import glob
 import argparse
 import fnmatch
+
+# Mov to gif :
+# ffmpeg -i video.mov -vf "fps=3,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 output.gif
+# 640x360
+
+MICROPYTHON_VERSION ="a1afb337d2629a781cf4e171b7db7f05eeacc78f"
+ESP_IDF_VERSION     ="v4.4.1"
+ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24" # Stable version but cannot rebuild with chip esp32s3
+ESP32_CAMERA_VERSION_S3="1ac48e5397ee22a59a18a314c4acf44c23dfe946" # Reliability problem but Esp32 S3 firmware can build with it
+
 OUTPUT_DIR = os.path.abspath(os.path.normpath(os.environ.setdefault("PYCAMERESP_FIRMWARE",os.path.dirname(__file__)+os.path.sep+"firmware")))
 
 if len(sys.argv) > 1:
@@ -24,7 +34,7 @@ mkdir "%(OUTPUT_DIR)s"
 cd "%(OUTPUT_DIR)s"
 git clone https://github.com/micropython/micropython.git
 cd "%(OUTPUT_DIR)s/micropython"
-git checkout a1afb337d2629a781cf4e171b7db7f05eeacc78f
+git checkout %(MICROPYTHON_VERSION)s
 cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
 git submodule update --init --recursive
 
@@ -32,7 +42,7 @@ git submodule update --init --recursive
 # Get espressif #
 #################
 cd "%(OUTPUT_DIR)s"
-git clone -b v4.4.1 --recursive https://github.com/espressif/esp-idf.git
+git clone -b %(ESP_IDF_VERSION)s --recursive https://github.com/espressif/esp-idf.git
 
 ##############
 # Get camera #
@@ -40,7 +50,7 @@ git clone -b v4.4.1 --recursive https://github.com/espressif/esp-idf.git
 cd "%(OUTPUT_DIR)s"
 git clone https://github.com/espressif/esp32-camera.git esp32-camera
 cd "%(OUTPUT_DIR)s/esp32-camera"
-git checkout 722497cb19383cd4ee6b5d57bb73148b5af41b24
+git checkout %(ESP32_CAMERA_VERSION)s
 
 cd "%(OUTPUT_DIR)s/esp-idf/components"
 ln -s "%(OUTPUT_DIR)s/esp32-camera" esp32-camera"""
@@ -135,16 +145,31 @@ cd "%(OUTPUT_DIR)s/micropython"
 git fetch --all
 git reset --hard 
 git clean -fdx
+
 cd "%(OUTPUT_DIR)s/esp32-camera"
 git fetch --all
 git reset --hard 
 git clean -fdx
+git checkout %(ESP32_CAMERA_VERSION)s
+
 cd "%(OUTPUT_DIR)s/esp-idf"
 git fetch --all
 git reset --hard 
 git clean -fdx
+
 cd "%(OUTPUT_DIR)s/esp-idf/components"
 ln -s "%(OUTPUT_DIR)s/esp32-camera" esp32-camera
+'''
+
+# Presence of an old unused camera component version in the firmware, causes a problem to rebuild GENERIC_S3.
+# This patch switch to recent version.
+S3_PATCH_COMMANDS='''
+
+#############################################
+# Replace Camera version for build ESP32 S3 #
+#############################################
+cd "%(OUTPUT_DIR)s/esp32-camera"
+git checkout %(ESP32_CAMERA_VERSION_S3)s
 '''
 
 def execute(commands):
@@ -190,6 +215,7 @@ def main():
 	parser.add_argument("-b", "--build",      help="build selected firmwares",                                      action="store_true")
 	parser.add_argument("-a", "--all",        help="install tools, get source, patch, and build selected firmwares",action="store_true")
 	parser.add_argument("-c", "--clean",      help="clean micropython sources to remove all patch",                 action="store_true")
+	parser.add_argument("-s", "--s3",         help="build Esp32 S3 without problem",                                action="store_true")
 	parser.add_argument("-o", "--outputdir",  help="output directory")
 	parser.add_argument('boards',  metavar='boards', type=str, help='Select boards to build micropython firmwares, for all firmwares use "*"', nargs="*")
 	args = parser.parse_args()
@@ -210,8 +236,11 @@ def main():
 			else:
 				print("Get sources already done")
 
-		if args.clean:
+		if args.clean or args.s3:
 			execute(CLEAN_COMMANDS)
+
+		if args.s3:
+			execute(S3_PATCH_COMMANDS)
 
 		if args.doc:
 			execute(BUILD_DOC_COMMANDS)

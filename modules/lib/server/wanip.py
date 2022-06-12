@@ -1,8 +1,8 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Get the wan ip address """
-import uasyncio
 import random
+import uasyncio
 from server.stream import *
 from server.httprequest import *
 from tools import logger,strings

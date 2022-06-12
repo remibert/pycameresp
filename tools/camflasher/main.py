@@ -591,30 +591,31 @@ class CamFlasher(QMainWindow):
 			e.ignore()
 
 	def dropEvent(self, e):
+		""" Drop event received """
+		self.show()
+		getattr(self, "raise")()
+		self.activateWindow()
 		if e.mimeData().hasUrls():
 			filenames = []
-
-
 			zip_detected = False
 			for file in e.mimeData().urls():
 				filename = file.toLocalFile()
 				if os.path.splitext(filename)[1].lower() == ".zip":
 					zip_detected = True
-				filenames.append(filename)
+				if filename.strip() != "":
+					filenames.append(filename.strip())
 
-			zip_extract = False
-			if zip_detected:
-				msg = QMessageBox(parent=self)
-				msg.setIcon(QMessageBox.Icon.Question)
-				msg.setStandardButtons(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes)
-				msg.setText("Do you want to extract the contents of the zip in the device ?")
-				if msg.exec() == QMessageBox.StandardButton.Yes:
-					zip_extract = True
+			if len(filenames) > 0:
+				zip_extract = False
+				if zip_detected:
+					msg = QMessageBox(parent=self)
+					msg.setIcon(QMessageBox.Icon.Question)
+					msg.setStandardButtons(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes)
+					msg.setText("Do you want to extract the contents of the zip in the device ?")
+					if msg.exec() == QMessageBox.StandardButton.Yes:
+						zip_extract = True
 
-			self.flasher.upload_files((filenames, zip_extract))
-			self.show()
-			getattr(self, "raise")()
-			self.activateWindow()
+				self.flasher.upload_files((filenames, zip_extract))
 
 	def on_option_clicked(self):
 		""" On option menu clicked """
