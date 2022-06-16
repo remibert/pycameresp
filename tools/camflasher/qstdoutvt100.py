@@ -111,17 +111,9 @@ class QStdoutVT100:
 			self.output = []
 		return result
 
-	def color_to_int(self, color):
-		""" Convert QtColor into integer """
-		r,g,b,a = color.getRgb()
-		result = a << 24 | r << 16 | g << 8 | b
-		return result
-
-	def set_color(self, text_backcolor, text_forecolor, cursor_backcolor, cursor_forecolor, reverse_backcolor, reverse_forecolor):
+	def set_colors(self, colors):
 		""" Change the default colors """
-		self.vt100.set_color(self.color_to_int(text_backcolor), self.color_to_int(text_forecolor),
-			self.color_to_int(cursor_backcolor), self.color_to_int(cursor_forecolor),
-			self.color_to_int(reverse_backcolor), self.color_to_int(reverse_forecolor))
+		self.vt100.set_colors(colors)
 
 	def flush(self):
 		""" Flush stdout """

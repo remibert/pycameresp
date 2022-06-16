@@ -708,6 +708,48 @@ def sysinfo():
 	""" Get system informations """
 	print_(strings.tostrings(info.sysinfo(display=False)))
 
+def vtcolors():
+	""" Show all VT100 colors """
+	res = b""
+	for i in range(16):
+		if i % 8 == 0:
+			res += b"\n"
+		res += b"\x1B[38;5;%dm\x1B[48;5;%dm %2d \x1B[0m"%((i+8)%16, i,i)
+
+	res += b"\n\n"
+
+	NEWLINE=12
+
+	j = 0
+	for i in range(16,232):
+		if j % (NEWLINE)== 0:
+			res += b"\n"
+		backcolor = i
+		if j % 36 < 36//2:
+			forecolor = 15
+		else:
+			forecolor = 0
+		res += b"\x1B[38;5;%dm\x1B[48;5;%dm %3d \x1B[0m"%(forecolor,backcolor,i)
+		j += 1
+	res += b"\n\n"
+
+	for i in range(232,256):
+		backcolor = i
+		if j % (NEWLINE)== 0:
+			res += b"\n"
+		if j % (NEWLINE) < (NEWLINE)//2:
+			forecolor = 15
+		else:
+			forecolor = 0
+		res += b"\x1B[38;5;%dm\x1B[48;5;%dm %-3d \x1B[0m"%(forecolor,backcolor,i)
+		j += 1
+
+	res += b"\n\n"
+
+	for i,j in [(1,b"bold"),(3,b"italic"),(4,b"underline"),(7,b"reverse")]:
+		res += b"%d : \x1B[%dm%s\x1B[0m\n"%(i,i,j)
+	print_(res.decode("utf8"))
+
 def get_command(command_name):
 	""" Get a command callback according to the command name """
 	try:
@@ -961,6 +1003,7 @@ shell_commands = \
 	"eval"       :[eval_           ,"string"               ],
 	"exec"       :[exec_           ,"string"               ],
 	"dump"       :[dump_           ,"filename"             ],
+	"vtcolors"   :[vtcolors                                ],
 }
 
 if __name__ == "__main__":

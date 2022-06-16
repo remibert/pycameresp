@@ -1,4 +1,4 @@
-#!python3
+#!/usr/bin/python3
 """ Tools to flash the firmware of pycameresp """
 # Requirements :
 #	- pip3 install serial
@@ -16,292 +16,28 @@ import os.path
 import os
 import socket
 import ipaddress
+import copy
 from pathlib import Path
-from platform import uname
+
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=import-error
 # pylint:disable=wrong-import-position
 
 try:
 	from PyQt6 import uic
-	from PyQt6.QtCore import QTimer, QEvent, Qt, QSettings, QCoreApplication
-	from PyQt6.QtWidgets import QFileDialog, QColorDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage
-	from PyQt6.QtGui import QCursor,QAction,QFont,QColor
+	from PyQt6.QtCore import QTimer, QEvent, Qt, QCoreApplication
+	from PyQt6.QtWidgets import QMainWindow, QMenu, QApplication, QMessageBox, QErrorMessage
+	from PyQt6.QtGui import QCursor,QAction,QFont
 except:
 	from PyQt5 import uic
-	from PyQt5.QtCore import QTimer, QEvent, Qt, QSettings, QCoreApplication
-	from PyQt5.QtWidgets import QFileDialog, QColorDialog, QMainWindow, QDialog, QMenu, QApplication, QMessageBox, QErrorMessage, QAction
-	from PyQt5.QtGui import QCursor, QFont,QColor
+	from PyQt5.QtCore import QTimer, QEvent, Qt, QCoreApplication
+	from PyQt5.QtWidgets import QMainWindow, QMenu, QApplication, QMessageBox, QErrorMessage, QAction
+	from PyQt5.QtGui import QCursor, QFont
+
+from dialogs import *
 from serial.tools import list_ports
 from flasher import Flasher
 from qstdoutvt100 import QStdoutVT100
-
-# Settings
-SETTINGS_FILENAME  = "CamFlasher.ini"
-FONT_FAMILY        = "camflasher.font.family"
-FONT_SIZE          = "camflasher.font.size"
-WORKING_DIRECTORY  = "camflasher.working_directory"
-WIN_GEOMETRY       = "camflasher.window.geometry"
-FIRMWARE_FILENAMES = "camflasher.firmware.filenames"
-TELNET_HOSTS       = "camflasher.telnet.host"
-DEVICE_RTS_DTR     = "camflasher.device.rts_dtr"
-TEXT_BACKCOLOR     = "camflasher.text.backcolor"
-TEXT_FORECOLOR     = "camflasher.text.forecolor"
-CURSOR_BACKCOLOR   = "camflasher.cursor.backcolor"
-CURSOR_FORECOLOR   = "camflasher.cursor.textcolor"
-REVERSE_BACKCOLOR  = "camflasher.reverse.backcolor"
-REVERSE_FORECOLOR  = "camflasher.reverse.textcolor"
-TYPE_LINK          = "camflasher.link.type"
-
-DEFAULT_TEXT_BACKCOLOR    = QColor(0xFF,0xFA,0xE6)
-DEFAULT_TEXT_FORECOLOR    = QColor(0x4D,0x47,0x00)
-DEFAULT_CURSOR_BACKCOLOR  = QColor(0x64,0x5D,0x00)
-DEFAULT_CURSOR_FORECOLOR  = QColor(0xFF,0xFC,0xD9)
-DEFAULT_REVERSE_BACKCOLOR = QColor(0xDF,0xD9,0xA8)
-DEFAULT_REVERSE_FORECOLOR = QColor(0x32,0x2D,0x00)
-
-DOWNLOAD_VERSION = "Download the lastest version of :"
-
-OUTPUT_TEXT = """
-<html>
-	<head/>
-	<body style="background-color : %(text_backcolor)s">
-		<p style="color : %(text_forecolor)s" >	
-			def function(self):<br>
-			&nbsp;&nbsp;&nbsp;&nbsp;for j in range(10):<br>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(j)<br>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="background-color : %(cursor_backcolor)s;color : %(cursor_forecolor)s">#</span> &lt;- Cursor <br>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="background-color : %(reverse_backcolor)s;color : %(reverse_forecolor)s"># Text in reverse video</span>
-		</p>
-	</body>
-</html>"""
-
-class AboutDialog(QDialog):
-	""" Dialog about """
-	def __init__(self, parent):
-		""" Dialog box constructor """
-		QDialog.__init__(self, parent)
-		try:
-			self.dialog = uic.loadUi('dialogabout.ui', self)
-		except Exception as err:
-			from dialogabout import Ui_DialogAbout
-			self.dialog = Ui_DialogAbout()
-			self.dialog.setupUi(self)
-		self.setModal(True)
-
-	def accept(self):
-		""" Accept about dialog """
-		self.close()
-
-def get_settings():
-	""" Return the QSettings class according to the os """
-	if sys.platform == "darwin":
-		result = QSettings()
-	elif sys.platform == "win32":
-		if uname() == "7":
-			result = QSettings(SETTINGS_FILENAME, QSettings.IniFormat)
-		else:
-			result = QSettings(SETTINGS_FILENAME)
-	else:
-		result = QSettings()
-	return result
-
-class FlashDialog(QDialog):
-	""" Dialog box to select firmware """
-	def __init__(self, parent):
-		""" Dialog box constructor """
-		QDialog.__init__(self, parent)
-		try:
-			self.dialog = uic.loadUi('dialogflash.ui', self)
-		except Exception as err:
-			from dialogflash import Ui_DialogFlash
-			self.dialog = Ui_DialogFlash()
-			self.dialog.setupUi(self)
-		self.initialized = False
-		self.setModal(True)
-
-	def showEvent(self, event):
-		""" On window shown """
-		if self.initialized is False:
-			self.initialized = True
-			settings = get_settings( )
-			firmwares = []
-			for firmware in settings.value(FIRMWARE_FILENAMES, []):
-				if os.path.exists(firmware):
-					firmwares.append(firmware)
-
-			firmwares.append(DOWNLOAD_VERSION + "ESP32CAM-firmware.bin")
-			firmwares.append(DOWNLOAD_VERSION + "GENERIC_SPIRAM-firmware.bin")
-			firmwares.append(DOWNLOAD_VERSION + "GENERIC-firmware.bin")
-			self.dialog.firmware.addItems(firmwares)
-			self.dialog.firmware.setCurrentIndex(0)
-			self.dialog.select_firmware.clicked.connect(self.on_firmware_clicked)
-			self.dialog.baud.addItems(["9600","57600","74880","115200","230400","460800"])
-			self.dialog.baud.setCurrentIndex(5)
-
-	def save_firmwares_list(self, firmware):
-		""" Save list in registry """
-		settings = get_settings()
-		firmwares = [firmware]
-		for i in range(self.dialog.firmware.count()):
-			if self.dialog.firmware.itemText(i) != self.dialog.firmware.currentText():
-				firmwares.append(self.dialog.firmware.itemText(i))
-		settings.setValue(FIRMWARE_FILENAMES, firmwares)
-
-	def accept(self):
-		""" Called when ok pressed """
-		firmware = self.dialog.firmware.currentText()
-		if  os.path.exists(firmware) or firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
-			self.save_firmwares_list(firmware)
-			super().accept()
-		elif os.path.exists(firmware) is False:
-			msg = QMessageBox(parent=self)
-			msg.setIcon(QMessageBox.Icon.Critical)
-			msg.setText("Firmware file does not exist")
-			msg.exec()
-
-	def on_firmware_clicked(self, event):
-		""" Selection of firmware button clicked """
-		firmware = QFileDialog.getOpenFileName(self, caption='Select firmware file', directory=str(Path.home()),filter="Firmware files (*.bin)")
-		if firmware != ('', ''):
-			for i in range(self.dialog.firmware.count()):
-				if self.dialog.firmware.itemText(i) == firmware[0]:
-					self.dialog.firmware.setCurrentIndex(i)
-					break
-			else:
-				self.dialog.firmware.addItem(firmware[0])
-				self.dialog.firmware.setCurrentIndex(self.dialog.firmware.count()-1)
-
-class OptionDialog(QDialog):
-	""" Dialog for options """
-	def __init__(self, parent):
-		""" Dialog box constructor """
-		QDialog.__init__(self, parent)
-		try:
-			self.dialog = uic.loadUi('dialogoption.ui', self)
-		except Exception as err:
-			from dialogoption import Ui_DialogOption
-			self.dialog = Ui_DialogOption()
-			self.dialog.setupUi(self)
-
-		settings = get_settings()
-		self.dialog.working_directory.setText(settings.value(WORKING_DIRECTORY,str(Path.home())))
-
-		self.dialog.spin_font_size.setValue(int(settings.value(FONT_SIZE   ,12)))
-		self.dialog.combo_font.setCurrentFont(QFont(settings.value(FONT_FAMILY ,"Courier")))
-		self.text_backcolor    = settings.value(TEXT_BACKCOLOR   ,DEFAULT_TEXT_BACKCOLOR)
-		self.text_forecolor    = settings.value(TEXT_FORECOLOR   ,DEFAULT_TEXT_FORECOLOR)
-		self.cursor_backcolor  = settings.value(CURSOR_BACKCOLOR ,DEFAULT_CURSOR_BACKCOLOR)
-		self.cursor_forecolor  = settings.value(CURSOR_FORECOLOR ,DEFAULT_CURSOR_FORECOLOR)
-		self.reverse_backcolor = settings.value(REVERSE_BACKCOLOR,DEFAULT_REVERSE_BACKCOLOR)
-		self.reverse_forecolor = settings.value(REVERSE_FORECOLOR,DEFAULT_REVERSE_FORECOLOR)
-
-		self.dialog.select_directory.clicked.connect(self.on_directory_clicked)
-		self.dialog.button_forecolor.clicked.connect(self.on_forecolor_clicked)
-		self.dialog.button_backcolor.clicked.connect(self.on_backcolor_clicked)
-		self.dialog.button_cursor_forecolor.clicked.connect(self.on_cursor_forecolor_clicked)
-		self.dialog.button_cursor_backcolor.clicked.connect(self.on_cursor_backcolor_clicked)
-		self.dialog.button_reverse_forecolor.clicked.connect(self.on_reverse_forecolor_clicked)
-		self.dialog.button_reverse_backcolor.clicked.connect(self.on_reverse_backcolor_clicked)
-		self.dialog.reset_color.clicked.connect(self.on_reset_color_clicked)
-
-		self.dialog.combo_font.currentTextChanged.connect(self.on_font_changed)
-		self.dialog.spin_font_size.valueChanged.connect(self.on_font_changed)
-		self.refresh_output()
-		self.setModal(True)
-
-	def refresh_output(self):
-		""" Refresh the output """
-		font = QFont()
-		font.setFamily    (self.dialog.combo_font.currentFont().family())
-		font.setPointSize (int(self.dialog.spin_font_size.value()))
-		self.dialog.label_output.setFont(font)
-		# pylint:disable=possibly-unused-variable
-		text_backcolor     = "rgb(%d,%d,%d)"%self.text_backcolor.getRgb()[:3]
-		text_forecolor     = "rgb(%d,%d,%d)"%self.text_forecolor.getRgb()[:3]
-		cursor_backcolor   = "rgb(%d,%d,%d)"%self.cursor_backcolor.getRgb()[:3]
-		cursor_forecolor   = "rgb(%d,%d,%d)"%self.cursor_forecolor.getRgb()[:3]
-		reverse_backcolor  = "rgb(%d,%d,%d)"%self.reverse_backcolor.getRgb()[:3]
-		reverse_forecolor  = "rgb(%d,%d,%d)"%self.reverse_forecolor.getRgb()[:3]
-		self.dialog.label_output.setHtml(OUTPUT_TEXT%locals())
-
-	def on_reset_color_clicked(self):
-		""" Reset the default color """
-		self.text_backcolor    = DEFAULT_TEXT_BACKCOLOR
-		self.text_forecolor    = DEFAULT_TEXT_FORECOLOR
-		self.cursor_backcolor  = DEFAULT_CURSOR_BACKCOLOR
-		self.cursor_forecolor  = DEFAULT_CURSOR_FORECOLOR
-		self.reverse_backcolor = DEFAULT_REVERSE_BACKCOLOR
-		self.reverse_forecolor = DEFAULT_REVERSE_FORECOLOR
-		self.refresh_output()
-
-	def on_font_changed(self, event):
-		""" Font family changed """
-		self.refresh_output()
-
-	def on_directory_clicked(self, event):
-		""" Selection of directory button clicked """
-		settings = get_settings()
-		directory = QFileDialog.getExistingDirectory(self, 'Select working directory', directory =settings.value(WORKING_DIRECTORY,str(Path.home())))
-		if directory != '':
-			self.dialog.working_directory.setText(directory)
-
-	def on_forecolor_clicked(self, event):
-		""" Select the forecolor """
-		color = QColorDialog.getColor(parent=self, initial=self.text_forecolor, title="Text color")
-		if color.isValid():
-			self.text_forecolor = color
-			self.refresh_output()
-
-	def on_backcolor_clicked(self, event):
-		""" Select the backcolor """
-		color = QColorDialog.getColor(parent=self, initial=self.text_backcolor, title="Background color")
-		if color.isValid():
-			self.text_backcolor = color
-			self.refresh_output()
-
-	def on_cursor_forecolor_clicked(self, event):
-		""" Select the cursor forecolor """
-		color = QColorDialog.getColor(parent=self, initial=self.cursor_forecolor, title="Cursor text color")
-		if color.isValid():
-			self.cursor_forecolor = color
-			self.refresh_output()
-
-	def on_cursor_backcolor_clicked(self, event):
-		""" Select the cursor backcolor """
-		color = QColorDialog.getColor(parent=self, initial=self.cursor_backcolor, title="Cursor background color")
-		if color.isValid():
-			self.cursor_backcolor = color
-			self.refresh_output()
-
-	def on_reverse_forecolor_clicked(self, event):
-		""" Select the reverse forecolor """
-		color = QColorDialog.getColor(parent=self, initial=self.reverse_forecolor, title="Reverse text color")
-		if color.isValid():
-			self.reverse_forecolor = color
-			self.refresh_output()
-
-	def on_reverse_backcolor_clicked(self, event):
-		""" Select the reverse backcolor """
-		color = QColorDialog.getColor(parent=self, initial=self.reverse_backcolor, title="Reverse background color")
-		if color.isValid():
-			self.reverse_backcolor = color
-			self.refresh_output()
-
-	def accept(self):
-		""" Accept about dialog """
-		font = self.dialog.combo_font.currentFont()
-		settings = get_settings()
-		settings.setValue(FONT_FAMILY , font.family())
-		settings.setValue(FONT_SIZE   , self.dialog.spin_font_size.value())
-		settings.setValue(WORKING_DIRECTORY, self.dialog.working_directory.text())
-		settings.setValue(TEXT_FORECOLOR   , self.text_forecolor)
-		settings.setValue(TEXT_BACKCOLOR   , self.text_backcolor)
-		settings.setValue(CURSOR_FORECOLOR , self.cursor_forecolor)
-		settings.setValue(CURSOR_BACKCOLOR , self.cursor_backcolor)
-		settings.setValue(REVERSE_FORECOLOR, self.reverse_forecolor)
-		settings.setValue(REVERSE_BACKCOLOR, self.reverse_backcolor)
-		super().accept()
 
 class Ports:
 	""" List of all serial ports """
@@ -476,9 +212,9 @@ class CamFlasher(QMainWindow):
 		""" Customization of the context menu """
 		context = QMenu(self)
 
-		copy = QAction("Copy", self)
-		copy.triggered.connect(self.copy)
-		context.addAction(copy)
+		copy_ = QAction("Copy", self)
+		copy_.triggered.connect(self.copy)
+		context.addAction(copy_)
 
 		paste = QAction("Paste", self)
 		paste.triggered.connect(self.paste)
@@ -523,13 +259,9 @@ class CamFlasher(QMainWindow):
 		settings = get_settings()
 		geometry = self.geometry_.geometry()
 		settings.setValue(WIN_GEOMETRY, geometry)
-		self.console.set_color(
-			settings.value(TEXT_BACKCOLOR,    DEFAULT_TEXT_BACKCOLOR),
-			settings.value(TEXT_FORECOLOR,    DEFAULT_TEXT_FORECOLOR),
-			settings.value(CURSOR_BACKCOLOR,  DEFAULT_CURSOR_BACKCOLOR),
-			settings.value(CURSOR_FORECOLOR,  DEFAULT_CURSOR_FORECOLOR),
-			settings.value(REVERSE_BACKCOLOR, DEFAULT_REVERSE_BACKCOLOR),
-			settings.value(REVERSE_FORECOLOR, DEFAULT_REVERSE_FORECOLOR))
+
+		colors = settings.value(FIELD_COLORS, copy.deepcopy(DEFAULT_COLORS))
+		self.console.set_colors(colors)
 
 		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
 		line = "W"*200 + "\n"

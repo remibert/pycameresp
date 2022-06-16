@@ -15,7 +15,7 @@ sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
 from exchange import FileReader, FileWriter, UploadCommand
-from filesystem import scandir, isdir, prefix
+from filesystem import scandir, isdir
 
 class FileLogger:
 	""" Class to save and display all log """
@@ -326,7 +326,10 @@ class StreamThread(threading.Thread):
 			file_writer = FileWriter()
 			for filename in self.drop_filenames:
 				filename_ = os.path.join(self.drop_directory,filename)
-				drop_filename = filename[len(self.drop_directory)+1:]
+				drop_filename = filename[len(self.drop_directory):]
+				if drop_filename[0] == "/" or drop_filename[0] == "\\":
+					drop_filename = drop_filename[1:]
+				drop_filename = drop_filename.replace("\\","/")
 
 				# If the content of zip must be extracted
 				if self.zip_extract and os.path.splitext(filename_)[1].lower() == ".zip":
@@ -403,7 +406,10 @@ class StreamThread(threading.Thread):
 				self.zip_extract = zip_extract
 				self.drop_directory, self.drop_filenames = self.create_upload_list(filenames)
 				current = self.drop_filenames[0]
-				drop_filename = current[len(self.drop_directory)+1:]
+				drop_filename = current[len(self.drop_directory):]
+				if drop_filename[0] == "/" or drop_filename[0] == "\\":
+					drop_filename = drop_filename[1:]
+				drop_filename = drop_filename.replace("\\","/")
 				self.stream.write(("upload %s\x0d"%drop_filename).encode("utf8"))
 
 	def on_write(self, command, data):

@@ -7,6 +7,8 @@ import os.path
 import glob
 import argparse
 import fnmatch
+import shutil
+import time
 
 # Mov to gif :
 # ffmpeg -i video.mov -vf "fps=3,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 output.gif
@@ -176,17 +178,38 @@ def execute(commands):
 	""" Execute shell commands """
 	commands = commands%globals()
 	for command in commands.split("\n"):
+		command = command.strip()
 		if len(command) >= 1 and command[0] == "#":
 			print("\x1B[38;33m" + command + "\x1B[m")
 		elif command.strip() != "":
 			print("\x1B[38;32m> " + command + "\x1B[m")
-			cmd = command.split(" ")
+			command = command.replace("\t"," ")
+			cmds = command.split(" ")
+			cmd = []
+			for part in cmds:
+				if len(part) > 0:
+					cmd.append(part)
 			if cmd[0] == "cd":
 				command = command.strip()
 				current_dir = command[3:].strip()
 				if current_dir[0] == '"' and current_dir[-1] == '"':
 					current_dir = current_dir.strip('"')
 				os.chdir(current_dir)
+			elif cmd[0] == "removetree" or cmd[0] == "removedir":
+				directory = cmd[1]
+				while os.path.exists(directory):
+					try:
+						shutil.rmtree(directory,0,lambda function,directory,dummy: (os.chmod(directory, 0o777),os.remove(directory)))
+					except OSError:
+						print ("! Remove dir failed '%s'"%directory)
+					if os.path.exists(directory):
+						time.sleep(1)
+			elif cmd[0] == "copyfile":
+				shutil.copyfile(cmd[1],cmd[2])
+			elif cmd[0] == "copytree" or cmd[0] == "copydir":
+				shutil.copytree(cmd[1],cmd[2])
+			elif cmd[0] == "remove":
+				os.remove(cmd[1])
 			elif cmd[0] == "source":
 				os.environ["IDF_PATH"] = OUTPUT_DIR + os.sep + "esp-idf"
 				pipe = subprocess.Popen(""". ./export.sh; env""", stdout=subprocess.PIPE, shell=True)

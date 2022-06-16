@@ -7,9 +7,9 @@ NO_COLOR       = b"\x1B[m"
 STRING_COLOR   = b"\x1B[31m"
 COMMENT_COLOR  = b"\x1B[32m"
 NUMBER_COLOR   = b"\x1B[33m"
-KEYWORD_COLOR  = b"\x1B[34m"
-CLASS_COLOR    = b"\x1B[35m"
-FUNCTION_COLOR = b"\x1B[36m"
+KEYWORD_COLOR  = b"\x1B[1;34m"
+CLASS_COLOR    = b"\x1B[1;35m"
+FUNCTION_COLOR = b"\x1B[1;36m"
 
 class Colorizer:
 	""" Syntax highlight for python """

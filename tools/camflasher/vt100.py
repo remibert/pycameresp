@@ -53,13 +53,36 @@ REVERSE_FORECOLOR = 0xFF000000
 CURSOR_BACKCOLOR  = 0xFFAAAAAA
 CURSOR_FORECOLOR  = 0xFF000000
 
-vga_colors = [
-	#     30,       31,       32,       33,       34,       35,       36,       37,
-	#     40,       41,       42,       43,       44,       45,       46,       47,
-	0x000000, 0xAA0000, 0x00AA00, 0xAA5500, 0x0000AA, 0xAA00AA, 0x00AAAA, 0xAAAAAA,
-	#     90,       91,       92,       93,       94,       95,       96,       97,
-	#    100,      101,      102,      103,      104,      105,      106,      107,
-	0x555555, 0xFF5555, 0x55FF55, 0xFFFF55, 0x5555FF, 0xFF55FF, 0x55FFFF, 0xFFFFFF,
+
+DEFAULT_COLORS = {
+	"text_colors":{
+		"text_backcolor"   : 0xFFFFFAE6,
+		"text_forecolor"   : 0xFF4D4700,
+		"cursor_backcolor" : 0xFF645D00,
+		"cursor_forecolor" : 0xFFFFFCD9,
+		"reverse_backcolor": 0xFFDFD9A8,
+		"reverse_forecolor": 0xFF322D00,
+	},
+	"ansi_colors":[
+		0xFF000000, 0xFFAA0000, 0xFF00AA00, 0xFFAA5500, 0xFF0000AA, 0xFFAA00AA, 0xFF00AAAA, 0xFFAAAAAA,
+		0xFF555555, 0xFFFF5555, 0xFF55FF55, 0xFFFFFF55, 0xFF5555FF, 0xFFFF55FF, 0xFF55FFFF, 0xFFFFFFFF]
+}
+
+
+FLAG_REVERSE   = 0x01
+FLAG_BOLD      = 0x02
+FLAG_ITALIC    = 0x04
+FLAG_UNDERLINE = 0x08
+FLAG_FAINT     = 0x10
+
+VGA_COLORS = [
+	#       30,         31,         32,         33,         34,         35,         36,         37,
+	#       40,         41,         42,         43,         44,         45,         46,         47,
+	0xFF000000, 0xFFAA0000, 0xFF00AA00, 0xFFAA5500, 0xFF0000AA, 0xFFAA00AA, 0xFF00AAAA, 0xFFAAAAAA,
+
+	#       90,         91,         92,         93,         94,         95,         96,         97,
+	#      100,        101,        102,        103,        104,        105,        106,        107,
+	0xFF555555, 0xFFFF5555, 0xFF55FF55, 0xFFFFFF55, 0xFF5555FF, 0xFFFF55FF, 0xFF55FFFF, 0xFFFFFFFF,
 
 	# step = 51
 	# for r in range(0,6):
@@ -71,50 +94,50 @@ vga_colors = [
 	# 			color = (rr << 16) | (gg << 8) | (bb)
 	# 			print ("0x%06X,"%(color ), end="")
 	# 6 × 6 × 6 cube (216 colors): 16 + 36 × r + 6 × g + b (0 ≤ r, g, b ≤ 5)
-	0x000000,0x000033,0x000066,0x000099,0x0000CC,0x0000FF,
-	0x003300,0x003333,0x003366,0x003399,0x0033CC,0x0033FF,
-	0x006600,0x006633,0x006666,0x006699,0x0066CC,0x0066FF,
-	0x009900,0x009933,0x009966,0x009999,0x0099CC,0x0099FF,
-	0x00CC00,0x00CC33,0x00CC66,0x00CC99,0x00CCCC,0x00CCFF,
-	0x00FF00,0x00FF33,0x00FF66,0x00FF99,0x00FFCC,0x00FFFF,
-	0x330000,0x330033,0x330066,0x330099,0x3300CC,0x3300FF,
-	0x333300,0x333333,0x333366,0x333399,0x3333CC,0x3333FF,
-	0x336600,0x336633,0x336666,0x336699,0x3366CC,0x3366FF,
-	0x339900,0x339933,0x339966,0x339999,0x3399CC,0x3399FF,
-	0x33CC00,0x33CC33,0x33CC66,0x33CC99,0x33CCCC,0x33CCFF,
-	0x33FF00,0x33FF33,0x33FF66,0x33FF99,0x33FFCC,0x33FFFF,
-	0x660000,0x660033,0x660066,0x660099,0x6600CC,0x6600FF,
-	0x663300,0x663333,0x663366,0x663399,0x6633CC,0x6633FF,
-	0x666600,0x666633,0x666666,0x666699,0x6666CC,0x6666FF,
-	0x669900,0x669933,0x669966,0x669999,0x6699CC,0x6699FF,
-	0x66CC00,0x66CC33,0x66CC66,0x66CC99,0x66CCCC,0x66CCFF,
-	0x66FF00,0x66FF33,0x66FF66,0x66FF99,0x66FFCC,0x66FFFF,
-	0x990000,0x990033,0x990066,0x990099,0x9900CC,0x9900FF,
-	0x993300,0x993333,0x993366,0x993399,0x9933CC,0x9933FF,
-	0x996600,0x996633,0x996666,0x996699,0x9966CC,0x9966FF,
-	0x999900,0x999933,0x999966,0x999999,0x9999CC,0x9999FF,
-	0x99CC00,0x99CC33,0x99CC66,0x99CC99,0x99CCCC,0x99CCFF,
-	0x99FF00,0x99FF33,0x99FF66,0x99FF99,0x99FFCC,0x99FFFF,
-	0xCC0000,0xCC0033,0xCC0066,0xCC0099,0xCC00CC,0xCC00FF,
-	0xCC3300,0xCC3333,0xCC3366,0xCC3399,0xCC33CC,0xCC33FF,
-	0xCC6600,0xCC6633,0xCC6666,0xCC6699,0xCC66CC,0xCC66FF,
-	0xCC9900,0xCC9933,0xCC9966,0xCC9999,0xCC99CC,0xCC99FF,
-	0xCCCC00,0xCCCC33,0xCCCC66,0xCCCC99,0xCCCCCC,0xCCCCFF,
-	0xCCFF00,0xCCFF33,0xCCFF66,0xCCFF99,0xCCFFCC,0xCCFFFF,
-	0xFF0000,0xFF0033,0xFF0066,0xFF0099,0xFF00CC,0xFF00FF,
-	0xFF3300,0xFF3333,0xFF3366,0xFF3399,0xFF33CC,0xFF33FF,
-	0xFF6600,0xFF6633,0xFF6666,0xFF6699,0xFF66CC,0xFF66FF,
-	0xFF9900,0xFF9933,0xFF9966,0xFF9999,0xFF99CC,0xFF99FF,
-	0xFFCC00,0xFFCC33,0xFFCC66,0xFFCC99,0xFFCCCC,0xFFCCFF,
-	0xFFFF00,0xFFFF33,0xFFFF66,0xFFFF99,0xFFFFCC,0xFFFFFF,
+	0xFF000000,0xFF000033,0xFF000066,0xFF000099,0xFF0000CC,0xFF0000FF,
+	0xFF003300,0xFF003333,0xFF003366,0xFF003399,0xFF0033CC,0xFF0033FF,
+	0xFF006600,0xFF006633,0xFF006666,0xFF006699,0xFF0066CC,0xFF0066FF,
+	0xFF009900,0xFF009933,0xFF009966,0xFF009999,0xFF0099CC,0xFF0099FF,
+	0xFF00CC00,0xFF00CC33,0xFF00CC66,0xFF00CC99,0xFF00CCCC,0xFF00CCFF,
+	0xFF00FF00,0xFF00FF33,0xFF00FF66,0xFF00FF99,0xFF00FFCC,0xFF00FFFF,
+	0xFF330000,0xFF330033,0xFF330066,0xFF330099,0xFF3300CC,0xFF3300FF,
+	0xFF333300,0xFF333333,0xFF333366,0xFF333399,0xFF3333CC,0xFF3333FF,
+	0xFF336600,0xFF336633,0xFF336666,0xFF336699,0xFF3366CC,0xFF3366FF,
+	0xFF339900,0xFF339933,0xFF339966,0xFF339999,0xFF3399CC,0xFF3399FF,
+	0xFF33CC00,0xFF33CC33,0xFF33CC66,0xFF33CC99,0xFF33CCCC,0xFF33CCFF,
+	0xFF33FF00,0xFF33FF33,0xFF33FF66,0xFF33FF99,0xFF33FFCC,0xFF33FFFF,
+	0xFF660000,0xFF660033,0xFF660066,0xFF660099,0xFF6600CC,0xFF6600FF,
+	0xFF663300,0xFF663333,0xFF663366,0xFF663399,0xFF6633CC,0xFF6633FF,
+	0xFF666600,0xFF666633,0xFF666666,0xFF666699,0xFF6666CC,0xFF6666FF,
+	0xFF669900,0xFF669933,0xFF669966,0xFF669999,0xFF6699CC,0xFF6699FF,
+	0xFF66CC00,0xFF66CC33,0xFF66CC66,0xFF66CC99,0xFF66CCCC,0xFF66CCFF,
+	0xFF66FF00,0xFF66FF33,0xFF66FF66,0xFF66FF99,0xFF66FFCC,0xFF66FFFF,
+	0xFF990000,0xFF990033,0xFF990066,0xFF990099,0xFF9900CC,0xFF9900FF,
+	0xFF993300,0xFF993333,0xFF993366,0xFF993399,0xFF9933CC,0xFF9933FF,
+	0xFF996600,0xFF996633,0xFF996666,0xFF996699,0xFF9966CC,0xFF9966FF,
+	0xFF999900,0xFF999933,0xFF999966,0xFF999999,0xFF9999CC,0xFF9999FF,
+	0xFF99CC00,0xFF99CC33,0xFF99CC66,0xFF99CC99,0xFF99CCCC,0xFF99CCFF,
+	0xFF99FF00,0xFF99FF33,0xFF99FF66,0xFF99FF99,0xFF99FFCC,0xFF99FFFF,
+	0xFFCC0000,0xFFCC0033,0xFFCC0066,0xFFCC0099,0xFFCC00CC,0xFFCC00FF,
+	0xFFCC3300,0xFFCC3333,0xFFCC3366,0xFFCC3399,0xFFCC33CC,0xFFCC33FF,
+	0xFFCC6600,0xFFCC6633,0xFFCC6666,0xFFCC6699,0xFFCC66CC,0xFFCC66FF,
+	0xFFCC9900,0xFFCC9933,0xFFCC9966,0xFFCC9999,0xFFCC99CC,0xFFCC99FF,
+	0xFFCCCC00,0xFFCCCC33,0xFFCCCC66,0xFFCCCC99,0xFFCCCCCC,0xFFCCCCFF,
+	0xFFCCFF00,0xFFCCFF33,0xFFCCFF66,0xFFCCFF99,0xFFCCFFCC,0xFFCCFFFF,
+	0xFFFF0000,0xFFFF0033,0xFFFF0066,0xFFFF0099,0xFFFF00CC,0xFFFF00FF,
+	0xFFFF3300,0xFFFF3333,0xFFFF3366,0xFFFF3399,0xFFFF33CC,0xFFFF33FF,
+	0xFFFF6600,0xFFFF6633,0xFFFF6666,0xFFFF6699,0xFFFF66CC,0xFFFF66FF,
+	0xFFFF9900,0xFFFF9933,0xFFFF9966,0xFFFF9999,0xFFFF99CC,0xFFFF99FF,
+	0xFFFFCC00,0xFFFFCC33,0xFFFFCC66,0xFFFFCC99,0xFFFFCCCC,0xFFFFCCFF,
+	0xFFFFFF00,0xFFFFFF33,0xFFFFFF66,0xFFFFFF99,0xFFFFFFCC,0xFFFFFFFF,
 
 	# for i in range(24):
 	# 	color = 8 + i*10
 	# 	print("0x%02X%02X%02X,"%(color,color,color))
 	# grayscale from black to white in 24 steps
-	0x080808, 0x121212, 0x1C1C1C, 0x262626, 0x303030, 0x3A3A3A, 0x444444, 0x4E4E4E,
-	0x585858, 0x626262, 0x6C6C6C, 0x767676, 0x808080, 0x8A8A8A, 0x949494, 0x9E9E9E,
-	0xA8A8A8, 0xB2B2B2, 0xBCBCBC, 0xC6C6C6, 0xD0D0D0, 0xDADADA, 0xE4E4E4, 0xEEEEEE,
+	0xFF080808, 0xFF121212, 0xFF1C1C1C, 0xFF262626, 0xFF303030, 0xFF3A3A3A, 0xFF444444, 0xFF4E4E4E,
+	0xFF585858, 0xFF626262, 0xFF6C6C6C, 0xFF767676, 0xFF808080, 0xFF8A8A8A, 0xFF949494, 0xFF9E9E9E,
+	0xFFA8A8A8, 0xFFB2B2B2, 0xFFBCBCBC, 0xFFC6C6C6, 0xFFD0D0D0, 0xFFDADADA, 0xFFE4E4E4, 0xFFEEEEEE,
 	]
 
 def get_len_utf8(key):
@@ -175,8 +198,7 @@ class Line:
 		self.line       = ""
 		self.forecolors = []
 		self.backcolors = []
-		self.reverses   = []
-		self.underlines = []
+		self.flags      = []
 		self.htmline    = None
 		self.cursor     = None
 		self.cursor_on  = False
@@ -198,8 +220,7 @@ class Line:
 			self.line       += " "*delta
 			self.forecolors += [TEXT_FORECOLOR]*delta
 			self.backcolors += [TEXT_BACKCOLOR]*delta
-			self.reverses   += [False]*delta
-			self.underlines += [False]*delta
+			self.flags      += [0]*delta
 			self.htmline    = None
 
 	def truncate(self, length):
@@ -208,8 +229,7 @@ class Line:
 			self.line       = self.line      [:length]
 			self.forecolors = self.forecolors[:length]
 			self.backcolors = self.backcolors[:length]
-			self.reverses   = self.reverses  [:length]
-			self.underlines = self.underlines[:length]
+			self.flags      = self.flags     [:length]
 			self.htmline    = None
 
 	def clear_line(self):
@@ -217,11 +237,10 @@ class Line:
 		self.line       = ""
 		self.forecolors = []
 		self.backcolors = []
-		self.reverses   = []
-		self.underlines = []
+		self.flags      = []
 		self.fill(self.width)
 
-	def replace_char(self, char, forecolor, backcolor, reverse, underline, cursor_column):
+	def replace_char(self, char, forecolor, backcolor, flags, cursor_column):
 		""" Replace character """
 		self.htmline = None
 		if cursor_column > len(self.line):
@@ -229,14 +248,12 @@ class Line:
 			self.line += " "*delta + char
 			self.forecolors += [TEXT_FORECOLOR]*delta + [forecolor]*len(char)
 			self.backcolors += [TEXT_BACKCOLOR]*delta + [backcolor]*len(char)
-			self.reverses   += [False]*delta             + [reverse]*len(char)
-			self.underlines += [False]*delta             + [underline]*len(char)
+			self.flags      += [0]*delta              + [flags]*len(char)
 		else:
 			self.line       = self.line      [:cursor_column] + char                  + self.line      [cursor_column+1:]
 			self.forecolors = self.forecolors[:cursor_column] + [forecolor]*len(char) + self.forecolors[cursor_column+1:]
 			self.backcolors = self.backcolors[:cursor_column] + [backcolor]*len(char) + self.backcolors[cursor_column+1:]
-			self.reverses   = self.reverses  [:cursor_column] + [reverse  ]*len(char) + self.reverses  [cursor_column+1:]
-			self.underlines = self.underlines[:cursor_column] + [underline]*len(char) + self.underlines[cursor_column+1:]
+			self.flags      = self.flags     [:cursor_column] + [flags    ]*len(char) + self.flags     [cursor_column+1:]
 
 	def erase_line(self, cursor_column, direction = None):
 		""" Erase the line """
@@ -247,24 +264,21 @@ class Line:
 				self.line       = self.line      [:cursor_column] + " "*delta
 				self.forecolors = self.forecolors[:cursor_column] + [TEXT_FORECOLOR]*delta
 				self.backcolors = self.backcolors[:cursor_column] + [TEXT_BACKCOLOR]*delta
-				self.reverses   = self.reverses  [:cursor_column] + [False]*delta
-				self.underlines = self.underlines[:cursor_column] + [False]*delta
+				self.flags      = self.flags     [:cursor_column] + [0]*delta
 				self.htmline    = None
 			# Erase to beginning of line
 			elif direction == "1":
 				self.line       =  " "*cursor_column                 + self.line      [cursor_column:]
 				self.forecolors =  [TEXT_FORECOLOR]*cursor_column + self.forecolors[cursor_column:]
 				self.backcolors =  [TEXT_BACKCOLOR]*cursor_column + self.backcolors[cursor_column:]
-				self.reverses   =  [False]*cursor_column             + self.reverses  [cursor_column:]
-				self.underlines =  [False]*cursor_column             + self.underlines[cursor_column:]
+				self.flags      =  [0]*cursor_column                 + self.flags     [cursor_column:]
 				self.htmline    = None
 			# Erase entire line
 			elif direction == "2":
 				self.line       = " "*self.width
 				self.forecolors += [TEXT_FORECOLOR]*self.width
 				self.backcolors += [TEXT_BACKCOLOR]*self.width
-				self.reverses   += [False]*self.width
-				self.underlines += [False]*self.width
+				self.flags      += [0]*self.width
 				self.htmline    = None
 
 	def get(self):
@@ -278,8 +292,11 @@ class Line:
 			self.cursor_on = cursor_on
 			previous_forecolor = None
 			previous_backcolor = None
-			previous_reverse = None
+			previous_reverse   = None
 			previous_underline = None
+			previous_bold      = None
+			previous_italic    = None
+			previous_faint     = None
 			htmlline = ""
 
 			# If the line not content cursor
@@ -291,12 +308,24 @@ class Line:
 
 				# Search in the end of line if the can be simplified
 				for i in range(stripped_length, length):
+					# If the end of line content faint
+					if self.flags[i] & FLAG_FAINT:
+						can_cut = False
+						break
 					# If the end of line content underline
-					if self.underlines[i] is True:
+					if self.flags[i] & FLAG_UNDERLINE:
 						can_cut = False
 						break
 					# If the end of line content reversion
-					if self.reverses[i] is True:
+					if self.flags[i] & FLAG_REVERSE:
+						can_cut = False
+						break
+					# If the end of line content italic
+					if self.flags[i] & FLAG_ITALIC:
+						can_cut = False
+						break
+					# If the end of line content bold
+					if self.flags[i] & FLAG_BOLD:
 						can_cut = False
 						break
 					# Or if the end of line content backcolor
@@ -332,19 +361,37 @@ class Line:
 					previous_backcolor = backcolor
 
 				# Treat the reverse case
-				reverse = self.reverses[i]
+				reverse = self.flags[i] & FLAG_REVERSE
 				if reverse != previous_reverse:
 					changed = True
 					previous_reverse = reverse
 
 				# Treat the underline case
-				underline = self.underlines[i]
+				underline = self.flags[i] & FLAG_UNDERLINE
 				if underline != previous_underline:
 					changed = True
 					previous_underline = underline
 
+				# Treat the faint case
+				faint = self.flags[i] & FLAG_FAINT
+				if faint != previous_faint:
+					changed = True
+					previous_faint = faint
+
+				# Treat the italic case
+				italic = self.flags[i] & FLAG_ITALIC
+				if italic != previous_italic:
+					changed = True
+					previous_italic = italic
+
+				# Treat the faint case
+				bold = self.flags[i] & FLAG_BOLD
+				if bold != previous_bold:
+					changed = True
+					previous_bold = bold
+
 				# In case of reverse
-				if reverse is True:
+				if reverse != 0:
 					if backcolor == TEXT_BACKCOLOR:
 						back = REVERSE_BACKCOLOR
 					else:
@@ -364,23 +411,43 @@ class Line:
 					changed = True
 					cursor_set = False
 
+				flags_html = ""
 				if underline:
-					underline_html = "text-decoration: underline;"
+					flags_html += "text-decoration: underline;"
+
+				if faint and bold:
+					flags_html += "font-weight: bold;"
+				elif faint:
+					flags_html += "font-weight: lighter;"
+				elif bold:
+					flags_html += "font-weight: bold;"
 				else:
-					underline_html = ""
+					flags_html += "font-weight: normal;"
+
+				if italic:
+					flags_html += "font-style: italic;"
+				else:
+					flags_html += "font-style: normal;"
+
+				if fore < 256:
+					fore = VGA_COLORS[fore]
+
+				if back < 256:
+					back = VGA_COLORS[back]
+
 				# If cursor on this character
 				if cursor == i:
 					if cursor_on:
-						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(CURSOR_FORECOLOR,CURSOR_BACKCOLOR,underline_html)
+						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(CURSOR_FORECOLOR,CURSOR_BACKCOLOR,flags_html)
 					else:
-						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(fore,back,underline_html)
+						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(fore,back,flags_html)
 					if i > 0:
 						part = '</span>' + part
 					cursor_set = True
 				else:
 					# The color must be changed
 					if changed:
-						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(fore,back,underline_html)
+						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(fore,back,flags_html)
 						if i > 0:
 							part = '</span>' + part
 					else:
@@ -426,8 +493,7 @@ class VT100:
 
 		self.forecolor           = TEXT_FORECOLOR
 		self.backcolor           = TEXT_BACKCOLOR
-		self.reverse             = False
-		self.underline           = False
+		self.flags               = 0
 		self.region_start        = 0
 		self.region_end          = self.height
 
@@ -451,8 +517,7 @@ class VT100:
 		""" Reset to initial state """
 		self.forecolor           = TEXT_FORECOLOR
 		self.backcolor           = TEXT_BACKCOLOR
-		self.reverse             = False
-		self.underline           = False
+		self.flags               = 0
 		self.region_start        = 0
 		self.region_end          = self.height
 
@@ -462,21 +527,22 @@ class VT100:
 		self.cursor_line_saved   = None
 		self.cls()
 
-	def set_color(self, text_backcolor, text_forecolor, cursor_backcolor, cursor_forecolor, reverse_backcolor, reverse_forecolor):
+	def set_colors(self, colors):
 		""" Change the default colors """
-		global TEXT_BACKCOLOR, TEXT_FORECOLOR, CURSOR_BACKCOLOR, CURSOR_FORECOLOR, REVERSE_FORECOLOR, REVERSE_BACKCOLOR
+		global TEXT_BACKCOLOR, TEXT_FORECOLOR, CURSOR_BACKCOLOR, CURSOR_FORECOLOR, REVERSE_FORECOLOR, REVERSE_BACKCOLOR, VGA_COLORS
 		for line in self.lines:
-			line.replace_color(text_backcolor, text_forecolor)
+			line.replace_color(colors["text_colors"]["text_backcolor"], colors["text_colors"]["text_forecolor"])
+		TEXT_BACKCOLOR    = colors["text_colors"]["text_backcolor"]
+		TEXT_FORECOLOR    = colors["text_colors"]["text_forecolor"]
+		CURSOR_BACKCOLOR  = colors["text_colors"]["cursor_backcolor"]
+		CURSOR_FORECOLOR  = colors["text_colors"]["cursor_forecolor"]
+		REVERSE_BACKCOLOR = colors["text_colors"]["reverse_backcolor"]
+		REVERSE_FORECOLOR = colors["text_colors"]["reverse_forecolor"]
+		self.forecolor    = colors["text_colors"]["text_forecolor"]
+		self.backcolor    = colors["text_colors"]["text_backcolor"]
 
-		TEXT_BACKCOLOR = text_backcolor
-		TEXT_FORECOLOR = text_forecolor
-		CURSOR_BACKCOLOR  = cursor_backcolor
-		CURSOR_FORECOLOR  = cursor_forecolor
-		REVERSE_BACKCOLOR = reverse_backcolor
-		REVERSE_FORECOLOR = reverse_forecolor
-
-		self.forecolor = text_forecolor
-		self.backcolor = text_backcolor
+		for i in range(16):
+			VGA_COLORS[i] = colors["ansi_colors"][i]
 		self.modified = True
 
 	def set_size(self, width, height):
@@ -573,7 +639,7 @@ class VT100:
 					self.auto_scroll(1)
 				if self.cursor_line >= self.height:
 					self.cursor_line = self.height-1
-				self.lines[self.cursor_line].replace_char(char, self.forecolor, self.backcolor, self.reverse, self.underline, self.cursor_column)
+				self.lines[self.cursor_line].replace_char(char, self.forecolor, self.backcolor, self.flags, self.cursor_column)
 				self.cursor_column += 1
 				return True
 		except Exception as err:
@@ -603,16 +669,14 @@ class VT100:
 			if escape[-1] == "m" and escape[1]=="[":
 				foreground = None
 				background = None
-				reverse = None
-				underline= None
+				flags    = None
 
 				data = escape[2:-1]
 				values = self.split(data)
 				# Case clear
 				if len(values) <= 1:
 					if len(values[0]) == 0:
-						reverse = False
-						underline = False
+						flags = 0
 						foreground = TEXT_FORECOLOR
 						background = TEXT_BACKCOLOR
 				# Case VT100 large predefined colors
@@ -620,11 +684,13 @@ class VT100:
 					if values[0] == '38' and values[1] == '5':
 						color = self.to_int(values[2])
 						if color < 256:
-							foreground = vga_colors[color]
+							# foreground = VGA_COLORS[color]
+							foreground = color
 					elif values[0] == '48' and values[1] == '5':
 						color = self.to_int(values[2])
 						if color < 256:
-							background = vga_colors[color]
+							# background = VGA_COLORS[color]
+							background = color
 				# Case VT100 RGB colors
 				elif len(values) == 5:
 					if values[0] == '38' and values[1] == '2':
@@ -633,44 +699,79 @@ class VT100:
 						background = ((self.to_int(values[2]) % 256) << 16) | ((self.to_int(values[3])%256) << 8) | ((self.to_int(values[4])%256))
 
 				# If color not found
-				if foreground is None and background is None and reverse is None and underline is None:
+				if foreground is None and background is None and flags is None:
 					# Case VT100 reduced predefined colors and reverse
 					for value in values:
 						value = self.to_int(value)
 						if value == 0:
 							foreground = TEXT_FORECOLOR
 							background = TEXT_BACKCOLOR
-							underline = False
-							reverse = False
-						elif value == 7:
-							reverse = True
+							flags   = 0
+						elif value == 1:
+							if flags is None:
+								flags = 0
+							flags |= FLAG_BOLD
+						elif value == 21:
+							if flags is None:
+								flags = 0
+							flags &= ~FLAG_BOLD
+						elif value == 2:
+							if flags is None:
+								flags = 0
+							flags |= FLAG_FAINT
+						elif value == 22:
+							if flags is None:
+								flags = 0
+							flags &= ~FLAG_FAINT
+						elif value == 3:
+							if flags is None:
+								flags = 0
+							flags |= FLAG_ITALIC
+						elif value == 23:
+							if flags is None:
+								flags = 0
+							flags &= ~FLAG_ITALIC
 						elif value == 4:
-							underline = True
-						elif value >= 30 and value <= 37:
-							foreground = vga_colors[value-30]
+							if flags is None:
+								flags = 0
+							flags |= FLAG_UNDERLINE
+						elif value == 24:
+							if flags is None:
+								flags = 0
+							flags &= ~FLAG_UNDERLINE
+						elif value == 7:
+							if flags is None:
+								flags = 0
+							flags |= FLAG_REVERSE
+						elif value == 27:
+							if flags is None:
+								flags = 0
+							flags &= ~FLAG_REVERSE
+						elif 30 <= value <= 37:
+							# foreground = VGA_COLORS[value-30]
+							foreground = value-30
 						elif value == 39:
 							foreground = TEXT_FORECOLOR
-						elif value >= 40 and value <= 47:
-							background = vga_colors[value-40]
+						elif 40 <= value <= 47:
+							# background = VGA_COLORS[value-40]
+							background = value-40
 						elif value == 49:
 							background = TEXT_BACKCOLOR
-						elif value >= 90 and value <= 97:
-							foreground = vga_colors[value-90+8]
-						elif value >= 100 and value <= 107:
-							background = vga_colors[value-100+8]
-						elif value == 27:
-							reverse = False
-							underline = False
+						elif 90 <= value <= 97:
+							# foreground = VGA_COLORS[value-90+8]
+							foreground = value-90+8
+						elif 100 <= value <= 107:
+							# background = VGA_COLORS[value-100+8]
+							background = value-100+8
 
 				# If color modification detected
 				if foreground is not None:
 					self.forecolor = foreground
 				if background is not None:
 					self.backcolor = background
-				if reverse is not None:
-					self.reverse = reverse
-				if underline is not None:
-					self.underline = underline
+				# if flags changed
+				if flags is not None:
+					self.flags = flags
 				result = True
 		return result
 
@@ -880,7 +981,7 @@ class VT100:
 
 	def to_html(self):
 		""" Get the html content of VT100 """
-		result = '<body style="background-color:#%08X">'%TEXT_BACKCOLOR
+		result = '<body style="background-color:#%06X">'%TEXT_BACKCOLOR
 		pos = 0
 		for line in self.lines:
 			if pos == self.cursor_line:

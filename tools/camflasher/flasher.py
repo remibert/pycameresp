@@ -7,6 +7,7 @@ import sys
 import fileuploader
 import streamdevice
 import vt100
+import esptool
 sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
@@ -128,7 +129,6 @@ class Flasher(threading.Thread):
 
 	def flasher(self, data):
 		""" Flasher of firmware it use the esptool.py command """
-		import esptool
 		port, baud, rts_dtr, firmware, erase, address, chip = data
 
 		# Disconnect serial link

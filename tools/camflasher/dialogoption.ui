@@ -6,267 +6,532 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>633</width>
-    <height>411</height>
+    <width>629</width>
+    <height>485</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Options</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2">
+  <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <widget class="QLabel" name="label_working_directory">
-     <property name="text">
-      <string>Working directory</string>
+    <widget class="QTabWidget" name="tab_options">
+     <property name="currentIndex">
+      <number>1</number>
      </property>
+     <widget class="QWidget" name="tab_config">
+      <attribute name="title">
+       <string>Options</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_working_directory">
+         <property name="text">
+          <string>Working directory</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="directory_layout">
+         <item>
+          <widget class="QLineEdit" name="working_directory">
+           <property name="toolTip">
+            <string>Working directory for exchanging files with the device</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="select_directory">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="acceptDrops">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>Working directory for exchanging files with the device</string>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <spacer name="spacer_config">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>190</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_console">
+      <attribute name="title">
+       <string>Console</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+           <underline>false</underline>
+          </font>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::DefaultContextMenu</enum>
+         </property>
+         <property name="title">
+          <string/>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+         <property name="checkable">
+          <bool>false</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_text">
+            <property name="text">
+             <string>Text</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" rowspan="7" colspan="2">
+           <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetMaximumSize</enum>
+            </property>
+            <item>
+             <widget class="QTextBrowser" name="label_output">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
+              </property>
+              <property name="toolTip">
+               <string>Show wisiwig</string>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::Box</enum>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="reset_color">
+              <property name="toolTip">
+               <string>Reset text colors</string>
+              </property>
+              <property name="text">
+               <string>Reset</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QFontComboBox" name="combo_font">
+              <property name="toolTip">
+               <string>Select text font family</string>
+              </property>
+              <property name="editable">
+               <bool>false</bool>
+              </property>
+              <property name="fontFilters">
+               <set>QFontComboBox::MonospacedFonts</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="spin_font_size">
+              <property name="toolTip">
+               <string>Select text font size</string>
+              </property>
+              <property name="minimum">
+               <number>7</number>
+              </property>
+              <property name="maximum">
+               <number>50</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="2" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QPushButton" name="button_backcolor">
+              <property name="toolTip">
+               <string>Select background color</string>
+              </property>
+              <property name="text">
+               <string>Background</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="button_forecolor">
+              <property name="toolTip">
+               <string>Select text color</string>
+              </property>
+              <property name="text">
+               <string>Foreground</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_cursor">
+            <property name="text">
+             <string>Cursor</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QPushButton" name="button_cursor_backcolor">
+              <property name="toolTip">
+               <string>Select cursor background color</string>
+              </property>
+              <property name="text">
+               <string>Background</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="button_cursor_forecolor">
+              <property name="toolTip">
+               <string>Select cursor text color</string>
+              </property>
+              <property name="text">
+               <string>Foreground</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_reverse">
+            <property name="text">
+             <string>Reverse video</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QPushButton" name="button_reverse_backcolor">
+              <property name="toolTip">
+               <string>Select reverse video background color</string>
+              </property>
+              <property name="text">
+               <string>Background</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="button_reverse_forecolor">
+              <property name="toolTip">
+               <string>Select reverse video text color</string>
+              </property>
+              <property name="text">
+               <string>Foreground</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="7" column="0" colspan="2">
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetMaximumSize</enum>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_palette">
+              <property name="text">
+               <string>Palette colors (ANSI)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QPushButton" name="color_0">
+                <property name="toolTip">
+                 <string>30-40</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: black</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_1">
+                <property name="toolTip">
+                 <string>31-41</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: red</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_2">
+                <property name="toolTip">
+                 <string>32-42</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: green</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_3">
+                <property name="toolTip">
+                 <string>33-43</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: yellow</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_4">
+                <property name="toolTip">
+                 <string>34-44</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: blue</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_5">
+                <property name="toolTip">
+                 <string>35-45</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: magenta</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_6">
+                <property name="toolTip">
+                 <string>36-46</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: cyan</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_7">
+                <property name="toolTip">
+                 <string>37-47</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: white</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <item>
+               <widget class="QPushButton" name="color_8">
+                <property name="toolTip">
+                 <string>90-100</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: black</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_9">
+                <property name="toolTip">
+                 <string>91-101</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: red</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_10">
+                <property name="toolTip">
+                 <string>92-102</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: green</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_11">
+                <property name="toolTip">
+                 <string>93-103</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: yellow</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_12">
+                <property name="toolTip">
+                 <string>94-104</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: blue</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_13">
+                <property name="toolTip">
+                 <string>95-105</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: magenta</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_14">
+                <property name="toolTip">
+                 <string>96-106</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: cyan</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="color_15">
+                <property name="toolTip">
+                 <string>97-107</string>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: white</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item row="7" column="2">
+           <widget class="QPushButton" name="reset_palette">
+            <property name="toolTip">
+             <string>Reset palette colors</string>
+            </property>
+            <property name="text">
+             <string>Reset palette</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>17</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item row="1" column="0">
-    <layout class="QHBoxLayout" name="directory_layout">
-     <item>
-      <widget class="QLineEdit" name="working_directory">
-       <property name="toolTip">
-        <string>Working directory for exchanging files with the device</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="select_directory">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="acceptDrops">
-        <bool>true</bool>
-       </property>
-       <property name="toolTip">
-        <string>Working directory for exchanging files with the device</string>
-       </property>
-       <property name="text">
-        <string>...</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="2" column="0">
-    <widget class="QGroupBox" name="groupBox">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="font">
-      <font>
-       <weight>50</weight>
-       <bold>false</bold>
-       <underline>false</underline>
-      </font>
-     </property>
-     <property name="contextMenuPolicy">
-      <enum>Qt::DefaultContextMenu</enum>
-     </property>
-     <property name="title">
-      <string>Console</string>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-     <property name="checkable">
-      <bool>false</bool>
-     </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <property name="leftMargin">
-       <number>5</number>
-      </property>
-      <property name="topMargin">
-       <number>5</number>
-      </property>
-      <property name="rightMargin">
-       <number>5</number>
-      </property>
-      <property name="bottomMargin">
-       <number>5</number>
-      </property>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_text">
-        <property name="text">
-         <string>Text</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2" rowspan="8">
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <property name="sizeConstraint">
-         <enum>QLayout::SetDefaultConstraint</enum>
-        </property>
-        <item>
-         <widget class="QTextBrowser" name="label_output">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="toolTip">
-           <string>Show wisiwig</string>
-          </property>
-          <property name="frameShape">
-           <enum>QFrame::Box</enum>
-          </property>
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="reset_color">
-          <property name="toolTip">
-           <string>Restore all default colors</string>
-          </property>
-          <property name="text">
-           <string>Reset</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="1" column="0" colspan="2">
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <item>
-         <widget class="QFontComboBox" name="combo_font">
-          <property name="toolTip">
-           <string>Select text font family</string>
-          </property>
-          <property name="editable">
-           <bool>false</bool>
-          </property>
-          <property name="fontFilters">
-           <set>QFontComboBox::MonospacedFonts</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="spin_font_size">
-          <property name="toolTip">
-           <string>Select text font size</string>
-          </property>
-          <property name="minimum">
-           <number>7</number>
-          </property>
-          <property name="maximum">
-           <number>50</number>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="0" colspan="2">
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QPushButton" name="button_backcolor">
-          <property name="toolTip">
-           <string>Select background color</string>
-          </property>
-          <property name="text">
-           <string>Back color</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_forecolor">
-          <property name="toolTip">
-           <string>Select text color</string>
-          </property>
-          <property name="text">
-           <string>Text color</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_cursor">
-        <property name="text">
-         <string>Cursor</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" colspan="2">
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QPushButton" name="button_cursor_backcolor">
-          <property name="toolTip">
-           <string>Select cursor background color</string>
-          </property>
-          <property name="text">
-           <string>Back color</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_cursor_forecolor">
-          <property name="toolTip">
-           <string>Select cursor text color</string>
-          </property>
-          <property name="text">
-           <string>Text color</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_reverse">
-        <property name="text">
-         <string>Reverse text</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0" colspan="2">
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <widget class="QPushButton" name="button_reverse_backcolor">
-          <property name="toolTip">
-           <string>Select reversed background color</string>
-          </property>
-          <property name="text">
-           <string>Back color</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="button_reverse_forecolor">
-          <property name="toolTip">
-           <string>Select reversed text color</string>
-          </property>
-          <property name="text">
-           <string>Text color</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="7" column="1">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>11</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="3" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -304,8 +569,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>254</x>
+     <y>370</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -320,8 +585,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>322</x>
+     <y>370</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
