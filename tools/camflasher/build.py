@@ -40,23 +40,28 @@ app = BUNDLE(exe,
              icon='%(ICONS)s',
              bundle_identifier='github.com/remibert/pycameresp')
 """
-UIC = 6
 if sys.platform == "win32":
-	ICONS = "icons/camflasher.ico"
 	import struct
-	version = struct.calcsize("P")*8
-	TARGET = "windows_%s_%d"%(platform.uname()[2], version)
+	ICONS   = "icons/camflasher.ico"
+	TARGET  = "windows_%s_%d"%(platform.uname()[2], struct.calcsize("P")*8)
+	EXE     = "%(NAME)s.exe"%globals()
+	PIP     = "3"
 	if platform.uname()[2] == "7":
 		UIC = 5
-	EXE = "%(NAME)s.exe"%globals()
+	else:
+		UIC = 6
 elif sys.platform == "linux":
-	ICONS = "icons/camflasher.ico"
-	TARGET = "linux"
-	EXE = "%(NAME)s"%globals()
+	ICONS   = "icons/camflasher.ico"
+	TARGET  = "linux"
+	EXE     = "%(NAME)s"%globals()
+	PIP     = "3"
+	UIC     = 6
 elif sys.platform == "darwin":
-	ICONS = "icons/camflasher.icns"
-	TARGET = "osx"
-	EXE = "%(NAME)s.dmg"%globals()
+	ICONS   = "icons/camflasher.icns"
+	TARGET  = "osx"
+	EXE     = "%(NAME)s.dmg"%globals()
+	PIP     = "3.10"
+	UIC     = 6
 
 def execute(commands):
 	""" Execute shell commands """
@@ -102,7 +107,7 @@ def execute(commands):
 
 def main():
 	""" Build standalone executable for camflasher """
-	global ICONS, TARGET, EXE, NAME, UIC, SPEC
+	global ICONS, TARGET, EXE, NAME, UIC, SPEC, PIP
 
 	spec_file = open("build-%(TARGET)s.spec"%globals(),"w")
 	spec_file.write(SPEC%globals())
@@ -127,7 +132,7 @@ def main():
 		###############################
 		# Remove installed esptool.py #
 		###############################
-		pip3 uninstall -y -q esptool
+		pip%(PIP)s uninstall -y -q esptool
 
 		####################
 		# Patch esptool.py #
@@ -158,7 +163,7 @@ def main():
 		#####################
 		# Reinstall esptool #
 		#####################
-		# pip3 -q install esptool
+		# pip%(PIP)s -q install esptool
 
 		##################
 		# Clean up build #

@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 """ Tools to flash the firmware of pycameresp """
 # Requirements :
-#	- pip3 install serial
 #	- pip3 install pyinstaller
 #	- pip3 install esptool
 #	- pip3 install pyserial
+#	- pip3 install requests
 # For windows seven
 #	- pip3 install pyqt5
 # For windows 10, 11, linux, osx
@@ -144,9 +144,8 @@ class CamFlasher(QMainWindow):
 		self.flasher.start()
 		self.current_state = None
 
-		self.serial_ports = []
-
 		self.port_selected = None
+		self.ports_connected = None
 		self.window.combo_port.currentTextChanged.connect(self.on_port_changed)
 		settings = get_settings()
 		self.telnet_hosts = settings.value(TELNET_HOSTS,[])
@@ -364,22 +363,30 @@ class CamFlasher(QMainWindow):
 	def on_refresh_port(self):
 		""" Refresh the combobox content with the serial ports detected """
 		# self.console.test()
+
 		self.hide_size += 1
 		if self.hide_size > 3:
 			self.setWindowTitle(self.title)
 
-		ports_connected = self.ports.update(list_ports.comports())
-		if ports_connected is not None:
+		self.ports_connected = self.ports.update(list_ports.comports())
+		if self.ports_connected is not None:
 			for i in range(self.window.combo_port.count()):
-				if not self.window.combo_port.itemText(i) in ports_connected:
+				if not self.window.combo_port.itemText(i) in self.ports_connected:
 					self.window.combo_port.removeItem(i)
 
-			for port in ports_connected:
+			for port in self.ports_connected:
 				for i in range(self.window.combo_port.count()):
 					if self.window.combo_port.itemText(i) == port:
 						break
 				else:
 					self.window.combo_port.addItem(port)
+
+		# Flash menu
+		if self.ports_connected is None or self.ports_connected == [] or \
+			self.current_state in [self.flasher.TELNET_CONNECTED, self.flasher.CONNECTING_TELNET, self.flasher.FLASHING]:
+			self.window.action_flash.setEnabled(False)
+		else:
+			self.window.action_flash.setEnabled(True)
 
 	def set_state_serial(self):
 		""" Set serial state """
@@ -404,12 +411,6 @@ class CamFlasher(QMainWindow):
 
 	def set_state_menu(self):
 		""" Set menu state """
-		# Flash menu
-		if self.current_state in [self.flasher.TELNET_CONNECTED, self.flasher.CONNECTING_TELNET, self.flasher.FLASHING]:
-			self.window.action_flash.setEnabled(False)
-		else:
-			self.window.action_flash.setEnabled(True)
-
 		# Upload menus
 		if self.current_state in [self.flasher.TELNET_CONNECTED, self.flasher.SERIAL_CONNECTED]:
 			self.window.action_upload_server.setEnabled(True)

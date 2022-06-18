@@ -10,14 +10,24 @@ import fnmatch
 import shutil
 import time
 
+# In case of error       : 
+#       [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:997)>
+# 
+# The solution is here   : 
+#        https://www.dev2qa.com/how-to-fix-python-error-certificate-verify-failed-unable-to-get-local-issuer-certificate-in-mac-os/
+
 # Mov to gif :
 # ffmpeg -i video.mov -vf "fps=3,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 output.gif
 # 640x360
 
-MICROPYTHON_VERSION ="a1afb337d2629a781cf4e171b7db7f05eeacc78f"
-ESP_IDF_VERSION     ="v4.4.1"
-ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24" # Stable version but cannot rebuild with chip esp32s3
+MICROPYTHON_VERSION ="-b v1.19.1"
+ESP_IDF_VERSION     ="-b v4.4.1"
+ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24"    # Very stable version but cannot be rebuild with chip esp32s3
 ESP32_CAMERA_VERSION_S3="1ac48e5397ee22a59a18a314c4acf44c23dfe946" # Reliability problem but Esp32 S3 firmware can build with it
+
+PIP="3"
+if sys.platform == "darwin":
+	PIP="3.10"
 
 OUTPUT_DIR = os.path.abspath(os.path.normpath(os.environ.setdefault("PYCAMERESP_FIRMWARE",os.path.dirname(__file__)+os.path.sep+"firmware")))
 
@@ -44,7 +54,7 @@ git submodule update --init --recursive
 # Get espressif #
 #################
 cd "%(OUTPUT_DIR)s"
-git clone -b %(ESP_IDF_VERSION)s --recursive https://github.com/espressif/esp-idf.git
+git clone %(ESP_IDF_VERSION)s --recursive https://github.com/espressif/esp-idf.git
 
 ##############
 # Get camera #
@@ -129,13 +139,13 @@ sudo apt-get install cmake           --fix-missing -y
 ############################
 # Install python libraries #
 ############################
-pip3 install pyqt6
-pip3 install pyinstaller
-pip3 install esptool
-pip3 install --upgrade esptool
-pip3 install pyserial
-pip3 install requests
-pip3 install pdoc3
+pip%(PIP)s install pyqt6
+pip%(PIP)s install pyinstaller
+pip%(PIP)s install esptool
+pip%(PIP)s install --upgrade esptool
+pip%(PIP)s install pyserial
+pip%(PIP)s install requests
+pip%(PIP)s install pdoc3
 '''
 
 CLEAN_COMMANDS='''

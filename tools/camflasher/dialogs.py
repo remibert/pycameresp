@@ -34,13 +34,6 @@ DEVICE_RTS_DTR     = "camflasher.device.rts_dtr"
 FIELD_COLORS       = "camflasher.colors"
 TYPE_LINK          = "camflasher.link.type"
 
-# DEFAULT_TEXT_BACKCOLOR    = 0xFFFAE6
-# DEFAULT_TEXT_FORECOLOR    = 0x4D4700
-# DEFAULT_CURSOR_BACKCOLOR  = 0x645D00
-# DEFAULT_CURSOR_FORECOLOR  = 0xFFFCD9
-# DEFAULT_REVERSE_BACKCOLOR = 0xDFD9A8
-# DEFAULT_REVERSE_FORECOLOR = 0x322D00
-
 DEFAULT_COLORS = {
 	"text_colors":{
 		"text_backcolor"   : 0xFFFAE6,
@@ -68,16 +61,27 @@ OUTPUT_TEXT = """
 				<span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;integer&nbsp;=&nbsp;</span><span style="color:%(number_color)s">12345</span><br>
 				<span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;=&nbsp;</span><span style="color:%(string_color)s">&quot;Hello&quot;</span><br>
 				<span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v&nbsp;=&nbsp;</span><span style="background-color : %(reverse_backcolor)s;color : %(reverse_forecolor)s">&quot;Reverse&quot;&nbsp;</span><span style="background-color : %(cursor_backcolor)s;color : %(cursor_forecolor)s">#</span><br><br><br>
+				<br><br>
+				<span style="background-color:%(color_0)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_1)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_2)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_3)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_4)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_5)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_6)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_7)s">&nbsp;&nbsp;&nbsp;</span>
+				<br><br>
+				<span style="background-color:%(color_8)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_9)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_10)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_11)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_12)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_13)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_14)s">&nbsp;&nbsp;&nbsp;</span>
+				<span style="background-color:%(color_15)s">&nbsp;&nbsp;&nbsp;</span>
 			</p>
 	</body>
 </html>"""
-
-# DEFAULT_COMMENT_COLOR  = 0x00AA00
-# DEFAULT_KEYWORD_COLOR  = 0x0000AA
-# DEFAULT_CLASS_COLOR    = 0xAA00AA
-# DEFAULT_FUNCTION_COLOR = 0x00AAAA
-# DEFAULT_NUMBER_COLOR   = 0xAA5500
-# DEFAULT_STRING_COLOR   = 0xAA0000
 
 class AboutDialog(QDialog):
 	""" Dialog about """
@@ -220,7 +224,7 @@ class OptionDialog(QDialog):
 		""" Refresh the ansi palette """
 		for i in range(16):
 			backcolor = '%06X'%self.colors["ansi_colors"][i]
-			forecolor = '%06X'%(self.colors["ansi_colors"][i]^0xFFFFFF)
+			forecolor = '%06X'%self.colors["ansi_colors"][(i+8)%16]
 			eval('self.dialog.color_%d.setStyleSheet ("color:#%s;background-color: #%s")'%(i,forecolor,backcolor))
 
 	def int_to_rgb(self, color):
@@ -260,6 +264,9 @@ class OptionDialog(QDialog):
 		function_color     = self.int_to_rgb(self.colors["ansi_colors"][6])
 		number_color       = self.int_to_rgb(self.colors["ansi_colors"][3])
 		string_color       = self.int_to_rgb(self.colors["ansi_colors"][1])
+
+		for i in range(16):
+			exec('color_%d = "%s"'%(i, self.int_to_rgb(self.colors["ansi_colors"][i])))
 
 		self.dialog.label_output.setHtml(OUTPUT_TEXT%locals())
 
