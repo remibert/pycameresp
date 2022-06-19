@@ -710,20 +710,20 @@ def sysinfo():
 
 def vtcolors():
 	""" Show all VT100 colors """
-	res = b""
+	res = b'\x1B[4m4 bits colors\x1B[m\n'
 	for i in range(16):
 		if i % 8 == 0:
-			res += b"\n"
-		res += b"\x1B[38;5;%dm\x1B[48;5;%dm %2d \x1B[0m"%((i+8)%16, i,i)
-
-	res += b"\n\n"
-
-	NEWLINE=12
-
+			res += b"\n  "
+		if i < 9:
+			forecolor = 15
+		else:
+			forecolor = 0
+		res += b"\x1B[38;5;%dm\x1B[48;5;%dm %2d \x1B[0m"%(forecolor, i,i)
+	res += b'\n\n\x1B[4m8 bits colors\x1B[m\n'
 	j = 0
-	for i in range(16,232):
-		if j % (NEWLINE)== 0:
-			res += b"\n"
+	for i in range(16,256):
+		if j % 12== 0:
+			res += b"\n  "
 		backcolor = i
 		if j % 36 < 36//2:
 			forecolor = 15
@@ -731,23 +731,17 @@ def vtcolors():
 			forecolor = 0
 		res += b"\x1B[38;5;%dm\x1B[48;5;%dm %3d \x1B[0m"%(forecolor,backcolor,i)
 		j += 1
+	res += b'\n\n\x1B[4mModifiers\x1B[m\n\n'
+
+	for i,j in [(0,"reset/normal"),(1,b"bold"),(3,b"italic"),(4,b"underline"),(7,b"reverse")]:
+		res += b"  %d : \x1B[%dm%s\x1B[0m\n"%(i,i,j)
+	res += b'\n\x1B[4mExamples\x1B[m\n\n'
+	res += b'  >>> print("\\033[\033[1m1\033[m;\033[7m7\033[mmBold reverse\\033[0m")\n'
+	res += b"  \033[1;7mBold reverse\033[0m"
 	res += b"\n\n"
+	res += b'  >>> print("\033[38;5;15m\033[48;5;1m\\033[48;5;1m\033[m\033[38;5;13m\\033[38;5;13m\033[mHello\\033[m")\n'
+	res += b"  \033[48;5;1m\033[38;5;13mHello\033[m\n"
 
-	for i in range(232,256):
-		backcolor = i
-		if j % (NEWLINE)== 0:
-			res += b"\n"
-		if j % (NEWLINE) < (NEWLINE)//2:
-			forecolor = 15
-		else:
-			forecolor = 0
-		res += b"\x1B[38;5;%dm\x1B[48;5;%dm %-3d \x1B[0m"%(forecolor,backcolor,i)
-		j += 1
-
-	res += b"\n\n"
-
-	for i,j in [(1,b"bold"),(3,b"italic"),(4,b"underline"),(7,b"reverse")]:
-		res += b"%d : \x1B[%dm%s\x1B[0m\n"%(i,i,j)
 	print_(res.decode("utf8"))
 
 def get_command(command_name):

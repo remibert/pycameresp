@@ -1,9 +1,14 @@
 """ Tools to flash the firmware of pycameresp """
+# Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=no-name-in-module
 import copy
+from distutils.command.config import config
 import sys
 import os.path
 import os
+import vt100
+import settings
 from pathlib import Path
 from platform import uname
 
@@ -22,31 +27,7 @@ except:
 	from PyQt5.QtWidgets import QFileDialog, QColorDialog, QDialog, QMessageBox
 	from PyQt5.QtGui import QFont,QColor
 
-# Settings
-SETTINGS_FILENAME  = "CamFlasher.ini"
-FONT_FAMILY        = "camflasher.font.family"
-FONT_SIZE          = "camflasher.font.size"
-WORKING_DIRECTORY  = "camflasher.working_directory"
-WIN_GEOMETRY       = "camflasher.window.geometry"
-FIRMWARE_FILENAMES = "camflasher.firmware.filenames"
-TELNET_HOSTS       = "camflasher.telnet.host"
-DEVICE_RTS_DTR     = "camflasher.device.rts_dtr"
-FIELD_COLORS       = "camflasher.colors"
-TYPE_LINK          = "camflasher.link.type"
 
-DEFAULT_COLORS = {
-	"text_colors":{
-		"text_backcolor"   : 0xFFFAE6,
-		"text_forecolor"   : 0x4D4700,
-		"cursor_backcolor" : 0x645D00,
-		"cursor_forecolor" : 0xFFFCD9,
-		"reverse_backcolor": 0xDFD9A8,
-		"reverse_forecolor": 0x322D00,
-	},
-	"ansi_colors":[
-		0x000000, 0xAA0000, 0x00AA00, 0xAA5500, 0x0000AA, 0xAA00AA, 0x00AAAA, 0xAAAAAA,
-		0x555555, 0xFF5555, 0x55FF55, 0xFFFF55, 0x5555FF, 0xFF55FF, 0x55FFFF, 0xFFFFFF]
-}
 
 DOWNLOAD_VERSION = "Download the lastest version of :"
 
@@ -100,19 +81,6 @@ class AboutDialog(QDialog):
 		""" Accept about dialog """
 		self.close()
 
-def get_settings():
-	""" Return the QSettings class according to the os """
-	if sys.platform == "darwin":
-		result = QSettings()
-	elif sys.platform == "win32":
-		if uname() == "7":
-			result = QSettings(SETTINGS_FILENAME, QSettings.IniFormat)
-		else:
-			result = QSettings(SETTINGS_FILENAME)
-	else:
-		result = QSettings()
-	return result
-
 class FlashDialog(QDialog):
 	""" Dialog box to select firmware """
 	def __init__(self, parent):
@@ -131,9 +99,9 @@ class FlashDialog(QDialog):
 		""" On window shown """
 		if self.initialized is False:
 			self.initialized = True
-			settings = get_settings( )
+			config = settings.get_settings( )
 			firmwares = []
-			for firmware in settings.value(FIRMWARE_FILENAMES, []):
+			for firmware in config.value(settings.FIRMWARE_FILENAMES, []):
 				if os.path.exists(firmware):
 					firmwares.append(firmware)
 
@@ -148,12 +116,12 @@ class FlashDialog(QDialog):
 
 	def save_firmwares_list(self, firmware):
 		""" Save list in registry """
-		settings = get_settings()
+		config = settings.get_settings()
 		firmwares = [firmware]
 		for i in range(self.dialog.firmware.count()):
 			if self.dialog.firmware.itemText(i) != self.dialog.firmware.currentText():
 				firmwares.append(self.dialog.firmware.itemText(i))
-		settings.setValue(FIRMWARE_FILENAMES, firmwares)
+		config.setValue(settings.FIRMWARE_FILENAMES, firmwares)
 
 	def accept(self):
 		""" Called when ok pressed """
@@ -191,15 +159,15 @@ class OptionDialog(QDialog):
 			self.dialog = Ui_DialogOption()
 			self.dialog.setupUi(self)
 
-		settings = get_settings()
-		self.dialog.working_directory.setText(settings.value(WORKING_DIRECTORY,str(Path.home())))
+		config = settings.get_settings()
+		self.dialog.working_directory.setText(config.value(settings.WORKING_DIRECTORY,str(Path.home())))
 
-		self.dialog.spin_font_size.setValue(int(settings.value(FONT_SIZE   ,12)))
+		self.dialog.spin_font_size.setValue(int(config.value(settings.FONT_SIZE   ,12)))
 
-		self.dialog.combo_font.setCurrentFont(QFont(settings.value(FONT_FAMILY ,"Courier")))
+		self.dialog.combo_font.setCurrentFont(QFont(config.value(settings.FONT_FAMILY ,"Courier")))
 
-		self.colors = settings.value(FIELD_COLORS, copy.deepcopy(DEFAULT_COLORS))
-		settings.setValue(FIELD_COLORS,copy.deepcopy(DEFAULT_COLORS))
+		self.colors = config.value(settings.FIELD_COLORS, copy.deepcopy(vt100.DEFAULT_COLORS))
+		# config.setValue(FIELD_COLORS,copy.deepcopy(vt100.DEFAULT_COLORS))
 		self.dialog.select_directory.clicked.connect(self.on_directory_clicked)
 		self.dialog.button_forecolor.clicked.connect(self.on_forecolor_clicked)
 		self.dialog.button_backcolor.clicked.connect(self.on_backcolor_clicked)
@@ -223,9 +191,9 @@ class OptionDialog(QDialog):
 	def refresh_palette(self):
 		""" Refresh the ansi palette """
 		for i in range(16):
-			backcolor = '%06X'%self.colors["ansi_colors"][i]
-			forecolor = '%06X'%self.colors["ansi_colors"][(i+8)%16]
-			eval('self.dialog.color_%d.setStyleSheet ("color:#%s;background-color: #%s")'%(i,forecolor,backcolor))
+			backcolor = vt100.to_html_color(self.colors["ansi_colors"][i])
+			forecolor = vt100.to_html_color(self.colors["ansi_colors"][(i+8)%16])
+			eval('self.dialog.color_%d.setStyleSheet ("color:%s;background-color:%s")'%(i,forecolor,backcolor))
 
 	def int_to_rgb(self, color):
 		""" Convert integer to rgb color """
@@ -272,19 +240,19 @@ class OptionDialog(QDialog):
 
 	def on_directory_clicked(self, event):
 		""" Selection of directory button clicked """
-		settings = get_settings()
-		directory = QFileDialog.getExistingDirectory(self, 'Select working directory', directory =settings.value(WORKING_DIRECTORY,str(Path.home())))
+		config = settings.get_settings()
+		directory = QFileDialog.getExistingDirectory(self, 'Select working directory', directory =config.value(settings.WORKING_DIRECTORY,str(Path.home())))
 		if directory != '':
 			self.dialog.working_directory.setText(directory)
 
 	def on_reset_color_clicked(self):
 		""" Reset the default color """
-		self.colors["text_colors"]    = copy.deepcopy(DEFAULT_COLORS["text_colors"])
+		self.colors["text_colors"]    = copy.deepcopy(vt100.DEFAULT_COLORS["text_colors"])
 		self.refresh_output()
 
 	def on_reset_palette_clicked(self):
 		""" Reset the default ansi color """
-		self.colors["ansi_colors"]    = copy.deepcopy(DEFAULT_COLORS["ansi_colors"])
+		self.colors["ansi_colors"]    = copy.deepcopy(vt100.DEFAULT_COLORS["ansi_colors"])
 		self.refresh_palette()
 		self.refresh_output()
 
@@ -369,9 +337,9 @@ class OptionDialog(QDialog):
 	def accept(self):
 		""" Accept about dialog """
 		font = self.dialog.combo_font.currentFont()
-		settings = get_settings()
-		settings.setValue(FONT_FAMILY , font.family())
-		settings.setValue(FONT_SIZE   , self.dialog.spin_font_size.value())
-		settings.setValue(WORKING_DIRECTORY, self.dialog.working_directory.text())
-		settings.setValue(FIELD_COLORS, self.colors)
+		config = settings.get_settings()
+		config.setValue(settings.FONT_FAMILY , font.family())
+		config.setValue(settings.FONT_SIZE   , self.dialog.spin_font_size.value())
+		config.setValue(settings.WORKING_DIRECTORY, self.dialog.working_directory.text())
+		config.setValue(settings.FIELD_COLORS, self.colors)
 		super().accept()

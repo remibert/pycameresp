@@ -1,3 +1,5 @@
+# Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
 """ Inject files read from github into device, using python prompt """
 import sys
 import time

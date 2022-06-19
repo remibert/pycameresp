@@ -1,3 +1,5 @@
+# Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLETS
 """ Class used to manage VT100 """
 # pylint:disable=too-many-lines
 TABSIZE = 4
@@ -189,6 +191,10 @@ def is_key_ended(key):
 			elif ord(key[0]) != "\x1B" and get_len_utf8(key) == len(key):
 				return True
 	return False
+
+def to_html_color(color):
+	""" Convert color into html color """
+	return "#%06X"%(color & 0xFFFFFF)
 
 class Line:
 	""" VT 100 line """
@@ -429,25 +435,27 @@ class Line:
 				else:
 					flags_html += "font-style: normal;"
 
-				if fore < 256:
+				if 0 <= fore <= 255:
 					fore = VGA_COLORS[fore]
 
-				if back < 256:
+				if 0 <= back <= 255:
 					back = VGA_COLORS[back]
 
+				back = to_html_color(back)
+				fore = to_html_color(fore)
 				# If cursor on this character
 				if cursor == i:
 					if cursor_on:
-						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(CURSOR_FORECOLOR,CURSOR_BACKCOLOR,flags_html)
+						part = '<span style="color:%s;background-color:%s;%s">'%(to_html_color(CURSOR_FORECOLOR), to_html_color(CURSOR_BACKCOLOR),flags_html)
 					else:
-						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(fore,back,flags_html)
+						part = '<span style="color:%s;background-color:%s;%s">'%(fore,back,flags_html)
 					if i > 0:
 						part = '</span>' + part
 					cursor_set = True
 				else:
 					# The color must be changed
 					if changed:
-						part = '<span style="color:#%06X;background-color:#%06X;%s">'%(fore,back,flags_html)
+						part = '<span style="color:%s;background-color:%s;%s">'%(fore,back,flags_html)
 						if i > 0:
 							part = '</span>' + part
 					else:
@@ -981,7 +989,7 @@ class VT100:
 
 	def to_html(self):
 		""" Get the html content of VT100 """
-		result = '<body style="background-color:#%06X">'%TEXT_BACKCOLOR
+		result = '<body style="background-color:%s">'%to_html_color(TEXT_BACKCOLOR)
 		pos = 0
 		for line in self.lines:
 			if pos == self.cursor_line:

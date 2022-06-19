@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+# Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
 """ Tools to flash the firmware of pycameresp """
 # Requirements :
 #	- pip3 install pyinstaller
@@ -17,6 +19,8 @@ import os
 import socket
 import ipaddress
 import copy
+import vt100
+import settings
 from pathlib import Path
 
 sys.path.append("../../modules/lib/tools")
@@ -45,8 +49,8 @@ class Ports:
 		""" Constructor """
 		self.rts_dtr = {}
 		self.status = {}
-		self.settings = get_settings()
-		self.rts_dtr = self.settings.value(DEVICE_RTS_DTR,{})
+		self.config = settings.get_settings()
+		self.rts_dtr = self.config.value(settings.DEVICE_RTS_DTR,{})
 		for key in self.rts_dtr.keys():
 			self.status[key] = False
 
@@ -69,7 +73,7 @@ class Ports:
 					# Create new port
 					self.status[key] = True
 					self.rts_dtr[key] = False
-					self.settings.setValue(DEVICE_RTS_DTR,self.rts_dtr)
+					self.config.setValue(settings.DEVICE_RTS_DTR,self.rts_dtr)
 					connected.append(detected_port.device)
 					result = True
 
@@ -102,7 +106,7 @@ class Ports:
 		for key in self.rts_dtr:
 			if name == key[0]:
 				self.rts_dtr[key] = value
-				self.settings.setValue(DEVICE_RTS_DTR,self.rts_dtr)
+				self.config.setValue(settings.DEVICE_RTS_DTR,self.rts_dtr)
 				break
 
 class CamFlasher(QMainWindow):
@@ -125,8 +129,8 @@ class CamFlasher(QMainWindow):
 
 		# Select font
 		self.update_font()
-		settings = get_settings()
-		self.geometry_.setGeometry(settings.value(WIN_GEOMETRY, self.geometry_.geometry()))
+		config = settings.get_settings()
+		self.geometry_.setGeometry(config.value(settings.WIN_GEOMETRY, self.geometry_.geometry()))
 
 		self.window.output.setAcceptDrops(False)
 		self.window.output.setReadOnly(True)
@@ -140,15 +144,15 @@ class CamFlasher(QMainWindow):
 		self.console = QStdoutVT100(self.window.output)
 
 		# Serial listener thread
-		self.flasher = Flasher(self.stdout, settings.value(WORKING_DIRECTORY))
+		self.flasher = Flasher(self.stdout, config.value(settings.WORKING_DIRECTORY))
 		self.flasher.start()
 		self.current_state = None
 
 		self.port_selected = None
 		self.ports_connected = None
 		self.window.combo_port.currentTextChanged.connect(self.on_port_changed)
-		settings = get_settings()
-		self.telnet_hosts = settings.value(TELNET_HOSTS,[])
+		
+		self.telnet_hosts = config.value(settings.TELNET_HOSTS,[])
 		if self.telnet_hosts is None:
 			self.telnet_hosts = []
 		hosts = []
@@ -159,7 +163,7 @@ class CamFlasher(QMainWindow):
 				break
 
 		self.window.combo_telnet_host.addItems(hosts)
-		self.window.tabs_link.setCurrentIndex(int(settings.value(TYPE_LINK,0)))
+		self.window.tabs_link.setCurrentIndex(int(config.value(settings.TYPE_LINK,0)))
 		if len(self.telnet_hosts) > 0:
 			host, port = self.telnet_hosts[0]
 			self.window.edit_telnet_port.setValue(port)
@@ -194,10 +198,10 @@ class CamFlasher(QMainWindow):
 
 	def update_font(self):
 		""" Update console font """
-		settings = get_settings()
+		config = settings.get_settings()
 		font = QFont()
-		font.setFamily    (settings.value(FONT_FAMILY ,"Courier"))
-		font.setPointSize (int(settings.value(FONT_SIZE   ,12)))
+		font.setFamily    (config.value(settings.FONT_FAMILY ,"Courier"))
+		font.setPointSize (int(config.value(settings.FONT_SIZE   ,12)))
 		self.window.output.setFont(font)
 
 	def on_about_clicked(self):
@@ -255,11 +259,11 @@ class CamFlasher(QMainWindow):
 	def resize_console(self):
 		""" Resize console """
 		# Save the position
-		settings = get_settings()
+		config = settings.get_settings()
 		geometry = self.geometry_.geometry()
-		settings.setValue(WIN_GEOMETRY, geometry)
+		config.setValue(settings.WIN_GEOMETRY, geometry)
 
-		colors = settings.value(FIELD_COLORS, copy.deepcopy(DEFAULT_COLORS))
+		colors = config.value(settings.FIELD_COLORS, copy.deepcopy(vt100.DEFAULT_COLORS))
 		self.console.set_colors(colors)
 
 		# Calculate the dimension in pixels of a text of 200 lines with 200 characters
@@ -286,8 +290,8 @@ class CamFlasher(QMainWindow):
 
 	def on_tabs_link_changed(self):
 		""" The links tab has changed """
-		settings = get_settings()
-		settings.setValue(TYPE_LINK,self.window.tabs_link.currentIndex())
+		config = settings.get_settings()
+		config.setValue(settings.TYPE_LINK,self.window.tabs_link.currentIndex())
 		if self.window.tabs_link.currentIndex() == 1 and self.current_state == self.flasher.DISCONNECTED:
 			self.window.combo_telnet_host.setFocus()
 		else:
@@ -355,8 +359,8 @@ class CamFlasher(QMainWindow):
 		option_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
 		result = option_dialog.exec()
 		if result == 1:
-			settings = get_settings()
-			self.flasher.set_directory(settings.value(WORKING_DIRECTORY,str(Path.home())))
+			config = settings.get_settings()
+			self.flasher.set_directory(config.value(settings.WORKING_DIRECTORY,str(Path.home())))
 			self.update_font()
 			self.resize_console()
 
@@ -529,10 +533,10 @@ class CamFlasher(QMainWindow):
 		for host, _ in self.telnet_hosts:
 			if host not in hosts:
 				hosts.append(host)
-		settings = get_settings()
+		config = settings.get_settings()
 		self.window.combo_telnet_host.clear()
 		self.window.combo_telnet_host.addItems(hosts)
-		settings.setValue(TELNET_HOSTS, self.telnet_hosts)
+		config.setValue(settings.TELNET_HOSTS, self.telnet_hosts)
 
 	def on_rts_dtr_changed(self, event):
 		""" On change of DTR/STR check box """

@@ -1,3 +1,5 @@
+# Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
 """ Micropython firmware flasher for esp32 """
 import threading
 import tempfile

@@ -7,8 +7,9 @@ import uasyncio
 import uos
 from tools import logger,sdcard,tasking,filesystem,strings,info
 
-MAX_DISPLAYED = 250
-MAX_REMOVED   = 100
+MAX_DAYS_DISPLAYED = 21
+MAX_DAYS_REMOVED   = 14
+MAX_MOTIONS        = MAX_DAYS_DISPLAYED*50
 
 class Historic:
 	""" Manage the motion detection history file """
@@ -85,14 +86,12 @@ class Historic:
 		""" Parse the all motions files to build historic """
 		root = Historic.get_root()
 		if root:
-			count = 0
 			try:
 				await Historic.acquire()
 				Historic.historic.clear()
 
 				# For all motions
 				for motion in motions:
-					path = root + "/" + motion
 					try:
 						# Parse json file
 						file = None
@@ -121,7 +120,7 @@ class Historic:
 				await Historic.acquire()
 				Historic.historic.sort()
 				Historic.historic.reverse()
-				while len(Historic.historic) > MAX_DISPLAYED:
+				while len(Historic.historic) > MAX_MOTIONS:
 					del Historic.historic[-1]
 				result = strings.tobytes(json.dumps(Historic.historic))
 			except Exception as err:
@@ -139,10 +138,13 @@ class Historic:
 			try:
 				logger.syslog("Start historic creation")
 				# Scan sd card and get more recent motions
-				motions = await Historic.scan_directories(MAX_DISPLAYED, False)
+				motions, lastdays = await Historic.scan_directories(MAX_DAYS_DISPLAYED, False)
 
 				# Build historic file
 				files = await Historic.build(motions)
+				logger.syslog("Historic contains :")
+				for day in lastdays:
+					logger.syslog("   %s"%day)
 				logger.syslog("End   historic creation")
 				logger.syslog(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False)))
 			except Exception as err:
@@ -170,9 +172,10 @@ class Historic:
 		return result
 
 	@staticmethod
-	async def scan_directories(quantity=10, older=True):
+	async def scan_directories(max_days=10, older=True):
 		""" Get the list of older or older directories in the sd card """
 		motions = []
+		lastdays = []
 		root = Historic.get_root()
 		if root:
 			try:
@@ -187,6 +190,12 @@ class Historic:
 						for day in days:
 							pathDay = pathMonth + "/" + day
 							hours = await Historic.scan_dir(pathDay, r"\d\dh\d\d", older)
+							lastdays.append("%s/%s/%s"%(year, month, day))
+							if len(lastdays) > max_days or len(motions) > MAX_MOTIONS:
+								motions.sort()
+								if older is False:
+									motions.reverse()
+								return motions, lastdays
 							for hour in hours:
 								pathHour = pathDay + "/" + hour
 								if older:
@@ -196,11 +205,6 @@ class Historic:
 								detections = await Historic.scan_dir(pathHour, r"\d\d.*\."+extension, older, directory=False)
 								for detection in detections:
 									motions.append(pathHour + "/" + detection)
-								if len(motions) > quantity:
-									motions.sort()
-									if older is False:
-										motions.reverse()
-									return motions
 				motions.sort()
 				if older is False:
 					motions.reverse()
@@ -208,7 +212,7 @@ class Historic:
 				logger.syslog(err)
 			finally:
 				await Historic.release()
-		return motions
+		return motions, lastdays
 
 	@staticmethod
 	def set_motion_state(state):
@@ -260,7 +264,7 @@ class Historic:
 			if sdcard.SdCard.is_not_enough_space(low=True) or force:
 				logger.syslog("Start cleanup historic")
 				Historic.first_extract[0] = False
-				olders = await Historic.scan_directories(MAX_REMOVED, True)
+				olders, lastdays = await Historic.scan_directories(MAX_DAYS_REMOVED, True)
 				previous = ""
 				for motion in olders:
 					try:
@@ -282,16 +286,16 @@ class Historic:
 		""" Internal periodic task """
 		from server.server import Server
 		if filesystem.ismicropython():
-			await Server.wait_resume(307)
+			await Server.wait_resume(241)
 		else:
-			await Server.wait_resume(17)
+			await Server.wait_resume(3)
 
 		if Historic.motion_in_progress[0] is False:
+			if sdcard.SdCard.is_mounted() is False:
+				Historic.get_root()
 			if sdcard.SdCard.is_mounted():
 				await Historic.remove_older()
 				await Historic.extract()
-			else:
-				Historic.get_root()
 		return True
 
 	@staticmethod

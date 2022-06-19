@@ -1,3 +1,5 @@
+# Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
 """ Stream class to communicate with the device """
 import os
 import os.path
@@ -307,10 +309,11 @@ class StreamThread(threading.Thread):
 			if directory_.find(os.path.normpath(directory)) == 0 and os.path.exists(directory_):
 				_, filenames = scandir(directory_, pattern_, recursive)
 				for filename in filenames:
-					file_writer = FileWriter()
-					filename = filename.replace("\\","/")
-					device_filename = filename.replace(directory, "")
-					file_writer.write(filename, self.stream, self.stream, device_filename, self.print)
+					if not self.is_fileignored(filename):
+						file_writer = FileWriter()
+						filename = filename.replace("\\","/")
+						device_filename = filename.replace(directory, "")
+						file_writer.write(filename, self.stream, self.stream, device_filename, self.print)
 			else:
 				self.print("'%s' not found"%(os.path.normpath(device_dir + "/" + pattern)))
 
@@ -373,6 +376,13 @@ class StreamThread(threading.Thread):
 				self.stream.write(b"from shell import sh\x0D")
 				self.stream.write(b"sh()\x0D")
 
+	def is_fileignored(self, filename):
+		""" Indicates that the filename is ignored """
+		if os.path.split(filename)[1] in [".DS_Store",".gitignore"]:
+			return True
+		else:
+			return False
+
 	def create_upload_list(self, filenames):
 		""" Create list with dropped filenames """
 		drop_filenames = []
@@ -380,7 +390,8 @@ class StreamThread(threading.Thread):
 			if isdir(filename):
 				_, files = scandir(filename, "*", True)
 				for f in files:
-					drop_filenames.append(os.path.normpath(f))
+					if not self.is_fileignored(f):
+						drop_filenames.append(os.path.normpath(f))
 			else:
 				drop_filenames.append(os.path.normpath(filename))
 

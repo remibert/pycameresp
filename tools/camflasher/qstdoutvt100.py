@@ -1,3 +1,5 @@
+# Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
 """ Stdout VT100 ouptut on qtextbrowser widget """
 import sys
 from threading import Lock

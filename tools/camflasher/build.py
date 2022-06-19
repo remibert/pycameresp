@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+# Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
 """ Build standalone executable for camflasher """
 import platform
 import sys
