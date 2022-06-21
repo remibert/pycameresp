@@ -7,8 +7,16 @@ For each of these classes, a json file with the same name is stored in the confi
 # pylint:disable=consider-iterating-dictionary
 import json
 import re
-import uos
-from tools import logger,filesystem,strings
+try:
+	import uos
+except:
+	import os as uos
+try:
+	from tools import logger,strings,filesystem
+except:
+	# pylint:disable=multiple-imports
+	import logger,strings,filesystem
+
 
 self_config = None
 class JsonConfig:
@@ -144,17 +152,22 @@ class JsonConfig:
 		del self_config
 		return result
 
-	def load(self, file = None, part_filename=""):
+	def load(self, file = None, part_filename="", tobytes=True, errorlog=True):
 		""" Load object with the file specified """
 		try:
 			filename = self.get_pathname(strings.tofilename(part_filename))
 			file, filename = self.open(file=file, read_write="r", part_filename=part_filename)
-			self.update(strings.tobytes(json.load(file)))
+
+			data = json.load(file)
+			if tobytes:
+				data = strings.tobytes(data)
+			self.update(data)
 			file.close()
 			return True
 		except OSError as err:
 			if err.args[0] == 2:
-				logger.syslog("Not existing %s "%(filename))
+				if errorlog:
+					logger.syslog("Not existing %s "%(filename))
 			else:
 				logger.syslog(err, "Cannot load %s "%(filename))
 			return False

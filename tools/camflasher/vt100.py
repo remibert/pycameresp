@@ -692,12 +692,10 @@ class VT100:
 					if values[0] == '38' and values[1] == '5':
 						color = self.to_int(values[2])
 						if color < 256:
-							# foreground = VGA_COLORS[color]
 							foreground = color
 					elif values[0] == '48' and values[1] == '5':
 						color = self.to_int(values[2])
 						if color < 256:
-							# background = VGA_COLORS[color]
 							background = color
 				# Case VT100 RGB colors
 				elif len(values) == 5:
@@ -756,20 +754,16 @@ class VT100:
 								flags = 0
 							flags &= ~FLAG_REVERSE
 						elif 30 <= value <= 37:
-							# foreground = VGA_COLORS[value-30]
 							foreground = value-30
 						elif value == 39:
 							foreground = TEXT_FORECOLOR
 						elif 40 <= value <= 47:
-							# background = VGA_COLORS[value-40]
 							background = value-40
 						elif value == 49:
 							background = TEXT_BACKCOLOR
 						elif 90 <= value <= 97:
-							# foreground = VGA_COLORS[value-90+8]
 							foreground = value-90+8
 						elif 100 <= value <= 107:
-							# background = VGA_COLORS[value-100+8]
 							background = value-100+8
 
 				# If color modification detected

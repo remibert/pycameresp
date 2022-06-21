@@ -48,6 +48,9 @@ if sys.platform == "win32":
 	TARGET  = "windows_%s_%d"%(platform.uname()[2], struct.calcsize("P")*8)
 	EXE     = "%(NAME)s.exe"%globals()
 	PIP     = "3"
+	COLOR_1 = "+"
+	COLOR_2 = ""
+	NO_COLOR = ""
 	if platform.uname()[2] == "7":
 		UIC = 5
 	else:
@@ -58,12 +61,18 @@ elif sys.platform == "linux":
 	EXE     = "%(NAME)s"%globals()
 	PIP     = "3"
 	UIC     = 6
+	COLOR_1 = "\x1B[38;33m"
+	COLOR_2 = "\x1B[38;32m"
+	NO_COLOR = "\x1B[m"
 elif sys.platform == "darwin":
 	ICONS   = "icons/camflasher.icns"
 	TARGET  = "osx"
 	EXE     = "%(NAME)s.dmg"%globals()
 	PIP     = "3.10"
 	UIC     = 6
+	COLOR_1 = "\x1B[38;33m"
+	COLOR_2 = "\x1B[38;32m"
+	NO_COLOR= "\x1B[m"
 
 def execute(commands):
 	""" Execute shell commands """
@@ -71,9 +80,9 @@ def execute(commands):
 	for command in commands.split("\n"):
 		command = command.strip()
 		if len(command) >= 1 and command[0] == "#":
-			print("\x1B[38;33m" + command + "\x1B[m")
+			print(COLOR_1 + command + NO_COLOR)
 		elif command.strip() != "":
-			print("\x1B[38;32m> " + command + "\x1B[m")
+			print(COLOR_2 + "> " + command + NO_COLOR)
 			command = command.replace("\t"," ")
 			cmds = command.split(" ")
 			cmd = []
@@ -165,7 +174,7 @@ def main():
 		#####################
 		# Reinstall esptool #
 		#####################
-		# pip%(PIP)s -q install esptool
+		pip%(PIP)s -q install esptool
 
 		##################
 		# Clean up build #
@@ -179,7 +188,7 @@ def main():
 		remove dialogabout.py
 		remove dialogoption.py
 		removedir esptool_
-		# removedir esptool
+		removedir esptool
 		removedir build"""%globals())
 
 if __name__ == "__main__":

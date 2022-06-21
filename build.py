@@ -10,10 +10,10 @@ import fnmatch
 import shutil
 import time
 
-# In case of error       : 
+# In case of error       :
 #       [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:997)>
-# 
-# The solution is here   : 
+#
+# The solution is here   :
 #        https://www.dev2qa.com/how-to-fix-python-error-certificate-verify-failed-unable-to-get-local-issuer-certificate-in-mac-os/
 
 # Mov to gif :
@@ -25,9 +25,24 @@ ESP_IDF_VERSION     ="-b v4.4.1"
 ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24"    # Very stable version but cannot be rebuild with chip esp32s3
 ESP32_CAMERA_VERSION_S3="1ac48e5397ee22a59a18a314c4acf44c23dfe946" # Reliability problem but Esp32 S3 firmware can build with it
 
-PIP="3"
-if sys.platform == "darwin":
-	PIP="3.10"
+if sys.platform == "win32":
+	PIP      = "3"
+	COLOR_1  = "+"
+	COLOR_2  = ""
+	COLOR_3  = ""
+	NO_COLOR = ""
+elif sys.platform == "linux":
+	PIP      = "3"
+	COLOR_1  = "\x1B[38;33m"
+	COLOR_2  = "\x1B[38;32m"
+	COLOR_3  = "\x1B[95m"
+	NO_COLOR = "\x1B[m"
+elif sys.platform == "darwin":
+	PIP      = "3.10"
+	COLOR_1  = "\x1B[38;33m"
+	COLOR_2  = "\x1B[38;32m"
+	COLOR_3  = "\x1B[95m"
+	NO_COLOR = "\x1B[m"
 
 OUTPUT_DIR = os.path.abspath(os.path.normpath(os.environ.setdefault("PYCAMERESP_FIRMWARE",os.path.dirname(__file__)+os.path.sep+"firmware")))
 
@@ -190,9 +205,9 @@ def execute(commands):
 	for command in commands.split("\n"):
 		command = command.strip()
 		if len(command) >= 1 and command[0] == "#":
-			print("\x1B[38;33m" + command + "\x1B[m")
+			print(COLOR_1 + command + NO_COLOR)
 		elif command.strip() != "":
-			print("\x1B[38;32m> " + command + "\x1B[m")
+			print(COLOR_2 + "> " + command + NO_COLOR)
 			command = command.replace("\t"," ")
 			cmds = command.split(" ")
 			cmd = []
@@ -289,11 +304,11 @@ def main():
 					for selected_board in args.boards:
 						if fnmatch.fnmatch(board, selected_board):
 							BOARD = board
-							print("\x1B[95m" +"*"*30 + "\x1B[m")
-							print("\x1B[95m" +"*"*30 + "\x1B[m")
-							print("\x1B[95m" + BOARD + "\x1B[m")
-							print("\x1B[95m" +"*"*30 + "\x1B[m")
-							print("\x1B[95m" +"*"*30 + "\x1B[m")
+							print(COLOR_3 +"*"*30 + NO_COLOR)
+							print(COLOR_3 +"*"*30 + NO_COLOR)
+							print(COLOR_3 + BOARD + NO_COLOR)
+							print(COLOR_3 +"*"*30 + NO_COLOR)
+							print(COLOR_3 +"*"*30 + NO_COLOR)
 							execute(BUILD_COMMANDS)
 
 if __name__ == "__main__":

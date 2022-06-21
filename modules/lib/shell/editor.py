@@ -19,16 +19,83 @@ import sys
 sys.path.append("lib")
 sys.path.append("lib/tools")
 try:
-	from tools import useful,logger,strings,terminal,filesystem
+	from tools import useful,logger,strings,terminal,filesystem,jsonconfig
 except:
 	# pylint:disable=multiple-imports
-	import useful,logger,strings,terminal,filesystem
+	import useful,logger,strings,terminal,filesystem,jsonconfig
 
-# Load default editor configuration
-try:
-	from editor_config import *
-except:
-	from shell.editor_config import *
+HORIZONTAL_MOVE = 8    # Scrolling minimal deplacement
+
+SELECTION_START = b"\x1B[7m"
+SELECTION_END   = b"\x1B[m"
+
+class EditorConfig(jsonconfig.JsonConfig):
+	""" Editor configuration for shortcuts and tab size"""
+	def __init__(self):
+		jsonconfig.JsonConfig.__init__(self)
+		self.tabsize              = 4    # Tabulation size
+
+		# For the same action several shortcuts can be used
+		# Move shortcuts
+		self.key_up               = ["\x1b[A"]
+		self.key_down             = ["\x1b[B"]
+		self.key_right            = ["\x1b[C"]
+		self.key_left             = ["\x1b[D"]
+		self.key_home             = ["\x1b[1;3D", "\x1b[H", "\x1b\x1b[D", "\x1b[1~", "\x1bb"]
+		self.key_end              = ["\x1b[1;3C", "\x1b[F", "\x1b\x1b[C", "\x1b[4~", "\x1bf"]
+		self.key_page_up          = ["\x1b[1;3A", "\x1b[A", "\x1b\x1b[A", "\x1b[5~"]
+		self.key_page_down        = ["\x1b[1;3B", "\x1b[B", "\x1b\x1b[B", "\x1b[6~"]
+		self.key_top              = ["\x1b[1;5H"]
+		self.key_bottom           = ["\x1b[1;5F"]
+		self.key_next_word        = ["\x1b[1;5C"]
+		self.key_previous_word    = ["\x1b[1;5D"]
+
+		# selection shortcuts
+		self.key_sel_up           = ["\x1b[1;2A"]
+		self.key_sel_down         = ["\x1b[1;2B"]
+		self.key_sel_right        = ["\x1b[1;2C"]
+		self.key_sel_left         = ["\x1b[1;2D"]
+		self.key_sel_page_up      = ["\x1b[1;10A","\x1b[1;4A","\x1b[5;2~"]
+		self.key_sel_page_down    = ["\x1b[1;10B","\x1b[1;4B","\x1b[6;2~"]
+		self.key_sel_home         = ["\x1b[1;2H","\x1b[1;10D"]
+		self.key_sel_end          = ["\x1b[1;2F","\x1b[1;10C"]
+		self.key_sel_top          = ["\x1b[1;6H"]
+		self.key_sel_bottom       = ["\x1b[1;6F"]
+		self.key_sel_next_word    = ["\x1b[1;6C","\x1b[1;4C"]
+		self.key_sel_prev_word    = ["\x1b[1;6D","\x1b[1;4D"]
+
+		self.key_sel_all          = ["\x01"]                              # Select All
+		# ctrl-b unused
+		self.key_copy             = ["\x03","\x1bc"]                      # Copy
+		# ctrl-d unused
+		self.key_execute          = ["\x05", "\x1b[15~"]                  # Execute script
+		self.key_find             = ["\x06", "\x1BOQ"]                    # Find
+		self.key_goto             = ["\x07"]                              # Goto line
+		self.key_backspace        = ["\x08","\x7F"]                       # Backspace
+		self.key_indent           = ["\x09"]                              # Indent
+		# line feed reserved
+		# ctrl-k unused
+		self.key_del_line      = ["\x0C"]                              # Delete line
+		self.key_new_line         = ["\x0D", "\0x0A"]                     # New line pressed
+		self.key_find_next        = ["\x0E", "\x1bOR"]                    # Find next
+		# ctrl-o unused
+		self.key_find_previous    = ["\x10", "\x1b[1;2R"]                 # Find previous
+		self.key_comment          = ["\x11"]                              # Comment block
+		self.key_replace          = ["\x12"]                              # Replace
+		self.key_save             = ["\x13", "\x1bs"]                     # Save
+		self.key_toggle_mode      = ["\x14"]                              # Toggle replace/insert mode
+		self.key_change_case      = ["\x15"]                              # Change case
+		self.key_paste            = ["\x16","\x1bv"]                      # Paste
+		# ctrl-w unused
+		self.key_cut              = ["\x18","\x1bx"]                      # Cut
+		# ctrl-y unused
+		# ctrl-z unused
+
+		self.key_exit             = ["\x1b"]                              # Exit
+
+		self.key_delete           = ["\x1b[3~"]                           # Delete pressed
+		self.key_unindent         = ["\x1b[Z"]                            # Unindent
+
 
 def is_enough_memory():
 	""" Indicate if it has enough memory """
@@ -44,10 +111,11 @@ def is_enough_memory():
 
 class View:
 	""" Class which manage the view of the edit field """
-	def __init__(self, view_height, view_top, extension=None):
+	def __init__(self, cfg, view_height, view_top, extension=None):
 		""" Constructor """
 		self.line     = 0
 		self.column   = 0
+		self.cfg      = cfg
 		if view_height is None:
 			self.height   = 20
 		else:
@@ -450,7 +518,7 @@ class View:
 
 class Text:
 	""" Class which manage the text edition """
-	def __init__(self, read_only=False):
+	def __init__(self, cfg, read_only=False):
 		""" Constructor """
 		self.lines = [""]
 		self.cursor_line   = 0
@@ -459,15 +527,16 @@ class Text:
 		self.modified     = False
 		self.replace_mode  = False
 		self.read_only     = read_only
+		self.cfg = cfg
 		self.view         = None
-		self.tab_size      = TABSIZE
+		self.tab_size      = self.cfg.tabsize
 		self.selection_start = None
 		self.selection_end   = None
 		self.selection = []
 		self.filename = None
-		self.MOVE_KEYS = UP+DOWN+LEFT+RIGHT+HOME+END+PAGE_UP+PAGE_DOWN+TOP+BOTTOM+NEXT_WORD+PREVIOUS_WORD
-		self.SELECT_KEYS = SELECT_UP+SELECT_DOWN+SELECT_RIGHT+SELECT_LEFT+SELECT_HOME+SELECT_END+SELECT_TOP+SELECT_BOTTOM+SELECT_PAGE_UP+SELECT_PAGE_DOWN+SELECT_ALL+SELECT_NEXT_WORD+SELECT_PREV_WORD
-		self.NOT_READ_ONLY_KEYS = COPY+CUT+PASTE+INDENT+UNINDENT+CHANGE_CASE+COMMENT+BACKSPACE+DELETE+NEW_LINE+DELETE_LINE
+		self.MOVE_KEYS = self.cfg.key_up+self.cfg.key_down+self.cfg.key_left+self.cfg.key_right+self.cfg.key_home+self.cfg.key_end+self.cfg.key_page_up+self.cfg.key_page_down+self.cfg.key_top+self.cfg.key_bottom+self.cfg.key_next_word+self.cfg.key_previous_word
+		self.SELECT_KEYS = self.cfg.key_sel_up+self.cfg.key_sel_down+self.cfg.key_sel_right+self.cfg.key_sel_left+self.cfg.key_sel_home+self.cfg.key_sel_end+self.cfg.key_sel_top+self.cfg.key_sel_bottom+self.cfg.key_sel_page_up+self.cfg.key_sel_page_down+self.cfg.key_sel_all+self.cfg.key_sel_next_word+self.cfg.key_sel_prev_word
+		self.NOT_READ_ONLY_KEYS = self.cfg.key_copy+self.cfg.key_cut+self.cfg.key_paste+self.cfg.key_indent+self.cfg.key_unindent+self.cfg.key_change_case+self.cfg.key_comment+self.cfg.key_backspace+self.cfg.key_delete+self.cfg.key_new_line+self.cfg.key_del_line
 
 	def set_view(self, view):
 		""" Define the view attached to the text """
@@ -696,12 +765,9 @@ class Text:
 				len_line = len(self.lines[self.cursor_line])-1
 
 			self.set_cursor_column()
-			# If the new cursor position is outside the last line of text
+			# If the new cursor position is outside the line of text
 			if self.cursor_column > len_line:
-				self.cursor_column = len_line
-			if len(self.lines)-1 == self.cursor_line:
-				if self.cursor_column >= len(self.lines[-1]):
-					self.cursor_column = len(self.lines[-1])-1
+				self.change_column(terminal.MAXINT)
 
 		if self.selection_start is not None:
 			self.selection_end = [self.cursor_column, self.cursor_line,self.get_tab_cursor(self.cursor_line)]
@@ -872,7 +938,7 @@ class Text:
 		""" Do a select all """
 		self.selection_start = [0,0,0]
 		lastLine = len(self.lines)-1
-		lastColumn = len(self.lines[lastLine])-1
+		lastColumn = len(self.lines[lastLine])
 		self.move_cursor(lastLine, lastColumn)
 		self.selection_end  = [lastColumn, lastLine, self.get_tab_cursor(lastLine, lastColumn)]
 		self.view.set_refresh_all()
@@ -1331,7 +1397,7 @@ class Text:
 
 			# If a part of line selected
 			if sel_line_start == sel_line_end and not (sel_column_start == 0 and sel_column_end == len(self.lines[sel_line_end])-1):
-				self.add_char(INDENT)
+				self.add_char(self.cfg.INDENT)
 			else:
 				# If the last line selected is at beginning of line
 				if sel_column_end == 0:
@@ -1484,59 +1550,59 @@ class Text:
 		if self.treat_char(keys) is False:
 			# Move in the edit field
 			if keys[0] in self.MOVE_KEYS:
-				if   keys[0] in LEFT:            key_callback = self.arrow_left
-				elif keys[0] in RIGHT:           key_callback = self.arrow_right
-				elif keys[0] in UP  :            key_callback = self.arrow_up
-				elif keys[0] in DOWN:            key_callback = self.arrow_down
-				elif keys[0] in HOME:            key_callback = self.home
-				elif keys[0] in END:             key_callback = self.end
-				elif keys[0] in PAGE_UP:         key_callback = self.page_up
-				elif keys[0] in PAGE_DOWN:       key_callback = self.page_down
-				elif keys[0] in TOP:             key_callback = self.top
-				elif keys[0] in BOTTOM:          key_callback = self.bottom
-				elif keys[0] in NEXT_WORD:       key_callback = self.next_word
-				elif keys[0] in PREVIOUS_WORD:   key_callback = self.previous_word
+				if   keys[0] in self.cfg.key_left:            key_callback = self.arrow_left
+				elif keys[0] in self.cfg.key_right:           key_callback = self.arrow_right
+				elif keys[0] in self.cfg.key_up  :            key_callback = self.arrow_up
+				elif keys[0] in self.cfg.key_down:            key_callback = self.arrow_down
+				elif keys[0] in self.cfg.key_home:            key_callback = self.home
+				elif keys[0] in self.cfg.key_end:             key_callback = self.end
+				elif keys[0] in self.cfg.key_page_up:         key_callback = self.page_up
+				elif keys[0] in self.cfg.key_page_down:       key_callback = self.page_down
+				elif keys[0] in self.cfg.key_top:             key_callback = self.top
+				elif keys[0] in self.cfg.key_bottom:          key_callback = self.bottom
+				elif keys[0] in self.cfg.key_next_word:       key_callback = self.next_word
+				elif keys[0] in self.cfg.key_previous_word:   key_callback = self.previous_word
 			elif keys[0] in self.SELECT_KEYS:
 				# Selection the edit field
-				if   keys[0] in SELECT_RIGHT:    key_callback = self.select_right
-				elif keys[0] in SELECT_LEFT:     key_callback = self.select_left
-				elif keys[0] in SELECT_UP:       key_callback = self.select_up
-				elif keys[0] in SELECT_DOWN:     key_callback = self.select_down
-				elif keys[0] in SELECT_HOME:     key_callback = self.select_home
-				elif keys[0] in SELECT_END:      key_callback = self.select_end
-				elif keys[0] in SELECT_TOP:      key_callback = self.select_top
-				elif keys[0] in SELECT_BOTTOM:   key_callback = self.select_bottom
-				elif keys[0] in SELECT_PAGE_UP:  key_callback = self.select_page_up
-				elif keys[0] in SELECT_PAGE_DOWN:key_callback = self.select_page_down
-				elif keys[0] in SELECT_ALL:      key_callback = self.select_all
-				elif keys[0] in SELECT_NEXT_WORD:key_callback = self.select_next_word
-				elif keys[0] in SELECT_PREV_WORD:key_callback = self.select_previous_word
+				if   keys[0] in self.cfg.key_sel_right:    key_callback = self.select_right
+				elif keys[0] in self.cfg.key_sel_left:     key_callback = self.select_left
+				elif keys[0] in self.cfg.key_sel_up:       key_callback = self.select_up
+				elif keys[0] in self.cfg.key_sel_down:     key_callback = self.select_down
+				elif keys[0] in self.cfg.key_sel_home:     key_callback = self.select_home
+				elif keys[0] in self.cfg.key_sel_end:      key_callback = self.select_end
+				elif keys[0] in self.cfg.key_sel_top:      key_callback = self.select_top
+				elif keys[0] in self.cfg.key_sel_bottom:   key_callback = self.select_bottom
+				elif keys[0] in self.cfg.key_sel_page_up:  key_callback = self.select_page_up
+				elif keys[0] in self.cfg.key_sel_page_down:key_callback = self.select_page_down
+				elif keys[0] in self.cfg.key_sel_all:      key_callback = self.select_all
+				elif keys[0] in self.cfg.key_sel_next_word:key_callback = self.select_next_word
+				elif keys[0] in self.cfg.key_sel_prev_word:key_callback = self.select_previous_word
 
 			# If the edit is not in read only
 			elif self.read_only is False:
 				if keys[0] in self.NOT_READ_ONLY_KEYS:
 					# Modification in the edit field
-					if   keys[0] in COPY:        key_callback = self.copy
-					elif keys[0] in CUT:         key_callback = self.cut
-					elif keys[0] in PASTE:       key_callback = self.paste
-					elif keys[0] in INDENT:      key_callback = self.indent
-					elif keys[0] in UNINDENT:    key_callback = self.unindent
-					elif keys[0] in CHANGE_CASE: key_callback = self.change_case
-					elif keys[0] in COMMENT:     key_callback = self.comment
-					elif keys[0] in BACKSPACE:   key_callback = self.backspace
-					elif keys[0] in DELETE:      key_callback = self.delete
-					elif keys[0] in NEW_LINE:    key_callback = self.new_line
-					elif keys[0] in DELETE_LINE: key_callback = self.delete_line
+					if   keys[0] in self.cfg.key_copy:        key_callback = self.copy
+					elif keys[0] in self.cfg.key_cut:         key_callback = self.cut
+					elif keys[0] in self.cfg.key_paste:       key_callback = self.paste
+					elif keys[0] in self.cfg.key_indent:      key_callback = self.indent
+					elif keys[0] in self.cfg.key_unindent:    key_callback = self.unindent
+					elif keys[0] in self.cfg.key_change_case: key_callback = self.change_case
+					elif keys[0] in self.cfg.key_comment:     key_callback = self.comment
+					elif keys[0] in self.cfg.key_backspace:   key_callback = self.backspace
+					elif keys[0] in self.cfg.key_delete:      key_callback = self.delete
+					elif keys[0] in self.cfg.key_new_line:    key_callback = self.new_line
+					elif keys[0] in self.cfg.key_del_line:    key_callback = self.delete_line
 			# else: self.add_char(keys)
 			if key_callback is not None:
 				key_callback(keys)
 
 class Edit:
 	""" Class which aggregate the View and Text """
-	def __init__(self, view_top=1, view_height=None, read_only=False, extension=None):
+	def __init__(self, cfg, view_top=1, view_height=None, read_only=False, extension=None):
 		""" Constructor """
-		self.view = View(view_height, view_top, extension=extension)
-		self.text = Text(read_only)
+		self.view = View(cfg, view_height, view_top, extension=extension)
+		self.text = Text(cfg, read_only)
 		self.text.set_view(self.view)
 		self.view.set_text(self.text)
 
@@ -1544,13 +1610,17 @@ class Editor:
 	""" Class which manage a complete editor """
 	def __init__(self, filename_, no_color=False, read_only=False):
 		""" Constructor """
+		self.cfg = EditorConfig()
+		if self.cfg.load(tobytes=False, errorlog=False) is False:
+			self.cfg.save()
+
 		self.file = filename_
 		self.filename = filesystem.split(filename_)[1]
 		if no_color:
 			extension = ""
 		else:
 			extension = filesystem.splitext(filename_)[1]
-		self.edit = Edit(read_only=read_only, extension=extension)
+		self.edit = Edit(self.cfg, read_only=read_only, extension=extension)
 		self.edit.text.load(filename_)
 		self.is_refresh_header = True
 		self.find_text = None
@@ -1561,7 +1631,7 @@ class Editor:
 		self.precedent_callback = None
 		self.trace = None
 		if filesystem.ismicropython() is False:
-			if filename_ == "toto.py":
+			if filename_ == "newfile.py":
 				self.trace = open("key.txt","w")
 
 		if (not filesystem.exists(filename_) and read_only is True) or filesystem.isdir(filename_):
@@ -1584,7 +1654,7 @@ class Editor:
 				end = " Mode: %s "%("Replace" if self.edit.text.replace_mode else "Insert")
 			else:
 				end = " Read only " if self.edit.text.read_only else ""
-			end = "L%d C%d "%(self.edit.text.cursor_line+1, self.edit.text.cursor_column+1) + end
+			end = "L%d C%d "%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end
 
 			header = "\x1B[7m%s%s%s\x1B[m"%(filename_, " "*(self.edit.view.width - len(filename_) - len(end)), end)
 			self.edit.view.write(header)
@@ -1631,7 +1701,7 @@ class Editor:
 					self.edit.view.flush()
 					self.loop = False
 					break
-				elif key == ESCAPE:
+				elif key == "\x1B":
 					self.edit.view.set_refresh_all()
 					self.is_refresh_header = True
 					break
@@ -1640,7 +1710,7 @@ class Editor:
 
 	def input(self, text, help_=None):
 		""" Input value, used to get a line number, or text searched """
-		edit_ = Edit(view_top=4, view_height=1, read_only=False)
+		edit_ = Edit(cfg=self.cfg, view_top=4, view_height=1, read_only=False)
 		edit_.view.cls()
 		edit_.view.move_cursor(3,0)
 		edit_.view.write(text)
@@ -1653,10 +1723,10 @@ class Editor:
 		while 1:
 			edit_.view.refresh()
 			key = self.get_key()
-			if key[0] in NEW_LINE:
+			if key[0] in self.cfg.key_new_line:
 				result = edit_.text.lines[0]
 				break
-			elif key[0] in ESCAPE:
+			elif key[0] in "\x1B":
 				break
 			else:
 				edit_.text.treat_key(key)
@@ -1767,10 +1837,10 @@ class Editor:
 			print( "\x1B[7mTime: %d.%03d s Press enter to stop\x1B[m"%((endTime-startTime)/1000, (endTime-startTime)%1000))
 			while 1:
 				keys = self.get_key()
-				if keys[0] in NEW_LINE:
+				if keys[0] in self.cfg.key_new_line:
 					loop = False
 					break
-				elif keys[0] in EXECUTE:
+				elif keys[0] in self.cfg.key_execute:
 					break
 				# else:
 					# print(strings.dump(keys[0]))
@@ -1783,18 +1853,18 @@ class Editor:
 		self.edit.view.cls()
 		self.edit.view.get_screen_size()
 		self.loop = True
-		self.EDIT_KEYS = TOGGLE_MODE+FIND+REPLACE+FIND_PREVIOUS+FIND_NEXT+EXIT+GOTO+SAVE+EXECUTE
+		self.EDIT_KEYS = self.cfg.key_toggle_mode+self.cfg.key_find+self.cfg.key_replace+self.cfg.key_find_previous+self.cfg.key_find_next+self.cfg.key_exit+self.cfg.key_goto+self.cfg.key_save+self.cfg.key_execute
 		while(self.loop):
 			try:
 				self.refresh()
-				keys = self.get_key(duration=0.3)
+				keys = self.get_key(duration=0.4)
 				if len(keys[0]) == 0:
 					self.is_refresh_header = True
 					self.refresh_header()
 					keys = self.get_key()
 
-				for key in keys:
-					if self.trace is not None:
+				if self.trace is not None:
+					for key in keys:
 						self.trace.write(strings.dump(key, withColor=False) + "\n")
 						self.trace.flush()
 				modified = self.edit.text.modified
@@ -1803,18 +1873,18 @@ class Editor:
 
 				if ord(keys[0][0]) < 0x20:
 					if keys[0] in self.EDIT_KEYS:
-						if   keys[0] in TOGGLE_MODE:    self.key_callback = self.toggle_mode
-						elif keys[0] in FIND:           self.key_callback = self.find
-						elif keys[0] in REPLACE:        self.key_callback = self.replace
-						elif keys[0] in FIND_PREVIOUS:  self.key_callback = self.find_previous
-						elif keys[0] in FIND_NEXT:      self.key_callback = self.find_next
-						elif keys[0] in EXIT:           self.key_callback = self.exit
-						elif keys[0] in GOTO:           self.key_callback = self.goto
-						elif keys[0] in SAVE:           self.key_callback = self.save
-						elif keys[0] in EXECUTE:        self.key_callback = self.execute
+						if   keys[0] in self.cfg.key_toggle_mode:    self.key_callback = self.toggle_mode
+						elif keys[0] in self.cfg.key_find:           self.key_callback = self.find
+						elif keys[0] in self.cfg.key_replace:        self.key_callback = self.replace
+						elif keys[0] in self.cfg.key_find_previous:  self.key_callback = self.find_previous
+						elif keys[0] in self.cfg.key_find_next:      self.key_callback = self.find_next
+						elif keys[0] in self.cfg.key_exit:           self.key_callback = self.exit
+						elif keys[0] in self.cfg.key_goto:           self.key_callback = self.goto
+						elif keys[0] in self.cfg.key_save:           self.key_callback = self.save
+						elif keys[0] in self.cfg.key_execute:        self.key_callback = self.execute
 
 				# If a replacement is in progress and new line pressed
-				if keys[0] in NEW_LINE:
+				if keys[0] in self.cfg.key_new_line:
 					if self.precedent_callback is not None:
 						# The next check is compatible with micropython
 						if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
@@ -1822,7 +1892,7 @@ class Editor:
 								# Replace current found
 								self.key_callback = self.replace_current
 				# If a replacement is in progress and select all pressed
-				if keys[0] in SELECT_ALL:
+				if keys[0] in self.cfg.key_sel_all:
 					if self.precedent_callback is not None:
 						# The next check is compatible with micropython
 						if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
@@ -1845,5 +1915,5 @@ if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		filename = sys.argv[1]
 	else:
-		filename = "toto.py"
+		filename = "newfile.py"
 	edit = Editor(filename, read_only=False)

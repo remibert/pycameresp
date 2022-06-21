@@ -380,6 +380,8 @@ class StreamThread(threading.Thread):
 		""" Indicates that the filename is ignored """
 		if os.path.split(filename)[1] in [".DS_Store",".gitignore"]:
 			return True
+		elif os.path.splitext(filename)[1] in [".pyc",".pyo"]:
+			return True
 		else:
 			return False
 

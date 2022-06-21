@@ -41,8 +41,8 @@ OUTPUT_TEXT = """
 				<span >&nbsp;&nbsp;&nbsp;</span><span style="font-weight: bold;color:%(keyword_color)s">def</span><span style="font-weight: bold;color:%(function_color)s">&nbsp;function</span><span >(</span><span style="font-weight: bold;color:%(keyword_color)s">self</span><span >):</span><br>
 				<span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;integer&nbsp;=&nbsp;</span><span style="color:%(number_color)s">12345</span><br>
 				<span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string&nbsp;=&nbsp;</span><span style="color:%(string_color)s">&quot;Hello&quot;</span><br>
-				<span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v&nbsp;=&nbsp;</span><span style="background-color : %(reverse_backcolor)s;color : %(reverse_forecolor)s">&quot;Reverse&quot;&nbsp;</span><span style="background-color : %(cursor_backcolor)s;color : %(cursor_forecolor)s">#</span><br><br><br>
-				<br><br>
+				<span >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v&nbsp;=&nbsp;</span><span style="background-color : %(reverse_backcolor)s;color : %(reverse_forecolor)s">&quot;Reverse&quot;&nbsp;</span><span style="background-color : %(cursor_backcolor)s;color : %(cursor_forecolor)s">#</span><br>
+				<br>
 				<span style="background-color:%(color_0)s">&nbsp;&nbsp;&nbsp;</span>
 				<span style="background-color:%(color_1)s">&nbsp;&nbsp;&nbsp;</span>
 				<span style="background-color:%(color_2)s">&nbsp;&nbsp;&nbsp;</span>
@@ -51,7 +51,7 @@ OUTPUT_TEXT = """
 				<span style="background-color:%(color_5)s">&nbsp;&nbsp;&nbsp;</span>
 				<span style="background-color:%(color_6)s">&nbsp;&nbsp;&nbsp;</span>
 				<span style="background-color:%(color_7)s">&nbsp;&nbsp;&nbsp;</span>
-				<br><br>
+				<br>
 				<span style="background-color:%(color_8)s">&nbsp;&nbsp;&nbsp;</span>
 				<span style="background-color:%(color_9)s">&nbsp;&nbsp;&nbsp;</span>
 				<span style="background-color:%(color_10)s">&nbsp;&nbsp;&nbsp;</span>

@@ -1,6 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 import sys
+import platform
 
 try:
 	from PyQt6.QtCore import QSettings
@@ -25,7 +26,7 @@ def get_settings():
 	if sys.platform == "darwin":
 		result = QSettings()
 	elif sys.platform == "win32":
-		if uname() == "7":
+		if platform.uname() == "7":
 			result = QSettings(SETTINGS_FILENAME, QSettings.IniFormat)
 		else:
 			result = QSettings(SETTINGS_FILENAME)

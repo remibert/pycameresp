@@ -42,4 +42,4 @@ z.write(os.path.normpath("%s/modules/pycameresp.py"%PYCAMERESP),"pycameresp.py")
 z.write(os.path.normpath("%s/modules/www/stylesheet.css"%PYCAMERESP),"www/stylesheet.css")
 z.close()
 
-useful.zip_dir("%s/editor.zip"%ROOT,PY_DIRECTORY,  ["*/editor*.py","*/filesystem.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py"],[], False, [["shell","editor"],["tools","editor"],["modules",""]])
+useful.zip_dir("%s/editor.zip"%ROOT,PY_DIRECTORY,  ["*/editor*.py","*/filesystem.py","*/jsonconfig.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py"],[], False, [["shell","editor"],["tools","editor"],["modules",""]])
