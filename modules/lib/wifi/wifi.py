@@ -3,18 +3,18 @@
 """ Manages access to wifi, treats cases of network loss with retry, and manages a fallback on the access point if no network is available """
 from wifi.accesspoint import *
 from wifi.station import *
+from tools import info
 
-WIFI_OFF            = 0
-WIFI_OTHER_NETWORK  = 1
-WIFI_CONNECTED      = 2
-LAN_CONNECTED       = 3
-WAN_CONNECTED       = 4
-ACCESS_POINT_FORCED = 5
-WIFI_LOST           = 6
-WIFI_CLOSE          = 7
+WIFI_OFF             = 0
+WIFI_OTHER_NETWORK   = 1
+WIFI_CONNECTED       = 2
+LAN_CONNECTED        = 3
+WAN_CONNECTED        = 4
+ACCESS_POINT_STARTED = 5
+WIFI_LOST            = 6
+WIFI_CLOSE           = 7
 
-
-MAX_PROBLEM = 3
+MAX_PROBLEM = 5
 
 class WifiContext:
 	""" Wifi context """
@@ -24,9 +24,6 @@ class WifiContext:
 		self.wan_problem    = 0
 		self.dns = ""
 		self.state = WIFI_OFF
-		self.polling_id = 0
-		self.access_point_forced = 0
-
 
 class Wifi:
 	""" Class to manage the wifi station and access point """
@@ -47,20 +44,20 @@ class Wifi:
 		""" Set the state of wifi """
 		# pylint:disable=multiple-statements
 		if Wifi.context.state != state:
-			if state == WIFI_OFF           : logger.syslog("Wifi off")
-			if state == WIFI_OTHER_NETWORK : logger.syslog("Wifi select other network")
-			if state == WIFI_CONNECTED     : logger.syslog("Wifi connected")
-			if state == LAN_CONNECTED      : logger.syslog("Wifi LAN connected")
-			if state == WAN_CONNECTED      : logger.syslog("Wifi WAN connected")
-			if state == ACCESS_POINT_FORCED: logger.syslog("Wifi access point forced")
-			if state == WIFI_LOST          : logger.syslog("Wifi lost connection")
-			if state == WIFI_CLOSE         : logger.syslog("Wifi closed")
+			if state == WIFI_OFF            : logger.syslog("Wifi off")
+			if state == WIFI_OTHER_NETWORK  : logger.syslog("Wifi select other network")
+			if state == WIFI_CONNECTED      : logger.syslog("Wifi connected")
+			if state == LAN_CONNECTED       : logger.syslog("Wifi LAN connected")
+			if state == WAN_CONNECTED       : logger.syslog("Wifi WAN connected")
+			if state == ACCESS_POINT_STARTED: logger.syslog("Wifi access point started")
+			if state == WIFI_LOST           : logger.syslog("Wifi lost connection")
+			if state == WIFI_CLOSE          : logger.syslog("Wifi closed")
 		Wifi.context.state = state
 
 	@staticmethod
 	def is_lan_connected():
 		""" Indicates if wifi network available for start server """
-		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED, ACCESS_POINT_FORCED]:
+		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED, ACCESS_POINT_STARTED]:
 			return True
 		elif AccessPoint.is_active() is True:
 			return True
@@ -71,7 +68,7 @@ class Wifi:
 		""" Set wan have establish dialog with external server """
 		Wifi.lan_connected(False)
 		if Wifi.context.wan_problem > 0:
-			logger.syslog("Wan connected")
+			logger.syslog("WAN connected")
 			Wifi.context.wan_problem = 0
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED]:
 			Wifi.set_state(WAN_CONNECTED)
@@ -81,13 +78,13 @@ class Wifi:
 		""" Indicates that wan have probably a problem """
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.wan_problem += 1
-			logger.syslog("Wan problem %d detected"%Wifi.context.wan_problem)
+			logger.syslog("WAN problem %d detected (max=%d)"%(Wifi.context.wan_problem,MAX_PROBLEM))
 
 	@staticmethod
 	def lan_connected(changeState=True):
 		""" Indicates that lan connection detected """
 		if Wifi.context.lan_problem > 0:
-			logger.syslog("Lan connected")
+			logger.syslog("LAN connected")
 			Wifi.context.lan_problem = 0
 		if changeState:
 			if Wifi.get_state() == WIFI_CONNECTED:
@@ -98,7 +95,7 @@ class Wifi:
 		""" Indicates that lan disconnection detected """
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.lan_problem += 1
-			logger.syslog("Lan problem %d detected"%Wifi.context.lan_problem)
+			logger.syslog("LAN problem %d detected (max=%d)"%(Wifi.context.lan_problem, MAX_PROBLEM))
 
 	@staticmethod
 	def is_wan_available():
@@ -123,45 +120,70 @@ class Wifi:
 	@staticmethod
 	async def manage():
 		""" Manage the wifi """
-		Wifi.context.polling_id += 1
 		while 1:
 			state = Wifi.get_state()
 
 			# If the wifi not started
 			if state == WIFI_OFF:
 				Wifi.context.dns = ""
-				Wifi.context.lan_problem = 0
-				Wifi.context.wan_problem = 0
+				
+				# If wifi station available
 				if Station.is_activated():
+					AccessPoint.stop()
+
 					# If wifi station connected
 					if await Station.start():
-						Wifi.context.dns = Station.get_info()[3]
 						Wifi.set_state(WIFI_CONNECTED)
 					else:
 						Wifi.set_state(WIFI_OTHER_NETWORK)
+						info.increase_issues_counter()
+				# If access point available
+				elif AccessPoint.is_activated():
+					Wifi.set_state(ACCESS_POINT_STARTED)
 
 			# If the network not reached select other network
-			elif state in [WIFI_OTHER_NETWORK, ACCESS_POINT_FORCED]:
+			elif state == WIFI_OTHER_NETWORK:
+				# If station available
 				if Station.is_activated():
-					Station.stop()
-					if await Station.choose_network(max_retry=5) is True:
-						Wifi.context.dns = Station.get_info()[3]
-						Wifi.context.lan_problem = 0
-						Wifi.context.wan_problem = 0
+					if await Station.choose_network(max_retry=15) is True:
 						Wifi.set_state(WIFI_CONNECTED)
 					else:
 						# Wifi connection failed
 						if Station.is_fallback():
-							Wifi.set_state(ACCESS_POINT_FORCED)
+							Wifi.set_state(ACCESS_POINT_STARTED)
 						else:
 							Wifi.set_state(WIFI_CLOSE)
 				else:
 					Wifi.set_state(WIFI_CLOSE)
 
+			# Start access point if no wifi station detected
+			elif state == ACCESS_POINT_STARTED:
+				# If access point inactive
+				if AccessPoint.is_active() is False:
+					# Stop wifi station to avoid some problems
+					Station.stop()
+
+					# Start the access point
+					AccessPoint.start(Station.is_fallback())
+				else:
+					# If no activity detected on access point
+					if (info.uptime_sec() - info.get_last_activity()) > 3*60:
+						# Retry to search network
+						if Station.is_activated():
+							Wifi.set_state(WIFI_CLOSE)
+
 			# If the wan reponding
 			elif state in [WAN_CONNECTED, LAN_CONNECTED, WIFI_CONNECTED]:
+				# If connection start
+				if state == WIFI_CONNECTED and Wifi.context.dns == "":
+					# Initialize context
+					Wifi.context.dns = Station.get_info()[3]
+					Wifi.context.lan_problem = 0
+					Wifi.context.wan_problem = 0
+				
+				# If station yet activated
 				if Station.is_activated():
-					# If many problem notified
+					# If too many problem detected
 					if Wifi.context.lan_problem >= MAX_PROBLEM or Wifi.context.wan_problem >= MAX_PROBLEM:
 						Wifi.set_state(WIFI_LOST)
 				else:
@@ -176,24 +198,3 @@ class Wifi:
 			if state == Wifi.get_state() or Wifi.get_state() == WIFI_OFF:
 				# Exit state loop
 				break
-
-		# If the accesspoint can activate
-		if state == ACCESS_POINT_FORCED and Station.is_fallback():
-			Wifi.context.access_point_forced = Wifi.context.polling_id + 4
-			forced = True
-		else:
-			forced = False
-
-		# If the accesspoint can activate
-		if forced or AccessPoint.is_activated() is True:
-			# If access point inactive
-			if AccessPoint.is_active() is False:
-				# Start the access point
-				AccessPoint.start(forced)
-		else:
-			# If access point active
-			if AccessPoint.is_active() is True:
-				# In case of access point forced it is not cut immediatly
-				if Wifi.context.access_point_forced <= Wifi.context.polling_id:
-					# Stop the access point
-					AccessPoint.stop()

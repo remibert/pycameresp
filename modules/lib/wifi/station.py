@@ -109,6 +109,7 @@ class Station:
 		Station.init()
 		if Station.wlan.isconnected():
 			Station.wlan.disconnect()
+		if Station.wlan.active():
 			Station.wlan.active(False)
 
 	@staticmethod
@@ -283,11 +284,13 @@ class Station:
 	@staticmethod
 	def stop():
 		""" Stop the wifi station """
-		logger.syslog("Stop wifi")
 		if Station.wlan is not None:
+			logger.syslog("Stop wifi")
 			try:
-				Station.wlan.disconnect()
-				Station.wlan.active(False)
+				if Station.wlan.isconnected():
+					Station.wlan.disconnect()
+				if Station.wlan.active():
+					Station.wlan.active(False)
 			except:
 				pass
 			Station.wlan = None

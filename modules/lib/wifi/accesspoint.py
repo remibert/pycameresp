@@ -129,7 +129,7 @@ class AccessPoint:
 					strings.tostrings(AccessPoint.config.gateway),
 					strings.tostrings(AccessPoint.config.dns)))
 		except Exception as err:
-			logger.syslog(err, msg="Cannot configure wifi AccessPoint")
+			logger.syslog(err, msg="Cannot configure wifi access point")
 
 	@staticmethod
 	def start(force=False):
@@ -139,7 +139,7 @@ class AccessPoint:
 			AccessPoint.reload_config()
 
 			if AccessPoint.config.activated or force:
-				logger.syslog("Start AccessPoint")
+				logger.syslog("Start access point")
 				from network import WLAN, AP_IF
 				AccessPoint.wlan = WLAN(AP_IF)
 				AccessPoint.configure()
@@ -148,7 +148,7 @@ class AccessPoint:
 				print(repr(AccessPoint.config))
 				result = True
 			else:
-				logger.syslog("AccessPoint disabled")
+				logger.syslog("Access point disabled")
 		else:
 			print("%s already opened"%AccessPoint.__class__.__name__)
 			print(repr(AccessPoint.config))
@@ -159,7 +159,7 @@ class AccessPoint:
 	def stop():
 		""" Stop access point """
 		if AccessPoint.is_active():
-			logger.syslog("AccessPoint stopped")
+			logger.syslog("Stop access point")
 			AccessPoint.close()
 
 	@staticmethod

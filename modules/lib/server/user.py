@@ -1,7 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Class used to manage a username and a password """
-from tools import logger,jsonconfig,encryption,strings
+from tools import logger,jsonconfig,encryption,strings,info
 
 EMPTY_PASSWORD = b"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" # empty password
 
@@ -37,13 +37,14 @@ class User:
 	def check(user, password, log=True, display=True):
 		""" Check the user and password """
 		User.init()
-
 		user = user.lower()
 
 		if User.instance.user == b"":
+			info.set_last_activity()
 			return True
 		elif user == User.instance.user:
 			if encryption.gethash(password) == User.instance.password:
+				info.set_last_activity()
 				if log is True:
 					User.login_state[0] = True
 				return True

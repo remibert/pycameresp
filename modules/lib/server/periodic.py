@@ -4,7 +4,7 @@
 import uasyncio
 from server.server import ServerConfig, Server
 import wifi
-from tools import battery, lang, awake, tasking, watchdog
+from tools import battery, lang, awake, tasking, watchdog, info, system
 
 async def periodic_task():
 	""" Periodic task """
@@ -66,3 +66,8 @@ class Periodic:
 			watchdog.WatchDog.feed()
 			await uasyncio.sleep(1)
 			polling_id += 1
+
+			# Check if any problems have occurred and if a reboot is needed
+			if polling_id % 3607:
+				if info.get_issues_counter() > 15:
+					system.reboot("Reboot required, %d problems detected"%info.get_issues_counter())

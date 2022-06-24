@@ -6,7 +6,7 @@ try:
 except:
 	pass
 import uos
-from tools import logger,filesystem
+from tools import logger,filesystem,info
 
 class SdCard:
 	""" Manage the sdcard """
@@ -81,6 +81,7 @@ class SdCard:
 							SdCard.opened[0]= True
 							result = True
 					except Exception as err:
+						info.increase_issues_counter()
 						logger.syslog("Cannot mount %s"%mountpoint)
 				else:
 					SdCard.mountpoint[0] = mountpoint[1:]
@@ -188,6 +189,11 @@ class SdCard:
 					file.write(data)
 					file.close()
 					result = True
+				except OSError as err:
+					logger.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
+					# If sd card not responding properly
+					if err.errno == 2:
+						info.increase_issues_counter()
 				except Exception as err:
 					logger.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
 				finally:

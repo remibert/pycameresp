@@ -99,6 +99,11 @@ class Historic:
 						motion_item = json.load(file)
 						if filesystem.exists(motion_item[0]):
 							Historic.add_item(motion_item)
+					except OSError as err:
+						logger.syslog(err)
+						# If sd card not responding properly
+						if err.errno == 2:
+							info.increase_issues_counter()
 					except Exception as err:
 						logger.syslog(err)
 					finally:

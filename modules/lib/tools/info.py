@@ -89,8 +89,8 @@ def sysinfo(display=True, text=""):
 up_last=None
 up_total=0
 
-def uptime(text="days"):
-	""" Tell how long the system has been running """
+def uptime_sec():
+	""" Get the uptime in seconds """
 	global up_last, up_total
 	try:
 		# pylint: disable=no-member
@@ -106,9 +106,35 @@ def uptime(text="days"):
 
 	up_last = up
 	up += up_total
+	return up
 
+def uptime(text="days"):
+	""" Tell how long the system has been running """
+	up = uptime_sec()
 	seconds = (up)%60
 	mins    = (up/60)%60
 	hours   = (up/3600)%24
 	days    = (up/86400)
 	return "%d %s, %d:%02d:%02d"%(days, strings.tostrings(text),hours,mins,seconds)
+
+_last_activity = 0
+def get_last_activity():
+	""" Get the last activity from user """
+	global _last_activity
+	return _last_activity
+
+def set_last_activity():
+	""" Set the last activity from user """
+	global _last_activity
+	_last_activity = uptime_sec()
+
+_issues_counter = 0
+def increase_issues_counter():
+	""" Increases a issue counter, that may require a reboot if there are too many"""
+	global _issues_counter
+	_issues_counter += 1
+
+def get_issues_counter():
+	""" Return the value of the issues counter """
+	global _issues_counter
+	return _issues_counter
