@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>lib.tools.info API documentation</title>
 <meta name="description" content="Device informations" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -115,11 +115,11 @@ def sysinfo(display=True, text=&#34;&#34;):
         except:
                 return b&#34;Sysinfo not available&#34;
 
-up_last=0
+up_last=None
 up_total=0
 
-def uptime(text=&#34;days&#34;):
-        &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
+def uptime_sec():
+        &#34;&#34;&#34; Get the uptime in seconds &#34;&#34;&#34;
         global up_last, up_total
         try:
                 # pylint: disable=no-member
@@ -127,17 +127,46 @@ def uptime(text=&#34;days&#34;):
         except:
                 up = time.time()
 
+        if up_last is None:
+                up_last = up
+
         if up_last &gt; up:
-                up_total += (2^30)//1000
+                up_total += (2&lt;&lt;30)//1000
 
         up_last = up
         up += up_total
+        return up
 
+def uptime(text=&#34;days&#34;):
+        &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
+        up = uptime_sec()
         seconds = (up)%60
         mins    = (up/60)%60
         hours   = (up/3600)%24
         days    = (up/86400)
-        return &#34;%d %s, %d:%02d:%02d&#34;%(days, strings.tostrings(text),hours,mins,seconds)</code></pre>
+        return &#34;%d %s, %d:%02d:%02d&#34;%(days, strings.tostrings(text),hours,mins,seconds)
+
+_last_activity = 0
+def get_last_activity():
+        &#34;&#34;&#34; Get the last activity from user &#34;&#34;&#34;
+        global _last_activity
+        return _last_activity
+
+def set_last_activity():
+        &#34;&#34;&#34; Set the last activity from user &#34;&#34;&#34;
+        global _last_activity
+        _last_activity = uptime_sec()
+
+_issues_counter = 0
+def increase_issues_counter():
+        &#34;&#34;&#34; Increases a issue counter, that may require a reboot if there are too many&#34;&#34;&#34;
+        global _issues_counter
+        _issues_counter += 1
+
+def get_issues_counter():
+        &#34;&#34;&#34; Return the value of the issues counter &#34;&#34;&#34;
+        global _issues_counter
+        return _issues_counter</code></pre>
 </details>
 </section>
 <section>
@@ -179,6 +208,51 @@ def uptime(text=&#34;days&#34;):
                         return result
         except:
                 return b&#34;Flash unavailable&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.info.get_issues_counter"><code class="name flex">
+<span>def <span class="ident">get_issues_counter</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the value of the issues counter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_issues_counter():
+        &#34;&#34;&#34; Return the value of the issues counter &#34;&#34;&#34;
+        global _issues_counter
+        return _issues_counter</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.info.get_last_activity"><code class="name flex">
+<span>def <span class="ident">get_last_activity</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the last activity from user</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_last_activity():
+        &#34;&#34;&#34; Get the last activity from user &#34;&#34;&#34;
+        global _last_activity
+        return _last_activity</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.info.increase_issues_counter"><code class="name flex">
+<span>def <span class="ident">increase_issues_counter</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Increases a issue counter, that may require a reboot if there are too many</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def increase_issues_counter():
+        &#34;&#34;&#34; Increases a issue counter, that may require a reboot if there are too many&#34;&#34;&#34;
+        global _issues_counter
+        _issues_counter += 1</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.info.iscamera"><code class="name flex">
@@ -230,6 +304,21 @@ def uptime(text=&#34;days&#34;):
                         return result
         except:
                 return b&#34;Mem unavailable&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.info.set_last_activity"><code class="name flex">
+<span>def <span class="ident">set_last_activity</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the last activity from user</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_last_activity():
+        &#34;&#34;&#34; Set the last activity from user &#34;&#34;&#34;
+        global _last_activity
+        _last_activity = uptime_sec()</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.info.sysinfo"><code class="name flex">
@@ -284,6 +373,25 @@ def uptime(text=&#34;days&#34;):
 </summary>
 <pre><code class="python">def uptime(text=&#34;days&#34;):
         &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
+        up = uptime_sec()
+        seconds = (up)%60
+        mins    = (up/60)%60
+        hours   = (up/3600)%24
+        days    = (up/86400)
+        return &#34;%d %s, %d:%02d:%02d&#34;%(days, strings.tostrings(text),hours,mins,seconds)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.info.uptime_sec"><code class="name flex">
+<span>def <span class="ident">uptime_sec</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the uptime in seconds</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def uptime_sec():
+        &#34;&#34;&#34; Get the uptime in seconds &#34;&#34;&#34;
         global up_last, up_total
         try:
                 # pylint: disable=no-member
@@ -291,17 +399,15 @@ def uptime(text=&#34;days&#34;):
         except:
                 up = time.time()
 
+        if up_last is None:
+                up_last = up
+
         if up_last &gt; up:
-                up_total += (2^30)//1000
+                up_total += (2&lt;&lt;30)//1000
 
         up_last = up
         up += up_total
-
-        seconds = (up)%60
-        mins    = (up/60)%60
-        hours   = (up/3600)%24
-        days    = (up/86400)
-        return &#34;%d %s, %d:%02d:%02d&#34;%(days, strings.tostrings(text),hours,mins,seconds)</code></pre>
+        return up</code></pre>
 </details>
 </dd>
 </dl>
@@ -321,20 +427,25 @@ def uptime(text=&#34;days&#34;):
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="lib.tools.info.flashinfo" href="#lib.tools.info.flashinfo">flashinfo</a></code></li>
+<li><code><a title="lib.tools.info.get_issues_counter" href="#lib.tools.info.get_issues_counter">get_issues_counter</a></code></li>
+<li><code><a title="lib.tools.info.get_last_activity" href="#lib.tools.info.get_last_activity">get_last_activity</a></code></li>
+<li><code><a title="lib.tools.info.increase_issues_counter" href="#lib.tools.info.increase_issues_counter">increase_issues_counter</a></code></li>
 <li><code><a title="lib.tools.info.iscamera" href="#lib.tools.info.iscamera">iscamera</a></code></li>
 <li><code><a title="lib.tools.info.meminfo" href="#lib.tools.info.meminfo">meminfo</a></code></li>
+<li><code><a title="lib.tools.info.set_last_activity" href="#lib.tools.info.set_last_activity">set_last_activity</a></code></li>
 <li><code><a title="lib.tools.info.sysinfo" href="#lib.tools.info.sysinfo">sysinfo</a></code></li>
 <li><code><a title="lib.tools.info.temperature" href="#lib.tools.info.temperature">temperature</a></code></li>
 <li><code><a title="lib.tools.info.uptime" href="#lib.tools.info.uptime">uptime</a></code></li>
+<li><code><a title="lib.tools.info.uptime_sec" href="#lib.tools.info.uptime_sec">uptime_sec</a></code></li>
 </ul>
 </li>
 </ul>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

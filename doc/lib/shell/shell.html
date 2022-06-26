@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>lib.shell.shell API documentation</title>
 <meta name="description" content="Class defining a minimalist shell, directly executable on the board.
 We modify directories, list, delete, move files, edit files ...
@@ -529,7 +529,7 @@ def host2ip(hostname):
 def mountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Mount command &#34;&#34;&#34;
         try:
-                uos.mount(machine.SDCard(), mountpoint)
+                sdcard.SdCard.mount(mountpoint)
                 print_(&#34;Sd mounted on &#39;%s&#39;&#34;%mountpoint)
         except:
                 print_(&#34;Cannot mount sd on &#39;%s&#39;&#34;%mountpoint)
@@ -537,7 +537,7 @@ def mountsd(mountpoint=&#34;/sd&#34;):
 def umountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Umount command &#34;&#34;&#34;
         try:
-                uos.umount(mountpoint)
+                sdcard.SdCard.umount(mountpoint)
                 print_(&#34;Sd umounted from &#39;%s&#39;&#34;%mountpoint)
         except:
                 print_(&#34;Cannot umount sd from &#39;%s&#39;&#34;%mountpoint)
@@ -592,6 +592,21 @@ def setdate(datetime=&#34;&#34;):
 
         if failed is True:
                 print_(&#39;Expected format &#34;YYYY/MM/DD hh:mm:ss&#34;&#39;)
+
+def formatsd(fstype=&#34;FAT&#34;):
+        &#34;&#34;&#34; Format sd card &#34;&#34;&#34;
+        if fstype in [&#34;FAT&#34;,&#34;LFS&#34;]:
+                if sdcard.SdCard.is_mounted() is False:
+                        res = input(&#34;All data will be lost on Sd card ? proceed with format (y/n) :&#34;)
+                        if res in [&#34;y&#34;,&#34;Y&#34;]:
+                                if sdcard.SdCard.formatsd() is True:
+                                        print_(&#34;Formatting terminated&#34;)
+                                else:
+                                        print_(&#34;Formatting failed&#34;)
+                else:
+                        print_(&#34;Sd card is mounted, a reboot required&#34;)
+        else:
+                print_(&#34;Filesystem supported : FAT or LFS&#34;)
 
 def reboot():
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
@@ -818,6 +833,42 @@ def sysinfo():
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
         print_(strings.tostrings(info.sysinfo(display=False)))
 
+def vtcolors():
+        &#34;&#34;&#34; Show all VT100 colors &#34;&#34;&#34;
+        res = b&#39;\x1B[4m4 bits colors\x1B[m\n&#39;
+        for i in range(16):
+                if i % 8 == 0:
+                        res += b&#34;\n  &#34;
+                if i &lt; 9:
+                        forecolor = 15
+                else:
+                        forecolor = 0
+                res += b&#34;\x1B[38;5;%dm\x1B[48;5;%dm %2d \x1B[0m&#34;%(forecolor, i,i)
+        res += b&#39;\n\n\x1B[4m8 bits colors\x1B[m\n&#39;
+        j = 0
+        for i in range(16,256):
+                if j % 12== 0:
+                        res += b&#34;\n  &#34;
+                backcolor = i
+                if j % 36 &lt; 36//2:
+                        forecolor = 15
+                else:
+                        forecolor = 0
+                res += b&#34;\x1B[38;5;%dm\x1B[48;5;%dm %3d \x1B[0m&#34;%(forecolor,backcolor,i)
+                j += 1
+        res += b&#39;\n\n\x1B[4mModifiers\x1B[m\n\n&#39;
+
+        for i,j in [(0,&#34;reset/normal&#34;),(1,b&#34;bold&#34;),(3,b&#34;italic&#34;),(4,b&#34;underline&#34;),(7,b&#34;reverse&#34;)]:
+                res += b&#34;  %d : \x1B[%dm%s\x1B[0m\n&#34;%(i,i,j)
+        res += b&#39;\n\x1B[4mExamples\x1B[m\n\n&#39;
+        res += b&#39;  &gt;&gt;&gt; print(&#34;\\033[\033[1m1\033[m;\033[7m7\033[mmBold reverse\\033[0m&#34;)\n&#39;
+        res += b&#34;  \033[1;7mBold reverse\033[0m&#34;
+        res += b&#34;\n\n&#34;
+        res += b&#39;  &gt;&gt;&gt; print(&#34;\033[38;5;15m\033[48;5;1m\\033[48;5;1m\033[m\033[38;5;13m\\033[38;5;13m\033[mHello\\033[m&#34;)\n&#39;
+        res += b&#34;  \033[48;5;1m\033[38;5;13mHello\033[m\n&#34;
+
+        print_(res.decode(&#34;utf8&#34;))
+
 def get_command(command_name):
         &#34;&#34;&#34; Get a command callback according to the command name &#34;&#34;&#34;
         try:
@@ -983,7 +1034,7 @@ async def async_shell():
         except:
                 Server = None
 
-        print_(&#34;\nPress key to start command line&#34;)
+        print_(&#34;\nPress key to start shell&#34;)
         if filesystem.ismicropython():
                 polling1 = 2
                 polling2 = 0.01
@@ -1071,6 +1122,8 @@ shell_commands = \
         &#34;eval&#34;       :[eval_           ,&#34;string&#34;               ],
         &#34;exec&#34;       :[exec_           ,&#34;string&#34;               ],
         &#34;dump&#34;       :[dump_           ,&#34;filename&#34;             ],
+        &#34;formatsd&#34;   :[formatsd        ,&#34;fstype&#34;               ],
+        &#34;vtcolors&#34;   :[vtcolors                                ],
 }
 
 if __name__ == &#34;__main__&#34;:
@@ -1101,7 +1154,7 @@ if __name__ == &#34;__main__&#34;:
         except:
                 Server = None
 
-        print_(&#34;\nPress key to start command line&#34;)
+        print_(&#34;\nPress key to start shell&#34;)
         if filesystem.ismicropython():
                 polling1 = 2
                 polling2 = 0.01
@@ -1583,6 +1636,31 @@ if __name__ == &#34;__main__&#34;:
         print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))</code></pre>
 </details>
 </dd>
+<dt id="lib.shell.shell.formatsd"><code class="name flex">
+<span>def <span class="ident">formatsd</span></span>(<span>fstype='FAT')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Format sd card</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def formatsd(fstype=&#34;FAT&#34;):
+        &#34;&#34;&#34; Format sd card &#34;&#34;&#34;
+        if fstype in [&#34;FAT&#34;,&#34;LFS&#34;]:
+                if sdcard.SdCard.is_mounted() is False:
+                        res = input(&#34;All data will be lost on Sd card ? proceed with format (y/n) :&#34;)
+                        if res in [&#34;y&#34;,&#34;Y&#34;]:
+                                if sdcard.SdCard.formatsd() is True:
+                                        print_(&#34;Formatting terminated&#34;)
+                                else:
+                                        print_(&#34;Formatting failed&#34;)
+                else:
+                        print_(&#34;Sd card is mounted, a reboot required&#34;)
+        else:
+                print_(&#34;Filesystem supported : FAT or LFS&#34;)</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.shell.gc"><code class="name flex">
 <span>def <span class="ident">gc</span></span>(<span>)</span>
 </code></dt>
@@ -1879,7 +1957,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def mountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Mount command &#34;&#34;&#34;
         try:
-                uos.mount(machine.SDCard(), mountpoint)
+                sdcard.SdCard.mount(mountpoint)
                 print_(&#34;Sd mounted on &#39;%s&#39;&#34;%mountpoint)
         except:
                 print_(&#34;Cannot mount sd on &#39;%s&#39;&#34;%mountpoint)</code></pre>
@@ -2343,7 +2421,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def umountsd(mountpoint=&#34;/sd&#34;):
         &#34;&#34;&#34; Umount command &#34;&#34;&#34;
         try:
-                uos.umount(mountpoint)
+                sdcard.SdCard.umount(mountpoint)
                 print_(&#34;Sd umounted from &#39;%s&#39;&#34;%mountpoint)
         except:
                 print_(&#34;Cannot umount sd from &#39;%s&#39;&#34;%mountpoint)</code></pre>
@@ -2390,6 +2468,52 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def uptime():
         &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
         print_(info.uptime())</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.shell.vtcolors"><code class="name flex">
+<span>def <span class="ident">vtcolors</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Show all VT100 colors</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def vtcolors():
+        &#34;&#34;&#34; Show all VT100 colors &#34;&#34;&#34;
+        res = b&#39;\x1B[4m4 bits colors\x1B[m\n&#39;
+        for i in range(16):
+                if i % 8 == 0:
+                        res += b&#34;\n  &#34;
+                if i &lt; 9:
+                        forecolor = 15
+                else:
+                        forecolor = 0
+                res += b&#34;\x1B[38;5;%dm\x1B[48;5;%dm %2d \x1B[0m&#34;%(forecolor, i,i)
+        res += b&#39;\n\n\x1B[4m8 bits colors\x1B[m\n&#39;
+        j = 0
+        for i in range(16,256):
+                if j % 12== 0:
+                        res += b&#34;\n  &#34;
+                backcolor = i
+                if j % 36 &lt; 36//2:
+                        forecolor = 15
+                else:
+                        forecolor = 0
+                res += b&#34;\x1B[38;5;%dm\x1B[48;5;%dm %3d \x1B[0m&#34;%(forecolor,backcolor,i)
+                j += 1
+        res += b&#39;\n\n\x1B[4mModifiers\x1B[m\n\n&#39;
+
+        for i,j in [(0,&#34;reset/normal&#34;),(1,b&#34;bold&#34;),(3,b&#34;italic&#34;),(4,b&#34;underline&#34;),(7,b&#34;reverse&#34;)]:
+                res += b&#34;  %d : \x1B[%dm%s\x1B[0m\n&#34;%(i,i,j)
+        res += b&#39;\n\x1B[4mExamples\x1B[m\n\n&#39;
+        res += b&#39;  &gt;&gt;&gt; print(&#34;\\033[\033[1m1\033[m;\033[7m7\033[mmBold reverse\\033[0m&#34;)\n&#39;
+        res += b&#34;  \033[1;7mBold reverse\033[0m&#34;
+        res += b&#34;\n\n&#34;
+        res += b&#39;  &gt;&gt;&gt; print(&#34;\033[38;5;15m\033[48;5;1m\\033[48;5;1m\033[m\033[38;5;13m\\033[38;5;13m\033[mHello\\033[m&#34;)\n&#39;
+        res += b&#34;  \033[48;5;1m\033[38;5;13mHello\033[m\n&#34;
+
+        print_(res.decode(&#34;utf8&#34;))</code></pre>
 </details>
 </dd>
 </dl>
@@ -2654,6 +2778,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.exit" href="#lib.shell.shell.exit">exit</a></code></li>
 <li><code><a title="lib.shell.shell.find" href="#lib.shell.shell.find">find</a></code></li>
 <li><code><a title="lib.shell.shell.flashinfo" href="#lib.shell.shell.flashinfo">flashinfo</a></code></li>
+<li><code><a title="lib.shell.shell.formatsd" href="#lib.shell.shell.formatsd">formatsd</a></code></li>
 <li><code><a title="lib.shell.shell.gc" href="#lib.shell.shell.gc">gc</a></code></li>
 <li><code><a title="lib.shell.shell.get_command" href="#lib.shell.shell.get_command">get_command</a></code></li>
 <li><code><a title="lib.shell.shell.get_screen_size" href="#lib.shell.shell.get_screen_size">get_screen_size</a></code></li>
@@ -2687,6 +2812,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.umountsd" href="#lib.shell.shell.umountsd">umountsd</a></code></li>
 <li><code><a title="lib.shell.shell.upload" href="#lib.shell.shell.upload">upload</a></code></li>
 <li><code><a title="lib.shell.shell.uptime" href="#lib.shell.shell.uptime">uptime</a></code></li>
+<li><code><a title="lib.shell.shell.vtcolors" href="#lib.shell.shell.vtcolors">vtcolors</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -2713,7 +2839,7 @@ if __name__ == &#34;__main__&#34;:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

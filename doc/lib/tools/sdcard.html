@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>lib.tools.sdcard API documentation</title>
 <meta name="description" content="Sdcard management class" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -35,7 +35,7 @@ try:
 except:
         pass
 import uos
-from tools import logger,filesystem
+from tools import logger,filesystem,info
 
 class SdCard:
         &#34;&#34;&#34; Manage the sdcard &#34;&#34;&#34;
@@ -95,6 +95,54 @@ class SdCard:
                 return SdCard.mountpoint[0]
 
         @staticmethod
+        def formatsd(fs=&#34;FAT&#34;):
+                &#34;&#34;&#34; Format the sd card (erase all data) &#34;&#34;&#34;
+                result = False
+                if SdCard.is_mounted() is False:
+                        try:
+                                import os
+                                import machine
+                                sd = machine.SDCard(**(SdCard.slot[0]))
+                                if fs== &#34;FAT&#34;:
+                                        os.VfsFat.mkfs(sd)
+                                        os.VfsFat(sd)
+                                        result = True
+                                elif fs== &#34;LFS&#34;:
+                                        os.VfsLfs2.mkfs(sd)
+                                        os.VfsLfs2(sd)
+                                result = True
+                        except Exception as err:
+                                logger.syslog(err)
+                return result
+
+        @staticmethod
+        def umount(mountpoint = &#34;/sd&#34;):
+                &#34;&#34;&#34; Umount sd card &#34;&#34;&#34;
+                result = False
+                if SdCard.is_mounted() is True and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
+                        if SdCard.is_available():
+                                if filesystem.ismicropython():
+                                        try:
+                                                uos.umount(mountpoint)
+                                                SdCard.mountpoint[0] = &#34;&#34;
+                                                SdCard.opened[0]= False
+                                                result = True
+                                        except Exception as err:
+                                                logger.syslog(err, &#34;Cannot umount %s&#34;%mountpoint)
+                                else:
+                                        SdCard.mountpoint[0] = &#34;&#34;
+                                        SdCard.opened[0] = False
+                                        result = True
+                        else:
+                                logger.syslog(&#34;SdCard disabled&#34;)
+                                SdCard.mountpoint[0] = &#34;&#34;
+                                SdCard.opened[0] = False
+                                result = True
+                elif SdCard.is_mounted() is False:
+                        result = True
+                return result
+
+        @staticmethod
         def mount(mountpoint = &#34;/sd&#34;):
                 &#34;&#34;&#34; Mount sd card &#34;&#34;&#34;
                 result = False
@@ -110,6 +158,7 @@ class SdCard:
                                                         SdCard.opened[0]= True
                                                         result = True
                                         except Exception as err:
+                                                info.increase_issues_counter()
                                                 logger.syslog(&#34;Cannot mount %s&#34;%mountpoint)
                                 else:
                                         SdCard.mountpoint[0] = mountpoint[1:]
@@ -217,6 +266,11 @@ class SdCard:
                                         file.write(data)
                                         file.close()
                                         result = True
+                                except OSError as err:
+                                        logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
+                                        # If sd card not responding properly
+                                        if err.errno == 2:
+                                                info.increase_issues_counter()
                                 except Exception as err:
                                         logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
                                 finally:
@@ -304,6 +358,54 @@ class SdCard:
                 return SdCard.mountpoint[0]
 
         @staticmethod
+        def formatsd(fs=&#34;FAT&#34;):
+                &#34;&#34;&#34; Format the sd card (erase all data) &#34;&#34;&#34;
+                result = False
+                if SdCard.is_mounted() is False:
+                        try:
+                                import os
+                                import machine
+                                sd = machine.SDCard(**(SdCard.slot[0]))
+                                if fs== &#34;FAT&#34;:
+                                        os.VfsFat.mkfs(sd)
+                                        os.VfsFat(sd)
+                                        result = True
+                                elif fs== &#34;LFS&#34;:
+                                        os.VfsLfs2.mkfs(sd)
+                                        os.VfsLfs2(sd)
+                                result = True
+                        except Exception as err:
+                                logger.syslog(err)
+                return result
+
+        @staticmethod
+        def umount(mountpoint = &#34;/sd&#34;):
+                &#34;&#34;&#34; Umount sd card &#34;&#34;&#34;
+                result = False
+                if SdCard.is_mounted() is True and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
+                        if SdCard.is_available():
+                                if filesystem.ismicropython():
+                                        try:
+                                                uos.umount(mountpoint)
+                                                SdCard.mountpoint[0] = &#34;&#34;
+                                                SdCard.opened[0]= False
+                                                result = True
+                                        except Exception as err:
+                                                logger.syslog(err, &#34;Cannot umount %s&#34;%mountpoint)
+                                else:
+                                        SdCard.mountpoint[0] = &#34;&#34;
+                                        SdCard.opened[0] = False
+                                        result = True
+                        else:
+                                logger.syslog(&#34;SdCard disabled&#34;)
+                                SdCard.mountpoint[0] = &#34;&#34;
+                                SdCard.opened[0] = False
+                                result = True
+                elif SdCard.is_mounted() is False:
+                        result = True
+                return result
+
+        @staticmethod
         def mount(mountpoint = &#34;/sd&#34;):
                 &#34;&#34;&#34; Mount sd card &#34;&#34;&#34;
                 result = False
@@ -319,6 +421,7 @@ class SdCard:
                                                         SdCard.opened[0]= True
                                                         result = True
                                         except Exception as err:
+                                                info.increase_issues_counter()
                                                 logger.syslog(&#34;Cannot mount %s&#34;%mountpoint)
                                 else:
                                         SdCard.mountpoint[0] = mountpoint[1:]
@@ -426,6 +529,11 @@ class SdCard:
                                         file.write(data)
                                         file.close()
                                         result = True
+                                except OSError as err:
+                                        logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
+                                        # If sd card not responding properly
+                                        if err.errno == 2:
+                                                info.increase_issues_counter()
                                 except Exception as err:
                                         logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
                                 finally:
@@ -505,6 +613,37 @@ def create_file(directory, filename, mode=&#34;w&#34;):
                         if err.args[0] not in [2,17]:
                                 logger.syslog(err)
                                 break
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.sdcard.SdCard.formatsd"><code class="name flex">
+<span>def <span class="ident">formatsd</span></span>(<span>fs='FAT')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Format the sd card (erase all data)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def formatsd(fs=&#34;FAT&#34;):
+        &#34;&#34;&#34; Format the sd card (erase all data) &#34;&#34;&#34;
+        result = False
+        if SdCard.is_mounted() is False:
+                try:
+                        import os
+                        import machine
+                        sd = machine.SDCard(**(SdCard.slot[0]))
+                        if fs== &#34;FAT&#34;:
+                                os.VfsFat.mkfs(sd)
+                                os.VfsFat(sd)
+                                result = True
+                        elif fs== &#34;LFS&#34;:
+                                os.VfsLfs2.mkfs(sd)
+                                os.VfsLfs2(sd)
+                        result = True
+                except Exception as err:
+                        logger.syslog(err)
         return result</code></pre>
 </details>
 </dd>
@@ -653,6 +792,7 @@ def mount(mountpoint = &#34;/sd&#34;):
                                                 SdCard.opened[0]= True
                                                 result = True
                                 except Exception as err:
+                                        info.increase_issues_counter()
                                         logger.syslog(&#34;Cannot mount %s&#34;%mountpoint)
                         else:
                                 SdCard.mountpoint[0] = mountpoint[1:]
@@ -701,6 +841,11 @@ def save(directory, filename, data):
                                 file.write(data)
                                 file.close()
                                 result = True
+                        except OSError as err:
+                                logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
+                                # If sd card not responding properly
+                                if err.errno == 2:
+                                        info.increase_issues_counter()
                         except Exception as err:
                                 logger.syslog(err, &#34;Cannot save %s/%s/%s&#34;%(SdCard.get_mountpoint(), directory, filename))
                         finally:
@@ -748,6 +893,43 @@ def set_slot(**slot):
         SdCard.slot[0] = slot</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.sdcard.SdCard.umount"><code class="name flex">
+<span>def <span class="ident">umount</span></span>(<span>mountpoint='/sd')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Umount sd card</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def umount(mountpoint = &#34;/sd&#34;):
+        &#34;&#34;&#34; Umount sd card &#34;&#34;&#34;
+        result = False
+        if SdCard.is_mounted() is True and mountpoint != &#34;/&#34; and mountpoint != &#34;&#34;:
+                if SdCard.is_available():
+                        if filesystem.ismicropython():
+                                try:
+                                        uos.umount(mountpoint)
+                                        SdCard.mountpoint[0] = &#34;&#34;
+                                        SdCard.opened[0]= False
+                                        result = True
+                                except Exception as err:
+                                        logger.syslog(err, &#34;Cannot umount %s&#34;%mountpoint)
+                        else:
+                                SdCard.mountpoint[0] = &#34;&#34;
+                                SdCard.opened[0] = False
+                                result = True
+                else:
+                        logger.syslog(&#34;SdCard disabled&#34;)
+                        SdCard.mountpoint[0] = &#34;&#34;
+                        SdCard.opened[0] = False
+                        result = True
+        elif SdCard.is_mounted() is False:
+                result = True
+        return result</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -770,6 +952,7 @@ def set_slot(**slot):
 <h4><code><a title="lib.tools.sdcard.SdCard" href="#lib.tools.sdcard.SdCard">SdCard</a></code></h4>
 <ul class="two-column">
 <li><code><a title="lib.tools.sdcard.SdCard.create_file" href="#lib.tools.sdcard.SdCard.create_file">create_file</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.formatsd" href="#lib.tools.sdcard.SdCard.formatsd">formatsd</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.get_free_size" href="#lib.tools.sdcard.SdCard.get_free_size">get_free_size</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.get_max_size" href="#lib.tools.sdcard.SdCard.get_max_size">get_max_size</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.get_mountpoint" href="#lib.tools.sdcard.SdCard.get_mountpoint">get_mountpoint</a></code></li>
@@ -782,6 +965,7 @@ def set_slot(**slot):
 <li><code><a title="lib.tools.sdcard.SdCard.save" href="#lib.tools.sdcard.SdCard.save">save</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.set_slot" href="#lib.tools.sdcard.SdCard.set_slot">set_slot</a></code></li>
 <li><code><a title="lib.tools.sdcard.SdCard.slot" href="#lib.tools.sdcard.SdCard.slot">slot</a></code></li>
+<li><code><a title="lib.tools.sdcard.SdCard.umount" href="#lib.tools.sdcard.SdCard.umount">umount</a></code></li>
 </ul>
 </li>
 </ul>
@@ -790,7 +974,7 @@ def set_slot(**slot):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

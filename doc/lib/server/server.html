@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>lib.server.server API documentation</title>
 <meta name="description" content="Manage server class" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -174,17 +174,20 @@ class Server:
                                 # If wan ip get
                                 if newWanIp is not None:
                                         # If wan ip must be notified
-                                        if (Server.context.wan_ip != newWanIp or forced):
-                                                await Server.context.notifier.notify(&#34;\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s&#34;%(
-                                                        wifi.Station.get_info()[0],
-                                                        newWanIp,
-                                                        info.uptime(),
-                                                        strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
+                                        if Server.context.wan_ip != newWanIp:
+                                                forced = True
                                         Server.context.wan_ip = newWanIp
                                         wifi.Wifi.wan_connected()
                                 else:
                                         logger.syslog(&#34;Cannot get wan ip&#34;)
                                         wifi.Wifi.wan_disconnected()
+
+                                if forced:
+                                        await Server.context.notifier.notify(&#34;\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s&#34;%(
+                                                wifi.Station.get_info()[0],
+                                                Server.context.wan_ip,
+                                                info.uptime(),
+                                                strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
 
         @staticmethod
         async def synchronize_time():
@@ -453,17 +456,20 @@ class Server:
                                 # If wan ip get
                                 if newWanIp is not None:
                                         # If wan ip must be notified
-                                        if (Server.context.wan_ip != newWanIp or forced):
-                                                await Server.context.notifier.notify(&#34;\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s&#34;%(
-                                                        wifi.Station.get_info()[0],
-                                                        newWanIp,
-                                                        info.uptime(),
-                                                        strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
+                                        if Server.context.wan_ip != newWanIp:
+                                                forced = True
                                         Server.context.wan_ip = newWanIp
                                         wifi.Wifi.wan_connected()
                                 else:
                                         logger.syslog(&#34;Cannot get wan ip&#34;)
                                         wifi.Wifi.wan_disconnected()
+
+                                if forced:
+                                        await Server.context.notifier.notify(&#34;\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s&#34;%(
+                                                wifi.Station.get_info()[0],
+                                                Server.context.wan_ip,
+                                                info.uptime(),
+                                                strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
 
         @staticmethod
         async def synchronize_time():
@@ -966,17 +972,20 @@ async def synchronize_wan_ip(forced):
                         # If wan ip get
                         if newWanIp is not None:
                                 # If wan ip must be notified
-                                if (Server.context.wan_ip != newWanIp or forced):
-                                        await Server.context.notifier.notify(&#34;\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s&#34;%(
-                                                wifi.Station.get_info()[0],
-                                                newWanIp,
-                                                info.uptime(),
-                                                strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
+                                if Server.context.wan_ip != newWanIp:
+                                        forced = True
                                 Server.context.wan_ip = newWanIp
                                 wifi.Wifi.wan_connected()
                         else:
                                 logger.syslog(&#34;Cannot get wan ip&#34;)
-                                wifi.Wifi.wan_disconnected()</code></pre>
+                                wifi.Wifi.wan_disconnected()
+
+                        if forced:
+                                await Server.context.notifier.notify(&#34;\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s&#34;%(
+                                        wifi.Station.get_info()[0],
+                                        Server.context.wan_ip,
+                                        info.uptime(),
+                                        strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))</code></pre>
 </details>
 </dd>
 <dt id="lib.server.server.Server.wait_all_suspended"><code class="name flex">
@@ -1140,7 +1149,7 @@ async def wait_resume(duration=None):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

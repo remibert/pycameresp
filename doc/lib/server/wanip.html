@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>lib.server.wanip API documentation</title>
 <meta name="description" content="Get the wan ip address" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -30,6 +30,7 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Get the wan ip address &#34;&#34;&#34;
+import random
 import uasyncio
 from server.stream import *
 from server.httprequest import *
@@ -43,17 +44,20 @@ async def request(host, port, path):
                 reader,writer = await uasyncio.open_connection(strings.tostrings(host), port)
                 streamio = Stream(reader, writer)
                 req = HttpRequest(None)
-                req.set_path(path)
-                req.set_header(b&#34;HOST&#34;,b&#34;ESP32&#34;)
+                req.set_path(strings.tobytes(path))
+                req.set_header(b&#34;HOST&#34;,strings.tobytes(host))
                 req.set_method(b&#34;GET&#34;)
-                req.set_header(b&#34;User-Agent&#34;,b&#34;ESP32&#34;)
+                req.set_header(b&#34;Accept&#34;         ,b&#34;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&#34;)
+                req.set_header(b&#34;User-Agent&#34;     ,b&#34;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15&#34;)
+                req.set_header(b&#34;Accept-Language&#34;,b&#34;fr-FR,fr;q=0.9&#34;)
                 req.set_header(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
-                req.set_header(b&#34;Connection&#34;,b&#34;keep-alive&#34;)
+                req.set_header(b&#34;Connection&#34;     ,b&#34;keep-alive&#34;)
                 await req.send(streamio)
                 response = HttpResponse(streamio)
                 await response.receive(streamio)
                 if response.status == b&#34;200&#34;:
-                        result = response.get_content()
+                        result = response.get_content().strip()
+
         except Exception as err:
                 logger.syslog(err)
         finally:
@@ -63,11 +67,18 @@ async def request(host, port, path):
 
 async def get_wan_ip_async():
         &#34;&#34;&#34; Get the wan ip address with asynchronous method &#34;&#34;&#34;
-        resp = await request(&#34;ip4only.me&#34;,80,b&#34;/api/&#34;)
+        hosts =[
+                (&#34;alma.ch&#34;              ,&#34;/myip.cgi&#34;),
+                (&#34;api.infoip.io&#34;        ,&#34;/ip&#34;),
+                (&#34;api.ipify.org&#34;        ,&#34;/&#34;),
+                (&#34;checkip.amazonaws.com&#34;,&#34;/&#34;),
+                (&#34;l2.io&#34;                ,&#34;/ip&#34;),
+                (&#34;whatismyip.akamai.com&#34;,&#34;/&#34;)
+        ]
+        host, path = hosts[random.randrange(0,len(hosts))]
+        resp = await request(host,80,path)
         if resp:
-                spl = resp.split(b&#34;,&#34;)
-                if len(spl) &gt; 1:
-                        return spl[1].decode(&#34;utf-8&#34;)
+                return resp.decode(&#34;utf-8&#34;)
         return None</code></pre>
 </details>
 </section>
@@ -89,11 +100,18 @@ async def get_wan_ip_async():
 </summary>
 <pre><code class="python">async def get_wan_ip_async():
         &#34;&#34;&#34; Get the wan ip address with asynchronous method &#34;&#34;&#34;
-        resp = await request(&#34;ip4only.me&#34;,80,b&#34;/api/&#34;)
+        hosts =[
+                (&#34;alma.ch&#34;              ,&#34;/myip.cgi&#34;),
+                (&#34;api.infoip.io&#34;        ,&#34;/ip&#34;),
+                (&#34;api.ipify.org&#34;        ,&#34;/&#34;),
+                (&#34;checkip.amazonaws.com&#34;,&#34;/&#34;),
+                (&#34;l2.io&#34;                ,&#34;/ip&#34;),
+                (&#34;whatismyip.akamai.com&#34;,&#34;/&#34;)
+        ]
+        host, path = hosts[random.randrange(0,len(hosts))]
+        resp = await request(host,80,path)
         if resp:
-                spl = resp.split(b&#34;,&#34;)
-                if len(spl) &gt; 1:
-                        return spl[1].decode(&#34;utf-8&#34;)
+                return resp.decode(&#34;utf-8&#34;)
         return None</code></pre>
 </details>
 </dd>
@@ -114,17 +132,20 @@ async def get_wan_ip_async():
                 reader,writer = await uasyncio.open_connection(strings.tostrings(host), port)
                 streamio = Stream(reader, writer)
                 req = HttpRequest(None)
-                req.set_path(path)
-                req.set_header(b&#34;HOST&#34;,b&#34;ESP32&#34;)
+                req.set_path(strings.tobytes(path))
+                req.set_header(b&#34;HOST&#34;,strings.tobytes(host))
                 req.set_method(b&#34;GET&#34;)
-                req.set_header(b&#34;User-Agent&#34;,b&#34;ESP32&#34;)
+                req.set_header(b&#34;Accept&#34;         ,b&#34;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&#34;)
+                req.set_header(b&#34;User-Agent&#34;     ,b&#34;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15&#34;)
+                req.set_header(b&#34;Accept-Language&#34;,b&#34;fr-FR,fr;q=0.9&#34;)
                 req.set_header(b&#34;Accept-Encoding&#34;,b&#34;gzip, deflate&#34;)
-                req.set_header(b&#34;Connection&#34;,b&#34;keep-alive&#34;)
+                req.set_header(b&#34;Connection&#34;     ,b&#34;keep-alive&#34;)
                 await req.send(streamio)
                 response = HttpResponse(streamio)
                 await response.receive(streamio)
                 if response.status == b&#34;200&#34;:
-                        result = response.get_content()
+                        result = response.get_content().strip()
+
         except Exception as err:
                 logger.syslog(err)
         finally:
@@ -159,7 +180,7 @@ async def get_wan_ip_async():
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

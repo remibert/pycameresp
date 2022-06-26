@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>lib.video.video API documentation</title>
 <meta name="description" content="Class to manage the camera of the ESP32CAM.
 This requires the modified firmware.
@@ -62,32 +62,6 @@ class CameraConfig(jsonconfig.JsonConfig):
                 self.hmirror    = False
                 self.vflip      = False
                 self.flash_level = 0
-
-class Motion:
-        &#34;&#34;&#34; Class motion detection returned by the detect function &#34;&#34;&#34;
-        def __init__(self, motion):
-                &#34;&#34;&#34; Constructor with motion object_ &#34;&#34;&#34;
-                self.motion = motion
-
-        def deinit (self):
-                &#34;&#34;&#34; Destructor &#34;&#34;&#34;
-                self.motion.deinit()
-
-        def extract(self):
-                &#34;&#34;&#34; Extract the full content of motion &#34;&#34;&#34;
-                return self.motion.extract()
-
-        def compare(self, other):
-                &#34;&#34;&#34; Compare image to detect motion &#34;&#34;&#34;
-                return self.motion.compare(other.motion)
-
-        def configure(self, param):
-                &#34;&#34;&#34; Configure the motion detection &#34;&#34;&#34;
-                self.motion.configure(param)
-
-        def get_image(self):
-                &#34;&#34;&#34; Return the jpeg buffer of motion &#34;&#34;&#34;
-                return self.motion.get_image()
 
 class Reservation:
         &#34;&#34;&#34; Manage the camera reservation &#34;&#34;&#34;
@@ -1599,117 +1573,6 @@ def vflip(val=None):
 <li>tools.jsonconfig.JsonConfig</li>
 </ul>
 </dd>
-<dt id="lib.video.video.Motion"><code class="flex name class">
-<span>class <span class="ident">Motion</span></span>
-<span>(</span><span>motion)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Class motion detection returned by the detect function </p>
-<p>Constructor with motion object_</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Motion:
-        &#34;&#34;&#34; Class motion detection returned by the detect function &#34;&#34;&#34;
-        def __init__(self, motion):
-                &#34;&#34;&#34; Constructor with motion object_ &#34;&#34;&#34;
-                self.motion = motion
-
-        def deinit (self):
-                &#34;&#34;&#34; Destructor &#34;&#34;&#34;
-                self.motion.deinit()
-
-        def extract(self):
-                &#34;&#34;&#34; Extract the full content of motion &#34;&#34;&#34;
-                return self.motion.extract()
-
-        def compare(self, other):
-                &#34;&#34;&#34; Compare image to detect motion &#34;&#34;&#34;
-                return self.motion.compare(other.motion)
-
-        def configure(self, param):
-                &#34;&#34;&#34; Configure the motion detection &#34;&#34;&#34;
-                self.motion.configure(param)
-
-        def get_image(self):
-                &#34;&#34;&#34; Return the jpeg buffer of motion &#34;&#34;&#34;
-                return self.motion.get_image()</code></pre>
-</details>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.video.video.Motion.compare"><code class="name flex">
-<span>def <span class="ident">compare</span></span>(<span>self, other)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Compare image to detect motion</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def compare(self, other):
-        &#34;&#34;&#34; Compare image to detect motion &#34;&#34;&#34;
-        return self.motion.compare(other.motion)</code></pre>
-</details>
-</dd>
-<dt id="lib.video.video.Motion.configure"><code class="name flex">
-<span>def <span class="ident">configure</span></span>(<span>self, param)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Configure the motion detection</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def configure(self, param):
-        &#34;&#34;&#34; Configure the motion detection &#34;&#34;&#34;
-        self.motion.configure(param)</code></pre>
-</details>
-</dd>
-<dt id="lib.video.video.Motion.deinit"><code class="name flex">
-<span>def <span class="ident">deinit</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Destructor</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def deinit (self):
-        &#34;&#34;&#34; Destructor &#34;&#34;&#34;
-        self.motion.deinit()</code></pre>
-</details>
-</dd>
-<dt id="lib.video.video.Motion.extract"><code class="name flex">
-<span>def <span class="ident">extract</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Extract the full content of motion</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def extract(self):
-        &#34;&#34;&#34; Extract the full content of motion &#34;&#34;&#34;
-        return self.motion.extract()</code></pre>
-</details>
-</dd>
-<dt id="lib.video.video.Motion.get_image"><code class="name flex">
-<span>def <span class="ident">get_image</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return the jpeg buffer of motion</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_image(self):
-        &#34;&#34;&#34; Return the jpeg buffer of motion &#34;&#34;&#34;
-        return self.motion.get_image()</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
 <dt id="lib.video.video.Reservation"><code class="flex name class">
 <span>class <span class="ident">Reservation</span></span>
 </code></dt>
@@ -1959,16 +1822,6 @@ to the web page. It stop the motion detection during this phase</p></div>
 <h4><code><a title="lib.video.video.CameraConfig" href="#lib.video.video.CameraConfig">CameraConfig</a></code></h4>
 </li>
 <li>
-<h4><code><a title="lib.video.video.Motion" href="#lib.video.video.Motion">Motion</a></code></h4>
-<ul class="">
-<li><code><a title="lib.video.video.Motion.compare" href="#lib.video.video.Motion.compare">compare</a></code></li>
-<li><code><a title="lib.video.video.Motion.configure" href="#lib.video.video.Motion.configure">configure</a></code></li>
-<li><code><a title="lib.video.video.Motion.deinit" href="#lib.video.video.Motion.deinit">deinit</a></code></li>
-<li><code><a title="lib.video.video.Motion.extract" href="#lib.video.video.Motion.extract">extract</a></code></li>
-<li><code><a title="lib.video.video.Motion.get_image" href="#lib.video.video.Motion.get_image">get_image</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="lib.video.video.Reservation" href="#lib.video.video.Reservation">Reservation</a></code></h4>
 <ul class="">
 <li><code><a title="lib.video.video.Reservation.acquire" href="#lib.video.video.Reservation.acquire">acquire</a></code></li>
@@ -1982,7 +1835,7 @@ to the web page. It stop the motion detection during this phase</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

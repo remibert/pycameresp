@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>lib.tools.jsonconfig API documentation</title>
 <meta name="description" content="Functions for managing the json configuration.
 All configuration classes end the name with the word Config.
@@ -40,8 +40,16 @@ For each of these classes, a json file with the same name is stored in the confi
 # pylint:disable=consider-iterating-dictionary
 import json
 import re
-import uos
-from tools import logger,filesystem,strings
+try:
+        import uos
+except:
+        import os as uos
+try:
+        from tools import logger,strings,filesystem
+except:
+        # pylint:disable=multiple-imports
+        import logger,strings,filesystem
+
 
 self_config = None
 class JsonConfig:
@@ -177,17 +185,22 @@ class JsonConfig:
                 del self_config
                 return result
 
-        def load(self, file = None, part_filename=&#34;&#34;):
+        def load(self, file = None, part_filename=&#34;&#34;, tobytes=True, errorlog=True):
                 &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
                 try:
                         filename = self.get_pathname(strings.tofilename(part_filename))
                         file, filename = self.open(file=file, read_write=&#34;r&#34;, part_filename=part_filename)
-                        self.update(strings.tobytes(json.load(file)))
+
+                        data = json.load(file)
+                        if tobytes:
+                                data = strings.tobytes(data)
+                        self.update(data)
                         file.close()
                         return True
                 except OSError as err:
                         if err.args[0] == 2:
-                                logger.syslog(&#34;Not existing %s &#34;%(filename))
+                                if errorlog:
+                                        logger.syslog(&#34;Not existing %s &#34;%(filename))
                         else:
                                 logger.syslog(err, &#34;Cannot load %s &#34;%(filename))
                         return False
@@ -367,17 +380,22 @@ class JsonConfig:
                 del self_config
                 return result
 
-        def load(self, file = None, part_filename=&#34;&#34;):
+        def load(self, file = None, part_filename=&#34;&#34;, tobytes=True, errorlog=True):
                 &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
                 try:
                         filename = self.get_pathname(strings.tofilename(part_filename))
                         file, filename = self.open(file=file, read_write=&#34;r&#34;, part_filename=part_filename)
-                        self.update(strings.tobytes(json.load(file)))
+
+                        data = json.load(file)
+                        if tobytes:
+                                data = strings.tobytes(data)
+                        self.update(data)
                         file.close()
                         return True
                 except OSError as err:
                         if err.args[0] == 2:
-                                logger.syslog(&#34;Not existing %s &#34;%(filename))
+                                if errorlog:
+                                        logger.syslog(&#34;Not existing %s &#34;%(filename))
                         else:
                                 logger.syslog(err, &#34;Cannot load %s &#34;%(filename))
                         return False
@@ -527,7 +545,7 @@ class JsonConfig:
 </details>
 </dd>
 <dt id="lib.tools.jsonconfig.JsonConfig.load"><code class="name flex">
-<span>def <span class="ident">load</span></span>(<span>self, file=None, part_filename='')</span>
+<span>def <span class="ident">load</span></span>(<span>self, file=None, part_filename='', tobytes=True, errorlog=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Load object with the file specified</p></div>
@@ -535,17 +553,22 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def load(self, file = None, part_filename=&#34;&#34;):
+<pre><code class="python">def load(self, file = None, part_filename=&#34;&#34;, tobytes=True, errorlog=True):
         &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
         try:
                 filename = self.get_pathname(strings.tofilename(part_filename))
                 file, filename = self.open(file=file, read_write=&#34;r&#34;, part_filename=part_filename)
-                self.update(strings.tobytes(json.load(file)))
+
+                data = json.load(file)
+                if tobytes:
+                        data = strings.tobytes(data)
+                self.update(data)
                 file.close()
                 return True
         except OSError as err:
                 if err.args[0] == 2:
-                        logger.syslog(&#34;Not existing %s &#34;%(filename))
+                        if errorlog:
+                                logger.syslog(&#34;Not existing %s &#34;%(filename))
                 else:
                         logger.syslog(err, &#34;Cannot load %s &#34;%(filename))
                 return False
@@ -731,7 +754,7 @@ class JsonConfig:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>

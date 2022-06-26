@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.2" />
+<meta name="generator" content="pdoc 0.10.0" />
 <title>lib.motion.motion API documentation</title>
 <meta name="description" content="Motion detection only work with ESP32CAM (Requires specially modified ESP32CAM firmware to handle motion detection.)" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -217,7 +217,7 @@ class ImageMotion:
                         self.motion.configure(\
                                 {
                                         &#34;mask&#34;:mask,
-                                        &#34;errorLights&#34;:[[0,1],[128,errorLight],[192, errorLight],[256,errorLight]],
+                                        &#34;errorLights&#34;:[[0,10],[30,10],[128,errorLight],[256,errorLight]],
                                         &#34;errorHistos&#34;:[[0,0],[32,32],[128,128],[256,256]]
                                 })
 
@@ -428,6 +428,12 @@ class Motion:
                                         current.reset_differences()
                                         break
 
+                                # If image is too dark
+                                if current.motion.get_light() &lt;= 20:
+                                        # Reuse the motion identifier
+                                        current.set_motion_id(previous.motion_id)
+                                        break
+
                                 # If image seem equal to previous
                                 if not self.is_detected(comparison):
                                         # Reuse the motion identifier
@@ -444,7 +450,10 @@ class Motion:
                         # Compute the list of differences
                         diffs = b&#34;&#34;
                         index = 0
+                        mean_light = -1
                         for image in self.images:
+                                if mean_light == -1:
+                                        mean_light = image.motion.get_light()
                                 differences.setdefault(image.get_motion_id(), []).append(image.get_motion_id())
                                 if image.get_motion_id() is not None:
                                         if image.index % 10 == 0:
@@ -455,7 +464,7 @@ class Motion:
                                                 index = image.index
                                         diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                         if display:
-                                line = b&#34;\r%s %s (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), index)
+                                line = b&#34;\r%s %s L%d (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), mean_light, index)
                                 if filesystem.ismicropython():
                                         sys.stdout.write(line)
                                 else:
@@ -1437,7 +1446,7 @@ async def detect_motion(pir_detection):
                         self.motion.configure(\
                                 {
                                         &#34;mask&#34;:mask,
-                                        &#34;errorLights&#34;:[[0,1],[128,errorLight],[192, errorLight],[256,errorLight]],
+                                        &#34;errorLights&#34;:[[0,10],[30,10],[128,errorLight],[256,errorLight]],
                                         &#34;errorHistos&#34;:[[0,0],[32,32],[128,128],[256,256]]
                                 })</code></pre>
 </details>
@@ -1680,7 +1689,7 @@ async def detect_motion(pir_detection):
                 self.motion.configure(\
                         {
                                 &#34;mask&#34;:mask,
-                                &#34;errorLights&#34;:[[0,1],[128,errorLight],[192, errorLight],[256,errorLight]],
+                                &#34;errorLights&#34;:[[0,10],[30,10],[128,errorLight],[256,errorLight]],
                                 &#34;errorHistos&#34;:[[0,0],[32,32],[128,128],[256,256]]
                         })</code></pre>
 </details>
@@ -1937,6 +1946,12 @@ async def detect_motion(pir_detection):
                                         current.reset_differences()
                                         break
 
+                                # If image is too dark
+                                if current.motion.get_light() &lt;= 20:
+                                        # Reuse the motion identifier
+                                        current.set_motion_id(previous.motion_id)
+                                        break
+
                                 # If image seem equal to previous
                                 if not self.is_detected(comparison):
                                         # Reuse the motion identifier
@@ -1953,7 +1968,10 @@ async def detect_motion(pir_detection):
                         # Compute the list of differences
                         diffs = b&#34;&#34;
                         index = 0
+                        mean_light = -1
                         for image in self.images:
+                                if mean_light == -1:
+                                        mean_light = image.motion.get_light()
                                 differences.setdefault(image.get_motion_id(), []).append(image.get_motion_id())
                                 if image.get_motion_id() is not None:
                                         if image.index % 10 == 0:
@@ -1964,7 +1982,7 @@ async def detect_motion(pir_detection):
                                                 index = image.index
                                         diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                         if display:
-                                line = b&#34;\r%s %s (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), index)
+                                line = b&#34;\r%s %s L%d (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), mean_light, index)
                                 if filesystem.ismicropython():
                                         sys.stdout.write(line)
                                 else:
@@ -2138,6 +2156,12 @@ async def detect_motion(pir_detection):
                                 current.reset_differences()
                                 break
 
+                        # If image is too dark
+                        if current.motion.get_light() &lt;= 20:
+                                # Reuse the motion identifier
+                                current.set_motion_id(previous.motion_id)
+                                break
+
                         # If image seem equal to previous
                         if not self.is_detected(comparison):
                                 # Reuse the motion identifier
@@ -2154,7 +2178,10 @@ async def detect_motion(pir_detection):
                 # Compute the list of differences
                 diffs = b&#34;&#34;
                 index = 0
+                mean_light = -1
                 for image in self.images:
+                        if mean_light == -1:
+                                mean_light = image.motion.get_light()
                         differences.setdefault(image.get_motion_id(), []).append(image.get_motion_id())
                         if image.get_motion_id() is not None:
                                 if image.index % 10 == 0:
@@ -2165,7 +2192,7 @@ async def detect_motion(pir_detection):
                                         index = image.index
                                 diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                 if display:
-                        line = b&#34;\r%s %s (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), index)
+                        line = b&#34;\r%s %s L%d (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), mean_light, index)
                         if filesystem.ismicropython():
                                 sys.stdout.write(line)
                         else:
@@ -2812,7 +2839,7 @@ def get(width=None, height=None):
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
 </footer>
 </body>
 </html>
