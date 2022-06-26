@@ -66,6 +66,54 @@ class SdCard:
 		return SdCard.mountpoint[0]
 
 	@staticmethod
+	def formatsd(fs="FAT"):
+		""" Format the sd card (erase all data) """
+		result = False
+		if SdCard.is_mounted() is False:
+			try:
+				import os
+				import machine
+				sd = machine.SDCard(**(SdCard.slot[0]))
+				if fs== "FAT":
+					os.VfsFat.mkfs(sd)
+					os.VfsFat(sd)
+					result = True
+				elif fs== "LFS":
+					os.VfsLfs2.mkfs(sd)
+					os.VfsLfs2(sd)
+				result = True
+			except Exception as err:
+				logger.syslog(err)
+		return result
+
+	@staticmethod
+	def umount(mountpoint = "/sd"):
+		""" Umount sd card """
+		result = False
+		if SdCard.is_mounted() is True and mountpoint != "/" and mountpoint != "":
+			if SdCard.is_available():
+				if filesystem.ismicropython():
+					try:
+						uos.umount(mountpoint)
+						SdCard.mountpoint[0] = ""
+						SdCard.opened[0]= False
+						result = True
+					except Exception as err:
+						logger.syslog(err, "Cannot umount %s"%mountpoint)
+				else:
+					SdCard.mountpoint[0] = ""
+					SdCard.opened[0] = False
+					result = True
+			else:
+				logger.syslog("SdCard disabled")
+				SdCard.mountpoint[0] = ""
+				SdCard.opened[0] = False
+				result = True
+		elif SdCard.is_mounted() is False:
+			result = True
+		return result
+
+	@staticmethod
 	def mount(mountpoint = "/sd"):
 		""" Mount sd card """
 		result = False

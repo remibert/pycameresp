@@ -190,6 +190,22 @@ class Motion:
 		""" Get light level """
 		return 128
 
+	def extract(self):
+		""" Extract the motion informations """
+		return []
+
+	def get_size(self):
+		""" Return the size of image buffer """
+		return 0
+
+	def get_max_light(self):
+		""" Get maximal light detected """
+		return 256
+
+	def get_min_light(self):
+		""" Get minimal light detected """
+		return 0
+
 def motion():
 	""" Get motion detection """
 	return Motion(None)

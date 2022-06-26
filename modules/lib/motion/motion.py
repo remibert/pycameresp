@@ -188,7 +188,7 @@ class ImageMotion:
 			self.motion.configure(\
 				{
 					"mask":mask,
-					"errorLights":[[0,1],[128,errorLight],[192, errorLight],[256,errorLight]],
+					"errorLights":[[0,10],[30,10],[128,errorLight],[256,errorLight]],
 					"errorHistos":[[0,0],[32,32],[128,128],[256,256]]
 				})
 
@@ -399,6 +399,12 @@ class Motion:
 					current.reset_differences()
 					break
 
+				# If image is too dark
+				if current.motion.get_light() <= 20:
+					# Reuse the motion identifier
+					current.set_motion_id(previous.motion_id)
+					break
+
 				# If image seem equal to previous
 				if not self.is_detected(comparison):
 					# Reuse the motion identifier
@@ -415,7 +421,10 @@ class Motion:
 			# Compute the list of differences
 			diffs = b""
 			index = 0
+			mean_light = -1
 			for image in self.images:
+				if mean_light == -1:
+					mean_light = image.motion.get_light()
 				differences.setdefault(image.get_motion_id(), []).append(image.get_motion_id())
 				if image.get_motion_id() is not None:
 					if image.index % 10 == 0:
@@ -426,7 +435,7 @@ class Motion:
 						index = image.index
 					diffs += b"%d:%d%s%s"%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, 'big'), trace)
 			if display:
-				line = b"\r%s %s (%d) "%(strings.date_to_bytes()[12:], bytes(diffs), index)
+				line = b"\r%s %s L%d (%d) "%(strings.date_to_bytes()[12:], bytes(diffs), mean_light, index)
 				if filesystem.ismicropython():
 					sys.stdout.write(line)
 				else:

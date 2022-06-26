@@ -419,7 +419,7 @@ def host2ip(hostname):
 def mountsd(mountpoint="/sd"):
 	""" Mount command """
 	try:
-		uos.mount(machine.SDCard(), mountpoint)
+		sdcard.SdCard.mount(mountpoint)
 		print_("Sd mounted on '%s'"%mountpoint)
 	except:
 		print_("Cannot mount sd on '%s'"%mountpoint)
@@ -427,7 +427,7 @@ def mountsd(mountpoint="/sd"):
 def umountsd(mountpoint="/sd"):
 	""" Umount command """
 	try:
-		uos.umount(mountpoint)
+		sdcard.SdCard.umount(mountpoint)
 		print_("Sd umounted from '%s'"%mountpoint)
 	except:
 		print_("Cannot umount sd from '%s'"%mountpoint)
@@ -482,6 +482,21 @@ def setdate(datetime=""):
 
 	if failed is True:
 		print_('Expected format "YYYY/MM/DD hh:mm:ss"')
+
+def formatsd(fstype="FAT"):
+	""" Format sd card """
+	if fstype in ["FAT","LFS"]:
+		if sdcard.SdCard.is_mounted() is False:
+			res = input("All data will be lost on Sd card ? proceed with format (y/n) :")
+			if res in ["y","Y"]:
+				if sdcard.SdCard.formatsd() is True:
+					print_("Formatting terminated")
+				else:
+					print_("Formatting failed")
+		else:
+			print_("Sd card is mounted, a reboot required")
+	else:
+		print_("Filesystem supported : FAT or LFS")
 
 def reboot():
 	""" Reboot command """
@@ -997,6 +1012,7 @@ shell_commands = \
 	"eval"       :[eval_           ,"string"               ],
 	"exec"       :[exec_           ,"string"               ],
 	"dump"       :[dump_           ,"filename"             ],
+	"formatsd"   :[formatsd        ,"fstype"               ],
 	"vtcolors"   :[vtcolors                                ],
 }
 

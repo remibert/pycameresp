@@ -28,32 +28,6 @@ class CameraConfig(jsonconfig.JsonConfig):
 		self.vflip      = False
 		self.flash_level = 0
 
-class Motion:
-	""" Class motion detection returned by the detect function """
-	def __init__(self, motion):
-		""" Constructor with motion object_ """
-		self.motion = motion
-
-	def deinit (self):
-		""" Destructor """
-		self.motion.deinit()
-
-	def extract(self):
-		""" Extract the full content of motion """
-		return self.motion.extract()
-
-	def compare(self, other):
-		""" Compare image to detect motion """
-		return self.motion.compare(other.motion)
-
-	def configure(self, param):
-		""" Configure the motion detection """
-		self.motion.configure(param)
-
-	def get_image(self):
-		""" Return the jpeg buffer of motion """
-		return self.motion.get_image()
-
 class Reservation:
 	""" Manage the camera reservation """
 	def __init__(self):
