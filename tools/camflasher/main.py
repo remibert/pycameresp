@@ -126,7 +126,7 @@ class CamFlasher(QMainWindow):
 		self.clear_selection = True
 		self.title = self.windowTitle()
 		self.hide_size = 0
-
+		self.paused = False
 		# Select font
 		self.update_font()
 		config = settings.get_settings()
@@ -175,6 +175,8 @@ class CamFlasher(QMainWindow):
 		self.window.action_paste.triggered.connect(self.paste)
 		self.window.action_copy.triggered.connect(self.copy)
 		self.window.action_resume.setDisabled(True)
+		self.window.action_pause.triggered.connect(self.pause)
+		self.window.action_resume.triggered.connect(self.pause)
 		self.window.action_flash.triggered.connect(self.on_flash_clicked)
 		self.window.action_about.triggered.connect(self.on_about_clicked)
 		self.window.action_option.triggered.connect(self.on_option_clicked)
@@ -215,18 +217,40 @@ class CamFlasher(QMainWindow):
 		""" Customization of the context menu """
 		context = QMenu(self)
 
-		copy_ = QAction("Copy", self)
-		copy_.triggered.connect(self.copy)
-		context.addAction(copy_)
+		copy = QAction("Copy", self)
+		copy.triggered.connect(self.copy)
+		context.addAction(copy)
 
-		paste = QAction("Paste", self)
-		paste.triggered.connect(self.paste)
-		context.addAction(paste)
+		if self.paused is False:
+			paste = QAction("Paste", self)
+			paste.triggered.connect(self.paste)
+			context.addAction(paste)
 
-		cls = QAction("Cls", self)
-		cls.triggered.connect(self.cls)
-		context.addAction(cls)
+			cls = QAction("Cls", self)
+			cls.triggered.connect(self.cls)
+			context.addAction(cls)
+
+			pause = QAction("Pause", self)
+			pause.triggered.connect(self.pause)
+			context.addAction(pause)
+		else:
+			pause = QAction("Resume", self)
+			pause.triggered.connect(self.pause)
+			context.addAction(pause)
+
 		context.exec(QCursor.pos())
+
+	def pause(self):
+		""" Pause console display """
+		self.paused = not self.paused
+		if self.paused:
+			self.window.action_paste.setDisabled(True)
+			self.window.action_pause.setDisabled(True)
+			self.window.action_resume.setEnabled(True)
+		else:
+			self.window.action_pause.setEnabled(True)
+			self.window.action_paste.setEnabled(True)
+			self.window.action_resume.setDisabled(True)
 
 	def cls(self):
 		""" Clear screen """
@@ -252,7 +276,8 @@ class CamFlasher(QMainWindow):
 			key = self.console.convert_key_to_vt100(event)
 			if key is not None:
 				self.clear_selection = True
-				self.flasher.send_key(key)
+				if self.paused is False:
+					self.flasher.send_key(key)
 			return True
 		return super(CamFlasher, self).eventFilter(obj, event)
 
@@ -590,7 +615,7 @@ class CamFlasher(QMainWindow):
 			self.clear_selection = False
 
 		cursor = self.window.output.textCursor()
-		if cursor.selectionEnd() == cursor.selectionStart():
+		if cursor.selectionEnd() == cursor.selectionStart() and self.paused is False:
 			output = self.console.refresh()
 			if output != "":
 				self.flasher.send_key(output.encode("utf-8"))

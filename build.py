@@ -112,7 +112,7 @@ make -C mpy-cross
 cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
 make submodules
 make BOARD=%(BOARD)s
-cp "%(OUTPUT_DIR)s/micropython/ports/esp32/build-%(BOARD)s/firmware.bin" "%(OUTPUT_DIR)s/%(BOARD)s-firmware.bin"
+cp "%(OUTPUT_DIR)s/micropython/ports/esp32/build-%(BOARD)s/firmware.bin" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.bin"
 
 ####################
 # Build distri zip #

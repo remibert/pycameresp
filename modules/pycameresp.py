@@ -76,8 +76,15 @@ def create_network_task(loop, html_loader = None):
 def create_shell_task(loop):
 	""" Create shell asynchronous task (press any key to get shell prompt) """
 	# pylint:disable=unused-import
-	from shell import async_shell,sh
+	from shell import async_shell
 	loop.create_task(async_shell())
+
+def create_user_task(loop, function):
+	""" Create user task """
+	from tools import tasking
+	async def task():
+		await tasking.task_monitoring(function)
+	loop.create_task(task())
 
 def run_tasks(loop):
 	""" Start all async task """
@@ -92,10 +99,13 @@ def run_tasks(loop):
 		logger.syslog(err)
 		system.reboot("Crash in main")
 
+# # Sample of user task
 # async def sample_task():
-#     count = 0
-#     while True:
-#         await uasyncio.sleep(10)
-#         print(count)
-#         count += 1
-# loop.create_task(sample_task())
+# 	count = 0
+# 	while True:
+# 		await uasyncio.sleep(1)
+# 		print("-",count)
+# 		count += 1
+
+# # Register the user task, monitor all exceptions
+# pycameresp.create_task(loop, sample_task)

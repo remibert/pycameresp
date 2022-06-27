@@ -312,7 +312,8 @@ class StreamThread(threading.Thread):
 					if not self.is_fileignored(filename):
 						file_writer = FileWriter()
 						filename = filename.replace("\\","/")
-						device_filename = filename.replace(directory, "")
+						device_filename = filename.replace(directory_, "")
+						device_filename = device_filename.lstrip("/")
 						file_writer.write(filename, self.stream, self.stream, device_filename, self.print)
 			else:
 				self.print("'%s' not found"%(os.path.normpath(device_dir + "/" + pattern)))

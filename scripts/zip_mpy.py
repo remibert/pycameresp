@@ -31,15 +31,15 @@ excludeds_shell = excludeds + [
 	"*/wifi/*",
 	"*/htmltemplate/*"]
 
-useful.zip_dir("%s/shell.zip"%ROOT,MPY_DIRECTORY,  ["*.mpy"], excludeds_shell, False, [["frozen_mpy","lib"]])
+useful.zip_dir("%s/delivery/shell.zip"%PYCAMERESP,MPY_DIRECTORY,  ["*.mpy"], excludeds_shell, False, [["frozen_mpy","lib"]])
 
 from zipfile import ZipFile, ZIP_DEFLATED 
 import os.path
-useful.zip_dir("%s/server.zip"%ROOT,MPY_DIRECTORY, ["*.mpy"], excludeds      , False, [["frozen_mpy","lib"]])
-z = ZipFile("%s/server.zip"%ROOT, "a",ZIP_DEFLATED)
+useful.zip_dir("%s/delivery/server.zip"%PYCAMERESP,MPY_DIRECTORY, ["*.mpy"], excludeds      , False, [["frozen_mpy","lib"]])
+z = ZipFile("%s/delivery/server.zip"%PYCAMERESP, "a",ZIP_DEFLATED)
 z.write(os.path.normpath("%s/modules/main.py"%PYCAMERESP),"main.py")
 z.write(os.path.normpath("%s/modules/pycameresp.py"%PYCAMERESP),"pycameresp.py")
 z.write(os.path.normpath("%s/modules/www/stylesheet.css"%PYCAMERESP),"www/stylesheet.css")
 z.close()
 
-useful.zip_dir("%s/editor.zip"%ROOT,PY_DIRECTORY,  ["*/editor*.py","*/filesystem.py","*/jsonconfig.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py"],[], False, [["shell","editor"],["tools","editor"],["modules",""]])
+useful.zip_dir("%s/delivery/editor.zip"%PYCAMERESP,PY_DIRECTORY,  ["*/editor*.py","*/filesystem.py","*/jsonconfig.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py"],[], False, [["shell","editor"],["tools","editor"],["modules",""]])

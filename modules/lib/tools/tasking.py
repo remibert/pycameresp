@@ -37,8 +37,9 @@ async def task_monitoring(task):
 	retry = 0
 	lastError = ""
 	memory_error_count = 0
+	max_retry = 20
 	try:
-		while retry < 20:
+		while retry < max_retry:
 			try:
 				while True:
 					if await task():
@@ -57,7 +58,7 @@ async def task_monitoring(task):
 				lastError = logger.syslog(err, "Task error")
 				retry += 1
 				await uasyncio.sleep_ms(6000)
-			logger.syslog("Task retry %d"%retry)
+			logger.syslog("Task retry %d/%d"%(retry,max_retry))
 		logger.syslog("Too many task error reboot")
 
 		from server.server import ServerConfig

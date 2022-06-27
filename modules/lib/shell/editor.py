@@ -75,7 +75,7 @@ class EditorConfig(jsonconfig.JsonConfig):
 		self.key_indent           = ["\x09"]                              # Indent
 		# line feed reserved
 		# ctrl-k unused
-		self.key_del_line      = ["\x0C"]                              # Delete line
+		self.key_del_line         = ["\x0C"]                              # Delete line
 		self.key_new_line         = ["\x0D", "\0x0A"]                     # New line pressed
 		self.key_find_next        = ["\x0E", "\x1bOR"]                    # Find next
 		# ctrl-o unused
@@ -1397,7 +1397,7 @@ class Text:
 
 			# If a part of line selected
 			if sel_line_start == sel_line_end and not (sel_column_start == 0 and sel_column_end == len(self.lines[sel_line_end])-1):
-				self.add_char(self.cfg.INDENT)
+				self.add_char(self.cfg.key_indent)
 			else:
 				# If the last line selected is at beginning of line
 				if sel_column_end == 0:

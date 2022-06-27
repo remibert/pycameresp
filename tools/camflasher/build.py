@@ -166,7 +166,7 @@ def main():
 	if sys.platform == "darwin":
 		execute("create-dmg dist/%(TARGET)s/%(NAME)s.dmg dist/%(TARGET)s/%(NAME)s.app --volicon %(ICONS)s"%(globals()))
 
-	zip_filename = "dist/%(NAME)s_%(TARGET)s.zip"%globals()
+	zip_filename = "../../delivery/%(NAME)s_%(TARGET)s.zip"%globals()
 	with zipfile.ZipFile(zip_filename, 'w') as myzip:
 		myzip.write("dist/%(TARGET)s/%(EXE)s"%globals(), EXE)
 
