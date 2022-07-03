@@ -16,8 +16,4 @@ Shell and text editor executed on esp32, here CamFlasher application used on ser
 
 The video show file drop directly on CamFlasher, the files are then uploaded to the device, works also from telnet connection.
 
-The shell command **download** allows the downloading files from board to your computer.
-
-The shell command **upload** allows the uploading files from your computer into the device.
-
 ![Drop.gif](/images/Drop.gif "Drop file on CamFlasher")

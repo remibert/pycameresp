@@ -31,33 +31,37 @@ def create_camera_task(loop, device):
 		from tools.awake import Awake
 		pin_wake_up = Awake.is_pin_wake_up()
 
-		if device == "ESP32ONE":
-			from video import Camera
-			from tools import sdcard
+		from video import Camera
 
-			# ESP32ONE device
-			Camera.gpio_config(
-				pin_pwdn=32, pin_reset=-1, pin_xclk=4, pin_sscb_sda=18, pin_sscb_scl=23,
-				pin_d7=36, pin_d6=37, pin_d5=38, pin_d4=39, pin_d3=35, pin_d2=14, pin_d1=13, pin_d0=34,
-				pin_vsync=5, pin_href=27, pin_pclk=25, xclk_freq_hz=20000000,
-				ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=12, fb_count=1, flash_led=0)
-			from tools import sdcard
-			sdcard.SdCard.set_slot(slot=None) # The slot is good but not working I don't know why
-		elif device == "M5CAMERA-B":
-			from video import Camera
-			from tools import sdcard
+		if Camera.is_activated():
+			if device == "ESP32ONE":
+				from tools import sdcard
 
-			# ESP32ONE device
-			Camera.gpio_config(
-				pin_pwdn=-1, pin_reset=15, pin_xclk=27, pin_sscb_sda=22, pin_sscb_scl=23,
-				pin_d7=19, pin_d6=36, pin_d5=18, pin_d4=39, pin_d3=5, pin_d2=34, pin_d1= 35, pin_d0=32,
-				pin_vsync=25, pin_href=26, pin_pclk=21, xclk_freq_hz=20000000, ledc_timer=0,
-				ledc_channel=0 , pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
-			sdcard.SdCard.set_slot(slot=None) # No sdcard available
+				# ESP32ONE device
+				Camera.gpio_config(
+					pin_pwdn=32, pin_reset=-1, pin_xclk=4, pin_sscb_sda=18, pin_sscb_scl=23,
+					pin_d7=36, pin_d6=37, pin_d5=38, pin_d4=39, pin_d3=35, pin_d2=14, pin_d1=13, pin_d0=34,
+					pin_vsync=5, pin_href=27, pin_pclk=25, xclk_freq_hz=20000000,
+					ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=12, fb_count=1, flash_led=0)
+				from tools import sdcard
+				sdcard.SdCard.set_slot(slot=None) # The slot is good but not working I don't know why
+			elif device == "M5CAMERA-B":
+				from tools import sdcard
 
-		# Start motion detection
-		import motion
-		motion.start(loop, pin_wake_up)
+				# ESP32ONE device
+				Camera.gpio_config(
+					pin_pwdn=-1, pin_reset=15, pin_xclk=27, pin_sscb_sda=22, pin_sscb_scl=23,
+					pin_d7=19, pin_d6=36, pin_d5=18, pin_d4=39, pin_d3=5, pin_d2=34, pin_d1= 35, pin_d0=32,
+					pin_vsync=25, pin_href=26, pin_pclk=21, xclk_freq_hz=20000000, ledc_timer=0,
+					ledc_channel=0 , pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
+				sdcard.SdCard.set_slot(slot=None) # No sdcard available
+
+			# Start camera before wifi to avoid problems
+			Camera.open()
+
+			# Start motion detection
+			import motion
+			motion.start(loop, pin_wake_up)
 
 def default_loader():
 	""" The html pages only loaded when the connection of http server is done.
@@ -104,7 +108,7 @@ def run_tasks(loop):
 # 	count = 0
 # 	while True:
 # 		await uasyncio.sleep(1)
-# 		print("-",count)
+# 		print(count)
 # 		count += 1
 
 # # Register the user task, monitor all exceptions

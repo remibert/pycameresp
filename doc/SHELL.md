@@ -61,6 +61,7 @@ edit        | start editor with selected file
 eval        | evaluation python string
 exec        | execute python string
 exit        | exit of shell
+formatsd    | format the sd card
 download    | transfer files from device to computer (only available with camflasher)
 find        | find a file
 flashinfo   | flash informations
@@ -88,3 +89,4 @@ sysinfo     | system informations
 temperature | device temperature
 umount      | umount sd card
 uptime      | the amount of time system is running
+vtcolors    | show VT100 colors supported

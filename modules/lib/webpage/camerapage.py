@@ -7,7 +7,6 @@ from htmltemplate          import *
 from webpage.mainpage      import main_frame
 from webpage.streamingpage import *
 from video                 import Camera
-import uasyncio
 from tools                 import lang,info
 
 @HttpServer.add_route(b'/camera', menu=lang.menu_camera, item=lang.item_camera, available=info.iscamera() and Camera.is_activated())
@@ -23,9 +22,9 @@ async def camera_page(request, response, args):
 				Streaming.get_html(request),
 				ComboCmd(framesizes, text=lang.resolution,  path=b"camera/configure", name=b"framesize"),
 				SliderCmd(           text=lang.quality   ,  path=b"camera/configure", name=b"quality",    min=b"10", max=b"63",  step=b"1", value=b"%d"%config.quality),
-				SliderCmd(           text=lang.brightness,  path=b"camera/configure", name=b"brightness", min=b"-2", max=b"2" ,  step=b"1", value=b"%d"%config.brightness),
-				SliderCmd(           text=lang.contrast  ,  path=b"camera/configure", name=b"contrast"  , min=b"-2", max=b"2" ,  step=b"1", value=b"%d"%config.contrast),
-				SliderCmd(           text=lang.saturation,  path=b"camera/configure", name=b"saturation", min=b"-2", max=b"2" ,  step=b"1", value=b"%d"%config.saturation),
+				# SliderCmd(           text=lang.brightness,  path=b"camera/configure", name=b"brightness", min=b"-2", max=b"2" ,  step=b"1", value=b"%d"%config.brightness),
+				# SliderCmd(           text=lang.contrast  ,  path=b"camera/configure", name=b"contrast"  , min=b"-2", max=b"2" ,  step=b"1", value=b"%d"%config.contrast),
+				# SliderCmd(           text=lang.saturation,  path=b"camera/configure", name=b"saturation", min=b"-2", max=b"2" ,  step=b"1", value=b"%d"%config.saturation),
 				SliderCmd(           text=lang.flash_level, path=b"camera/configure", name=b"flash_level", min=b"0" , max=b"256", step=b"1", value=b"%d"%config.flash_level),
 				SwitchCmd(           text=lang.hmirror   ,  path=b"camera/configure", name=b"hmirror"   , checked=config.hmirror),
 				SwitchCmd(           text=lang.vflip     ,  path=b"camera/configure", name=b"vflip"     , checked=config.vflip))
