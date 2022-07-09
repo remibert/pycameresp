@@ -107,11 +107,11 @@ class ImageMotion:
 
 	def get_filename(self):
 		""" Get the storage filename """
-		return "%s Id=%d D=%2d"%(self.filename, self.index, self.get_diff_count())
+		return "%s Id=%d D=%d"%(self.filename, self.index, self.get_diff_count())
 
 	def get_message(self):
 		""" Get the message of motion """
-		return "%s %s D=%2d"%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+		return "%s %s D=%d"%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
 	def get_informations(self):
 		""" Return the informations of motion """

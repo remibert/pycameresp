@@ -77,7 +77,8 @@ class Historic:
 		if item is not None:
 			if not filesystem.ismicropython():
 				# Remove the "/" before filename
-				item [0] = item[0][1:]
+				item [0] = item [0].lstrip("/")
+
 			# Add json file to the historic
 			Historic.historic.insert(0,item)
 
@@ -97,7 +98,10 @@ class Historic:
 						file = None
 						file = open(motion, "rb")
 						motion_item = json.load(file)
-						if filesystem.exists(motion_item[0]):
+						filename = motion_item[0]
+						if not filesystem.ismicropython():
+							filename = filename.lstrip("/")
+						if filesystem.exists(filename):
 							Historic.add_item(motion_item)
 					except OSError as err:
 						logger.syslog(err)

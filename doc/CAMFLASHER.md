@@ -112,13 +112,17 @@ The **Account** submenu allows you to configure the password, the language :
 ![WebMenu](/images/WebMenu_Account.png "WebMenu")
 
 The **System** submenu allows you to request a reboot, obtain information on the device, configure the wake up and the battery mode :
+
 ![WebMenu](/images/WebMenu_System.png "WebMenu")
 
-The **Network** submenu is used to configure the access point and wifi networks
+The **Network** submenu is used to configure the access point and wifi networks :
+
 ![WebMenu](/images/WebMenu_Network.png "WebMenu")
 
 The **Server** submenu allows the activation/deactivation of each server, to configure pushover notifications, and to configure the presence detection of smartphones to automate the start/stop of motion detection :
+
 ![WebMenu](/images/WebMenu_Server.png "WebMenu")
+
 The **Camera** submenu allows to see the streaming of the camera, and also to activate/deactivate the camera :
 
 ![WebMenu](/images/WebMenu_Camera.png "WebMenu")
@@ -129,7 +133,7 @@ The **Motion** submenu allows you to start and stop motion detection, configure 
 
 # Region settings
 
-you can configure the time zone offset to synchronize the time as well as the language (french and english). The language will only be taken into account at the next reboot.
+You can configure the time zone offset to synchronize the time as well as the language (french and english). The language will only be taken into account at the next reboot.
 
 - Select the **Account**/**Region**
 
@@ -293,6 +297,21 @@ If you have pushover notifications enabled, you will receive all detections on t
 ![WebMenu](/images/WebMenu_MotionHistoric.png "WebMenu")
 
 The red frames indicate the areas that have triggered a notification.
+
+Action on the image :
+
+- ⏮ : click on top left corner of image switches to first motion detection (also page up key)
+- ⏭ : bottom right corner of image switches to last motion detection (also page down key)
+- ⏪ : click on the top of the image to switches to the previous day of motion detection (also up arrow key)
+- ⏩ : click on the bottom of the image switches to the next day of motion detection (also down arrow key)
+- ◀️ : click on the left of the image switches to the previous motion detection (also left arrow key)
+- ▶️ : click on the left of the image switches to the next motion detection (also right arrow key)
+- ⏺ : click in the middle of the image to save the image on your computer
+
+The image information is : 
+- **YYYY/MM/DD hh:mm:ss** : date and time of the motion detection,
+- **Id=xxx** : identification number of the images since the launch of the detection,
+- **D=xxx** : number of squares in the image that have changed since the previous image (see red frames).
 
 # System menu
 

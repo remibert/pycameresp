@@ -33,7 +33,7 @@ async def historic(request, response, args):
 		var image_request    = new XMLHttpRequest();
 
 		setInterval(show, 200);
-  
+
 		const MOTION_FILENAME =0;
 		const MOTION_WIDTH    =1;
 		const MOTION_HEIGHT   =2;
@@ -134,13 +134,15 @@ async def historic(request, response, args):
 			var motion = historic[id];
 			var ctx = document.getElementById('motion').getContext('2d');
 			
-			ctx.drawImage(document.getElementById(id), 0, 0, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
+			var offsetX = 30;
+			var offsetY = 30;
+			ctx.drawImage(document.getElementById(id), offsetX, offsetY, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
 			var x;
 			var y;
 
 			// Show thumb image selected
 			document.getElementById(previousId).style.border = "";
-			document.getElementById(id).style.border = "3px solid dodgerblue";
+			document.getElementById(id).style.border = "5px solid dodgerblue";
 			previousId = id;
 
 			var squarex = motion[MOTION_SQUAREX];
@@ -158,7 +160,7 @@ async def historic(request, response, args):
 						if (detection != " ")
 						{
 							ctx.strokeStyle = "yellow";
-							ctx.strokeRect(x * squarex + 15, y*squarey +15, squarex-30, squarey-30);
+							ctx.strokeRect(offsetX + (x * squarex + 15),offsetY + (y*squarey +15), squarex-30, squarey-30);
 						}
 					}
 				}
@@ -176,8 +178,8 @@ async def historic(request, response, args):
 						if (previous != detection)
 						{
 							ctx.beginPath();
-							ctx.moveTo(x*squarex, y*squarey);
-							ctx.lineTo(x*squarex, y*squarey + squarey);
+							ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
+							ctx.lineTo(offsetX + x*squarex, offsetY + y*squarey + squarey);
 							ctx.stroke();
 						}
 					}
@@ -195,8 +197,8 @@ async def historic(request, response, args):
 						if (previous != detection)
 						{
 							ctx.beginPath();
-							ctx.moveTo(x*squarex, y*squarey);
-							ctx.lineTo(x*squarex + squarex, y*squarey);
+							ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
+							ctx.lineTo(offsetX + x*squarex + squarex, offsetY + y*squarey);
 							ctx.stroke();
 						}
 					}
@@ -205,16 +207,34 @@ async def historic(request, response, args):
 
 			// Show text image
 			ctx.font = '20px monospace';
-			ctx.fillStyle = "red";
-			ctx.fillText(get_name(motion[MOTION_FILENAME]), 10, 20);
+			ctx.fillStyle = "white";
+			ctx.rect(0, offsetY + motion[MOTION_HEIGHT],  motion[MOTION_WIDTH], 100);
+			ctx.fill();
+
+			ctx.fillStyle = "black";
+			ctx.fillText(get_name(motion[MOTION_FILENAME]),  10, offsetY + motion[MOTION_HEIGHT] + 20);
 
 			// Show arrows
 			ctx.fillStyle = 'rgba(255,255,255,10)';
 			ctx.font = '30px monospace';
-			ctx.fillText("\xE2\x86\x90", 0, motion[MOTION_HEIGHT]/2);
-			ctx.fillText("\xE2\x86\x92", motion[MOTION_WIDTH]-20, motion[MOTION_HEIGHT]/2);
-			ctx.fillText("\xE2\x87\xA4", motion[MOTION_WIDTH]/2, 20);
-			ctx.fillText("\xE2\x87\xA5", motion[MOTION_WIDTH]/2, motion[MOTION_HEIGHT]);
+			
+			// Previous
+			ctx.fillText("\u25C0\uFE0F", 0, offsetY + motion[MOTION_HEIGHT]/2); 
+			
+			// Next
+			ctx.fillText("\u25B6\uFE0F", offsetX + motion[MOTION_WIDTH], offsetY + motion[MOTION_HEIGHT]/2);
+
+			// Previous day
+			ctx.fillText("\u23EA",  offsetX + motion[MOTION_WIDTH]/2, 25); 
+			
+			// Next day
+			ctx.fillText("\u23E9", offsetX + motion[MOTION_WIDTH]/2,25+ offsetY + motion[MOTION_HEIGHT]);
+
+			// Begin
+			ctx.fillText("\u23EE\uFE0F",0, 25);
+
+			// End
+			ctx.fillText("\u23ED\uFE0F", offsetX + motion[MOTION_WIDTH], 25+offsetY + motion[MOTION_HEIGHT]);
 		}
 
 		// Convert the filename into text displayed
@@ -223,6 +243,7 @@ async def historic(request, response, args):
 			filename = filename.split(".")[0];
 			lst = filename.split("/");
 			filename = lst[lst.length-1];
+			filename = filename.replace("D= ","D=");
 			spl = filename.split(" ");
 
 			if (spl.length == 3)
@@ -239,6 +260,11 @@ async def historic(request, response, args):
 				result = filename;
 			}
 			return result;
+		}
+
+		function get_date(filename)
+		{
+			return get_name(filename).substring(0,10);
 		}
 
 		function click_motion(id)
@@ -277,15 +303,72 @@ async def historic(request, response, args):
 			}
 		}
 
+		function next_day_motion()
+		{
+			if (current_id + 1 < last_id)
+			{
+				var new_id = current_id;
+
+				do
+				{
+					new_id += 1;
+					if (get_date(historic[new_id][MOTION_FILENAME]) != get_date(historic[current_id][MOTION_FILENAME]))
+					{
+						current_id = new_id;
+						show_motion(current_id);
+						break;
+					}
+				}
+				while (new_id + 1 < last_id);
+			}
+		}
+
+		function previous_day_motion()
+		{
+			if (current_id > 0)
+			{
+				var new_id = current_id;
+
+				do
+				{
+					new_id -= 1;
+
+					if (get_date(historic[new_id][MOTION_FILENAME]) != get_date(historic[current_id][MOTION_FILENAME]))
+					{
+						current_id = new_id;
+
+						do
+						{
+							new_id -= 1;
+							if (get_date(historic[new_id][MOTION_FILENAME]) == get_date(historic[current_id][MOTION_FILENAME]))
+							{
+								current_id = new_id;
+							}
+							else
+							{
+								break;
+							}
+						}
+						while(new_id - 1 >= 0);
+						show_motion(current_id);
+						break;
+					}
+				}
+				while (new_id - 1 >= 0);
+			}
+		}
+
 		function check_key(e)
 		{
 			e = e || window.event;
 
 			if (e.keyCode == '38') // up arrow
 			{
+				previous_day_motion();
 			}
 			else if (e.keyCode == '40') // down arrow
 			{
+				next_day_motion();
 			}
 			else if (e.keyCode == '37') // left arrow
 			{
@@ -317,8 +400,18 @@ async def historic(request, response, args):
 			const x = e.clientX - rect.left;
 			const y = e.clientY - rect.top;
 
+			// If click on first
+			if (x < 100 && y < 100)
+			{
+				first_motion();
+			}
+			// If click on last
+			else if (x > (rect.width - 100) && y > (rect.height -100))
+			{
+				last_motion();
+			}
 			// If the click is in the middle
-			if (x > rect.width/3 && x < (2*rect.width/3) && y > rect.height/3 && y < (2*rect.height/3))
+			else if (x > rect.width/3 && x < (2*rect.width/3) && y > rect.height/3 && y < (2*rect.height/3))
 			{
 				// Download image
 				if (confirm("Download this image ?"))
@@ -338,7 +431,7 @@ async def historic(request, response, args):
 						}
 						else
 						{
-							first_motion();
+							previous_day_motion();
 						}
 					}
 					else
@@ -349,7 +442,7 @@ async def historic(request, response, args):
 						}
 						else
 						{
-							last_motion();
+							next_day_motion();
 						}
 					}
 				}
@@ -363,7 +456,7 @@ async def historic(request, response, args):
 						}
 						else
 						{
-							first_motion();
+							previous_day_motion();
 						}
 					}
 					else
@@ -374,7 +467,7 @@ async def historic(request, response, args):
 						}
 						else
 						{
-							last_motion();
+							next_day_motion();
 						}
 					}
 				}
@@ -385,7 +478,7 @@ async def historic(request, response, args):
 		<canvas id="motion" width="%d" height="%d" ></canvas>
 		<br>
 		<div id="motions"></div>
-		"""%(lang.historic_not_available, detailled, 800,600)),
+		"""%(lang.historic_not_available, detailled, 860,660)),
 	]
 	page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
 	await response.send_page(page)
