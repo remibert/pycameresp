@@ -102,7 +102,7 @@ def uptime_sec():
 		up_last = up
 
 	if up_last > up:
-		up_total += (2<<30)//1000
+		up_total += (1<<30)//1000
 
 	up_last = up
 	up += up_total
