@@ -520,6 +520,7 @@ class VT100:
 		self.test_number = 0
 		self.output              = None
 		self.cursor_on           = False
+		self.edit_detected = 1000
 
 	def reset(self):
 		""" Reset to initial state """
@@ -638,10 +639,20 @@ class VT100:
 		else:
 			self.cursor_on = not self.cursor_on
 
+	def is_in_editor(self):
+		""" Indicates that the editor is running or not """
+		if self.edit_detected > 10:
+			return False
+		return True
+
 	def treat_char(self, char):
 		""" Treat character entered """
 		try:
 			if ord(char) >= 0x20 and ord(char) != 0x7F:
+				if char == "\u25B7":
+					self.edit_detected = 0
+				else:
+					self.edit_detected += 1
 				if self.cursor_column >= self.width:
 					self.cursor_column = 0
 					self.auto_scroll(1)

@@ -6,8 +6,10 @@ from threading import Lock
 from vt100 import VT100
 try:
 	from PyQt6.QtCore import Qt,QTimer
+	from PyQt6.QtWidgets import QTextBrowser
 except:
 	from PyQt5.QtCore import Qt,QTimer
+	from PyQt5.QtWidgets import QTextBrowser
 
 # Main keys
 main_keys = {
@@ -54,6 +56,9 @@ class QStdoutVT100:
 	def __init__(self, qtextbrowser):
 		""" Constructor with QTextBrowser widget"""
 		self.qtextbrowser = qtextbrowser
+		self.qtextbrowser.mouseReleaseEvent = self.on_mouse_release_event
+		self.qtextbrowser.mousePressEvent   = self.on_mouse_press_event
+		self.qtextbrowser.cursorPositionChanged.connect(self.update_selection)
 		self.vt100 = VT100()
 		self.lock = Lock()
 		self.output = []
@@ -63,6 +68,71 @@ class QStdoutVT100:
 		self.cursor_timer.timeout.connect(self.on_refresh_cursor)
 		self.cursor_timer.start()
 		sys.stdout = self
+		self.pressed = False
+		self.selection_start = None
+		self.selection_end = None
+
+	def on_mouse_release_event(self, evt):
+		""" Catch mouse release event """
+		QTextBrowser.mouseReleaseEvent(self.qtextbrowser, evt)
+		self.pressed = False
+
+	def is_select_in_editor(self):
+		""" Indicates that selection is in editor """
+		if self.selection_start is not None and self.vt100.is_in_editor() and self.pressed is False:
+			return True
+		return False
+
+	def get_selection(self):
+		""" Get selection escape sequence """
+		result = ""
+		if self.selection_start is not None and self.selection_end is not None:
+			start_line, start_column = self.selection_start
+			end_line, end_column     = self.selection_end
+			if start_line == 0:
+				start_line = 1
+				start_column = 1
+			result = "\x1B[%d;%dH\x1B[%d;%df"%(start_line, start_column, end_line, end_column)
+		return result
+
+	def on_mouse_press_event(self, evt):
+		""" Catch mouse press event """
+		QTextBrowser.mousePressEvent(self.qtextbrowser, evt)
+		self.pressed = True
+
+	def update_selection(self):
+		""" Update selection """
+		cursor = self.qtextbrowser.textCursor()
+		if cursor.hasSelection():
+			cursor = self.qtextbrowser.textCursor()
+			start_col = None
+			start_line = None
+			end_col = None
+			end_line = None
+			line = 0
+			col = 1
+			for i in range(cursor.document().characterCount()):
+				if cursor.selectionStart() <= i <= cursor.selectionEnd():
+					if start_col is None and start_line is None:
+						start_col = col
+						start_line = line
+					end_col = col
+					end_line = line
+
+				elif i > cursor.selectionEnd():
+					break
+				
+				if cursor.document().characterAt(i) == "\u2028":
+					col = 1
+					line += 1
+				else:
+					col += 1
+			self.selection_start = (start_line, start_col)
+			self.selection_end   = (end_line,   end_col)
+			self.stdout.write("%s->%s\n"%(self.selection_start, self.selection_end))
+		else:
+			self.selection_start = None
+			self.selection_end   = None
 
 	def __del__(self):
 		""" Destructor """
@@ -102,15 +172,20 @@ class QStdoutVT100:
 		""" Resize event """
 		self.vt100.set_size(width,height)
 
+	def get_size(self):
+		""" Return the console size """
+		return self.vt100.get_size()
+
 	def refresh(self):
 		""" Refresh the console """
 		result = ""
 		self.can_test = True
-		if self.vt100.is_modified():
-			self.qtextbrowser.setHtml(self.vt100.to_html())
-			for output in self.output:
-				result += output
-			self.output = []
+		if self.pressed is False:
+			if self.vt100.is_modified():
+				self.qtextbrowser.setHtml(self.vt100.to_html())
+				for output in self.output:
+					result += output
+				self.output = []
 		return result
 
 	def set_colors(self, colors):

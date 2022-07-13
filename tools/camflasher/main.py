@@ -187,6 +187,7 @@ class CamFlasher(QMainWindow):
 		self.window.button_telnet_connect.clicked.connect(self.on_telnet_connect)
 		self.window.button_serial_open.clicked.connect(self.on_serial_open)
 		self.window.combo_telnet_host.currentIndexChanged.connect(self.on_telnet_host_changed)
+
 		self.ports = Ports()
 		# Refresher of the console content
 		self.timer_refresh_console = QTimer(active=True, interval=100)
@@ -609,14 +610,27 @@ class CamFlasher(QMainWindow):
 		self.connection_state()
 
 		self.window.output.viewport().setProperty("cursor", QCursor(Qt.CursorShape.ArrowCursor))
+		cursor = self.window.output.textCursor()
 		if self.clear_selection is True:
-			cursor = self.window.output.textCursor()
+			text = cursor.selectedText()
 			cursor.removeSelectedText()
+			cursor.insertText(text)
+			self.clear_selection = False
+
+		if self.console.is_select_in_editor():
+			self.flasher.send_key(self.console.get_selection().encode("utf-8"))
+			text = cursor.selectedText()
+			cursor.removeSelectedText()
+			cursor.insertText(text)
 			self.clear_selection = False
 
 		cursor = self.window.output.textCursor()
-		if cursor.selectionEnd() == cursor.selectionStart() and self.paused is False:
+
+		# Refresh only if mouse is not in selection or if the console is not paused
+		if   cursor.hasSelection()         is False and \
+			self.paused                    is False:
 			output = self.console.refresh()
+
 			if output != "":
 				self.flasher.send_key(output.encode("utf-8"))
 

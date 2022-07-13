@@ -516,6 +516,10 @@ class View:
 		""" clear the end of screen """
 		self.write(b"\x1B[0J")
 
+	def get_position(self):
+		""" Get the position of view """
+		return self.line, self.column
+
 class Text:
 	""" Class which manage the text edition """
 	def __init__(self, cfg, read_only=False):
@@ -1176,19 +1180,32 @@ class Text:
 		self.view.hide_selection()
 		self.selection_start = self.selection_end = None
 
-	def goto(self, lineNumber):
+	def goto(self, line, column=None, clear_selection=True):
 		""" Goto specified line """
-		self.hide_selection()
-		if lineNumber < 0:
+		if clear_selection:
+			self.hide_selection()
+		if line < 0:
 			self.cursor_line = len(self.lines)-1
-		elif lineNumber < 1:
+		elif line < 1:
 			self.cursor_line = 1
-		elif lineNumber < len(self.lines):
-			self.cursor_line = lineNumber - 1
+		elif line < len(self.lines):
+			self.cursor_line = line - 1
 		else:
 			self.cursor_line = len(self.lines)-1
 		self.cursor_column = 0
-		self.change_column(0)
+
+		if column is not None:
+			self.change_column(0)
+			if column > 1:
+				while True:
+					self.change_column(1)
+
+					if self.tab_cursor_column >= column-1:
+						break
+					if self.cursor_column == 0:
+						self.change_column(-1)
+						break
+
 		self.view.move()
 
 	def copy_clipboard(self):
@@ -1596,6 +1613,21 @@ class Text:
 			# else: self.add_char(keys)
 			if key_callback is not None:
 				key_callback(keys)
+			else:
+				if len(keys[0]) > 3:
+					if keys[0][0:2] == "\x1B[" and keys[0][-1] in ["H","f"]:
+						if keys[0][-1] == "f":
+							end = True
+						else:
+							end = False
+						pos = keys[0][2:-1]
+						line, column = pos.split(";")
+						line_view, column_view = self.view.get_position()
+						if end:
+							self.open_selection()
+						self.goto(int(line)+line_view,int(column)+column_view, not end)
+						if end:
+							self.open_selection()
 
 class Edit:
 	""" Class which aggregate the View and Text """
@@ -1648,13 +1680,13 @@ class Editor:
 		""" Refresh the header of editor """
 		if self.is_refresh_header:
 			self.edit.view.move_cursor(0, 0)
-			filename_ = " File: %s"%(self.filename)
+			filename_ = "\u25C1 File: %s"%(self.filename)
 			if self.edit.text.read_only is False:
 				filename_ += " (*)" if self.edit.text.modified else ""
 				end = " Mode: %s "%("Replace" if self.edit.text.replace_mode else "Insert")
 			else:
 				end = " Read only " if self.edit.text.read_only else ""
-			end = "L%d C%d "%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end
+			end = "L%d C%d "%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end + "\u25B7"
 
 			header = "\x1B[7m%s%s%s\x1B[m"%(filename_, " "*(self.edit.view.width - len(filename_) - len(end)), end)
 			self.edit.view.write(header)
@@ -1862,6 +1894,11 @@ class Editor:
 					self.is_refresh_header = True
 					self.refresh_header()
 					keys = self.get_key()
+
+				# if keys == ["\x1B[23~"]:
+				# 	keys = ["\x1B[1;1H"]
+				# if keys == ["\x1B[24~"]:
+				# 	keys = ["\x1B[21;32f"]
 
 				if self.trace is not None:
 					for key in keys:

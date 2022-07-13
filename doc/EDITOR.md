@@ -48,8 +48,7 @@ Editor shortcuts :
 
 
 This editor also works on linux and osx, and can also be used autonomously,
-you need to add the useful.py script to its side of editor.py. 
-All the keyboard shortcuts are at the start of the script editor.py.
+you need to download editor.zip.
 
-**On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.**
+**On the devices with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.**
 
