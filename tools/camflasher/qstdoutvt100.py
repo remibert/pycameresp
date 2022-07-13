@@ -71,47 +71,54 @@ class QStdoutVT100:
 		self.pressed = False
 		self.selection_start = None
 		self.selection_end = None
+		self.cursor_pos = None
 
 	def on_mouse_release_event(self, evt):
 		""" Catch mouse release event """
 		QTextBrowser.mouseReleaseEvent(self.qtextbrowser, evt)
 		self.pressed = False
-
-	def is_select_in_editor(self):
-		""" Indicates that selection is in editor """
-		if self.selection_start is not None and self.vt100.is_in_editor() and self.pressed is False:
-			return True
-		return False
-
-	def get_selection(self):
-		""" Get selection escape sequence """
-		result = ""
-		if self.selection_start is not None and self.selection_end is not None:
-			start_line, start_column = self.selection_start
-			end_line, end_column     = self.selection_end
-			if start_line == 0:
-				start_line = 1
-				start_column = 1
-			result = "\x1B[%d;%dH\x1B[%d;%df"%(start_line, start_column, end_line, end_column)
-		return result
+		coord = self.get_coordinates()
 
 	def on_mouse_press_event(self, evt):
 		""" Catch mouse press event """
 		QTextBrowser.mousePressEvent(self.qtextbrowser, evt)
 		self.pressed = True
 
-	def update_selection(self):
-		""" Update selection """
+	def is_select_in_editor(self):
+		""" Indicates that selection is in editor """
+		if (self.selection_start is not None or self.cursor_pos is not None) and \
+			self.vt100.is_in_editor() and \
+			self.pressed is False:
+			return True
+		return False
+
+	def get_selection(self):
+		""" Get selection escape sequence """
+		result = ""
+		if self.cursor_pos is not None:
+			result = "\x1B[%d;%dH"%(self.cursor_pos[0], self.cursor_pos[1])
+			self.cursor_pos = None
+		elif self.selection_start is not None and self.selection_end is not None:
+			start_line, start_column = self.selection_start
+			end_line, end_column     = self.selection_end
+			if start_line == 0:
+				start_line = 1
+				start_column = 1
+			result = "\x1B[%d;%dH\x1B[%d;%df"%(start_line, start_column, end_line, end_column)
+			self.selection_end = None
+			self.selection_start = None
+		return result
+
+	def get_coordinates(self):
 		cursor = self.qtextbrowser.textCursor()
-		if cursor.hasSelection():
-			cursor = self.qtextbrowser.textCursor()
-			start_col = None
-			start_line = None
-			end_col = None
-			end_line = None
-			line = 0
-			col = 1
-			for i in range(cursor.document().characterCount()):
+		start_col = None
+		start_line = None
+		end_col = None
+		end_line = None
+		line = 0
+		col = 1
+		for i in range(cursor.document().characterCount()):
+			if cursor.hasSelection():
 				if cursor.selectionStart() <= i <= cursor.selectionEnd():
 					if start_col is None and start_line is None:
 						start_col = col
@@ -121,15 +128,29 @@ class QStdoutVT100:
 
 				elif i > cursor.selectionEnd():
 					break
-				
-				if cursor.document().characterAt(i) == "\u2028":
-					col = 1
-					line += 1
-				else:
-					col += 1
+			elif i >= cursor.position():
+				break
+			
+			if cursor.document().characterAt(i) == "\u2028":
+				col = 1
+				line += 1
+			else:
+				col += 1
+
+		if start_line is not None and start_col is not None:
 			self.selection_start = (start_line, start_col)
+		
+		if end_line is not None and end_col is not None:
 			self.selection_end   = (end_line,   end_col)
-			self.stdout.write("%s->%s\n"%(self.selection_start, self.selection_end))
+
+		if not cursor.hasSelection():
+			self.cursor_pos = (line, col)
+
+	def update_selection(self):
+		""" Update selection """
+		cursor = self.qtextbrowser.textCursor()
+		if cursor.hasSelection():
+			self.get_coordinates()
 		else:
 			self.selection_start = None
 			self.selection_end   = None

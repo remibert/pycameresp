@@ -1192,12 +1192,14 @@ class Text:
 			self.cursor_line = line - 1
 		else:
 			self.cursor_line = len(self.lines)-1
+			if column is not None:
+				column = terminal.MAXINT
 		self.cursor_column = 0
 
 		if column is not None:
 			self.change_column(0)
 			if column > 1:
-				while True:
+				for i in range(len(self.lines[self.cursor_line])):
 					self.change_column(1)
 
 					if self.tab_cursor_column >= column-1:
@@ -1614,7 +1616,9 @@ class Text:
 			if key_callback is not None:
 				key_callback(keys)
 			else:
+
 				if len(keys[0]) > 3:
+					# If camflasher mouse selection
 					if keys[0][0:2] == "\x1B[" and keys[0][-1] in ["H","f"]:
 						if keys[0][-1] == "f":
 							end = True
