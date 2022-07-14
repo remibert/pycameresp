@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>276</width>
-    <height>112</height>
+    <width>307</width>
+    <height>146</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QLabel" name="text">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;Camflasher used to flash the pycameresp&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt; firmware and interact with esp32 device. &lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;See git here : &lt;a href=&quot;https://github.com/remibert/pycameresp&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Pycameresp project&lt;/span&gt;&lt;/a&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Camflasher used to flash the pycameresp&lt;/p&gt;&lt;p&gt;firmware and interact with esp32 device &lt;/p&gt;&lt;p&gt;either by a serial link or by a telnet connection.&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>
@@ -30,6 +30,13 @@
      </property>
      <property name="textInteractionFlags">
       <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QPushButton" name="gitProject">
+     <property name="text">
+      <string>See Pycameresp git project</string>
      </property>
     </widget>
    </item>

@@ -18,15 +18,15 @@ sys.path.append("../../modules/lib/tools")
 
 try:
 	from PyQt6 import uic
-	from PyQt6.QtCore import QSettings
+	from PyQt6.QtCore import QUrl
 	from PyQt6.QtWidgets import QFileDialog, QColorDialog, QDialog, QMessageBox
-	from PyQt6.QtGui import QFont,QColor
+	from PyQt6.QtGui import QFont, QColor, QDesktopServices
+
 except:
 	from PyQt5 import uic
-	from PyQt5.QtCore import QSettings
+	from PyQt5.QtCore import QUrl
 	from PyQt5.QtWidgets import QFileDialog, QColorDialog, QDialog, QMessageBox
-	from PyQt5.QtGui import QFont,QColor
-
+	from PyQt5.QtGui import QFont, QColor, QDesktopServices
 
 
 DOWNLOAD_VERSION = "Download the lastest version of :"
@@ -76,6 +76,12 @@ class AboutDialog(QDialog):
 			self.dialog = Ui_DialogAbout()
 			self.dialog.setupUi(self)
 		self.setModal(True)
+
+		self.dialog.gitProject.clicked.connect(self.gotoGitProject)
+
+	def gotoGitProject(self):
+		# QUrl myUrl()
+		QDesktopServices.openUrl(QUrl("https://github.com/remibert/pycameresp"))
 
 	def accept(self):
 		""" Accept about dialog """

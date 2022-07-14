@@ -1190,7 +1190,7 @@ class Text:
 			self.cursor_line = len(self.lines)-1
 		elif line < 1:
 			self.cursor_line = 1
-		elif line < len(self.lines):
+		elif line <= len(self.lines):
 			self.cursor_line = line - 1
 		else:
 			self.cursor_line = len(self.lines)-1
@@ -1199,15 +1199,11 @@ class Text:
 		self.cursor_column = 0
 
 		if column is not None:
-			self.change_column(0)
 			if column > 1:
 				for i in range(len(self.lines[self.cursor_line])):
-					self.change_column(1)
-
+					self.cursor_column = i
+					self.get_tab_cursor_column()
 					if self.tab_cursor_column >= column-1:
-						break
-					if self.cursor_column == 0:
-						self.change_column(-1)
 						break
 
 		self.view.move()
@@ -1620,11 +1616,13 @@ class Text:
 			else:
 				if len(keys[0]) > 3:
 					# If camflasher mouse selection
-					if keys[0][0:2] == "\x1B[" and keys[0][-1] in ["H","f"]:
-						if keys[0][-1] == "f":
+					if keys[0][0:2] == "\x1B[" and keys[0][-1] in ["x","y"]:
+						if keys[0][-1] == "y":
 							end = True
 						else:
+
 							self.begin_line, self.begin_column = self.view.get_position()
+							self.hide_selection()
 							end = False
 						pos = keys[0][2:-1]
 						line, column = pos.split(";")
@@ -1633,7 +1631,7 @@ class Text:
 							self.open_selection()
 						self.goto(int(line)+self.begin_line,int(column)+self.begin_column, not end)
 						if end:
-							self.open_selection()
+							self.close_selection()
 
 class Edit:
 	""" Class which aggregate the View and Text """
@@ -1902,9 +1900,9 @@ class Editor:
 					keys = self.get_key()
 
 				# if keys == ["\x1B[23~"]:
-				# 	keys = ["\x1B[1;130H"]
+				# 	keys = ["\x1B[29;1x"]
 				# if keys == ["\x1B[24~"]:
-				# 	keys = ["\x1B[1;135f"]
+				# 	keys = ["\x1B[29;19y"]
 
 				if self.trace is not None:
 					for key in keys:

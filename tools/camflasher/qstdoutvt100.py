@@ -100,7 +100,7 @@ class QStdoutVT100:
 		""" Get selection escape sequence """
 		result = ""
 		if self.cursor_pos is not None:
-			result = "\x1B[%d;%dH"%(self.cursor_pos[0], self.cursor_pos[1])
+			result = "\x1B[%d;%dx"%(self.cursor_pos[0], self.cursor_pos[1])
 			self.cursor_pos = None
 		elif self.selection_start is not None and self.selection_end is not None:
 			start_line, start_column = self.selection_start
@@ -108,7 +108,7 @@ class QStdoutVT100:
 			if start_line == 0:
 				start_line = 1
 				start_column = 1
-			result = "\x1B[%d;%dH\x1B[%d;%df"%(start_line, start_column, end_line, end_column)
+			result = "\x1B[%d;%dx\x1B[%d;%dy"%(start_line, start_column, end_line, end_column)
 			self.selection_end = None
 			self.selection_start = None
 		return result

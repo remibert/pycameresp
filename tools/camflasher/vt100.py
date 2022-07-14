@@ -641,7 +641,7 @@ class VT100:
 
 	def is_in_editor(self):
 		""" Indicates that the editor is running or not """
-		if self.edit_detected > 10:
+		if self.edit_detected >= 4:
 			return False
 		return True
 

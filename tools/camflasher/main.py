@@ -628,7 +628,8 @@ class CamFlasher(QMainWindow):
 			self.cancel_selection()
 
 		if self.console.is_select_in_editor():
-			self.flasher.send_key(self.console.get_selection().encode("utf-8"))
+			move = self.console.get_selection().encode("utf-8")
+			self.flasher.send_key(move)
 			self.cancel_selection()
 
 		# Refresh only if mouse is not in selection or if the console is not paused
