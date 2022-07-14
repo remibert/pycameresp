@@ -77,12 +77,16 @@ class QStdoutVT100:
 		""" Catch mouse release event """
 		QTextBrowser.mouseReleaseEvent(self.qtextbrowser, evt)
 		self.pressed = False
-		coord = self.get_coordinates()
+		self.get_coordinates()
 
 	def on_mouse_press_event(self, evt):
 		""" Catch mouse press event """
 		QTextBrowser.mousePressEvent(self.qtextbrowser, evt)
 		self.pressed = True
+
+	def reset_pressed(self):
+		""" Reset the pressed state """
+		self.pressed = False
 
 	def is_select_in_editor(self):
 		""" Indicates that selection is in editor """

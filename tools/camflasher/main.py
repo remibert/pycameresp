@@ -216,6 +216,7 @@ class CamFlasher(QMainWindow):
 
 	def context_menu(self, pos):
 		""" Customization of the context menu """
+		self.console.reset_pressed()
 		context = QMenu(self)
 
 		copy = QAction("Copy", self)
@@ -255,6 +256,7 @@ class CamFlasher(QMainWindow):
 
 	def cls(self):
 		""" Clear screen """
+		self.cancel_selection()
 		print("\x1B[2J\x1B[1;1f",end="")
 
 	def copy(self):
@@ -492,6 +494,7 @@ class CamFlasher(QMainWindow):
 
 	def on_telnet_connect(self, event):
 		""" Click on telnet button connection """
+		self.cancel_selection()
 		if self.flasher.get_state() == self.flasher.DISCONNECTED:
 			full_host = self.window.combo_telnet_host.currentText()
 			if " " in full_host:
@@ -546,6 +549,7 @@ class CamFlasher(QMainWindow):
 
 	def on_serial_open(self, event):
 		""" Click on open serial button"""
+		self.cancel_selection()
 		if self.flasher.get_state() == self.flasher.DISCONNECTED:
 			rts_dtr = self.ports.get_rts_dtr(self.get_port())
 			self.window.chk_rts_dtr.setChecked(rts_dtr)
@@ -593,6 +597,7 @@ class CamFlasher(QMainWindow):
 				erase     = self.flash_dialog.dialog.erase.isChecked()
 				address   = self.flash_dialog.dialog.address.currentText()
 				chip      = self.flash_dialog.dialog.chip.currentText()
+				self.cancel_selection()
 				self.flasher.flash((port, baud, rts_dtr, firmware, erase, address, chip))
 			except Exception as err:
 				print(err)
@@ -605,6 +610,14 @@ class CamFlasher(QMainWindow):
 			result = None
 		return result
 
+	def cancel_selection(self):
+		""" Cancel the text selected """
+		cursor = self.window.output.textCursor()
+		text = cursor.selectedText()
+		cursor.removeSelectedText()
+		cursor.insertText(text)
+		self.clear_selection = False
+
 	def on_refresh_console(self):
 		""" Refresh the console content """
 		self.connection_state()
@@ -612,19 +625,11 @@ class CamFlasher(QMainWindow):
 		self.window.output.viewport().setProperty("cursor", QCursor(Qt.CursorShape.ArrowCursor))
 		cursor = self.window.output.textCursor()
 		if self.clear_selection is True:
-			text = cursor.selectedText()
-			cursor.removeSelectedText()
-			cursor.insertText(text)
-			self.clear_selection = False
+			self.cancel_selection()
 
 		if self.console.is_select_in_editor():
 			self.flasher.send_key(self.console.get_selection().encode("utf-8"))
-			text = cursor.selectedText()
-			cursor.removeSelectedText()
-			cursor.insertText(text)
-			self.clear_selection = False
-
-		cursor = self.window.output.textCursor()
+			self.cancel_selection()
 
 		# Refresh only if mouse is not in selection or if the console is not paused
 		if   cursor.hasSelection()         is False and \

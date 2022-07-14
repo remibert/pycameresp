@@ -541,6 +541,8 @@ class Text:
 		self.MOVE_KEYS = self.cfg.key_up+self.cfg.key_down+self.cfg.key_left+self.cfg.key_right+self.cfg.key_home+self.cfg.key_end+self.cfg.key_page_up+self.cfg.key_page_down+self.cfg.key_top+self.cfg.key_bottom+self.cfg.key_next_word+self.cfg.key_previous_word
 		self.SELECT_KEYS = self.cfg.key_sel_up+self.cfg.key_sel_down+self.cfg.key_sel_right+self.cfg.key_sel_left+self.cfg.key_sel_home+self.cfg.key_sel_end+self.cfg.key_sel_top+self.cfg.key_sel_bottom+self.cfg.key_sel_page_up+self.cfg.key_sel_page_down+self.cfg.key_sel_all+self.cfg.key_sel_next_word+self.cfg.key_sel_prev_word
 		self.NOT_READ_ONLY_KEYS = self.cfg.key_copy+self.cfg.key_cut+self.cfg.key_paste+self.cfg.key_indent+self.cfg.key_unindent+self.cfg.key_change_case+self.cfg.key_comment+self.cfg.key_backspace+self.cfg.key_delete+self.cfg.key_new_line+self.cfg.key_del_line
+		self.begin_line = 1
+		self.begin_column = 1
 
 	def set_view(self, view):
 		""" Define the view attached to the text """
@@ -1616,20 +1618,20 @@ class Text:
 			if key_callback is not None:
 				key_callback(keys)
 			else:
-
 				if len(keys[0]) > 3:
 					# If camflasher mouse selection
 					if keys[0][0:2] == "\x1B[" and keys[0][-1] in ["H","f"]:
 						if keys[0][-1] == "f":
 							end = True
 						else:
+							self.begin_line, self.begin_column = self.view.get_position()
 							end = False
 						pos = keys[0][2:-1]
 						line, column = pos.split(";")
-						line_view, column_view = self.view.get_position()
+						
 						if end:
 							self.open_selection()
-						self.goto(int(line)+line_view,int(column)+column_view, not end)
+						self.goto(int(line)+self.begin_line,int(column)+self.begin_column, not end)
 						if end:
 							self.open_selection()
 
@@ -1900,9 +1902,9 @@ class Editor:
 					keys = self.get_key()
 
 				# if keys == ["\x1B[23~"]:
-				# 	keys = ["\x1B[1;1H"]
+				# 	keys = ["\x1B[1;130H"]
 				# if keys == ["\x1B[24~"]:
-				# 	keys = ["\x1B[21;32f"]
+				# 	keys = ["\x1B[1;135f"]
 
 				if self.trace is not None:
 					for key in keys:
