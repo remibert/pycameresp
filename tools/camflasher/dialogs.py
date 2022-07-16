@@ -143,7 +143,13 @@ class FlashDialog(QDialog):
 
 	def on_firmware_clicked(self, event):
 		""" Selection of firmware button clicked """
-		firmware = QFileDialog.getOpenFileName(self, caption='Select firmware file', directory=str(Path.home()),filter="Firmware files (*.bin)")
+		path = str(Path.home())
+		if self.dialog.firmware.maxCount() > 0:
+			firmware = self.dialog.firmware.currentText()
+			if os.path.exists(firmware):
+				path = os.path.split(firmware)[0]
+
+		firmware = QFileDialog.getOpenFileName(self, caption='Select firmware file', directory=path, filter="Firmware files (*.bin)")
 		if firmware != ('', ''):
 			for i in range(self.dialog.firmware.count()):
 				if self.dialog.firmware.itemText(i) == firmware[0]:
