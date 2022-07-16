@@ -136,11 +136,11 @@ class ImageMotion:
 
         def get_filename(self):
                 &#34;&#34;&#34; Get the storage filename &#34;&#34;&#34;
-                return &#34;%s Id=%d D=%2d&#34;%(self.filename, self.index, self.get_diff_count())
+                return &#34;%s Id=%d D=%d&#34;%(self.filename, self.index, self.get_diff_count())
 
         def get_message(self):
                 &#34;&#34;&#34; Get the message of motion &#34;&#34;&#34;
-                return &#34;%s %s D=%2d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+                return &#34;%s %s D=%d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
         def get_informations(self):
                 &#34;&#34;&#34; Return the informations of motion &#34;&#34;&#34;
@@ -1365,11 +1365,11 @@ async def detect_motion(pir_detection):
 
         def get_filename(self):
                 &#34;&#34;&#34; Get the storage filename &#34;&#34;&#34;
-                return &#34;%s Id=%d D=%2d&#34;%(self.filename, self.index, self.get_diff_count())
+                return &#34;%s Id=%d D=%d&#34;%(self.filename, self.index, self.get_diff_count())
 
         def get_message(self):
                 &#34;&#34;&#34; Get the message of motion &#34;&#34;&#34;
-                return &#34;%s %s D=%2d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+                return &#34;%s %s D=%d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
 
         def get_informations(self):
                 &#34;&#34;&#34; Return the informations of motion &#34;&#34;&#34;
@@ -1588,7 +1588,7 @@ async def detect_motion(pir_detection):
 </summary>
 <pre><code class="python">def get_filename(self):
         &#34;&#34;&#34; Get the storage filename &#34;&#34;&#34;
-        return &#34;%s Id=%d D=%2d&#34;%(self.filename, self.index, self.get_diff_count())</code></pre>
+        return &#34;%s Id=%d D=%d&#34;%(self.filename, self.index, self.get_diff_count())</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.ImageMotion.get_informations"><code class="name flex">
@@ -1625,7 +1625,7 @@ async def detect_motion(pir_detection):
 </summary>
 <pre><code class="python">def get_message(self):
         &#34;&#34;&#34; Get the message of motion &#34;&#34;&#34;
-        return &#34;%s %s D=%2d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())</code></pre>
+        return &#34;%s %s D=%d&#34;%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.ImageMotion.get_motion_detected"><code class="name flex">

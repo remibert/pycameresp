@@ -779,7 +779,7 @@ class Text:
 			self.selection_end = [self.cursor_column, self.cursor_line,self.get_tab_cursor(self.cursor_line)]
 		self.view.move()
 
-	def change_column(self, move_column):
+	def change_column(self, move_column, with_move_view=True):
 		""" Move the cursor on another column """
 		cursor_line   = self.cursor_line
 		cursor_column = self.cursor_column
@@ -820,7 +820,8 @@ class Text:
 		if abs(move_column) > 0:
 			self.get_tab_cursor_column()
 		self.close_selection()
-		self.view.move()
+		if with_move_view:
+			self.view.move()
 		if self.cursor_column == cursor_column and self.cursor_line == cursor_line:
 			return False
 		else:
@@ -1200,10 +1201,15 @@ class Text:
 
 		if column is not None:
 			if column > 1:
-				for i in range(len(self.lines[self.cursor_line])):
-					self.cursor_column = i
-					self.get_tab_cursor_column()
+				cur_line = self.cursor_line
+				self.change_column(0, with_move_view=False)
+				for i in range(len(self.lines[self.cursor_line]) + 1):
+					self.change_column(1, with_move_view=False)
 					if self.tab_cursor_column >= column-1:
+						break
+
+					if self.cursor_line != cur_line:
+						self.change_column(-1, with_move_view=False)
 						break
 
 		self.view.move()
@@ -1899,10 +1905,10 @@ class Editor:
 					self.refresh_header()
 					keys = self.get_key()
 
-				# if keys == ["\x1B[23~"]:
-				# 	keys = ["\x1B[29;1x"]
-				# if keys == ["\x1B[24~"]:
-				# 	keys = ["\x1B[29;19y"]
+				if keys == ["\x1B[23~"]:
+					keys = ["\x1B[1;5x"]
+				if keys == ["\x1B[24~"]:
+					keys = ["\x1B[5;1y"]
 
 				if self.trace is not None:
 					for key in keys:

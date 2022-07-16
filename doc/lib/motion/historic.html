@@ -106,7 +106,8 @@ class Historic:
                 if item is not None:
                         if not filesystem.ismicropython():
                                 # Remove the &#34;/&#34; before filename
-                                item [0] = item[0][1:]
+                                item [0] = item [0].lstrip(&#34;/&#34;)
+
                         # Add json file to the historic
                         Historic.historic.insert(0,item)
 
@@ -126,7 +127,10 @@ class Historic:
                                                 file = None
                                                 file = open(motion, &#34;rb&#34;)
                                                 motion_item = json.load(file)
-                                                if filesystem.exists(motion_item[0]):
+                                                filename = motion_item[0]
+                                                if not filesystem.ismicropython():
+                                                        filename = filename.lstrip(&#34;/&#34;)
+                                                if filesystem.exists(filename):
                                                         Historic.add_item(motion_item)
                                         except OSError as err:
                                                 logger.syslog(err)
@@ -428,7 +432,8 @@ class Historic:
                 if item is not None:
                         if not filesystem.ismicropython():
                                 # Remove the &#34;/&#34; before filename
-                                item [0] = item[0][1:]
+                                item [0] = item [0].lstrip(&#34;/&#34;)
+
                         # Add json file to the historic
                         Historic.historic.insert(0,item)
 
@@ -448,7 +453,10 @@ class Historic:
                                                 file = None
                                                 file = open(motion, &#34;rb&#34;)
                                                 motion_item = json.load(file)
-                                                if filesystem.exists(motion_item[0]):
+                                                filename = motion_item[0]
+                                                if not filesystem.ismicropython():
+                                                        filename = filename.lstrip(&#34;/&#34;)
+                                                if filesystem.exists(filename):
                                                         Historic.add_item(motion_item)
                                         except OSError as err:
                                                 logger.syslog(err)
@@ -716,7 +724,8 @@ def add_item(item):
         if item is not None:
                 if not filesystem.ismicropython():
                         # Remove the &#34;/&#34; before filename
-                        item [0] = item[0][1:]
+                        item [0] = item [0].lstrip(&#34;/&#34;)
+
                 # Add json file to the historic
                 Historic.historic.insert(0,item)</code></pre>
 </details>
@@ -777,7 +786,10 @@ async def build(motions):
                                         file = None
                                         file = open(motion, &#34;rb&#34;)
                                         motion_item = json.load(file)
-                                        if filesystem.exists(motion_item[0]):
+                                        filename = motion_item[0]
+                                        if not filesystem.ismicropython():
+                                                filename = filename.lstrip(&#34;/&#34;)
+                                        if filesystem.exists(filename):
                                                 Historic.add_item(motion_item)
                                 except OSError as err:
                                         logger.syslog(err)

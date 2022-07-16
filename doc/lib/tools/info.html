@@ -131,7 +131,7 @@ def uptime_sec():
                 up_last = up
 
         if up_last &gt; up:
-                up_total += (2&lt;&lt;30)//1000
+                up_total += (1&lt;&lt;30)//1000
 
         up_last = up
         up += up_total
@@ -403,7 +403,7 @@ def get_issues_counter():
                 up_last = up
 
         if up_last &gt; up:
-                up_total += (2&lt;&lt;30)//1000
+                up_total += (1&lt;&lt;30)//1000
 
         up_last = up
         up += up_total

@@ -629,6 +629,7 @@ class CamFlasher(QMainWindow):
 
 		if self.console.is_select_in_editor():
 			move = self.console.get_selection().encode("utf-8")
+			# self.stdout.write("%s\n"%move)
 			self.flasher.send_key(move)
 			self.cancel_selection()
 

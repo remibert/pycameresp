@@ -112,7 +112,7 @@ class EditorConfig(jsonconfig.JsonConfig):
                 self.key_indent           = [&#34;\x09&#34;]                              # Indent
                 # line feed reserved
                 # ctrl-k unused
-                self.key_del_line      = [&#34;\x0C&#34;]                              # Delete line
+                self.key_del_line         = [&#34;\x0C&#34;]                              # Delete line
                 self.key_new_line         = [&#34;\x0D&#34;, &#34;\0x0A&#34;]                     # New line pressed
                 self.key_find_next        = [&#34;\x0E&#34;, &#34;\x1bOR&#34;]                    # Find next
                 # ctrl-o unused
@@ -553,6 +553,10 @@ class View:
                 &#34;&#34;&#34; clear the end of screen &#34;&#34;&#34;
                 self.write(b&#34;\x1B[0J&#34;)
 
+        def get_position(self):
+                &#34;&#34;&#34; Get the position of view &#34;&#34;&#34;
+                return self.line, self.column
+
 class Text:
         &#34;&#34;&#34; Class which manage the text edition &#34;&#34;&#34;
         def __init__(self, cfg, read_only=False):
@@ -574,6 +578,8 @@ class Text:
                 self.MOVE_KEYS = self.cfg.key_up+self.cfg.key_down+self.cfg.key_left+self.cfg.key_right+self.cfg.key_home+self.cfg.key_end+self.cfg.key_page_up+self.cfg.key_page_down+self.cfg.key_top+self.cfg.key_bottom+self.cfg.key_next_word+self.cfg.key_previous_word
                 self.SELECT_KEYS = self.cfg.key_sel_up+self.cfg.key_sel_down+self.cfg.key_sel_right+self.cfg.key_sel_left+self.cfg.key_sel_home+self.cfg.key_sel_end+self.cfg.key_sel_top+self.cfg.key_sel_bottom+self.cfg.key_sel_page_up+self.cfg.key_sel_page_down+self.cfg.key_sel_all+self.cfg.key_sel_next_word+self.cfg.key_sel_prev_word
                 self.NOT_READ_ONLY_KEYS = self.cfg.key_copy+self.cfg.key_cut+self.cfg.key_paste+self.cfg.key_indent+self.cfg.key_unindent+self.cfg.key_change_case+self.cfg.key_comment+self.cfg.key_backspace+self.cfg.key_delete+self.cfg.key_new_line+self.cfg.key_del_line
+                self.begin_line = 1
+                self.begin_column = 1
 
         def set_view(self, view):
                 &#34;&#34;&#34; Define the view attached to the text &#34;&#34;&#34;
@@ -810,7 +816,7 @@ class Text:
                         self.selection_end = [self.cursor_column, self.cursor_line,self.get_tab_cursor(self.cursor_line)]
                 self.view.move()
 
-        def change_column(self, move_column):
+        def change_column(self, move_column, with_move_view=True):
                 &#34;&#34;&#34; Move the cursor on another column &#34;&#34;&#34;
                 cursor_line   = self.cursor_line
                 cursor_column = self.cursor_column
@@ -851,7 +857,8 @@ class Text:
                 if abs(move_column) &gt; 0:
                         self.get_tab_cursor_column()
                 self.close_selection()
-                self.view.move()
+                if with_move_view:
+                        self.view.move()
                 if self.cursor_column == cursor_column and self.cursor_line == cursor_line:
                         return False
                 else:
@@ -1213,19 +1220,35 @@ class Text:
                 self.view.hide_selection()
                 self.selection_start = self.selection_end = None
 
-        def goto(self, lineNumber):
+        def goto(self, line, column=None, clear_selection=True):
                 &#34;&#34;&#34; Goto specified line &#34;&#34;&#34;
-                self.hide_selection()
-                if lineNumber &lt; 0:
+                if clear_selection:
+                        self.hide_selection()
+                if line &lt; 0:
                         self.cursor_line = len(self.lines)-1
-                elif lineNumber &lt; 1:
+                elif line &lt; 1:
                         self.cursor_line = 1
-                elif lineNumber &lt; len(self.lines):
-                        self.cursor_line = lineNumber - 1
+                elif line &lt;= len(self.lines):
+                        self.cursor_line = line - 1
                 else:
                         self.cursor_line = len(self.lines)-1
+                        if column is not None:
+                                column = terminal.MAXINT
                 self.cursor_column = 0
-                self.change_column(0)
+
+                if column is not None:
+                        if column &gt; 1:
+                                cur_line = self.cursor_line
+                                self.change_column(0, with_move_view=False)
+                                for i in range(len(self.lines[self.cursor_line]) + 1):
+                                        self.change_column(1, with_move_view=False)
+                                        if self.tab_cursor_column &gt;= column-1:
+                                                break
+
+                                        if self.cursor_line != cur_line:
+                                                self.change_column(-1, with_move_view=False)
+                                                break
+
                 self.view.move()
 
         def copy_clipboard(self):
@@ -1434,7 +1457,7 @@ class Text:
 
                         # If a part of line selected
                         if sel_line_start == sel_line_end and not (sel_column_start == 0 and sel_column_end == len(self.lines[sel_line_end])-1):
-                                self.add_char(self.cfg.INDENT)
+                                self.add_char(self.cfg.key_indent)
                         else:
                                 # If the last line selected is at beginning of line
                                 if sel_column_end == 0:
@@ -1633,6 +1656,25 @@ class Text:
                         # else: self.add_char(keys)
                         if key_callback is not None:
                                 key_callback(keys)
+                        else:
+                                if len(keys[0]) &gt; 3:
+                                        # If camflasher mouse selection
+                                        if keys[0][0:2] == &#34;\x1B[&#34; and keys[0][-1] in [&#34;x&#34;,&#34;y&#34;]:
+                                                if keys[0][-1] == &#34;y&#34;:
+                                                        end = True
+                                                else:
+
+                                                        self.begin_line, self.begin_column = self.view.get_position()
+                                                        self.hide_selection()
+                                                        end = False
+                                                pos = keys[0][2:-1]
+                                                line, column = pos.split(&#34;;&#34;)
+                                                
+                                                if end:
+                                                        self.open_selection()
+                                                self.goto(int(line)+self.begin_line,int(column)+self.begin_column, not end)
+                                                if end:
+                                                        self.close_selection()
 
 class Edit:
         &#34;&#34;&#34; Class which aggregate the View and Text &#34;&#34;&#34;
@@ -1685,13 +1727,13 @@ class Editor:
                 &#34;&#34;&#34; Refresh the header of editor &#34;&#34;&#34;
                 if self.is_refresh_header:
                         self.edit.view.move_cursor(0, 0)
-                        filename_ = &#34; File: %s&#34;%(self.filename)
+                        filename_ = &#34;\u25C1 File: %s&#34;%(self.filename)
                         if self.edit.text.read_only is False:
                                 filename_ += &#34; (*)&#34; if self.edit.text.modified else &#34;&#34;
                                 end = &#34; Mode: %s &#34;%(&#34;Replace&#34; if self.edit.text.replace_mode else &#34;Insert&#34;)
                         else:
                                 end = &#34; Read only &#34; if self.edit.text.read_only else &#34;&#34;
-                        end = &#34;L%d C%d &#34;%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end
+                        end = &#34;L%d C%d &#34;%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end + &#34;\u25B7&#34;
 
                         header = &#34;\x1B[7m%s%s%s\x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)), end)
                         self.edit.view.write(header)
@@ -1899,6 +1941,11 @@ class Editor:
                                         self.is_refresh_header = True
                                         self.refresh_header()
                                         keys = self.get_key()
+
+                                if keys == [&#34;\x1B[23~&#34;]:
+                                        keys = [&#34;\x1B[1;5x&#34;]
+                                if keys == [&#34;\x1B[24~&#34;]:
+                                        keys = [&#34;\x1B[5;1y&#34;]
 
                                 if self.trace is not None:
                                         for key in keys:
@@ -2064,13 +2111,13 @@ if __name__ == &#34;__main__&#34;:
                 &#34;&#34;&#34; Refresh the header of editor &#34;&#34;&#34;
                 if self.is_refresh_header:
                         self.edit.view.move_cursor(0, 0)
-                        filename_ = &#34; File: %s&#34;%(self.filename)
+                        filename_ = &#34;\u25C1 File: %s&#34;%(self.filename)
                         if self.edit.text.read_only is False:
                                 filename_ += &#34; (*)&#34; if self.edit.text.modified else &#34;&#34;
                                 end = &#34; Mode: %s &#34;%(&#34;Replace&#34; if self.edit.text.replace_mode else &#34;Insert&#34;)
                         else:
                                 end = &#34; Read only &#34; if self.edit.text.read_only else &#34;&#34;
-                        end = &#34;L%d C%d &#34;%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end
+                        end = &#34;L%d C%d &#34;%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end + &#34;\u25B7&#34;
 
                         header = &#34;\x1B[7m%s%s%s\x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)), end)
                         self.edit.view.write(header)
@@ -2278,6 +2325,11 @@ if __name__ == &#34;__main__&#34;:
                                         self.is_refresh_header = True
                                         self.refresh_header()
                                         keys = self.get_key()
+
+                                if keys == [&#34;\x1B[23~&#34;]:
+                                        keys = [&#34;\x1B[1;5x&#34;]
+                                if keys == [&#34;\x1B[24~&#34;]:
+                                        keys = [&#34;\x1B[5;1y&#34;]
 
                                 if self.trace is not None:
                                         for key in keys:
@@ -2592,13 +2644,13 @@ if __name__ == &#34;__main__&#34;:
         &#34;&#34;&#34; Refresh the header of editor &#34;&#34;&#34;
         if self.is_refresh_header:
                 self.edit.view.move_cursor(0, 0)
-                filename_ = &#34; File: %s&#34;%(self.filename)
+                filename_ = &#34;\u25C1 File: %s&#34;%(self.filename)
                 if self.edit.text.read_only is False:
                         filename_ += &#34; (*)&#34; if self.edit.text.modified else &#34;&#34;
                         end = &#34; Mode: %s &#34;%(&#34;Replace&#34; if self.edit.text.replace_mode else &#34;Insert&#34;)
                 else:
                         end = &#34; Read only &#34; if self.edit.text.read_only else &#34;&#34;
-                end = &#34;L%d C%d &#34;%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end
+                end = &#34;L%d C%d &#34;%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end + &#34;\u25B7&#34;
 
                 header = &#34;\x1B[7m%s%s%s\x1B[m&#34;%(filename_, &#34; &#34;*(self.edit.view.width - len(filename_) - len(end)), end)
                 self.edit.view.write(header)
@@ -2683,6 +2735,11 @@ if __name__ == &#34;__main__&#34;:
                                 self.is_refresh_header = True
                                 self.refresh_header()
                                 keys = self.get_key()
+
+                        if keys == [&#34;\x1B[23~&#34;]:
+                                keys = [&#34;\x1B[1;5x&#34;]
+                        if keys == [&#34;\x1B[24~&#34;]:
+                                keys = [&#34;\x1B[5;1y&#34;]
 
                         if self.trace is not None:
                                 for key in keys:
@@ -2824,7 +2881,7 @@ if __name__ == &#34;__main__&#34;:
                 self.key_indent           = [&#34;\x09&#34;]                              # Indent
                 # line feed reserved
                 # ctrl-k unused
-                self.key_del_line      = [&#34;\x0C&#34;]                              # Delete line
+                self.key_del_line         = [&#34;\x0C&#34;]                              # Delete line
                 self.key_new_line         = [&#34;\x0D&#34;, &#34;\0x0A&#34;]                     # New line pressed
                 self.key_find_next        = [&#34;\x0E&#34;, &#34;\x1bOR&#34;]                    # Find next
                 # ctrl-o unused
@@ -2882,6 +2939,8 @@ if __name__ == &#34;__main__&#34;:
                 self.MOVE_KEYS = self.cfg.key_up+self.cfg.key_down+self.cfg.key_left+self.cfg.key_right+self.cfg.key_home+self.cfg.key_end+self.cfg.key_page_up+self.cfg.key_page_down+self.cfg.key_top+self.cfg.key_bottom+self.cfg.key_next_word+self.cfg.key_previous_word
                 self.SELECT_KEYS = self.cfg.key_sel_up+self.cfg.key_sel_down+self.cfg.key_sel_right+self.cfg.key_sel_left+self.cfg.key_sel_home+self.cfg.key_sel_end+self.cfg.key_sel_top+self.cfg.key_sel_bottom+self.cfg.key_sel_page_up+self.cfg.key_sel_page_down+self.cfg.key_sel_all+self.cfg.key_sel_next_word+self.cfg.key_sel_prev_word
                 self.NOT_READ_ONLY_KEYS = self.cfg.key_copy+self.cfg.key_cut+self.cfg.key_paste+self.cfg.key_indent+self.cfg.key_unindent+self.cfg.key_change_case+self.cfg.key_comment+self.cfg.key_backspace+self.cfg.key_delete+self.cfg.key_new_line+self.cfg.key_del_line
+                self.begin_line = 1
+                self.begin_column = 1
 
         def set_view(self, view):
                 &#34;&#34;&#34; Define the view attached to the text &#34;&#34;&#34;
@@ -3118,7 +3177,7 @@ if __name__ == &#34;__main__&#34;:
                         self.selection_end = [self.cursor_column, self.cursor_line,self.get_tab_cursor(self.cursor_line)]
                 self.view.move()
 
-        def change_column(self, move_column):
+        def change_column(self, move_column, with_move_view=True):
                 &#34;&#34;&#34; Move the cursor on another column &#34;&#34;&#34;
                 cursor_line   = self.cursor_line
                 cursor_column = self.cursor_column
@@ -3159,7 +3218,8 @@ if __name__ == &#34;__main__&#34;:
                 if abs(move_column) &gt; 0:
                         self.get_tab_cursor_column()
                 self.close_selection()
-                self.view.move()
+                if with_move_view:
+                        self.view.move()
                 if self.cursor_column == cursor_column and self.cursor_line == cursor_line:
                         return False
                 else:
@@ -3521,19 +3581,35 @@ if __name__ == &#34;__main__&#34;:
                 self.view.hide_selection()
                 self.selection_start = self.selection_end = None
 
-        def goto(self, lineNumber):
+        def goto(self, line, column=None, clear_selection=True):
                 &#34;&#34;&#34; Goto specified line &#34;&#34;&#34;
-                self.hide_selection()
-                if lineNumber &lt; 0:
+                if clear_selection:
+                        self.hide_selection()
+                if line &lt; 0:
                         self.cursor_line = len(self.lines)-1
-                elif lineNumber &lt; 1:
+                elif line &lt; 1:
                         self.cursor_line = 1
-                elif lineNumber &lt; len(self.lines):
-                        self.cursor_line = lineNumber - 1
+                elif line &lt;= len(self.lines):
+                        self.cursor_line = line - 1
                 else:
                         self.cursor_line = len(self.lines)-1
+                        if column is not None:
+                                column = terminal.MAXINT
                 self.cursor_column = 0
-                self.change_column(0)
+
+                if column is not None:
+                        if column &gt; 1:
+                                cur_line = self.cursor_line
+                                self.change_column(0, with_move_view=False)
+                                for i in range(len(self.lines[self.cursor_line]) + 1):
+                                        self.change_column(1, with_move_view=False)
+                                        if self.tab_cursor_column &gt;= column-1:
+                                                break
+
+                                        if self.cursor_line != cur_line:
+                                                self.change_column(-1, with_move_view=False)
+                                                break
+
                 self.view.move()
 
         def copy_clipboard(self):
@@ -3742,7 +3818,7 @@ if __name__ == &#34;__main__&#34;:
 
                         # If a part of line selected
                         if sel_line_start == sel_line_end and not (sel_column_start == 0 and sel_column_end == len(self.lines[sel_line_end])-1):
-                                self.add_char(self.cfg.INDENT)
+                                self.add_char(self.cfg.key_indent)
                         else:
                                 # If the last line selected is at beginning of line
                                 if sel_column_end == 0:
@@ -3940,7 +4016,26 @@ if __name__ == &#34;__main__&#34;:
                                         elif keys[0] in self.cfg.key_del_line:    key_callback = self.delete_line
                         # else: self.add_char(keys)
                         if key_callback is not None:
-                                key_callback(keys)</code></pre>
+                                key_callback(keys)
+                        else:
+                                if len(keys[0]) &gt; 3:
+                                        # If camflasher mouse selection
+                                        if keys[0][0:2] == &#34;\x1B[&#34; and keys[0][-1] in [&#34;x&#34;,&#34;y&#34;]:
+                                                if keys[0][-1] == &#34;y&#34;:
+                                                        end = True
+                                                else:
+
+                                                        self.begin_line, self.begin_column = self.view.get_position()
+                                                        self.hide_selection()
+                                                        end = False
+                                                pos = keys[0][2:-1]
+                                                line, column = pos.split(&#34;;&#34;)
+                                                
+                                                if end:
+                                                        self.open_selection()
+                                                self.goto(int(line)+self.begin_line,int(column)+self.begin_column, not end)
+                                                if end:
+                                                        self.close_selection()</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -4121,7 +4216,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.change_column"><code class="name flex">
-<span>def <span class="ident">change_column</span></span>(<span>self, move_column)</span>
+<span>def <span class="ident">change_column</span></span>(<span>self, move_column, with_move_view=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Move the cursor on another column</p></div>
@@ -4129,7 +4224,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def change_column(self, move_column):
+<pre><code class="python">def change_column(self, move_column, with_move_view=True):
         &#34;&#34;&#34; Move the cursor on another column &#34;&#34;&#34;
         cursor_line   = self.cursor_line
         cursor_column = self.cursor_column
@@ -4170,7 +4265,8 @@ if __name__ == &#34;__main__&#34;:
         if abs(move_column) &gt; 0:
                 self.get_tab_cursor_column()
         self.close_selection()
-        self.view.move()
+        if with_move_view:
+                self.view.move()
         if self.cursor_column == cursor_column and self.cursor_line == cursor_line:
                 return False
         else:
@@ -4744,7 +4840,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.goto"><code class="name flex">
-<span>def <span class="ident">goto</span></span>(<span>self, lineNumber)</span>
+<span>def <span class="ident">goto</span></span>(<span>self, line, column=None, clear_selection=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Goto specified line</p></div>
@@ -4752,19 +4848,35 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def goto(self, lineNumber):
+<pre><code class="python">def goto(self, line, column=None, clear_selection=True):
         &#34;&#34;&#34; Goto specified line &#34;&#34;&#34;
-        self.hide_selection()
-        if lineNumber &lt; 0:
+        if clear_selection:
+                self.hide_selection()
+        if line &lt; 0:
                 self.cursor_line = len(self.lines)-1
-        elif lineNumber &lt; 1:
+        elif line &lt; 1:
                 self.cursor_line = 1
-        elif lineNumber &lt; len(self.lines):
-                self.cursor_line = lineNumber - 1
+        elif line &lt;= len(self.lines):
+                self.cursor_line = line - 1
         else:
                 self.cursor_line = len(self.lines)-1
+                if column is not None:
+                        column = terminal.MAXINT
         self.cursor_column = 0
-        self.change_column(0)
+
+        if column is not None:
+                if column &gt; 1:
+                        cur_line = self.cursor_line
+                        self.change_column(0, with_move_view=False)
+                        for i in range(len(self.lines[self.cursor_line]) + 1):
+                                self.change_column(1, with_move_view=False)
+                                if self.tab_cursor_column &gt;= column-1:
+                                        break
+
+                                if self.cursor_line != cur_line:
+                                        self.change_column(-1, with_move_view=False)
+                                        break
+
         self.view.move()</code></pre>
 </details>
 </dd>
@@ -4821,7 +4933,7 @@ if __name__ == &#34;__main__&#34;:
 
                 # If a part of line selected
                 if sel_line_start == sel_line_end and not (sel_column_start == 0 and sel_column_end == len(self.lines[sel_line_end])-1):
-                        self.add_char(self.cfg.INDENT)
+                        self.add_char(self.cfg.key_indent)
                 else:
                         # If the last line selected is at beginning of line
                         if sel_column_end == 0:
@@ -5603,7 +5715,26 @@ if __name__ == &#34;__main__&#34;:
                                 elif keys[0] in self.cfg.key_del_line:    key_callback = self.delete_line
                 # else: self.add_char(keys)
                 if key_callback is not None:
-                        key_callback(keys)</code></pre>
+                        key_callback(keys)
+                else:
+                        if len(keys[0]) &gt; 3:
+                                # If camflasher mouse selection
+                                if keys[0][0:2] == &#34;\x1B[&#34; and keys[0][-1] in [&#34;x&#34;,&#34;y&#34;]:
+                                        if keys[0][-1] == &#34;y&#34;:
+                                                end = True
+                                        else:
+
+                                                self.begin_line, self.begin_column = self.view.get_position()
+                                                self.hide_selection()
+                                                end = False
+                                        pos = keys[0][2:-1]
+                                        line, column = pos.split(&#34;;&#34;)
+                                        
+                                        if end:
+                                                self.open_selection()
+                                        self.goto(int(line)+self.begin_line,int(column)+self.begin_column, not end)
+                                        if end:
+                                                self.close_selection()</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.Text.unindent"><code class="name flex">
@@ -6081,7 +6212,11 @@ if __name__ == &#34;__main__&#34;:
 
         def cls_end_screen(self):
                 &#34;&#34;&#34; clear the end of screen &#34;&#34;&#34;
-                self.write(b&#34;\x1B[0J&#34;)</code></pre>
+                self.write(b&#34;\x1B[0J&#34;)
+
+        def get_position(self):
+                &#34;&#34;&#34; Get the position of view &#34;&#34;&#34;
+                return self.line, self.column</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -6157,6 +6292,20 @@ if __name__ == &#34;__main__&#34;:
                 sys.stdout.flush()
         except:
                 pass</code></pre>
+</details>
+</dd>
+<dt id="lib.shell.editor.View.get_position"><code class="name flex">
+<span>def <span class="ident">get_position</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the position of view</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_position(self):
+        &#34;&#34;&#34; Get the position of view &#34;&#34;&#34;
+        return self.line, self.column</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.editor.View.get_screen_position"><code class="name flex">
@@ -6877,6 +7026,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.editor.View.colorize_none" href="#lib.shell.editor.View.colorize_none">colorize_none</a></code></li>
 <li><code><a title="lib.shell.editor.View.colorize_syntax" href="#lib.shell.editor.View.colorize_syntax">colorize_syntax</a></code></li>
 <li><code><a title="lib.shell.editor.View.flush" href="#lib.shell.editor.View.flush">flush</a></code></li>
+<li><code><a title="lib.shell.editor.View.get_position" href="#lib.shell.editor.View.get_position">get_position</a></code></li>
 <li><code><a title="lib.shell.editor.View.get_screen_position" href="#lib.shell.editor.View.get_screen_position">get_screen_position</a></code></li>
 <li><code><a title="lib.shell.editor.View.get_screen_size" href="#lib.shell.editor.View.get_screen_size">get_screen_size</a></code></li>
 <li><code><a title="lib.shell.editor.View.hide_selection" href="#lib.shell.editor.View.hide_selection">hide_selection</a></code></li>

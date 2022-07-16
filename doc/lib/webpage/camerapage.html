@@ -36,7 +36,6 @@ from htmltemplate          import *
 from webpage.mainpage      import main_frame
 from webpage.streamingpage import *
 from video                 import Camera
-import uasyncio
 from tools                 import lang,info
 
 @HttpServer.add_route(b&#39;/camera&#39;, menu=lang.menu_camera, item=lang.item_camera, available=info.iscamera() and Camera.is_activated())
@@ -52,9 +51,9 @@ async def camera_page(request, response, args):
                                 Streaming.get_html(request),
                                 ComboCmd(framesizes, text=lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
                                 SliderCmd(           text=lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
-                                SliderCmd(           text=lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
-                                SliderCmd(           text=lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
-                                SliderCmd(           text=lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
+                                # SliderCmd(           text=lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
+                                # SliderCmd(           text=lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
+                                # SliderCmd(           text=lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
                                 SliderCmd(           text=lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
                                 SwitchCmd(           text=lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
                                 SwitchCmd(           text=lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip))
@@ -176,9 +175,9 @@ async def camera_page(request, response, args):
                                 Streaming.get_html(request),
                                 ComboCmd(framesizes, text=lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
                                 SliderCmd(           text=lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
-                                SliderCmd(           text=lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
-                                SliderCmd(           text=lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
-                                SliderCmd(           text=lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
+                                # SliderCmd(           text=lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
+                                # SliderCmd(           text=lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
+                                # SliderCmd(           text=lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
                                 SliderCmd(           text=lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
                                 SwitchCmd(           text=lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
                                 SwitchCmd(           text=lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip))
