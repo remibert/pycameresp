@@ -134,8 +134,8 @@ async def historic(request, response, args):
 			var motion = historic[id];
 			var ctx = document.getElementById('motion').getContext('2d');
 			
-			var offsetX = 30;
-			var offsetY = 30;
+			var offsetX = 35;
+			var offsetY = 35;
 			ctx.drawImage(document.getElementById(id), offsetX, offsetY, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
 			var x;
 			var y;
@@ -160,7 +160,7 @@ async def historic(request, response, args):
 						if (detection != " ")
 						{
 							ctx.strokeStyle = "yellow";
-							ctx.strokeRect(offsetX + (x * squarex + 15),offsetY + (y*squarey +15), squarex-30, squarey-30);
+							ctx.strokeRect(offsetX + (x * squarex + 15),offsetY + (y*squarey +15), squarex-40, squarey-40);
 						}
 					}
 				}
@@ -225,16 +225,16 @@ async def historic(request, response, args):
 			ctx.fillText("\u25B6\uFE0F", offsetX + motion[MOTION_WIDTH], offsetY + motion[MOTION_HEIGHT]/2);
 
 			// Previous day
-			ctx.fillText("\u23EA",  offsetX + motion[MOTION_WIDTH]/2, 25); 
+			ctx.fillText("\u23EA",  offsetX + motion[MOTION_WIDTH]/2, 30); 
 			
 			// Next day
-			ctx.fillText("\u23E9", offsetX + motion[MOTION_WIDTH]/2,25+ offsetY + motion[MOTION_HEIGHT]);
+			ctx.fillText("\u23E9", offsetX + motion[MOTION_WIDTH]/2,30+ offsetY + motion[MOTION_HEIGHT]);
 
 			// Begin
-			ctx.fillText("\u23EE\uFE0F",0, 25);
+			ctx.fillText("\u23EE\uFE0F",0, 30);
 
 			// End
-			ctx.fillText("\u23ED\uFE0F", offsetX + motion[MOTION_WIDTH], 25+offsetY + motion[MOTION_HEIGHT]);
+			ctx.fillText("\u23ED\uFE0F", offsetX + motion[MOTION_WIDTH], 30+offsetY + motion[MOTION_HEIGHT]);
 		}
 
 		// Convert the filename into text displayed
@@ -478,7 +478,7 @@ async def historic(request, response, args):
 		<canvas id="motion" width="%d" height="%d" ></canvas>
 		<br>
 		<div id="motions"></div>
-		"""%(lang.historic_not_available, detailled, 860,660)),
+		"""%(lang.historic_not_available, detailled, 800+40+40,600+40+40)),
 	]
 	page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
 	await response.send_page(page)
