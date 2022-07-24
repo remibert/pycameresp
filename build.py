@@ -20,7 +20,7 @@ import time
 # ffmpeg -i video.mov -vf "fps=3,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 output.gif
 # 640x360
 
-MICROPYTHON_VERSION ="-b v1.19.1"
+MICROPYTHON_VERSION ="fa15aed0f718562871288aa174e91507a134db28"
 ESP_IDF_VERSION     ="-b v4.4.1"
 ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24"    # Very stable version but cannot be rebuild with chip esp32s3
 ESP32_CAMERA_VERSION_S3="1ac48e5397ee22a59a18a314c4acf44c23dfe946" # Reliability problem but Esp32 S3 firmware can build with it
@@ -172,6 +172,9 @@ cd "%(OUTPUT_DIR)s/micropython"
 git fetch --all
 git reset --hard 
 git clean -fdx
+git checkout %(MICROPYTHON_VERSION)s
+cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
+git submodule update --init --recursive
 
 cd "%(OUTPUT_DIR)s/esp32-camera"
 git fetch --all
@@ -183,6 +186,7 @@ cd "%(OUTPUT_DIR)s/esp-idf"
 git fetch --all
 git reset --hard 
 git clean -fdx
+git checkout %(ESP_IDF_VERSION)s
 
 cd "%(OUTPUT_DIR)s/esp-idf/components"
 ln -s "%(OUTPUT_DIR)s/esp32-camera" esp32-camera
@@ -277,14 +281,14 @@ def main():
 			execute(INSTALL_TOOLS_COMMANDS)
 
 		if (args.get or args.all):
-			if  not os.path.exists(OUTPUT_DIR + os.sep + "esp32-camera") and \
-				not os.path.exists(OUTPUT_DIR + os.sep + "esp-idf") and \
+			if  not os.path.exists(OUTPUT_DIR + os.sep + "esp32-camera") or \
+				not os.path.exists(OUTPUT_DIR + os.sep + "esp-idf") or \
 				not os.path.exists(OUTPUT_DIR + os.sep + "micropython"):
 				execute(GET_COMMANDS)
 			else:
 				print("Get sources already done")
 
-		if args.clean or args.s3:
+		if args.clean or args.s3 or args.all:
 			execute(CLEAN_COMMANDS)
 
 		if args.s3:
