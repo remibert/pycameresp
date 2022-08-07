@@ -51,10 +51,11 @@ class Colorizer:
 				pos = -1
 				# If a keyword start
 				if char in self.lexicon.keys():
-					pos = j
-					state = STATE_KEYWORD
-					word  = charactere
-					keywords = self.lexicon[char]
+					if not (0x41 <= previous_char <= 0x5A or 0x61 <= previous_char <= 0x7A or 0x30 <= previous_char <= 0x39 or previous_char == 0x5F):
+						pos = j
+						state = STATE_KEYWORD
+						word  = charactere
+						keywords = self.lexicon[char]
 				# If decimal number started
 				elif 0x31 <= char <= 0x39:
 					if 0x41 <= previous_char <= 0x5A or 0x61 <= previous_char <= 0x7A or 0x30 <= previous_char <= 0x39 or previous_char == 0x5F:

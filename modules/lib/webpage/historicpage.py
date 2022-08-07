@@ -131,110 +131,113 @@ async def historic(request, response, args):
 
 		function show_motion(id)
 		{
-			var motion = historic[id];
-			var ctx = document.getElementById('motion').getContext('2d');
-			
-			var offsetX = 35;
-			var offsetY = 35;
-			ctx.drawImage(document.getElementById(id), offsetX, offsetY, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
-			var x;
-			var y;
-
-			// Show thumb image selected
-			document.getElementById(previousId).style.border = "";
-			document.getElementById(id).style.border = "5px solid dodgerblue";
-			previousId = id;
-
-			var squarex = motion[MOTION_SQUAREX];
-			var squarey = motion[MOTION_SQUAREY];
-			var maxx = motion[MOTION_WIDTH] /squarex;
-			var maxy = motion[MOTION_HEIGHT]/squarey;
-			
-			if (%d)
+			if (historic != null && historic.length > 0)
 			{
+				var motion = historic[id];
+				var ctx = document.getElementById('motion').getContext('2d');
+				
+				var offsetX = 35;
+				var offsetY = 35;
+				ctx.drawImage(document.getElementById(id), offsetX, offsetY, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
+				var x;
+				var y;
+
+				// Show thumb image selected
+				document.getElementById(previousId).style.border = "";
+				document.getElementById(id).style.border = "5px solid dodgerblue";
+				previousId = id;
+
+				var squarex = motion[MOTION_SQUAREX];
+				var squarey = motion[MOTION_SQUAREY];
+				var maxx = motion[MOTION_WIDTH] /squarex;
+				var maxy = motion[MOTION_HEIGHT]/squarey;
+				
+				if (%d)
+				{
+					for (y = 0; y < maxy; y ++)
+					{
+						for (x = 0; x < maxx; x ++)
+						{
+							detection = motion[MOTION_DIFFS][y*maxx + x];
+							if (detection != " ")
+							{
+								ctx.strokeStyle = "yellow";
+								ctx.strokeRect(offsetX + (x * squarex + 15),offsetY + (y*squarey +15), squarex-40, squarey-40);
+							}
+						}
+					}
+				}
+
+				ctx.strokeStyle = "red";
 				for (y = 0; y < maxy; y ++)
 				{
 					for (x = 0; x < maxx; x ++)
 					{
-						detection = motion[MOTION_DIFFS][y*maxx + x];
-						if (detection != " ")
+						var detection = motion[MOTION_DIFFS][y*maxx + x];
+						if (x >= 1)
 						{
-							ctx.strokeStyle = "yellow";
-							ctx.strokeRect(offsetX + (x * squarex + 15),offsetY + (y*squarey +15), squarex-40, squarey-40);
+							var previous = motion[MOTION_DIFFS][y*maxx + x -1];
+							if (previous != detection)
+							{
+								ctx.beginPath();
+								ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
+								ctx.lineTo(offsetX + x*squarex, offsetY + y*squarey + squarey);
+								ctx.stroke();
+							}
 						}
 					}
 				}
-			}
-
-			ctx.strokeStyle = "red";
-			for (y = 0; y < maxy; y ++)
-			{
+				
 				for (x = 0; x < maxx; x ++)
 				{
-					var detection = motion[MOTION_DIFFS][y*maxx + x];
-					if (x >= 1)
+					for (y = 0; y < maxy; y ++)
 					{
-						var previous = motion[MOTION_DIFFS][y*maxx + x -1];
-						if (previous != detection)
+						var detection = motion[MOTION_DIFFS][y*maxx + x];
+						if (y >= 1)
 						{
-							ctx.beginPath();
-							ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
-							ctx.lineTo(offsetX + x*squarex, offsetY + y*squarey + squarey);
-							ctx.stroke();
+							var previous = motion[MOTION_DIFFS][(y-1)*maxx + x];
+							if (previous != detection)
+							{
+								ctx.beginPath();
+								ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
+								ctx.lineTo(offsetX + x*squarex + squarex, offsetY + y*squarey);
+								ctx.stroke();
+							}
 						}
 					}
 				}
+
+				// Show text image
+				ctx.font = '20px monospace';
+				ctx.fillStyle = "white";
+				ctx.rect(0, offsetY + motion[MOTION_HEIGHT],  motion[MOTION_WIDTH], 100);
+				ctx.fill();
+
+				ctx.fillStyle = "black";
+				ctx.fillText(get_name(motion[MOTION_FILENAME]),  10, offsetY + motion[MOTION_HEIGHT] + 20);
+
+				// Show arrows
+				ctx.fillStyle = 'rgba(255,255,255,10)';
+				ctx.font = '30px monospace';
+				
+				// Previous
+				ctx.fillText("\u25C0\uFE0F", 0, offsetY + motion[MOTION_HEIGHT]/2); 
+				
+				// Next
+				ctx.fillText("\u25B6\uFE0F", offsetX + motion[MOTION_WIDTH], offsetY + motion[MOTION_HEIGHT]/2);
+
+				// Previous day
+				ctx.fillText("\u23EA",  offsetX + motion[MOTION_WIDTH]/2, 30); 
+				
+				// Next day
+				ctx.fillText("\u23E9", offsetX + motion[MOTION_WIDTH]/2,30+ offsetY + motion[MOTION_HEIGHT]);
+
+				// Begin
+				ctx.fillText("\u23EE\uFE0F",0, 30);
+
+				// End
+				ctx.fillText("\u23ED\uFE0F", offsetX + motion[MOTION_WIDTH], 30+offsetY + motion[MOTION_HEIGHT]);
 			}
-			
-			for (x = 0; x < maxx; x ++)
-			{
-				for (y = 0; y < maxy; y ++)
-				{
-					var detection = motion[MOTION_DIFFS][y*maxx + x];
-					if (y >= 1)
-					{
-						var previous = motion[MOTION_DIFFS][(y-1)*maxx + x];
-						if (previous != detection)
-						{
-							ctx.beginPath();
-							ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
-							ctx.lineTo(offsetX + x*squarex + squarex, offsetY + y*squarey);
-							ctx.stroke();
-						}
-					}
-				}
-			}
-
-			// Show text image
-			ctx.font = '20px monospace';
-			ctx.fillStyle = "white";
-			ctx.rect(0, offsetY + motion[MOTION_HEIGHT],  motion[MOTION_WIDTH], 100);
-			ctx.fill();
-
-			ctx.fillStyle = "black";
-			ctx.fillText(get_name(motion[MOTION_FILENAME]),  10, offsetY + motion[MOTION_HEIGHT] + 20);
-
-			// Show arrows
-			ctx.fillStyle = 'rgba(255,255,255,10)';
-			ctx.font = '30px monospace';
-			
-			// Previous
-			ctx.fillText("\u25C0\uFE0F", 0, offsetY + motion[MOTION_HEIGHT]/2); 
-			
-			// Next
-			ctx.fillText("\u25B6\uFE0F", offsetX + motion[MOTION_WIDTH], offsetY + motion[MOTION_HEIGHT]/2);
-
-			// Previous day
-			ctx.fillText("\u23EA",  offsetX + motion[MOTION_WIDTH]/2, 30); 
-			
-			// Next day
-			ctx.fillText("\u23E9", offsetX + motion[MOTION_WIDTH]/2,30+ offsetY + motion[MOTION_HEIGHT]);
-
-			// Begin
-			ctx.fillText("\u23EE\uFE0F",0, 30);
-
-			// End
-			ctx.fillText("\u23ED\uFE0F", offsetX + motion[MOTION_WIDTH], 30+offsetY + motion[MOTION_HEIGHT]);
 		}
 
 		// Convert the filename into text displayed
@@ -487,10 +490,7 @@ async def historic(request, response, args):
 async def historic_json(request, response, args):
 	""" Send historic json file """
 	Server.slow_down()
-	if await Historic.locked() is False:
-		await response.send_buffer(b"historic.json", await Historic.get_json())
-	else:
-		await response.send_buffer(b"historic.json", b"[]")
+	await response.send_buffer(b"historic.json", await Historic.get_json())
 
 @HttpServer.add_route(b'/historic/images/.*', available=info.iscamera() and Camera.is_activated())
 async def historic_image(request, response, args):

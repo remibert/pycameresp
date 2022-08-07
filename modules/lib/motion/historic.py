@@ -123,7 +123,7 @@ class Historic:
 	async def get_json():
 		""" Read the historic from disk """
 		root = Historic.get_root()
-		result = b""
+		result = b"[]"
 		if root:
 			try:
 				await Historic.acquire()
@@ -295,7 +295,7 @@ class Historic:
 		""" Internal periodic task """
 		from server.server import Server
 		if filesystem.ismicropython():
-			await Server.wait_resume(241)
+			await Server.wait_resume(127)
 		else:
 			await Server.wait_resume(3)
 
