@@ -198,6 +198,7 @@ class CamFlasher(QMainWindow):
 		self.timer_refresh_port = QTimer(active=True, interval=1000)
 		self.timer_refresh_port.timeout.connect(self.on_refresh_port)
 		self.timer_refresh_port.start()
+		self.selected_text = None
 
 	def update_font(self):
 		""" Update console font """
@@ -259,12 +260,23 @@ class CamFlasher(QMainWindow):
 		self.cancel_selection()
 		print("\x1B[2J\x1B[1;1f",end="")
 
-	def copy(self):
-		""" Copy to clipboard the text selected """
+	def get_selected_text(self):
+		""" Get the selected text """
 		text_selected = self.window.output.textCursor().selectedText()
 		text_selected = text_selected.replace("\xa0"," ")
 		text_selected = text_selected.replace("\u2028","\n")
-		QApplication.clipboard().setText(text_selected)
+		return text_selected
+
+	def copy(self):
+		""" Copy to clipboard the text selected """
+		if self.console.is_in_editor():
+			selected = self.selected_text
+		else:
+			selected = self.get_selected_text()
+		if selected is not None:
+			if self.console.is_in_editor():
+				self.flasher.send_key(b"\x03")
+			QApplication.clipboard().setText(selected)
 
 	def paste(self):
 		""" Paste to console the content of clipboard """
@@ -280,6 +292,20 @@ class CamFlasher(QMainWindow):
 			if key is not None:
 				self.clear_selection = True
 				if self.paused is False:
+					if self.console.is_in_editor() and self.selected_text is not None:
+						# If key is cut
+						if key == b'\x18':
+							QApplication.clipboard().setText(self.selected_text)
+							self.selected_text = None
+						# If key is paste
+						elif key == b'\x19':
+							pass
+						# If key is copy
+						elif key == b'\x03':
+							QApplication.clipboard().setText(self.selected_text)
+							self.selected_text = None
+						else:
+							self.selected_text = None
 					self.flasher.send_key(key)
 			return True
 		return super(CamFlasher, self).eventFilter(obj, event)
@@ -628,7 +654,12 @@ class CamFlasher(QMainWindow):
 			self.cancel_selection()
 
 		if self.console.is_select_in_editor():
-			move = self.console.get_selection().encode("utf-8")
+			move, selection = self.console.get_selection()
+			move = move.encode("utf-8")
+			if selection is True:
+				self.selected_text = self.get_selected_text()
+			else:
+				self.selected_text = None
 			# self.stdout.write("%s\n"%move)
 			self.flasher.send_key(move)
 			self.cancel_selection()

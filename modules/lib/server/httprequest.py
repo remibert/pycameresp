@@ -316,6 +316,7 @@ class Http:
 					result += await self.content.serialize(streamio)
 					noEnd = True
 			except Exception as err:
+				logger.syslog(err)
 				# Serialize error detected
 				result += await streamio.write(b'Content-Type: text/plain\r\n\r\n')
 				result += await streamio.write(strings.tostrings(logger.exception(err)))

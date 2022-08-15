@@ -39,7 +39,7 @@ class HttpServer:
 			try:
 				loader()
 			except ModuleNotFound as err:
-				logger.syslog("Failed to preload html page, %s"%str(err))
+				logger.syslog("Preload html page : %s"%str(err))
 			except Exception as err:
 				logger.syslog(err)
 

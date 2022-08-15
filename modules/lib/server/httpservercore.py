@@ -41,6 +41,7 @@ class HttpServerCore:
 			else:
 				await response.send_error(status=b"404", content=strings.tobytes(logger.exception(err)))
 		except Exception as err:
+			logger.syslog(err)
 			await response.send_error(status=b"404", content=strings.tobytes(logger.exception(err)))
 		finally:
 			await stream.close()

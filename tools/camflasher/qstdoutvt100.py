@@ -96,12 +96,18 @@ class QStdoutVT100:
 			return True
 		return False
 
+	def is_in_editor(self):
+		""" Indicates if editor is opened """
+		return self.vt100.is_in_editor()
+
 	def get_selection(self):
 		""" Get selection escape sequence """
 		result = ""
+		selection = False
 		if self.cursor_pos is not None:
 			result = "\x1B[%d;%dx"%(self.cursor_pos[0], self.cursor_pos[1])
 			self.cursor_pos = None
+			selection = False
 		elif self.selection_start is not None and self.selection_end is not None:
 			start_line, start_column = self.selection_start
 			end_line, end_column     = self.selection_end
@@ -111,9 +117,11 @@ class QStdoutVT100:
 			result = "\x1B[%d;%dx\x1B[%d;%dy"%(start_line, start_column, end_line, end_column)
 			self.selection_end = None
 			self.selection_start = None
-		return result
+			selection = True
+		return result, selection
 
 	def get_coordinates(self):
+		""" Convert the mouse position into vt100 cursor coordinates """
 		cursor = self.qtextbrowser.textCursor()
 		start_col = None
 		start_line = None

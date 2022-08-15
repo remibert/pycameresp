@@ -154,11 +154,13 @@ class Server:
 					wifi.Wifi.wan_disconnected()
 
 				if forced:
-					await Server.context.notifier.notify("\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s"%(
+					await Server.context.notifier.notify("\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s\n - %s"%(
 						wifi.Station.get_info()[0],
 						Server.context.wan_ip,
 						info.uptime(),
-						strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
+						strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False)),
+						strings.tostrings(info.meminfo(display=False))
+						))
 
 	@staticmethod
 	async def synchronize_time():
