@@ -7,9 +7,9 @@ import uasyncio
 import uos
 from tools import logger,sdcard,tasking,filesystem,strings,info
 
-MAX_DAYS_DISPLAYED = 21
+MAX_DAYS_DISPLAYED = 14
 MAX_DAYS_REMOVED   = 14
-MAX_MOTIONS        = MAX_DAYS_DISPLAYED*50
+MAX_MOTIONS        = 300
 
 class Historic:
 	""" Manage the motion detection history file """
@@ -90,7 +90,7 @@ class Historic:
 			try:
 				await Historic.acquire()
 				Historic.historic.clear()
-
+				last_day = ""
 				# For all motions
 				for motion in motions:
 					try:
@@ -103,6 +103,9 @@ class Historic:
 							filename = filename.lstrip("/")
 						if filesystem.exists(filename):
 							Historic.add_item(motion_item)
+						if last_day != motion_item[0][4:14]:
+							last_day = motion_item[0][4:14]
+							print("Build historic day %s"%last_day)
 					except OSError as err:
 						logger.syslog(err)
 						# If sd card not responding properly
@@ -113,7 +116,7 @@ class Historic:
 					finally:
 						if file:
 							file.close()
-					await uasyncio.sleep_ms(3)
+					await uasyncio.sleep_ms(2)
 			except Exception as err:
 				logger.syslog(err)
 			finally:
@@ -174,7 +177,7 @@ class Historic:
 				if typ & 0xF000 != 0x4000:
 					if re.match(pattern, name):
 						result.append(name)
-		await uasyncio.sleep_ms(5)
+		await uasyncio.sleep_ms(3)
 		result.sort()
 		if older is False:
 			result.reverse()
@@ -197,14 +200,11 @@ class Historic:
 						pathMonth = pathYear + "/" + month
 						days = await Historic.scan_dir(pathMonth, r"\d\d", older)
 						for day in days:
+							print("Scan historic day %s/%s/%s"%(year, month, day))
 							pathDay = pathMonth + "/" + day
 							hours = await Historic.scan_dir(pathDay, r"\d\dh\d\d", older)
 							lastdays.append("%s/%s/%s"%(year, month, day))
-							if len(lastdays) > max_days or len(motions) > MAX_MOTIONS:
-								motions.sort()
-								if older is False:
-									motions.reverse()
-								return motions, lastdays
+
 							for hour in hours:
 								pathHour = pathDay + "/" + hour
 								if older:
@@ -213,6 +213,11 @@ class Historic:
 									extension = "json"
 								detections = await Historic.scan_dir(pathHour, r"\d\d.*\."+extension, older, directory=False)
 								for detection in detections:
+									if len(lastdays) > max_days or len(motions) > MAX_MOTIONS:
+										motions.sort()
+										if older is False:
+											motions.reverse()
+										return motions, lastdays
 									motions.append(pathHour + "/" + detection)
 				motions.sort()
 				if older is False:
