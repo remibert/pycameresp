@@ -59,22 +59,22 @@ class Streaming:
 		</script>"""%(size, request.port+1,Streaming.streaming_id[0]))
 
 	@staticmethod
-	def inactivity_timeout(timer):
-		""" Suspend video streaming after delay """
-		Streaming.streaming_id[0] += 1
-
-	@staticmethod
 	def activity():
 		""" User activity detected """
 		if Streaming.inactivity[0]:
 			Streaming.inactivity[0].stop()
 			Streaming.inactivity[0] = None
-		Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivity_timeout, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
+		Streaming.inactivity[0] = tasking.Inactivity(Streaming.stop, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
 
 	@staticmethod
 	def get_streaming_id():
 		""" Return the current streaming id """
 		return Streaming.streaming_id[0]
+
+	@staticmethod
+	def stop():
+		""" Stop streaming """
+		Streaming.streaming_id[0] += 1
 
 @HttpServer.add_route(b'/camera/start', available=info.iscamera() and Camera.is_activated())
 async def camera_start_streaming(request, response, args):

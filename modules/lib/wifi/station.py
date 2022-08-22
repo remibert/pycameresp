@@ -4,7 +4,7 @@
 import time
 from wifi import ip, hostname
 import uasyncio
-from tools import jsonconfig,strings,logger
+from tools import jsonconfig,strings,logger,lang
 
 class NetworkConfig(jsonconfig.JsonConfig):
 	""" Wifi station configuration class """
@@ -92,7 +92,7 @@ class Station:
 			retry = 0
 			while not Station.wlan.isconnected() and retry < max_retry:
 				await uasyncio.sleep(1)
-				logger.syslog ("   %-2d/%d wait connection to %s"%(retry+1, max_retry, strings.tostrings(network.ssid)))
+				logger.syslog ("   %-2d/%d wait connection to %s (wifi=%s)"%(retry+1, max_retry, strings.tostrings(network.ssid), strings.tostrings(Station.get_signal_strength_bytes())))
 				retry += 1
 
 			if Station.wlan.isconnected() is False:
@@ -182,8 +182,44 @@ class Station:
 				Station.last_scan[0] = time.time()
 			except Exception as err:
 				logger.syslog("No network found")
-
 		return Station.other_networks
+
+	@staticmethod
+	def get_signal_strength():
+		""" Get the signal strength """
+		result = None
+		if Station.wlan:
+			try:
+				rssi = Station.wlan.status("rssi")
+				if rssi > -60:
+					result = 5
+				elif rssi > -70:
+					result = 4
+				elif rssi > -80:
+					result = 3
+				elif rssi > -90:
+					result = 2
+				elif rssi > -100:
+					result = 1
+				else:
+					result = 0
+			except:
+				pass
+		return result
+
+	@staticmethod
+	def get_signal_strength_bytes():
+		""" Get the signal strength into string """
+		signal_strength = {
+				5    : lang.signal_excellent,
+				4    : lang.signal_very_good,
+				3    : lang.signal_good     ,
+				2    : lang.signal_low      ,
+				1    : lang.signal_very_low ,
+				0    : lang.signal_no       ,
+				None : lang.signal_none
+			}[Station.get_signal_strength()]
+		return signal_strength
 
 	@staticmethod
 	def is_activated():

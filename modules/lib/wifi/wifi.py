@@ -78,7 +78,7 @@ class Wifi:
 		""" Indicates that wan have probably a problem """
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.wan_problem += 1
-			logger.syslog("WAN problem %d detected (max=%d)"%(Wifi.context.wan_problem,MAX_PROBLEM))
+			logger.syslog("WAN problem %d detected (max=%d) (wifi=%s)"%(Wifi.context.wan_problem,MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))
 
 	@staticmethod
 	def lan_connected(changeState=True):
@@ -95,7 +95,7 @@ class Wifi:
 		""" Indicates that lan disconnection detected """
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.lan_problem += 1
-			logger.syslog("LAN problem %d detected (max=%d)"%(Wifi.context.lan_problem, MAX_PROBLEM))
+			logger.syslog("LAN problem %d detected (max=%d)(wifi=%s)"%(Wifi.context.lan_problem, MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))
 
 	@staticmethod
 	def is_wan_available():

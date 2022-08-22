@@ -8,6 +8,7 @@ from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import main_frame
 from tools             import info, lang, builddate, strings
+from wifi.station      import Station
 
 @HttpServer.add_route(b'/', menu=lang.menu_system, item=lang.item_information)
 async def index(request, response, args):
@@ -41,6 +42,8 @@ async def index(request, response, args):
 	except:
 		platform = lang.unavailable
 
+	signal_strength = Station.get_signal_strength_bytes()
+
 	try:
 		uptime = strings.tobytes(info.uptime(lang.days))
 	except:
@@ -49,15 +52,17 @@ async def index(request, response, args):
 	date = strings.date_to_bytes()
 
 	page = main_frame(request, response, args, lang.device_informations,
-		Edit(text=lang.date,             value=date,           disabled=True),
-		Edit(text=lang.build_date,       value=builddate.date, disabled=True),
-		Edit(text=lang.uptime,           value=uptime,         disabled=True),
-		Edit(text=lang.platform,         value=platform,       disabled=True),
-		Edit(text=lang.frequency,        value=frequency,      disabled=True),
+		Edit(text=lang.date,             value=date,            disabled=True),
+		Edit(text=lang.build_date,       value=builddate.date,  disabled=True),
+		Edit(text=lang.uptime,           value=uptime,          disabled=True),
+		Edit(text=lang.platform,         value=platform,        disabled=True),
+		Edit(text=lang.frequency,        value=frequency,       disabled=True),
 		Edit(text=lang.memory_free,      value=mem_free,        disabled=True),
 		Edit(text=lang.memory_allocated, value=mem_alloc,       disabled=True),
 		Edit(text=lang.memory_total,     value=mem_total,       disabled=True),
 		Edit(text=lang.flash_user,       value=flash_user,      disabled=True),
-		Edit(text=lang.flash_size,       value=flash_size,      disabled=True))
+		Edit(text=lang.flash_size,       value=flash_size,      disabled=True),
+		Edit(text=lang.signal_strength,  value=signal_strength, disabled=True),
+		)
 
 	await response.send_page(page)

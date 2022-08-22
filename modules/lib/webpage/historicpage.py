@@ -1,17 +1,19 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to view recent motion detection """
-from server.httpserver import HttpServer
-from server.server     import Server
-from htmltemplate      import *
-from webpage.mainpage  import main_frame
-from motion            import Historic
-from video             import Camera
-from tools             import lang,info, strings
+from server.httpserver     import HttpServer
+from server.server         import Server
+from htmltemplate          import *
+from webpage.mainpage      import main_frame
+from webpage.streamingpage import Streaming
+from motion                import Historic
+from video                 import Camera
+from tools                 import lang,info, strings
 
 @HttpServer.add_route(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=info.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
 	""" Historic motion detection page """
+	Streaming.stop()
 	Historic.get_root()
 	if len(request.params) == 0:
 		detailled = False
@@ -73,6 +75,13 @@ async def historic(request, response, args):
 					historic = JSON.parse(historic_request.responseText);
 					load_image();
 				}
+				else
+				{
+					var ctx = document.getElementById('motion').getContext('2d');
+					ctx.font = '25px Arial';
+					ctx.fillStyle = "black";
+					ctx.fillText("%s", 10, 20);
+				}
 			}
 		}
 
@@ -120,6 +129,10 @@ async def historic(request, response, args):
 					{
 						setTimeout(load_image, 1);
 					}
+				}
+				else 
+				{
+					setTimeout(load_image, 1);
 				}
 			}
 		}
@@ -481,7 +494,7 @@ async def historic(request, response, args):
 		<canvas id="motion" width="%d" height="%d" ></canvas>
 		<br>
 		<div id="motions"></div>
-		"""%(lang.historic_not_available, detailled, 800+40+40,600+40+40)),
+		"""%(lang.historic_not_available, lang.historic_not_available, detailled, 800+40+40,600+40+40)),
 	]
 	page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
 	await response.send_page(page)
@@ -490,7 +503,11 @@ async def historic(request, response, args):
 async def historic_json(request, response, args):
 	""" Send historic json file """
 	Server.slow_down()
-	await response.send_buffer(b"historic.json", await Historic.get_json())
+	try:
+		await response.send_buffer(b"historic.json", await Historic.get_json())
+	except Exception as err:
+		logger.syslog(err)
+		await response.send_error(status=b"404", content=b"Historic problem")
 
 @HttpServer.add_route(b'/historic/images/.*', available=info.iscamera() and Camera.is_activated())
 async def historic_image(request, response, args):
