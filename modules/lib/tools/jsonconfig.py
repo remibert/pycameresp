@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Functions for managing the json configuration.
 All configuration classes end the name with the word Config.
 For each of these classes, a json file with the same name is stored in the config directory of the board. """
@@ -39,7 +40,7 @@ class JsonConfig:
 			file, filename = self.open(file=file, read_write="w", part_filename=part_filename)
 			data = self.__dict__.copy()
 			del data["modification_date"]
-			json.dump(strings.tostrings(data),file)
+			json.dump(strings.tostrings(data),file,separators=(',', ':'))
 			file.close()
 			self.modification_date = uos.stat(filename)[8]
 			return True
@@ -51,7 +52,7 @@ class JsonConfig:
 		""" Convert the configuration to string """
 		data = self.__dict__.copy()
 		del data["modification_date"]
-		return json.dumps(strings.tostrings(data))
+		return json.dumps(strings.tostrings(data),separators=(',', ':'))
 
 	def get_pathname(self, part_filename=""):
 		""" Get the configuration filename according to the class name """
@@ -79,6 +80,7 @@ class JsonConfig:
 
 	def open(self, file=None, read_write="r", part_filename=""):
 		""" Create or open configuration file """
+		# pylint:disable=unspecified-encoding
 		filename = file
 		if filesystem.exists(self.config_root()) is False:
 			filesystem.makedir(self.config_root())
@@ -89,7 +91,7 @@ class JsonConfig:
 			file = open(filename, read_write)
 		return file, filename
 
-	def update(self, params):
+	def update(self, params, show_error=True):
 		""" Update object with html request params """
 		global self_config
 		if b"name" in params and b"value" in params and len(params) == 2:
@@ -144,7 +146,7 @@ class JsonConfig:
 					# pylint: disable=exec-used
 					exec(execval)
 				else:
-					if name != b"action":
+					if name != b"action" and show_error:
 						print("%s.%s not existing"%(self.__class__.__name__, strings.tostrings(name)))
 			except Exception as err:
 				logger.syslog(err, "Error on %s"%(execval))
@@ -154,6 +156,7 @@ class JsonConfig:
 
 	def load(self, file = None, part_filename="", tobytes=True, errorlog=True):
 		""" Load object with the file specified """
+		filename = ""
 		try:
 			filename = self.get_pathname(strings.tofilename(part_filename))
 			file, filename = self.open(file=file, read_write="r", part_filename=part_filename)

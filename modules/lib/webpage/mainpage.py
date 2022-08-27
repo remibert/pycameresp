@@ -84,7 +84,7 @@ def manage_default_button(request, config, callback=None, onclick=b""):
 		disabled = False
 	elif action == b"save":
 		disabled = True
-		config.update(request.params)
+		config.update(request.params, show_error=False)
 		if callback:
 			callback(request, config)
 		config.save()

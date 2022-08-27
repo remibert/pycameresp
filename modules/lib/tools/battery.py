@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Manage the battery """
 import uasyncio
 import machine

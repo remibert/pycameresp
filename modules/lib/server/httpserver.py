@@ -3,6 +3,7 @@
 # historically based on :
 # https://github.com/jczic/MicroWebSrv/blob/master/microWebSocket.py
 # but I have modified a lot, there must still be some original functions.
+# pylint:disable=consider-using-f-string
 """ This class is used to manage an http server.
 This class contains few lines of code, this is to save memory.
 The core of the server is in the other class HttpServerCore, which is loaded into memory only when connecting an HTTP client.

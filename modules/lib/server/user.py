@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Class used to manage a username and a password """
 from tools import logger,jsonconfig,encryption,strings,info
 

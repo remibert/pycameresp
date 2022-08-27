@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-iterating-dictionary
 """ Syntax highlight for python in the editor """
 PYTHON_KEYWORDS = b"and as assert break class continue def del elif else except exec finally for from global if import in is lambda None not or pass print raise return try while self as join abs apply bool buffer callable chr cmp coerce compile complex delattr dir dict divmod eval execfile filter float getattr globals hasattr hash hex id input int intern isinstance issubclass len list locals long map max min oct open ord pow range raw_input reduce reload repr round setattr slice str tuple type unichr unicode vars xrange zip with yield True False async await"
 

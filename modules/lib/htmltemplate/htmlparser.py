@@ -3,6 +3,7 @@
 """ This script parse the template.html file and creates the template classes
 that can be used to compose a web page.
 This automatically creates the content of file lib/htmltemplate/htmlclasses.py """
+# pylint:disable=consider-using-f-string
 import re
 
 def findall(pattern, text):
@@ -50,10 +51,11 @@ def parse(force=False):
 	""" Parse the www/template.html and createsthe content of file lib/htmltemplate/htmlclasses.py """
 	from htmltemplate import WWW_DIR, TEMPLATE_FILE, TEMPLATE_PY
 	# pylint: disable=duplicate-string-formatting-argument
+	# pylint:disable=unspecified-encoding
 	print("Parse html template")
 	lines = open(WWW_DIR+TEMPLATE_FILE).readlines()
 	py_class_file = open(TEMPLATE_PY,"w")
-	py_class_file.write("''' File automatically generated with template.html content '''\n# pylint:disable=missing-function-docstring\n# pylint:disable=trailing-whitespace\n# pylint:disable=too-many-lines\nfrom htmltemplate.template import Template \n")
+	py_class_file.write("''' File automatically generated with template.html content '''\n# pylint:disable=missing-function-docstring\n# pylint:disable=global-variable-not-assigned\n# pylint:disable=trailing-whitespace\n# pylint:disable=too-many-lines\nfrom htmltemplate.template import Template \n")
 
 	stack = []
 	for line in lines:

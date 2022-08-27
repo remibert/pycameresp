@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Device informations """
 import sys
 import time
@@ -120,21 +121,25 @@ def uptime(text="days"):
 _last_activity = 0
 def get_last_activity():
 	""" Get the last activity from user """
+	# pylint:disable=global-variable-not-assigned
 	global _last_activity
 	return _last_activity
 
 def set_last_activity():
 	""" Set the last activity from user """
+	# pylint:disable=global-variable-not-assigned
 	global _last_activity
 	_last_activity = uptime_sec()
 
 _issues_counter = 0
 def increase_issues_counter():
 	""" Increases a issue counter, that may require a reboot if there are too many"""
+	# pylint:disable=global-variable-not-assigned
 	global _issues_counter
 	_issues_counter += 1
 
 def get_issues_counter():
 	""" Return the value of the issues counter """
+	# pylint:disable=global-variable-not-assigned
 	global _issues_counter
 	return _issues_counter

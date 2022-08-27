@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Motion detection only work with ESP32CAM (Requires specially modified ESP32CAM firmware to handle motion detection.) """
 from gc import collect
 import sys

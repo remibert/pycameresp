@@ -1,5 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
+
 """ Sdcard management class """
 try:
 	import machine
@@ -71,14 +73,18 @@ class SdCard:
 		result = False
 		if SdCard.is_mounted() is False:
 			try:
+				# pylint:disable=redefined-outer-name
+
 				import os
 				import machine
 				sd = machine.SDCard(**(SdCard.slot[0]))
 				if fs== "FAT":
+					# pylint:disable=no-member
 					os.VfsFat.mkfs(sd)
 					os.VfsFat(sd)
 					result = True
 				elif fs== "LFS":
+					# pylint:disable=no-member
 					os.VfsLfs2.mkfs(sd)
 					os.VfsLfs2(sd)
 				result = True
@@ -193,6 +199,7 @@ class SdCard:
 						logger.syslog(err)
 						break
 			try:
+				# pylint:disable=unspecified-encoding
 				result = open(filepath,mode)
 				break
 			except OSError as err:

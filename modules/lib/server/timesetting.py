@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Function which sets the internal clock of the card based on an ntp server """
 import time
 from tools import logger,strings,filesystem

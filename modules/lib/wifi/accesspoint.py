@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Classes used to manage the wifi access point """
 from wifi import hostname, ip
 from tools import jsonconfig,strings,logger

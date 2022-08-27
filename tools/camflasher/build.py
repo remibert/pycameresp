@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=global-variable-not-assigned
+# pylint:disable=consider-using-f-string
+# pylint:disable=unspecified-encoding
 """ Build standalone executable for camflasher """
 import platform
 import sys

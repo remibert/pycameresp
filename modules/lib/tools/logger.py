@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Logger and exception functions """
 import sys
 import io
@@ -26,7 +27,7 @@ def exception(err, msg=""):
 		text = file.getvalue()
 	return text
 
-def syslog(err, msg="", display=True):
+def syslog(err, msg="", display=True, write=True):
 	""" Log the error in syslog.log file """
 	if isinstance(err, Exception):
 		err = exception(err)
@@ -39,11 +40,13 @@ def syslog(err, msg="", display=True):
 
 	result = "%s%s"%(strings.tostrings(msg),strings.tostrings(err))
 
-	log(result)
+	if write:
+		log(result)
 	return result
 
 def log(msg):
 	""" Log message in syslog.log file without printing """
+	# pylint:disable=unspecified-encoding
 	try:
 		filename = "syslog.log"
 		if filesystem.ismicropython():

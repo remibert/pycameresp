@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# pylint:disable=consider-using-f-string
 """ Build pycameresp firmware """
 import sys
 import subprocess

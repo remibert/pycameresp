@@ -1,5 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
+
 """ Manages access to wifi, treats cases of network loss with retry, and manages a fallback on the access point if no network is available """
 from wifi.accesspoint import *
 from wifi.station import *
@@ -126,7 +128,7 @@ class Wifi:
 			# If the wifi not started
 			if state == WIFI_OFF:
 				Wifi.context.dns = ""
-				
+
 				# If wifi station available
 				if Station.is_activated():
 					AccessPoint.stop()
@@ -180,7 +182,7 @@ class Wifi:
 					Wifi.context.dns = Station.get_info()[3]
 					Wifi.context.lan_problem = 0
 					Wifi.context.wan_problem = 0
-				
+
 				# If station yet activated
 				if Station.is_activated():
 					# If too many problem detected

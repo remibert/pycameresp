@@ -7,8 +7,8 @@ import machine
 from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import main_frame
-from tools             import info, lang, builddate, strings
 from wifi.station      import Station
+from tools             import info, lang, builddate, strings
 
 @HttpServer.add_route(b'/', menu=lang.menu_system, item=lang.item_information)
 async def index(request, response, args):

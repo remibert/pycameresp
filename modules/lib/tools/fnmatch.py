@@ -1,5 +1,7 @@
 """  Unix filename pattern matching.
 Extracted from cpython fnmatch.py """
+# pylint:disable=consider-using-f-string
+
 import re
 
 previous_pat = [None, None]

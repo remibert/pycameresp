@@ -1,6 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
+# pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
 import wifi
 from tools import logger,strings

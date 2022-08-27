@@ -2,6 +2,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 # DNS spec https://www2.cs.duke.edu/courses/fall16/compsci356/DNS/DNS-primer.pdf
+# pylint:disable=consider-using-f-string
 import struct
 import random
 import socket

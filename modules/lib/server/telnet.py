@@ -1,5 +1,6 @@
 # Based on https://github.com/cpopp/MicroTelnetServer/blob/master/utelnet/utelnetserver.py
 # Add user login
+# pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
 """ Telnet class """
 import sys
@@ -215,6 +216,7 @@ def accept_telnet_connect(telnet_server):
 def stop():
 	""" Stop telnet server """
 	import uos
+	# pylint:disable=global-variable-not-assigned
 	global server_socket, last_client_socket
 	uos.dupterm(None)
 	if server_socket:

@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Manage the motion detection history file """
 import re
 import json
@@ -52,7 +53,7 @@ class Historic:
 				name = strings.tostrings(name)
 				item = Historic.create_item(root + "/" + path + "/" + name +".json", motion_info)
 				res1 = sdcard.SdCard.save(path, name + ".jpg" , image)
-				res2 = sdcard.SdCard.save(path, name + ".json", json.dumps(item))
+				res2 = sdcard.SdCard.save(path, name + ".json", json.dumps(item, separators=(',', ':')))
 				Historic.add_item(item)
 				result = res1 and res2
 			except Exception as err:
@@ -78,6 +79,26 @@ class Historic:
 			if not filesystem.ismicropython():
 				# Remove the "/" before filename
 				item [0] = item [0].lstrip("/")
+
+			# If the differences are in an old format
+			if type(item[3]) == type(""):
+				diffs = []
+				diffVal = 0
+				i = 0
+				for diff in item[3]:
+					if diff == "#":
+						diffVal |= 1
+
+					if (i %32 == 31):
+						diffs.append(diffVal)
+						diffVal = 0
+					else:
+						diffVal <<= 1
+					i += 1
+				diffMax = len(item[3])
+				diffVal <<= (31 - (diffMax%32))
+				diffs.append(diffVal)
+				item[3] = diffs
 
 			# Add json file to the historic
 			Historic.historic.insert(0,item)
@@ -134,7 +155,7 @@ class Historic:
 				Historic.historic.reverse()
 				while len(Historic.historic) > MAX_MOTIONS:
 					del Historic.historic[-1]
-				result = strings.tobytes(json.dumps(Historic.historic))
+				result = strings.tobytes(json.dumps(Historic.historic, separators=(',', ':')))
 			except Exception as err:
 				logger.syslog(err)
 			finally:
@@ -200,7 +221,7 @@ class Historic:
 						pathMonth = pathYear + "/" + month
 						days = await Historic.scan_dir(pathMonth, r"\d\d", older)
 						for day in days:
-							print("Scan historic day %s/%s/%s"%(year, month, day))
+							print("Scan  historic day %s/%s/%s"%(year, month, day))
 							pathDay = pathMonth + "/" + day
 							hours = await Historic.scan_dir(pathDay, r"\d\dh\d\d", older)
 							lastdays.append("%s/%s/%s"%(year, month, day))

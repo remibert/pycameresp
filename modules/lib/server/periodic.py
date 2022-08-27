@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Periodic task, wifi management, get wan_ip, synchronize time """
 import uasyncio
 from server.server import ServerConfig, Server
@@ -18,6 +19,8 @@ class Periodic:
 		self.server_config = ServerConfig()
 		self.server_config.load()
 		self.get_login_state = None
+		self.last_success_notification = None
+		self.current_time = 0
 		watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
 
 	async def check_login(self):
@@ -34,7 +37,16 @@ class Periodic:
 		if login is not None:
 			from server.notifier import Notifier
 			if login:
-				await Notifier.notify(lang.login_success_detected, display=False, enabled=self.server_config.notify)
+				if self.last_success_notification is None:
+					notif = True
+					self.last_success_notification = self.current_time
+				elif self.last_success_notification + 5*60 < self.current_time:
+					self.last_success_notification = self.current_time
+					notif = True
+				else:
+					notif = False
+				if notif:
+					await Notifier.notify(lang.login_success_detected, display=False, enabled=self.server_config.notify)
 			else:
 				await Notifier.notify(lang.login_failed_detected,  display=False, enabled=self.server_config.notify)
 
@@ -66,6 +78,7 @@ class Periodic:
 			watchdog.WatchDog.feed()
 			await uasyncio.sleep(1)
 			polling_id += 1
+			self.current_time += 1
 
 			# Check if any problems have occurred and if a reboot is needed
 			if polling_id % 3607:

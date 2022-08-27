@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Miscellaneous utility functions """
 import machine
 from tools import strings,logger,system,watchdog, info

@@ -1082,6 +1082,9 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 		pPreviousLights ++;
 	}
 
+	mp_obj_t diffsVal       = mp_obj_new_list(0, NULL);
+	u_int32_t diffVal = 0;
+
 	char * diffs = (char*)_malloc(sizeof(char) * self->diffMax + 1);
 	if (motionConfiguration.mask_length > 0 && motionConfiguration.mask_length == self->diffMax)
 	{
@@ -1103,34 +1106,63 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 				else
 				{
 					diffs[i] = '#';
+					diffVal |= 1;
 				}
 			}
 			else
 			{
 				diffs[i] = ' ';
 			}
+
+			if (i %32 == 31)
+			{
+				mp_obj_list_append(diffsVal, mp_obj_new_int(diffVal));
+				diffVal = 0;
+			}
+			else
+			{
+				diffVal <<= 1;
+			}
+
 			pDiffs++;
 			pMask++;
 		}
+
+		diffVal <<= (31 - (self->diffMax%32));
+		mp_obj_list_append(diffsVal, mp_obj_new_int(diffVal));
 		//ESP_LOGE(TAG,"ignored=%d diff=%d",  ignored, diffDetected);
 	}
 	else
 	{
 		int count = 0;
-		pDiffs         = self->diffs;
+		pDiffs    = self->diffs;
 		for (i = 0; i < self->diffMax; i++)
 		{
 			if (*pDiffs)
 			{
 				diffs[i] = '#';
+				diffVal |= 1;
 				count ++;
 			}
 			else
 			{
 				diffs[i] = ' ';
 			}
+
+			if (i %32 == 31)
+			{
+				mp_obj_list_append(diffsVal, mp_obj_new_int(diffVal));
+				diffVal = 0;
+			}
+			else
+			{
+				diffVal <<= 1;
+			}
+
 			pDiffs++;
 		}
+		diffVal <<= (31 - (self->diffMax%32));
+		mp_obj_list_append(diffsVal, mp_obj_new_int(diffVal));
 	}
 
 	mp_obj_t diffdict = mp_obj_new_dict(0);
@@ -1142,7 +1174,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 		mp_obj_dict_store(diffdict, mp_obj_new_str("height"    , strlen("height"))    ,  mp_obj_new_int(self->diffHeight));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("diffhisto" , strlen("diffhisto")) ,  mp_obj_new_int(diffHisto));
 		mp_obj_dict_store(diffdict, mp_obj_new_str("errhisto"  , strlen("errhisto"))  ,  mp_obj_new_int(errHisto));
-		mp_obj_dict_store(diffdict, mp_obj_new_str("diffs"     , strlen("diffs"))     ,  mp_obj_new_str(diffs     , self->diffMax));
+		mp_obj_dict_store(diffdict, mp_obj_new_str("diffs"     , strlen("diffs"))     ,  diffsVal);
 	mp_obj_dict_store(result, mp_obj_new_str("diff"     , strlen("diff")), diffdict);
 	_free((void**)&diffs);
 	return diffDetected;

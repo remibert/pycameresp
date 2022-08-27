@@ -3,6 +3,7 @@
 # historically based on :
 # https://github.com/jczic/MicroWebSrv/blob/master/microWebSocket.py
 # but I have modified a lot, there must still be some original functions.
+# pylint:disable=consider-using-f-string
 """ These classes manage http responses and requests.
 The set of request and response are in bytes format.
 I no longer use strings, because they are between 20 and 30 times slower.
@@ -369,6 +370,7 @@ class ContentFile:
 	""" Class that contains a file """
 	def __init__(self, filename, content_type=None, base64=False):
 		""" Constructor """
+		# pylint:disable=global-variable-not-assigned
 		if type(filename) == type([]):
 			self.filenames = filename
 		else:
@@ -435,6 +437,7 @@ class ContentBuffer:
 	""" Class that contains a buffer """
 	def __init__(self, filename, buffer, content_type=None):
 		""" Constructor """
+		# pylint:disable=global-variable-not-assigned
 		self.filename = filename
 		self.buffer = buffer
 		if content_type is None:

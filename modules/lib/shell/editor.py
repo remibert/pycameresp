@@ -3,6 +3,9 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=multiple-statements
 # pylint:disable=too-many-lines
+# pylint:disable=consider-using-f-string
+# pylint:disable=unspecified-encoding
+
 """ Class defining a VT100 text editor.
 This editor works directly in the board.
 This allows you to make quick and easy changes directly on the board, without having to use synchronization tools.
@@ -1338,7 +1341,7 @@ class Text:
 	def change_case(self, keys=None):
 		""" Change the case of selection """
 		selection = self.copy_clipboard()
-		if selection != []:
+		if len(selection) > 0:
 			self.modified = True
 			selection_start = self.selection_start
 			selection_end   = self.selection_end
@@ -1632,7 +1635,7 @@ class Text:
 							end = False
 						pos = keys[0][2:-1]
 						line, column = pos.split(";")
-						
+
 						if end:
 							self.open_selection()
 						self.goto(int(line)+self.begin_line,int(column)+self.begin_column, not end)

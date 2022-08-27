@@ -1,5 +1,8 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=too-many-lines
+# pylint:disable=consider-using-f-string
+# pylint:disable=unspecified-encoding
 """ Class defining a minimalist shell, directly executable on the board.
 We modify directories, list, delete, move files, edit files ...
 The commands are :
@@ -57,6 +60,7 @@ stdout_redirected = None
 
 def print_(message, end=None):
 	""" Redirect the print to file """
+	# pylint:disable=global-variable-not-assigned
 	global stdout_redirected
 	if stdout_redirected is None:
 		if end is None:
@@ -72,6 +76,7 @@ def print_(message, end=None):
 
 def get_screen_size():
 	""" Return the screen size and check if output redirected """
+	# pylint:disable=global-variable-not-assigned
 	global stdout_redirected
 	if stdout_redirected is None:
 		height, width = terminal.get_screen_size()
@@ -319,6 +324,7 @@ def find(file):
 
 def print_part(message, width, height, count):
 	""" Print a part of text """
+	# pylint:disable=global-variable-not-assigned
 	global stdout_redirected
 	if isinstance(message , bytes):
 		message = message.decode("utf8")
@@ -513,6 +519,7 @@ def deepsleep(seconds=60):
 edit_class = None
 def edit(file, no_color=False, read_only=False):
 	""" Edit command """
+	# pylint:disable=global-variable-not-assigned
 	global edit_class
 	global stdout_redirected
 	if stdout_redirected is None:
@@ -632,6 +639,7 @@ def cls():
 
 def check_cam_flasher():
 	""" Check if the terminal is CamFlasher """
+	# pylint:disable=global-variable-not-assigned
 	global stdout_redirected
 	if stdout_redirected is None:
 		# Request terminal device attribut
@@ -762,6 +770,7 @@ def vtcolors():
 def get_command(command_name):
 	""" Get a command callback according to the command name """
 	try:
+		# pylint:disable=global-variable-not-assigned
 		global shell_commands
 		command = shell_commands[command_name]
 		command_function = command[0]
@@ -779,6 +788,7 @@ def get_command(command_name):
 
 def exec_command(args):
 	""" Execute command """
+	# pylint:disable=global-variable-not-assigned
 	global stdout_redirected
 	command_name = ""
 	command_function = None

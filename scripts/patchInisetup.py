@@ -1,3 +1,6 @@
+""" Patch the initsetup.py """
+# pylint:disable=consider-using-f-string
+# pylint:disable=unspecified-encoding
 
 filesToAdd = [
 	("","modules/main.py"),
@@ -37,4 +40,4 @@ if __name__ == "__main__":
 	open(root + "/micropython/ports/esp32/modules/inisetup.py","w").write(inisetup%patchIni)
 	import time
 	year,month,day,hour,minute,second,weekday,yearday = time.localtime()[:8]
-	open("modules/lib/tools/builddate.py","w").write("date=b'%04d/%02d/%02d  %02d:%02d:%02d'\n"%(year,month,day,hour,minute,second))
+	open("modules/lib/tools/builddate.py","w").write("''' Build date '''\ndate=b'%04d/%02d/%02d  %02d:%02d:%02d'\n"%(year,month,day,hour,minute,second))

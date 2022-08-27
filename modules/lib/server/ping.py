@@ -9,6 +9,7 @@
 #    Author: Olav Morken
 #    https://github.com/olavmrk/python-ping/blob/master/ping.py
 #    @data: bytes
+# pylint:disable=consider-using-f-string
 """ Ping network class """
 import time
 import random

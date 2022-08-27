@@ -85,10 +85,10 @@ async def wifi_config(request, response, args):
 		pass
 	# If the save button clicked
 	elif action == b"save":
-		network.update(request.params)
+		network.update(request.params, show_error=False)
 		network.save()
 		network = select_network(0, True)
-		config.update(request.params)
+		config.update(request.params, show_error=False)
 		config.default = network.ssid
 		config.save()
 		forced  = b"none"

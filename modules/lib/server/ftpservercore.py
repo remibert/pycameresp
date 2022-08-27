@@ -3,6 +3,8 @@
 # historically based on :
 # https://github.com/robert-hh/FTP-Server-for-ESP8266-ESP32-and-PYBD/blob/master/ftp.py
 # but I have modified a lot, there must still be some original functions.
+# pylint:disable=consider-using-f-string
+# pylint:disable=unspecified-encoding
 """ Ftp server implementation core class """
 import socket
 import os
@@ -50,7 +52,12 @@ class FtpServerCore:
 		self.received = None
 		self.remoteaddr = None
 		self.client = None
-		logger.syslog(b"[FTP] Open data %d"%self.dataport)
+		self.log(b"Open data %d"%self.dataport)
+
+	def log(self, err, msg="", write=False):
+		""" Log message """
+		if write:
+			logger.syslog(err, msg=msg, write=write)
 
 	def get_ip(self):
 		""" Get the ip address of the board """
@@ -103,7 +110,7 @@ class FtpServerCore:
 			if pattern is None:
 				accepted = True
 			else:
-				accepted = fnmatch(strings.tostrings(filename), strings.tostrings(pattern))
+				accepted = fnmatch.fnmatch(strings.tostrings(filename), strings.tostrings(pattern))
 			if accepted:
 				if quantity > 100:
 					date = 0
@@ -133,7 +140,7 @@ class FtpServerCore:
 		try:
 			self.send_file_list_with_pattern(path, stream_, full, now)
 		except Exception as err:
-			logger.syslog(err)
+			self.log(err, write=True)
 			pattern = path.split(b"/")[-1]
 			path = path[:-(len(pattern) + 1)]
 			if path == b"":
@@ -146,7 +153,7 @@ class FtpServerCore:
 
 	async def send_response(self, code, message):
 		""" Send response to ftp client """
-		logger.syslog(b"[FTP] %d %s"%(code, message))
+		self.log(b"%d %s"%(code, message))
 		await self.client.write(b'%d %s\r\n'%(code,message))
 
 	async def send_error(self, err):
@@ -162,7 +169,7 @@ class FtpServerCore:
 				else:
 					showError = True
 		if showError:
-			logger.syslog(err, msg=b"[FTP] cmd='%s' cwd='%s' root='%s' path='%s' payload='%s'"%(self.command, self.cwd, self.root, self.path, self.payload))
+			self.log(err, msg=b"cmd='%s' cwd='%s' root='%s' path='%s' payload='%s'"%(self.command, self.cwd, self.root, self.path, self.payload))
 		await self.send_response(550, b"Failed")
 
 	async def USER(self):
@@ -213,7 +220,7 @@ class FtpServerCore:
 				self.cwd = self.path
 				await self.send_response(250,b"CWD command successful.")
 			except Exception as err:
-				logger.syslog(err)
+				self.log(err, write=True)
 				await self.send_error(b"Path not existing")
 		else:
 			await self.send_error(b"Path too long")
@@ -237,7 +244,7 @@ class FtpServerCore:
 		await self.send_response(227, b"Entering Passive Mode (%s,%d,%d)"%(self.addr.replace(b'.',b','), self.dataport>>8, self.dataport%256))
 		self.close_pasv()
 		self.pasvsocket, self.data_addr = self.datasocket.accept()
-		logger.syslog(b"[FTP] PASV Accepted")
+		self.log(b"PASV Accepted")
 
 	async def PORT(self):
 		""" Ftp command PORT """
@@ -251,7 +258,7 @@ class FtpServerCore:
 			self.pasvsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.pasvsocket.settimeout(1000)
 			self.pasvsocket.connect((self.data_addr, self.dataport))
-			logger.syslog("[FTP] Data connection with: %s"%strings.tostrings(self.data_addr))
+			self.log("Data connection with: %s"%strings.tostrings(self.data_addr))
 			await self.send_response(200, b"OK")
 		else:
 			await self.send_response(504, b"Fail")
@@ -268,7 +275,7 @@ class FtpServerCore:
 			place = self.cwd
 		await self.send_response(150, b"Connection accepted.") # Start list files
 		listsocket = stream.Socket(self.pasvsocket)
-		logger.syslog("[FTP] List '%s'"%(strings.tostrings(self.root+place)))
+		self.log("List %s"%(strings.tostrings(self.root+place)))
 		self.send_file_list(self.root + place, listsocket, self.command == b"LIST" or self.payload == b"-l")
 		listsocket.close()
 		await self.send_response(226, b"Transfert complete.") # End list files
@@ -282,14 +289,14 @@ class FtpServerCore:
 			await self.send_response(211, b"TYPE: Binary STRU: File MODE: Stream")
 		else:
 			await self.send_response(213,b"Directory listing:")
-			logger.syslog("[FTP] List '%s'"%strings.tostrings(self.root+self.path))
+			self.log("List %s"%strings.tostrings(self.root+self.path))
 			self.send_file_list(self.root + self.path, self.client, True)
 			await self.send_response(213, b"Stat end")
 
 	async def RETR(self):
 		""" Ftp command RETR """
 		await self.send_response(150, b"Start send file")
-		logger.syslog("[FTP] Send file '%s'"%strings.tostrings(self.root+self.path))
+		self.log("Send %s"%strings.tostrings(self.root+self.path), write=True)
 		filename = self.root + self.path
 
 		if filesystem.ismicropython():
@@ -310,7 +317,7 @@ class FtpServerCore:
 	def close_pasv(self):
 		""" Close PASV connection """
 		if self.pasvsocket is not None:
-			logger.syslog(b"[FTP] Close PASV")
+			self.log(b"Close PASV")
 			self.pasvsocket.close()
 			self.pasvsocket = None
 
@@ -326,14 +333,14 @@ class FtpServerCore:
 	async def STOR(self):
 		""" Ftp command STOR """
 		await self.send_response(150, b"Start receive file")
-		logger.syslog("[FTP] Receive file '%s'"%strings.tostrings(self.root + self.path))
+		self.log("Receive %s"%strings.tostrings(self.root + self.path), write=True)
 		filename = self.root + self.path
 
 		if filesystem.ismicropython():
 			try:
 				self.write_file(filename, self.pasvsocket)
 			except Exception as err:
-				logger.syslog(err)
+				self.log(err, write=True)
 				directory, file = filesystem.split(strings.tostrings(filename))
 				filesystem.makedir(directory, True)
 				self.write_file(filename, self.pasvsocket)
@@ -349,7 +356,7 @@ class FtpServerCore:
 
 	async def DELE(self):
 		""" Ftp command DELE """
-		logger.syslog("[FTP] Delete '%s'"%strings.tostrings(self.root + self.path))
+		self.log("Delete %s"%strings.tostrings(self.root + self.path), write=True)
 		os.remove(strings.tostrings(self.root + self.path))
 		await self.send_ok()
 
@@ -379,7 +386,7 @@ class FtpServerCore:
 	async def RNTO(self):
 		""" Ftp command RNTO """
 		if self.fromname is not None:
-			logger.syslog("[FTP] Rename '%s' to '%s'"%(strings.tostrings(self.root + self.fromname), strings.tostrings(self.root + self.path)))
+			self.log("Rename %s to %s"%(strings.tostrings(self.root + self.fromname), strings.tostrings(self.root + self.path)), write=True)
 			os.rename(strings.tostrings(self.root + self.fromname), strings.tostrings(self.root + self.path))
 			await self.send_ok()
 		else:
@@ -401,8 +408,8 @@ class FtpServerCore:
 		try:
 			self.received = await self.client.readline()
 		except Exception as err:
-			logger.syslog(err)
-			logger.syslog(b"[FTP] Reset connection")
+			self.log(err, write=True)
+			self.log(b"Reset connection")
 			self.quit = True
 
 		if len(self.received) <= 0:
@@ -416,7 +423,7 @@ class FtpServerCore:
 			self.command = self.received.split(b" ")[0].upper()
 			self.payload = self.received[len(self.command):].lstrip()
 			self.path = filesystem.abspathbytes(self.cwd, self.payload)
-			logger.syslog(b"[FTP] '%s' id=%08X cwd='%s' payload='%s' path='%s'"%(message, id(self), self.cwd, self.payload, self.path))
+			self.log(b"'%s' id=%08X cwd='%s' payload='%s' path='%s'"%(message, id(self), self.cwd, self.payload, self.path))
 
 	async def treat_command(self):
 		""" Treat ftp command """
@@ -437,7 +444,7 @@ class FtpServerCore:
 				else:
 					await self.unsupported_command()
 			except Exception as err:
-				logger.syslog(err)
+				self.log(err, write=True)
 				await self.send_error(err)
 
 	async def on_connection(self, reader, writer):
@@ -445,7 +452,7 @@ class FtpServerCore:
 		Server.slow_down()
 		self.remoteaddr = strings.tobytes(writer.get_extra_info('peername')[0])
 		self.addr = self.get_ip()
-		logger.syslog("[FTP] Connected from %s"%strings.tostrings(self.remoteaddr))
+		self.log("Connected from %s"%strings.tostrings(self.remoteaddr), write=True)
 		self.client = stream.Stream(reader, writer)
 		try:
 			await self.send_response(220, b"Ftp " + strings.tobytes(os.uname()[4]) + b".")
@@ -454,9 +461,9 @@ class FtpServerCore:
 				await self.receive_command()
 				await self.treat_command()
 		except Exception as err:
-			logger.syslog(err)
+			self.log(err, write=True)
 			await self.send_error(err)
 		finally:
 			self.close_pasv()
 			await self.client.close()
-		logger.syslog("[FTP] Disconnected")
+		self.log("Disconnected", write=True)

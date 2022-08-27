@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Class to manage the camera of the ESP32CAM.
 This requires the modified firmware.
 I added in the firmware the possibility of detecting movements,

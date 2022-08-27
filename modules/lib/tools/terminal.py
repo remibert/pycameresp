@@ -145,6 +145,7 @@ def refresh_screen_size():
 
 def get_screen_size(force=False):
 	""" Get the VT100 screen size """
+	# pylint:disable=global-variable-not-assigned
 	global screen_size, refresh_size
 	refresh_size += 1
 	if refresh_size == 5:

@@ -1,6 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to view recent motion detection """
+# pylint:disable=anomalous-unicode-escape-in-string
 from server.httpserver     import HttpServer
 from server.server         import Server
 from htmltemplate          import *
@@ -142,6 +143,32 @@ async def historic(request, response, args):
 			show_motion(current_id);
 		}
 
+		function get_difference(motion, x, y)
+		{
+			var squarex = motion[MOTION_SQUAREX];
+			var maxx = motion[MOTION_WIDTH] /squarex;
+			var bitpos = y*maxx + x;
+			if (typeof motion[MOTION_DIFFS] === 'string')
+			{
+				return motion[MOTION_DIFFS][bitpos];
+			}
+			else
+			{
+				var word = parseInt(bitpos/32);
+				var bit  = 31-bitpos%%32;
+				var mask = 1 << bit;
+				var val  = motion[MOTION_DIFFS][word];
+				if (val & mask)
+				{
+					return "#";
+				}
+				else
+				{
+					return " ";
+				}
+			}
+		}
+
 		function show_motion(id)
 		{
 			if (historic != null && historic.length > 0)
@@ -171,7 +198,7 @@ async def historic(request, response, args):
 					{
 						for (x = 0; x < maxx; x ++)
 						{
-							detection = motion[MOTION_DIFFS][y*maxx + x];
+							detection = get_difference(motion, x, y);
 							if (detection != " ")
 							{
 								ctx.strokeStyle = "yellow";
@@ -186,10 +213,10 @@ async def historic(request, response, args):
 				{
 					for (x = 0; x < maxx; x ++)
 					{
-						var detection = motion[MOTION_DIFFS][y*maxx + x];
+						var detection = get_difference(motion, x, y);
 						if (x >= 1)
 						{
-							var previous = motion[MOTION_DIFFS][y*maxx + x -1];
+							var previous = get_difference(motion, x-1, y);
 							if (previous != detection)
 							{
 								ctx.beginPath();
@@ -205,10 +232,10 @@ async def historic(request, response, args):
 				{
 					for (y = 0; y < maxy; y ++)
 					{
-						var detection = motion[MOTION_DIFFS][y*maxx + x];
+						var detection = get_difference(motion, x, y);
 						if (y >= 1)
 						{
-							var previous = motion[MOTION_DIFFS][(y-1)*maxx + x];
+							var previous = get_difference(motion, x, y-1);
 							if (previous != detection)
 							{
 								ctx.beginPath();

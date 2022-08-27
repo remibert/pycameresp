@@ -3,6 +3,7 @@
 # historically based on :
 # https://github.com/robert-hh/FTP-Server-for-ESP8266-ESP32-and-PYBD/blob/master/ftp.py
 # but I have modified a lot, there must still be some original functions.
+# pylint:disable=consider-using-f-string
 """ Ftp server main class.
 This class contains few lines of code, this is to save memory.
 The core of the server is in the other class FtpServerCore, which is loaded into memory only when connecting an FTP client.
