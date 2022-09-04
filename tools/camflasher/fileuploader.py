@@ -13,6 +13,7 @@ from re import split
 import requests
 from serial.tools import list_ports
 sys.path.append("../../modules/lib/tools")
+# pylint:disable=consider-using-f-string
 # pylint:disable=import-error
 # pylint:disable=wrong-import-position
 import filesystem

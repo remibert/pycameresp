@@ -5,7 +5,7 @@
 import uasyncio
 from server.server import ServerConfig, Server
 import wifi
-from tools import battery, lang, awake, tasking, watchdog, info, system
+from tools import lang, awake, tasking, watchdog, info, system, support
 
 async def periodic_task():
 	""" Periodic task """
@@ -52,6 +52,9 @@ class Periodic:
 
 	async def task(self):
 		""" Periodic task method """
+		if support.battery():
+			from tools import battery
+
 		polling_id = 0
 
 		watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
@@ -72,7 +75,8 @@ class Periodic:
 
 			# Reset brownout counter if wifi connected
 			if wifi.Wifi.is_wan_connected():
-				battery.Battery.reset_brownout()
+				if support.battery():
+					battery.Battery.reset_brownout()
 
 			# Reset watch dog
 			watchdog.WatchDog.feed()

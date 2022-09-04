@@ -17,9 +17,11 @@ except:
 
 def create_battery_task(loop):
 	""" Create async task for battery level monitoring """
-	from tools.battery import Battery
-	Battery.protect()
-	loop.create_task(Battery.periodic_task())
+	from tools import support
+	if support.battery():
+		from tools.battery import Battery
+		Battery.protect()
+		loop.create_task(Battery.periodic_task())
 
 def create_camera_task(loop, device):
 	""" Create async task for motion detection and camera streaming """
@@ -112,4 +114,4 @@ def run_tasks(loop):
 # 		count += 1
 
 # # Register the user task, monitor all exceptions
-# pycameresp.create_task(loop, sample_task)
+# pycameresp.create_user_task(loop, sample_task)

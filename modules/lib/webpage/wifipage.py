@@ -5,7 +5,7 @@ from server.httpserver        import HttpServer
 from htmltemplate.htmlclasses import *
 from webpage.mainpage         import main_frame, manage_default_button
 import wifi
-from tools                    import lang,strings,logger
+from tools                    import lang,strings,logger,support
 
 def static_ip_html(config, disabled):
 	""" Html to get static ip """
@@ -134,7 +134,7 @@ async def wifi_config(request, response, args):
 
 	page = main_frame(request, response, args, lang.wifi_configuration,
 		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),Br(),
-		Edit(text=lang.hostname ,   name=b"hostname",  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled),
+		Edit(text=lang.hostname ,   name=b"hostname",  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled) if support.hostname() else None,
 		Switch(text=lang.fallback_to_the, name=b"fallback", checked=config.fallback, disabled=disabled),Br(),
 		Card(
 			[
@@ -186,6 +186,6 @@ async def access_point(request, response, args):
 			[
 				CardHeader(text=lang.static_ip),
 				CardBody(static_ip_html(config, disabled))
-			]),Br(),
+			]) if support.static_ip_accesspoint() else None ,Br(),
 		submit)
 	await response.send_page(page)

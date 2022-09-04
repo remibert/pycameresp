@@ -340,6 +340,8 @@ class View:
 				part_line = self.text.get_tab_line(current_line, self.column, self.column+self.width, True)
 				self.write(clear_line)
 				self.colorize(part_line)
+		elif current_line == count_line:
+			self.write(clear_line)
 
 	def colorize_none(self, text):
 		""" No colorization """
@@ -712,13 +714,17 @@ class Text:
 			else:
 				self.cursor_column = 0
 
-	def load(self, filename_):
+	def getFilename(self):
+		""" Return the filename """
+		return self.filename
+
+	def load(self, filename):
 		""" Load file in the editor """
 		self.filename = None
 		try:
 			self.lines = []
-			self.filename = filename_
-			file = open(filename_, "r")
+			self.filename = filename
+			file = open(filename, "r")
 			line = file.readline()
 			while line != "":
 				self.lines.append(line.replace("\r\n","\n"))
@@ -736,13 +742,15 @@ class Text:
 			logger.syslog(err)
 			self.lines = [""]
 
-	def save(self):
+	def save(self, filename=None):
 		""" Save text in the file """
 		result = False
 		if self.read_only is False:
-			if self.filename is not None:
+			if filename is None:
+				filename = self.filename
+			if filename is not None:
 				try:
-					file = open(self.filename, "w")
+					file = open(filename, "w")
 					for line in self.lines:
 						file.write(line)
 					file.close()
@@ -1629,18 +1637,20 @@ class Text:
 						if keys[0][-1] == "y":
 							end = True
 						else:
-
 							self.begin_line, self.begin_column = self.view.get_position()
 							self.hide_selection()
 							end = False
-						pos = keys[0][2:-1]
-						line, column = pos.split(";")
+						try:
+							pos = keys[0][2:-1]
+							line, column = pos.split(";")
 
-						if end:
-							self.open_selection()
-						self.goto(int(line)+self.begin_line,int(column)+self.begin_column, not end)
-						if end:
-							self.close_selection()
+							if end:
+								self.open_selection()
+								self.goto(int(line)+self.begin_line,int(column)+self.begin_column, not end)
+							if end:
+								self.close_selection()
+						except:
+							pass
 
 class Edit:
 	""" Class which aggregate the View and Text """
@@ -1653,20 +1663,19 @@ class Edit:
 
 class Editor:
 	""" Class which manage a complete editor """
-	def __init__(self, filename_, no_color=False, read_only=False):
+	def __init__(self, filename, no_color=False, read_only=False):
 		""" Constructor """
 		self.cfg = EditorConfig()
 		if self.cfg.load(tobytes=False, errorlog=False) is False:
 			self.cfg.save()
 
-		self.file = filename_
-		self.filename = filesystem.split(filename_)[1]
+		self.displayed_filename = filesystem.split(filename)[1]
 		if no_color:
 			extension = ""
 		else:
-			extension = filesystem.splitext(filename_)[1]
+			extension = filesystem.splitext(filename)[1]
 		self.edit = Edit(self.cfg, read_only=read_only, extension=extension)
-		self.edit.text.load(filename_)
+		self.edit.text.load(filename)
 		self.is_refresh_header = True
 		self.find_text = None
 		self.replace_text = None
@@ -1676,32 +1685,32 @@ class Editor:
 		self.precedent_callback = None
 		self.trace = None
 		if filesystem.ismicropython() is False:
-			if filename_ == "newfile.py":
+			if filename == "newfile.py":
 				self.trace = open("key.txt","w")
 
-		if (not filesystem.exists(filename_) and read_only is True) or filesystem.isdir(filename_):
-			print("Cannot open '%s'"%self.filename)
+		if (not filesystem.exists(filename) and read_only is True) or filesystem.isdir(filename):
+			print("Cannot open '%s'"%self.displayed_filename)
 		else:
 			try:
 				self.run()
 			except Exception as err:
 				self.edit.view.cls()
 				logger.syslog(err)
-				print("Failed edit '%s'"%self.filename)
+				print("Failed edit '%s'"%self.displayed_filename)
 
 	def refresh_header(self):
 		""" Refresh the header of editor """
 		if self.is_refresh_header:
 			self.edit.view.move_cursor(0, 0)
-			filename_ = "\u25C1 File: %s"%(self.filename)
+			filename = "\u25C1 File: %s"%(self.displayed_filename)
 			if self.edit.text.read_only is False:
-				filename_ += " (*)" if self.edit.text.modified else ""
+				filename += " (*)" if self.edit.text.modified else ""
 				end = " Mode: %s "%("Replace" if self.edit.text.replace_mode else "Insert")
 			else:
 				end = " Read only " if self.edit.text.read_only else ""
 			end = "L%d C%d "%(self.edit.text.cursor_line+1, self.edit.view.tab_cursor_column+1) + end + "\u25B7"
 
-			header = "\x1B[7m%s%s%s\x1B[m"%(filename_, " "*(self.edit.view.width - len(filename_) - len(end)), end)
+			header = "\x1B[7m%s%s%s\x1B[m"%(filename, " "*(self.edit.view.width - len(filename) - len(end)), end)
 			self.edit.view.write(header)
 			self.edit.view.move_cursor()
 			self.is_refresh_header = False
@@ -1719,16 +1728,16 @@ class Editor:
 			self.edit.text.replace_mode = True
 		self.is_refresh_header = True
 
-	def save(self, keys=None):
+	def save(self, keys=None, filename=None):
 		""" Save the file edited """
-		self.edit.text.save()
+		self.edit.text.save(filename)
 		self.is_refresh_header = True
 
 	def exit(self, keys=None):
 		""" Exit from editor """
 		self.edit.view.cls()
 		if self.edit.text.modified:
-			self.edit.view.write("\nSave file '%s' (\x1b[7mY\x1b[m:Yes, \x1b[7mN\x1b[m:No, \x1b[7mEsc\x1b[m:Cancel) : "%self.filename)
+			self.edit.view.write("\nSave file '%s' (\x1b[7mY\x1b[m:Yes, \x1b[7mN\x1b[m:No, \x1b[7mEsc\x1b[m:Cancel) : "%self.displayed_filename)
 			self.edit.view.flush()
 			while 1:
 				key = terminal.getch()
@@ -1871,7 +1880,7 @@ class Editor:
 			self.edit.view.flush()
 			startTime = strings.ticks()
 			try:
-				error_line = useful.run(self.filename)
+				error_line = useful.run(self.displayed_filename)
 			except KeyboardInterrupt:
 				error_line = None
 
@@ -1895,75 +1904,85 @@ class Editor:
 
 	def run(self):
 		""" Core of the editor """
-		self.edit.view.cls()
-		self.edit.view.get_screen_size()
-		self.loop = True
-		self.EDIT_KEYS = self.cfg.key_toggle_mode+self.cfg.key_find+self.cfg.key_replace+self.cfg.key_find_previous+self.cfg.key_find_next+self.cfg.key_exit+self.cfg.key_goto+self.cfg.key_save+self.cfg.key_execute
-		while(self.loop):
-			try:
-				self.refresh()
-				keys = self.get_key(duration=0.4)
-				if len(keys[0]) == 0:
-					self.is_refresh_header = True
-					self.refresh_header()
-					keys = self.get_key()
+		try:
+			self.edit.view.cls()
+			self.edit.view.get_screen_size()
+			self.loop = True
+			self.EDIT_KEYS = self.cfg.key_toggle_mode+self.cfg.key_find+self.cfg.key_replace+self.cfg.key_find_previous+self.cfg.key_find_next+self.cfg.key_exit+self.cfg.key_goto+self.cfg.key_save+self.cfg.key_execute
+			while(self.loop):
+				try:
+					self.refresh()
+					keys = self.get_key(duration=0.4)
+					if len(keys[0]) == 0:
+						self.is_refresh_header = True
+						self.refresh_header()
+						keys = self.get_key()
 
-				if keys == ["\x1B[23~"]:
-					keys = ["\x1B[1;5x"]
-				if keys == ["\x1B[24~"]:
-					keys = ["\x1B[5;1y"]
+					if keys == ["\x1B[23~"]:
+						keys = ["\x1B[1;5x"]
+					if keys == ["\x1B[24~"]:
+						keys = ["\x1B[5;1y"]
 
-				if self.trace is not None:
-					for key in keys:
-						self.trace.write(strings.dump(key, withColor=False) + "\n")
-						self.trace.flush()
-				modified = self.edit.text.modified
-				self.precedent_callback = self.key_callback
-				self.key_callback = None
+					if self.trace is not None:
+						for key in keys:
+							self.trace.write(strings.dump(key, withColor=False) + "\n")
+							self.trace.flush()
+					modified = self.edit.text.modified
+					self.precedent_callback = self.key_callback
+					self.key_callback = None
 
-				if ord(keys[0][0]) < 0x20:
-					if keys[0] in self.EDIT_KEYS:
-						if   keys[0] in self.cfg.key_toggle_mode:    self.key_callback = self.toggle_mode
-						elif keys[0] in self.cfg.key_find:           self.key_callback = self.find
-						elif keys[0] in self.cfg.key_replace:        self.key_callback = self.replace
-						elif keys[0] in self.cfg.key_find_previous:  self.key_callback = self.find_previous
-						elif keys[0] in self.cfg.key_find_next:      self.key_callback = self.find_next
-						elif keys[0] in self.cfg.key_exit:           self.key_callback = self.exit
-						elif keys[0] in self.cfg.key_goto:           self.key_callback = self.goto
-						elif keys[0] in self.cfg.key_save:           self.key_callback = self.save
-						elif keys[0] in self.cfg.key_execute:        self.key_callback = self.execute
+					if ord(keys[0][0]) < 0x20:
+						if keys[0] in self.EDIT_KEYS:
+							if   keys[0] in self.cfg.key_toggle_mode:    self.key_callback = self.toggle_mode
+							elif keys[0] in self.cfg.key_find:           self.key_callback = self.find
+							elif keys[0] in self.cfg.key_replace:        self.key_callback = self.replace
+							elif keys[0] in self.cfg.key_find_previous:  self.key_callback = self.find_previous
+							elif keys[0] in self.cfg.key_find_next:      self.key_callback = self.find_next
+							elif keys[0] in self.cfg.key_exit:           self.key_callback = self.exit
+							elif keys[0] in self.cfg.key_goto:           self.key_callback = self.goto
+							elif keys[0] in self.cfg.key_save:           self.key_callback = self.save
+							elif keys[0] in self.cfg.key_execute:        self.key_callback = self.execute
 
-				# If a replacement is in progress and new line pressed
-				if keys[0] in self.cfg.key_new_line:
-					if self.precedent_callback is not None:
-						# The next check is compatible with micropython
-						if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
-							if self.replace_text is not None:
-								# Replace current found
-								self.key_callback = self.replace_current
-				# If a replacement is in progress and select all pressed
-				if keys[0] in self.cfg.key_sel_all:
-					if self.precedent_callback is not None:
-						# The next check is compatible with micropython
-						if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
-							if self.replace_text is not None:
-								# Replace all
-								self.key_callback = self.replace_all
+					# If a replacement is in progress and new line pressed
+					if keys[0] in self.cfg.key_new_line:
+						if self.precedent_callback is not None:
+							# The next check is compatible with micropython
+							if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
+								if self.replace_text is not None:
+									# Replace current found
+									self.key_callback = self.replace_current
+					# If a replacement is in progress and select all pressed
+					if keys[0] in self.cfg.key_sel_all:
+						if self.precedent_callback is not None:
+							# The next check is compatible with micropython
+							if self.precedent_callback.__name__ in [self.find_next.__name__, self.find_previous.__name__, self.replace.__name__, self.replace_current.__name__]:
+								if self.replace_text is not None:
+									# Replace all
+									self.key_callback = self.replace_all
 
-				if self.key_callback is not None:
-					self.key_callback(keys)
-				else:
-					self.edit.text.treat_key(keys)
-				if modified != self.edit.text.modified:
-					self.is_refresh_header = True
-			except KeyboardInterrupt:
-				pass
-		self.edit.view.reset_scroll_region()
-		self.edit.view.reset()
+					if self.key_callback is not None:
+						self.key_callback(keys)
+					else:
+						self.edit.text.treat_key(keys)
+					if modified != self.edit.text.modified:
+						self.is_refresh_header = True
+				except KeyboardInterrupt:
+					pass
+			self.edit.view.reset_scroll_region()
+			self.edit.view.reset()
+		except Exception as err:
+			print(logger.exception(err))
+			filename = self.edit.text.getFilename() + "_backup"
+			self.save(filename=filename)
+			print("After the crash, a copy of the file was saved in '%s'"%filename)
 
-if __name__ == "__main__":
+def main():
+	""" Main function """
 	if len(sys.argv) > 1:
 		filename = sys.argv[1]
 	else:
 		filename = "newfile.py"
 	edit = Editor(filename, read_only=False)
+
+if __name__ == "__main__":
+	main()

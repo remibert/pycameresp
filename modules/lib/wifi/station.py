@@ -12,9 +12,9 @@ class NetworkConfig(jsonconfig.JsonConfig):
 	def __init__(self):
 		""" Constructor """
 		jsonconfig.JsonConfig.__init__(self)
-		self.wifi_password  = b""
+		self.wifi_password = b""
 		self.ssid          = b""
-		self.ip_address     = b""
+		self.ip_address    = b""
 		self.netmask       = b""
 		self.gateway       = b""
 		self.dns           = b""
@@ -133,7 +133,10 @@ class Station:
 		# If ip is dynamic
 		if  network.dynamic   is True:
 			if len(Station.get_hostname()) > 0:
-				Station.wlan.config(dhcp_hostname= strings.tostrings(Station.get_hostname()))
+				try:
+					Station.wlan.config(hostname= strings.tostrings(Station.get_hostname()))
+				except:
+					pass
 		else:
 			try:
 				Station.wlan.ifconfig((strings.tostrings(network.ip_address),strings.tostrings(network.netmask),strings.tostrings(network.gateway),strings.tostrings(network.dns)))
@@ -141,9 +144,9 @@ class Station:
 				logger.syslog(err, msg="Cannot configure wifi station")
 		try:
 			network.ip_address = strings.tobytes(Station.wlan.ifconfig()[0])
-			network.netmask   = strings.tobytes(Station.wlan.ifconfig()[1])
-			network.gateway   = strings.tobytes(Station.wlan.ifconfig()[2])
-			network.dns       = strings.tobytes(Station.wlan.ifconfig()[3])
+			network.netmask    = strings.tobytes(Station.wlan.ifconfig()[1])
+			network.gateway    = strings.tobytes(Station.wlan.ifconfig()[2])
+			network.dns        = strings.tobytes(Station.wlan.ifconfig()[3])
 		except Exception as err:
 			logger.syslog(err, msg="Cannot get ip station")
 

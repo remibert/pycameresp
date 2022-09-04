@@ -38,6 +38,8 @@ if __name__ == "__main__":
 
 	inisetup = open("patch/python/micropython/ports/esp32/modules/inisetup.py","r").read()
 	open(root + "/micropython/ports/esp32/modules/inisetup.py","w").write(inisetup%patchIni)
+	inisetup = open("patch/python/micropython/ports/rp2/modules/_boot.py","r").read()
+	open(root + "/micropython/ports/rp2/modules/_boot.py","w").write(inisetup%patchIni)
 	import time
 	year,month,day,hour,minute,second,weekday,yearday = time.localtime()[:8]
 	open("modules/lib/tools/builddate.py","w").write("''' Build date '''\ndate=b'%04d/%02d/%02d  %02d:%02d:%02d'\n"%(year,month,day,hour,minute,second))

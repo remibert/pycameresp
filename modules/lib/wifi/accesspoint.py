@@ -2,6 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Classes used to manage the wifi access point """
+import sys
 from wifi import hostname, ip
 from tools import jsonconfig,strings,logger
 
@@ -43,22 +44,28 @@ class AccessPoint:
 	@staticmethod
 	def open(ssid=None, password=None, authmode=None):
 		""" Open access point """
-		from wifi import AUTHMODE
+		from wifi import AUTHMODE, AUTHMODE_DEFAULT
 		# pylint:disable=multiple-statements
 		if ssid     is not None: AccessPoint.config.ssid         = strings.tobytes(ssid)
 		if password is not None: AccessPoint.config.wifi_password = strings.tobytes(password)
 		if authmode is not None: AccessPoint.config.authmode     = strings.tobytes(authmode)
 
-		authmode = 3
+		authmode = AUTHMODE_DEFAULT
 		for authmode_num, authmode_name in AUTHMODE.items():
 			if authmode_name == AccessPoint.config.authmode:
 				authmode = authmode_num
 				break
-		AccessPoint.wlan.active(True) # IMPORTANT : Activate before configure
+
+		if sys.platform != "rp2":
+			AccessPoint.wlan.active(True) # IMPORTANT : For esp32 activate before configure
+
 		AccessPoint.wlan.config(\
 			essid    = strings.tostrings(AccessPoint.config.ssid),
 			password = strings.tostrings(AccessPoint.config.wifi_password),
-			authmode = authmode)
+			security = authmode)
+
+		if sys.platform == "rp2":
+			AccessPoint.wlan.active(True) # IMPORTANT : For esp32 activate before configure
 
 	@staticmethod
 	def reload_config():
@@ -124,11 +131,12 @@ class AccessPoint:
 				AccessPoint.config.netmask   != b"" and \
 				AccessPoint.config.gateway   != b"" and \
 				AccessPoint.config.dns       != b"":
-				AccessPoint.wlan.ifconfig((
-					strings.tostrings(AccessPoint.config.ip_address),
-					strings.tostrings(AccessPoint.config.netmask),
-					strings.tostrings(AccessPoint.config.gateway),
-					strings.tostrings(AccessPoint.config.dns)))
+				if sys.platform != "rp2":
+					AccessPoint.wlan.ifconfig((
+						strings.tostrings(AccessPoint.config.ip_address),
+						strings.tostrings(AccessPoint.config.netmask),
+						strings.tostrings(AccessPoint.config.gateway),
+						strings.tostrings(AccessPoint.config.dns)))
 		except Exception as err:
 			logger.syslog(err, msg="Cannot configure wifi access point")
 
@@ -145,7 +153,6 @@ class AccessPoint:
 				AccessPoint.wlan = WLAN(AP_IF)
 				AccessPoint.configure()
 				AccessPoint.open()
-				AccessPoint.configure()
 				print(repr(AccessPoint.config))
 				result = True
 			else:

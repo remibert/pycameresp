@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Stdout VT100 ouptut on qtextbrowser widget """
 import sys
 from threading import Lock
@@ -30,7 +31,7 @@ function_keys = {
 	Qt.Key.Key_F4        : [b"\x1bOS"  ,b"\x1b[1;2S"],
 	Qt.Key.Key_F5        : [b"\x1b[15~",b"\x1b[15;2~"],
 	Qt.Key.Key_F6        : [b"\x1b[17~",b"\x1b[17;2~"],
-	Qt.Key.Key_F6        : [b"\x1b[18~",b"\x1b[18;2~"],
+	Qt.Key.Key_F7        : [b"\x1b[18~",b"\x1b[18;2~"],
 	Qt.Key.Key_F8        : [b"\x1b[19~",b"\x1b[19;2~"],
 	Qt.Key.Key_F9        : [b"\x1b[20~",b"\x1b[20;2~"],
 	Qt.Key.Key_F10       : [b"\x1b[21~",b"\x1b[21;2~"],
@@ -142,7 +143,7 @@ class QStdoutVT100:
 					break
 			elif i >= cursor.position():
 				break
-			
+
 			if cursor.document().characterAt(i) == "\u2028":
 				col = 1
 				line += 1
@@ -151,7 +152,7 @@ class QStdoutVT100:
 
 		if start_line is not None and start_col is not None:
 			self.selection_start = (start_line, start_col)
-		
+
 		if end_line is not None and end_col is not None:
 			self.selection_end   = (end_line,   end_col)
 

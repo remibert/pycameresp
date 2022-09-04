@@ -3,16 +3,15 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=no-name-in-module
 import copy
-from distutils.command.config import config
 import sys
 import os.path
 import os
+from pathlib import Path
 import vt100
 import settings
-from pathlib import Path
-from platform import uname
 
 sys.path.append("../../modules/lib/tools")
+# pylint:disable=consider-using-f-string
 # pylint:disable=import-error
 # pylint:disable=wrong-import-position
 
@@ -80,6 +79,7 @@ class AboutDialog(QDialog):
 		self.dialog.gitProject.clicked.connect(self.gotoGitProject)
 
 	def gotoGitProject(self):
+		""" Goto git project url """
 		# QUrl myUrl()
 		QDesktopServices.openUrl(QUrl("https://github.com/remibert/pycameresp"))
 
@@ -190,7 +190,7 @@ class OptionDialog(QDialog):
 
 		for i in range(16):
 			eval('self.dialog.color_%d.clicked.connect (self.on_ansi_color_%d_clicked)'%(i,i))
-	
+
 		self.refresh_palette()
 
 		self.dialog.reset_color.clicked.connect(self.on_reset_color_clicked)
@@ -215,10 +215,12 @@ class OptionDialog(QDialog):
 		return "rgb(%d,%d,%d)"%(r,g,b)
 
 	def qcolor_to_int(self, color):
+		""" Convert qtcolor into integer """
 		r,g,b,a = color.getRgb()
 		return  r << 16 | g << 8 | b
 
 	def int_to_qcolor(self, color):
+		""" Convert integer into qt color """
 		r = (color & 0xFF0000) >> 16
 		g = (color & 0x00FF00) >> 8
 		b = (color & 0x0000FF)

@@ -11,6 +11,7 @@ import streamdevice
 import vt100
 import esptool
 sys.path.append("../../modules/lib/tools")
+# pylint:disable=consider-using-f-string
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
 from strings import get_utf8_length

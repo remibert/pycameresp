@@ -5,7 +5,7 @@
 import time
 import wifi
 import uasyncio
-from tools import jsonconfig,logger,builddate,lang,watchdog,info,strings,sdcard
+from tools import jsonconfig,logger,builddate,lang,watchdog,info,strings,sdcard,support
 if info.iscamera():
 	from video.video import Camera
 
@@ -230,9 +230,10 @@ class Server:
 
 				# If telnet activated
 				if Server.context.server_config.telnet:
-					# Load and start telnet
-					import server.telnet
-					server.telnet.start()
+					if support.telnet():
+						# Load and start telnet
+						import server.telnet
+						server.telnet.start()
 
 				# If ftp activated
 				if Server.context.server_config.ftp:

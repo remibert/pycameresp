@@ -25,12 +25,12 @@ async def index(request, response, args):
 		mem_free  = lang.unavailable
 		mem_total = lang.unavailable
 	try:
-		import esp
-		flash_user = strings.size_to_bytes(esp.flash_user_start())
-		flash_size = strings.size_to_bytes(esp.flash_size())
+		_, flash_allocated, flash_free = info.flash_size()
+		flash_allocated = strings.size_to_bytes(flash_allocated)
+		flash_free      = strings.size_to_bytes(flash_free)
 	except:
-		flash_user = lang.unavailable
-		flash_size = lang.unavailable
+		flash_allocated = lang.unavailable
+		flash_free      = lang.unavailable
 
 	try:
 		frequency = b"%d"%(machine.freq()//1000000)
@@ -60,8 +60,8 @@ async def index(request, response, args):
 		Edit(text=lang.memory_free,      value=mem_free,        disabled=True),
 		Edit(text=lang.memory_allocated, value=mem_alloc,       disabled=True),
 		Edit(text=lang.memory_total,     value=mem_total,       disabled=True),
-		Edit(text=lang.flash_user,       value=flash_user,      disabled=True),
-		Edit(text=lang.flash_size,       value=flash_size,      disabled=True),
+		Edit(text=lang.flash_free,       value=flash_free,      disabled=True),
+		Edit(text=lang.flash_allocated,  value=flash_allocated, disabled=True),
 		Edit(text=lang.signal_strength,  value=signal_strength, disabled=True),
 		)
 

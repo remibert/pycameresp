@@ -52,18 +52,25 @@ def meminfo(display=True):
 	except:
 		return b"Mem unavailable"
 
+
+def flash_size(mountpoint=None):
+	""" Get flash informations """
+	import uos
+	if mountpoint is None:
+		mountpoint = os.getcwd()
+	status = uos.statvfs(mountpoint)
+	free  = status[0]*status[3]
+	if free < 0:
+		free = 0
+	total = status[1]*status[2]
+	alloc  = total - free
+	return total, alloc, free
+
+
 def flashinfo(mountpoint=None, display=True):
 	""" Get flash informations """
 	try:
-		import uos
-		if mountpoint is None:
-			mountpoint = os.getcwd()
-		status = uos.statvfs(mountpoint)
-		free  = status[0]*status[3]
-		if free < 0:
-			free = 0
-		total = status[1]*status[2]
-		alloc  = total - free
+		total, alloc, free = flash_size(mountpoint=mountpoint)
 		result = b"Disk %s : alloc=%s free=%s total=%s used=%-3.2f%%"%(strings.tobytes(mountpoint),
 			strings.size_to_string(alloc, 1),
 			strings.size_to_string(free,  1),

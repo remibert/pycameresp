@@ -14,8 +14,11 @@ import serial
 import fileuploader
 import vt100
 sys.path.append("../../modules/lib/tools")
+# pylint:disable=consider-using-enumerate
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
+# pylint:disable=consider-using-f-string
+# pylint:disable=unspecified-encoding
 from exchange import FileReader, FileWriter, UploadCommand
 from filesystem import scandir, isdir
 
@@ -386,6 +389,51 @@ class StreamThread(threading.Thread):
 		else:
 			return False
 
+	def prefix(self, files):
+		""" Gives the common prefix of a file set
+		>>> files = ["/titi/tutu/tata/toto.txt","/titi/tutu/toto.txt","/titi/tutu/tete/toto.txt","/titi/tutu/tout/toto.txt","/titi/tutu/.txt","/titi/tutu/tutu/toto.txt"]
+		>>> prefix(files) in ['/titi/tutu','\\\\titi\\\\tutu']
+		True
+		"""
+		from os import sep
+		from os.path import normpath
+
+		# Initializes counters
+		counters = []
+
+		# For all files
+		for file in files:
+			file = normpath(file)
+
+			# Split the file name into a piece
+			paths = file.split(sep)
+
+			# For each piece
+			for i in range(0,len(paths)):
+				try:
+					try:
+						# Test if counters exist
+						counters[i][paths[i]] += 1
+					except:
+						# Creates a path counters
+						counters[i][paths[i]] = 1
+				except:
+					# Adds a new level of depth
+					counters.append({paths[i] : 1})
+
+		# Constructs the prefix of the list of files
+		try:
+			result = ""
+			amount = list(counters[0].values())[0]
+			for counter in counters:
+				if len(counter.keys()) == 1 and list(counter.values())[0] == amount:
+					result += list(counter.keys())[0] + sep
+				else:
+					return result [:-1]
+			return result
+		except IndexError:
+			return ""
+
 	def create_upload_list(self, filenames):
 		""" Create list with dropped filenames """
 		drop_filenames = []
@@ -402,7 +450,7 @@ class StreamThread(threading.Thread):
 			drop_directory = os.path.split(os.path.normpath(filenames[0]))[0]
 		else:
 			if len(drop_filenames) > 1:
-				drop_directory = os.path.normpath(os.path.commonprefix(drop_filenames))
+				drop_directory = os.path.normpath(self.prefix(drop_filenames))
 			else:
 				drop_directory = os.path.normpath(os.path.split(os.path.normpath(filenames[0]))[0])
 		return drop_directory, drop_filenames

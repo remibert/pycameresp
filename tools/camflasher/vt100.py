@@ -2,6 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLETS
 """ Class used to manage VT100 """
 # pylint:disable=too-many-lines
+# pylint:disable=consider-using-f-string
 TABSIZE = 4
 BACKSPACE        = "\x7F"
 LINE_FEED        = "\n"
@@ -480,8 +481,9 @@ class Line:
 
 	def replace_color(self, backcolor, forecolor):
 		""" Replace the default background color and text color """
-		global TEXT_BACKCOLOR, TEXT_FORECOLOR
 		# pylint:disable=consider-using-enumerate
+		# pylint:disable=global-variable-not-assigned
+		global TEXT_BACKCOLOR, TEXT_FORECOLOR
 		for i in range(len(self.forecolors)):
 			if self.forecolors[i] == TEXT_FORECOLOR:
 				self.forecolors[i] = forecolor
@@ -538,6 +540,7 @@ class VT100:
 
 	def set_colors(self, colors):
 		""" Change the default colors """
+		# pylint:disable=global-variable-not-assigned
 		global TEXT_BACKCOLOR, TEXT_FORECOLOR, CURSOR_BACKCOLOR, CURSOR_FORECOLOR, REVERSE_FORECOLOR, REVERSE_BACKCOLOR, VGA_COLORS
 		for line in self.lines:
 			line.replace_color(colors["text_colors"]["text_backcolor"], colors["text_colors"]["text_forecolor"])
