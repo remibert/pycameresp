@@ -100,6 +100,7 @@ class JsonConfig:
 		else:
 			setmany = True
 		self_config = self
+
 		for name in self.__dict__.keys():
 			# Case of web input is missing when bool is false
 			if type(self.__dict__[name]) == type(True):
@@ -130,6 +131,7 @@ class JsonConfig:
 						params[name] = int(params[name])
 					except:
 						params[name] = 0
+
 		result = True
 		for name, value in params.items():
 			execval = strings.tostrings(name)
@@ -138,7 +140,9 @@ class JsonConfig:
 					# pylint: disable=exec-used
 					exec("a = self_config.%s"%execval)
 					existing = True
-				except:
+				except Exception as err:
+					if "'NoneType' object" in str(err):
+						result = None
 					existing = False
 
 				if existing:
@@ -146,12 +150,12 @@ class JsonConfig:
 					# pylint: disable=exec-used
 					exec(execval)
 				else:
-					if name != b"action" and show_error:
+					if name != b"action" and show_error and result is not None:
 						print("%s.%s not existing"%(self.__class__.__name__, strings.tostrings(name)))
 			except Exception as err:
 				logger.syslog(err, "Error on %s"%(execval))
 				result = False
-		del self_config
+		self_config = None
 		return result
 
 	def load(self, file = None, part_filename="", tobytes=True, errorlog=True):

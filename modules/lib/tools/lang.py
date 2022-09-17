@@ -1,36 +1,12 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Language selected and regional time """
-from tools.jsonconfig import *
-
-region_config = None
-
-class RegionConfig(JsonConfig):
-	""" Language selected and regional time """
-	def __init__(self):
-		""" Constructor """
-		JsonConfig.__init__(self)
-		self.lang        = b"english"
-		self.offset_time  = 1
-		self.dst         = True
-		self.current_time = 0
-
-	@staticmethod
-	def get():
-		""" Return region configuration """
-		global region_config
-		if region_config is None:
-			region_config = RegionConfig()
-			if region_config.load() is False:
-				region_config.save()
-
-		if region_config.is_changed():
-			region_config.load()
-		return region_config
+from tools import region, strings, logger
 
 try:
-	exec(b"from tools.lang_%s import *"%RegionConfig.get().lang)
+	exec(b"from tools.lang_%s import *"%region.RegionConfig.get().lang)
+	logger.syslog("Select lang : %s"%strings.tostrings(region.RegionConfig.get().lang))
 except Exception as err:
-	from tools import logger
 	logger.syslog(err)
 	from tools.lang_english import *

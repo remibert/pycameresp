@@ -179,7 +179,7 @@ class Historic:
 				for day in lastdays:
 					logger.syslog("   %s"%day)
 				logger.syslog("End   historic creation")
-				logger.syslog(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False)))
+				logger.syslog(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint())))
 			except Exception as err:
 				logger.syslog(err)
 
@@ -314,7 +314,7 @@ class Historic:
 						await Historic.release()
 					if sdcard.SdCard.is_not_enough_space(low=False) is False:
 						break
-				logger.syslog("End cleanup historic : %s"%(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
+				logger.syslog("End cleanup historic : %s"%(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint()))))
 
 	@staticmethod
 	async def periodic():

@@ -54,7 +54,7 @@ import io
 import os
 import uos
 import machine
-from tools import useful,logger,sdcard,filesystem,exchange,info,strings,terminal,watchdog
+from tools import useful,logger,sdcard,filesystem,exchange,info,strings,terminal,watchdog,lang
 
 stdout_redirected = None
 
@@ -551,7 +551,7 @@ def cat(file):
 
 def df(mountpoint = None):
 	""" Display free disk space """
-	print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))
+	print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint)))
 
 def gc():
 	""" Garbage collector command """
@@ -560,7 +560,7 @@ def gc():
 
 def uptime():
 	""" Tell how long the system has been running """
-	print_(info.uptime())
+	print_(strings.tostrings(info.uptime()))
 
 def man(command):
 	""" Man command """
@@ -721,15 +721,15 @@ def temperature():
 
 def meminfo():
 	""" Get memory informations """
-	print_(strings.tostrings(info.meminfo(display=False)))
+	print_(strings.tostrings(b"%s : %s"%(lang.memory_label, info.meminfo())))
 
 def flashinfo(mountpoint=None):
 	""" Get flash informations """
-	print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))
+	print_(strings.tostrings(b"%s : %s"%(lang.flash_info, info.flashinfo(mountpoint=mountpoint))))
 
 def sysinfo():
 	""" Get system informations """
-	print_(strings.tostrings(info.sysinfo(display=False)))
+	print_(strings.tostrings(info.sysinfo()))
 
 def vtcolors():
 	""" Show all VT100 colors """

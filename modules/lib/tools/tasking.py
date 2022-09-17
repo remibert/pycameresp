@@ -3,7 +3,7 @@
 # pylint:disable=consider-using-f-string
 """ Miscellaneous utility functions """
 import machine
-from tools import strings,logger,system,watchdog, info
+from tools import lang,strings,logger,system,watchdog, info
 
 class Inactivity:
 	""" Class to manage inactivity timer """
@@ -46,7 +46,7 @@ async def task_monitoring(task):
 					if await task():
 						retry = 0
 			except MemoryError as err:
-				lastError = logger.syslog(err, "Memory error, %s"%strings.tostrings(info.meminfo(display=False)))
+				lastError = logger.syslog(err, "Memory error, %s"%strings.tostrings(info.meminfo()))
 				from gc import collect
 				collect()
 				memory_error_count += 1

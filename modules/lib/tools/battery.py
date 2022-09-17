@@ -4,7 +4,7 @@
 """ Manage the battery """
 import uasyncio
 import machine
-from tools import jsonconfig,logger,tasking,support
+from tools import lang,jsonconfig,logger,tasking,support
 
 if support.battery():
 	try:

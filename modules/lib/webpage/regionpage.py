@@ -4,12 +4,12 @@
 from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import main_frame, manage_default_button
-from tools             import lang
+from tools             import lang, region
 
 @HttpServer.add_route(b'/region', menu=lang.menu_account, item=lang.item_region)
 async def region_page(request, response, args):
 	""" Function define the web page to manage lang and time """
-	config = lang.RegionConfig()
+	config = region.RegionConfig()
 	disabled, action, submit = manage_default_button(request, config)
 	langages = []
 	for langage in [b"english",b"french"]:

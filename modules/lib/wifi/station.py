@@ -221,7 +221,7 @@ class Station:
 				2    : lang.signal_low      ,
 				1    : lang.signal_very_low ,
 				0    : lang.signal_no       ,
-				None : lang.signal_none
+				None : lang.no_information
 			}[Station.get_signal_strength()]
 		return signal_strength
 

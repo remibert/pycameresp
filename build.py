@@ -21,7 +21,7 @@ import time
 # ffmpeg -i video.mov -vf "fps=3,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 output.gif
 # 640x360
 
-MICROPYTHON_VERSION ="c616721b1afe176c8d760afc15a93621d411c1dc"
+MICROPYTHON_VERSION ="0e8c2204da377e95b5000a3c708891d98cdeb69c" #"c616721b1afe176c8d760afc15a93621d411c1dc"
 ESP_IDF_VERSION     ="-b v4.4.2"
 ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24"    # Very stable version but cannot be rebuild with chip esp32s3
 ESP32_CAMERA_VERSION_S3="1ac48e5397ee22a59a18a314c4acf44c23dfe946" # Reliability problem but Esp32 S3 firmware can build with it
@@ -92,7 +92,7 @@ cd %(PYCAMERESP_DIR)s/modules/lib
 export PYTHONPATH=../simul;pdoc3 --html -o ../../doc --force .
 '''
 
-BUILD_COMMANDS = '''
+BUILD_ESP_COMMANDS = '''
 
 #####################
 # Set env espressif #
@@ -122,6 +122,30 @@ cd %(PYCAMERESP_DIR)s
 python3 "%(PYCAMERESP_DIR)s/scripts/zip_mpy.py" "%(OUTPUT_DIR)s" "%(BOARD)s" "%(PYCAMERESP_DIR)s"
 '''
 
+BUILD_RP2_COMMANDS = '''
+
+###################
+# Build mpy-cross #
+###################
+cd "%(OUTPUT_DIR)s/micropython"
+make -C mpy-cross
+
+#####################
+# Build micropython #
+#####################
+cd "%(OUTPUT_DIR)s/micropython/ports/rp2"
+make submodules
+make BOARD=%(BOARD)s
+cp "%(OUTPUT_DIR)s/micropython/ports/rp2/build-%(BOARD)s/firmware.uf2" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.uf2"
+
+####################
+# Build distri zip #
+####################
+cd %(PYCAMERESP_DIR)s
+python3 "%(PYCAMERESP_DIR)s/scripts/zip_mpy.py" "%(OUTPUT_DIR)s" "%(BOARD)s" "%(PYCAMERESP_DIR)s"
+'''
+
+
 PATCH_COMMANDS = '''
 
 ############################
@@ -130,6 +154,7 @@ PATCH_COMMANDS = '''
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/c/micropython/"*       "%(OUTPUT_DIR)s/micropython"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/python/micropython/"*  "%(OUTPUT_DIR)s/micropython"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/esp32/modules"
+cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/rp2/modules"
 cd %(PYCAMERESP_DIR)s
 python3        "%(PYCAMERESP_DIR)s/scripts/patchInisetup.py"    "%(OUTPUT_DIR)s"
 '''
@@ -269,6 +294,7 @@ def main():
 	parser.add_argument("-a", "--all",        help="install tools, get source, patch, and build selected firmwares",action="store_true")
 	parser.add_argument("-c", "--clean",      help="clean micropython sources to remove all patch",                 action="store_true")
 	parser.add_argument("-s", "--s3",         help="build Esp32 S3 without problem",                                action="store_true")
+	parser.add_argument("-r", "--rp2",        help="build raspberry pico RP2 and RP2 W",                            action="store_true")
 	parser.add_argument("-o", "--outputdir",  help="output directory")
 	parser.add_argument('boards',  metavar='boards', type=str, help='Select boards to build micropython firmwares, for all firmwares use "*"', nargs="*")
 	args = parser.parse_args()
@@ -302,7 +328,10 @@ def main():
 			execute(PATCH_COMMANDS)
 
 		if args.build or args.all:
-			board_dir = OUTPUT_DIR + os.path.sep + "micropython/ports/esp32/boards" + os.sep + "*"
+			if args.rp2:
+				board_dir = OUTPUT_DIR + os.path.sep + "micropython/ports/rp2/boards" + os.sep + "*"
+			else:
+				board_dir = OUTPUT_DIR + os.path.sep + "micropython/ports/esp32/boards" + os.sep + "*"
 			for board in glob.glob(board_dir):
 				if os.path.isdir(board):
 					board = os.path.split(board)[1]
@@ -314,7 +343,10 @@ def main():
 							print(COLOR_3 + BOARD + NO_COLOR)
 							print(COLOR_3 +"*"*30 + NO_COLOR)
 							print(COLOR_3 +"*"*30 + NO_COLOR)
-							execute(BUILD_COMMANDS)
+							if args.rp2:
+								execute(BUILD_RP2_COMMANDS)
+							else:
+								execute(BUILD_ESP_COMMANDS)
 
 if __name__ == "__main__":
 	main()

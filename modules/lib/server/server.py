@@ -5,7 +5,7 @@
 import time
 import wifi
 import uasyncio
-from tools import jsonconfig,logger,builddate,lang,watchdog,info,strings,sdcard,support
+from tools import jsonconfig,logger,builddate,region,lang,watchdog,info,strings,support
 if info.iscamera():
 	from video.video import Camera
 
@@ -34,7 +34,7 @@ class ServerContext:
 		self.get_wan_ip_async = None
 		self.wan_ip = None
 		self.server_config  = ServerConfig()
-		self.region_config  = lang.RegionConfig()
+		self.region_config  = region.RegionConfig()
 		self.set_date = None
 		self.one_per_day = None
 		self.flushed = False
@@ -122,7 +122,7 @@ class Server:
 		preload : True force the load of page at the start,
 		False the load of page is done a the first http connection (Takes time on first connection) """
 		Server.context = ServerContext(loop, page_loader, preload, http_port)
-		logger.syslog(info.sysinfo(display=False))
+		logger.syslog(info.sysinfo())
 		logger.syslog("Version: %s"%strings.tostrings(builddate.date))
 
 		from server.periodic import periodic_task
@@ -155,13 +155,12 @@ class Server:
 					wifi.Wifi.wan_disconnected()
 
 				if forced:
-					await Server.context.notifier.notify("\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s\n - %s"%(
-						wifi.Station.get_info()[0],
-						Server.context.wan_ip,
-						info.uptime(),
-						strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False)),
-						strings.tostrings(info.meminfo(display=False))
-						))
+					message = "\n - Lan Ip : %s\n"%wifi.Station.get_info()[0]
+					message += " - Wan Ip : %s\n"%Server.context.wan_ip
+					message += " - Uptime : %s\n"%strings.tostrings(info.uptime())
+					message += " - %s : %s\n"%(strings.tostrings(lang.memory_label), strings.tostrings(info.meminfo()))
+					message += " - %s : %s\n"%(strings.tostrings(lang.flash_label), strings.tostrings(info.flashinfo()))
+					await Server.context.notifier.notify(message)
 
 	@staticmethod
 	async def synchronize_time():
