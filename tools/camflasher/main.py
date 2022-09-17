@@ -614,6 +614,8 @@ class CamFlasher(QMainWindow):
 		result = self.flash_dialog.exec()
 		if result == 1 and self.window.combo_port.currentText() != "":
 			try:
+				if self.paused:
+					self.pause()
 				firmware = self.flash_dialog.dialog.firmware.currentText()
 				if firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
 					firmware = (firmware[len(DOWNLOAD_VERSION):],)
