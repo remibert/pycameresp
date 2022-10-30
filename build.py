@@ -21,10 +21,10 @@ import time
 # ffmpeg -i video.mov -vf "fps=3,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 output.gif
 # 640x360
 
-MICROPYTHON_VERSION ="0e8c2204da377e95b5000a3c708891d98cdeb69c" #"c616721b1afe176c8d760afc15a93621d411c1dc"
+MICROPYTHON_VERSION ="12f99481518b0ebcb14f00b2323865a845c2a4f1" #"0e8c2204da377e95b5000a3c708891d98cdeb69c" #"c616721b1afe176c8d760afc15a93621d411c1dc"
 ESP_IDF_VERSION     ="-b v4.4.2"
-ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24"    # Very stable version but cannot be rebuild with chip esp32s3
-ESP32_CAMERA_VERSION_S3="1ac48e5397ee22a59a18a314c4acf44c23dfe946" # Reliability problem but Esp32 S3 firmware can build with it
+ESP32_CAMERA_VERSION="5c8349f4cf169c8a61283e0da9b8cff10994d3f3"#"de025b8f40e45b4b264b2cdd385000d151d8986a" #"722497cb19383cd4ee6b5d57bb73148b5af41b24"    # Very stable version but cannot be rebuild with chip esp32s3
+ESP32_CAMERA_VERSION_S3=ESP32_CAMERA_VERSION#"1ac48e5397ee22a59a18a314c4acf44c23dfe946" # Reliability problem but Esp32 S3 firmware can build with it
 
 if sys.platform == "win32":
 	PIP      = "3"

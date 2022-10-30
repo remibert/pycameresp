@@ -1184,6 +1184,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 // compare method
 STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 {
+	static int counter = 0;
 	Motion_t *self = self_in;
 	Motion_t *previous = other_in;
 
@@ -1193,7 +1194,10 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 	}
 	else if (self->diffMax != previous->diffMax)
 	{
-		mp_raise_TypeError(MP_ERROR_TEXT("Motions not same format"));
+		if (counter++ > 2)
+		{
+			mp_raise_TypeError(MP_ERROR_TEXT("Motions not same format"));
+		}
 	}
 	else
 	{
@@ -1291,14 +1295,14 @@ STATIC const mp_rom_map_elem_t Motion_locals_dict_table[] =
 STATIC MP_DEFINE_CONST_DICT(Motion_locals_dict, Motion_locals_dict_table);
 
 // Class definition
-const mp_obj_type_t Motion_type = 
-{
-	{ &mp_type_type },
-	.name        = MP_QSTR_Motion,
-	.print       = Motion_print,
-	.make_new    = Motion_make_new,
-	.locals_dict = (mp_obj_t)&Motion_locals_dict,
-};
+MP_DEFINE_CONST_OBJ_TYPE(
+	Motion_type,
+	MP_QSTR_Motion,
+	MP_TYPE_FLAG_NONE,
+	make_new, Motion_make_new,
+	print, Motion_print,
+	locals_dict, &Motion_locals_dict
+	);
 
 #ifdef CONFIG_ESP32CAM
 
@@ -1310,14 +1314,15 @@ STATIC const mp_rom_map_elem_t configure_locals_dict_table[] =
 STATIC MP_DEFINE_CONST_DICT(configure_locals_dict, configure_locals_dict_table);
 
 // Class configuration low level camera
-const mp_obj_type_t configure_type = 
-{
-	{ &mp_type_type },
-	.name        = MP_QSTR_configure,
-	.print       = 0,
-	.make_new    = configure_make_new,
-	.locals_dict = (mp_obj_t)&configure_locals_dict,
-};
+MP_DEFINE_CONST_OBJ_TYPE(
+	configure_type,
+	MP_QSTR_configure,
+	MP_TYPE_FLAG_NONE,
+	make_new, configure_make_new,
+	print, 0,
+	locals_dict, &configure_locals_dict
+	);
+
 #endif
 
 STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {

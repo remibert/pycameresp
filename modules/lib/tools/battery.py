@@ -143,7 +143,6 @@ if support.battery():
 				machine.SOFT_RESET      : "Soft",
 				BROWNOUT_RESET          : "Brownout",
 			}.setdefault(machine.reset_cause(), "%d"%machine.reset_cause())
-			logger.syslog(" ")
 			logger.syslog("%s Start %s"%('-'*10,'-'*10), display=False)
 			logger.syslog("%s reset"%causes)
 
