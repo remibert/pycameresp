@@ -376,7 +376,7 @@ class StreamThread(threading.Thread):
 				time.sleep(0.4)
 				prompt = uploader.wait_prompt(device=self.stream)
 			if prompt == ">>>":
-				uploader.upload_from_server(self.stream, fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, filename)
+				uploader.upload_from_server(self.stream, fileuploader.GITHUB_API_HOST, fileuploader.PYCAMERESP_PATH, filename)
 				self.stream.write(b"from shell import sh\x0D")
 				self.stream.write(b"sh()\x0D")
 

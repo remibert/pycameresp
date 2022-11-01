@@ -9,7 +9,6 @@ import os.path
 import binascii
 import io
 import zipfile
-from re import split
 import requests
 from serial.tools import list_ports
 sys.path.append("../../modules/lib/tools")
@@ -21,8 +20,9 @@ import strings
 import streamdevice
 import vt100
 
-GITHUB_HOST = 'https://github.com'
+GITHUB_API_HOST = 'https://api.github.com/repos'
 PYCAMERESP_PATH = 'remibert/pycameresp/releases'
+
 
 class BinaryReader:
 	""" Binary file reader with filename """
@@ -366,20 +366,18 @@ class PythonUploader:
 		""" Get the path of filename from the github releases """
 		result = None
 		url = "%s/%s"%(host,path)
-		response = requests.get(url, allow_redirects=True)
-		lines = response.content.decode("utf8").split("\n")
-		for line in lines:
-			if filename in line and "href" in line:
-				spl = split(r'.*<a href="([a-zA-Z0-9/\.\-_]*)".*>.*',line)
-				if len(spl) > 0:
-					result = spl[1]
-					break
+		response = requests.get(url, allow_redirects=True, timeout=10)
+		for version in response.json():
+			for asset in version["assets"]:
+				if asset["name"] == filename:
+					if result is None:
+						result = asset["browser_download_url"]
 		return result
 
-	def upload_from_server(self, device, host, path, filename):
+	def upload_from_server(self, device, api_host, path, filename):
 		""" Upload file """
 		if self.check_prompt(device):
-			zip_file = self.download_last_release(host, path, filename)
+			zip_file = self.download_last_release(api_host, path, filename)
 			zip_content = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
 			zip_content.write(zip_file)
 			zip_content.close()
@@ -456,20 +454,20 @@ class PythonUploader:
 			self.print(vt100.COLOR_FAILED+"Upload failed"+vt100.COLOR_NONE)
 		self.prompt.terminate()
 
-	def download_last_release(self, host, path, filename):
+	def download_last_release(self, api_host, path, filename):
 		""" Download file last release of file from github """
 		result   = None
 		filepath = None
 		try:
 			self.print("\n"+vt100.COLOR_OK+"Find the latest version of %s"%filename+vt100.COLOR_NONE)
-			filepath = self.get_url_filename(host, path, filename)
+			filepath = self.get_url_filename(api_host, path, filename)
 		except Exception as err:
 			self.print(vt100.COLOR_FAILED+"Unable to find the latest version"+vt100.COLOR_NONE)
 
 		if filepath is not None:
 			try:
 				self.print(vt100.COLOR_OK+"Download %s"%filepath+vt100.COLOR_NONE)
-				response = requests.get(host + filepath, allow_redirects=True)
+				response = requests.get(filepath, allow_redirects=True, timeout=10)
 				result = response.content
 			except Exception as err:
 				self.print(vt100.COLOR_FAILED+"Download failed"+vt100.COLOR_NONE)
@@ -486,7 +484,7 @@ def test():
 
 	try:
 		uploader = PythonUploader(print)
-		uploader.upload_from_server(serial_port, GITHUB_HOST, PYCAMERESP_PATH, "shell.zip")
+		uploader.upload_from_server(serial_port, GITHUB_API_HOST, PYCAMERESP_PATH, "shell.zip")
 	finally:
 		serial_port.close()
 

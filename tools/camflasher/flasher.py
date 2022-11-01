@@ -149,7 +149,7 @@ class Flasher(threading.Thread):
 			if type(firmware) == type((0,)):
 				firmware = firmware[0]
 				uploader = fileuploader.PythonUploader(self.print)
-				content = uploader.download_last_release(fileuploader.GITHUB_HOST, fileuploader.PYCAMERESP_PATH, firmware)
+				content = uploader.download_last_release(fileuploader.GITHUB_API_HOST, fileuploader.PYCAMERESP_PATH, firmware)
 				if content is not None:
 					directory = tempfile.TemporaryDirectory()
 					firmware = "%s/%s"%(directory.name, firmware)

@@ -71,7 +71,7 @@ elif sys.platform == "darwin":
 	ICONS   = "icons/camflasher.icns"
 	TARGET  = "osx"
 	EXE     = "%(NAME)s.dmg"%globals()
-	PIP     = "3.10"
+	PIP     = "3"
 	UIC     = 6
 	COLOR_1 = "\x1B[38;33m"
 	COLOR_2 = "\x1B[38;32m"
@@ -153,7 +153,7 @@ def main():
 		####################
 		git clone https://github.com/espressif/esptool.git -q esptool_
 		cd esptool_
-		git checkout d20bf7f1086027edb40a29a112612e354685b0cf
+		git checkout -q d20bf7f1086027edb40a29a112612e354685b0cf
 		cd ..
 		copytree esptool_/esptool esptool
 
@@ -180,7 +180,7 @@ def main():
 		#####################
 		# Reinstall esptool #
 		#####################
-		pip%(PIP)s -q install esptool
+		pip%(PIP)s -q install esptool --use-pep517
 
 		##################
 		# Clean up build #
