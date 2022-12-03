@@ -16,25 +16,18 @@ async def historic(request, response, args):
 	""" Historic motion detection page """
 	Streaming.stop()
 	Historic.get_root()
-	if len(request.params) == 0:
-		detailled = False
-	else:
-		detailled = True
 	pageContent = [\
 		Tag(b"""
-		<!-- The Modal -->
-		<div class="modal " id="view_window">
-			<div class="modal-dialog modal-dialog-centered">
+
+		<div class="modal" id="myModal">
+			<div class="modal-dialog modal-fullscreen">
 				<div class="modal-content">
-					<!-- Modal Header -->
 					<div class="modal-header">
-						<h4 class="modal-title" id="view_title"></h4>
+						<button type="button" class="btn " data-bs-dismiss="modal">Close</button>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 					</div>
-
-					<!-- Modal body -->
-					<div class="modal-body">
-						<canvas id="view_image" width="%d" height="%d" class="d-block" style="width:100%%;height:auto;"></canvas>
+					<div class="modal-body" >
+						<canvas id="view_image" class="w-100" data-bs-dismiss="modal"/>
 					</div>
 				</div>
 			</div>
@@ -42,20 +35,13 @@ async def historic(request, response, args):
 
 		<script type='text/javascript'>
 
-		var HISTORIC_NOT_AVAILABLE = "%s";
-		var DETAILLED = %d;
-
-		document.onkeydown = check_key;
 		window.onload = load_historic;
 
 		var historic = null;
 		var current_id = 0;
 		var last_id = 0;
-		var previousId = 0;
 		var historic_request = new XMLHttpRequest();
 		var image_request    = new XMLHttpRequest();
-
-		setInterval(show, 200);
 
 		const MOTION_FILENAME =0;
 		const MOTION_WIDTH    =1;
@@ -63,20 +49,6 @@ async def historic(request, response, args):
 		const MOTION_DIFFS    =3;
 		const MOTION_SQUAREX  =4;
 		const MOTION_SQUAREY  =5;
-
-		function download(fileUrl) 
-		{
-			var a = document.createElement("a");
-			a.href = fileUrl;
-			filename = fileUrl.split("/").pop();
-			a.setAttribute("download", filename);
-			a.click();
-		}
-
-		function download_motion()
-		{
-			download("/historic/download/" + historic[current_id][MOTION_FILENAME]);
-		}
 
 		function load_historic()
 		{
@@ -108,6 +80,18 @@ async def historic(request, response, args):
 			}
 		}
 
+		function get_quality()
+		{
+			if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+			{
+				return 1;
+			}
+			else
+			{
+				return 2;
+			}
+		}
+
 		function image_loaded()
 		{
 			if (image_request.readyState === XMLHttpRequest.DONE)
@@ -115,35 +99,41 @@ async def historic(request, response, args):
 				if (image_request.status === 200)
 				{
 					var motion = historic[last_id];
-					var internaldiv = document.createElement("div");
-						internaldiv.className ="col-lg-2";
-						internaldiv.style = "width:100%%; height:100%%; position:relative;";
-
-						var title = document.createElement("span");
-							title.className = "card-title";
-							title.innerText = get_name(motion[MOTION_FILENAME]).slice(0,19);
-							internaldiv.appendChild(title);
-						var image = new Image();
-							image.id     = last_id;
-							image.className = "w-100 shadow-1-strong rounded mb-1";
-							image.src    = 'data:image/jpeg;base64,' + image_request.response;
-							image.style = "width:100%%; height:100%%; position:absolute; top:0px; left:0px;";
-							image.alt    = get_name(motion[MOTION_FILENAME]);
-							image.title  = get_name(motion[MOTION_FILENAME]);
-							image.style  = "padding: 0px;";
-							image.setAttribute("data-bs-toggle","modal");
-							image.setAttribute("data-bs-target","#view_window");
-							image.onclick = e => 
-								{
-									click_motion(parseInt(e.target.id,10));
-								};
-							internaldiv.appendChild(image);
 
 					var div = document.createElement("div");
-						div.className ="card col-lg-2";
-						div.appendChild(internaldiv);
+						div.className = "col-lg-2  pb-1 border bg-light";
 
-					document.getElementById('motions').appendChild(div);
+						var canvas = document.createElement("canvas");
+							canvas.width     = motion[MOTION_WIDTH ] * get_quality();
+							canvas.height    = motion[MOTION_HEIGHT] * get_quality();
+							canvas.id        = last_id;
+							canvas.className = "w-100";
+							canvas.setAttribute("data-bs-toggle","modal");
+							canvas.setAttribute("data-bs-target","#myModal");
+							canvas.onclick = e => 
+								{
+									var view = document.getElementById('view_image');
+									var destCtx = view.getContext('2d');
+									view.width     = motion[MOTION_WIDTH ] * get_quality();
+									view.height    = motion[MOTION_HEIGHT] * get_quality();
+
+									destCtx.drawImage(canvas, 0, 0);
+								};
+
+						var image = new Image();
+							image.src        = 'data:image/jpeg;base64,' + image_request.response;
+							image.onload     = function(){show_motion(canvas.id, image);};
+
+						div.appendChild(canvas);
+
+					if (last_id == 0)
+					{
+						document.getElementById('motions').replaceChildren(div);
+					}
+					else
+					{
+						document.getElementById('motions').appendChild(div);
+					}
 					last_id = last_id + 1;
 					if (last_id < historic.length-1)
 					{
@@ -157,16 +147,11 @@ async def historic(request, response, args):
 			}
 		}
 
-		function show()
-		{
-			show_motion(current_id);
-		}
-
 		function get_difference(motion, x, y)
 		{
 			var squarex = motion[MOTION_SQUAREX];
-			var maxx = motion[MOTION_WIDTH] /squarex;
-			var bitpos = y*maxx + x;
+			var maxx    = motion[MOTION_WIDTH] /squarex;
+			var bitpos  = y*maxx + x;
 			if (typeof motion[MOTION_DIFFS] === 'string')
 			{
 				return motion[MOTION_DIFFS][bitpos];
@@ -188,88 +173,71 @@ async def historic(request, response, args):
 			}
 		}
 
-		function show_motion(id)
+		function show_motion(id, image)
 		{
-			if (historic != null && historic.length > 0)
+			var x;
+			var y;
+
+			var motion = historic[id];
+			var canvas = document.getElementById(id);
+			var ctx = canvas.getContext('2d');
+
+			var squarex = motion[MOTION_SQUAREX] * get_quality();
+			var squarey = motion[MOTION_SQUAREY] * get_quality();
+			var maxx = (motion[MOTION_WIDTH] /squarex) * get_quality();
+			var maxy = (motion[MOTION_HEIGHT]/squarey) * get_quality();
+
+			ctx.drawImage(image, 0, 0, motion[MOTION_WIDTH ]  , motion[MOTION_HEIGHT], 0, 0, motion[MOTION_WIDTH ] * get_quality(), motion[MOTION_HEIGHT] * get_quality());
+
+			ctx.strokeStyle = "red";
+			ctx.lineWidth =  1 * get_quality();
+			for (y = 0; y < maxy; y ++)
 			{
-				var motion = historic[id];
-				var view_title = document.getElementById('view_title');
-					view_title.innerText = get_name(motion[MOTION_FILENAME]);
-				console.log(get_name(motion[MOTION_FILENAME]));
-
-				var ctx = document.getElementById('view_image').getContext('2d');
-
-				var offsetX = 0;//35;
-				var offsetY = 0; //35;
-				ctx.drawImage(document.getElementById(id), offsetX, offsetY, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
-				var x;
-				var y;
-
-				// Show thumb image selected
-				document.getElementById(previousId).style.border = "";
-				document.getElementById(id).style.border = "5px solid dodgerblue";
-				previousId = id;
-
-				var squarex = motion[MOTION_SQUAREX];
-				var squarey = motion[MOTION_SQUAREY];
-				var maxx = motion[MOTION_WIDTH] /squarex;
-				var maxy = motion[MOTION_HEIGHT]/squarey;
-				
-				if (DETAILLED)
-				{
-					for (y = 0; y < maxy; y ++)
-					{
-						for (x = 0; x < maxx; x ++)
-						{
-							detection = get_difference(motion, x, y);
-							if (detection != " ")
-							{
-								ctx.strokeStyle = "yellow";
-								ctx.strokeRect(offsetX + (x * squarex + 15),offsetY + (y*squarey +15), squarex-40, squarey-40);
-							}
-						}
-					}
-				}
-
-				ctx.strokeStyle = "red";
-				for (y = 0; y < maxy; y ++)
-				{
-					for (x = 0; x < maxx; x ++)
-					{
-						var detection = get_difference(motion, x, y);
-						if (x >= 1)
-						{
-							var previous = get_difference(motion, x-1, y);
-							if (previous != detection)
-							{
-								ctx.beginPath();
-								ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
-								ctx.lineTo(offsetX + x*squarex, offsetY + y*squarey + squarey);
-								ctx.stroke();
-							}
-						}
-					}
-				}
-				
 				for (x = 0; x < maxx; x ++)
 				{
-					for (y = 0; y < maxy; y ++)
+					var detection = get_difference(motion, x, y);
+					if (x >= 1)
 					{
-						var detection = get_difference(motion, x, y);
-						if (y >= 1)
+						var previous = get_difference(motion, x-1, y);
+						if (previous != detection)
 						{
-							var previous = get_difference(motion, x, y-1);
-							if (previous != detection)
-							{
-								ctx.beginPath();
-								ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
-								ctx.lineTo(offsetX + x*squarex + squarex, offsetY + y*squarey);
-								ctx.stroke();
-							}
+							ctx.beginPath();
+							ctx.moveTo(0 + x*squarex, 0 + y*squarey);
+							ctx.lineTo(0 + x*squarex, 0 + y*squarey + squarey);
+							ctx.stroke();
 						}
 					}
 				}
 			}
+			
+			for (x = 0; x < maxx; x ++)
+			{
+				for (y = 0; y < maxy; y ++)
+				{
+					var detection = get_difference(motion, x, y);
+					if (y >= 1)
+					{
+						var previous = get_difference(motion, x, y-1);
+						if (previous != detection)
+						{
+							ctx.beginPath();
+							ctx.moveTo(0 + x*squarex, 0 + y*squarey);
+							ctx.lineTo(0 + x*squarex + squarex, 0 + y*squarey);
+							ctx.stroke();
+						}
+					}
+				}
+			}
+
+			ctx.font = "40px monospace";
+			var width = ctx.measureText(get_name(motion[MOTION_FILENAME])).width;
+			ctx.fillStyle = 'rgba(0,0,0,0.3)';
+
+			ctx.fillRect(10,(motion[MOTION_HEIGHT] * get_quality())-40-15, width, 40);
+
+			ctx.fillStyle = 'rgba(255,255,255,0.5)';
+			ctx.fillText(get_name(motion[MOTION_FILENAME]),  10, (motion[MOTION_HEIGHT] * get_quality())-20);
+
 		}
 
 		// Convert the filename into text displayed
@@ -302,138 +270,11 @@ async def historic(request, response, args):
 			return get_name(filename).substring(0,10);
 		}
 
-		function click_motion(id)
-		{
-			current_id = id;
-			show_motion(id);
-		}
-
-		function first_motion()
-		{
-			current_id = 0;
-			show_motion(current_id);
-		}
-
-		function last_motion()
-		{
-			current_id = last_id-1;
-			show_motion(current_id);
-		}
-
-		function next_motion()
-		{
-			if (current_id + 1 < last_id)
-			{
-				current_id = current_id + 1;
-				show_motion(current_id);
-			}
-		}
-
-		function previous_motion()
-		{
-			if (current_id > 0)
-			{
-				current_id = current_id -1;
-				show_motion(current_id);
-			}
-		}
-
-		function next_day_motion()
-		{
-			if (current_id + 1 < last_id)
-			{
-				var new_id = current_id;
-
-				do
-				{
-					new_id += 1;
-					if (get_date(historic[new_id][MOTION_FILENAME]) != get_date(historic[current_id][MOTION_FILENAME]))
-					{
-						current_id = new_id;
-						show_motion(current_id);
-						break;
-					}
-				}
-				while (new_id + 1 < last_id);
-			}
-		}
-
-		function previous_day_motion()
-		{
-			if (current_id > 0)
-			{
-				var new_id = current_id;
-
-				do
-				{
-					new_id -= 1;
-
-					if (get_date(historic[new_id][MOTION_FILENAME]) != get_date(historic[current_id][MOTION_FILENAME]))
-					{
-						current_id = new_id;
-
-						do
-						{
-							new_id -= 1;
-							if (get_date(historic[new_id][MOTION_FILENAME]) == get_date(historic[current_id][MOTION_FILENAME]))
-							{
-								current_id = new_id;
-							}
-							else
-							{
-								break;
-							}
-						}
-						while(new_id - 1 >= 0);
-						show_motion(current_id);
-						break;
-					}
-				}
-				while (new_id - 1 >= 0);
-			}
-		}
-
-		function check_key(e)
-		{
-			e = e || window.event;
-
-			if (e.keyCode == '38') // up arrow
-			{
-				previous_day_motion();
-			}
-			else if (e.keyCode == '40') // down arrow
-			{
-				next_day_motion();
-			}
-			else if (e.keyCode == '37') // left arrow
-			{
-				previous_motion();
-			}
-			else if (e.keyCode == '39')// right arrow
-			{
-				next_motion();
-			}
-			else if (e.keyCode == '35') // end
-			{
-			}
-			else if (e.keyCode == '36') // home
-			{
-			}
-			else if (e.keyCode == '33') // page up
-			{
-				first_motion();
-			}
-			else if (e.keyCode == '34') // page down
-			{
-				last_motion();
-			}
-		}
-
 		</script>
-		<canvas id="motion" width="0" height="0"></canvas>
-		<br>
-		<div id="motions" class="row"></div>
-		"""%(800,600, lang.historic_not_available, detailled)),
+		<div id="motions" class="row">
+		<span>%s</span>
+		</div>
+		"""%(lang.historic_not_available)),
 	]
 	page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
 	await response.send_page(page)
