@@ -46,9 +46,9 @@ async def presence(request, response, args):
 		i += 1
 
 	page = main_frame(request, response, args,lang.presence_detection_configuration,
-		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),Br(),
+		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
 		editSmartphones,
-		Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),Br(),
+		Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),
 		submit)
 
 	await response.send_page(page)

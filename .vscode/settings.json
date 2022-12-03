@@ -44,7 +44,23 @@
 		"${workspaceFolder}/modules/lib/tools",
 		"${workspaceFolder}/modules/lib/shell"
 	],
-	"python.linting.pylintArgs": [
+	"python.linting.pylintArgs": [		"--disable=bad-indentation",
+	"--disable=unused-argument",
+	"--disable=invalid-name",
+	"--disable=import-outside-toplevel",
+	"--disable=broad-except",
+	"--disable=unused-variable",
+	"--disable=line-too-long",
+	"--disable=superfluous-parens",
+	"--disable=unidiomatic-typecheck",
+	"--disable=bare-except",
+	"--disable=unused-wildcard-import",
+	"--disable=wildcard-import",
+	"--disable=global-statement",
+	"--disable=eval-used",
+	"--disable=exec-used"],
+
+	"pylint.args":  [
 		"--disable=bad-indentation",
 		"--disable=unused-argument",
 		"--disable=invalid-name",

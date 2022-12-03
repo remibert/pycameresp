@@ -516,6 +516,10 @@ def deepsleep(seconds=60):
 	""" Deep sleep command """
 	machine.deepsleep(int(seconds)*1000)
 
+def ligthsleep(seconds=60):
+	""" Light sleep command """
+	machine.lightsleep(int(seconds)*1000)
+
 edit_class = None
 def edit(file, no_color=False, read_only=False):
 	""" Edit command """
@@ -1012,6 +1016,7 @@ shell_commands = \
 	"flashinfo"  :[flashinfo                               ],
 	"sysinfo"    :[sysinfo                                 ],
 	"deepsleep"  :[deepsleep       ,"seconds"              ],
+	"lightsleep" :[ligthsleep      ,"seconds"              ],
 	"ping"       :[ping            ,"host"                 ],
 	"reboot"     :[reboot                                  ],
 	"help"       :[help                                    ],

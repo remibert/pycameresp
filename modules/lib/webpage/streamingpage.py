@@ -43,9 +43,10 @@ class Streaming:
 		Streaming.activity()
 		Streaming.streaming_id[0] += id(request)
 		if width is not None and height is not None:
-			size = b'width="%d" height="%d"'%(width, height)
+			# size = b'width="%d" height="%d"'%(width, height)
+			size =  b'width="100%%"'
 		else:
-			size = b""
+			size = b'width="100%%"'
 		return Tag(b"""
 		<p>
 			<div style="position: relative;">

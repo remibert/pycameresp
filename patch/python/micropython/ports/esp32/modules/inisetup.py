@@ -35,6 +35,12 @@ def setup():
     uos.VfsLfs2.mkfs(bdev)
     vfs = uos.VfsLfs2(bdev)
     uos.mount(vfs, "/")
+    install_files()
+    return vfs
+
+def install_files():
+    from zlib import decompress
+    from binascii import a2b_base64
     with open("boot.py", "w") as f:
         f.write(
             """\
@@ -46,4 +52,3 @@ def setup():
 """
         )
 %s
-    return vfs

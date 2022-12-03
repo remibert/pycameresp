@@ -1,6 +1,8 @@
 """ Patch the initsetup.py """
 # pylint:disable=consider-using-f-string
 # pylint:disable=unspecified-encoding
+from zlib import *
+from binascii import *
 
 filesToAdd = [
 	("","modules/main.py"),
@@ -16,19 +18,19 @@ if __name__ == "__main__":
 		root = "firmware"
 
 	fileSetup='''
+    print("Install %(filename)s")
     with open("%(filename)s", "w") as f:
-        f.write("""%(content)s""")
+        f.write(decompress(a2b_base64(%(content)s)))
 '''
 	from os.path import split
 	patchIni=""
 	import glob
 	for filename in glob.glob("modules/www/*.css"):
-		if not "bootstrap" in filename:
-			filesToAdd.append(("www",filename))
+		filesToAdd.append(("www",filename))
+	for filename in glob.glob("modules/www/*.js"):
+		filesToAdd.append(("www",filename))
 	for path, filename in filesToAdd:
-		content = open(filename,"r").read()
-		content = content.replace('"""',"'''")
-		content = content.replace("\x5C","\x5C\x5C") # Replace \ by \\
+		content = b2a_base64(compress(open(filename,"rb").read()))
 		if path != "":
 			patchIni += "    try:\n        uos.mkdir('%s')\n    except: pass\n"%path
 			filename = "%s/%s"%(path, split(filename)[1])

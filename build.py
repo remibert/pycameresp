@@ -13,10 +13,8 @@ import time
 
 # In case of error       :
 #       [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:997)>
+# The solution is to double click on "Install Certificates.command" from python installation.
 #
-# The solution is here   :
-#        https://www.dev2qa.com/how-to-fix-python-error-certificate-verify-failed-unable-to-get-local-issuer-certificate-in-mac-os/
-
 # Mov to gif :
 # ffmpeg -i video.mov -vf "fps=3,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 output.gif
 # 640x360
@@ -315,7 +313,7 @@ def main():
 			else:
 				print("Get sources already done")
 
-		if args.clean or args.s3 or args.all:
+		if args.clean or args.all:
 			execute(CLEAN_COMMANDS)
 
 		if args.s3:

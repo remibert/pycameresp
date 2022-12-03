@@ -55,7 +55,7 @@ async def camera_on_off(request, response, args):
 
 	if command in [b"on",b"off"]:
 		config.save()
-		alert = Br(), Br(), AlertError(text=lang.taken_into_account)
+		alert = AlertError(text=lang.taken_into_account)
 	else:
 		alert = None
 

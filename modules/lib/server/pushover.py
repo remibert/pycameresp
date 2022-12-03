@@ -48,7 +48,6 @@ class Notification:
 				request.set_method(b"POST")
 				request.set_path  (b"/1/messages.json")
 				request.set_header(b"Host",self.host)
-				request.set_header(b"Accept-Encoding",b"gzip, deflate")
 				request.set_header(b"Accept",         b"*/*")
 				request.set_header(b"Connection",     b"keep-alive")
 				request.set_header(b"Content-Type",   b"multipart/form-data")

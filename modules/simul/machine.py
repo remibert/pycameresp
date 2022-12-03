@@ -22,6 +22,10 @@ def reset():
 
 def deepsleep(duration=0):
 	""" Deep sleep """
+
+def lightsleep(duration=0):
+	""" Light sleep """
+
 class ADC:
 	""" ADC """
 	ATTN_11DB = 1
@@ -48,8 +52,12 @@ class Pin:
 	OUT = 1
 	PULL_UP = 1
 	PULL_DOWN =0
+	IRQ_RISING = 2
+	IRQ_FALLING = 4
 	def __init__(self, *args, **params):
 		""" Constructor """
+		self.handler = None
+		self.trigger = None
 
 	def value(self, val=0):
 		""" Value """
@@ -60,6 +68,11 @@ class Pin:
 
 	def off(self):
 		""" Off"""
+		
+	def irq(self, handler=None, trigger=None):
+		self.handler = handler
+		self.trigger = trigger
+
 class Timer:
 	""" Timer """
 	ONE_SHOT = 0

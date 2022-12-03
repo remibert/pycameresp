@@ -12,6 +12,8 @@ if support.battery():
 	except:
 		BROWNOUT_RESET = 6
 
+	MAX_BROWNOUT_RESET = 32
+
 	class BatteryConfig(jsonconfig.JsonConfig):
 		""" Battery configuration """
 		def __init__(self):
@@ -101,14 +103,35 @@ if support.battery():
 			y = a*x + b
 			return y
 
+
 		@staticmethod
 		def protect():
 			""" Protect the battery """
 			Battery.init()
 			Battery.keep_reset_cause()
 			if Battery.manage_level() or Battery.is_too_many_brownout():
-				logger.syslog("Sleep infinite")
-				machine.deepsleep()
+				# Too many brownout reset
+				# Slow deepsleep during 1 hour
+				if Battery.config.brownout_count < MAX_BROWNOUT_RESET + 60:
+					logger.syslog("Sleep 1 minute")
+					machine.deepsleep(600*1000)
+				# Slow deepsleep during one day
+				elif Battery.config.brownout_count < MAX_BROWNOUT_RESET + 60 + 24:
+					logger.syslog("Sleep 1 hour")
+					machine.deepsleep(3600*1000)
+				# Slow deepsleep during three days
+				elif Battery.config.brownout_count < MAX_BROWNOUT_RESET + 60 + 24 + 8:
+					logger.syslog("Sleep 3 hours")
+					machine.deepsleep(3*3600*1000)
+				# Slow deepsleep during one week
+				elif Battery.config.brownout_count < MAX_BROWNOUT_RESET + 60 + 24 + 8 + 7:
+					logger.syslog("Sleep 24 hours")
+					machine.deepsleep(24*3600*1000)
+				# Deepsleep infinite
+				else:
+					logger.syslog("Sleep infinite")
+					machine.deepsleep()
+
 
 		@staticmethod
 		def manage_level():
@@ -164,9 +187,9 @@ if support.battery():
 				Battery.config.save()
 
 				# if the number of consecutive brownout resets is too high
-				if Battery.config.brownout_count > 32:
+				if Battery.config.brownout_count > MAX_BROWNOUT_RESET:
 					# Battery too low, save the battery status
-					logger.syslog("Too many successive brownout reset")
+					logger.syslog("Too many successive brownout reset %d"%Battery.config.brownout_count)
 					deepsleep = True
 			return deepsleep
 

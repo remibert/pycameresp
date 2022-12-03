@@ -963,7 +963,7 @@ class Text:
 
 	def get_selection(self):
 		""" Get information about selection """
-		if self.selection_start:
+		if self.selection_start is not None and self.selection_end is not None:
 			if self.selection_start[1] > self.selection_end[1]:
 				return self.selection_end, self.selection_start
 			elif self.selection_start[1] < self.selection_end[1]:
@@ -1634,22 +1634,18 @@ class Text:
 				if len(keys[0]) > 3:
 					# If camflasher mouse selection
 					if keys[0][0:2] == "\x1B[" and keys[0][-1] in ["x","y"]:
-						if keys[0][-1] == "y":
-							end = True
-						else:
-							self.begin_line, self.begin_column = self.view.get_position()
-							self.hide_selection()
-							end = False
 						try:
 							pos = keys[0][2:-1]
 							line, column = pos.split(";")
-
-							if end:
+							self.begin_line, self.begin_column = self.view.get_position()
+							if keys[0][-1] == "x":
+								self.goto(int(line)+self.begin_line,int(column)+self.begin_column, True)
 								self.open_selection()
-								self.goto(int(line)+self.begin_line,int(column)+self.begin_column, not end)
-							if end:
 								self.close_selection()
-						except:
+							else:
+								self.goto(int(line)+self.begin_line,int(column)+self.begin_column, False)
+								self.close_selection()
+						except Exception as err:
 							pass
 
 class Edit:
@@ -1919,9 +1915,9 @@ class Editor:
 						keys = self.get_key()
 
 					if keys == ["\x1B[23~"]:
-						keys = ["\x1B[1;5x"]
+						keys = ["\x1B[15;5x"]
 					if keys == ["\x1B[24~"]:
-						keys = ["\x1B[5;1y"]
+						keys = ["\x1B[20;5y"]
 
 					if self.trace is not None:
 						for key in keys:

@@ -22,13 +22,33 @@ async def historic(request, response, args):
 		detailled = True
 	pageContent = [\
 		Tag(b"""
+		<!-- The Modal -->
+		<div class="modal " id="view_window">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<!-- Modal Header -->
+					<div class="modal-header">
+						<h4 class="modal-title" id="view_title"></h4>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+
+					<!-- Modal body -->
+					<div class="modal-body">
+						<canvas id="view_image" width="%d" height="%d" class="d-block" style="width:100%%;height:auto;"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<script type='text/javascript'>
+
+		var HISTORIC_NOT_AVAILABLE = "%s";
+		var DETAILLED = %d;
 
 		document.onkeydown = check_key;
 		window.onload = load_historic;
 
 		var historic = null;
-		var images = [];
 		var current_id = 0;
 		var last_id = 0;
 		var previousId = 0;
@@ -60,8 +80,6 @@ async def historic(request, response, args):
 
 		function load_historic()
 		{
-			var canvas = document.getElementById('motion'); 
-			canvas.addEventListener("mousedown", function (e) { get_click_position(canvas, e); });
 			historic_request.onreadystatechange = historic_loaded;
 			historic_request.open("GET","historic/historic.json",true);
 			historic_request.send();
@@ -76,13 +94,6 @@ async def historic(request, response, args):
 					historic = JSON.parse(historic_request.responseText);
 					load_image();
 				}
-				else
-				{
-					var ctx = document.getElementById('motion').getContext('2d');
-					ctx.font = '25px Arial';
-					ctx.fillStyle = "black";
-					ctx.fillText("%s", 10, 20);
-				}
 			}
 		}
 
@@ -95,13 +106,6 @@ async def historic(request, response, args):
 				image_request.open("GET","/historic/images/" + motion[MOTION_FILENAME],true);
 				image_request.send();
 			}
-			else
-			{
-				var ctx = document.getElementById('motion').getContext('2d');
-				ctx.font = '25px Arial';
-				ctx.fillStyle = "black";
-				ctx.fillText("%s", 10, 20);
-			}
 		}
 
 		function image_loaded()
@@ -111,20 +115,35 @@ async def historic(request, response, args):
 				if (image_request.status === 200)
 				{
 					var motion = historic[last_id];
-					var image = new Image();
-					image.id     = last_id;
-					image.src    = 'data:image/jpeg;base64,' + image_request.response;
-					image.width  = motion[MOTION_WIDTH] /15;
-					image.height = motion[MOTION_HEIGHT]/15;
-					image.alt    = get_name(motion[MOTION_FILENAME]);
-					image.title  = get_name(motion[MOTION_FILENAME]);
-					image.style  = "padding: 1px;";
-					image.onclick = e => 
-						{
-							click_motion(parseInt(e.target.id,10));
-						};
-					images.push(image);
-					document.getElementById('motions').appendChild(image);
+					var internaldiv = document.createElement("div");
+						internaldiv.className ="col-lg-2";
+						internaldiv.style = "width:100%%; height:100%%; position:relative;";
+
+						var title = document.createElement("span");
+							title.className = "card-title";
+							title.innerText = get_name(motion[MOTION_FILENAME]).slice(0,19);
+							internaldiv.appendChild(title);
+						var image = new Image();
+							image.id     = last_id;
+							image.className = "w-100 shadow-1-strong rounded mb-1";
+							image.src    = 'data:image/jpeg;base64,' + image_request.response;
+							image.style = "width:100%%; height:100%%; position:absolute; top:0px; left:0px;";
+							image.alt    = get_name(motion[MOTION_FILENAME]);
+							image.title  = get_name(motion[MOTION_FILENAME]);
+							image.style  = "padding: 0px;";
+							image.setAttribute("data-bs-toggle","modal");
+							image.setAttribute("data-bs-target","#view_window");
+							image.onclick = e => 
+								{
+									click_motion(parseInt(e.target.id,10));
+								};
+							internaldiv.appendChild(image);
+
+					var div = document.createElement("div");
+						div.className ="card col-lg-2";
+						div.appendChild(internaldiv);
+
+					document.getElementById('motions').appendChild(div);
 					last_id = last_id + 1;
 					if (last_id < historic.length-1)
 					{
@@ -174,10 +193,14 @@ async def historic(request, response, args):
 			if (historic != null && historic.length > 0)
 			{
 				var motion = historic[id];
-				var ctx = document.getElementById('motion').getContext('2d');
-				
-				var offsetX = 35;
-				var offsetY = 35;
+				var view_title = document.getElementById('view_title');
+					view_title.innerText = get_name(motion[MOTION_FILENAME]);
+				console.log(get_name(motion[MOTION_FILENAME]));
+
+				var ctx = document.getElementById('view_image').getContext('2d');
+
+				var offsetX = 0;//35;
+				var offsetY = 0; //35;
 				ctx.drawImage(document.getElementById(id), offsetX, offsetY, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
 				var x;
 				var y;
@@ -192,7 +215,7 @@ async def historic(request, response, args):
 				var maxx = motion[MOTION_WIDTH] /squarex;
 				var maxy = motion[MOTION_HEIGHT]/squarey;
 				
-				if (%d)
+				if (DETAILLED)
 				{
 					for (y = 0; y < maxy; y ++)
 					{
@@ -246,37 +269,6 @@ async def historic(request, response, args):
 						}
 					}
 				}
-
-				// Show text image
-				ctx.font = '20px monospace';
-				ctx.fillStyle = "white";
-				ctx.rect(0, offsetY + motion[MOTION_HEIGHT],  motion[MOTION_WIDTH], 100);
-				ctx.fill();
-
-				ctx.fillStyle = "black";
-				ctx.fillText(get_name(motion[MOTION_FILENAME]),  10, offsetY + motion[MOTION_HEIGHT] + 20);
-
-				// Show arrows
-				ctx.fillStyle = 'rgba(255,255,255,10)';
-				ctx.font = '30px monospace';
-				
-				// Previous
-				ctx.fillText("\u25C0\uFE0F", 0, offsetY + motion[MOTION_HEIGHT]/2); 
-				
-				// Next
-				ctx.fillText("\u25B6\uFE0F", offsetX + motion[MOTION_WIDTH], offsetY + motion[MOTION_HEIGHT]/2);
-
-				// Previous day
-				ctx.fillText("\u23EA",  offsetX + motion[MOTION_WIDTH]/2, 30); 
-				
-				// Next day
-				ctx.fillText("\u23E9", offsetX + motion[MOTION_WIDTH]/2,30+ offsetY + motion[MOTION_HEIGHT]);
-
-				// Begin
-				ctx.fillText("\u23EE\uFE0F",0, 30);
-
-				// End
-				ctx.fillText("\u23ED\uFE0F", offsetX + motion[MOTION_WIDTH], 30+offsetY + motion[MOTION_HEIGHT]);
 			}
 		}
 
@@ -437,91 +429,11 @@ async def historic(request, response, args):
 			}
 		}
 
-		function get_click_position(canvas, e)
-		{
-			const rect = canvas.getBoundingClientRect();
-			const x = e.clientX - rect.left;
-			const y = e.clientY - rect.top;
-
-			// If click on first
-			if (x < 100 && y < 100)
-			{
-				first_motion();
-			}
-			// If click on last
-			else if (x > (rect.width - 100) && y > (rect.height -100))
-			{
-				last_motion();
-			}
-			// If the click is in the middle
-			else if (x > rect.width/3 && x < (2*rect.width/3) && y > rect.height/3 && y < (2*rect.height/3))
-			{
-				// Download image
-				if (confirm("Download this image ?"))
-				{
-					download_motion();
-				}
-			}
-			else
-			{
-				if (x < rect.width / 2)
-				{
-					if (y < rect.height / 2)
-					{
-						if (x < y)
-						{
-							previous_motion();
-						}
-						else
-						{
-							previous_day_motion();
-						}
-					}
-					else
-					{
-						if (x < rect.height - y)
-						{
-							previous_motion();
-						}
-						else
-						{
-							next_day_motion();
-						}
-					}
-				}
-				else
-				{
-					if (y < rect.height / 2)
-					{
-						if (rect.width - x < y)
-						{
-							next_motion();
-						}
-						else
-						{
-							previous_day_motion();
-						}
-					}
-					else
-					{
-						if (rect.width - x < rect.height - y)
-						{
-							next_motion();
-						}
-						else
-						{
-							next_day_motion();
-						}
-					}
-				}
-			}
-		}
-
 		</script>
-		<canvas id="motion" width="%d" height="%d" ></canvas>
+		<canvas id="motion" width="0" height="0"></canvas>
 		<br>
-		<div id="motions"></div>
-		"""%(lang.historic_not_available, lang.historic_not_available, detailled, 800+40+40,600+40+40)),
+		<div id="motions" class="row"></div>
+		"""%(800,600, lang.historic_not_available, detailled)),
 	]
 	page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
 	await response.send_page(page)

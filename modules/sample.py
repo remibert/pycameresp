@@ -37,16 +37,15 @@ async def sample_page(request, response, args):
 		Tag(b'''
 			<p>Example to interact with esp32 via an html page (see the content of file <b>sample.py</b>)</p>
 			'''),
-			ButtonCmd(text=b"Click on button",  path=b"/sample/button"), Br(),Br(),
-			SliderCmd(min=b"10", max=b"30", step=b"2", value=b"12", text=b"Move slider", path=b"/sample/slider"), Br(),
+			ButtonCmd(text=b"Click on button",  path=b"/sample/button"),
+			SliderCmd(min=b"10", max=b"30", step=b"2", value=b"12", text=b"Move slider", path=b"/sample/slider"),
 			ComboCmd(\
 				[
 					Option(value=b"One"   , text=b"One"),
 					Option(value=b"Two"   , text=b"Two", selected=True),
 					Option(value=b"Three" , text=b"Three"),
-				], path=b"/sample/combo", text=b"Select number"), Br(),Br(),
+				], path=b"/sample/combo", text=b"Select number"),
 			SwitchCmd(text=b"Change this switch", checked=True, path=b"/sample/switch"),
-			Br(),
 			Br(),
 			Paragraph(b"To eliminate this page delete the <b>sample.py</b> file"))
 	await response.send_page(page)

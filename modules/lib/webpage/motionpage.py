@@ -20,7 +20,7 @@ def zone_masking(config, disabled):
 	squarey = SnapConfig.get().square_y - 2
 	width   = SnapConfig.get().diff_x
 	height  = SnapConfig.get().diff_y
-	maxi     = SnapConfig.get().max
+	maxi    = SnapConfig.get().max
 	if disabled:
 		buttons = b""
 	else:
@@ -39,8 +39,6 @@ def zone_masking(config, disabled):
 					appearance: none;
 					background-color: #EFEFEF;
 					opacity: 0.14;
-					width: %dpx;
-					height: %dpx;
 				}
 				.zoneMask:checked
 				{
@@ -49,6 +47,43 @@ def zone_masking(config, disabled):
 				}
 			</style>
 			<script>
+				var videoStream      = document.getElementById("video-stream");
+				var videoStreamWidth = videoStream.offsetWidth;
+
+				function onVideoStreamDisplayed()
+				{
+					onLoadZoneMasking();
+					resizeZoneMasking();
+				}
+
+				videoStream.addEventListener('load', onVideoStreamDisplayed);
+
+				if (window.addEventListener) 
+				{
+					window.addEventListener ("resize", onResizeEvent, true);
+				} 
+
+				function onResizeEvent() 
+				{
+					if(videoStream.offsetWidth != videoStreamWidth)
+					{
+						videoStreamWidth = videoStream.offsetWidth;
+						resizeZoneMasking();
+					}
+				}
+
+				function resizeZoneMasking()
+				{
+					var cellWidth  = (videoStream.offsetWidth  / 20) - 2.;
+					
+					for (id = 0; id < %d; id++)
+					{
+						var cell = document.getElementById(id);
+						cell.style.width  = cellWidth + "px";
+						cell.style.height = cellWidth + "px";
+					}
+				}
+			
 				var initMask='%s';
 				var disabled = %d;
 				function check(box)
@@ -125,9 +160,8 @@ def zone_masking(config, disabled):
 						cell.checked = 1;
 					}
 				}
-				onLoadZoneMasking();
 			</script>
-"""%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
+"""%(buttons,maxi,config.mask,disabled,height,width,maxi,maxi,maxi))
 	return result
 
 @HttpServer.add_route(b'/motion/config', menu=lang.menu_motion, item=lang.item_motion, available=info.iscamera() and Camera.is_activated())
@@ -147,14 +181,14 @@ async def motion(request, response, args):
 	page = main_frame(request, response, args, lang.motion_detection_configuration,
 		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
 		Streaming.get_html(request, SnapConfig.get().width, SnapConfig.get().height),
-		zone_masking(config, disabled), Br(),
+		zone_masking(config, disabled),
 		Slider(text=lang.detects_a_movement,          name=b"differences_detection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differences_detection,         disabled=disabled),
 		Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),
-		Switch(text=lang.notification_motion, name=b"notify",       checked=config.notify,       disabled=disabled),Br(),
-		Switch(text=lang.notification_state,  name=b"notify_state", checked=config.notify_state, disabled=disabled),Br(),
-		Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence", checked=config.suspend_on_presence, disabled=disabled),Br(),
-		Switch(text=lang.permanent_detection,                      name=b"permanent_detection", checked=config.permanent_detection, disabled=disabled),Br(),
-		Switch(text=lang.turn_on_flash,                            name=b"light_compensation",  checked=config.light_compensation,  disabled=disabled),Br(),
+		Switch(text=lang.notification_motion, name=b"notify",       checked=config.notify,       disabled=disabled),
+		Switch(text=lang.notification_state,  name=b"notify_state", checked=config.notify_state, disabled=disabled),
+		Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence", checked=config.suspend_on_presence, disabled=disabled),
+		Switch(text=lang.permanent_detection,                      name=b"permanent_detection", checked=config.permanent_detection, disabled=disabled),
+		Switch(text=lang.turn_on_flash,                            name=b"light_compensation",  checked=config.light_compensation,  disabled=disabled),
 		submit)
 	await response.send_page(page)
 

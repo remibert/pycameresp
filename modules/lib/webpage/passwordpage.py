@@ -16,7 +16,7 @@ class PasswordPage:
 		if new_password is not None:
 			res = User.change(request.params.get(b"user", b""), request.params.get(b"current_password", b""), request.params.get(b"new_password"), request.params.get(b"renew_password"))
 			if res is True:
-				return [Br(),AlertSuccess(text=lang.password_changed)]
+				return [AlertSuccess(text=lang.password_changed)]
 			elif res is None:
 				return PasswordPage.change_page(alert=lang.passwords_not_equals)
 			else:

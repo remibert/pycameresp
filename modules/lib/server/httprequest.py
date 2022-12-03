@@ -9,7 +9,7 @@ The set of request and response are in bytes format.
 I no longer use strings, because they are between 20 and 30 times slower.
 It may sound a bit more complicated, but it's a lot quick.
 """
-
+import zlib
 import hashlib
 import time
 from binascii import hexlify, b2a_base64
@@ -40,7 +40,8 @@ MIMES = {\
 	b".gif"   : b"image/gif",
 	b".jpeg"  : b"image/jpeg",
 	b".svg"   : b"image/svg+xml",
-	b".ico"   : b"image/x-icon"
+	b".ico"   : b"image/x-icon",
+	b".bin"   : b"application/octet-stream"
 }
 
 class Http:
@@ -61,6 +62,7 @@ class Http:
 		self.content_file = None
 		self.identifier = None
 		self.request    = request
+		self.chunk_size = 0
 
 	def __del__(self):
 		if self.content_file is not None:
@@ -174,16 +176,19 @@ class Http:
 		data = await streamio.readline()
 		if data != b"":
 			spl = data.split()
-			self.method = spl[0]
-			path = spl[1]
-			proto = spl[2]
-			if self.request is False:
-				self.status = path
-			paths = path.split(b"?", 1)
-			if len(paths) > 1:
-				self.unserialize_params(paths[1])
-			self.path = self.unquote(paths[0])
-			await self.unserialize_headers(streamio)
+			if len(spl) >= 2:
+				self.method = spl[0]
+				path = spl[1]
+				if self.request is False:
+					self.status = path
+				paths = path.split(b"?", 1)
+				if len(paths) > 1:
+					self.unserialize_params(paths[1])
+				self.path = self.unquote(paths[0])
+			
+				await self.unserialize_headers(streamio)
+			else:
+				await self.read_content(streamio)
 
 	def unserialize_params(self, url):
 		""" Extract parameters from url """
@@ -193,44 +198,56 @@ class Http:
 				param = [self.unquote(x) for x in pair.split(b"=", 1)]
 				if len(param) == 1:
 					param.append(True)
-				previousValue = self.params.get(param[0])
-				if previousValue is not None:
-					if previousValue == b'0' and param[1] == b'':
+				previous_value = self.params.get(param[0])
+				if previous_value is not None:
+					if previous_value == b'0' and param[1] == b'':
 						self.params[param[0]] = b'1'
 					else:
-						if not isinstance(previousValue, list):
-							self.params[param[0]] = [previousValue]
+						if not isinstance(previous_value, list):
+							self.params[param[0]] = [previous_value]
 						self.params[param[0]].append(param[1])
 				else:
 					self.params[param[0]] = param[1]
 
 	async def read_content(self, streamio):
 		""" Read the content of http request """
-		length = int(self.headers.get(b"Content-Length","0"))
+		if self.headers.get(b"Transfer-Encoding",b"") == b"chunked":
+			length = await streamio.readline()
+			length = eval(strings.tostrings(b"0x%s"%length.strip()))
+			self.chunk_size = length
+			chunk = True
+		else:
+			length = int(self.headers.get(b"Content-Length",b"0"))
+			chunk = False
+		await self.read_data(length, streamio, chunk)
+
+	async def read_data(self, length, streamio, chunk=False):
+		""" Read data with length """
 		# If data small write in memory
 		if length < 4096:
-			self.content = b""
-			while len(self.content) < length:
-				self.content += await streamio.read(int(self.headers.get(b"Content-Length","0")))
+			if chunk is False or self.content is None:
+				self.content = b""
+			data = b""
+			while len(data) < length:
+				data += await streamio.read(length - len(data))
+			self.content += data
 		# Data too big write in file
 		else:
 			self.content_file = "%d.tmp"%id(self)
-			try:
-				content = open(self.content_file, "wb")
+			if chunk is False:
+				attrib = "wb"
+			else:
+				attrib = "ab"
+			with open(self.content_file, attrib) as content:
 				while content.tell() < length:
-					content.write(await streamio.read(int(self.headers.get(b"Content-Length","0"))))
-			finally:
-				content.close()
+					content.write(await streamio.read(length - len(self.content)))
 
 	def get_content_filename(self):
 		""" Copy the content into file """
 		if self.content is not None:
 			self.content_file = "%d.tmp"%id(self)
-			try:
-				content = open(self.content_file, "wb")
+			with open(self.content_file, "wb") as content:
 				content.write(self.content)
-			finally:
-				content.close()
 			self.content = None
 		return self.content_file
 
@@ -304,7 +321,7 @@ class Http:
 	async def serialize_body(self, streamio):
 		""" Serialize body """
 		result = 0
-		noEnd = False
+		no_end = False
 		# If content existing
 		if self.content is not None:
 			try:
@@ -315,7 +332,7 @@ class Http:
 				else:
 					# Serialize object
 					result += await self.content.serialize(streamio)
-					noEnd = True
+					no_end = True
 			except Exception as err:
 				logger.syslog(err)
 				# Serialize error detected
@@ -346,7 +363,7 @@ class Http:
 			if self.headers[b"Content-Type"] != b"multipart/x-mixed-replace":
 				result += await streamio.write(b"--")
 
-		if noEnd is False:
+		if no_end is False:
 			# Terminate serialize request or response
 			result += await streamio.write(b"\r\n")
 		return result
@@ -383,48 +400,60 @@ class ContentFile:
 		else:
 			self.content_type = content_type
 
+	async def serialize_file(self, filename, streamio):
+		""" Serialize the content of file named filename """
+		result = 0
+		found = False
+
+		filename = strings.tostrings(filename)
+
+		# If file existing
+		if filesystem.exists(filename):
+			with open(strings.tostrings(filename), "rb") as f:
+				found = True
+				result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.content_type))
+				if server.stream.Bufferedio.is_enough_memory():
+					step = 1440*10
+				else:
+					step = 512
+				buf = bytearray(step)
+				f.seek(0,2)
+				size = f.tell()
+				f.seek(0)
+
+				if self.base64 and step % 3 != 0:
+					step = (step//3)*3
+
+				length_written = 0
+
+				while size > 0:
+					if size < step:
+						buf = bytearray(size)
+					length = f.readinto(buf)
+					size -= length
+					if self.base64:
+						length_written += await streamio.write(b2a_base64(buf))
+					else:
+						length_written += await streamio.write(buf)
+				result += length_written
+		else:
+			logger.syslog("%s file not found"%filename)
+		return result, found
+
 	async def serialize(self, streamio):
 		""" Serialize file """
 		found = False
+		result = 0
 		try:
-			f = None
 			# print("Begin send %s"%strings.tostrings(self.filename))
 			for filename in self.filenames:
-				if filesystem.exists(filename):
-					f = open(strings.tostrings(filename), "rb")
-					if found is False:
-						result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.content_type))
+				r, f = await self.serialize_file(filename, streamio)
+				result += r
+				if f:
 					found = True
-					if server.stream.Bufferedio.is_enough_memory():
-						step = 1440*10
-					else:
-						step = 512
-					buf = bytearray(step)
-					f.seek(0,2)
-					size = f.tell()
-					f.seek(0)
-
-					if self.base64 and step % 3 != 0:
-						step = (step//3)*3
-
-					lengthWritten = 0
-
-					while size > 0:
-						if size < step:
-							buf = bytearray(size)
-						length = f.readinto(buf)
-						size -= length
-						if self.base64:
-							lengthWritten += await streamio.write(b2a_base64(buf))
-						else:
-							lengthWritten += await streamio.write(buf)
-					# print("End send %s"%strings.tostrings(self.filename))
-					result += lengthWritten
+			# print("End send %s"%strings.tostrings(self.filename))
 		except Exception as err:
 			pass
-		finally:
-			if f:
-				f.close()
 		if found is False:
 			result = await streamio.write(b'Content-Type: text/plain\r\n\r\n')
 			filenames = b""
@@ -495,21 +524,17 @@ class PartFile:
 	async def serialize(self, identifier, streamio):
 		""" Serialize multi part file """
 		result = await self.serialize_header(identifier, streamio)
-		try:
-			part = b""
-			file = open(strings.tostrings(self.filename),"rb")
+		with open(strings.tostrings(self.filename),"rb") as file:
 			part = file.read()
-		finally:
-			file.close()
 		result += await streamio.write(b"\r\n%s\r\n"%part)
 		result +=  await streamio.write(b"--%s"%identifier)
 		return result
 
 	async def get_size(self, identifier):
 		""" Get the size of multi part file """
-		headerSize = await self.serialize_header(identifier, server.stream.Bytesio())
-		fileSize = filesystem.filesize((strings.tostrings(self.filename)))
-		return headerSize + fileSize + 4 + len(identifier) + 2
+		header_size = await self.serialize_header(identifier, server.stream.Bytesio())
+		file_size = filesystem.filesize((strings.tostrings(self.filename)))
+		return header_size + file_size + 4 + len(identifier) + 2
 
 class PartBin(PartFile):
 	""" Class that contains a binary data, used in multipart request or response """
@@ -535,6 +560,7 @@ class HttpResponse(Http):
 	def __init__(self, streamio, remoteaddr= b"", port = 0, name = ""):
 		""" Constructor """
 		Http.__init__(self, request=False, remoteaddr=remoteaddr, port=port, name=name)
+		self.chunk_size = 0
 		self.streamio = streamio
 
 	async def send(self, content=None, status=b"200", headers=None):
@@ -556,13 +582,13 @@ class HttpResponse(Http):
 		""" Send ok to the client web browser """
 		return await self.send_error(status=b"200", content=content)
 
-	async def send_file(self, filename, mimeType=None, headers=None, base64=False):
+	async def send_file(self, filename, mime_type=None, headers=None, base64=False):
 		""" Send a file to the client web browser """
-		return await self.send(content=ContentFile(filename, mimeType, base64), status=b"200", headers=headers)
+		return await self.send(content=ContentFile(filename, mime_type, base64), status=b"200", headers=headers)
 
-	async def send_buffer(self, filename, buffer, mimeType=None, headers=None):
+	async def send_buffer(self, filename, buffer, mime_type=None, headers=None):
 		""" Send a file to the client web browser """
-		return await self.send(content=ContentBuffer(filename, buffer, mimeType), status=b"200", headers=headers)
+		return await self.send(content=ContentBuffer(filename, buffer, mime_type), status=b"200", headers=headers)
 
 	async def send_page(self, page):
 		""" Send a template page to the client web browser """
@@ -589,7 +615,7 @@ class HttpRequest(Http):
 			streamio = self.streamio
 		await self.unserialize(streamio)
 
-	async def send(self, streamio):
+	async def send(self, streamio=None):
 		""" Send request to server """
 		if streamio is None:
 			streamio = self.streamio

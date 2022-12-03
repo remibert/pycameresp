@@ -67,6 +67,10 @@ class TelnetLogin:
 				result = self.input_buffer
 				self.input_buffer = b""
 				self.input_char = b""
+			# If tabulation sequence detected
+			elif self.input_char[0] == 0x09:
+				# Ignore escape sequence
+				self.input_char = b""
 			# If line feed detected
 			elif self.input_char[0] == 0x0A:
 				self.input_char = b""

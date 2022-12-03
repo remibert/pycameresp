@@ -163,9 +163,13 @@ class Flasher(threading.Thread):
 			print("\x1B[48;5;229m\x1B[38;5;243m")
 			if firmware is not None:
 				# Start flasher
-				flash_command = ["--port", port, "--baud", baud, "--chip", chip, "write_flash", address, firmware]
+				base_command = ["--port", port, "--baud", baud, "--chip", chip]
 				if erase:
-					flash_command.append("--erase-all")
+					flash_command = base_command[:] + ["erase_flash"]
+					print("esptool.py %s" % " ".join(flash_command))
+					esptool.main(flash_command)
+					print("")
+				flash_command = base_command[:] + [ "write_flash", "-z", address, firmware]
 				print("esptool.py %s" % " ".join(flash_command))
 				esptool.main(flash_command)
 				print("\n"+vt100.COLOR_OK+"Flashed with success. Remove strap and press reset button"+vt100.COLOR_NONE)

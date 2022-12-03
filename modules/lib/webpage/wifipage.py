@@ -133,9 +133,9 @@ async def wifi_config(request, response, args):
 		submit = Submit(text=lang.modify, name=b"action", value=b"modify")
 
 	page = main_frame(request, response, args, lang.wifi_configuration,
-		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),Br(),
+		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
 		Edit(text=lang.hostname ,   name=b"hostname",  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled) if support.hostname() else None,
-		Switch(text=lang.fallback_to_the, name=b"fallback", checked=config.fallback, disabled=disabled),Br(),
+		Switch(text=lang.fallback_to_the, name=b"fallback", checked=config.fallback, disabled=disabled),
 		Card(
 			[
 				CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
@@ -143,7 +143,7 @@ async def wifi_config(request, response, args):
 					ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b"ssid", value=network.ssid, disabled=disabled),
 					Edit(text=lang.password,    name=b"wifi_password", placeholder=lang.enter_password,      type=b"password",value=network.wifi_password, disabled=disabled),
 				])
-			]),Br(),
+			]),
 		Card(
 			[
 				CardHeader([\
@@ -151,7 +151,6 @@ async def wifi_config(request, response, args):
 				CardBody([\
 					None if dynamic else static_ip_html(network, disabled)])
 			]),
-		Br(),
 		submit)
 	await response.send_page(page)
 
@@ -172,7 +171,7 @@ async def access_point(request, response, args):
 	# pylint: disable=missing-parentheses-for-call-in-test
 	# pylint: disable=using-constant-test
 	page = main_frame(request, response, args, lang.access_point_configuration if access_point else b"Wifi configuration",
-		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),Br(),
+		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
 		Card(
 			[
 				CardHeader(text=lang.wifi),
@@ -181,11 +180,11 @@ async def access_point(request, response, args):
 					Edit(text=lang.password,    name=b"wifi_password",type=b"password", placeholder=lang.enter_password,      value=config.wifi_password, disabled=disabled),
 					Select(authmodes,text=lang.authentication_mode,name=b"authmode", disabled=disabled),
 				]),
-			]),Br(),
+			]),
 		Card(
 			[
 				CardHeader(text=lang.static_ip),
 				CardBody(static_ip_html(config, disabled))
-			]) if support.static_ip_accesspoint() else None ,Br(),
+			]) if support.static_ip_accesspoint() else None ,
 		submit)
 	await response.send_page(page)

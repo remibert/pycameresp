@@ -21,7 +21,6 @@ async def request(host, port, path):
 		req.set_header(b"Accept"         ,b"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 		req.set_header(b"User-Agent"     ,b"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15")
 		req.set_header(b"Accept-Language",b"fr-FR,fr;q=0.9")
-		req.set_header(b"Accept-Encoding",b"gzip, deflate")
 		req.set_header(b"Connection"     ,b"keep-alive")
 		await req.send(streamio)
 		response = HttpResponse(streamio)
