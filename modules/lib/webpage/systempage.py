@@ -14,12 +14,12 @@ async def system_page(request, response, args):
 	page = main_frame(request, response, args, lang.system_management_s%Station.get_hostname(),
 		FormGroup([
 			Label(text=lang.configuration ), Br(),
-			UploadFile(text=lang.upload, path=b"/system/upload_config", alert=lang.configuration_uploaded, accept=b".cfg"),
+			UploadFile(text=lang.upload, path=b"/system/upload_config", alert=lang.configuration_uploaded, accept=b".cfg"), Space(),
 			DownloadFile(text=lang.download, path=b"/system/download_config", filename=b"Config_%s.cfg"%Station.get_hostname()),
 		]),
 		FormGroup([
 			Label(text=lang.file_system), Br(),
-			UploadFile(text=lang.upload, path=b"/system/upload_file_system", alert=lang.upload_in_progress, accept=b".cfs"),
+			UploadFile(text=lang.upload, path=b"/system/upload_file_system", alert=lang.upload_in_progress, accept=b".cfs"), Space(),
 			DownloadFile(text=lang.download, path=b"/system/download_file_system", filename=b"FileSystem_%s.cfs"%Station.get_hostname()),
 		]),
 		FormGroup([

@@ -16,8 +16,6 @@ def zone_masking(config, disabled):
 	""" displays an html page to hide certain area of the camera, in order to ignore movements """
 	_ = SnapConfig.get()
 
-	squarex = SnapConfig.get().square_x - 2
-	squarey = SnapConfig.get().square_y - 2
 	width   = SnapConfig.get().diff_x
 	height  = SnapConfig.get().diff_y
 	maxi    = SnapConfig.get().max
@@ -175,12 +173,11 @@ async def motion(request, response, args):
 	config = MotionConfig()
 
 	# Keep activated status
-	activated = config.activated
 	disabled, action, submit = manage_default_button(request, config, onclick=b"onValidZoneMasking()")
 
 	page = main_frame(request, response, args, lang.motion_detection_configuration,
 		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
-		Streaming.get_html(request, SnapConfig.get().width, SnapConfig.get().height),
+		Streaming.get_html(request),
 		zone_masking(config, disabled),
 		Slider(text=lang.detects_a_movement,          name=b"differences_detection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differences_detection,         disabled=disabled),
 		Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),

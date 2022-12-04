@@ -117,11 +117,11 @@ async def wifi_config(request, response, args):
 
 	if action in [b"previous",b"next",b"change",b"forget",b"modify",b"default"]:
 		submit = \
-			Submit (text=lang.save  ,     name=b"action",  value=b"save"    , style=b"margin-right:0.5em"), \
-			Submit (text=lang.lt ,        name=b"action",  value=b"previous", style=b"margin-right:0.5em"), \
-			Submit (text=lang.gt ,        name=b"action",  value=b"next"    , style=b"margin-right:0.5em"), \
-			Submit (text=lang.forget,     name=b"action",  value=b"forget"  , style=b"margin-right:0.5em"), \
-			Submit (text=lang.set_default,name=b"action",  value=b"default" , style=b"margin-right:0.5em"), \
+			Submit (text=lang.save  ,     name=b"action",  value=b"save"    ), Space(), \
+			Submit (text=lang.lt ,        name=b"action",  value=b"previous"), Space(), \
+			Submit (text=lang.gt ,        name=b"action",  value=b"next"    ), Space(), \
+			Submit (text=lang.forget,     name=b"action",  value=b"forget"  ), Space(), \
+			Submit (text=lang.set_default,name=b"action",  value=b"default" ), Space(), \
 			Input  (                      name=b"forced",  value=forced     , type=b"hidden"), \
 			Input  (                      name=b"current", value=current    , type=b"hidden")
 

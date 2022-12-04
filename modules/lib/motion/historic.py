@@ -8,9 +8,9 @@ import uasyncio
 import uos
 from tools import logger,sdcard,tasking,filesystem,strings,info
 
-MAX_DAYS_DISPLAYED = 14
+MAX_DAYS_DISPLAYED = 28
 MAX_DAYS_REMOVED   = 14
-MAX_MOTIONS        = 300
+MAX_MOTIONS        = 400
 
 class Historic:
 	""" Manage the motion detection history file """
@@ -83,21 +83,21 @@ class Historic:
 			# If the differences are in an old format
 			if type(item[3]) == type(""):
 				diffs = []
-				diffVal = 0
+				diff_val = 0
 				i = 0
 				for diff in item[3]:
 					if diff == "#":
-						diffVal |= 1
+						diff_val |= 1
 
 					if (i %32 == 31):
-						diffs.append(diffVal)
-						diffVal = 0
+						diffs.append(diff_val)
+						diff_val = 0
 					else:
-						diffVal <<= 1
+						diff_val <<= 1
 					i += 1
-				diffMax = len(item[3])
-				diffVal <<= (31 - (diffMax%32))
-				diffs.append(diffVal)
+				diff_max = len(item[3])
+				diff_val <<= (31 - (diff_max%32))
+				diffs.append(diff_val)
 				item[3] = diffs
 
 			# Add json file to the historic
@@ -137,7 +137,8 @@ class Historic:
 					finally:
 						if file:
 							file.close()
-					await uasyncio.sleep_ms(2)
+					if filesystem.ismicropython():
+						await uasyncio.sleep_ms(2)
 			except Exception as err:
 				logger.syslog(err)
 			finally:
@@ -149,12 +150,11 @@ class Historic:
 		root = Historic.get_root()
 		result = b"[]"
 		if root:
+			await Historic.reduce_history()
 			try:
 				await Historic.acquire()
 				Historic.historic.sort()
 				Historic.historic.reverse()
-				while len(Historic.historic) > MAX_MOTIONS:
-					del Historic.historic[-1]
 				result = strings.tobytes(json.dumps(Historic.historic, separators=(',', ':')))
 			except Exception as err:
 				logger.syslog(err)
@@ -198,7 +198,8 @@ class Historic:
 				if typ & 0xF000 != 0x4000:
 					if re.match(pattern, name):
 						result.append(name)
-		await uasyncio.sleep_ms(3)
+		if filesystem.ismicropython():
+			await uasyncio.sleep_ms(3)
 		result.sort()
 		if older is False:
 			result.reverse()
@@ -215,31 +216,31 @@ class Historic:
 				await Historic.acquire()
 				years = await Historic.scan_dir(root, r"\d\d\d\d", older)
 				for year in years:
-					pathYear = root + "/" + year
-					months = await Historic.scan_dir(pathYear, r"\d\d", older)
+					path_year = root + "/" + year
+					months = await Historic.scan_dir(path_year, r"\d\d", older)
 					for month in months:
-						pathMonth = pathYear + "/" + month
-						days = await Historic.scan_dir(pathMonth, r"\d\d", older)
+						path_month = path_year + "/" + month
+						days = await Historic.scan_dir(path_month, r"\d\d", older)
 						for day in days:
 							print("Scan  historic day %s/%s/%s"%(year, month, day))
-							pathDay = pathMonth + "/" + day
-							hours = await Historic.scan_dir(pathDay, r"\d\dh\d\d", older)
+							path_day = path_month + "/" + day
+							hours = await Historic.scan_dir(path_day, r"\d\dh\d\d", older)
 							lastdays.append("%s/%s/%s"%(year, month, day))
 
 							for hour in hours:
-								pathHour = pathDay + "/" + hour
+								path_hour = path_day + "/" + hour
 								if older:
 									extension = "jpg"
 								else:
 									extension = "json"
-								detections = await Historic.scan_dir(pathHour, r"\d\d.*\."+extension, older, directory=False)
+								detections = await Historic.scan_dir(path_hour, r"\d\d.*\."+extension, older, directory=False)
 								for detection in detections:
 									if len(lastdays) > max_days or len(motions) > MAX_MOTIONS:
 										motions.sort()
 										if older is False:
 											motions.reverse()
 										return motions, lastdays
-									motions.append(pathHour + "/" + detection)
+									motions.append(path_hour + "/" + detection)
 				motions.sort()
 				if older is False:
 					motions.reverse()
@@ -291,16 +292,46 @@ class Historic:
 					shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
 
 	@staticmethod
+	async def reduce_history():
+		""" Reduce the history length """
+		try:
+			await Historic.acquire()
+
+			if len(Historic.historic) > MAX_MOTIONS:
+				while len(Historic.historic) > MAX_MOTIONS:
+					del Historic.historic[-1]
+
+		finally:
+			await Historic.release()
+
+	@staticmethod
+	async def get_last_days():
+		""" Return the list of last days """
+		last_days = set()
+		try:
+			await Historic.acquire()
+			for item in Historic.historic:
+				filename = item[0].lstrip("/").split("/")
+				date = b"%s/%s/%s"%(strings.tobytes(filename[1]),strings.tobytes(filename[2]),strings.tobytes(filename[3]))
+				last_days.add(date)
+		finally:
+			await Historic.release()
+		return last_days
+
+	@staticmethod
 	async def remove_older(force=False):
 		""" Remove older files to make space """
 		root = Historic.get_root()
 		if root:
+			await Historic.reduce_history()
+
 			# If not enough space available on sdcard
 			if sdcard.SdCard.is_not_enough_space(low=True) or force:
 				logger.syslog("Start cleanup historic")
 				Historic.first_extract[0] = False
 				olders, lastdays = await Historic.scan_directories(MAX_DAYS_REMOVED, True)
 				previous = ""
+
 				for motion in olders:
 					try:
 						await Historic.acquire()
@@ -321,9 +352,9 @@ class Historic:
 		""" Internal periodic task """
 		from server.server import Server
 		if filesystem.ismicropython():
-			await Server.wait_resume(127)
+			await Server.wait_resume(31)
 		else:
-			await Server.wait_resume(3)
+			await Server.wait_resume(1)
 
 		if Historic.motion_in_progress[0] is False:
 			if sdcard.SdCard.is_mounted() is False:

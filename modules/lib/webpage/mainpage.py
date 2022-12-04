@@ -50,7 +50,7 @@ def main_page(request, response, args, title_frame, content=None):
 
 def main_frame(request, response, args, title_frame, *content):
 	""" Function define the main frame into the main page with menu, it check also the login password """
-	internal = [Title3(text=title_frame, style=b"padding-top:0.5em;padding-bottom:0.5em;"),content]
+	internal = [Title3(text=title_frame, style=b"padding-top:0.5em;padding-bottom:0.5em;"),content, Br(), Br(),Br()]
 	return main_page(request, response, args, title_frame, content=internal)
 
 def manage_default_button(request, config, callback=None, onclick=b""):

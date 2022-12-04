@@ -38,26 +38,21 @@ class Streaming:
 		Streaming.durty[0] = False
 
 	@staticmethod
-	def get_html(request, width=None, height=None):
+	def get_html(request):
 		""" Return streaming html part with javascript code """
 		Streaming.activity()
 		Streaming.streaming_id[0] += id(request)
-		if width is not None and height is not None:
-			# size = b'width="%d" height="%d"'%(width, height)
-			size =  b'width="100%%"'
-		else:
-			size = b'width="100%%"'
 		return Tag(b"""
 		<p>
 			<div style="position: relative;">
-				<img id="video-stream" src="" %s/>
+				<img id="video-stream" src="" width="100%%"/>
 				<table id="zone_masking" style="position: absolute;top:0px" />
 			</div>
 		</p>
 		<script>
 			var streamUrl = document.location.protocol + "//" + document.location.hostname + ':%d';
 			document.getElementById('video-stream').src = `${streamUrl}/camera/start?streaming_id=%d`;
-		</script>"""%(size, request.port+1,Streaming.streaming_id[0]))
+		</script>"""%(request.port+1,Streaming.streaming_id[0]))
 
 	@staticmethod
 	def activity():

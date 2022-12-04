@@ -5,7 +5,7 @@
 import time
 import wifi
 import uasyncio
-from tools import jsonconfig,logger,builddate,region,lang,watchdog,info,strings,support
+from tools import jsonconfig,logger,builddate,region,lang,watchdog,info,strings,support,filesystem
 if info.iscamera():
 	from video.video import Camera
 
@@ -19,7 +19,10 @@ class ServerConfig(jsonconfig.JsonConfig):
 		self.telnet = True
 		self.wanip = True
 		self.notify = True
-		self.server_postponed = 7
+		if filesystem.ismicropython():
+			self.server_postponed = 7
+		else:
+			self.server_postponed = 1
 
 class ServerContext:
 	""" Context to initialize the servers """
