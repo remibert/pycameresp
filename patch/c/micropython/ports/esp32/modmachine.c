@@ -332,7 +332,12 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_SPI), MP_ROM_PTR(&machine_spi_type) },
     { MP_ROM_QSTR(MP_QSTR_SoftSPI), MP_ROM_PTR(&mp_machine_soft_spi_type) },
     { MP_ROM_QSTR(MP_QSTR_UART), MP_ROM_PTR(&machine_uart_type) },
-
+//# REMI BERTHOLET START
+    #if MICROPY_PY_MACHINE_PCNT
+    { MP_ROM_QSTR(MP_QSTR_Counter), MP_ROM_PTR(&machine_Counter_type) },
+    { MP_ROM_QSTR(MP_QSTR_Encoder), MP_ROM_PTR(&machine_Encoder_type) },
+    #endif
+//# REMI BERTHOLET END
     // Reset reasons
     { MP_ROM_QSTR(MP_QSTR_reset_cause), MP_ROM_PTR(&machine_reset_cause_obj) },
     { MP_ROM_QSTR(MP_QSTR_HARD_RESET), MP_ROM_INT(MP_HARD_RESET) },

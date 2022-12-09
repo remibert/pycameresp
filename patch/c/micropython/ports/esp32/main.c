@@ -223,6 +223,11 @@ soft_reset_exit:
     // deinitialise peripherals
     machine_pwm_deinit_all();
     // TODO: machine_rmt_deinit_all();
+//# REMI BERTHOLET START
+    #if MICROPY_PY_MACHINE_PCNT
+    machine_encoder_deinit_all();
+    #endif
+//# REMI BERTHOLET END
     machine_pins_deinit();
     machine_deinit();
     usocket_events_deinit();

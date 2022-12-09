@@ -65,6 +65,7 @@ set(MICROPY_SOURCE_PORT
     ${PROJECT_DIR}/machine_adc.c
     ${PROJECT_DIR}/machine_adcblock.c
     ${PROJECT_DIR}/machine_dac.c
+    ${PROJECT_DIR}/machine_encoder.c
     ${PROJECT_DIR}/machine_i2c.c
     ${PROJECT_DIR}/machine_i2s.c
     ${PROJECT_DIR}/machine_uart.c
