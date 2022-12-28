@@ -133,25 +133,27 @@ async def wifi_config(request, response, args):
 		submit = Submit(text=lang.modify, name=b"action", value=b"modify")
 
 	page = main_frame(request, response, args, lang.wifi_configuration,
-		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
-		Edit(text=lang.hostname ,   name=b"hostname",  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled) if support.hostname() else None,
-		Switch(text=lang.fallback_to_the, name=b"fallback", checked=config.fallback, disabled=disabled),
-		Card(
-			[
-				CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
-				CardBody([
-					ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b"ssid", value=network.ssid, disabled=disabled),
-					Edit(text=lang.password,    name=b"wifi_password", placeholder=lang.enter_password,      type=b"password",value=network.wifi_password, disabled=disabled),
-				])
-			]),
-		Card(
-			[
-				CardHeader([\
-					Switch(text=lang.dynamic_ip, checked=dynamic, name=b"dynamic", onchange=b"this.form.submit()", disabled=disabled)]),
-				CardBody([\
-					None if dynamic else static_ip_html(network, disabled)])
-			]),
-		submit)
+		Form([
+			Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
+			Edit(text=lang.hostname ,   name=b"hostname",  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled) if support.hostname() else None,
+			Switch(text=lang.fallback_to_the, name=b"fallback", checked=config.fallback, disabled=disabled),
+			Card(
+				[
+					CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
+					CardBody([
+						ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b"ssid", value=network.ssid, disabled=disabled),
+						Edit(text=lang.password,    name=b"wifi_password", placeholder=lang.enter_password,      type=b"password",value=network.wifi_password, disabled=disabled),
+					])
+				]),
+			Card(
+				[
+					CardHeader([\
+						Switch(text=lang.dynamic_ip, spacer=b"mb-0", checked=dynamic, name=b"dynamic", onchange=b"this.form.submit()", disabled=disabled)]),
+					None if dynamic else CardBody([\
+						static_ip_html(network, disabled)])
+				]),
+			submit
+		]))
 	await response.send_page(page)
 
 @HttpServer.add_route(b'/accesspoint', menu=lang.menu_network, item=lang.item_access_point)
@@ -171,20 +173,23 @@ async def access_point(request, response, args):
 	# pylint: disable=missing-parentheses-for-call-in-test
 	# pylint: disable=using-constant-test
 	page = main_frame(request, response, args, lang.access_point_configuration if access_point else b"Wifi configuration",
-		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
-		Card(
-			[
-				CardHeader(text=lang.wifi),
-				CardBody([
-					Edit(text=lang.ssid, placeholder=lang.enter_ssid, name=b"ssid", value=config.ssid, disabled=disabled),
-					Edit(text=lang.password,    name=b"wifi_password",type=b"password", placeholder=lang.enter_password,      value=config.wifi_password, disabled=disabled),
-					Select(authmodes,text=lang.authentication_mode,name=b"authmode", disabled=disabled),
+		Form([
+			Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
+			Card(
+				[
+					CardHeader(text=lang.wifi),
+					CardBody([
+						Edit(text=lang.ssid, placeholder=lang.enter_ssid, name=b"ssid", value=config.ssid, disabled=disabled),
+						Edit(text=lang.password,    name=b"wifi_password",type=b"password", placeholder=lang.enter_password,      value=config.wifi_password, disabled=disabled),
+						Label(text=lang.authentication_mode),
+						Select(authmodes,name=b"authmode", disabled=disabled),
+					]),
 				]),
-			]),
-		Card(
-			[
-				CardHeader(text=lang.static_ip),
-				CardBody(static_ip_html(config, disabled))
-			]) if support.static_ip_accesspoint() else None ,
-		submit)
+			Card(
+				[
+					CardHeader(text=lang.static_ip),
+					CardBody(static_ip_html(config, disabled))
+				]) if support.static_ip_accesspoint() else None ,
+			submit
+		]))
 	await response.send_page(page)

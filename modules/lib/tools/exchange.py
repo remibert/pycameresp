@@ -8,9 +8,9 @@ import io
 import binascii
 try:
 	import filesystem
-	import strings
+	import date
 except:
-	from tools import filesystem, strings
+	from tools import filesystem, date
 if filesystem.ismicropython():
 	# pylint:disable=import-error
 	import micropython
@@ -117,8 +117,8 @@ class DateReader(Reader):
 	def read_second(self, byte):
 		""" Read second """
 		if self.second.read_byte(byte) is not None:
-			date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
-			self.value = time.mktime(tuple(date))
+			date_ = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+			self.value = time.mktime(tuple(date_))
 			return self.value
 
 class FilenameReader(Reader):
@@ -437,7 +437,7 @@ class FileWriter:
 			out_file.write(b"# %s\x0D\x0A"%filename_.encode("utf8"))
 
 			# Send the file date
-			year,month,day,hour,minute,second,_,_ = strings.local_time(filesystem.filetime(filename))[:8]
+			year,month,day,hour,minute,second,_,_ = date.local_time(filesystem.filetime(filename))[:8]
 			out_file.write(b"# %04d/%02d/%02d %02d:%02d:%02d\x0D\x0A"%(year,month,day,hour,minute,second))
 
 			# Send the file size

@@ -85,12 +85,12 @@ def create_shell_task(loop):
 	from shell import async_shell
 	loop.create_task(async_shell())
 
-def create_user_task(loop, function):
+def create_user_task(loop, function, *args, **params):
 	""" Create user task """
 	from tools import tasking
-	async def task():
-		await tasking.task_monitoring(function)
-	loop.create_task(task())
+	async def task(*args, **params):
+		await tasking.task_monitoring(function, *args, **params)
+	loop.create_task(task(*args, **params))
 
 def run_tasks(loop):
 	""" Start all async task """

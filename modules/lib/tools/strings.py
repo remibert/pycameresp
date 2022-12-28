@@ -5,42 +5,6 @@
 import binascii
 import time
 
-def local_time(date=None):
-	""" Safe local time, it return 2000/1/1 00:00:00 if date can be extracted """
-	try:
-		year,month,day,hour,minute,second,weekday,yearday = time.localtime(date)[:8]
-	except:
-		year,month,day,hour,minute,second,weekday,yearday = 2000,1,1,0,0,0,0,0
-	return year,month,day,hour,minute,second,weekday,yearday
-
-def date_to_string(date = None):
-	""" Get a string with the current date """
-	return date_to_bytes(date).decode("utf8")
-
-def date_to_bytes(date = None):
-	""" Get a bytes with the current date """
-	year,month,day,hour,minute,second,weekday,yearday = local_time(date)[:8]
-	return b"%04d/%02d/%02d  %02d:%02d:%02d"%(year,month,day,hour,minute,second)
-
-def date_ms_to_string():
-	""" Get a string with the current date with ms """
-	ms = (time.time_ns() // 1000000)%1000
-	year,month,day,hour,minute,second,weekday,yearday = local_time(None)[:8]
-	return "%04d/%02d/%02d %02d:%02d:%02d.%03d"%(year,month,day,hour,minute,second,ms)
-
-def date_to_filename(date = None):
-	""" Get a filename with a date """
-	filename = date_to_string(date)
-	filename = filename.replace("  "," ")
-	filename = filename.replace(" ","_")
-	filename = filename.replace("/","-")
-	filename = filename.replace(":","-")
-	return filename
-
-def date_to_path(date=None):
-	""" Get a path with year/month/day/hour """
-	year,month,day,hour,minute,second,weekday,yearday = local_time(date)[:8]
-	return b"%04d/%02d/%02d/%02dh%02d"%(year,month,day,hour,minute)
 
 def size_to_string(size, largeur=6):
 	""" Convert a size in a string with k, m, g, t..."""

@@ -12,3 +12,4 @@ tmp
 modules/lib/config/*.*
 key.txt
 *.pulses
+modules/pulses/*

@@ -34,7 +34,7 @@ class WLAN:
 		self.ssid     = ssid
 		self.authmode = authmode
 
-	def config(self, dhcp_hostname="", essid="", password="", authmode=3):
+	def config(self, dhcp_hostname="", essid="", password="", authmode=3, security=0):
 		""" Configure wlan """
 		self.ssid=essid
 		self.dhcp_hostname_=dhcp_hostname

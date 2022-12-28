@@ -386,7 +386,7 @@ async def historic(request, response, args):
 		]
 	else:
 		page_content = Tag(b"<span>%s</span>"%lang.historic_not_available)
-	page = main_frame(request, response, args,lang.last_motion_detections,page_content)
+	page = main_frame(request, response, args,lang.last_motion_detections,Form(page_content))
 	await response.send_page(page)
 
 @HttpServer.add_route(b'/historic/historic.json', available=info.iscamera() and Camera.is_activated())
@@ -396,8 +396,7 @@ async def historic_json(request, response, args):
 	try:
 		await response.send_buffer(b"historic.json", await Historic.get_json())
 	except Exception as err:
-		logger.syslog(err)
-		await response.send_error(status=b"404", content=b"Historic problem")
+		await response.send_not_found(err)
 
 @HttpServer.add_route(b'/historic/images/.*', available=info.iscamera() and Camera.is_activated())
 async def historic_image(request, response, args):
@@ -409,7 +408,7 @@ async def historic_image(request, response, args):
 			await Historic.acquire()
 			await response.send_file(strings.tostrings(request.path[len("/historic/images/"):]), base64=True)
 		else:
-			await response.send_error(status=b"404", content=b"Image not found")
+			await response.send_not_found()
 	finally:
 		if reserved:
 			await Historic.release()
@@ -425,7 +424,7 @@ async def download_image(request, response, args):
 			await Historic.acquire()
 			await response.send_file(strings.tostrings(request.path[len("/historic/download/"):]), base64=False)
 		else:
-			await response.send_error(status=b"404", content=b"Image not found")
+			await response.send_not_found()
 	finally:
 		if reserved:
 			await Historic.release()

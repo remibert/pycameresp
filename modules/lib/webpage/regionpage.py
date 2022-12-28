@@ -25,7 +25,10 @@ async def region_page(request, response, args):
 		alert = None
 
 	page = main_frame(request, response, args, lang.region_configuration,
-		Edit  (text=lang.utc_offset             , name=b"offset_time",pattern=b"-*[0-9]*[0-9]", placeholder=lang.offset_time_to,        value=b"%d"%config.offset_time,       disabled=disabled),
-		Switch(text=lang.daylight_saving_time   , name=b"dst"       ,checked=config.dst,    disabled=disabled),
-		Select(langages,text=lang.language,name=b"lang", disabled=disabled), submit, alert)
+		Form([
+			Edit  (text=lang.utc_offset             , name=b"offset_time",pattern=b"-*[0-9]*[0-9]", placeholder=lang.offset_time_to,        value=b"%d"%config.offset_time,       disabled=disabled),
+			Switch(text=lang.daylight_saving_time   , name=b"dst"       ,checked=config.dst,    disabled=disabled),
+			Label(text=lang.language),
+			Select(langages,name=b"lang", disabled=disabled), submit, alert
+		]))
 	await response.send_page(page)

@@ -1,0 +1,438 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<canvas id="line-chart"></canvas>
+<span id="legend"></span>
+<span id="power"></span>
+<script>
+var TYPE  = '%s';
+var STEP  = %d;
+var DAY   = '%s';
+var DATE  = '%s';
+var UNIT  = '%s';
+var POWER = '%s';
+var chartjs = null;
+
+function pad(num, size) 
+{
+	num = parseInt(num);
+	num = num.toString();
+	while (num.length < size) 
+	{
+		num = "0" + num;
+	}
+	return num;
+}
+
+function capitalize(string) 
+{
+	return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function get_max_days_in_month()
+{
+	var spl = DAY.split("-");
+	var year = spl[0];
+	var month = spl[1];
+	var monthStart = new Date(year, month - 1, 1);
+	var monthEnd = new Date(year, month, 1);
+	var result = (monthEnd - monthStart) / (1000 * 60 * 60 * 24);
+	return result;
+}
+
+class Cost
+{
+	constructor(name, price, currency, color, size)
+	{
+		this.name     = name;
+		this.price    = price;
+		this.currency = currency;
+		this.color    = color;
+
+		this.pulses = new Array(size);
+		this.pulses.fill(0);
+		this.total_pulses = 0;
+
+		this.costs = new Array(size);
+		this.costs.fill(0);
+		this.total_cost = 0;
+	}
+
+	add_item(pulses, index)
+	{
+		this.pulses[index] += pulses;
+		this.total_pulses  += pulses;
+
+		var current_cost = (this.price / 1000.) * pulses;
+		this.costs[index]  += current_cost;
+		this.total_cost    += current_cost;
+	}
+}
+
+class Costs
+{
+	constructor(rates, size)
+	{
+		this.costs = new Map();
+
+		for (let i = 0; i < rates.length; i++)
+		{
+			var rate = rates[i];
+			if (!this.costs.has(rate.rate))
+			{
+				this.costs.set(rate.rate, new Cost(rate.rate, rate.price, rate.currency, rate.color, size));
+			}
+		}
+	}
+
+	add_item(pulses, index, name)
+	{
+		this.costs.get(name).add_item(pulses, index);
+	}
+}
+
+
+class MainChart
+{
+	constructor()
+	{
+		this.chart    = null;
+		this.costs    = null;
+		this.size     = 0;
+		this.labels   = null;
+		this.datasets = null;
+		this.datas    = null;
+		this.chart    = null;
+	}
+
+	get_labels()
+	{
+		return this.labels;
+	}
+
+	get_datasets()
+	{
+		var datasets = [];
+	}
+
+	show(datas)
+	{
+		if (!(chartjs === null))
+		{
+			chartjs.destroy();
+			chartjs = null;
+		}
+		chartjs = new Chart(document.getElementById("line-chart"), 
+		{
+			type: 'bar',
+			data: 
+			{
+				labels: this.get_labels(),
+				datasets: this.get_datasets()
+			},
+			options: 
+			{
+				responsive: true,
+				animation:
+				{
+					duration: 0
+				},
+				plugins:
+				{
+					legend:
+					{
+						position: 'top',
+					},
+					title:
+					{
+						display: true,
+						text: this.get_legend()
+					}
+				},
+				scales:
+				{
+					x:
+					{
+						stacked: true,
+					},
+					y:
+					{
+						stacked: true
+					}
+				}
+			}
+		});
+	}
+
+	get_datasets()
+	{
+		var result = [];
+		var data = null;
+		var unit = "";
+		var item = null;
+		for (var [name, cost] of this.costs.costs)
+		{
+			data = [];
+			if (UNIT === "price")
+			{
+				unit = cost.currency;
+				cost.costs.forEach(item =>
+				{
+					data.push(item.toFixed(2));
+				});
+			}
+			else
+			{
+				var divisor = 1;
+				if (STEP <= 15)
+				{
+					unit = "Wh";
+					divisor = 1;
+				}
+				else
+				{
+					unit = "kWh";
+					divisor = 1000.;
+				}
+
+				cost.pulses.forEach(item => 
+				{
+					data.push((item / divisor).toFixed(2));
+				});
+			}
+			result.push(
+				{ 
+					data: data,
+					label: cost.name + " (" + unit + ")",
+					backgroundColor: cost.color,
+					fill: false,
+					pointRadius:1,
+					borderWidth:0
+				});
+			
+		}
+		return result;
+	}
+
+	get_legend()
+	{
+		var legend = "<br>";
+		var result = capitalize(DATE) + ' : ';
+		var total = 0;
+		var currency = "";
+		if (UNIT === "price")
+		{
+			for (var [name, cost] of this.costs.costs)
+			{
+				total += cost.total_cost;
+				currency = cost.currency;
+				legend += "<li>" + cost.name  + " : " + cost.total_cost.toFixed(2) + " " + cost.currency + "</li>";
+			}
+			result += total.toFixed(2) + currency;
+		}
+		else
+		{
+			for (var [name, cost] of this.costs.costs)
+			{
+				total += cost.total_pulses;
+				legend += "<li>" + cost.name  + " : " + (cost.total_pulses / 1000).toFixed(2) + " kWh </li>";
+			}
+			result += (total/1000).toFixed(2) + " kWh";
+		}
+		document.getElementById("legend").innerHTML="<ul>" + capitalize(legend) + "</ul>";
+		return result;
+	}
+}
+
+class HourlyChart extends MainChart
+{
+	constructor()
+	{
+		super();
+		this.size = 1440/STEP;
+		this.labels = new Array(this.size);
+		this.labels.fill(0);
+	}
+
+	parse(datas)
+	{
+		var minute = 0;
+		var rate = null;
+		this.costs = new Costs(datas.rates, this.size);
+		var step_pulses = 0;
+		var step = 0;
+		var index = 0;
+		var end_time = -1;
+
+		datas.pulses.forEach(pulses =>
+		{
+			if (minute > end_time)
+			{
+				for (let i = 0; i < datas.rates.length; i++)
+				{
+					rate = datas.rates[i];
+					if (minute*60 >= rate.start_time && minute*60 <= rate.end_time)
+					{
+						end_time = rate.end_time/60;
+						rate = datas.rates[i];
+						break;
+					}
+				}
+			}
+			step_pulses += pulses;
+			step += 1;
+			if (step === STEP)
+			{
+				this.costs.add_item(step_pulses, index, rate.rate);
+				step = 0;
+				index += 1;
+				step_pulses = 0;
+			}
+			minute += 1;
+		});
+
+		for (let i = 0; i < this.size; i++)
+		{
+			this.labels[i] = pad((i*STEP)/60, 2) + ":" + pad((i*STEP)%%60, 2);
+		}
+	}
+
+}
+
+class DailyChart extends MainChart
+{
+	constructor()
+	{
+		super();
+		this.size = get_max_days_in_month();
+		this.labels = new Array(this.size);
+		for (let i = 0; i < this.size; i++)
+		{
+			this.labels[i] = i+1;
+		}
+	}
+
+	get_rate(time_slot, rates)
+	{
+		var rate = "";
+		
+		for (let i = 0; i < rates.length; i++)
+		{
+			rate = rates[i];
+			if (time_slot[0] >= rate.start_time && time_slot[1] <= rate.end_time)
+			{
+				rate = rates[i];
+				break;
+			}
+		}
+		return rate.rate;
+	}
+
+	parse(datas)
+	{
+		var time_slot = null;
+		this.costs = new Costs(datas.rates, this.size);
+		datas.time_slots.forEach(time_slot => 
+		{
+			var rate = this.get_rate(time_slot.time_slot, datas.rates);
+			for (let day = 0; day < this.size; day++)
+			{
+				this.costs.add_item(time_slot.days[day], day, rate);
+			}
+		});
+	}
+
+	static async manage()
+	{
+		var chart = new DailyChart();
+		const response = await fetch('/daily_datas?month='+DAY);
+		chart.parse(await response.json());
+		chart.show();
+	}
+}
+
+class MonthlyChart extends MainChart
+{
+	constructor()
+	{
+		super();
+		this.size = 12;
+		this.labels = new Array(this.size);
+		for (let i = 0; i < this.size; i++)
+		{
+			this.labels[i] = i+1;
+		}
+	}
+
+	get_rate(time_slot, rates)
+	{
+		var rate = "";
+		
+		for (let i = 0; i < rates.length; i++)
+		{
+			rate = rates[i];
+			if (time_slot[0] >= rate.start_time && time_slot[1] <= rate.end_time)
+			{
+				rate = rates[i];
+				break;
+			}
+		}
+		return rate.rate;
+	}
+
+	parse(datas)
+	{
+		var time_slot = null;
+		this.costs = new Costs(datas.rates, this.size);
+		datas.time_slots.forEach(time_slot => 
+		{
+			var rate = this.get_rate(time_slot.time_slot, datas.rates);
+			for (let month = 0; month < this.size; month++)
+			{
+				this.costs.add_item(time_slot.months[month], month, rate);
+			}
+		});
+	}
+
+	static async manage()
+	{
+		var chart = new MonthlyChart();
+		const response = await fetch('/monthly_datas?year='+DAY);
+		chart.parse(await response.json());
+		chart.show();
+	}
+}
+
+async function manage_hourly()
+{
+	var chart = new HourlyChart();
+	const response = await fetch('/hourly_datas?day='+DAY);
+	chart.parse(await response.json());
+	chart.show();
+}
+
+async function refresh_power()
+{
+	const response = await fetch('/power_datas');
+	data = await response.json();
+	document.getElementById("power").innerHTML= POWER + " : " + (data.power/1000).toFixed(3) + " kWh";
+}
+
+if (TYPE  === "hourly")
+{
+	manage_hourly();
+	const d = new Date();
+	var currentDay = d.getFullYear() + "-" + pad(d.getMonth()+1,2) + "-" + pad(d.getDate(),2);
+	if (DAY === currentDay)
+	{
+		setInterval(manage_hourly, 5000);
+		setInterval(refresh_power, 1000);
+	}
+}
+else if (TYPE === "daily")
+{
+	DailyChart.manage();
+}
+else if (TYPE === "monthly")
+{
+	MonthlyChart.manage();
+}
+</script>

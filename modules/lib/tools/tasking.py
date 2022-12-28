@@ -32,7 +32,7 @@ class Inactivity:
 		self.stop()
 		self.start()
 
-async def task_monitoring(task):
+async def task_monitoring(task, *args, **params):
 	""" Check if task crash, log message and reboot if it too frequent """
 	import uasyncio
 	retry = 0
@@ -43,7 +43,7 @@ async def task_monitoring(task):
 		while retry < max_retry:
 			try:
 				while True:
-					if await task():
+					if await task(*args, **params):
 						retry = 0
 			except MemoryError as err:
 				lastError = logger.syslog(err, "Memory error, %s"%strings.tostrings(info.meminfo()))
@@ -67,7 +67,6 @@ async def task_monitoring(task):
 
 		config = ServerConfig()
 		config.load()
-		from tools import lang
 		await Notifier.notify(lang.reboot_after_many%strings.tobytes(lastError), enabled=config.notify)
 	finally:
 		system.reboot()

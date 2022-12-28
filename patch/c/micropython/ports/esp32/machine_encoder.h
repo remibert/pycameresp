@@ -36,4 +36,8 @@ typedef struct _mp_pcnt_obj_t {
     int8_t x124; // Encoder: multiplier 124 // Counter: 0 is 'direction=' keyword used, -1 is '_src=' keyword used
 } mp_pcnt_obj_t;
 
+void machine_encoder_deinit_all(void);
+extern const mp_obj_type_t machine_Counter_type;
+extern const mp_obj_type_t machine_Encoder_type;
+
 #endif // MICROPY_INCLUDED_MACHINE_ENCODER_H

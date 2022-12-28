@@ -28,7 +28,7 @@ def findall(pattern, text):
 		elif end_tag is not None:
 			end_tag += s
 			if var != "":
-				if var in ["disabled","checked","active","selected"]:
+				if var in ["disabled","checked","active","selected","required","novalidate"]:
 					end_format += " b'%s' if self.%s else b'',"%(var, var)
 				else:
 					end_format += "self.%s,"%var
@@ -36,7 +36,7 @@ def findall(pattern, text):
 		else:
 			begin_tag += s
 			if var != "":
-				if var in ["disabled","checked","active","selected"]:
+				if var in ["disabled","checked","active","selected","required","novalidate"]:
 					begin_format += " b'%s' if self.%s else b'',"%(var, var)
 				else:
 					begin_format += "self.%s,"%var
@@ -117,12 +117,13 @@ def parse(force=False):
 						py_class_file.write('\tself.{:<12} = params.get("{}", b"*")\n'.format(attribute,attribute))
 					elif attribute in ["id","name"]:
 						py_class_file.write('\tself.{:<12} = params.get("{}", b"%d"%id(self))\n'.format(attribute,attribute))
-					elif attribute in ["disabled","active"]:
+					elif attribute in ["disabled","active","novalidate","required"]:
 						py_class_file.write('\tself.{:<12} = params.get("{}", False)\n'.format(attribute,attribute))
 					elif attribute in ["checked"]:
 						py_class_file.write('\tself.{:<12} = params.get("{}", True)\n'.format(attribute,attribute))
 					else:
 						py_class_file.write('\tself.{:<12} = params.get("{}", b"")\n'.format(attribute,attribute))
+				py_class_file.write('\tself.end_init(**params)\n')
 				py_class_file.write('\treturn self\n')
 			else:
 				raise SyntaxError()

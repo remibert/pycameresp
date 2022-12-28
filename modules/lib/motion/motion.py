@@ -12,7 +12,7 @@ from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
 from video.video     import Camera
-from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem
+from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem,date
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
@@ -71,9 +71,9 @@ class ImageMotion:
 		self.index    = self.baseIndex[0]
 		self.filename = None
 		self.motion_id = None
-		self.date     = strings.date_to_string()
-		self.filename = strings.date_to_filename()
-		path = strings.date_to_path()
+		self.date     = date.date_to_string()
+		self.filename = date.date_to_filename()
+		path = date.date_to_path()
 		if path[-1] in [0x30,0x31,0x32,0x33,0x34]:
 			path = path[:-1] + b"0"
 		else:
@@ -436,7 +436,7 @@ class Motion:
 						index = image.index
 					diffs += b"%d:%d%s%s"%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, 'big'), trace)
 			if display:
-				line = b"\r%s %s L%d (%d) "%(strings.date_to_bytes()[12:], bytes(diffs), mean_light, index)
+				line = b"\r%s %s L%d (%d) "%(date.time_to_html(), bytes(diffs), mean_light, index)
 				if filesystem.ismicropython():
 					sys.stdout.write(line)
 				else:

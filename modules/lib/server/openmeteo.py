@@ -3,8 +3,8 @@
 """ These classes are used to get meteo informations.
 See https://open-meteo.com """
 # pylint:disable=wrong-import-position
-import uasyncio
 import json
+import uasyncio
 from server.stream import *
 from server.httprequest import *
 import wifi

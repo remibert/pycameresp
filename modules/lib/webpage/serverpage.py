@@ -13,11 +13,13 @@ async def server(request, response, args):
 	config = ServerConfig()
 	disabled, action, submit = manage_default_button(request, config)
 	page = main_frame(request, response, args,lang.servers_configuration,
-		Switch(text=lang.telnet, name=b"telnet", checked=config.telnet, disabled=disabled) if support.telnet() else None,
-		Switch(text=lang.ftp   , name=b"ftp"   , checked=config.ftp,    disabled=disabled),
-		Switch(text=lang.http  , name=b"http"  , checked=config.http,   disabled=disabled),
-		Switch(text=lang.time_synchronization   , name=b"ntp"   , checked=config.ntp,    disabled=disabled),
-		Switch(text=lang.wan_ip   , name=b"wanip"   , checked=config.wanip,    disabled=disabled),
-		Switch(text=lang.notification_reboot_user, name=b"notify", checked=config.notify, disabled=disabled),
-		submit)
+		Form([
+			Switch(text=lang.telnet, name=b"telnet", checked=config.telnet, disabled=disabled) if support.telnet() else None,
+			Switch(text=lang.ftp   , name=b"ftp"   , checked=config.ftp,    disabled=disabled),
+			Switch(text=lang.http  , name=b"http"  , checked=config.http,   disabled=disabled),
+			Switch(text=lang.time_synchronization   , name=b"ntp"   , checked=config.ntp,    disabled=disabled),
+			Switch(text=lang.wan_ip   , name=b"wanip"   , checked=config.wanip,    disabled=disabled),
+			Switch(text=lang.notification_reboot_user, name=b"notify", checked=config.notify, disabled=disabled),
+			submit
+		]))
 	await response.send_page(page)

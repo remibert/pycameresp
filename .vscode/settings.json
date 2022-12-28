@@ -1,22 +1,4 @@
 {
-    "MicroPython.executeButton": [
-        {
-            "text": "▶",
-            "tooltip": "Run",
-            "alignment": "left",
-            "command": "extension.executeFile",
-            "priority": 3.5
-        }
-    ],
-    "MicroPython.syncButton": [
-        {
-            "text": "$(sync)",
-            "tooltip": "sync",
-            "alignment": "left",
-            "command": "extension.execute",
-            "priority": 4
-        }
-	],
 	"files.associations": {
 		"typeinfo": "c",
 		"modhomekit.h": "c",
@@ -37,14 +19,8 @@
 		"${workspaceFolder}/modules/lib/tools",
 		"${workspaceFolder}/modules/lib/shell"
 	],
-	"python.analysis.extraPaths":[
-		"${workspaceFolder}/modules",
-		"${workspaceFolder}/modules/lib",
-		"${workspaceFolder}/modules/simul",
-		"${workspaceFolder}/modules/lib/tools",
-		"${workspaceFolder}/modules/lib/shell"
-	],
-	"python.linting.pylintArgs": [		"--disable=bad-indentation",
+	"python.linting.pylintArgs": [
+	"--disable=bad-indentation",
 	"--disable=unused-argument",
 	"--disable=invalid-name",
 	"--disable=import-outside-toplevel",
@@ -59,30 +35,24 @@
 	"--disable=global-statement",
 	"--disable=eval-used",
 	"--disable=exec-used"],
-
-	"pylint.args":  [
-		"--disable=bad-indentation",
-		"--disable=unused-argument",
-		"--disable=invalid-name",
-		"--disable=import-outside-toplevel",
-		"--disable=broad-except",
-		"--disable=unused-variable",
-		"--disable=line-too-long",
-		"--disable=superfluous-parens",
-		"--disable=unidiomatic-typecheck",
-		"--disable=bare-except",
-		"--disable=unused-wildcard-import",
-		"--disable=wildcard-import",
-		"--disable=global-statement",
-		"--disable=eval-used",
-		"--disable=exec-used"],
 	"python.envFile": "${workspaceFolder}/.env",
-	"python.linting.pylintUseMinimalCheckers": true,
 	"python.linting.enabled": true,
-	"python.analysis.diagnosticSeverityOverrides": {
-		"reportMissingImports": "none"
-	},
 	"workbench.colorCustomizations": {
-		"editorWhitespace.foreground": "#DDDDDD"
-	}
+		"editorWhitespace.foreground": "#EEEEEE"
+	},
+	"editor.minimap.enabled": false,
+	"editor.renderWhitespace":"all",
+	"editor.suggest.insertMode": "replace",
+	"workbench.editor.enablePreview": false,
+	"workbench.tree.indent": 10,
+	"workbench.tree.renderIndentGuides": "always",
+	"workbench.colorTheme": "Visual Studio Light - C++",
+	"workbench.iconTheme": "vscode-icons",
+	"extensions.ignoreRecommendations": true,
+	"editor.autoClosingBrackets": "never",
+	"editor.autoClosingQuotes": "never",
+	"editor.quickSuggestions": {
+		"other": "off"
+	},
+	"editor.snippetSuggestions": "none"
 }

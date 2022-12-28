@@ -12,11 +12,12 @@ try:
 	import uos
 except:
 	import os as uos
+	
 try:
-	from tools import logger,strings,filesystem
-except:
+	from tools import logger,strings,filesystem,date
+except Exception as err:
 	# pylint:disable=multiple-imports
-	import logger,strings,filesystem
+	import logger,strings,filesystem,date
 
 
 self_config = None
@@ -124,11 +125,29 @@ class JsonConfig:
 					if setmany:
 						params[name] = False
 			# Case of web input is integer but string with number received
-			elif type(self.__dict__[name]) == type(0) or type(self.__dict__[name]) == type(0.):
+			elif type(self.__dict__[name]) == type(0):
 				name = strings.tobytes(name)
 				if name in params:
 					try:
 						params[name] = int(params[name])
+					except:
+						if b"date" in name:
+							try:
+								params[name] = date.html_to_date(params[name])
+							except:
+								params[name] = 0
+						elif b"time" in name:
+							try:
+								params[name] = date.html_to_time(params[name])
+							except:
+								params[name] = 0
+						else:
+							params[name] = 0
+			elif type(self.__dict__[name]) == type(0.):
+				name = strings.tobytes(name)
+				if name in params:
+					try:
+						params[name] = float(params[name])
 					except:
 						params[name] = 0
 

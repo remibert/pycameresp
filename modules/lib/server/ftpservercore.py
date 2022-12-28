@@ -14,7 +14,7 @@ from server.server import Server
 from server.user import User
 from wifi.accesspoint import AccessPoint
 from wifi.station import Station
-from tools import logger,fnmatch,filesystem,strings
+from tools import logger,fnmatch,filesystem,strings,date
 
 MONTHS  = [b"Jan", b"Feb", b"Mar", b"Apr", b"May", b"Jun", b"Jul", b"Aug", b"Sep", b"Oct", b"Nov", b"Dec"]
 
@@ -78,12 +78,12 @@ class FtpServerCore:
 		""" Destroy ftp instance """
 		self.close()
 
-	def get_file_description(self, filename, typ, size, date, now, full):
+	def get_file_description(self, filename, typ, size, date_, now, full):
 		""" Build list of file description """
 		if full:
 			file_permissions = b"drwxr-xr-x" if (typ & 0xF000 == 0x4000) else b"-rw-r--r--"
 
-			d = strings.local_time(date)
+			d = date.local_time(date_)
 			year,month,day,hour,minute,_,_,_ = d[:8]
 
 			if year != now[0] and month != now[1]:
@@ -113,7 +113,7 @@ class FtpServerCore:
 				accepted = fnmatch.fnmatch(strings.tostrings(filename), strings.tostrings(pattern))
 			if accepted:
 				if quantity > 100:
-					date = 0
+					date_ = 0
 				else:
 					sta = (0,0,0,0,0,0,0,0,0)
 					try:
@@ -122,9 +122,9 @@ class FtpServerCore:
 							sta = filesystem.fileinfo(strings.tostrings(filesystem.abspathbytes(path,strings.tobytes(filename))))
 					except Exception:
 						pass
-					date = sta[8]
+					date_ = sta[8]
 
-				description += self.get_file_description(filename, typ, size, date, now, full)
+				description += self.get_file_description(filename, typ, size, date_, now, full)
 				counter += 1
 				if counter == 20:
 					counter = 0
@@ -136,7 +136,7 @@ class FtpServerCore:
 
 	def send_file_list(self, path, stream_, full):
 		""" Send the list of file """
-		now = strings.local_time()
+		now = date.local_time()
 		try:
 			self.send_file_list_with_pattern(path, stream_, full, now)
 		except Exception as err:

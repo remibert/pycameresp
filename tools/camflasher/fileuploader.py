@@ -17,6 +17,7 @@ sys.path.append("../../modules/lib/tools")
 # pylint:disable=wrong-import-position
 import filesystem
 import strings
+import date
 import streamdevice
 import vt100
 
@@ -45,7 +46,7 @@ class BinaryReader:
 
 	def get_date_time(self):
 		""" Return the tuple with date and time of file """
-		return strings.local_time(filesystem.filetime(self.filename))[:6]
+		return date.local_time(filesystem.filetime(self.filename))[:6]
 
 class ZipReader:
 	""" Zip binary file reader """
@@ -291,11 +292,11 @@ class PythonPrompt:
 						break
 		return result
 
-	def set_date(self, date = None):
+	def set_date(self, date_ = None):
 		""" Set date time in device """
 		result = True
 		self.executor.execute("import machine")
-		year,month,day,hour,minute,second = strings.local_time(date)[:6]
+		year,month,day,hour,minute,second = date.local_time(date_)[:6]
 		if self.executor.execute("machine.RTC().datetime((%d,%d,%d,%d,%d,%d,%d,%d))"%(year, month, day, 0, hour, minute, second, 0), synchrone=True) is not None:
 			result = False
 		return result

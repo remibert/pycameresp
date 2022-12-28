@@ -27,15 +27,15 @@ def exists(filename):
 			pass
 	return False
 
-previousFileInfo = []
+previous_file_info = []
 def fileinfo(path):
 	""" Get the file informations """
-	global previousFileInfo
-	if len(previousFileInfo) == 0:
-		previousFileInfo = [path, os.stat(path)]
-	elif previousFileInfo[0] != path:
-		previousFileInfo = [path, os.stat(path)]
-	return previousFileInfo[1]
+	global previous_file_info
+	if len(previous_file_info) == 0:
+		previous_file_info = [path, os.stat(path)]
+	elif previous_file_info[0] != path:
+		previous_file_info = [path, os.stat(path)]
+	return previous_file_info[1]
 
 def isdir(path):
 	""" Indicates if the path is a directory """
@@ -69,18 +69,18 @@ def splitext(p):
 	sep='\\'
 	altsep = '/'
 	extsep = '.'
-	sepIndex = p.rfind(sep)
+	sep_index = p.rfind(sep)
 	if altsep:
 		altsepIndex = p.rfind(altsep)
-		sepIndex = max(sepIndex, altsepIndex)
+		sep_index = max(sep_index, altsepIndex)
 
-	dotIndex = p.rfind(extsep)
-	if dotIndex > sepIndex:
-		filenameIndex = sepIndex + 1
-		while filenameIndex < dotIndex:
-			if p[filenameIndex:filenameIndex+1] != extsep:
-				return p[:dotIndex], p[dotIndex:]
-			filenameIndex += 1
+	dot_index = p.rfind(extsep)
+	if dot_index > sep_index:
+		filename_index = sep_index + 1
+		while filename_index < dot_index:
+			if p[filename_index:filename_index+1] != extsep:
+				return p[:dot_index], p[dot_index:]
+			filename_index += 1
 	return p, p[:0]
 
 def split(p):

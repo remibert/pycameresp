@@ -58,18 +58,22 @@ class Pin:
 		""" Constructor """
 		self.handler = None
 		self.trigger = None
+		self.val = 0
 
-	def value(self, val=0):
+	def value(self, val=None):
 		""" Value """
-		return val
+		if val is not None:
+			self.val = val
+		return self.val
 
 	def on(self):
 		""" On """
 
 	def off(self):
 		""" Off"""
-		
+
 	def irq(self, handler=None, trigger=None):
+		""" Irq """
 		self.handler = handler
 		self.trigger = trigger
 
@@ -113,3 +117,24 @@ class SDCard:
 	# pylint:disable=redefined-outer-name
 	def __init__(self, slot=1, width=1, cd=None, wp=None, sck=None, miso=None, mosi=None, cs=None, freq=1):
 		pass
+
+
+class Counter:
+	""" See https://github.com/micropython/micropython/pull/6639 for the PCNT Counter. """
+	UP = 1
+	def __init__(self, a, src, direction):
+		""" Constructor """
+		self.val = 0
+	def pause(self):
+		""" Pause """
+	def value(self, val=None):
+		""" Get value """
+		if val is not None:
+			self.val += val
+		return self.val
+	def resume(self):
+		""" Resume """
+	def deinit(self):
+		""" Stops the Counter """
+	def filter_ns(self, value):
+		""" Filter nano seconds """

@@ -34,7 +34,8 @@ async def switch_changed(request, response, args):
 async def sample_page(request, response, args):
 	""" Test simple page with differents web widgets """
 	page = main_frame(request, response, args, b"Sample",
-		Tag(b'''
+		Form([
+			Tag(b'''
 			<p>Example to interact with esp32 via an html page (see the content of file <b>sample.py</b>)</p>
 			'''),
 			ButtonCmd(text=b"Click on button",  path=b"/sample/button"),
@@ -47,5 +48,6 @@ async def sample_page(request, response, args):
 				], path=b"/sample/combo", text=b"Select number"),
 			SwitchCmd(text=b"Change this switch", checked=True, path=b"/sample/switch"),
 			Br(),
-			Paragraph(b"To eliminate this page delete the <b>sample.py</b> file"))
+			Paragraph(b"To eliminate this page delete the <b>sample.py</b> file")
+		]))
 	await response.send_page(page)

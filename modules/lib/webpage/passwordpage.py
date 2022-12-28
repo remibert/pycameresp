@@ -52,8 +52,8 @@ class PasswordPage:
 			alert = AlertError(text=alert)
 		dialog = [alert, Form([content, Submit(text=submit)], method=b"post", action=action)]
 		if modal:
-			dialog = Modal(dialog)
-		return [dialog]
+			dialog = Div(Modal(dialog),class_=b"modal-sm")
+		return Form([dialog])
 
 	@staticmethod
 	def login(request, response, duration):

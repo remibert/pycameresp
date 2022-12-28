@@ -92,6 +92,10 @@ STATIC mp_pcnt_obj_t *pcnts[PCNT_UNIT_MAX] = {};
 #define THRES1_LAT thres1_lat
 #define ZERO_LAT   zero_lat
 #endif
+
+const mp_obj_type_t machine_Counter_type;
+const mp_obj_type_t machine_Encoder_type;
+
 STATIC void IRAM_ATTR pcnt_intr_handler(void *arg) {
     for (int id = 0; id < PCNT_UNIT_MAX; ++id) {
         if (PCNT.int_st.val & (1 << id)) {

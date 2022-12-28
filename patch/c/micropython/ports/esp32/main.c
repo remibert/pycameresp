@@ -77,6 +77,11 @@
 #else
 #define MP_TASK_STACK_LIMIT_MARGIN (1024)
 #endif
+//# REMI BERTHOLET START
+#if MICROPY_PY_MACHINE_PCNT
+#include "machine_encoder.h"
+#endif
+//# REMI BERTHOLET END
 
 int vprintf_null(const char *format, va_list ap) {
     // do nothing: this is used as a log target during raw repl mode

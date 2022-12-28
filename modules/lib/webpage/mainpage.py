@@ -42,9 +42,9 @@ def main_page(request, response, args, title_frame, content=None):
 			else:
 				menu_items.append(menu_item)
 		menu_bar.append(Menu(menu_items, text=previous_menu))
-		page = Page([stylesheet, MenuBar(menu_bar), Container(Form(content))], title=title, style=b"padding-top: 4.5rem;")
+		page = Page([stylesheet, MenuBar(menu_bar), Div(content)], class_=b"container", title=title, style=b"padding-top: 4.5rem;")
 	else:
-		page = Page(page + [stylesheet], title=lang.login)
+		page = Page([page] + [stylesheet], title=lang.login)
 	Server.slow_down()
 	return page
 

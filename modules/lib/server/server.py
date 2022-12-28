@@ -5,7 +5,7 @@
 import time
 import wifi
 import uasyncio
-from tools import jsonconfig,logger,builddate,region,lang,watchdog,info,strings,support,filesystem
+from tools import jsonconfig,logger,builddate,region,lang,watchdog,info,strings,support,filesystem,date
 if info.iscamera():
 	from video.video import Camera
 
@@ -210,9 +210,9 @@ class Server:
 	@staticmethod
 	def is_one_per_day():
 		""" Indicates if the action must be done on per day """
-		date = strings.date_to_bytes()[:14]
-		if Server.context.one_per_day is None or (date[-2:] == b"12" and date != Server.context.one_per_day):
-			Server.context.one_per_day = date
+		date_ = date.date_to_bytes()[:14]
+		if Server.context.one_per_day is None or (date_[-2:] == b"12" and date_ != Server.context.one_per_day):
+			Server.context.one_per_day = date_
 			return True
 		return False
 

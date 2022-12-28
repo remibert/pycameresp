@@ -9,7 +9,6 @@ The set of request and response are in bytes format.
 I no longer use strings, because they are between 20 and 30 times slower.
 It may sound a bit more complicated, but it's a lot quick.
 """
-import zlib
 import hashlib
 import time
 from binascii import hexlify, b2a_base64
@@ -185,7 +184,7 @@ class Http:
 				if len(paths) > 1:
 					self.unserialize_params(paths[1])
 				self.path = self.unquote(paths[0])
-			
+
 				await self.unserialize_headers(streamio)
 			else:
 				await self.read_content(streamio)
@@ -577,6 +576,16 @@ class HttpResponse(Http):
 	async def send_error(self, status, content=None):
 		""" Send error to the client web browser """
 		return await self.send(status=status, content=content)
+
+	async def send_not_found(self, err=None):
+		""" Send page not found """
+		if err is None:
+			content = b""
+		elif type(err) == type(b"") or type(err) == type(""):
+			content = strings.tobytes(err)
+		else:
+			content = strings.tobytes(logger.exception(err))
+		return await self.send_error(status=b"404", content=content)
 
 	async def send_ok(self, content=None):
 		""" Send ok to the client web browser """

@@ -5,7 +5,7 @@
 import sys
 import time
 import os
-from tools import strings,filesystem,lang
+from tools import strings,filesystem,lang,date
 
 try:
 	import machine
@@ -99,7 +99,7 @@ def sysinfo():
 	""" Get system informations """
 	try:
 		result  = b"Device : %s\n"%(deviceinfo())
-		result += b"Time   : %s\n"%(strings.date_to_bytes())
+		result += b"Time   : %s\n"%(date.date_to_bytes())
 		result += b"%s : %s\n"%(lang.memory_label, meminfo())
 		result += b"%s : %s"%(lang.flash_label, flashinfo("/"))
 		return result

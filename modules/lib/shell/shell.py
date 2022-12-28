@@ -54,7 +54,7 @@ import io
 import os
 import uos
 import machine
-from tools import useful,logger,sdcard,filesystem,exchange,info,strings,terminal,watchdog,lang
+from tools import useful,logger,sdcard,filesystem,exchange,info,strings,terminal,watchdog,lang,date
 
 stdout_redirected = None
 
@@ -264,7 +264,7 @@ class LsDisplayer:
 		if fileinfo[0] & 0x4000 == 0x4000:
 			if self.showdir:
 				if self.long:
-					message = b"%s %s [%s]"%(strings.date_to_bytes(date_),b" "*7,self.purge_path(path))
+					message = b"%s %s [%s]"%(date.date_to_bytes(date_),b" "*7,self.purge_path(path))
 				else:
 					message = b"[%s]"%self.purge_path(path)
 				self.count = print_part(message, self.width, self.height, self.count)
@@ -273,7 +273,7 @@ class LsDisplayer:
 				fileinfo = filesystem.fileinfo(path)
 				date_ = fileinfo[8]
 				size = fileinfo[6]
-				message = b"%s %s %s"%(strings.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
+				message = b"%s %s %s"%(date.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
 			else:
 				message = self.purge_path(path)
 			self.count = print_part(message, self.width, self.height, self.count)
@@ -438,7 +438,7 @@ def umountsd(mountpoint="/sd"):
 	except:
 		print_("Cannot umount sd from '%s'"%mountpoint)
 
-def date(update=False, offsetUTC=+1, noDst=False):
+def date_(update=False, offsetUTC=+1, noDst=False):
 	""" Get or set date """
 	try:
 		from server.timesetting import set_date
@@ -451,7 +451,7 @@ def date(update=False, offsetUTC=+1, noDst=False):
 		del sys.modules["server.timesetting"]
 	except:
 		pass
-	print_(strings.date_to_string())
+	print_(date.date_to_string())
 
 def setdate(datetime=""):
 	""" Set date and time """
@@ -998,7 +998,7 @@ shell_commands = \
 	"rm"         :[rm              ,"file",                  ("-r","recursive",True),("-f","force",True),("-s","simulate",True)],
 	"ls"         :[ls              ,"file",                  ("-r","recursive",True),("-l","long",True)],
 	"ll"         :[ll              ,"file",                  ("-r","recursive",True)],
-	"date"       :[date            ,"offsetUTC" ,            ("-u","update",True),   ("-n","noDst",True)],
+	"date"       :[date_           ,"offsetUTC" ,            ("-u","update",True),   ("-n","noDst",True)],
 	"setdate"    :[setdate         ,"datetime"             ],
 	"uptime"     :[uptime                                  ],
 	"find"       :[find            ,"file"                 ],

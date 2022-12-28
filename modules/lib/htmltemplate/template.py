@@ -5,15 +5,23 @@ from tools import logger
 
 class Template:
 	""" Base class of html templates """
+	default_spacer = b"mb-3"
 	def __init__(self, classname, *args, **params):
+		""" """
 		self.classname = classname
 		self.children = []
+		self.spacer = b""
 		if len(args) > 0:
 			children = args[0]
 		else:
 			children = params.get("children",[])
 		if children != []:
 			self.add_children(children)
+
+	def end_init(self, **params):
+		""" Terminate initialisation"""
+		if params.get("spacer", None) is None:
+			self.spacer = Template.default_spacer
 
 	def add_children(self, children):
 		""" Add children of html template in the current instance """

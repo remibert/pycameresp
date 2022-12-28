@@ -103,14 +103,14 @@ source ./export.sh
 # Build mpy-cross #
 ###################
 cd "%(OUTPUT_DIR)s/micropython"
-make -C mpy-cross
+make -C mpy-cross -j 8
 
 #####################
 # Build micropython #
 #####################
 cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
-make submodules
-make BOARD=%(BOARD)s
+make submodules -j 8
+make BOARD=%(BOARD)s -j 8
 cp "%(OUTPUT_DIR)s/micropython/ports/esp32/build-%(BOARD)s/firmware.bin" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.bin"
 
 ####################
@@ -153,6 +153,8 @@ cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/c/micropython/"*       "%(OUTPUT_DIR)s/
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/python/micropython/"*  "%(OUTPUT_DIR)s/micropython"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/esp32/modules"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/rp2/modules"
+rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/electricmeter"
+rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/electricmeter"
 cd %(PYCAMERESP_DIR)s
 python3        "%(PYCAMERESP_DIR)s/scripts/patchInisetup.py"    "%(OUTPUT_DIR)s"
 '''

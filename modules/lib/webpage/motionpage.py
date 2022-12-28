@@ -176,17 +176,19 @@ async def motion(request, response, args):
 	disabled, action, submit = manage_default_button(request, config, onclick=b"onValidZoneMasking()")
 
 	page = main_frame(request, response, args, lang.motion_detection_configuration,
-		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
-		Streaming.get_html(request),
-		zone_masking(config, disabled),
-		Slider(text=lang.detects_a_movement,          name=b"differences_detection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differences_detection,         disabled=disabled),
-		Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),
-		Switch(text=lang.notification_motion, name=b"notify",       checked=config.notify,       disabled=disabled),
-		Switch(text=lang.notification_state,  name=b"notify_state", checked=config.notify_state, disabled=disabled),
-		Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence", checked=config.suspend_on_presence, disabled=disabled),
-		Switch(text=lang.permanent_detection,                      name=b"permanent_detection", checked=config.permanent_detection, disabled=disabled),
-		Switch(text=lang.turn_on_flash,                            name=b"light_compensation",  checked=config.light_compensation,  disabled=disabled),
-		submit)
+		Form([
+			Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
+			Streaming.get_html(request),
+			zone_masking(config, disabled),
+			Slider(text=lang.detects_a_movement,          name=b"differences_detection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differences_detection,         disabled=disabled),
+			Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),
+			Switch(text=lang.notification_motion, name=b"notify",       checked=config.notify,       disabled=disabled),
+			Switch(text=lang.notification_state,  name=b"notify_state", checked=config.notify_state, disabled=disabled),
+			Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence", checked=config.suspend_on_presence, disabled=disabled),
+			Switch(text=lang.permanent_detection,                      name=b"permanent_detection", checked=config.permanent_detection, disabled=disabled),
+			Switch(text=lang.turn_on_flash,                            name=b"light_compensation",  checked=config.light_compensation,  disabled=disabled),
+			submit
+		]))
 	await response.send_page(page)
 
 @HttpServer.add_route(b'/motion/onoff', menu=lang.menu_motion, item=lang.item_motion_onoff, available=info.iscamera() and Camera.is_activated())
@@ -203,5 +205,7 @@ async def motion_on_off(request, response, args):
 		config.save()
 
 	page = main_frame(request, response, args, lang.motion_onoff,
-		Submit(text=lang.motion_off if config.activated else lang.motion_on,  name=b"action", value=b"off" if config.activated else b"on" ))
+		Form([
+			Submit(text=lang.motion_off if config.activated else lang.motion_on,  name=b"action", value=b"off" if config.activated else b"on" )
+		]))
 	await response.send_page(page)

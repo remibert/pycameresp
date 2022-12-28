@@ -312,8 +312,8 @@ class Historic:
 			await Historic.acquire()
 			for item in Historic.historic:
 				filename = item[0].lstrip("/").split("/")
-				date = b"%s/%s/%s"%(strings.tobytes(filename[1]),strings.tobytes(filename[2]),strings.tobytes(filename[3]))
-				last_days.add(date)
+				date_ = b"%s/%s/%s"%(strings.tobytes(filename[1]),strings.tobytes(filename[2]),strings.tobytes(filename[3]))
+				last_days.add(date_)
 		finally:
 			await Historic.release()
 		return last_days

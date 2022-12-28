@@ -162,7 +162,7 @@ class Colorizer:
 					keywords = None
 			# If decimal detected
 			elif state == STATE_DECIMAL:
-				if char >= 0x30 and char <= 0x39:
+				if char >= 0x30 and char <= 0x39 or char == 0x5F:
 					word += charactere
 				elif char == 0x2E:
 					if b"." not in word:

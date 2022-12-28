@@ -12,23 +12,25 @@ from tools             import lang,archiver,filesystem,logger,system
 async def system_page(request, response, args):
 	""" Function define the web page to manage system of the board """
 	page = main_frame(request, response, args, lang.system_management_s%Station.get_hostname(),
-		FormGroup([
-			Label(text=lang.configuration ), Br(),
-			UploadFile(text=lang.upload, path=b"/system/upload_config", alert=lang.configuration_uploaded, accept=b".cfg"), Space(),
-			DownloadFile(text=lang.download, path=b"/system/download_config", filename=b"Config_%s.cfg"%Station.get_hostname()),
-		]),
-		FormGroup([
-			Label(text=lang.file_system), Br(),
-			UploadFile(text=lang.upload, path=b"/system/upload_file_system", alert=lang.upload_in_progress, accept=b".cfs"), Space(),
-			DownloadFile(text=lang.download, path=b"/system/download_file_system", filename=b"FileSystem_%s.cfs"%Station.get_hostname()),
-		]),
-		FormGroup([
-			Label(text=lang.syslog), Br(),
-			DownloadFile(text=lang.download, path=b"/system/download_syslog", filename=b"Syslog_%s.log"%Station.get_hostname()),
-		]),
-		FormGroup([
-			Label(text=lang.reboot_device), Br(),
-			ButtonCmd(text=lang.reboot,path=b"/system/reboot",confirm=lang.confirm_reboot, name=b"reboot")
+		Form([
+			FormGroup([
+				Label(text=lang.configuration ), Br(),
+				UploadFile(text=lang.upload, path=b"/system/upload_config", alert=lang.configuration_uploaded, accept=b".cfg"), Space(),
+				DownloadFile(text=lang.download, path=b"/system/download_config", filename=b"Config_%s.cfg"%Station.get_hostname()),
+			]),
+			FormGroup([
+				Label(text=lang.file_system), Br(),
+				UploadFile(text=lang.upload, path=b"/system/upload_file_system", alert=lang.upload_in_progress, accept=b".cfs"), Space(),
+				DownloadFile(text=lang.download, path=b"/system/download_file_system", filename=b"FileSystem_%s.cfs"%Station.get_hostname()),
+			]),
+			FormGroup([
+				Label(text=lang.syslog), Br(),
+				DownloadFile(text=lang.download, path=b"/system/download_syslog", filename=b"Syslog_%s.log"%Station.get_hostname()),
+			]),
+			FormGroup([
+				Label(text=lang.reboot_device), Br(),
+				ButtonCmd(text=lang.reboot,path=b"/system/reboot",confirm=lang.confirm_reboot, name=b"reboot")
+			])
 		])
 	)
 	await response.send_page(page)

@@ -23,10 +23,12 @@ async def pushover(request, response, args):
 	else:
 		typ = b""
 	page = main_frame(request, response, args,lang.notification_configuration,
-		Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
-		Edit(text=lang.pushover_user,  name=b"user",  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
-		Edit(text=lang.pushover_token, name=b"token", placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
-		submit,
-		Br(), Link(href=b"https://pushover.net", text=lang.see_pushover_website))
+		Form([
+			Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
+			Edit(text=lang.pushover_user,  name=b"user",  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
+			Edit(text=lang.pushover_token, name=b"token", placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
+			submit,
+			Br(), Link(href=b"https://pushover.net", text=lang.see_pushover_website)
+		]))
 
 	await response.send_page(page)

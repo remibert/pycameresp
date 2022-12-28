@@ -5,7 +5,7 @@
 import sys
 import io
 try:
-	from tools import filesystem, strings
+	from tools import filesystem, strings, date
 except:
 	import filesystem
 	import strings
@@ -63,7 +63,7 @@ def log(msg):
 			filesystem.rename(filename       ,filename + ".1")
 			log_file = open(filename,"a")
 
-		log_file.write(strings.date_ms_to_string() + " %s\n"%(msg))
+		log_file.write(date.date_ms_to_string() + " %s\n"%(msg))
 		log_file.flush()
 		log_file.close()
 	except:

@@ -58,6 +58,10 @@
 #include "extmod/machine_spi.h"
 #include "modmachine.h"
 #include "machine_rtc.h"
+#if MICROPY_PY_MACHINE_PCNT
+#include "machine_encoder.h"
+#endif
+//# REMI BERTHOLET END
 
 #if MICROPY_PY_MACHINE
 

@@ -36,7 +36,10 @@ class SdCard:
 		""" Return the maximal size of sdcard """
 		if SdCard.is_mounted():
 			status = uos.statvfs(SdCard.get_mountpoint())
-			return status[1]*status[2]
+			if filesystem.ismicropython():
+				return status[1]*status[2]
+			else:
+				return status.f_frsize*status.f_blocks
 		else:
 			return 0
 
@@ -45,7 +48,10 @@ class SdCard:
 		""" Return the free size of sdcard """
 		if SdCard.is_mounted():
 			status = uos.statvfs(SdCard.get_mountpoint())
-			return status[0]*status[3]
+			if filesystem.ismicropython():
+				return status[0]*status[3]
+			else:
+				return status.f_bsize * status.f_bfree
 		else:
 			return 0
 

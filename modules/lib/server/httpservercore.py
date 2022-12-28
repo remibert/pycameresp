@@ -9,7 +9,7 @@ Http server core, it instanciated only if a connection is done to the asynchrono
 from server.httpserver import HttpServer
 from server.httprequest import HttpRequest, HttpResponse
 from server.stream import Stream
-from tools import logger,strings
+from tools import logger
 
 class HttpServerCore:
 	""" Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
@@ -30,7 +30,7 @@ class HttpServerCore:
 			# print(request.path)
 			function, args = HttpServer.search_route(request)
 			if function is None:
-				await response.send_error(status=b"404", content=b"Page not found")
+				await response.send_not_found()
 			else:
 				await function(request, response, args)
 		except OSError as err:
@@ -39,9 +39,9 @@ class HttpServerCore:
 				# Ignore error
 				pass
 			else:
-				await response.send_error(status=b"404", content=strings.tobytes(logger.exception(err)))
+				await response.send_not_found(err)
 		except Exception as err:
 			logger.syslog(err)
-			await response.send_error(status=b"404", content=strings.tobytes(logger.exception(err)))
+			await response.send_not_found(err)
 		finally:
 			await stream.close()
