@@ -10,24 +10,9 @@ from server.httpserver      import HttpServer
 from htmltemplate           import *
 from webpage.mainpage       import main_frame
 from tools                  import date, strings, lang
-from electricmeter.config   import RateConfig, RatesConfig, TimeSlotConfig, TimeSlotsConfig
+from electricmeter.config   import RateConfig, TimeSlotConfig, get_config, get_prices
 from electricmeter          import electricmeter, em_lang
 
-rates_config      = None
-time_slots_config = None
-
-def get_config():
-	""" Get and load electric meter configuration """
-	global rates_config, time_slots_config
-
-	if rates_config is None:
-		rates_config = RatesConfig()
-		rates_config.load()
-
-	if time_slots_config is None:
-		time_slots_config = TimeSlotsConfig()
-		time_slots_config.load()
-	return rates_config, time_slots_config
 
 @HttpServer.add_route(b'/hourly', menu=em_lang.menu_electricmeter, item=em_lang.item_hour)
 async def hourly_page_page(request, response, args):
@@ -84,12 +69,8 @@ async def hourly_page_page(request, response, args):
 async def hourly_page_datas(request, response, args):
 	""" Send pulses of hours and rates """
 	day    = date.html_to_date(request.params.get(b"day",b""))
-	rates, time_slots = get_config()
 	result = {"pulses":None}
-	try:
-		result["rates"] = strings.tostrings(time_slots.get_prices(rates.search_rates(day)))
-	except Exception as err:
-		result["rates"] = {}
+	result["rates"] = strings.tostrings(get_prices(day))
 	try:
 		result["pulses"] = electricmeter.HourlyCounter.get_datas(day)
 		await response.send_buffer(b"pulses", buffer=strings.tobytes(json.dumps(result)), mime_type=b"application/json")
@@ -157,12 +138,8 @@ async def daily_datas(request, response, args):
 	""" Send pulses of month and rates """
 	await electricmeter.MonthlyCounter.refresh()
 	month    = date.html_to_date(request.params.get(b"month",b""))
-	rates, time_slots = get_config()
 	result = {"time_slots":None}
-	try:
-		result["rates"] = strings.tostrings(time_slots.get_prices(rates.search_rates(month)))
-	except Exception as err:
-		result["rates"] = {}
+	result["rates"] = strings.tostrings(get_prices(month))
 	try:
 		result["time_slots"] = electricmeter.DailyCounter.get_datas(month)
 		await response.send_buffer(b"pulses", buffer=strings.tobytes(json.dumps(result)), mime_type=b"application/json")
@@ -213,12 +190,8 @@ async def monthly_datas(request, response, args):
 	""" Send pulses of month and rates """
 	await electricmeter.MonthlyCounter.refresh()
 	year    = date.html_to_date(request.params.get(b"year",b""))
-	rates, time_slots = get_config()
 	result = {"time_slots":None}
-	try:
-		result["rates"] = strings.tostrings(time_slots.get_prices(rates.search_rates(year)))
-	except Exception as err:
-		result["rates"] = {}
+	result["rates"] = strings.tostrings(get_prices(year))
 	try:
 		result["time_slots"] = electricmeter.MonthlyCounter.get_datas(year)
 		await response.send_buffer(b"pulses", buffer=strings.tobytes(json.dumps(result)), mime_type=b"application/json")

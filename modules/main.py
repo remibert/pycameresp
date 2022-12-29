@@ -48,8 +48,8 @@ def sample_html_page_loader():
 try:
 	from electricmeter import create_electric_meter
 	create_electric_meter(loop, gpio=21)
-except:
-	pass
+except Exception as err:
+	print(err)
 
 # Create servers, network tools, wifi manager asynchronous task
 pycameresp.create_network_task(loop, sample_html_page_loader)

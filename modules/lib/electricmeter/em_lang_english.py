@@ -1,10 +1,9 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ English text for electricmeter """
-title_electricmeter = b"Power consumption "
+title_electricmeter = b"Power consumption per "
 menu_electricmeter  = b"Electric meter"
 
-item_hour           = b"Per hour"
 rate                = b"Rate"
 field_rate          = b"Name defining the rate"
 price               = b"Price per kWh"
@@ -29,8 +28,9 @@ field_end           = b"End time"
 field_time_rate     = b"Rate name"
 field_color         = b"Rate color"
 
-item_day            = b"Per day"
-item_month          = b"Per month"
-item_year           = b"Per year"
+item_hour           = b"Hour"
+item_day            = b"Day"
+item_month          = b"Month"
+item_year           = b"Year"
 item_rate           = b"Rate"
 power_consumed      = b"Instantaneous power consumption"

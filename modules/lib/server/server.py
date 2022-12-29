@@ -57,6 +57,22 @@ class Server:
 	slow_speed = [None]
 	tasks = {}
 	context = None
+	daily_notifier = None
+
+	@staticmethod
+	def set_daily_notifier(callback):
+		""" Replace the daily notification (callback which return a string with message to notify) """
+		Server.daily_notifier = callback
+
+	@staticmethod
+	def default_daily_notifier():
+		""" Return the default message notification """
+		message = "\n - Lan Ip : %s\n"%wifi.Station.get_info()[0]
+		message += " - Wan Ip : %s\n"%Server.context.wan_ip
+		message += " - Uptime : %s\n"%strings.tostrings(info.uptime())
+		message += " - %s : %s\n"%(strings.tostrings(lang.memory_label), strings.tostrings(info.meminfo()))
+		message += " - %s : %s\n"%(strings.tostrings(lang.flash_label), strings.tostrings(info.flashinfo()))
+		return message
 
 	@staticmethod
 	def suspend():
@@ -158,11 +174,11 @@ class Server:
 					wifi.Wifi.wan_disconnected()
 
 				if forced:
-					message = "\n - Lan Ip : %s\n"%wifi.Station.get_info()[0]
-					message += " - Wan Ip : %s\n"%Server.context.wan_ip
-					message += " - Uptime : %s\n"%strings.tostrings(info.uptime())
-					message += " - %s : %s\n"%(strings.tostrings(lang.memory_label), strings.tostrings(info.meminfo()))
-					message += " - %s : %s\n"%(strings.tostrings(lang.flash_label), strings.tostrings(info.flashinfo()))
+					try:
+						# pylint:disable=not-callable
+						message = Server.daily_notifier()
+					except:
+						message = Server.default_daily_notifier()
 					await Server.context.notifier.notify(message)
 
 	@staticmethod

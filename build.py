@@ -112,12 +112,6 @@ cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
 make submodules -j 8
 make BOARD=%(BOARD)s -j 8
 cp "%(OUTPUT_DIR)s/micropython/ports/esp32/build-%(BOARD)s/firmware.bin" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.bin"
-
-####################
-# Build distri zip #
-####################
-cd %(PYCAMERESP_DIR)s
-python3 "%(PYCAMERESP_DIR)s/scripts/zip_mpy.py" "%(OUTPUT_DIR)s" "%(BOARD)s" "%(PYCAMERESP_DIR)s"
 '''
 
 BUILD_RP2_COMMANDS = '''
@@ -135,6 +129,9 @@ cd "%(OUTPUT_DIR)s/micropython/ports/rp2"
 make submodules
 make BOARD=%(BOARD)s
 cp "%(OUTPUT_DIR)s/micropython/ports/rp2/build-%(BOARD)s/firmware.uf2" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.uf2"
+'''
+
+ZIP_MODULES = '''
 
 ####################
 # Build distri zip #
@@ -142,7 +139,6 @@ cp "%(OUTPUT_DIR)s/micropython/ports/rp2/build-%(BOARD)s/firmware.uf2" "%(PYCAME
 cd %(PYCAMERESP_DIR)s
 python3 "%(PYCAMERESP_DIR)s/scripts/zip_mpy.py" "%(OUTPUT_DIR)s" "%(BOARD)s" "%(PYCAMERESP_DIR)s"
 '''
-
 
 PATCH_COMMANDS = '''
 
@@ -295,6 +291,7 @@ def main():
 	parser.add_argument("-c", "--clean",      help="clean micropython sources to remove all patch",                 action="store_true")
 	parser.add_argument("-s", "--s3",         help="build Esp32 S3 without problem",                                action="store_true")
 	parser.add_argument("-r", "--rp2",        help="build raspberry pico RP2 and RP2 W",                            action="store_true")
+	parser.add_argument("-z", "--zippy",      help="zip python modules",                                            action="store_true")
 	parser.add_argument("-o", "--outputdir",  help="output directory")
 	parser.add_argument('boards',  metavar='boards', type=str, help='Select boards to build micropython firmwares, for all firmwares use "*"', nargs="*")
 	args = parser.parse_args()
@@ -326,6 +323,9 @@ def main():
 
 		if args.patch or args.all:
 			execute(PATCH_COMMANDS)
+		
+		if args.zippy:
+			execute(ZIP_MODULES)
 
 		if args.build or args.all:
 			if args.rp2:
@@ -347,6 +347,7 @@ def main():
 								execute(BUILD_RP2_COMMANDS)
 							else:
 								execute(BUILD_ESP_COMMANDS)
+							execute(ZIP_MODULES)
 
 if __name__ == "__main__":
 	main()

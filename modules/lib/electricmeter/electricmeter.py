@@ -4,8 +4,11 @@ import time
 import collections
 import uasyncio
 import machine
-from electricmeter.config   import TimeSlotsConfig
-from tools import filesystem, date, fnmatch, logger, tasking
+import wifi
+from server.server import Server
+from electricmeter.config   import get_prices, create_empty_slot
+from electricmeter          import em_lang
+from tools import filesystem, date, strings, fnmatch, logger, tasking, info
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-iterating-dictionary
 # pylint:disable=missing-function-docstring
@@ -104,18 +107,19 @@ class PulseSensor:
 class HourlyCounter:
 	""" Hourly counter of wh consumed """
 	counter = None
+
 	def __init__(self, gpio):
 		""" Constructor """
 		global PULSE_DIRECTORY
 		filesystem.makedir(PULSE_DIRECTORY,True)
 		self.day    = time.time()
-		self.pulses = self.load(self.day)
+		self.pulses = HourlyCounter.load(HourlyCounter.get_filename(self.day))
 		self.last_save = time.time()
 		self.watt_hour = 0
 		self.previous_pulse_time = None
 		self.day_pulses_counter = 0
 		self.pulse_sensor = PulseSensor(gpio)
-
+	
 	async def manage(self):
 		""" Manage the counter """
 		# Wait the list of pulses
@@ -135,9 +139,9 @@ class HourlyCounter:
 			self.pulses[minut] += pulse_quantity
 
 			# If day change
-			if self.is_same_day(day, self.day) is False:
+			if HourlyCounter.is_same_day(day, self.day) is False:
 				# Save day counter
-				self.save(self.day)
+				HourlyCounter.save(HourlyCounter.get_filename(self.day))
 
 				# Clear day pulses counter
 				self.day_pulses_counter = 0
@@ -149,19 +153,21 @@ class HourlyCounter:
 		# Each ten minutes
 		if time.time() > (self.last_save + 67):
 			# Save pulses file
-			self.save(self.day)
+			HourlyCounter.save(HourlyCounter.get_filename(self.day))
 
 		# print("%s %.1f wh pulses=%d"%(date.date_to_string(), self.watt_hour, self.day_pulses_counter))
 		return True
 
-	def is_same_day(self, day1, day2):
+	@staticmethod
+	def is_same_day(day1, day2):
 		""" Indicates if the day 1 is equal to day 2"""
 		if day1//86400 == day2//86400 or day1 is None or day2 is None:
 			return True
 		else:
 			return False
 
-	def get_filename(self, day=None):
+	@staticmethod
+	def get_filename(day=None):
 		""" Return the filename according to day """
 		global PULSE_DIRECTORY, PULSE_HOURLY
 		if day is None:
@@ -169,31 +175,35 @@ class HourlyCounter:
 		year,month,day = date.local_time(day)[:3]
 		return "%s/%04d-%02d/%04d-%02d-%02d%s"%(PULSE_DIRECTORY, year, month, year, month, day, PULSE_HOURLY)
 
-	def save(self, day):
+	@staticmethod
+	def save(filename):
 		""" Save pulses file """
-		filename  = self.get_filename(day)
-		# print("Save day %s"%filename)
-		filesystem.makedir(filesystem.split(filename)[0], True)
-		with open(filename, "wb") as file:
-			file.write(struct.pack("B"*1440, *self.pulses))
-		self.last_save = time.time()
-
-	def load(self, day=None, pulses=None):
-		""" Load pulses file """
-		if pulses is None:
-			pulses = [0]*1440
 		try:
-			filename = self.get_filename(day)
-			# print("Load day %s"%filename)
+			filesystem.makedir(filesystem.split(filename)[0], True)
+			with open(filename, "wb") as file:
+				file.write(struct.pack("B"*1440, *HourlyCounter.counter.pulses))
+			HourlyCounter.counter.last_save = time.time()
+		except Exception as err:
+			logger.exception(err)
+
+	@staticmethod
+	def load(filename, pulses=None):
+		""" Load pulses file """
+		result = [0]*1440
+		try:
 			with open(filename, "rb") as file:
-				content = file.read()
+				load_pulses = struct.unpack("B"*1440, file.read())
 				index = 0
-				for byte in content:
-					pulses[index] += byte
-					index += 1
-		except OSError:
-			pass
-		return pulses
+				if pulses is None:
+					result = list(load_pulses)
+				else:
+					result = pulses
+					for pulse in load_pulses:
+						result[index] += pulse
+						index += 1
+		except Exception as err:
+			logger.exception(err)
+		return result
 
 	@staticmethod
 	def get_power():
@@ -211,15 +221,15 @@ class HourlyCounter:
 		await tasking.task_monitoring(HourlyCounter.counter.manage)
 
 	@staticmethod
-	def get_datas(day):
-		""" Return the pulse filename according to the day selected """
-		if type(day) == type(b""):
-			day = date.html_to_date(day)
+	def get_datas(selected_date):
+		""" Return the pulse filename according to the selected date """
+		if type(selected_date) == type(b""):
+			selected_date = date.html_to_date(selected_date)
 
-		if day is None or HourlyCounter.counter.is_same_day(day, time.time()):
+		if selected_date is None or HourlyCounter.is_same_day(selected_date, time.time()):
 			result = HourlyCounter.counter.pulses
 		else:
-			result = HourlyCounter.counter.load(day)
+			result = HourlyCounter.load(HourlyCounter.get_filename(selected_date))
 		return result
 
 	@staticmethod
@@ -229,25 +239,33 @@ class HourlyCounter:
 		while True:
 			HourlyCounter.counter.simulate(random.randint(1, 4))
 			await uasyncio.sleep(random.randint(1, 5))
-	
+
 class DailyCounter:
 	""" Daily counter of wh consumed """
 	@staticmethod
-	def get_filename(day=None):
-		""" Return the filename according to day """
+	def get_filename(selected_date=None):
+		""" Return the filename according to selected date """
 		global PULSE_DIRECTORY, PULSE_DAILY
-		if day is None:
-			day = time.time()
-		year,month,day = date.local_time(day)[:3]
+		if selected_date is None:
+			selected_date = time.time()
+		year,month = date.local_time(selected_date)[:2]
 		return "%s/%04d-%02d/%04d-%02d%s"%(PULSE_DIRECTORY, year, month, year, month, PULSE_DAILY)
 
 	@staticmethod
-	def get_datas(month):
+	def get_datas(selected_date):
 		""" Return the pulse filename according to the month selected """
 		result = []
+		filename = DailyCounter.get_filename(selected_date)
+		slot_pulses = DailyCounter.load(filename)
+		for time_slot, days in slot_pulses.items():
+			result.append({"time_slot":time_slot,"days":days})
+		return result
+
+	@staticmethod
+	def load(filename):
+		""" Load daily file """
+		result = {}
 		try:
-			filename = DailyCounter.get_filename(month)
-			# print("Load month %s"%filename)
 			with open(filename, "rb") as file:
 				while True:
 					data = file.read(2)
@@ -256,7 +274,7 @@ class DailyCounter:
 					start = struct.unpack("H", data)[0]*60
 					end   = struct.unpack("H", file.read(2))[0]*60
 					days = struct.unpack("H"*31, file.read(2*31))
-					result.append({"time_slot":(start,end),"days":days})
+					result[(start,end)] = days
 		except OSError:
 			pass
 		except Exception as err:
@@ -264,26 +282,18 @@ class DailyCounter:
 		return result
 
 	@staticmethod
-	def create_empty():
-		""" Create empty daily data """
-		time_slots = TimeSlotsConfig()
-		time_slots.load()
-
-		slots = []
-		index = 0
-		while True:
-			slot = time_slots.get(index)
-			if slot is None:
-				break
-			slots.append((slot[b"start_time"]//60, slot[b"end_time"]//60))
-			index += 1
-		if len(slots) == 0:
-			slots.append((0,1439))
-
-		slot_pulses = {}
-		for start, end in slots:
-			slot_pulses[(start,end)] = [0]*31
-		return slots, slot_pulses
+	def save(filename, slot_pulses):
+		""" Save daily file """
+		try:
+			with open(filename, "wb") as file:
+				for time_slot, days in slot_pulses.items():
+					start, end = time_slot
+					file.write(struct.pack("HH", start//60, end//60))
+					file.write(struct.pack("H"*len(days), *days))
+		except OSError:
+			pass
+		except Exception as err:
+			logger.exception(err)
 
 	@staticmethod
 	async def update(filenames, daily_to_update):
@@ -292,56 +302,31 @@ class DailyCounter:
 			year, month = key
 			print("Update %s\n  "%daily_filename, end="")
 			hourly_searched = "%s/%s-%s/%s-%s*%s"%(PULSE_DIRECTORY, year, month, year, month, PULSE_HOURLY)
-			slots, slot_pulses = DailyCounter.create_empty()
+			slot_pulses = create_empty_slot(31)
 			for hourly_filename in filenames:
 				if fnmatch.fnmatch(hourly_filename, hourly_searched):
 					name = filesystem.splitext(filesystem.split(hourly_filename)[1])[0]
 					day = int(name.split("-")[-1])
 					print("%d "%day, end="")
-					with open(hourly_filename, "rb") as file:
-						content = file.read()
-						hour = 0
-						for start, end in slots:
-							hour = 0
-							for byte in content:
-								if start <= hour <= end:
-									slot_pulses[(start,end)][day-1] += byte
-								hour += 1
+					hourly_pulses = HourlyCounter.load(hourly_filename)
+					second = 0
+					for start, end in slot_pulses.keys():
+						second = 0
+						for pulses in hourly_pulses:
+							if start <= second <= end:
+								slot_pulses[(start,end)][day-1] += pulses
+							second += 60
 				else:
 					pass
 			print("")
 			await uasyncio.sleep_ms(3)
-			with open(daily_filename, "wb") as file:
-				for start, end in slots:
-					file.write(struct.pack("HH", start, end))
-					file.write(struct.pack("H"*len(slot_pulses[(start,end)]), *slot_pulses[(start,end)]))
+			DailyCounter.save(daily_filename, slot_pulses)
 
 class MonthlyCounter:
 	""" Monthly counter of wh consumed """
 	last_update = [0]
 	next_update = [0]
 	force = [True]
-	@staticmethod
-	def create_empty():
-		""" Create empty monthly datas """
-		time_slots = TimeSlotsConfig()
-		time_slots.load()
-
-		slots = []
-		index = 0
-		while True:
-			slot = time_slots.get(index)
-			if slot is None:
-				break
-			slots.append((slot[b"start_time"]//60, slot[b"end_time"]//60))
-			index += 1
-		if len(slots) == 0:
-			slots.append((0,1439))
-
-		slot_pulses = {}
-		for start, end in slots:
-			slot_pulses[(start,end)] = [0]*12
-		return slots, slot_pulses
 
 	@staticmethod
 	async def update(filenames, monthly_to_update):
@@ -349,33 +334,47 @@ class MonthlyCounter:
 		for year, monthly_filename in monthly_to_update.items():
 			print("Update %s\n  "%monthly_filename, end="")
 			daily_searched = "%s/%s-*/%s-*%s"%(PULSE_DIRECTORY, year, year, PULSE_DAILY)
-			slots, slot_pulses = MonthlyCounter.create_empty()
+			slot_pulses = create_empty_slot(12)
 			for daily_filename in filenames:
 				if fnmatch.fnmatch(daily_filename, daily_searched):
 					name = filesystem.splitext(filesystem.split(daily_filename)[1])[0]
 					month = int(name.split("-")[-1])
 					print("%d "%month, end="")
-					with open(daily_filename, "rb") as file:
-						while True:
-							data = file.read(2)
-							if len(data) == 0:
-								break
-							start = struct.unpack("H", data)[0]
-							end   = struct.unpack("H", file.read(2))[0]
-							days = struct.unpack("H"*31, file.read(2*31))
-							for day in days:
-								if (start,end) in slot_pulses.keys():
-									try:
-										slot_pulses[(start,end)][month-1] = slot_pulses[(start,end)][month-1]+day
-									except Exception as err:
-										pass
-								else:
-									pass
+					daily_slot_pulses = DailyCounter.load(daily_filename)
+					for time_slot, days in daily_slot_pulses.items():
+						for day in days:
+							slot_pulses[time_slot][month-1] = slot_pulses[time_slot][month-1]+day
 			print("")
-			with open(monthly_filename, "wb") as file:
-				for start, end in slots:
-					file.write(struct.pack("HH", start, end))
-					file.write(struct.pack("I"*len(slot_pulses[(start,end)]), *slot_pulses[(start,end)]))
+			MonthlyCounter.save(monthly_filename, slot_pulses)
+
+	@staticmethod
+	def save(filename, slot_pulses):
+		try:
+			with open(filename, "wb") as file:
+				for time_slot, months in slot_pulses.items():
+					start, end = time_slot
+					file.write(struct.pack("HH", start//60, end//60))
+					file.write(struct.pack("I"*len(months), *months))
+		except Exception as err:
+			logger.exception(err)
+
+	@staticmethod
+	def load(filename):
+		""" Load daily file content """
+		result = {}
+		try:
+			with open(filename, "rb") as file:
+				while True:
+					data = file.read(2)
+					if len(data) == 0:
+						break
+					start = struct.unpack("H", data)[0]*60
+					end   = struct.unpack("H", file.read(2))[0]*60
+					months = struct.unpack("I"*12, file.read(4*12))
+					result[(start,end)] = months
+		except Exception as err:
+			logger.exception(err)
+		return result
 
 	@staticmethod
 	async def get_updates():
@@ -407,35 +406,21 @@ class MonthlyCounter:
 		return daily_to_update, monthly_to_update, filenames
 
 	@staticmethod
-	def get_filename(day=None):
+	def get_filename(selected_date=None):
 		""" Return the filename according to day """
 		global PULSE_DIRECTORY, PULSE_MONTHLY
-		if day is None:
-			day = time.time()
-		year = date.local_time(day)[0]
+		if selected_date is None:
+			selected_date = time.time()
+		year = date.local_time(selected_date)[0]
 		return "%s/%04d%s"%(PULSE_DIRECTORY, year, PULSE_MONTHLY)
 
 	@staticmethod
-	def get_datas(month):
+	def get_datas(selected_date):
 		""" Return the pulse filename according to the month selected """
 		result = []
-		try:
-			filename = MonthlyCounter.get_filename(month)
-			# print("Load month %s"%filename)
-			with open(filename, "rb") as file:
-				while True:
-					data = file.read(2)
-					if len(data) == 0:
-						break
-					start = struct.unpack("H", data)[0]*60
-					end   = struct.unpack("H", file.read(2))[0]*60
-					
-					months = struct.unpack("I"*12, file.read(4*12))
-					result.append({"time_slot":(start,end),"months":months})
-		except OSError:
-			pass
-		except Exception as err:
-			logger.exception(err)
+		slot_pulses = MonthlyCounter.load(MonthlyCounter.get_filename(selected_date))
+		for time_slot, months in slot_pulses.items():
+			result.append({"time_slot":time_slot,"months":months})
 		return result
 
 	@staticmethod
@@ -453,6 +438,7 @@ class MonthlyCounter:
 			MonthlyCounter.next_update[0] -= 1
 			await uasyncio.sleep(1)
 
+		await uasyncio.sleep(5)
 		daily_to_update, monthly_to_update, filenames = await MonthlyCounter().get_updates()
 		await DailyCounter.update  (filenames, daily_to_update)
 		await MonthlyCounter.update(filenames, monthly_to_update)
@@ -465,8 +451,95 @@ class MonthlyCounter:
 		""" Task to count wh from the electric meter """
 		await tasking.task_monitoring(MonthlyCounter.manage)
 
+class Consumption:
+	""" Stores the consumption of a time slot """
+	def __init__(self, name, currency):
+		""" Constructor """
+		self.name = strings.tostrings(name)
+		self.cost = 0.
+		self.pulses = 0
+		self.currency = strings.tostrings(currency)
+
+	def add(self, pulses, price):
+		""" Add wh pulses with its price """
+		cumul_pulses = 0
+		for pulse in pulses:
+			cumul_pulses += pulse
+
+		self.cost += cumul_pulses*price/1000
+		self.pulses += cumul_pulses
+
+	def to_string(self):
+		""" Convert to string """
+		return "%s : %.2f %s (%.3f kWh)"%(self.name, self.cost, strings.tostrings(self.currency), self.pulses/1000)
+
+class Cost:
+	""" Abstract class to compute the cost """
+	def get_rates(self, selected_date):
+		""" Get the rate according to the selected date """
+		prices = get_prices(selected_date)
+		consumptions = {}
+		for price in prices:
+			consumptions[price[b"rate"]] = Consumption(price[b"rate"], price[b"currency"])
+		return prices, consumptions
+
+	def compute(self, selected_date):
+		""" Compute cost """
+		return {}
+
+	def get_message(self, title, selected_date):
+		""" Get result message """
+		consumptions = self.compute(selected_date)
+		result = " - " + strings.tostrings(title) + " :\n"
+		for consumption in consumptions.values():
+			result += "   %s\n"%consumption.to_string()
+		return result
+
+class HourlyCost(Cost):
+	""" Hourly cost calculation """
+	def compute(self, selected_date):
+		""" Compute cost """
+		prices, consumptions = self.get_rates(selected_date)
+		pulses = HourlyCounter.load(HourlyCounter.get_filename(selected_date))
+		second = 0
+		for pulse in pulses:
+			for price in prices:
+				if price[b"start_time"] <= second <= price[b"end_time"]:
+					consumptions[price[b"rate"]].add([pulse], price[b"price"])
+					break
+			second += 60
+		return consumptions
+
+class DailyCost(Cost):
+	""" Daily cost calculation """
+	def compute(self, selected_date):
+		""" Compute cost """
+		slot_pulses = DailyCounter.load(DailyCounter.get_filename(selected_date))
+		prices,consumptions = self.get_rates(selected_date)
+		for slot_time, pulses in slot_pulses.items():
+			for price in prices:
+				start, end = slot_time
+				if price[b"start_time"] == start and price[b"end_time"] == end:
+					consumptions[price[b"rate"]].add(pulses, price[b"price"])
+					break
+		return consumptions
+
+def daily_notifier():
+	""" Get electricmeter daily notification """
+	selected_date = time.time() - 86400
+	message = "\n"
+	cost = HourlyCost()
+	message += cost.get_message(em_lang.item_day, selected_date)
+	cost = DailyCost()
+	message += cost.get_message(em_lang.item_month, selected_date)
+	message += " - Lan Ip : %s\n"%wifi.Station.get_info()[0]
+	message += " - Wan Ip : %s\n"%Server.context.wan_ip
+	message += " - Uptime : %s\n"%strings.tostrings(info.uptime())
+	return message
+
 def create_electric_meter(loop, gpio=21):
 	""" Create user task """
+	Server.set_daily_notifier(daily_notifier)
 	loop.create_task(HourlyCounter.task(gpio))
 	loop.create_task(MonthlyCounter.task())
 	if filesystem.ismicropython() is False:

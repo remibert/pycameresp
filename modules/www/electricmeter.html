@@ -215,9 +215,15 @@ class MainChart
 	get_legend()
 	{
 		var legend = "<br>";
-		var result = capitalize(DATE) + ' : ';
+		var result = "";
 		var total = 0;
 		var currency = "";
+
+		if (TYPE  === "hourly")
+		{
+			result = capitalize(DATE) + ' : ';
+		}
+
 		if (UNIT === "price")
 		{
 			for (var [name, cost] of this.costs.costs)

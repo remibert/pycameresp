@@ -160,6 +160,7 @@ def main():
 		################
 		# Copy scripts #
 		################
+		copyfile ../../modules/lib/tools/date.py        date.py
 		copyfile ../../modules/lib/tools/strings.py     strings.py
 		copyfile ../../modules/lib/tools/filesystem.py  filesystem.py
 		copyfile ../../modules/lib/tools/exchange.py    exchange.py
@@ -187,6 +188,7 @@ def main():
 		##################
 		remove build-%(TARGET)s.spec
 		remove strings.py
+		remove date.py
 		remove filesystem.py
 		remove exchange.py
 		remove camflasher.py

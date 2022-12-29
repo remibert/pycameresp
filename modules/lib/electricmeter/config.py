@@ -121,3 +121,41 @@ class TimeSlotsConfig(jsonconfig.JsonConfig):
 				time_slot[b"price"]    = rates[time_slot[b"rate"]][b"price"]
 				time_slot[b"currency"] = rates[time_slot[b"rate"]][b"currency"]
 		return result
+
+rates_config      = None
+time_slots_config = None
+
+def get_config():
+	""" Get and load electric meter configuration """
+	global rates_config, time_slots_config
+
+	if rates_config is None:
+		rates_config = RatesConfig()
+		rates_config.load()
+
+	if time_slots_config is None:
+		time_slots_config = TimeSlotsConfig()
+		time_slots_config.load()
+	return rates_config, time_slots_config
+
+def get_prices(day):
+	""" Get the price information according to the day selected """
+	rates, time_slots = get_config()
+	return time_slots.get_prices(rates.search_rates(day))
+
+
+def create_empty_slot(size):
+	""" Create empty time slot """
+	time_slots = TimeSlotsConfig()
+	time_slots.load()
+	slot_pulses = {}
+	index = 0
+	while True:
+		time_slot = time_slots.get(index)
+		if time_slot is None:
+			break
+		slot_pulses[(time_slot[b"start_time"], time_slot[b"end_time"])] = [0]*size
+		index += 1
+	if len(slot_pulses) == 0:
+		slot_pulses[(0,1439*60)] = [0]*size
+	return slot_pulses

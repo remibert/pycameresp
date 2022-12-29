@@ -33,6 +33,7 @@ excludeds_shell = excludeds + [
 
 useful.zip_dir("%s/delivery/shell.zip"%PYCAMERESP,MPY_DIRECTORY,  ["*.mpy"], excludeds_shell, False, [["frozen_mpy","lib"]])
 
+
 from zipfile import ZipFile, ZIP_DEFLATED 
 import os.path
 useful.zip_dir("%s/delivery/server.zip"%PYCAMERESP,MPY_DIRECTORY, ["*.mpy"], excludeds      , False, [["frozen_mpy","lib"]])
@@ -43,4 +44,5 @@ z.write(os.path.normpath("%s/modules/www/bootstrap.bundle.min.js"%PYCAMERESP),"w
 z.write(os.path.normpath("%s/modules/www/bootstrap.min.css"%PYCAMERESP),"www/bootstrap.min.css")
 z.close()
 
-useful.zip_dir("%s/delivery/editor.zip"%PYCAMERESP,PY_DIRECTORY,  ["*/editor*.py","*/filesystem.py","*/jsonconfig.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py"],[], False, [["shell","editor"],["tools","editor"],["modules",""]])
+useful.zip_dir("%s/delivery/editor.zip"%PYCAMERESP,PY_DIRECTORY,  ["*/editor*.py","*/filesystem.py","*/jsonconfig.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py","*/date.py"],[], False, [["shell","editor"],["tools","editor"],["modules",""]])
+useful.zip_dir("%s/delivery/electricmeter.zip"%PYCAMERESP,"%s/modules"%PYCAMERESP,  ["*/lib/electricmeter/*.py","*/www/electricmeter.html"],[], False, [["modules",""]])

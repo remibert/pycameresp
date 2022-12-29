@@ -1,10 +1,9 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Textes en francais pour watt metre """
-title_electricmeter = b"Puissance consomm\xC3\xA9e "
+title_electricmeter = b"Puissance consomm\xC3\xA9e par "
 menu_electricmeter  = b"Compteur"
 
-item_hour           = b"Par heure"
 rate                = b"Tarif"
 field_rate          = b"Nom d\xC3\xA9finissant le tarif"
 price               = b"Prix au kwh"
@@ -29,8 +28,9 @@ field_end           = b"Heure de fin"
 field_time_rate     = b"Nom du tarif"
 field_color         = b"Couleur du tarif"
 
-item_day            = b"Par jour"
-item_month          = b"Par mois"
-item_year           = b"Par ann\xC3\xA9e"
+item_hour           = b"Heure"
+item_day            = b"Jour"
+item_month          = b"Mois"
+item_year           = b"Ann\xC3\xA9e"
 item_rate           = b"Tarif"
 power_consumed      = b"Puissance instantan\xC3\xA9e"
