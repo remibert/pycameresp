@@ -10,6 +10,7 @@ except:
 	from tools import fnmatch
 
 try:
+	import uasyncio
 	import uos
 except:
 	pass
@@ -179,15 +180,19 @@ def scandir(path, pattern, recursive, displayer=None):
 	if path == "":
 		path = "."
 	if path is not None and pattern is not None:
-		for file in os.listdir(path):
+		for file_info in uos.ilistdir(path):
+			name = file_info[0]
+			typ  = file_info[1]
 			if path != "":
-				filename = path + "/" + file
+				filename = path + "/" + name
 			else:
-				filename = file
+				filename = name
 			if sys.platform != "win32":
 				filename = filename.replace("//","/")
 				filename = filename.replace("//","/")
-			if isdir(filename):
+
+			# if directory
+			if typ & 0xF000 == 0x4000:
 				if displayer:
 					displayer.show(filename)
 				else:
@@ -197,12 +202,51 @@ def scandir(path, pattern, recursive, displayer=None):
 					filenames += fils
 					directories += dirs
 			else:
-				if fnmatch.fnmatch(file, pattern):
+				if fnmatch.fnmatch(name, pattern):
 					if displayer:
 						displayer.show(filename)
 						filenames = [""]
 					else:
 						filenames.append(filename)
+	return directories, filenames
+
+async def ascandir(path, pattern, recursive, displayer=None):
+	""" Asynchronous scan recursively a directory """
+	filenames   = []
+	directories = []
+	if path == "":
+		path = "."
+	if path is not None and pattern is not None:
+		for file_info in uos.ilistdir(path):
+			name = file_info[0]
+			typ  = file_info[1]
+			if path != "":
+				filename = path + "/" + name
+			else:
+				filename = name
+			if sys.platform != "win32":
+				filename = filename.replace("//","/")
+				filename = filename.replace("//","/")
+
+			# if directory
+			if typ & 0xF000 == 0x4000:
+				if displayer:
+					displayer.show(filename)
+				else:
+					directories.append(filename)
+				if recursive:
+					dirs,fils = await ascandir(filename, pattern, recursive, displayer)
+					filenames += fils
+					directories += dirs
+			else:
+				if fnmatch.fnmatch(name, pattern):
+					if displayer:
+						displayer.show(filename)
+						filenames = [""]
+					else:
+						filenames.append(filename)
+		if ismicropython():
+			await uasyncio.sleep_ms(3)
 	return directories, filenames
 
 def prefix(files):

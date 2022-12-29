@@ -381,7 +381,8 @@ class MonthlyCounter:
 		""" Build the list of daily and monthly file to update """
 		global PULSE_DIRECTORY, PULSE_MONTHLY, PULSE_DAILY
 		force = MonthlyCounter.force[0]
-		directories, filenames = filesystem.scandir(PULSE_DIRECTORY, "*", True)
+		_, filenames = await filesystem.ascandir(PULSE_DIRECTORY, "*", True)
+		filenames.sort()
 		daily_to_update = {}
 		monthly_to_update = {}
 		for filename in filenames:
