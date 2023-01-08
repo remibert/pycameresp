@@ -6,7 +6,7 @@ import uasyncio
 import machine
 import wifi
 from server.server import Server
-from electricmeter.config   import get_prices, create_empty_slot
+from electricmeter.config   import TimeSlotsConfig
 from electricmeter          import em_lang
 from tools import filesystem, date, strings, fnmatch, logger, tasking, info
 # pylint:disable=consider-using-f-string
@@ -302,7 +302,7 @@ class DailyCounter:
 			year, month = key
 			print("Update %s\n  "%daily_filename, end="")
 			hourly_searched = "%s/%s-%s/%s-%s*%s"%(PULSE_DIRECTORY, year, month, year, month, PULSE_HOURLY)
-			slot_pulses = create_empty_slot(31)
+			slot_pulses = TimeSlotsConfig.create_empty_slot(31)
 			for hourly_filename in filenames:
 				if fnmatch.fnmatch(hourly_filename, hourly_searched):
 					name = filesystem.splitext(filesystem.split(hourly_filename)[1])[0]
@@ -318,8 +318,9 @@ class DailyCounter:
 							second += 60
 				else:
 					pass
+				await uasyncio.sleep_ms(2)
 			print("")
-			await uasyncio.sleep_ms(3)
+			await uasyncio.sleep_ms(2)
 			DailyCounter.save(daily_filename, slot_pulses)
 
 class MonthlyCounter:
@@ -334,7 +335,7 @@ class MonthlyCounter:
 		for year, monthly_filename in monthly_to_update.items():
 			print("Update %s\n  "%monthly_filename, end="")
 			daily_searched = "%s/%s-*/%s-*%s"%(PULSE_DIRECTORY, year, year, PULSE_DAILY)
-			slot_pulses = create_empty_slot(12)
+			slot_pulses = TimeSlotsConfig.create_empty_slot(12)
 			for daily_filename in filenames:
 				if fnmatch.fnmatch(daily_filename, daily_searched):
 					name = filesystem.splitext(filesystem.split(daily_filename)[1])[0]
@@ -344,8 +345,10 @@ class MonthlyCounter:
 					for time_slot, days in daily_slot_pulses.items():
 						for day in days:
 							slot_pulses[time_slot][month-1] = slot_pulses[time_slot][month-1]+day
+				await uasyncio.sleep_ms(2)
 			print("")
 			MonthlyCounter.save(monthly_filename, slot_pulses)
+			await uasyncio.sleep_ms(2)
 
 	@staticmethod
 	def save(filename, slot_pulses):
@@ -403,6 +406,7 @@ class MonthlyCounter:
 				if update:
 					daily_to_update[(year, month)] = daily
 					monthly_to_update[year] = monthly
+			await uasyncio.sleep_ms(2)
 		MonthlyCounter.force[0] = False
 		return daily_to_update, monthly_to_update, filenames
 
@@ -439,7 +443,6 @@ class MonthlyCounter:
 			MonthlyCounter.next_update[0] -= 1
 			await uasyncio.sleep(1)
 
-		await uasyncio.sleep(5)
 		daily_to_update, monthly_to_update, filenames = await MonthlyCounter().get_updates()
 		await DailyCounter.update  (filenames, daily_to_update)
 		await MonthlyCounter.update(filenames, monthly_to_update)
@@ -478,7 +481,7 @@ class Cost:
 	""" Abstract class to compute the cost """
 	def get_rates(self, selected_date):
 		""" Get the rate according to the selected date """
-		prices = get_prices(selected_date)
+		prices = TimeSlotsConfig.get_cost(selected_date)
 		consumptions = {}
 		for price in prices:
 			consumptions[price[b"rate"]] = Consumption(price[b"rate"], price[b"currency"])

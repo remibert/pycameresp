@@ -26,7 +26,7 @@ def date_ms_to_string():
 	""" Get a string with the current date with ms """
 	current = time.time_ns()
 	ms = (current // 1_000_000)%1000
-	current /= 1_000_000_000
+	current //= 1_000_000_000
 	year,month,day,hour,minute,second = local_time(current)[:6]
 	return "%04d/%02d/%02d %02d:%02d:%02d.%03d"%(year,month,day,hour,minute,second,ms)
 

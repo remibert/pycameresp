@@ -148,7 +148,7 @@ async def wifi_config(request, response, args):
 			Card(
 				[
 					CardHeader([\
-						Switch(text=lang.dynamic_ip, spacer=b"mb-0", checked=dynamic, name=b"dynamic", onchange=b"this.form.submit()", disabled=disabled)]),
+						Switch(text=lang.dynamic_ip, spacer=b"mb-0", checked=dynamic, name=b"dynamic", event=b'onchange="this.form.submit()"', disabled=disabled)]),
 					None if dynamic else CardBody([\
 						static_ip_html(network, disabled)])
 				]),

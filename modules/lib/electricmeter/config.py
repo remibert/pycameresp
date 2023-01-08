@@ -15,8 +15,10 @@ class RateConfig(jsonconfig.JsonConfig):
 		self.currency = b""
 		self.validity_date = 0
 
+
 class RatesConfig(jsonconfig.JsonConfig):
 	""" Rates list per kwh """
+	config = None
 	def __init__(self):
 		""" Constructor """
 		jsonconfig.JsonConfig.__init__(self)
@@ -67,6 +69,15 @@ class RatesConfig(jsonconfig.JsonConfig):
 					result[rate[b"name"]] = rate
 		return result
 
+	@staticmethod
+	def get_config():
+		""" Return the singleton configuration """
+		if RatesConfig.config is None:
+			RatesConfig.config = RatesConfig()
+			RatesConfig.config.load()
+		return RatesConfig.config
+
+
 class TimeSlotConfig(jsonconfig.JsonConfig):
 	""" Time slot configuration """
 	def __init__(self):
@@ -79,6 +90,7 @@ class TimeSlotConfig(jsonconfig.JsonConfig):
 
 class TimeSlotsConfig(jsonconfig.JsonConfig):
 	""" Time slots list """
+	config = None
 	def __init__(self):
 		""" Constructor """
 		jsonconfig.JsonConfig.__init__(self)
@@ -122,40 +134,52 @@ class TimeSlotsConfig(jsonconfig.JsonConfig):
 				time_slot[b"currency"] = rates[time_slot[b"rate"]][b"currency"]
 		return result
 
-rates_config      = None
-time_slots_config = None
+	@staticmethod
+	def get_config():
+		""" Return the singleton configuration """
+		if TimeSlotsConfig.config is None:
+			TimeSlotsConfig.config = TimeSlotsConfig()
+			TimeSlotsConfig.config.load()
+		return TimeSlotsConfig.config
 
-def get_config():
-	""" Get and load electric meter configuration """
-	global rates_config, time_slots_config
+	@staticmethod
+	def get_cost(day):
+		""" Get the cost according to the day selected """
+		time_slots = TimeSlotsConfig.get_config()
+		rates      = RatesConfig.get_config()
+		return time_slots.get_prices(rates.search_rates(day))
 
-	if rates_config is None:
-		rates_config = RatesConfig()
-		rates_config.load()
+	@staticmethod
+	def create_empty_slot(size):
+		""" Create empty time slot """
+		time_slots = TimeSlotsConfig()
+		time_slots.load()
+		slot_pulses = {}
+		index = 0
+		while True:
+			time_slot = time_slots.get(index)
+			if time_slot is None:
+				break
+			slot_pulses[(time_slot[b"start_time"], time_slot[b"end_time"])] = [0]*size
+			index += 1
+		if len(slot_pulses) == 0:
+			slot_pulses[(0,1439*60)] = [0]*size
+		return slot_pulses
 
-	if time_slots_config is None:
-		time_slots_config = TimeSlotsConfig()
-		time_slots_config.load()
-	return rates_config, time_slots_config
 
-def get_prices(day):
-	""" Get the price information according to the day selected """
-	rates, time_slots = get_config()
-	return time_slots.get_prices(rates.search_rates(day))
+class GeolocationConfig(jsonconfig.JsonConfig):
+	""" Geolocation configuration """
+	config = None
+	def __init__(self):
+		""" Constructor """
+		jsonconfig.JsonConfig.__init__(self)
+		self.latitude  = 44.93
+		self.longitude = 4.87
 
-
-def create_empty_slot(size):
-	""" Create empty time slot """
-	time_slots = TimeSlotsConfig()
-	time_slots.load()
-	slot_pulses = {}
-	index = 0
-	while True:
-		time_slot = time_slots.get(index)
-		if time_slot is None:
-			break
-		slot_pulses[(time_slot[b"start_time"], time_slot[b"end_time"])] = [0]*size
-		index += 1
-	if len(slot_pulses) == 0:
-		slot_pulses[(0,1439*60)] = [0]*size
-	return slot_pulses
+	@staticmethod
+	def get_config():
+		""" Return the singleton configuration """
+		if GeolocationConfig.config is None:
+			GeolocationConfig.config = GeolocationConfig()
+			GeolocationConfig.config.load()
+		return GeolocationConfig.config

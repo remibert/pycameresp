@@ -33,4 +33,10 @@ item_day            = b"Jour"
 item_month          = b"Mois"
 item_year           = b"Ann\xC3\xA9e"
 item_rate           = b"Tarif"
+
 power_consumed      = b"Puissance instantan\xC3\xA9e"
+
+item_geolocation    = b"G\xC3\xA9olocalisation"
+latitude            = b"Latitude"
+longitude           = b"Longitude"
+temperature         = b"Temp\xC3\xA9rature"

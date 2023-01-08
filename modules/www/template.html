@@ -87,14 +87,14 @@
 			<!--Edit:begin-->
 			<div class="form-group %(spacer)s">
 				<label class="form-check-label">%(text)s</label>
-				<input type="%(type)s" class="form-control form-label %(class_)s" style="%(style)s" id="%(id)s" pattern="%(pattern)s" placeholder="%(placeholder)s" type="%(type)s" value="%(value)s" name="%(name)s" step="%(step)s" %(disabled)s %(required)s %(event)s/>
+				<input type="%(type)s" class="form-control form-label %(class_)s" style="%(style)s" id="%(id)s" pattern="%(pattern)s" placeholder="%(placeholder)s" type="%(type)s" value="%(value)s" name="%(name)s" min="%(min)s" max="%(max)s" step="%(step)s" %(disabled)s %(required)s %(event)s/>
 			</div>
 			<!--Edit:end-->
 
 			<!--Switch:begin-->
 			<div class="form-check form-switch %(spacer)s">
 				<input type="hidden" value="0" name="%(name)s" />
-				<input type="checkbox" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s onchange="%(onchange)s" />
+				<input type="checkbox" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" value="%(value)s" name="%(name)s" %(checked)s %(disabled)s %(event)s/>
 				<label class="form-check-label" for="%(id)s">%(text)s</label>
 			</div>
 			<!--Switch:end-->
@@ -102,7 +102,7 @@
 			<!--Radio:begin-->
 			<div class="form-check %(spacer)s">
 				<label class="form-check-label">
-					<input type="radio" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(checked)s %(disabled)s onchange="%(onchange)s">%(text)s</input>
+					<input type="radio" class="form-check-input %(class_)s" style="%(style)s" id="%(id)s" name="%(name)s" %(checked)s %(disabled)s %(event)s>%(text)s</input>
 				</label>
 			</div>
 			<!--Radio:end-->

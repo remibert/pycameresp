@@ -9,6 +9,9 @@ var DAY   = '%s';
 var DATE  = '%s';
 var UNIT  = '%s';
 var POWER = '%s';
+var LATITUDE = %f;
+var LONGITUDE = %f;
+var WITH_TEMPERATURE = "%s";
 var chartjs = null;
 
 function pad(num, size) 
@@ -36,6 +39,31 @@ function get_max_days_in_month()
 	var monthEnd = new Date(year, month, 1);
 	var result = (monthEnd - monthStart) / (1000 * 60 * 60 * 24);
 	return result;
+}
+
+function get_first_day_month()
+{
+	var spl = DAY.split("-");
+	return spl[0] + "-" + spl[1] + "-01";
+}
+
+function get_last_day_month()
+{
+	var spl = DAY.split("-");
+	var year = spl[0];
+	var month = spl[1];
+	var day = 0;
+	var current = new Date();
+
+	if (parseInt(month) == (current.getMonth() +1) && parseInt(year) == current.getFullYear())
+	{
+		day = current.getDate();
+	}
+	else
+	{
+		day = get_max_days_in_month();
+	}
+	return spl[0] + "-" + spl[1] + "-" + pad(day,2);
 }
 
 class Cost
@@ -89,7 +117,6 @@ class Costs
 	}
 }
 
-
 class MainChart
 {
 	constructor()
@@ -108,25 +135,30 @@ class MainChart
 		return this.labels;
 	}
 
-	get_datasets()
-	{
-		var datasets = [];
-	}
-
-	show(datas)
+	show(meteo=null)
 	{
 		if (!(chartjs === null))
 		{
 			chartjs.destroy();
 			chartjs = null;
 		}
+		if (meteo !== null)
+		{
+			if ("error" in meteo)
+			{
+				meteo = null;
+			}
+			if (WITH_TEMPERATURE === "false")
+			{
+				meteo = null;
+			}
+		}
 		chartjs = new Chart(document.getElementById("line-chart"), 
 		{
-			type: 'bar',
 			data: 
 			{
 				labels: this.get_labels(),
-				datasets: this.get_datasets()
+				datasets: this.get_datasets(meteo)
 			},
 			options: 
 			{
@@ -162,9 +194,62 @@ class MainChart
 		});
 	}
 
-	get_datasets()
+	get_meteo(datasets, meteo)
 	{
-		var result = [];
+		if (meteo !== null)
+		{
+			datasets.push(
+					{ 
+						type: "line",
+						data: meteo.daily.temperature_2m_max,
+						label: meteo.daily_units.temperature_2m_max,
+						backgroundColor: "#F10B0B",
+						borderColor: "#F10B0B",
+						fill: false,
+						pointRadius:1,
+						borderWidth:1,
+						scales:
+						{
+							x:
+							{
+								stacked: true,
+							},
+							y:
+							{
+								stacked: false
+							}
+						},
+						stack:"temp max"
+						
+					});
+			datasets.push(
+				{ 
+					type: "line",
+					data: meteo.daily.temperature_2m_min,
+					label: meteo.daily_units.temperature_2m_min,
+					backgroundColor: "#0BCEF1",
+					borderColor: "#0BCEF1",
+					fill: false,
+					pointRadius:1,
+					borderWidth:1,
+					scales:
+						{
+							x:
+							{
+								stacked: true,
+							},
+							y:
+							{
+								stacked: false
+							}
+						},
+					stack:"temp in"
+				});
+		}
+	}
+
+	get_consumption(datasets)
+	{
 		var data = null;
 		var unit = "";
 		var item = null;
@@ -198,17 +283,27 @@ class MainChart
 					data.push((item / divisor).toFixed(2));
 				});
 			}
-			result.push(
+			var type = "bar";
+			datasets.push(
 				{ 
+					type: type,
 					data: data,
 					label: cost.name + " (" + unit + ")",
 					backgroundColor: cost.color,
+					borderColor: cost.color,
 					fill: false,
 					pointRadius:1,
-					borderWidth:0
+					borderWidth:0,
+					stack:"Power",
 				});
-			
 		}
+	}
+
+	get_datasets(meteo=null)
+	{
+		var result = [];
+		this.get_meteo(result, meteo);
+		this.get_consumption(result);
 		return result;
 	}
 
@@ -300,7 +395,6 @@ class HourlyChart extends MainChart
 			this.labels[i] = pad((i*STEP)/60, 2) + ":" + pad((i*STEP)%%60, 2);
 		}
 	}
-
 }
 
 class DailyChart extends MainChart
@@ -349,9 +443,21 @@ class DailyChart extends MainChart
 	static async manage()
 	{
 		var chart = new DailyChart();
+		var dataMeteo = null;
 		const response = await fetch('/daily_datas?month='+DAY);
 		chart.parse(await response.json());
-		chart.show();
+
+		var localWeatherUrl = "https://api.open-meteo.com/v1/forecast?" + 
+			"start_date=" + get_first_day_month() +
+			"&end_date="   + get_last_day_month() +
+			"&latitude="   + LATITUDE + 
+			"&longitude=" + LONGITUDE + 
+			"&daily=temperature_2m_max,temperature_2m_min" + 
+			"&timezone=auto" ;
+		const meteo = await fetch(localWeatherUrl);
+		
+		dataMeteo = await meteo.json();
+		chart.show(dataMeteo);
 	}
 }
 

@@ -8,15 +8,16 @@
 import json
 from server.httpserver      import HttpServer
 from htmltemplate           import *
-from webpage.mainpage       import main_frame
+from webpage.mainpage       import main_frame, manage_default_button
 from tools                  import date, strings, lang
-from electricmeter.config   import RateConfig, TimeSlotConfig, get_config, get_prices
+from electricmeter.config   import RateConfig, TimeSlotConfig, RatesConfig, TimeSlotsConfig, GeolocationConfig
 from electricmeter          import electricmeter, em_lang
 
 
 @HttpServer.add_route(b'/hourly', menu=em_lang.menu_electricmeter, item=em_lang.item_hour)
 async def hourly_page_page(request, response, args):
 	""" Daily consumption graph hour by hour """
+	geolocation = GeolocationConfig.get_config()
 	day  = date.html_to_date(request.params.get(b"day",b""))
 
 	if   request.params.get(b"direction",b"") == b"next":
@@ -59,7 +60,15 @@ async def hourly_page_page(request, response, args):
 			],
 			class_=b"row"),
 
-		Tag(content%(b"hourly", step, date.date_to_html(day), lang.translate_date(day), unit, em_lang.power_consumed))
+		Tag(content%(b"hourly",
+			step,
+			date.date_to_html(day),
+			lang.translate_date(day),
+			unit,
+			em_lang.power_consumed,
+			geolocation.latitude,
+			geolocation.longitude,
+			b""))
 	]
 	page = main_frame(request, response, args,em_lang.title_electricmeter + em_lang.item_hour.lower(),Form(page_content))
 	await response.send_page(page)
@@ -70,12 +79,13 @@ async def hourly_page_datas(request, response, args):
 	""" Send pulses of hours and rates """
 	day    = date.html_to_date(request.params.get(b"day",b""))
 	result = {"pulses":None}
-	result["rates"] = strings.tostrings(get_prices(day))
+	result["rates"] = strings.tostrings(TimeSlotsConfig.get_cost(day))
 	try:
 		result["pulses"] = electricmeter.HourlyCounter.get_datas(day)
 		await response.send_buffer(b"pulses", buffer=strings.tobytes(json.dumps(result)), mime_type=b"application/json")
 	except Exception as err:
 		await response.send_not_found(err)
+
 
 @HttpServer.add_route(b'/power_datas')
 async def power_page_datas(request, response, args):
@@ -90,13 +100,18 @@ async def power_page_datas(request, response, args):
 @HttpServer.add_route(b'/daily', menu=em_lang.menu_electricmeter, item=em_lang.item_day)
 async def daily_page(request, response, args):
 	""" Consumption graph day by day """
+	geolocation = GeolocationConfig.get_config()
 	y,m = date.local_time()[:2]
 	year   = int(request.params.get(b"year",b"%d"%y))
 	month  = int(request.params.get(b"month",b"%d"%m))
-
 	day  = date.html_to_date(b"%04d-%02d-01"%(year, month))
-
 	unit = request.params.get(b"unit",b"power")
+	temperature = request.params.get(b"temperature")
+	if temperature is None or temperature == b"0":
+		with_temperature = b"false"
+		temperature = None
+	else:
+		with_temperature = b"true"
 
 	months_combo = []
 	month_id = 1
@@ -113,21 +128,24 @@ async def daily_page(request, response, args):
 				Div([
 					Edit (name=b"year", spacer=b"", type=b"number", step=b"1",  required=True, value=b"%d"%year, event=b'onchange="this.form.submit()"'),
 					],
-					class_=b'col-md-4'),
+					class_=b'col-md-3'),
 				Div([
 					Select(months_combo, spacer=b"", name=b"month", event=b'onchange="this.form.submit()"')],
-					class_=b'col-md-4 mb-2'),
+					class_=b'col-md-3 mb-2'),
 				Div(
 					[Select(
 						[
 							Option(text=em_lang.type_price, value=b"price", selected= True if unit == b"price" else False),
 							Option(text=em_lang.type_power, value=b"power", selected= True if unit == b"power" else False),
 						], spacer=b"", text=em_lang.step_minutes, name=b"unit",                 event=b'onchange="this.form.submit()"')],
-					class_=b'col-md-4')
+					class_=b'col-md-3'),
+				Div(
+					Switch(text=em_lang.temperature, name=b"temperature", checked=temperature, event=b'onchange="this.form.submit()"'),
+					class_=b'col-md-3')
 			],
 			class_=b"row"),
 
-		Tag(content%(b"daily", 86400, date.date_to_html(day), lang.translate_date(day, False), unit, em_lang.power_consumed))
+		Tag(content%(b"daily", 86400, date.date_to_html(day), lang.translate_date(day, False), unit, em_lang.power_consumed, geolocation.latitude, geolocation.longitude, with_temperature))
 	]
 	page = main_frame(request, response, args, em_lang.title_electricmeter + em_lang.item_day.lower(),Form(page_content))
 	await response.send_page(page)
@@ -139,7 +157,7 @@ async def daily_datas(request, response, args):
 	await electricmeter.MonthlyCounter.refresh()
 	month    = date.html_to_date(request.params.get(b"month",b""))
 	result = {"time_slots":None}
-	result["rates"] = strings.tostrings(get_prices(month))
+	result["rates"] = strings.tostrings(TimeSlotsConfig.get_cost(month))
 	try:
 		result["time_slots"] = electricmeter.DailyCounter.get_datas(month)
 		await response.send_buffer(b"pulses", buffer=strings.tobytes(json.dumps(result)), mime_type=b"application/json")
@@ -150,14 +168,11 @@ async def daily_datas(request, response, args):
 @HttpServer.add_route(b'/monthly', menu=em_lang.menu_electricmeter, item=em_lang.item_month)
 async def monthly_page(request, response, args):
 	""" Consumption graph month by month """
-
+	geolocation = GeolocationConfig.get_config()
 	y = date.local_time()[0]
 	year   = int(request.params.get(b"year",b"%d"%y))
-
 	month  = date.html_to_date(b"%04d-01-01"%(year))
-
 	unit = request.params.get(b"unit",b"power")
-
 
 	with  open(WWW_DIR + "electricmeter.html", "rb") as file:
 		content = file.read()
@@ -179,7 +194,7 @@ async def monthly_page(request, response, args):
 			],
 			class_=b"row"),
 
-		Tag(content%(b"monthly", 86400, date.date_to_html(month), lang.translate_date(month, False), unit, em_lang.power_consumed))
+		Tag(content%(b"monthly", 86400, date.date_to_html(month), lang.translate_date(month, False), unit, em_lang.power_consumed, geolocation.latitude, geolocation.longitude, b""))
 	]
 	page = main_frame(request, response, args, em_lang.title_electricmeter + em_lang.item_month.lower(),Form(page_content))
 	await response.send_page(page)
@@ -189,9 +204,9 @@ async def monthly_page(request, response, args):
 async def monthly_datas(request, response, args):
 	""" Send pulses of month and rates """
 	await electricmeter.MonthlyCounter.refresh()
-	year    = date.html_to_date(request.params.get(b"year",b""))
+	year   = date.html_to_date(request.params.get(b"year",b""))
 	result = {"time_slots":None}
-	result["rates"] = strings.tostrings(get_prices(year))
+	result["rates"] = strings.tostrings(TimeSlotsConfig.get_cost(year))
 	try:
 		result["time_slots"] = electricmeter.MonthlyCounter.get_datas(year)
 		await response.send_buffer(b"pulses", buffer=strings.tobytes(json.dumps(result)), mime_type=b"application/json")
@@ -202,8 +217,7 @@ async def monthly_datas(request, response, args):
 @HttpServer.add_route(b'/rate', menu=em_lang.menu_electricmeter, item=em_lang.item_rate)
 async def rate_page(request, response, args):
 	""" Electric rate configuration page """
-	rates, _ = get_config()
-
+	rates   = RatesConfig.get_config()
 	current = RateConfig()
 	# If new rate added
 	if request.params.get(b"add",None) is not None:
@@ -252,8 +266,8 @@ async def rate_page(request, response, args):
 @HttpServer.add_route(b'/time_slots', menu=em_lang.menu_electricmeter, item=em_lang.item_time_slots)
 async def time_slots_page(request, response, args):
 	""" Electric time slots configuration page """
-	rates, time_slots = get_config()
-
+	time_slots = TimeSlotsConfig.get_config()
+	rates   = RatesConfig.get_config()
 	current = TimeSlotConfig()
 
 	# If new time_slot added
@@ -314,4 +328,19 @@ async def time_slots_page(request, response, args):
 			]),
 			List(time_slots_items)
 		])
+	await response.send_page(page)
+
+
+@HttpServer.add_route(b'/geolocation', menu=em_lang.menu_electricmeter, item=em_lang.item_geolocation)
+async def geolocation_page(request, response, args):
+	""" Determines the geolocation of the device """
+	config = GeolocationConfig.get_config()
+	disabled, action, submit = manage_default_button(request, config)
+
+	page = main_frame(request, response, args, em_lang.item_geolocation,
+		Form([
+			Edit  (text=em_lang.latitude,  name=b"latitude",  type=b"number", step=b"0.0001", required=True, min=b"-90.",  max=b"90." , value=b"%.3f"%config.latitude, disabled=disabled),
+			Edit  (text=em_lang.longitude, name=b"longitude", type=b"number", step=b"0.0001", required=True, min=b"-180.", max=b"180.", value=b"%.3f"%config.longitude,disabled=disabled),
+			submit, None
+		]))
 	await response.send_page(page)

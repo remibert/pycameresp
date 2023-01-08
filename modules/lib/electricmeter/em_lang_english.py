@@ -34,3 +34,8 @@ item_month          = b"Month"
 item_year           = b"Year"
 item_rate           = b"Rate"
 power_consumed      = b"Instantaneous power consumption"
+
+item_geolocation    = b"Geolocation"
+latitude            = b"Latitude"
+longitude           = b"Longitude"
+temperature         = b"Temperature"
