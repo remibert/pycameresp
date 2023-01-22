@@ -38,6 +38,7 @@ If you have enough memory (SPIRAM or other), just start the server with the prel
 # historically based on :
 # https://github.com/jczic/MicroWebSrv/blob/master/microWebSocket.py
 # but I have modified a lot, there must still be some original functions.
+# pylint:disable=consider-using-f-string
 &#34;&#34;&#34; This class is used to manage an http server.
 This class contains few lines of code, this is to save memory.
 The core of the server is in the other class HttpServerCore, which is loaded into memory only when connecting an HTTP client.
@@ -74,7 +75,7 @@ class HttpServer:
                         try:
                                 loader()
                         except ModuleNotFound as err:
-                                logger.syslog(&#34;Failed to preload html page, %s&#34;%str(err))
+                                logger.syslog(&#34;Preload html page : %s&#34;%str(err))
                         except Exception as err:
                                 logger.syslog(err)
 
@@ -301,7 +302,7 @@ preload : True = preload the server at the start, False = load the server at the
                         try:
                                 loader()
                         except ModuleNotFound as err:
-                                logger.syslog(&#34;Failed to preload html page, %s&#34;%str(err))
+                                logger.syslog(&#34;Preload html page : %s&#34;%str(err))
                         except Exception as err:
                                 logger.syslog(err)
 
@@ -598,7 +599,7 @@ async def static_pages(request, response, args):
                 try:
                         loader()
                 except ModuleNotFound as err:
-                        logger.syslog(&#34;Failed to preload html page, %s&#34;%str(err))
+                        logger.syslog(&#34;Preload html page : %s&#34;%str(err))
                 except Exception as err:
                         logger.syslog(err)</code></pre>
 </details>

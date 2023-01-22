@@ -29,6 +29,8 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
+
 &#34;&#34;&#34; Sdcard management class &#34;&#34;&#34;
 try:
         import machine
@@ -63,7 +65,10 @@ class SdCard:
                 &#34;&#34;&#34; Return the maximal size of sdcard &#34;&#34;&#34;
                 if SdCard.is_mounted():
                         status = uos.statvfs(SdCard.get_mountpoint())
-                        return status[1]*status[2]
+                        if filesystem.ismicropython():
+                                return status[1]*status[2]
+                        else:
+                                return status.f_frsize*status.f_blocks
                 else:
                         return 0
 
@@ -72,7 +77,10 @@ class SdCard:
                 &#34;&#34;&#34; Return the free size of sdcard &#34;&#34;&#34;
                 if SdCard.is_mounted():
                         status = uos.statvfs(SdCard.get_mountpoint())
-                        return status[0]*status[3]
+                        if filesystem.ismicropython():
+                                return status[0]*status[3]
+                        else:
+                                return status.f_bsize * status.f_bfree
                 else:
                         return 0
 
@@ -100,14 +108,18 @@ class SdCard:
                 result = False
                 if SdCard.is_mounted() is False:
                         try:
+                                # pylint:disable=redefined-outer-name
+
                                 import os
                                 import machine
                                 sd = machine.SDCard(**(SdCard.slot[0]))
                                 if fs== &#34;FAT&#34;:
+                                        # pylint:disable=no-member
                                         os.VfsFat.mkfs(sd)
                                         os.VfsFat(sd)
                                         result = True
                                 elif fs== &#34;LFS&#34;:
+                                        # pylint:disable=no-member
                                         os.VfsLfs2.mkfs(sd)
                                         os.VfsLfs2(sd)
                                 result = True
@@ -222,6 +234,7 @@ class SdCard:
                                                 logger.syslog(err)
                                                 break
                         try:
+                                # pylint:disable=unspecified-encoding
                                 result = open(filepath,mode)
                                 break
                         except OSError as err:
@@ -326,7 +339,10 @@ class SdCard:
                 &#34;&#34;&#34; Return the maximal size of sdcard &#34;&#34;&#34;
                 if SdCard.is_mounted():
                         status = uos.statvfs(SdCard.get_mountpoint())
-                        return status[1]*status[2]
+                        if filesystem.ismicropython():
+                                return status[1]*status[2]
+                        else:
+                                return status.f_frsize*status.f_blocks
                 else:
                         return 0
 
@@ -335,7 +351,10 @@ class SdCard:
                 &#34;&#34;&#34; Return the free size of sdcard &#34;&#34;&#34;
                 if SdCard.is_mounted():
                         status = uos.statvfs(SdCard.get_mountpoint())
-                        return status[0]*status[3]
+                        if filesystem.ismicropython():
+                                return status[0]*status[3]
+                        else:
+                                return status.f_bsize * status.f_bfree
                 else:
                         return 0
 
@@ -363,14 +382,18 @@ class SdCard:
                 result = False
                 if SdCard.is_mounted() is False:
                         try:
+                                # pylint:disable=redefined-outer-name
+
                                 import os
                                 import machine
                                 sd = machine.SDCard(**(SdCard.slot[0]))
                                 if fs== &#34;FAT&#34;:
+                                        # pylint:disable=no-member
                                         os.VfsFat.mkfs(sd)
                                         os.VfsFat(sd)
                                         result = True
                                 elif fs== &#34;LFS&#34;:
+                                        # pylint:disable=no-member
                                         os.VfsLfs2.mkfs(sd)
                                         os.VfsLfs2(sd)
                                 result = True
@@ -485,6 +508,7 @@ class SdCard:
                                                 logger.syslog(err)
                                                 break
                         try:
+                                # pylint:disable=unspecified-encoding
                                 result = open(filepath,mode)
                                 break
                         except OSError as err:
@@ -607,6 +631,7 @@ def create_file(directory, filename, mode=&#34;w&#34;):
                                         logger.syslog(err)
                                         break
                 try:
+                        # pylint:disable=unspecified-encoding
                         result = open(filepath,mode)
                         break
                 except OSError as err:
@@ -631,14 +656,18 @@ def formatsd(fs=&#34;FAT&#34;):
         result = False
         if SdCard.is_mounted() is False:
                 try:
+                        # pylint:disable=redefined-outer-name
+
                         import os
                         import machine
                         sd = machine.SDCard(**(SdCard.slot[0]))
                         if fs== &#34;FAT&#34;:
+                                # pylint:disable=no-member
                                 os.VfsFat.mkfs(sd)
                                 os.VfsFat(sd)
                                 result = True
                         elif fs== &#34;LFS&#34;:
+                                # pylint:disable=no-member
                                 os.VfsLfs2.mkfs(sd)
                                 os.VfsLfs2(sd)
                         result = True
@@ -661,7 +690,10 @@ def get_free_size():
         &#34;&#34;&#34; Return the free size of sdcard &#34;&#34;&#34;
         if SdCard.is_mounted():
                 status = uos.statvfs(SdCard.get_mountpoint())
-                return status[0]*status[3]
+                if filesystem.ismicropython():
+                        return status[0]*status[3]
+                else:
+                        return status.f_bsize * status.f_bfree
         else:
                 return 0</code></pre>
 </details>
@@ -680,7 +712,10 @@ def get_max_size():
         &#34;&#34;&#34; Return the maximal size of sdcard &#34;&#34;&#34;
         if SdCard.is_mounted():
                 status = uos.statvfs(SdCard.get_mountpoint())
-                return status[1]*status[2]
+                if filesystem.ismicropython():
+                        return status[1]*status[2]
+                else:
+                        return status.f_frsize*status.f_blocks
         else:
                 return 0</code></pre>
 </details>

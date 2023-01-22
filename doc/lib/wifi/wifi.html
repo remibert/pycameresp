@@ -29,6 +29,8 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
+
 &#34;&#34;&#34; Manages access to wifi, treats cases of network loss with retry, and manages a fallback on the access point if no network is available &#34;&#34;&#34;
 from wifi.accesspoint import *
 from wifi.station import *
@@ -107,7 +109,7 @@ class Wifi:
                 &#34;&#34;&#34; Indicates that wan have probably a problem &#34;&#34;&#34;
                 if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
                         Wifi.context.wan_problem += 1
-                        logger.syslog(&#34;WAN problem %d detected (max=%d)&#34;%(Wifi.context.wan_problem,MAX_PROBLEM))
+                        logger.syslog(&#34;WAN problem %d detected (max=%d) (wifi=%s)&#34;%(Wifi.context.wan_problem,MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))
 
         @staticmethod
         def lan_connected(changeState=True):
@@ -124,7 +126,7 @@ class Wifi:
                 &#34;&#34;&#34; Indicates that lan disconnection detected &#34;&#34;&#34;
                 if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
                         Wifi.context.lan_problem += 1
-                        logger.syslog(&#34;LAN problem %d detected (max=%d)&#34;%(Wifi.context.lan_problem, MAX_PROBLEM))
+                        logger.syslog(&#34;LAN problem %d detected (max=%d)(wifi=%s)&#34;%(Wifi.context.lan_problem, MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))
 
         @staticmethod
         def is_wan_available():
@@ -155,7 +157,7 @@ class Wifi:
                         # If the wifi not started
                         if state == WIFI_OFF:
                                 Wifi.context.dns = &#34;&#34;
-                                
+
                                 # If wifi station available
                                 if Station.is_activated():
                                         AccessPoint.stop()
@@ -209,7 +211,7 @@ class Wifi:
                                         Wifi.context.dns = Station.get_info()[3]
                                         Wifi.context.lan_problem = 0
                                         Wifi.context.wan_problem = 0
-                                
+
                                 # If station yet activated
                                 if Station.is_activated():
                                         # If too many problem detected
@@ -300,7 +302,7 @@ class Wifi:
                 &#34;&#34;&#34; Indicates that wan have probably a problem &#34;&#34;&#34;
                 if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
                         Wifi.context.wan_problem += 1
-                        logger.syslog(&#34;WAN problem %d detected (max=%d)&#34;%(Wifi.context.wan_problem,MAX_PROBLEM))
+                        logger.syslog(&#34;WAN problem %d detected (max=%d) (wifi=%s)&#34;%(Wifi.context.wan_problem,MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))
 
         @staticmethod
         def lan_connected(changeState=True):
@@ -317,7 +319,7 @@ class Wifi:
                 &#34;&#34;&#34; Indicates that lan disconnection detected &#34;&#34;&#34;
                 if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
                         Wifi.context.lan_problem += 1
-                        logger.syslog(&#34;LAN problem %d detected (max=%d)&#34;%(Wifi.context.lan_problem, MAX_PROBLEM))
+                        logger.syslog(&#34;LAN problem %d detected (max=%d)(wifi=%s)&#34;%(Wifi.context.lan_problem, MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))
 
         @staticmethod
         def is_wan_available():
@@ -348,7 +350,7 @@ class Wifi:
                         # If the wifi not started
                         if state == WIFI_OFF:
                                 Wifi.context.dns = &#34;&#34;
-                                
+
                                 # If wifi station available
                                 if Station.is_activated():
                                         AccessPoint.stop()
@@ -402,7 +404,7 @@ class Wifi:
                                         Wifi.context.dns = Station.get_info()[3]
                                         Wifi.context.lan_problem = 0
                                         Wifi.context.wan_problem = 0
-                                
+
                                 # If station yet activated
                                 if Station.is_activated():
                                         # If too many problem detected
@@ -563,7 +565,7 @@ def lan_disconnected():
         &#34;&#34;&#34; Indicates that lan disconnection detected &#34;&#34;&#34;
         if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
                 Wifi.context.lan_problem += 1
-                logger.syslog(&#34;LAN problem %d detected (max=%d)&#34;%(Wifi.context.lan_problem, MAX_PROBLEM))</code></pre>
+                logger.syslog(&#34;LAN problem %d detected (max=%d)(wifi=%s)&#34;%(Wifi.context.lan_problem, MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))</code></pre>
 </details>
 </dd>
 <dt id="lib.wifi.wifi.Wifi.manage"><code class="name flex">
@@ -584,7 +586,7 @@ async def manage():
                 # If the wifi not started
                 if state == WIFI_OFF:
                         Wifi.context.dns = &#34;&#34;
-                        
+
                         # If wifi station available
                         if Station.is_activated():
                                 AccessPoint.stop()
@@ -638,7 +640,7 @@ async def manage():
                                 Wifi.context.dns = Station.get_info()[3]
                                 Wifi.context.lan_problem = 0
                                 Wifi.context.wan_problem = 0
-                        
+
                         # If station yet activated
                         if Station.is_activated():
                                 # If too many problem detected
@@ -717,7 +719,7 @@ def wan_disconnected():
         &#34;&#34;&#34; Indicates that wan have probably a problem &#34;&#34;&#34;
         if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
                 Wifi.context.wan_problem += 1
-                logger.syslog(&#34;WAN problem %d detected (max=%d)&#34;%(Wifi.context.wan_problem,MAX_PROBLEM))</code></pre>
+                logger.syslog(&#34;WAN problem %d detected (max=%d) (wifi=%s)&#34;%(Wifi.context.wan_problem,MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))</code></pre>
 </details>
 </dd>
 </dl>

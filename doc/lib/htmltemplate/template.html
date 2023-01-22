@@ -34,15 +34,23 @@ from tools import logger
 
 class Template:
         &#34;&#34;&#34; Base class of html templates &#34;&#34;&#34;
+        default_spacer = b&#34;mb-3&#34;
         def __init__(self, classname, *args, **params):
+                &#34;&#34;&#34; &#34;&#34;&#34;
                 self.classname = classname
                 self.children = []
+                self.spacer = b&#34;&#34;
                 if len(args) &gt; 0:
                         children = args[0]
                 else:
                         children = params.get(&#34;children&#34;,[])
                 if children != []:
                         self.add_children(children)
+
+        def end_init(self, **params):
+                &#34;&#34;&#34; Terminate initialisation&#34;&#34;&#34;
+                if params.get(&#34;spacer&#34;, None) is None:
+                        self.spacer = Template.default_spacer
 
         def add_children(self, children):
                 &#34;&#34;&#34; Add children of html template in the current instance &#34;&#34;&#34;
@@ -93,15 +101,23 @@ class Template:
 </summary>
 <pre><code class="python">class Template:
         &#34;&#34;&#34; Base class of html templates &#34;&#34;&#34;
+        default_spacer = b&#34;mb-3&#34;
         def __init__(self, classname, *args, **params):
+                &#34;&#34;&#34; &#34;&#34;&#34;
                 self.classname = classname
                 self.children = []
+                self.spacer = b&#34;&#34;
                 if len(args) &gt; 0:
                         children = args[0]
                 else:
                         children = params.get(&#34;children&#34;,[])
                 if children != []:
                         self.add_children(children)
+
+        def end_init(self, **params):
+                &#34;&#34;&#34; Terminate initialisation&#34;&#34;&#34;
+                if params.get(&#34;spacer&#34;, None) is None:
+                        self.spacer = Template.default_spacer
 
         def add_children(self, children):
                 &#34;&#34;&#34; Add children of html template in the current instance &#34;&#34;&#34;
@@ -130,6 +146,13 @@ class Template:
                 except Exception as err:
                         await file.write(logger.html_exception(err))</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.htmltemplate.template.Template.default_spacer"><code class="name">var <span class="ident">default_spacer</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="lib.htmltemplate.template.Template.add_children"><code class="name flex">
@@ -148,6 +171,21 @@ class Template:
                         self.add_children(child)
         else:
                 self.children.append(children)</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.template.Template.end_init"><code class="name flex">
+<span>def <span class="ident">end_init</span></span>(<span>self, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Terminate initialisation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def end_init(self, **params):
+        &#34;&#34;&#34; Terminate initialisation&#34;&#34;&#34;
+        if params.get(&#34;spacer&#34;, None) is None:
+                self.spacer = Template.default_spacer</code></pre>
 </details>
 </dd>
 <dt id="lib.htmltemplate.template.Template.write"><code class="name flex">
@@ -201,6 +239,8 @@ class Template:
 <h4><code><a title="lib.htmltemplate.template.Template" href="#lib.htmltemplate.template.Template">Template</a></code></h4>
 <ul class="">
 <li><code><a title="lib.htmltemplate.template.Template.add_children" href="#lib.htmltemplate.template.Template.add_children">add_children</a></code></li>
+<li><code><a title="lib.htmltemplate.template.Template.default_spacer" href="#lib.htmltemplate.template.Template.default_spacer">default_spacer</a></code></li>
+<li><code><a title="lib.htmltemplate.template.Template.end_init" href="#lib.htmltemplate.template.Template.end_init">end_init</a></code></li>
 <li><code><a title="lib.htmltemplate.template.Template.write" href="#lib.htmltemplate.template.Template.write">write</a></code></li>
 </ul>
 </li>

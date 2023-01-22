@@ -34,7 +34,7 @@ from server.httpserver import HttpServer
 from server.server     import ServerConfig
 from htmltemplate      import *
 from webpage.mainpage  import main_frame, manage_default_button
-from tools import lang
+from tools import lang, support
 
 @HttpServer.add_route(b&#39;/server&#39;, menu=lang.menu_server, item=lang.item_server)
 async def server(request, response, args):
@@ -42,13 +42,15 @@ async def server(request, response, args):
         config = ServerConfig()
         disabled, action, submit = manage_default_button(request, config)
         page = main_frame(request, response, args,lang.servers_configuration,
-                Switch(text=lang.ftp   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),Br(),
-                Switch(text=lang.http  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),Br(),
-                Switch(text=lang.telnet, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),Br(),
-                Switch(text=lang.time_synchronization   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),Br(),
-                Switch(text=lang.wan_ip   , name=b&#34;wanip&#34;   , checked=config.wanip,    disabled=disabled),Br(),
-                Switch(text=lang.notification_reboot_user, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
-                submit)
+                Form([
+                        Switch(text=lang.telnet, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled) if support.telnet() else None,
+                        Switch(text=lang.ftp   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),
+                        Switch(text=lang.http  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),
+                        Switch(text=lang.time_synchronization   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),
+                        Switch(text=lang.wan_ip   , name=b&#34;wanip&#34;   , checked=config.wanip,    disabled=disabled),
+                        Switch(text=lang.notification_reboot_user, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),
+                        submit
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </section>
@@ -74,13 +76,15 @@ async def server(request, response, args):
         config = ServerConfig()
         disabled, action, submit = manage_default_button(request, config)
         page = main_frame(request, response, args,lang.servers_configuration,
-                Switch(text=lang.ftp   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),Br(),
-                Switch(text=lang.http  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),Br(),
-                Switch(text=lang.telnet, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled),Br(),
-                Switch(text=lang.time_synchronization   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),Br(),
-                Switch(text=lang.wan_ip   , name=b&#34;wanip&#34;   , checked=config.wanip,    disabled=disabled),Br(),
-                Switch(text=lang.notification_reboot_user, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
-                submit)
+                Form([
+                        Switch(text=lang.telnet, name=b&#34;telnet&#34;, checked=config.telnet, disabled=disabled) if support.telnet() else None,
+                        Switch(text=lang.ftp   , name=b&#34;ftp&#34;   , checked=config.ftp,    disabled=disabled),
+                        Switch(text=lang.http  , name=b&#34;http&#34;  , checked=config.http,   disabled=disabled),
+                        Switch(text=lang.time_synchronization   , name=b&#34;ntp&#34;   , checked=config.ntp,    disabled=disabled),
+                        Switch(text=lang.wan_ip   , name=b&#34;wanip&#34;   , checked=config.wanip,    disabled=disabled),
+                        Switch(text=lang.notification_reboot_user, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),
+                        submit
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </dd>

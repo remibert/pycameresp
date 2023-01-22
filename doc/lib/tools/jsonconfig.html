@@ -33,6 +33,7 @@ For each of these classes, a json file with the same name is stored in the confi
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Functions for managing the json configuration.
 All configuration classes end the name with the word Config.
 For each of these classes, a json file with the same name is stored in the config directory of the board. &#34;&#34;&#34;
@@ -44,11 +45,12 @@ try:
         import uos
 except:
         import os as uos
+        
 try:
-        from tools import logger,strings,filesystem
-except:
+        from tools import logger,strings,filesystem,date
+except Exception as err:
         # pylint:disable=multiple-imports
-        import logger,strings,filesystem
+        import logger,strings,filesystem,date
 
 
 self_config = None
@@ -72,7 +74,7 @@ class JsonConfig:
                         file, filename = self.open(file=file, read_write=&#34;w&#34;, part_filename=part_filename)
                         data = self.__dict__.copy()
                         del data[&#34;modification_date&#34;]
-                        json.dump(strings.tostrings(data),file)
+                        json.dump(strings.tostrings(data),file,separators=(&#39;,&#39;, &#39;:&#39;))
                         file.close()
                         self.modification_date = uos.stat(filename)[8]
                         return True
@@ -84,7 +86,7 @@ class JsonConfig:
                 &#34;&#34;&#34; Convert the configuration to string &#34;&#34;&#34;
                 data = self.__dict__.copy()
                 del data[&#34;modification_date&#34;]
-                return json.dumps(strings.tostrings(data))
+                return json.dumps(strings.tostrings(data),separators=(&#39;,&#39;, &#39;:&#39;))
 
         def get_pathname(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Get the configuration filename according to the class name &#34;&#34;&#34;
@@ -112,6 +114,7 @@ class JsonConfig:
 
         def open(self, file=None, read_write=&#34;r&#34;, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Create or open configuration file &#34;&#34;&#34;
+                # pylint:disable=unspecified-encoding
                 filename = file
                 if filesystem.exists(self.config_root()) is False:
                         filesystem.makedir(self.config_root())
@@ -122,7 +125,7 @@ class JsonConfig:
                         file = open(filename, read_write)
                 return file, filename
 
-        def update(self, params):
+        def update(self, params, show_error=True):
                 &#34;&#34;&#34; Update object with html request params &#34;&#34;&#34;
                 global self_config
                 if b&#34;name&#34; in params and b&#34;value&#34; in params and len(params) == 2:
@@ -131,6 +134,7 @@ class JsonConfig:
                 else:
                         setmany = True
                 self_config = self
+
                 for name in self.__dict__.keys():
                         # Case of web input is missing when bool is false
                         if type(self.__dict__[name]) == type(True):
@@ -154,13 +158,32 @@ class JsonConfig:
                                         if setmany:
                                                 params[name] = False
                         # Case of web input is integer but string with number received
-                        elif type(self.__dict__[name]) == type(0) or type(self.__dict__[name]) == type(0.):
+                        elif type(self.__dict__[name]) == type(0):
                                 name = strings.tobytes(name)
                                 if name in params:
                                         try:
                                                 params[name] = int(params[name])
                                         except:
+                                                if b&#34;date&#34; in name:
+                                                        try:
+                                                                params[name] = date.html_to_date(params[name])
+                                                        except:
+                                                                params[name] = 0
+                                                elif b&#34;time&#34; in name:
+                                                        try:
+                                                                params[name] = date.html_to_time(params[name])
+                                                        except:
+                                                                params[name] = 0
+                                                else:
+                                                        params[name] = 0
+                        elif type(self.__dict__[name]) == type(0.):
+                                name = strings.tobytes(name)
+                                if name in params:
+                                        try:
+                                                params[name] = float(params[name])
+                                        except:
                                                 params[name] = 0
+
                 result = True
                 for name, value in params.items():
                         execval = strings.tostrings(name)
@@ -169,7 +192,9 @@ class JsonConfig:
                                         # pylint: disable=exec-used
                                         exec(&#34;a = self_config.%s&#34;%execval)
                                         existing = True
-                                except:
+                                except Exception as err:
+                                        if &#34;&#39;NoneType&#39; object&#34; in str(err):
+                                                result = None
                                         existing = False
 
                                 if existing:
@@ -177,16 +202,17 @@ class JsonConfig:
                                         # pylint: disable=exec-used
                                         exec(execval)
                                 else:
-                                        if name != b&#34;action&#34;:
+                                        if name != b&#34;action&#34; and show_error and result is not None:
                                                 print(&#34;%s.%s not existing&#34;%(self.__class__.__name__, strings.tostrings(name)))
                         except Exception as err:
                                 logger.syslog(err, &#34;Error on %s&#34;%(execval))
                                 result = False
-                del self_config
+                self_config = None
                 return result
 
         def load(self, file = None, part_filename=&#34;&#34;, tobytes=True, errorlog=True):
                 &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
+                filename = &#34;&#34;
                 try:
                         filename = self.get_pathname(strings.tofilename(part_filename))
                         file, filename = self.open(file=file, read_write=&#34;r&#34;, part_filename=part_filename)
@@ -267,7 +293,7 @@ class JsonConfig:
                         file, filename = self.open(file=file, read_write=&#34;w&#34;, part_filename=part_filename)
                         data = self.__dict__.copy()
                         del data[&#34;modification_date&#34;]
-                        json.dump(strings.tostrings(data),file)
+                        json.dump(strings.tostrings(data),file,separators=(&#39;,&#39;, &#39;:&#39;))
                         file.close()
                         self.modification_date = uos.stat(filename)[8]
                         return True
@@ -279,7 +305,7 @@ class JsonConfig:
                 &#34;&#34;&#34; Convert the configuration to string &#34;&#34;&#34;
                 data = self.__dict__.copy()
                 del data[&#34;modification_date&#34;]
-                return json.dumps(strings.tostrings(data))
+                return json.dumps(strings.tostrings(data),separators=(&#39;,&#39;, &#39;:&#39;))
 
         def get_pathname(self, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Get the configuration filename according to the class name &#34;&#34;&#34;
@@ -307,6 +333,7 @@ class JsonConfig:
 
         def open(self, file=None, read_write=&#34;r&#34;, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Create or open configuration file &#34;&#34;&#34;
+                # pylint:disable=unspecified-encoding
                 filename = file
                 if filesystem.exists(self.config_root()) is False:
                         filesystem.makedir(self.config_root())
@@ -317,7 +344,7 @@ class JsonConfig:
                         file = open(filename, read_write)
                 return file, filename
 
-        def update(self, params):
+        def update(self, params, show_error=True):
                 &#34;&#34;&#34; Update object with html request params &#34;&#34;&#34;
                 global self_config
                 if b&#34;name&#34; in params and b&#34;value&#34; in params and len(params) == 2:
@@ -326,6 +353,7 @@ class JsonConfig:
                 else:
                         setmany = True
                 self_config = self
+
                 for name in self.__dict__.keys():
                         # Case of web input is missing when bool is false
                         if type(self.__dict__[name]) == type(True):
@@ -349,13 +377,32 @@ class JsonConfig:
                                         if setmany:
                                                 params[name] = False
                         # Case of web input is integer but string with number received
-                        elif type(self.__dict__[name]) == type(0) or type(self.__dict__[name]) == type(0.):
+                        elif type(self.__dict__[name]) == type(0):
                                 name = strings.tobytes(name)
                                 if name in params:
                                         try:
                                                 params[name] = int(params[name])
                                         except:
+                                                if b&#34;date&#34; in name:
+                                                        try:
+                                                                params[name] = date.html_to_date(params[name])
+                                                        except:
+                                                                params[name] = 0
+                                                elif b&#34;time&#34; in name:
+                                                        try:
+                                                                params[name] = date.html_to_time(params[name])
+                                                        except:
+                                                                params[name] = 0
+                                                else:
+                                                        params[name] = 0
+                        elif type(self.__dict__[name]) == type(0.):
+                                name = strings.tobytes(name)
+                                if name in params:
+                                        try:
+                                                params[name] = float(params[name])
+                                        except:
                                                 params[name] = 0
+
                 result = True
                 for name, value in params.items():
                         execval = strings.tostrings(name)
@@ -364,7 +411,9 @@ class JsonConfig:
                                         # pylint: disable=exec-used
                                         exec(&#34;a = self_config.%s&#34;%execval)
                                         existing = True
-                                except:
+                                except Exception as err:
+                                        if &#34;&#39;NoneType&#39; object&#34; in str(err):
+                                                result = None
                                         existing = False
 
                                 if existing:
@@ -372,16 +421,17 @@ class JsonConfig:
                                         # pylint: disable=exec-used
                                         exec(execval)
                                 else:
-                                        if name != b&#34;action&#34;:
+                                        if name != b&#34;action&#34; and show_error and result is not None:
                                                 print(&#34;%s.%s not existing&#34;%(self.__class__.__name__, strings.tostrings(name)))
                         except Exception as err:
                                 logger.syslog(err, &#34;Error on %s&#34;%(execval))
                                 result = False
-                del self_config
+                self_config = None
                 return result
 
         def load(self, file = None, part_filename=&#34;&#34;, tobytes=True, errorlog=True):
                 &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
+                filename = &#34;&#34;
                 try:
                         filename = self.get_pathname(strings.tofilename(part_filename))
                         file, filename = self.open(file=file, read_write=&#34;r&#34;, part_filename=part_filename)
@@ -555,6 +605,7 @@ class JsonConfig:
 </summary>
 <pre><code class="python">def load(self, file = None, part_filename=&#34;&#34;, tobytes=True, errorlog=True):
         &#34;&#34;&#34; Load object with the file specified &#34;&#34;&#34;
+        filename = &#34;&#34;
         try:
                 filename = self.get_pathname(strings.tofilename(part_filename))
                 file, filename = self.open(file=file, read_write=&#34;r&#34;, part_filename=part_filename)
@@ -588,6 +639,7 @@ class JsonConfig:
 </summary>
 <pre><code class="python">def open(self, file=None, read_write=&#34;r&#34;, part_filename=&#34;&#34;):
         &#34;&#34;&#34; Create or open configuration file &#34;&#34;&#34;
+        # pylint:disable=unspecified-encoding
         filename = file
         if filesystem.exists(self.config_root()) is False:
                 filesystem.makedir(self.config_root())
@@ -615,7 +667,7 @@ class JsonConfig:
                 file, filename = self.open(file=file, read_write=&#34;w&#34;, part_filename=part_filename)
                 data = self.__dict__.copy()
                 del data[&#34;modification_date&#34;]
-                json.dump(strings.tostrings(data),file)
+                json.dump(strings.tostrings(data),file,separators=(&#39;,&#39;, &#39;:&#39;))
                 file.close()
                 self.modification_date = uos.stat(filename)[8]
                 return True
@@ -637,11 +689,11 @@ class JsonConfig:
         &#34;&#34;&#34; Convert the configuration to string &#34;&#34;&#34;
         data = self.__dict__.copy()
         del data[&#34;modification_date&#34;]
-        return json.dumps(strings.tostrings(data))</code></pre>
+        return json.dumps(strings.tostrings(data),separators=(&#39;,&#39;, &#39;:&#39;))</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.jsonconfig.JsonConfig.update"><code class="name flex">
-<span>def <span class="ident">update</span></span>(<span>self, params)</span>
+<span>def <span class="ident">update</span></span>(<span>self, params, show_error=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Update object with html request params</p></div>
@@ -649,7 +701,7 @@ class JsonConfig:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def update(self, params):
+<pre><code class="python">def update(self, params, show_error=True):
         &#34;&#34;&#34; Update object with html request params &#34;&#34;&#34;
         global self_config
         if b&#34;name&#34; in params and b&#34;value&#34; in params and len(params) == 2:
@@ -658,6 +710,7 @@ class JsonConfig:
         else:
                 setmany = True
         self_config = self
+
         for name in self.__dict__.keys():
                 # Case of web input is missing when bool is false
                 if type(self.__dict__[name]) == type(True):
@@ -681,13 +734,32 @@ class JsonConfig:
                                 if setmany:
                                         params[name] = False
                 # Case of web input is integer but string with number received
-                elif type(self.__dict__[name]) == type(0) or type(self.__dict__[name]) == type(0.):
+                elif type(self.__dict__[name]) == type(0):
                         name = strings.tobytes(name)
                         if name in params:
                                 try:
                                         params[name] = int(params[name])
                                 except:
+                                        if b&#34;date&#34; in name:
+                                                try:
+                                                        params[name] = date.html_to_date(params[name])
+                                                except:
+                                                        params[name] = 0
+                                        elif b&#34;time&#34; in name:
+                                                try:
+                                                        params[name] = date.html_to_time(params[name])
+                                                except:
+                                                        params[name] = 0
+                                        else:
+                                                params[name] = 0
+                elif type(self.__dict__[name]) == type(0.):
+                        name = strings.tobytes(name)
+                        if name in params:
+                                try:
+                                        params[name] = float(params[name])
+                                except:
                                         params[name] = 0
+
         result = True
         for name, value in params.items():
                 execval = strings.tostrings(name)
@@ -696,7 +768,9 @@ class JsonConfig:
                                 # pylint: disable=exec-used
                                 exec(&#34;a = self_config.%s&#34;%execval)
                                 existing = True
-                        except:
+                        except Exception as err:
+                                if &#34;&#39;NoneType&#39; object&#34; in str(err):
+                                        result = None
                                 existing = False
 
                         if existing:
@@ -704,12 +778,12 @@ class JsonConfig:
                                 # pylint: disable=exec-used
                                 exec(execval)
                         else:
-                                if name != b&#34;action&#34;:
+                                if name != b&#34;action&#34; and show_error and result is not None:
                                         print(&#34;%s.%s not existing&#34;%(self.__class__.__name__, strings.tostrings(name)))
                 except Exception as err:
                         logger.syslog(err, &#34;Error on %s&#34;%(execval))
                         result = False
-        del self_config
+        self_config = None
         return result</code></pre>
 </details>
 </dd>

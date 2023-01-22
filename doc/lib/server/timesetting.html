@@ -29,9 +29,9 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Function which sets the internal clock of the card based on an ntp server &#34;&#34;&#34;
-import time
-from tools import logger,strings,filesystem
+from tools import logger, strings, date
 
 def get_ntp_time():
         &#34;&#34;&#34; Return the time from a NTP server &#34;&#34;&#34;
@@ -58,7 +58,7 @@ def get_ntp_time():
 def set_time(currenttime):
         &#34;&#34;&#34; Change the current time &#34;&#34;&#34;
         try:
-                newtime = strings.local_time(currenttime)
+                newtime = date.local_time(currenttime)
                 year,month,day,hour,minute,second,weekday,yearday = newtime[:8]
 
                 import machine
@@ -66,31 +66,22 @@ def set_time(currenttime):
         except Exception as exc:
                 logger.syslog(&#34;Cannot set time &#39;%s&#39;&#34;%exc)
 
-def mktime(t):
-        &#34;&#34;&#34; Portable mktime &#34;&#34;&#34;
-        year,month,day,hour,minute,second,weekday,yearday = t
-        if filesystem.ismicropython():
-                return time.mktime((year, month, day, hour, minute, second, weekday, yearday))
-        else:
-                return time.mktime((year, month, day, hour, minute, second, weekday, yearday, 0))
-
-
 def calc_local_time(currenttime, offsetTime=+1, dst=True):
         &#34;&#34;&#34; Calculate the local time &#34;&#34;&#34;
-        year,month,day,hour,minute,second,weekday,yearday = strings.local_time(currenttime)[:8]
+        year,month,day,hour,minute,second,weekday,yearday = date.local_time(currenttime)[:8]
 
         # Get the day of the last sunday of march
-        march_end_weekday = strings.local_time(mktime((year, 3, 31, 0, 0, 0, 0, 0)))[6]
+        march_end_weekday = date.local_time(date.mktime((year, 3, 31, 0, 0, 0, 0, 0)))[6]
         start_day_dst = 31-((1+march_end_weekday)%7)
 
         # Get the day of the last sunday of october
-        october_end_weekday = strings.local_time(mktime((year,10, 30, 0, 0, 0, 0, 0)))[6]
+        october_end_weekday = date.local_time(date.mktime((year,10, 30, 0, 0, 0, 0, 0)))[6]
         end_day_dst = 30-((1+october_end_weekday)%7)
 
-        start_DST = mktime((year,3 ,start_day_dst,1,0,0,0,0))
-        end_DST   = mktime((year,10,end_day_dst  ,1,0,0,0,0))
+        start_DST = date.mktime((year,3 ,start_day_dst,1,0,0,0,0))
+        end_DST   = date.mktime((year,10,end_day_dst  ,1,0,0,0,0))
 
-        now = mktime((year,month,day,hour,minute,second,weekday,yearday))
+        now = date.mktime((year,month,day,hour,minute,second,weekday,yearday))
 
         if dst and now &gt; start_DST and now &lt; end_DST : # we are before last sunday of october
                 return now+(offsetTime*3600)+3600 # DST: UTC+dst*H + 1
@@ -105,7 +96,7 @@ def set_date(offsetTime=+1, dst=True, display=False):
                 if currenttime &gt; 0:
                         set_time(currenttime)
                         if display:
-                                logger.syslog(&#34;Date updated : %s&#34;%(strings.date_to_string()))
+                                logger.syslog(&#34;Date updated : %s&#34;%(date.date_to_string()))
                         return currenttime
         return 0</code></pre>
 </details>
@@ -128,20 +119,20 @@ def set_date(offsetTime=+1, dst=True, display=False):
 </summary>
 <pre><code class="python">def calc_local_time(currenttime, offsetTime=+1, dst=True):
         &#34;&#34;&#34; Calculate the local time &#34;&#34;&#34;
-        year,month,day,hour,minute,second,weekday,yearday = strings.local_time(currenttime)[:8]
+        year,month,day,hour,minute,second,weekday,yearday = date.local_time(currenttime)[:8]
 
         # Get the day of the last sunday of march
-        march_end_weekday = strings.local_time(mktime((year, 3, 31, 0, 0, 0, 0, 0)))[6]
+        march_end_weekday = date.local_time(date.mktime((year, 3, 31, 0, 0, 0, 0, 0)))[6]
         start_day_dst = 31-((1+march_end_weekday)%7)
 
         # Get the day of the last sunday of october
-        october_end_weekday = strings.local_time(mktime((year,10, 30, 0, 0, 0, 0, 0)))[6]
+        october_end_weekday = date.local_time(date.mktime((year,10, 30, 0, 0, 0, 0, 0)))[6]
         end_day_dst = 30-((1+october_end_weekday)%7)
 
-        start_DST = mktime((year,3 ,start_day_dst,1,0,0,0,0))
-        end_DST   = mktime((year,10,end_day_dst  ,1,0,0,0,0))
+        start_DST = date.mktime((year,3 ,start_day_dst,1,0,0,0,0))
+        end_DST   = date.mktime((year,10,end_day_dst  ,1,0,0,0,0))
 
-        now = mktime((year,month,day,hour,minute,second,weekday,yearday))
+        now = date.mktime((year,month,day,hour,minute,second,weekday,yearday))
 
         if dst and now &gt; start_DST and now &lt; end_DST : # we are before last sunday of october
                 return now+(offsetTime*3600)+3600 # DST: UTC+dst*H + 1
@@ -181,24 +172,6 @@ def set_date(offsetTime=+1, dst=True, display=False):
                 return 0</code></pre>
 </details>
 </dd>
-<dt id="lib.server.timesetting.mktime"><code class="name flex">
-<span>def <span class="ident">mktime</span></span>(<span>t)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Portable mktime</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def mktime(t):
-        &#34;&#34;&#34; Portable mktime &#34;&#34;&#34;
-        year,month,day,hour,minute,second,weekday,yearday = t
-        if filesystem.ismicropython():
-                return time.mktime((year, month, day, hour, minute, second, weekday, yearday))
-        else:
-                return time.mktime((year, month, day, hour, minute, second, weekday, yearday, 0))</code></pre>
-</details>
-</dd>
 <dt id="lib.server.timesetting.set_date"><code class="name flex">
 <span>def <span class="ident">set_date</span></span>(<span>offsetTime=1, dst=True, display=False)</span>
 </code></dt>
@@ -216,7 +189,7 @@ def set_date(offsetTime=+1, dst=True, display=False):
                 if currenttime &gt; 0:
                         set_time(currenttime)
                         if display:
-                                logger.syslog(&#34;Date updated : %s&#34;%(strings.date_to_string()))
+                                logger.syslog(&#34;Date updated : %s&#34;%(date.date_to_string()))
                         return currenttime
         return 0</code></pre>
 </details>
@@ -233,7 +206,7 @@ def set_date(offsetTime=+1, dst=True, display=False):
 <pre><code class="python">def set_time(currenttime):
         &#34;&#34;&#34; Change the current time &#34;&#34;&#34;
         try:
-                newtime = strings.local_time(currenttime)
+                newtime = date.local_time(currenttime)
                 year,month,day,hour,minute,second,weekday,yearday = newtime[:8]
 
                 import machine
@@ -262,7 +235,6 @@ def set_date(offsetTime=+1, dst=True, display=False):
 <ul class="">
 <li><code><a title="lib.server.timesetting.calc_local_time" href="#lib.server.timesetting.calc_local_time">calc_local_time</a></code></li>
 <li><code><a title="lib.server.timesetting.get_ntp_time" href="#lib.server.timesetting.get_ntp_time">get_ntp_time</a></code></li>
-<li><code><a title="lib.server.timesetting.mktime" href="#lib.server.timesetting.mktime">mktime</a></code></li>
 <li><code><a title="lib.server.timesetting.set_date" href="#lib.server.timesetting.set_date">set_date</a></code></li>
 <li><code><a title="lib.server.timesetting.set_time" href="#lib.server.timesetting.set_time">set_time</a></code></li>
 </ul>

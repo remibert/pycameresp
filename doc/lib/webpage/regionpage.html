@@ -33,12 +33,12 @@
 from server.httpserver import HttpServer
 from htmltemplate      import *
 from webpage.mainpage  import main_frame, manage_default_button
-from tools             import lang
+from tools             import lang, region
 
 @HttpServer.add_route(b&#39;/region&#39;, menu=lang.menu_account, item=lang.item_region)
 async def region_page(request, response, args):
         &#34;&#34;&#34; Function define the web page to manage lang and time &#34;&#34;&#34;
-        config = lang.RegionConfig()
+        config = region.RegionConfig()
         disabled, action, submit = manage_default_button(request, config)
         langages = []
         for langage in [b&#34;english&#34;,b&#34;french&#34;]:
@@ -49,14 +49,17 @@ async def region_page(request, response, args):
                 langages.append(Option(text=langage, selected=selected, value=langage))
 
         if action == b&#34;save&#34;:
-                alert = Br(), Br(), AlertError(text=lang.taken_into_account)
+                alert = AlertError(text=lang.taken_into_account)
         else:
                 alert = None
 
         page = main_frame(request, response, args, lang.region_configuration,
-                Edit  (text=lang.utc_offset             , name=b&#34;offset_time&#34;,pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=lang.offset_time_to,        value=b&#34;%d&#34;%config.offset_time,       disabled=disabled),
-                Switch(text=lang.daylight_saving_time   , name=b&#34;dst&#34;       ,checked=config.dst,    disabled=disabled),Br(),
-                Select(langages,text=lang.language,name=b&#34;lang&#34;, disabled=disabled), submit, alert)
+                Form([
+                        Edit  (text=lang.utc_offset             , name=b&#34;offset_time&#34;,pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=lang.offset_time_to,        value=b&#34;%d&#34;%config.offset_time,       disabled=disabled),
+                        Switch(text=lang.daylight_saving_time   , name=b&#34;dst&#34;       ,checked=config.dst,    disabled=disabled),
+                        Label(text=lang.language),
+                        Select(langages,name=b&#34;lang&#34;, disabled=disabled), submit, alert
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </section>
@@ -79,7 +82,7 @@ async def region_page(request, response, args):
 <pre><code class="python">@HttpServer.add_route(b&#39;/region&#39;, menu=lang.menu_account, item=lang.item_region)
 async def region_page(request, response, args):
         &#34;&#34;&#34; Function define the web page to manage lang and time &#34;&#34;&#34;
-        config = lang.RegionConfig()
+        config = region.RegionConfig()
         disabled, action, submit = manage_default_button(request, config)
         langages = []
         for langage in [b&#34;english&#34;,b&#34;french&#34;]:
@@ -90,14 +93,17 @@ async def region_page(request, response, args):
                 langages.append(Option(text=langage, selected=selected, value=langage))
 
         if action == b&#34;save&#34;:
-                alert = Br(), Br(), AlertError(text=lang.taken_into_account)
+                alert = AlertError(text=lang.taken_into_account)
         else:
                 alert = None
 
         page = main_frame(request, response, args, lang.region_configuration,
-                Edit  (text=lang.utc_offset             , name=b&#34;offset_time&#34;,pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=lang.offset_time_to,        value=b&#34;%d&#34;%config.offset_time,       disabled=disabled),
-                Switch(text=lang.daylight_saving_time   , name=b&#34;dst&#34;       ,checked=config.dst,    disabled=disabled),Br(),
-                Select(langages,text=lang.language,name=b&#34;lang&#34;, disabled=disabled), submit, alert)
+                Form([
+                        Edit  (text=lang.utc_offset             , name=b&#34;offset_time&#34;,pattern=b&#34;-*[0-9]*[0-9]&#34;, placeholder=lang.offset_time_to,        value=b&#34;%d&#34;%config.offset_time,       disabled=disabled),
+                        Switch(text=lang.daylight_saving_time   , name=b&#34;dst&#34;       ,checked=config.dst,    disabled=disabled),
+                        Label(text=lang.language),
+                        Select(langages,name=b&#34;lang&#34;, disabled=disabled), submit, alert
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </dd>

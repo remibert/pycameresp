@@ -52,11 +52,13 @@ async def pushover(request, response, args):
         else:
                 typ = b&#34;&#34;
         page = main_frame(request, response, args,lang.notification_configuration,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
-                Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
-                submit,
-                Br(), Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website))
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
+                        Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
+                        submit,
+                        Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website)
+                ]))
 
         await response.send_page(page)</code></pre>
 </details>
@@ -93,11 +95,13 @@ async def pushover(request, response, args):
         else:
                 typ = b&#34;&#34;
         page = main_frame(request, response, args,lang.notification_configuration,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
-                Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
-                submit,
-                Br(), Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website))
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
+                        Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
+                        submit,
+                        Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website)
+                ]))
 
         await response.send_page(page)</code></pre>
 </details>

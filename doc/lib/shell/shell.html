@@ -110,6 +110,9 @@ The commands are :
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=too-many-lines
+# pylint:disable=consider-using-f-string
+# pylint:disable=unspecified-encoding
 &#34;&#34;&#34; Class defining a minimalist shell, directly executable on the board.
 We modify directories, list, delete, move files, edit files ...
 The commands are :
@@ -161,12 +164,13 @@ import io
 import os
 import uos
 import machine
-from tools import useful,logger,sdcard,filesystem,exchange,info,strings,terminal,watchdog
+from tools import useful,logger,sdcard,filesystem,exchange,info,strings,terminal,watchdog,lang,date
 
 stdout_redirected = None
 
 def print_(message, end=None):
         &#34;&#34;&#34; Redirect the print to file &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         if stdout_redirected is None:
                 if end is None:
@@ -182,6 +186,7 @@ def print_(message, end=None):
 
 def get_screen_size():
         &#34;&#34;&#34; Return the screen size and check if output redirected &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         if stdout_redirected is None:
                 height, width = terminal.get_screen_size()
@@ -369,7 +374,7 @@ class LsDisplayer:
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
                                 if self.long:
-                                        message = b&#34;%s %s [%s]&#34;%(strings.date_to_bytes(date_),b&#34; &#34;*7,self.purge_path(path))
+                                        message = b&#34;%s %s [%s]&#34;%(date.date_to_bytes(date_),b&#34; &#34;*7,self.purge_path(path))
                                 else:
                                         message = b&#34;[%s]&#34;%self.purge_path(path)
                                 self.count = print_part(message, self.width, self.height, self.count)
@@ -378,7 +383,7 @@ class LsDisplayer:
                                 fileinfo = filesystem.fileinfo(path)
                                 date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                message = b&#34;%s %s %s&#34;%(strings.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
+                                message = b&#34;%s %s %s&#34;%(date.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
                         else:
                                 message = self.purge_path(path)
                         self.count = print_part(message, self.width, self.height, self.count)
@@ -429,6 +434,7 @@ def find(file):
 
 def print_part(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         if isinstance(message , bytes):
                 message = message.decode(&#34;utf8&#34;)
@@ -542,7 +548,7 @@ def umountsd(mountpoint=&#34;/sd&#34;):
         except:
                 print_(&#34;Cannot umount sd from &#39;%s&#39;&#34;%mountpoint)
 
-def date(update=False, offsetUTC=+1, noDst=False):
+def date_(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
         try:
                 from server.timesetting import set_date
@@ -555,7 +561,7 @@ def date(update=False, offsetUTC=+1, noDst=False):
                 del sys.modules[&#34;server.timesetting&#34;]
         except:
                 pass
-        print_(strings.date_to_string())
+        print_(date.date_to_string())
 
 def setdate(datetime=&#34;&#34;):
         &#34;&#34;&#34; Set date and time &#34;&#34;&#34;
@@ -620,9 +626,14 @@ def deepsleep(seconds=60):
         &#34;&#34;&#34; Deep sleep command &#34;&#34;&#34;
         machine.deepsleep(int(seconds)*1000)
 
+def ligthsleep(seconds=60):
+        &#34;&#34;&#34; Light sleep command &#34;&#34;&#34;
+        machine.lightsleep(int(seconds)*1000)
+
 edit_class = None
 def edit(file, no_color=False, read_only=False):
         &#34;&#34;&#34; Edit command &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global edit_class
         global stdout_redirected
         if stdout_redirected is None:
@@ -654,7 +665,7 @@ def cat(file):
 
 def df(mountpoint = None):
         &#34;&#34;&#34; Display free disk space &#34;&#34;&#34;
-        print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))
+        print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint)))
 
 def gc():
         &#34;&#34;&#34; Garbage collector command &#34;&#34;&#34;
@@ -663,7 +674,7 @@ def gc():
 
 def uptime():
         &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
-        print_(info.uptime())
+        print_(strings.tostrings(info.uptime()))
 
 def man(command):
         &#34;&#34;&#34; Man command &#34;&#34;&#34;
@@ -742,6 +753,7 @@ def cls():
 
 def check_cam_flasher():
         &#34;&#34;&#34; Check if the terminal is CamFlasher &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         if stdout_redirected is None:
                 # Request terminal device attribut
@@ -823,15 +835,15 @@ def temperature():
 
 def meminfo():
         &#34;&#34;&#34; Get memory informations &#34;&#34;&#34;
-        print_(strings.tostrings(info.meminfo(display=False)))
+        print_(strings.tostrings(b&#34;%s : %s&#34;%(lang.memory_label, info.meminfo())))
 
 def flashinfo(mountpoint=None):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
-        print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))
+        print_(strings.tostrings(b&#34;%s : %s&#34;%(lang.flash_info, info.flashinfo(mountpoint=mountpoint))))
 
 def sysinfo():
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
-        print_(strings.tostrings(info.sysinfo(display=False)))
+        print_(strings.tostrings(info.sysinfo()))
 
 def vtcolors():
         &#34;&#34;&#34; Show all VT100 colors &#34;&#34;&#34;
@@ -872,6 +884,7 @@ def vtcolors():
 def get_command(command_name):
         &#34;&#34;&#34; Get a command callback according to the command name &#34;&#34;&#34;
         try:
+                # pylint:disable=global-variable-not-assigned
                 global shell_commands
                 command = shell_commands[command_name]
                 command_function = command[0]
@@ -889,6 +902,7 @@ def get_command(command_name):
 
 def exec_command(args):
         &#34;&#34;&#34; Execute command &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         command_name = &#34;&#34;
         command_function = None
@@ -1094,7 +1108,7 @@ shell_commands = \
         &#34;rm&#34;         :[rm              ,&#34;file&#34;,                  (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-f&#34;,&#34;force&#34;,True),(&#34;-s&#34;,&#34;simulate&#34;,True)],
         &#34;ls&#34;         :[ls              ,&#34;file&#34;,                  (&#34;-r&#34;,&#34;recursive&#34;,True),(&#34;-l&#34;,&#34;long&#34;,True)],
         &#34;ll&#34;         :[ll              ,&#34;file&#34;,                  (&#34;-r&#34;,&#34;recursive&#34;,True)],
-        &#34;date&#34;       :[date            ,&#34;offsetUTC&#34; ,            (&#34;-u&#34;,&#34;update&#34;,True),   (&#34;-n&#34;,&#34;noDst&#34;,True)],
+        &#34;date&#34;       :[date_           ,&#34;offsetUTC&#34; ,            (&#34;-u&#34;,&#34;update&#34;,True),   (&#34;-n&#34;,&#34;noDst&#34;,True)],
         &#34;setdate&#34;    :[setdate         ,&#34;datetime&#34;             ],
         &#34;uptime&#34;     :[uptime                                  ],
         &#34;find&#34;       :[find            ,&#34;file&#34;                 ],
@@ -1112,6 +1126,7 @@ shell_commands = \
         &#34;flashinfo&#34;  :[flashinfo                               ],
         &#34;sysinfo&#34;    :[sysinfo                                 ],
         &#34;deepsleep&#34;  :[deepsleep       ,&#34;seconds&#34;              ],
+        &#34;lightsleep&#34; :[ligthsleep      ,&#34;seconds&#34;              ],
         &#34;ping&#34;       :[ping            ,&#34;host&#34;                 ],
         &#34;reboot&#34;     :[reboot                                  ],
         &#34;help&#34;       :[help                                    ],
@@ -1259,6 +1274,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def check_cam_flasher():
         &#34;&#34;&#34; Check if the terminal is CamFlasher &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         if stdout_redirected is None:
                 # Request terminal device attribut
@@ -1350,8 +1366,8 @@ if __name__ == &#34;__main__&#34;:
                         copyfile(src,dst,quiet)</code></pre>
 </details>
 </dd>
-<dt id="lib.shell.shell.date"><code class="name flex">
-<span>def <span class="ident">date</span></span>(<span>update=False, offsetUTC=1, noDst=False)</span>
+<dt id="lib.shell.shell.date_"><code class="name flex">
+<span>def <span class="ident">date_</span></span>(<span>update=False, offsetUTC=1, noDst=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get or set date</p></div>
@@ -1359,7 +1375,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def date(update=False, offsetUTC=+1, noDst=False):
+<pre><code class="python">def date_(update=False, offsetUTC=+1, noDst=False):
         &#34;&#34;&#34; Get or set date &#34;&#34;&#34;
         try:
                 from server.timesetting import set_date
@@ -1372,7 +1388,7 @@ if __name__ == &#34;__main__&#34;:
                 del sys.modules[&#34;server.timesetting&#34;]
         except:
                 pass
-        print_(strings.date_to_string())</code></pre>
+        print_(date.date_to_string())</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.deepsleep"><code class="name flex">
@@ -1400,7 +1416,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def df(mountpoint = None):
         &#34;&#34;&#34; Display free disk space &#34;&#34;&#34;
-        print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))</code></pre>
+        print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint)))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.download"><code class="name flex">
@@ -1470,6 +1486,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def edit(file, no_color=False, read_only=False):
         &#34;&#34;&#34; Edit command &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global edit_class
         global stdout_redirected
         if stdout_redirected is None:
@@ -1521,6 +1538,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def exec_command(args):
         &#34;&#34;&#34; Execute command &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         command_name = &#34;&#34;
         command_function = None
@@ -1633,7 +1651,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def flashinfo(mountpoint=None):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
-        print_(strings.tostrings(info.flashinfo(mountpoint=mountpoint, display=False)))</code></pre>
+        print_(strings.tostrings(b&#34;%s : %s&#34;%(lang.flash_info, info.flashinfo(mountpoint=mountpoint))))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.formatsd"><code class="name flex">
@@ -1688,6 +1706,7 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def get_command(command_name):
         &#34;&#34;&#34; Get a command callback according to the command name &#34;&#34;&#34;
         try:
+                # pylint:disable=global-variable-not-assigned
                 global shell_commands
                 command = shell_commands[command_name]
                 command_function = command[0]
@@ -1715,6 +1734,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def get_screen_size():
         &#34;&#34;&#34; Return the screen size and check if output redirected &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         if stdout_redirected is None:
                 height, width = terminal.get_screen_size()
@@ -1845,6 +1865,20 @@ if __name__ == &#34;__main__&#34;:
                 print_(&#34;Not available&#34;)</code></pre>
 </details>
 </dd>
+<dt id="lib.shell.shell.ligthsleep"><code class="name flex">
+<span>def <span class="ident">ligthsleep</span></span>(<span>seconds=60)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Light sleep command</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ligthsleep(seconds=60):
+        &#34;&#34;&#34; Light sleep command &#34;&#34;&#34;
+        machine.lightsleep(int(seconds)*1000)</code></pre>
+</details>
+</dd>
 <dt id="lib.shell.shell.ll"><code class="name flex">
 <span>def <span class="ident">ll</span></span>(<span>file='', recursive=False)</span>
 </code></dt>
@@ -1923,7 +1957,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def meminfo():
         &#34;&#34;&#34; Get memory informations &#34;&#34;&#34;
-        print_(strings.tostrings(info.meminfo(display=False)))</code></pre>
+        print_(strings.tostrings(b&#34;%s : %s&#34;%(lang.memory_label, info.meminfo())))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.mkdir"><code class="name flex">
@@ -2061,6 +2095,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def print_(message, end=None):
         &#34;&#34;&#34; Redirect the print to file &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         if stdout_redirected is None:
                 if end is None:
@@ -2086,6 +2121,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def print_part(message, width, height, count):
         &#34;&#34;&#34; Print a part of text &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global stdout_redirected
         if isinstance(message , bytes):
                 message = message.decode(&#34;utf8&#34;)
@@ -2391,7 +2427,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def sysinfo():
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
-        print_(strings.tostrings(info.sysinfo(display=False)))</code></pre>
+        print_(strings.tostrings(info.sysinfo()))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.temperature"><code class="name flex">
@@ -2467,7 +2503,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def uptime():
         &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
-        print_(info.uptime())</code></pre>
+        print_(strings.tostrings(info.uptime()))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.shell.vtcolors"><code class="name flex">
@@ -2656,7 +2692,7 @@ if __name__ == &#34;__main__&#34;:
                 if fileinfo[0] &amp; 0x4000 == 0x4000:
                         if self.showdir:
                                 if self.long:
-                                        message = b&#34;%s %s [%s]&#34;%(strings.date_to_bytes(date_),b&#34; &#34;*7,self.purge_path(path))
+                                        message = b&#34;%s %s [%s]&#34;%(date.date_to_bytes(date_),b&#34; &#34;*7,self.purge_path(path))
                                 else:
                                         message = b&#34;[%s]&#34;%self.purge_path(path)
                                 self.count = print_part(message, self.width, self.height, self.count)
@@ -2665,7 +2701,7 @@ if __name__ == &#34;__main__&#34;:
                                 fileinfo = filesystem.fileinfo(path)
                                 date_ = fileinfo[8]
                                 size = fileinfo[6]
-                                message = b&#34;%s %s %s&#34;%(strings.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
+                                message = b&#34;%s %s %s&#34;%(date.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
                         else:
                                 message = self.purge_path(path)
                         self.count = print_part(message, self.width, self.height, self.count)
@@ -2712,7 +2748,7 @@ if __name__ == &#34;__main__&#34;:
         if fileinfo[0] &amp; 0x4000 == 0x4000:
                 if self.showdir:
                         if self.long:
-                                message = b&#34;%s %s [%s]&#34;%(strings.date_to_bytes(date_),b&#34; &#34;*7,self.purge_path(path))
+                                message = b&#34;%s %s [%s]&#34;%(date.date_to_bytes(date_),b&#34; &#34;*7,self.purge_path(path))
                         else:
                                 message = b&#34;[%s]&#34;%self.purge_path(path)
                         self.count = print_part(message, self.width, self.height, self.count)
@@ -2721,7 +2757,7 @@ if __name__ == &#34;__main__&#34;:
                         fileinfo = filesystem.fileinfo(path)
                         date_ = fileinfo[8]
                         size = fileinfo[6]
-                        message = b&#34;%s %s %s&#34;%(strings.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
+                        message = b&#34;%s %s %s&#34;%(date.date_to_bytes(date_),strings.size_to_bytes(size),self.purge_path(path))
                 else:
                         message = self.purge_path(path)
                 self.count = print_part(message, self.width, self.height, self.count)</code></pre>
@@ -2766,7 +2802,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.cls" href="#lib.shell.shell.cls">cls</a></code></li>
 <li><code><a title="lib.shell.shell.copyfile" href="#lib.shell.shell.copyfile">copyfile</a></code></li>
 <li><code><a title="lib.shell.shell.cp" href="#lib.shell.shell.cp">cp</a></code></li>
-<li><code><a title="lib.shell.shell.date" href="#lib.shell.shell.date">date</a></code></li>
+<li><code><a title="lib.shell.shell.date_" href="#lib.shell.shell.date_">date_</a></code></li>
 <li><code><a title="lib.shell.shell.deepsleep" href="#lib.shell.shell.deepsleep">deepsleep</a></code></li>
 <li><code><a title="lib.shell.shell.df" href="#lib.shell.shell.df">df</a></code></li>
 <li><code><a title="lib.shell.shell.download" href="#lib.shell.shell.download">download</a></code></li>
@@ -2786,6 +2822,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="lib.shell.shell.help" href="#lib.shell.shell.help">help</a></code></li>
 <li><code><a title="lib.shell.shell.host2ip" href="#lib.shell.shell.host2ip">host2ip</a></code></li>
 <li><code><a title="lib.shell.shell.ip2host" href="#lib.shell.shell.ip2host">ip2host</a></code></li>
+<li><code><a title="lib.shell.shell.ligthsleep" href="#lib.shell.shell.ligthsleep">ligthsleep</a></code></li>
 <li><code><a title="lib.shell.shell.ll" href="#lib.shell.shell.ll">ll</a></code></li>
 <li><code><a title="lib.shell.shell.ls" href="#lib.shell.shell.ls">ls</a></code></li>
 <li><code><a title="lib.shell.shell.man" href="#lib.shell.shell.man">man</a></code></li>

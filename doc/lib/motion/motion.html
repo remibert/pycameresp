@@ -29,6 +29,7 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Motion detection only work with ESP32CAM (Requires specially modified ESP32CAM firmware to handle motion detection.) &#34;&#34;&#34;
 from gc import collect
 import sys
@@ -40,7 +41,7 @@ from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
 from video.video     import Camera
-from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem
+from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem,date
 
 class MotionConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Configuration class of motion detection &#34;&#34;&#34;
@@ -99,9 +100,9 @@ class ImageMotion:
                 self.index    = self.baseIndex[0]
                 self.filename = None
                 self.motion_id = None
-                self.date     = strings.date_to_string()
-                self.filename = strings.date_to_filename()
-                path = strings.date_to_path()
+                self.date     = date.date_to_string()
+                self.filename = date.date_to_filename()
+                path = date.date_to_path()
                 if path[-1] in [0x30,0x31,0x32,0x33,0x34]:
                         path = path[:-1] + b&#34;0&#34;
                 else:
@@ -464,7 +465,7 @@ class Motion:
                                                 index = image.index
                                         diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                         if display:
-                                line = b&#34;\r%s %s L%d (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), mean_light, index)
+                                line = b&#34;\r%s %s L%d (%d) &#34;%(date.time_to_html(), bytes(diffs), mean_light, index)
                                 if filesystem.ismicropython():
                                         sys.stdout.write(line)
                                 else:
@@ -1328,9 +1329,9 @@ async def detect_motion(pir_detection):
                 self.index    = self.baseIndex[0]
                 self.filename = None
                 self.motion_id = None
-                self.date     = strings.date_to_string()
-                self.filename = strings.date_to_filename()
-                path = strings.date_to_path()
+                self.date     = date.date_to_string()
+                self.filename = date.date_to_filename()
+                path = date.date_to_path()
                 if path[-1] in [0x30,0x31,0x32,0x33,0x34]:
                         path = path[:-1] + b&#34;0&#34;
                 else:
@@ -1982,7 +1983,7 @@ async def detect_motion(pir_detection):
                                                 index = image.index
                                         diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                         if display:
-                                line = b&#34;\r%s %s L%d (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), mean_light, index)
+                                line = b&#34;\r%s %s L%d (%d) &#34;%(date.time_to_html(), bytes(diffs), mean_light, index)
                                 if filesystem.ismicropython():
                                         sys.stdout.write(line)
                                 else:
@@ -2192,7 +2193,7 @@ async def detect_motion(pir_detection):
                                         index = image.index
                                 diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                 if display:
-                        line = b&#34;\r%s %s L%d (%d) &#34;%(strings.date_to_bytes()[12:], bytes(diffs), mean_light, index)
+                        line = b&#34;\r%s %s L%d (%d) &#34;%(date.time_to_html(), bytes(diffs), mean_light, index)
                         if filesystem.ismicropython():
                                 sys.stdout.write(line)
                         else:

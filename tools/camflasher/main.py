@@ -69,6 +69,8 @@ class Ports:
 					if self.status[key] is False:
 						self.status[key] = True
 						result = True
+					else:
+						pass
 				else:
 					# Create new port
 					self.status[key] = True
@@ -76,6 +78,8 @@ class Ports:
 					self.config.setValue(settings.DEVICE_RTS_DTR,self.rts_dtr)
 					connected.append(detected_port.device)
 					result = True
+			else:
+				pass
 
 		# For all ports already registered
 		for key in self.status:
@@ -83,13 +87,18 @@ class Ports:
 			for detected_port in sorted(detected_ports):
 				# If port is yet connected
 				if key[0] == detected_port.device and key[1] == detected_port.vid and key[2] == detected_port.pid:
+					result = True
 					break
+				else:
+					pass
 			else:
 				# The port is disconnected
 				self.status[key] = False
 				result = True
 		if result is True:
 			return connected
+		else:
+			pass
 		return None
 
 	def get_rts_dtr(self, name):

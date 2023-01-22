@@ -4,7 +4,11 @@
 
 The web interface allows configuration of the network, servers, etc... gives device information, and allows video streaming.
 
-![WebInterface.gif](/images/WebInterface.gif "Board information web page")
+![WebInterface.gif](/images/WebInterface.gif "Web pages")
+
+Responsive interface for smartphones and tablets
+
+![ResponsiceWebInterface.gif](/images/ResponsiveWebInterface.gif "Responsive Web pages")
 
 Smartphone motion detection notification (with pushover application)
 

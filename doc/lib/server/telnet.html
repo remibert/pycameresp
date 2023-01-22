@@ -29,6 +29,7 @@
 </summary>
 <pre><code class="python"># Based on https://github.com/cpopp/MicroTelnetServer/blob/master/utelnet/utelnetserver.py
 # Add user login
+# pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
 &#34;&#34;&#34; Telnet class &#34;&#34;&#34;
 import sys
@@ -94,6 +95,10 @@ class TelnetLogin:
                         elif self.input_char[0] == 0x0D:
                                 result = self.input_buffer
                                 self.input_buffer = b&#34;&#34;
+                                self.input_char = b&#34;&#34;
+                        # If tabulation sequence detected
+                        elif self.input_char[0] == 0x09:
+                                # Ignore escape sequence
                                 self.input_char = b&#34;&#34;
                         # If line feed detected
                         elif self.input_char[0] == 0x0A:
@@ -244,6 +249,7 @@ def accept_telnet_connect(telnet_server):
 def stop():
         &#34;&#34;&#34; Stop telnet server &#34;&#34;&#34;
         import uos
+        # pylint:disable=global-variable-not-assigned
         global server_socket, last_client_socket
         uos.dupterm(None)
         if server_socket:
@@ -351,6 +357,7 @@ def start(port=23):
 <pre><code class="python">def stop():
         &#34;&#34;&#34; Stop telnet server &#34;&#34;&#34;
         import uos
+        # pylint:disable=global-variable-not-assigned
         global server_socket, last_client_socket
         uos.dupterm(None)
         if server_socket:
@@ -422,6 +429,10 @@ def start(port=23):
                         elif self.input_char[0] == 0x0D:
                                 result = self.input_buffer
                                 self.input_buffer = b&#34;&#34;
+                                self.input_char = b&#34;&#34;
+                        # If tabulation sequence detected
+                        elif self.input_char[0] == 0x09:
+                                # Ignore escape sequence
                                 self.input_char = b&#34;&#34;
                         # If line feed detected
                         elif self.input_char[0] == 0x0A:
@@ -567,6 +578,10 @@ def start(port=23):
                 elif self.input_char[0] == 0x0D:
                         result = self.input_buffer
                         self.input_buffer = b&#34;&#34;
+                        self.input_char = b&#34;&#34;
+                # If tabulation sequence detected
+                elif self.input_char[0] == 0x09:
+                        # Ignore escape sequence
                         self.input_char = b&#34;&#34;
                 # If line feed detected
                 elif self.input_char[0] == 0x0A:

@@ -54,5 +54,12 @@
 	"editor.quickSuggestions": {
 		"other": "off"
 	},
-	"editor.snippetSuggestions": "none"
+	"editor.snippetSuggestions": "none",
+	"python.analysis.extraPaths": [
+		"${workspaceFolder}/modules",
+		"${workspaceFolder}/modules/lib",
+		"${workspaceFolder}/modules/simul",
+		"${workspaceFolder}/modules/lib/tools",
+		"${workspaceFolder}/modules/lib/shell"
+	]
 }

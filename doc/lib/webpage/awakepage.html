@@ -42,12 +42,13 @@ async def wakeup(request, response, args):
         disabled, action, submit = manage_default_button(request, config)
 
         page = main_frame(request, response, args, lang.gpio_wake_up,
-                Switch(text=lang.activated,       name=b&#34;activated&#34;,     checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.gpio_used_wake_up, name=b&#34;wake_up_gpio&#34;,     placeholder=lang.gpio_connected_to_pir, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wake_up_gpio,    disabled=disabled),
-                Edit(text=lang.awake_duration_in, name=b&#34;awake_duration&#34;,  placeholder=lang.duration_awake,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.awake_duration, disabled=disabled),
-                Edit(text=lang.sleep_duration_in, name=b&#34;sleep_duration&#34;,  placeholder=lang.duration_sleep,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.sleep_duration, disabled=disabled),
-                Br(),
-                submit)
+                Form([
+                        Switch(text=lang.activated,       name=b&#34;activated&#34;,     checked=config.activated, disabled=disabled),
+                        Edit(text=lang.gpio_used_wake_up, name=b&#34;wake_up_gpio&#34;,     placeholder=lang.gpio_connected_to_pir, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wake_up_gpio,    disabled=disabled),
+                        Edit(text=lang.awake_duration_in, name=b&#34;awake_duration&#34;,  placeholder=lang.duration_awake,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.awake_duration, disabled=disabled),
+                        Edit(text=lang.sleep_duration_in, name=b&#34;sleep_duration&#34;,  placeholder=lang.duration_sleep,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.sleep_duration, disabled=disabled),
+                        submit
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </section>
@@ -74,12 +75,13 @@ async def wakeup(request, response, args):
         disabled, action, submit = manage_default_button(request, config)
 
         page = main_frame(request, response, args, lang.gpio_wake_up,
-                Switch(text=lang.activated,       name=b&#34;activated&#34;,     checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.gpio_used_wake_up, name=b&#34;wake_up_gpio&#34;,     placeholder=lang.gpio_connected_to_pir, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wake_up_gpio,    disabled=disabled),
-                Edit(text=lang.awake_duration_in, name=b&#34;awake_duration&#34;,  placeholder=lang.duration_awake,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.awake_duration, disabled=disabled),
-                Edit(text=lang.sleep_duration_in, name=b&#34;sleep_duration&#34;,  placeholder=lang.duration_sleep,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.sleep_duration, disabled=disabled),
-                Br(),
-                submit)
+                Form([
+                        Switch(text=lang.activated,       name=b&#34;activated&#34;,     checked=config.activated, disabled=disabled),
+                        Edit(text=lang.gpio_used_wake_up, name=b&#34;wake_up_gpio&#34;,     placeholder=lang.gpio_connected_to_pir, pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.wake_up_gpio,    disabled=disabled),
+                        Edit(text=lang.awake_duration_in, name=b&#34;awake_duration&#34;,  placeholder=lang.duration_awake,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.awake_duration, disabled=disabled),
+                        Edit(text=lang.sleep_duration_in, name=b&#34;sleep_duration&#34;,  placeholder=lang.duration_sleep,        pattern=b&#34;[0-9]*[0-9]&#34;, value=b&#34;%d&#34;%config.sleep_duration, disabled=disabled),
+                        submit
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </dd>

@@ -45,11 +45,9 @@ def zone_masking(config, disabled):
         &#34;&#34;&#34; displays an html page to hide certain area of the camera, in order to ignore movements &#34;&#34;&#34;
         _ = SnapConfig.get()
 
-        squarex = SnapConfig.get().square_x - 2
-        squarey = SnapConfig.get().square_y - 2
         width   = SnapConfig.get().diff_x
         height  = SnapConfig.get().diff_y
-        maxi     = SnapConfig.get().max
+        maxi    = SnapConfig.get().max
         if disabled:
                 buttons = b&#34;&#34;
         else:
@@ -68,8 +66,6 @@ def zone_masking(config, disabled):
                                         appearance: none;
                                         background-color: #EFEFEF;
                                         opacity: 0.14;
-                                        width: %dpx;
-                                        height: %dpx;
                                 }
                                 .zoneMask:checked
                                 {
@@ -78,6 +74,43 @@ def zone_masking(config, disabled):
                                 }
                         &lt;/style&gt;
                         &lt;script&gt;
+                                var videoStream      = document.getElementById(&#34;video-stream&#34;);
+                                var videoStreamWidth = videoStream.offsetWidth;
+
+                                function onVideoStreamDisplayed()
+                                {
+                                        onLoadZoneMasking();
+                                        resizeZoneMasking();
+                                }
+
+                                videoStream.addEventListener(&#39;load&#39;, onVideoStreamDisplayed);
+
+                                if (window.addEventListener) 
+                                {
+                                        window.addEventListener (&#34;resize&#34;, onResizeEvent, true);
+                                } 
+
+                                function onResizeEvent() 
+                                {
+                                        if(videoStream.offsetWidth != videoStreamWidth)
+                                        {
+                                                videoStreamWidth = videoStream.offsetWidth;
+                                                resizeZoneMasking();
+                                        }
+                                }
+
+                                function resizeZoneMasking()
+                                {
+                                        var cellWidth  = (videoStream.offsetWidth  / 20) - 2.;
+                                        
+                                        for (id = 0; id &lt; %d; id++)
+                                        {
+                                                var cell = document.getElementById(id);
+                                                cell.style.width  = cellWidth + &#34;px&#34;;
+                                                cell.style.height = cellWidth + &#34;px&#34;;
+                                        }
+                                }
+                        
                                 var initMask=&#39;%s&#39;;
                                 var disabled = %d;
                                 function check(box)
@@ -154,9 +187,8 @@ def zone_masking(config, disabled):
                                                 cell.checked = 1;
                                         }
                                 }
-                                onLoadZoneMasking();
                         &lt;/script&gt;
-&#34;&#34;&#34;%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
+&#34;&#34;&#34;%(buttons,maxi,config.mask,disabled,height,width,maxi,maxi,maxi))
         return result
 
 @HttpServer.add_route(b&#39;/motion/config&#39;, menu=lang.menu_motion, item=lang.item_motion, available=info.iscamera() and Camera.is_activated())
@@ -170,21 +202,22 @@ async def motion(request, response, args):
         config = MotionConfig()
 
         # Keep activated status
-        activated = config.activated
         disabled, action, submit = manage_default_button(request, config, onclick=b&#34;onValidZoneMasking()&#34;)
 
         page = main_frame(request, response, args, lang.motion_detection_configuration,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                Streaming.get_html(request, SnapConfig.get().width, SnapConfig.get().height),
-                zone_masking(config, disabled), Br(),
-                Slider(text=lang.detects_a_movement,          name=b&#34;differences_detection&#34;,        min=b&#34;1&#34;,  max=b&#34;64&#34;, step=b&#34;1&#34;,  value=b&#34;%d&#34;%config.differences_detection,         disabled=disabled),
-                Slider(text=lang.motion_detection_sensitivity,          name=b&#34;sensitivity&#34;,        min=b&#34;0&#34;,  max=b&#34;100&#34;, step=b&#34;5&#34;,  value=b&#34;%d&#34;%config.sensitivity,         disabled=disabled),
-                Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),Br(),
-                Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),Br(),
-                Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),Br(),
-                Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;, checked=config.permanent_detection, disabled=disabled),Br(),
-                Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,  checked=config.light_compensation,  disabled=disabled),Br(),
-                submit)
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Streaming.get_html(request),
+                        zone_masking(config, disabled),
+                        Slider(text=lang.detects_a_movement,          name=b&#34;differences_detection&#34;,        min=b&#34;1&#34;,  max=b&#34;64&#34;, step=b&#34;1&#34;,  value=b&#34;%d&#34;%config.differences_detection,         disabled=disabled),
+                        Slider(text=lang.motion_detection_sensitivity,          name=b&#34;sensitivity&#34;,        min=b&#34;0&#34;,  max=b&#34;100&#34;, step=b&#34;5&#34;,  value=b&#34;%d&#34;%config.sensitivity,         disabled=disabled),
+                        Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),
+                        Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),
+                        Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),
+                        Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;, checked=config.permanent_detection, disabled=disabled),
+                        Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,  checked=config.light_compensation,  disabled=disabled),
+                        submit
+                ]))
         await response.send_page(page)
 
 @HttpServer.add_route(b&#39;/motion/onoff&#39;, menu=lang.menu_motion, item=lang.item_motion_onoff, available=info.iscamera() and Camera.is_activated())
@@ -201,7 +234,9 @@ async def motion_on_off(request, response, args):
                 config.save()
 
         page = main_frame(request, response, args, lang.motion_onoff,
-                Submit(text=lang.motion_off if config.activated else lang.motion_on,  name=b&#34;action&#34;, value=b&#34;off&#34; if config.activated else b&#34;on&#34; ))
+                Form([
+                        Submit(text=lang.motion_off if config.activated else lang.motion_on,  name=b&#34;action&#34;, value=b&#34;off&#34; if config.activated else b&#34;on&#34; )
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </section>
@@ -232,21 +267,22 @@ async def motion(request, response, args):
         config = MotionConfig()
 
         # Keep activated status
-        activated = config.activated
         disabled, action, submit = manage_default_button(request, config, onclick=b&#34;onValidZoneMasking()&#34;)
 
         page = main_frame(request, response, args, lang.motion_detection_configuration,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                Streaming.get_html(request, SnapConfig.get().width, SnapConfig.get().height),
-                zone_masking(config, disabled), Br(),
-                Slider(text=lang.detects_a_movement,          name=b&#34;differences_detection&#34;,        min=b&#34;1&#34;,  max=b&#34;64&#34;, step=b&#34;1&#34;,  value=b&#34;%d&#34;%config.differences_detection,         disabled=disabled),
-                Slider(text=lang.motion_detection_sensitivity,          name=b&#34;sensitivity&#34;,        min=b&#34;0&#34;,  max=b&#34;100&#34;, step=b&#34;5&#34;,  value=b&#34;%d&#34;%config.sensitivity,         disabled=disabled),
-                Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),Br(),
-                Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),Br(),
-                Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),Br(),
-                Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;, checked=config.permanent_detection, disabled=disabled),Br(),
-                Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,  checked=config.light_compensation,  disabled=disabled),Br(),
-                submit)
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Streaming.get_html(request),
+                        zone_masking(config, disabled),
+                        Slider(text=lang.detects_a_movement,          name=b&#34;differences_detection&#34;,        min=b&#34;1&#34;,  max=b&#34;64&#34;, step=b&#34;1&#34;,  value=b&#34;%d&#34;%config.differences_detection,         disabled=disabled),
+                        Slider(text=lang.motion_detection_sensitivity,          name=b&#34;sensitivity&#34;,        min=b&#34;0&#34;,  max=b&#34;100&#34;, step=b&#34;5&#34;,  value=b&#34;%d&#34;%config.sensitivity,         disabled=disabled),
+                        Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),
+                        Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),
+                        Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),
+                        Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;, checked=config.permanent_detection, disabled=disabled),
+                        Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,  checked=config.light_compensation,  disabled=disabled),
+                        submit
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </dd>
@@ -273,7 +309,9 @@ async def motion_on_off(request, response, args):
                 config.save()
 
         page = main_frame(request, response, args, lang.motion_onoff,
-                Submit(text=lang.motion_off if config.activated else lang.motion_on,  name=b&#34;action&#34;, value=b&#34;off&#34; if config.activated else b&#34;on&#34; ))
+                Form([
+                        Submit(text=lang.motion_off if config.activated else lang.motion_on,  name=b&#34;action&#34;, value=b&#34;off&#34; if config.activated else b&#34;on&#34; )
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </dd>
@@ -290,11 +328,9 @@ async def motion_on_off(request, response, args):
         &#34;&#34;&#34; displays an html page to hide certain area of the camera, in order to ignore movements &#34;&#34;&#34;
         _ = SnapConfig.get()
 
-        squarex = SnapConfig.get().square_x - 2
-        squarey = SnapConfig.get().square_y - 2
         width   = SnapConfig.get().diff_x
         height  = SnapConfig.get().diff_y
-        maxi     = SnapConfig.get().max
+        maxi    = SnapConfig.get().max
         if disabled:
                 buttons = b&#34;&#34;
         else:
@@ -313,8 +349,6 @@ async def motion_on_off(request, response, args):
                                         appearance: none;
                                         background-color: #EFEFEF;
                                         opacity: 0.14;
-                                        width: %dpx;
-                                        height: %dpx;
                                 }
                                 .zoneMask:checked
                                 {
@@ -323,6 +357,43 @@ async def motion_on_off(request, response, args):
                                 }
                         &lt;/style&gt;
                         &lt;script&gt;
+                                var videoStream      = document.getElementById(&#34;video-stream&#34;);
+                                var videoStreamWidth = videoStream.offsetWidth;
+
+                                function onVideoStreamDisplayed()
+                                {
+                                        onLoadZoneMasking();
+                                        resizeZoneMasking();
+                                }
+
+                                videoStream.addEventListener(&#39;load&#39;, onVideoStreamDisplayed);
+
+                                if (window.addEventListener) 
+                                {
+                                        window.addEventListener (&#34;resize&#34;, onResizeEvent, true);
+                                } 
+
+                                function onResizeEvent() 
+                                {
+                                        if(videoStream.offsetWidth != videoStreamWidth)
+                                        {
+                                                videoStreamWidth = videoStream.offsetWidth;
+                                                resizeZoneMasking();
+                                        }
+                                }
+
+                                function resizeZoneMasking()
+                                {
+                                        var cellWidth  = (videoStream.offsetWidth  / 20) - 2.;
+                                        
+                                        for (id = 0; id &lt; %d; id++)
+                                        {
+                                                var cell = document.getElementById(id);
+                                                cell.style.width  = cellWidth + &#34;px&#34;;
+                                                cell.style.height = cellWidth + &#34;px&#34;;
+                                        }
+                                }
+                        
                                 var initMask=&#39;%s&#39;;
                                 var disabled = %d;
                                 function check(box)
@@ -399,9 +470,8 @@ async def motion_on_off(request, response, args):
                                                 cell.checked = 1;
                                         }
                                 }
-                                onLoadZoneMasking();
                         &lt;/script&gt;
-&#34;&#34;&#34;%(buttons,squarex,squarey,config.mask,disabled,height,width,maxi,maxi,maxi))
+&#34;&#34;&#34;%(buttons,maxi,config.mask,disabled,height,width,maxi,maxi,maxi))
         return result</code></pre>
 </details>
 </dd>

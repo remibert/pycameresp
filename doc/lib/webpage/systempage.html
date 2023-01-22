@@ -41,20 +41,29 @@ from tools             import lang,archiver,filesystem,logger,system
 async def system_page(request, response, args):
         &#34;&#34;&#34; Function define the web page to manage system of the board &#34;&#34;&#34;
         page = main_frame(request, response, args, lang.system_management_s%Station.get_hostname(),
-                Label(text=lang.configuration ),Br(),
-                UploadFile(text=lang.upload, path=b&#34;/system/upload_config&#34;, alert=lang.configuration_uploaded, accept=b&#34;.cfg&#34;),
-                DownloadFile(text=lang.download, path=b&#34;/system/download_config&#34;, filename=b&#34;Config_%s.cfg&#34;%Station.get_hostname()),
-
-                Br(),Br(),Label(text=lang.file_system),Br(),
-                UploadFile(text=lang.upload, path=b&#34;/system/upload_file_system&#34;, alert=lang.upload_in_progress, accept=b&#34;.cfs&#34;),
-                DownloadFile(text=lang.download, path=b&#34;/system/download_file_system&#34;, filename=b&#34;FileSystem_%s.cfs&#34;%Station.get_hostname()),
-
-                Br(),Br(),Label(text=lang.syslog),Br(),
-                DownloadFile(text=lang.download, path=b&#34;/system/download_syslog&#34;, filename=b&#34;Syslog_%s.log&#34;%Station.get_hostname()),
-
-                Br(), Br(),Label(text=lang.reboot_device),Br(),
-                ButtonCmd(text=lang.reboot,path=b&#34;/system/reboot&#34;,confirm=lang.confirm_reboot, name=b&#34;reboot&#34;))
+                Form([
+                        FormGroup([
+                                Label(text=lang.configuration ), Br(),
+                                UploadFile(text=lang.upload, path=b&#34;/system/upload_config&#34;, alert=lang.configuration_uploaded, accept=b&#34;.cfg&#34;), Space(),
+                                DownloadFile(text=lang.download, path=b&#34;/system/download_config&#34;, filename=b&#34;Config_%s.cfg&#34;%Station.get_hostname()),
+                        ]),
+                        FormGroup([
+                                Label(text=lang.file_system), Br(),
+                                UploadFile(text=lang.upload, path=b&#34;/system/upload_file_system&#34;, alert=lang.upload_in_progress, accept=b&#34;.cfs&#34;), Space(),
+                                DownloadFile(text=lang.download, path=b&#34;/system/download_file_system&#34;, filename=b&#34;FileSystem_%s.cfs&#34;%Station.get_hostname()),
+                        ]),
+                        FormGroup([
+                                Label(text=lang.syslog), Br(),
+                                DownloadFile(text=lang.download, path=b&#34;/system/download_syslog&#34;, filename=b&#34;Syslog_%s.log&#34;%Station.get_hostname()),
+                        ]),
+                        FormGroup([
+                                Label(text=lang.reboot_device), Br(),
+                                ButtonCmd(text=lang.reboot,path=b&#34;/system/reboot&#34;,confirm=lang.confirm_reboot, name=b&#34;reboot&#34;)
+                        ])
+                ])
+        )
         await response.send_page(page)
+
 
 @HttpServer.add_route(b&#39;/system/upload_config&#39;)
 async def upload_config(request, response, args):
@@ -200,19 +209,27 @@ async def reboot(request, response, args):
 async def system_page(request, response, args):
         &#34;&#34;&#34; Function define the web page to manage system of the board &#34;&#34;&#34;
         page = main_frame(request, response, args, lang.system_management_s%Station.get_hostname(),
-                Label(text=lang.configuration ),Br(),
-                UploadFile(text=lang.upload, path=b&#34;/system/upload_config&#34;, alert=lang.configuration_uploaded, accept=b&#34;.cfg&#34;),
-                DownloadFile(text=lang.download, path=b&#34;/system/download_config&#34;, filename=b&#34;Config_%s.cfg&#34;%Station.get_hostname()),
-
-                Br(),Br(),Label(text=lang.file_system),Br(),
-                UploadFile(text=lang.upload, path=b&#34;/system/upload_file_system&#34;, alert=lang.upload_in_progress, accept=b&#34;.cfs&#34;),
-                DownloadFile(text=lang.download, path=b&#34;/system/download_file_system&#34;, filename=b&#34;FileSystem_%s.cfs&#34;%Station.get_hostname()),
-
-                Br(),Br(),Label(text=lang.syslog),Br(),
-                DownloadFile(text=lang.download, path=b&#34;/system/download_syslog&#34;, filename=b&#34;Syslog_%s.log&#34;%Station.get_hostname()),
-
-                Br(), Br(),Label(text=lang.reboot_device),Br(),
-                ButtonCmd(text=lang.reboot,path=b&#34;/system/reboot&#34;,confirm=lang.confirm_reboot, name=b&#34;reboot&#34;))
+                Form([
+                        FormGroup([
+                                Label(text=lang.configuration ), Br(),
+                                UploadFile(text=lang.upload, path=b&#34;/system/upload_config&#34;, alert=lang.configuration_uploaded, accept=b&#34;.cfg&#34;), Space(),
+                                DownloadFile(text=lang.download, path=b&#34;/system/download_config&#34;, filename=b&#34;Config_%s.cfg&#34;%Station.get_hostname()),
+                        ]),
+                        FormGroup([
+                                Label(text=lang.file_system), Br(),
+                                UploadFile(text=lang.upload, path=b&#34;/system/upload_file_system&#34;, alert=lang.upload_in_progress, accept=b&#34;.cfs&#34;), Space(),
+                                DownloadFile(text=lang.download, path=b&#34;/system/download_file_system&#34;, filename=b&#34;FileSystem_%s.cfs&#34;%Station.get_hostname()),
+                        ]),
+                        FormGroup([
+                                Label(text=lang.syslog), Br(),
+                                DownloadFile(text=lang.download, path=b&#34;/system/download_syslog&#34;, filename=b&#34;Syslog_%s.log&#34;%Station.get_hostname()),
+                        ]),
+                        FormGroup([
+                                Label(text=lang.reboot_device), Br(),
+                                ButtonCmd(text=lang.reboot,path=b&#34;/system/reboot&#34;,confirm=lang.confirm_reboot, name=b&#34;reboot&#34;)
+                        ])
+                ])
+        )
         await response.send_page(page)</code></pre>
 </details>
 </dd>

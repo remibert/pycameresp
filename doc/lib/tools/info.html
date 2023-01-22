@@ -29,11 +29,13 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Device informations &#34;&#34;&#34;
 import sys
 import time
 import os
-from tools import strings,filesystem
+from tools import strings,filesystem,lang,date
+
 try:
         import machine
 except:
@@ -60,7 +62,7 @@ def iscamera():
                 else:
                         return True
 
-def meminfo(display=True):
+def meminfo():
         &#34;&#34;&#34; Get memory informations &#34;&#34;&#34;
         import gc
         try:
@@ -68,51 +70,69 @@ def meminfo(display=True):
                 alloc = gc.mem_alloc()
                 free  = gc.mem_free()
                 total = alloc+free
-                result = b&#34;Memory : alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(
+                result = lang.memory_info%(
                         strings.size_to_bytes(alloc, 1),
                         strings.size_to_bytes(free,  1),
                         strings.size_to_bytes(total, 1),
                         100-(free*100/total))
-                if display:
-                        print(strings.tostrings(result))
-                else:
-                        return result
         except:
-                return b&#34;Mem unavailable&#34;
+                result = lang.no_information
+        return result
 
-def flashinfo(mountpoint=None, display=True):
+def flash_size(mountpoint=None):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
-        try:
-                import uos
-                if mountpoint is None:
-                        mountpoint = os.getcwd()
-                status = uos.statvfs(mountpoint)
+        import uos
+        if mountpoint is None:
+                mountpoint = os.getcwd()
+        status = uos.statvfs(mountpoint)
+        if filesystem.ismicropython():
                 free  = status[0]*status[3]
                 if free &lt; 0:
                         free = 0
                 total = status[1]*status[2]
                 alloc  = total - free
-                result = b&#34;Disk %s : alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(strings.tobytes(mountpoint),
-                        strings.size_to_string(alloc, 1),
-                        strings.size_to_string(free,  1),
-                        strings.size_to_string(total, 1),
-                        100-(free*100/total))
-                if display:
-                        print(strings.tostrings(result))
-                else:
-                        return result
-        except:
-                return b&#34;Flash unavailable&#34;
+        else:
+                free = status.f_bavail * status.f_frsize
+                total = status.f_blocks * status.f_frsize
+                alloc = (status.f_blocks - status.f_bfree) * status.f_frsize
+        return total, alloc, free
 
-def sysinfo(display=True, text=&#34;&#34;):
+
+def flashinfo(mountpoint=None):
+        &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
+        try:
+                total, alloc, free = flash_size(mountpoint=mountpoint)
+        except:
+                alloc = 1
+                free = 1
+                total = alloc+free
+        percent = 100-(free*100/total)
+        total   = strings.size_to_bytes(total, 1)
+        free    = strings.size_to_bytes(free,  1)
+        alloc   = strings.size_to_bytes(alloc, 1)
+        if mountpoint is None:
+                mountpoint = b&#34;/&#34;
+        else:
+                mountpoint = strings.tobytes(mountpoint)
+        result = lang.flash_info%(mountpoint, alloc, free, total, percent)
+        return result
+
+def deviceinfo():
+        &#34;&#34;&#34; Get device informations &#34;&#34;&#34;
+        try:
+                return b&#34;%s %dMhz&#34;%(strings.tobytes(sys.platform), machine.freq()//1000000)
+        except:
+                return b&#34;Device information unavailable&#34;
+
+def sysinfo():
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
         try:
-                result = b&#34;Device : %s%s %dMhz\nTime   : %s\n%s\n%s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(&#34;/&#34;,False))
-                if display:
-                        print(strings.tostrings(result))
-                else:
-                        return result
-        except:
+                result  = b&#34;Device : %s\n&#34;%(deviceinfo())
+                result += b&#34;Time   : %s\n&#34;%(date.date_to_bytes())
+                result += b&#34;%s : %s\n&#34;%(lang.memory_label, meminfo())
+                result += b&#34;%s : %s&#34;%(lang.flash_label, flashinfo(&#34;/&#34;))
+                return result
+        except Exception as err:
                 return b&#34;Sysinfo not available&#34;
 
 up_last=None
@@ -137,34 +157,41 @@ def uptime_sec():
         up += up_total
         return up
 
-def uptime(text=&#34;days&#34;):
+def uptime(text=b&#34;days&#34;):
         &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
-        up = uptime_sec()
-        seconds = (up)%60
-        mins    = (up/60)%60
-        hours   = (up/3600)%24
-        days    = (up/86400)
-        return &#34;%d %s, %d:%02d:%02d&#34;%(days, strings.tostrings(text),hours,mins,seconds)
+        try:
+                up = uptime_sec()
+                seconds = (up)%60
+                mins    = (up/60)%60
+                hours   = (up/3600)%24
+                days    = (up/86400)
+                return b&#34;%d %s, %d:%02d:%02d&#34;%(days, text,hours,mins,seconds)
+        except:
+                return lang.no_information
 
 _last_activity = 0
 def get_last_activity():
         &#34;&#34;&#34; Get the last activity from user &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global _last_activity
         return _last_activity
 
 def set_last_activity():
         &#34;&#34;&#34; Set the last activity from user &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global _last_activity
         _last_activity = uptime_sec()
 
 _issues_counter = 0
 def increase_issues_counter():
         &#34;&#34;&#34; Increases a issue counter, that may require a reboot if there are too many&#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global _issues_counter
         _issues_counter += 1
 
 def get_issues_counter():
         &#34;&#34;&#34; Return the value of the issues counter &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global _issues_counter
         return _issues_counter</code></pre>
 </details>
@@ -176,8 +203,25 @@ def get_issues_counter():
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.tools.info.flashinfo"><code class="name flex">
-<span>def <span class="ident">flashinfo</span></span>(<span>mountpoint=None, display=True)</span>
+<dt id="lib.tools.info.deviceinfo"><code class="name flex">
+<span>def <span class="ident">deviceinfo</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get device informations</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def deviceinfo():
+        &#34;&#34;&#34; Get device informations &#34;&#34;&#34;
+        try:
+                return b&#34;%s %dMhz&#34;%(strings.tobytes(sys.platform), machine.freq()//1000000)
+        except:
+                return b&#34;Device information unavailable&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.info.flash_size"><code class="name flex">
+<span>def <span class="ident">flash_size</span></span>(<span>mountpoint=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get flash informations</p></div>
@@ -185,29 +229,52 @@ def get_issues_counter():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def flashinfo(mountpoint=None, display=True):
+<pre><code class="python">def flash_size(mountpoint=None):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
-        try:
-                import uos
-                if mountpoint is None:
-                        mountpoint = os.getcwd()
-                status = uos.statvfs(mountpoint)
+        import uos
+        if mountpoint is None:
+                mountpoint = os.getcwd()
+        status = uos.statvfs(mountpoint)
+        if filesystem.ismicropython():
                 free  = status[0]*status[3]
                 if free &lt; 0:
                         free = 0
                 total = status[1]*status[2]
                 alloc  = total - free
-                result = b&#34;Disk %s : alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(strings.tobytes(mountpoint),
-                        strings.size_to_string(alloc, 1),
-                        strings.size_to_string(free,  1),
-                        strings.size_to_string(total, 1),
-                        100-(free*100/total))
-                if display:
-                        print(strings.tostrings(result))
-                else:
-                        return result
+        else:
+                free = status.f_bavail * status.f_frsize
+                total = status.f_blocks * status.f_frsize
+                alloc = (status.f_blocks - status.f_bfree) * status.f_frsize
+        return total, alloc, free</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.info.flashinfo"><code class="name flex">
+<span>def <span class="ident">flashinfo</span></span>(<span>mountpoint=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get flash informations</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def flashinfo(mountpoint=None):
+        &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
+        try:
+                total, alloc, free = flash_size(mountpoint=mountpoint)
         except:
-                return b&#34;Flash unavailable&#34;</code></pre>
+                alloc = 1
+                free = 1
+                total = alloc+free
+        percent = 100-(free*100/total)
+        total   = strings.size_to_bytes(total, 1)
+        free    = strings.size_to_bytes(free,  1)
+        alloc   = strings.size_to_bytes(alloc, 1)
+        if mountpoint is None:
+                mountpoint = b&#34;/&#34;
+        else:
+                mountpoint = strings.tobytes(mountpoint)
+        result = lang.flash_info%(mountpoint, alloc, free, total, percent)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.info.get_issues_counter"><code class="name flex">
@@ -221,6 +288,7 @@ def get_issues_counter():
 </summary>
 <pre><code class="python">def get_issues_counter():
         &#34;&#34;&#34; Return the value of the issues counter &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global _issues_counter
         return _issues_counter</code></pre>
 </details>
@@ -236,6 +304,7 @@ def get_issues_counter():
 </summary>
 <pre><code class="python">def get_last_activity():
         &#34;&#34;&#34; Get the last activity from user &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global _last_activity
         return _last_activity</code></pre>
 </details>
@@ -251,6 +320,7 @@ def get_issues_counter():
 </summary>
 <pre><code class="python">def increase_issues_counter():
         &#34;&#34;&#34; Increases a issue counter, that may require a reboot if there are too many&#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global _issues_counter
         _issues_counter += 1</code></pre>
 </details>
@@ -277,7 +347,7 @@ def get_issues_counter():
 </details>
 </dd>
 <dt id="lib.tools.info.meminfo"><code class="name flex">
-<span>def <span class="ident">meminfo</span></span>(<span>display=True)</span>
+<span>def <span class="ident">meminfo</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get memory informations</p></div>
@@ -285,7 +355,7 @@ def get_issues_counter():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def meminfo(display=True):
+<pre><code class="python">def meminfo():
         &#34;&#34;&#34; Get memory informations &#34;&#34;&#34;
         import gc
         try:
@@ -293,17 +363,14 @@ def get_issues_counter():
                 alloc = gc.mem_alloc()
                 free  = gc.mem_free()
                 total = alloc+free
-                result = b&#34;Memory : alloc=%s free=%s total=%s used=%-3.2f%%&#34;%(
+                result = lang.memory_info%(
                         strings.size_to_bytes(alloc, 1),
                         strings.size_to_bytes(free,  1),
                         strings.size_to_bytes(total, 1),
                         100-(free*100/total))
-                if display:
-                        print(strings.tostrings(result))
-                else:
-                        return result
         except:
-                return b&#34;Mem unavailable&#34;</code></pre>
+                result = lang.no_information
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.info.set_last_activity"><code class="name flex">
@@ -317,12 +384,13 @@ def get_issues_counter():
 </summary>
 <pre><code class="python">def set_last_activity():
         &#34;&#34;&#34; Set the last activity from user &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global _last_activity
         _last_activity = uptime_sec()</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.info.sysinfo"><code class="name flex">
-<span>def <span class="ident">sysinfo</span></span>(<span>display=True, text='')</span>
+<span>def <span class="ident">sysinfo</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get system informations</p></div>
@@ -330,15 +398,15 @@ def get_issues_counter():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sysinfo(display=True, text=&#34;&#34;):
+<pre><code class="python">def sysinfo():
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
         try:
-                result = b&#34;Device : %s%s %dMhz\nTime   : %s\n%s\n%s&#34;%(text, sys.platform, machine.freq()//1000000, strings.date_to_bytes(), meminfo(False), flashinfo(&#34;/&#34;,False))
-                if display:
-                        print(strings.tostrings(result))
-                else:
-                        return result
-        except:
+                result  = b&#34;Device : %s\n&#34;%(deviceinfo())
+                result += b&#34;Time   : %s\n&#34;%(date.date_to_bytes())
+                result += b&#34;%s : %s\n&#34;%(lang.memory_label, meminfo())
+                result += b&#34;%s : %s&#34;%(lang.flash_label, flashinfo(&#34;/&#34;))
+                return result
+        except Exception as err:
                 return b&#34;Sysinfo not available&#34;</code></pre>
 </details>
 </dd>
@@ -363,7 +431,7 @@ def get_issues_counter():
 </details>
 </dd>
 <dt id="lib.tools.info.uptime"><code class="name flex">
-<span>def <span class="ident">uptime</span></span>(<span>text='days')</span>
+<span>def <span class="ident">uptime</span></span>(<span>text=b'days')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Tell how long the system has been running</p></div>
@@ -371,14 +439,17 @@ def get_issues_counter():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def uptime(text=&#34;days&#34;):
+<pre><code class="python">def uptime(text=b&#34;days&#34;):
         &#34;&#34;&#34; Tell how long the system has been running &#34;&#34;&#34;
-        up = uptime_sec()
-        seconds = (up)%60
-        mins    = (up/60)%60
-        hours   = (up/3600)%24
-        days    = (up/86400)
-        return &#34;%d %s, %d:%02d:%02d&#34;%(days, strings.tostrings(text),hours,mins,seconds)</code></pre>
+        try:
+                up = uptime_sec()
+                seconds = (up)%60
+                mins    = (up/60)%60
+                hours   = (up/3600)%24
+                days    = (up/86400)
+                return b&#34;%d %s, %d:%02d:%02d&#34;%(days, text,hours,mins,seconds)
+        except:
+                return lang.no_information</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.info.uptime_sec"><code class="name flex">
@@ -428,6 +499,8 @@ def get_issues_counter():
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="lib.tools.info.deviceinfo" href="#lib.tools.info.deviceinfo">deviceinfo</a></code></li>
+<li><code><a title="lib.tools.info.flash_size" href="#lib.tools.info.flash_size">flash_size</a></code></li>
 <li><code><a title="lib.tools.info.flashinfo" href="#lib.tools.info.flashinfo">flashinfo</a></code></li>
 <li><code><a title="lib.tools.info.get_issues_counter" href="#lib.tools.info.get_issues_counter">get_issues_counter</a></code></li>
 <li><code><a title="lib.tools.info.get_last_activity" href="#lib.tools.info.get_last_activity">get_last_activity</a></code></li>

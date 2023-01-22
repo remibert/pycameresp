@@ -34,7 +34,7 @@ an user and password, on your site</p>
 &#34;&#34;&#34; Class used to store http connection sessions, it is useful if you define
 an user and password, on your site &#34;&#34;&#34;
 import time
-from tools import encryption, strings
+from tools import encryption, strings, date
 
 class Sessions:
         &#34;&#34;&#34; Class manage an http sessions &#34;&#34;&#34;
@@ -43,7 +43,7 @@ class Sessions:
         @staticmethod
         def create(duration):
                 &#34;&#34;&#34; Create new session &#34;&#34;&#34;
-                session = encryption.gethash(strings.date_to_bytes())
+                session = encryption.gethash(date.date_to_bytes())
                 Sessions.sessions.append((session, time.time() + duration))
                 return session
 
@@ -100,7 +100,7 @@ class Sessions:
         @staticmethod
         def create(duration):
                 &#34;&#34;&#34; Create new session &#34;&#34;&#34;
-                session = encryption.gethash(strings.date_to_bytes())
+                session = encryption.gethash(date.date_to_bytes())
                 Sessions.sessions.append((session, time.time() + duration))
                 return session
 
@@ -174,7 +174,7 @@ def check(session):
 <pre><code class="python">@staticmethod
 def create(duration):
         &#34;&#34;&#34; Create new session &#34;&#34;&#34;
-        session = encryption.gethash(strings.date_to_bytes())
+        session = encryption.gethash(date.date_to_bytes())
         Sessions.sessions.append((session, time.time() + duration))
         return session</code></pre>
 </details>

@@ -30,14 +30,18 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Class to manage wifi and access point &#34;&#34;&#34;
-# from wifi.hostname import *
+import sys
 from wifi.accesspoint import *
 from wifi.station import *
 from wifi.wifi import *
 from wifi.ip import *
 
-
-AUTHMODE = {0: b&#34;open&#34;, 1: b&#34;WEP&#34;, 2: b&#34;WPA-PSK&#34;, 3: b&#34;WPA2-PSK&#34;, 4: b&#34;WPA/WPA2-PSK&#34;}</code></pre>
+if sys.platform == &#34;rp2&#34;:
+    AUTHMODE = {0: b&#34;open&#34;, 0x00200002: b&#34;WPA-PSK&#34;, 0x00400004: b&#34;WPA2-PSK&#34;, 0x00400006: b&#34;WPA/WPA2-PSK&#34;}
+    AUTHMODE_DEFAULT = 0x00400004
+else:
+    AUTHMODE = {0: b&#34;open&#34;, 1: b&#34;WEP&#34;, 2: b&#34;WPA-PSK&#34;, 3: b&#34;WPA2-PSK&#34;, 4: b&#34;WPA/WPA2-PSK&#34;}
+    AUTHMODE_DEFAULT = 3</code></pre>
 </details>
 </section>
 <section>

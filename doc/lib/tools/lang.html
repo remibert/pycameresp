@@ -29,40 +29,36 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Language selected and regional time &#34;&#34;&#34;
-from tools.jsonconfig import *
-
-region_config = None
-
-class RegionConfig(JsonConfig):
-        &#34;&#34;&#34; Language selected and regional time &#34;&#34;&#34;
-        def __init__(self):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                JsonConfig.__init__(self)
-                self.lang        = b&#34;english&#34;
-                self.offset_time  = 1
-                self.dst         = True
-                self.current_time = 0
-
-        @staticmethod
-        def get():
-                &#34;&#34;&#34; Return region configuration &#34;&#34;&#34;
-                global region_config
-                if region_config is None:
-                        region_config = RegionConfig()
-                        if region_config.load() is False:
-                                region_config.save()
-
-                if region_config.is_changed():
-                        region_config.load()
-                return region_config
+import time
+import sys
+from tools import region, strings, logger
 
 try:
-        exec(b&#34;from tools.lang_%s import *&#34;%RegionConfig.get().lang)
+        exec(b&#34;from tools.lang_%s import *&#34;%region.RegionConfig.get().lang)
+        logger.syslog(&#34;Select lang : %s&#34;%strings.tostrings(region.RegionConfig.get().lang))
 except Exception as err:
-        from tools import logger
         logger.syslog(err)
-        from tools.lang_english import *</code></pre>
+        from tools.lang_english import *
+
+def translate_date(current_date, with_day=True):
+        &#34;&#34;&#34; Return the date formated according to the lang &#34;&#34;&#34;
+        # pylint:disable=undefined-variable
+        # pylint:disable=possibly-unused-variable
+        # pylint:disable=used-before-assignment
+        # pylint:disable=global-variable-not-assigned
+        year, month, day, _, _, _, weekday = time.localtime(current_date)[:7]
+        global weekdays, months, date_format, month_format
+        weekday = weekdays[weekday]
+        month   = months[month-1]
+        info = {&#34;weekday&#34;:weekday,&#34;month&#34;:month,&#34;day&#34;:day,&#34;year&#34;:year}
+        if sys.implementation.name == &#34;micropython&#34;:
+                return date_format % info
+        if with_day:
+                return date_format % strings.tobytes(info)
+        else:
+                return month_format % strings.tobytes(info)</code></pre>
 </details>
 </section>
 <section>
@@ -70,75 +66,39 @@ except Exception as err:
 <section>
 </section>
 <section>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="lib.tools.lang.RegionConfig"><code class="flex name class">
-<span>class <span class="ident">RegionConfig</span></span>
+<dt id="lib.tools.lang.translate_date"><code class="name flex">
+<span>def <span class="ident">translate_date</span></span>(<span>current_date, with_day=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Language selected and regional time </p>
-<p>Constructor</p></div>
+<div class="desc"><p>Return the date formated according to the lang</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class RegionConfig(JsonConfig):
-        &#34;&#34;&#34; Language selected and regional time &#34;&#34;&#34;
-        def __init__(self):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                JsonConfig.__init__(self)
-                self.lang        = b&#34;english&#34;
-                self.offset_time  = 1
-                self.dst         = True
-                self.current_time = 0
-
-        @staticmethod
-        def get():
-                &#34;&#34;&#34; Return region configuration &#34;&#34;&#34;
-                global region_config
-                if region_config is None:
-                        region_config = RegionConfig()
-                        if region_config.load() is False:
-                                region_config.save()
-
-                if region_config.is_changed():
-                        region_config.load()
-                return region_config</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>tools.jsonconfig.JsonConfig</li>
-</ul>
-<h3>Static methods</h3>
-<dl>
-<dt id="lib.tools.lang.RegionConfig.get"><code class="name flex">
-<span>def <span class="ident">get</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return region configuration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def get():
-        &#34;&#34;&#34; Return region configuration &#34;&#34;&#34;
-        global region_config
-        if region_config is None:
-                region_config = RegionConfig()
-                if region_config.load() is False:
-                        region_config.save()
-
-        if region_config.is_changed():
-                region_config.load()
-        return region_config</code></pre>
+<pre><code class="python">def translate_date(current_date, with_day=True):
+        &#34;&#34;&#34; Return the date formated according to the lang &#34;&#34;&#34;
+        # pylint:disable=undefined-variable
+        # pylint:disable=possibly-unused-variable
+        # pylint:disable=used-before-assignment
+        # pylint:disable=global-variable-not-assigned
+        year, month, day, _, _, _, weekday = time.localtime(current_date)[:7]
+        global weekdays, months, date_format, month_format
+        weekday = weekdays[weekday]
+        month   = months[month-1]
+        info = {&#34;weekday&#34;:weekday,&#34;month&#34;:month,&#34;day&#34;:day,&#34;year&#34;:year}
+        if sys.implementation.name == &#34;micropython&#34;:
+                return date_format % info
+        if with_day:
+                return date_format % strings.tobytes(info)
+        else:
+                return month_format % strings.tobytes(info)</code></pre>
 </details>
 </dd>
 </dl>
-</dd>
-</dl>
+</section>
+<section>
 </section>
 </article>
 <nav id="sidebar">
@@ -152,14 +112,9 @@ def get():
 <li><code><a title="lib.tools" href="index.html">lib.tools</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="lib.tools.lang.RegionConfig" href="#lib.tools.lang.RegionConfig">RegionConfig</a></code></h4>
+<li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="lib.tools.lang.RegionConfig.get" href="#lib.tools.lang.RegionConfig.get">get</a></code></li>
-</ul>
-</li>
+<li><code><a title="lib.tools.lang.translate_date" href="#lib.tools.lang.translate_date">translate_date</a></code></li>
 </ul>
 </li>
 </ul>

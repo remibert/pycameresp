@@ -15,7 +15,9 @@ Below are the devices compatible with pycameresp :
 
 ![ESP32CAM](/images/Device_ESP32CAM.jpg "ESP32CAM")
 ![ESP32CAM-MB](/images/Device_ESP32CAM-MB.jpg "ESP32CAM-MB")
-![NODEMCU](/images/Device_NODEMCU.jpg "NODE MCU") ![LOLIN32](/images/Device_LOLIN32.jpg "LOLIN32")
 ![TTGO](/images/Device_TTGO.jpg "TTGO")
 ![ESP32ONE](/images/Device_ESP32ONE.jpg "ESP32ONE")
 ![M5StackCamera](/images/Device_M5StackCamera.jpg "M5StackCamera")
+![BPI-Leaf-S3](/images/Device_BPI-Leaf-S3.png "BPI-Leaf-S3")
+
+**Devices without spiram have been removed, the platform can work, but we often fall into a lack of memory.**

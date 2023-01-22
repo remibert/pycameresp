@@ -29,9 +29,10 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Miscellaneous utility functions &#34;&#34;&#34;
 import machine
-from tools import strings,logger,system,watchdog
+from tools import lang,strings,logger,system,watchdog, info
 
 class Inactivity:
         &#34;&#34;&#34; Class to manage inactivity timer &#34;&#34;&#34;
@@ -60,7 +61,7 @@ class Inactivity:
                 self.stop()
                 self.start()
 
-async def task_monitoring(task):
+async def task_monitoring(task, *args, **params):
         &#34;&#34;&#34; Check if task crash, log message and reboot if it too frequent &#34;&#34;&#34;
         import uasyncio
         retry = 0
@@ -71,10 +72,10 @@ async def task_monitoring(task):
                 while retry &lt; max_retry:
                         try:
                                 while True:
-                                        if await task():
+                                        if await task(*args, **params):
                                                 retry = 0
                         except MemoryError as err:
-                                lastError = logger.syslog(err, &#34;Memory error&#34;)
+                                lastError = logger.syslog(err, &#34;Memory error, %s&#34;%strings.tostrings(info.meminfo()))
                                 from gc import collect
                                 collect()
                                 memory_error_count += 1
@@ -95,7 +96,6 @@ async def task_monitoring(task):
 
                 config = ServerConfig()
                 config.load()
-                from tools import lang
                 await Notifier.notify(lang.reboot_after_many%strings.tobytes(lastError), enabled=config.notify)
         finally:
                 system.reboot()</code></pre>
@@ -109,7 +109,7 @@ async def task_monitoring(task):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="lib.tools.tasking.task_monitoring"><code class="name flex">
-<span>async def <span class="ident">task_monitoring</span></span>(<span>task)</span>
+<span>async def <span class="ident">task_monitoring</span></span>(<span>task, *args, **params)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check if task crash, log message and reboot if it too frequent</p></div>
@@ -117,7 +117,7 @@ async def task_monitoring(task):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def task_monitoring(task):
+<pre><code class="python">async def task_monitoring(task, *args, **params):
         &#34;&#34;&#34; Check if task crash, log message and reboot if it too frequent &#34;&#34;&#34;
         import uasyncio
         retry = 0
@@ -128,10 +128,10 @@ async def task_monitoring(task):
                 while retry &lt; max_retry:
                         try:
                                 while True:
-                                        if await task():
+                                        if await task(*args, **params):
                                                 retry = 0
                         except MemoryError as err:
-                                lastError = logger.syslog(err, &#34;Memory error&#34;)
+                                lastError = logger.syslog(err, &#34;Memory error, %s&#34;%strings.tostrings(info.meminfo()))
                                 from gc import collect
                                 collect()
                                 memory_error_count += 1
@@ -152,7 +152,6 @@ async def task_monitoring(task):
 
                 config = ServerConfig()
                 config.load()
-                from tools import lang
                 await Notifier.notify(lang.reboot_after_many%strings.tobytes(lastError), enabled=config.notify)
         finally:
                 system.reboot()</code></pre>

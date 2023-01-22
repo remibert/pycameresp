@@ -29,11 +29,12 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Manage server class &#34;&#34;&#34;
 import time
 import wifi
 import uasyncio
-from tools import jsonconfig,logger,builddate,lang,watchdog,info,strings,sdcard
+from tools import jsonconfig,logger,builddate,region,lang,watchdog,info,strings,support,filesystem,date
 if info.iscamera():
         from video.video import Camera
 
@@ -47,7 +48,10 @@ class ServerConfig(jsonconfig.JsonConfig):
                 self.telnet = True
                 self.wanip = True
                 self.notify = True
-                self.server_postponed = 7
+                if filesystem.ismicropython():
+                        self.server_postponed = 7
+                else:
+                        self.server_postponed = 1
 
 class ServerContext:
         &#34;&#34;&#34; Context to initialize the servers &#34;&#34;&#34;
@@ -62,7 +66,7 @@ class ServerContext:
                 self.get_wan_ip_async = None
                 self.wan_ip = None
                 self.server_config  = ServerConfig()
-                self.region_config  = lang.RegionConfig()
+                self.region_config  = region.RegionConfig()
                 self.set_date = None
                 self.one_per_day = None
                 self.flushed = False
@@ -82,6 +86,22 @@ class Server:
         slow_speed = [None]
         tasks = {}
         context = None
+        daily_notifier = None
+
+        @staticmethod
+        def set_daily_notifier(callback):
+                &#34;&#34;&#34; Replace the daily notification (callback which return a string with message to notify) &#34;&#34;&#34;
+                Server.daily_notifier = callback
+
+        @staticmethod
+        def default_daily_notifier():
+                &#34;&#34;&#34; Return the default message notification &#34;&#34;&#34;
+                message = &#34;\n - Lan Ip : %s\n&#34;%wifi.Station.get_info()[0]
+                message += &#34; - Wan Ip : %s\n&#34;%Server.context.wan_ip
+                message += &#34; - Uptime : %s\n&#34;%strings.tostrings(info.uptime())
+                message += &#34; - %s : %s\n&#34;%(strings.tostrings(lang.memory_label), strings.tostrings(info.meminfo()))
+                message += &#34; - %s : %s\n&#34;%(strings.tostrings(lang.flash_label), strings.tostrings(info.flashinfo()))
+                return message
 
         @staticmethod
         def suspend():
@@ -150,7 +170,7 @@ class Server:
                 preload : True force the load of page at the start,
                 False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
                 Server.context = ServerContext(loop, page_loader, preload, http_port)
-                logger.syslog(info.sysinfo(display=False))
+                logger.syslog(info.sysinfo())
                 logger.syslog(&#34;Version: %s&#34;%strings.tostrings(builddate.date))
 
                 from server.periodic import periodic_task
@@ -183,11 +203,12 @@ class Server:
                                         wifi.Wifi.wan_disconnected()
 
                                 if forced:
-                                        await Server.context.notifier.notify(&#34;\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s&#34;%(
-                                                wifi.Station.get_info()[0],
-                                                Server.context.wan_ip,
-                                                info.uptime(),
-                                                strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
+                                        try:
+                                                # pylint:disable=not-callable
+                                                message = Server.daily_notifier()
+                                        except:
+                                                message = Server.default_daily_notifier()
+                                        await Server.context.notifier.notify(message)
 
         @staticmethod
         async def synchronize_time():
@@ -234,9 +255,9 @@ class Server:
         @staticmethod
         def is_one_per_day():
                 &#34;&#34;&#34; Indicates if the action must be done on per day &#34;&#34;&#34;
-                date = strings.date_to_bytes()[:14]
-                if Server.context.one_per_day is None or (date[-2:] == b&#34;12&#34; and date != Server.context.one_per_day):
-                        Server.context.one_per_day = date
+                date_ = date.date_to_bytes()[:14]
+                if Server.context.one_per_day is None or (date_[-2:] == b&#34;12&#34; and date_ != Server.context.one_per_day):
+                        Server.context.one_per_day = date_
                         return True
                 return False
 
@@ -256,9 +277,10 @@ class Server:
 
                                 # If telnet activated
                                 if Server.context.server_config.telnet:
-                                        # Load and start telnet
-                                        import server.telnet
-                                        server.telnet.start()
+                                        if support.telnet():
+                                                # Load and start telnet
+                                                import server.telnet
+                                                server.telnet.start()
 
                                 # If ftp activated
                                 if Server.context.server_config.ftp:
@@ -364,6 +386,22 @@ class Server:
         slow_speed = [None]
         tasks = {}
         context = None
+        daily_notifier = None
+
+        @staticmethod
+        def set_daily_notifier(callback):
+                &#34;&#34;&#34; Replace the daily notification (callback which return a string with message to notify) &#34;&#34;&#34;
+                Server.daily_notifier = callback
+
+        @staticmethod
+        def default_daily_notifier():
+                &#34;&#34;&#34; Return the default message notification &#34;&#34;&#34;
+                message = &#34;\n - Lan Ip : %s\n&#34;%wifi.Station.get_info()[0]
+                message += &#34; - Wan Ip : %s\n&#34;%Server.context.wan_ip
+                message += &#34; - Uptime : %s\n&#34;%strings.tostrings(info.uptime())
+                message += &#34; - %s : %s\n&#34;%(strings.tostrings(lang.memory_label), strings.tostrings(info.meminfo()))
+                message += &#34; - %s : %s\n&#34;%(strings.tostrings(lang.flash_label), strings.tostrings(info.flashinfo()))
+                return message
 
         @staticmethod
         def suspend():
@@ -432,7 +470,7 @@ class Server:
                 preload : True force the load of page at the start,
                 False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
                 Server.context = ServerContext(loop, page_loader, preload, http_port)
-                logger.syslog(info.sysinfo(display=False))
+                logger.syslog(info.sysinfo())
                 logger.syslog(&#34;Version: %s&#34;%strings.tostrings(builddate.date))
 
                 from server.periodic import periodic_task
@@ -465,11 +503,12 @@ class Server:
                                         wifi.Wifi.wan_disconnected()
 
                                 if forced:
-                                        await Server.context.notifier.notify(&#34;\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s&#34;%(
-                                                wifi.Station.get_info()[0],
-                                                Server.context.wan_ip,
-                                                info.uptime(),
-                                                strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))
+                                        try:
+                                                # pylint:disable=not-callable
+                                                message = Server.daily_notifier()
+                                        except:
+                                                message = Server.default_daily_notifier()
+                                        await Server.context.notifier.notify(message)
 
         @staticmethod
         async def synchronize_time():
@@ -516,9 +555,9 @@ class Server:
         @staticmethod
         def is_one_per_day():
                 &#34;&#34;&#34; Indicates if the action must be done on per day &#34;&#34;&#34;
-                date = strings.date_to_bytes()[:14]
-                if Server.context.one_per_day is None or (date[-2:] == b&#34;12&#34; and date != Server.context.one_per_day):
-                        Server.context.one_per_day = date
+                date_ = date.date_to_bytes()[:14]
+                if Server.context.one_per_day is None or (date_[-2:] == b&#34;12&#34; and date_ != Server.context.one_per_day):
+                        Server.context.one_per_day = date_
                         return True
                 return False
 
@@ -538,9 +577,10 @@ class Server:
 
                                 # If telnet activated
                                 if Server.context.server_config.telnet:
-                                        # Load and start telnet
-                                        import server.telnet
-                                        server.telnet.start()
+                                        if support.telnet():
+                                                # Load and start telnet
+                                                import server.telnet
+                                                server.telnet.start()
 
                                 # If ftp activated
                                 if Server.context.server_config.ftp:
@@ -627,6 +667,10 @@ class Server:
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="lib.server.server.Server.daily_notifier"><code class="name">var <span class="ident">daily_notifier</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="lib.server.server.Server.slow_speed"><code class="name">var <span class="ident">slow_speed</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -642,6 +686,26 @@ class Server:
 </dl>
 <h3>Static methods</h3>
 <dl>
+<dt id="lib.server.server.Server.default_daily_notifier"><code class="name flex">
+<span>def <span class="ident">default_daily_notifier</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the default message notification</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def default_daily_notifier():
+        &#34;&#34;&#34; Return the default message notification &#34;&#34;&#34;
+        message = &#34;\n - Lan Ip : %s\n&#34;%wifi.Station.get_info()[0]
+        message += &#34; - Wan Ip : %s\n&#34;%Server.context.wan_ip
+        message += &#34; - Uptime : %s\n&#34;%strings.tostrings(info.uptime())
+        message += &#34; - %s : %s\n&#34;%(strings.tostrings(lang.memory_label), strings.tostrings(info.meminfo()))
+        message += &#34; - %s : %s\n&#34;%(strings.tostrings(lang.flash_label), strings.tostrings(info.flashinfo()))
+        return message</code></pre>
+</details>
+</dd>
 <dt id="lib.server.server.Server.init"><code class="name flex">
 <span>def <span class="ident">init</span></span>(<span>loop=None, page_loader=None, preload=False, http_port=80)</span>
 </code></dt>
@@ -663,7 +727,7 @@ def init(loop=None, page_loader=None, preload=False, http_port=80):
         preload : True force the load of page at the start,
         False the load of page is done a the first http connection (Takes time on first connection) &#34;&#34;&#34;
         Server.context = ServerContext(loop, page_loader, preload, http_port)
-        logger.syslog(info.sysinfo(display=False))
+        logger.syslog(info.sysinfo())
         logger.syslog(&#34;Version: %s&#34;%strings.tostrings(builddate.date))
 
         from server.periodic import periodic_task
@@ -701,9 +765,9 @@ def is_all_waiting():
 <pre><code class="python">@staticmethod
 def is_one_per_day():
         &#34;&#34;&#34; Indicates if the action must be done on per day &#34;&#34;&#34;
-        date = strings.date_to_bytes()[:14]
-        if Server.context.one_per_day is None or (date[-2:] == b&#34;12&#34; and date != Server.context.one_per_day):
-                Server.context.one_per_day = date
+        date_ = date.date_to_bytes()[:14]
+        if Server.context.one_per_day is None or (date_[-2:] == b&#34;12&#34; and date_ != Server.context.one_per_day):
+                Server.context.one_per_day = date_
                 return True
         return False</code></pre>
 </details>
@@ -812,6 +876,21 @@ def resume():
         Server.suspended[0] = False</code></pre>
 </details>
 </dd>
+<dt id="lib.server.server.Server.set_daily_notifier"><code class="name flex">
+<span>def <span class="ident">set_daily_notifier</span></span>(<span>callback)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replace the daily notification (callback which return a string with message to notify)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def set_daily_notifier(callback):
+        &#34;&#34;&#34; Replace the daily notification (callback which return a string with message to notify) &#34;&#34;&#34;
+        Server.daily_notifier = callback</code></pre>
+</details>
+</dd>
 <dt id="lib.server.server.Server.slow_down"><code class="name flex">
 <span>def <span class="ident">slow_down</span></span>(<span>duration=20)</span>
 </code></dt>
@@ -852,9 +931,10 @@ async def start_server():
 
                         # If telnet activated
                         if Server.context.server_config.telnet:
-                                # Load and start telnet
-                                import server.telnet
-                                server.telnet.start()
+                                if support.telnet():
+                                        # Load and start telnet
+                                        import server.telnet
+                                        server.telnet.start()
 
                         # If ftp activated
                         if Server.context.server_config.ftp:
@@ -981,11 +1061,12 @@ async def synchronize_wan_ip(forced):
                                 wifi.Wifi.wan_disconnected()
 
                         if forced:
-                                await Server.context.notifier.notify(&#34;\n - Lan Ip : %s\n - Wan Ip : %s\n - Uptime : %s\n - %s&#34;%(
-                                        wifi.Station.get_info()[0],
-                                        Server.context.wan_ip,
-                                        info.uptime(),
-                                        strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint(), display=False))))</code></pre>
+                                try:
+                                        # pylint:disable=not-callable
+                                        message = Server.daily_notifier()
+                                except:
+                                        message = Server.default_daily_notifier()
+                                await Server.context.notifier.notify(message)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.server.Server.wait_all_suspended"><code class="name flex">
@@ -1054,7 +1135,10 @@ async def wait_resume(duration=None):
                 self.telnet = True
                 self.wanip = True
                 self.notify = True
-                self.server_postponed = 7</code></pre>
+                if filesystem.ismicropython():
+                        self.server_postponed = 7
+                else:
+                        self.server_postponed = 1</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1084,7 +1168,7 @@ async def wait_resume(duration=None):
                 self.get_wan_ip_async = None
                 self.wan_ip = None
                 self.server_config  = ServerConfig()
-                self.region_config  = lang.RegionConfig()
+                self.region_config  = region.RegionConfig()
                 self.set_date = None
                 self.one_per_day = None
                 self.flushed = False
@@ -1117,14 +1201,17 @@ async def wait_resume(duration=None):
 <ul>
 <li>
 <h4><code><a title="lib.server.server.Server" href="#lib.server.server.Server">Server</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="lib.server.server.Server.context" href="#lib.server.server.Server.context">context</a></code></li>
+<li><code><a title="lib.server.server.Server.daily_notifier" href="#lib.server.server.Server.daily_notifier">daily_notifier</a></code></li>
+<li><code><a title="lib.server.server.Server.default_daily_notifier" href="#lib.server.server.Server.default_daily_notifier">default_daily_notifier</a></code></li>
 <li><code><a title="lib.server.server.Server.init" href="#lib.server.server.Server.init">init</a></code></li>
 <li><code><a title="lib.server.server.Server.is_all_waiting" href="#lib.server.server.Server.is_all_waiting">is_all_waiting</a></code></li>
 <li><code><a title="lib.server.server.Server.is_one_per_day" href="#lib.server.server.Server.is_one_per_day">is_one_per_day</a></code></li>
 <li><code><a title="lib.server.server.Server.is_slow" href="#lib.server.server.Server.is_slow">is_slow</a></code></li>
 <li><code><a title="lib.server.server.Server.manage" href="#lib.server.server.Server.manage">manage</a></code></li>
 <li><code><a title="lib.server.server.Server.resume" href="#lib.server.server.Server.resume">resume</a></code></li>
+<li><code><a title="lib.server.server.Server.set_daily_notifier" href="#lib.server.server.Server.set_daily_notifier">set_daily_notifier</a></code></li>
 <li><code><a title="lib.server.server.Server.slow_down" href="#lib.server.server.Server.slow_down">slow_down</a></code></li>
 <li><code><a title="lib.server.server.Server.slow_speed" href="#lib.server.server.Server.slow_speed">slow_speed</a></code></li>
 <li><code><a title="lib.server.server.Server.start_server" href="#lib.server.server.Server.start_server">start_server</a></code></li>

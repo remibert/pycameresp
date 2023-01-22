@@ -34,7 +34,7 @@ import sys
 import os
 import select
 try:
-        from tools import filesystem, strings,watchdog
+        from tools import filesystem, strings, watchdog
 except:
         # pylint:disable=multiple-imports
         import strings,filesystem
@@ -88,6 +88,45 @@ if filesystem.ismicropython():
                                 sys.stdin.buffer.read(1)
                         else:
                                 break
+elif sys.platform == &#34;win32&#34;:
+        def getch(raw = True, duration=MAXINT, interchar=0.01):
+                &#34;&#34;&#34; Wait a key pressed on keyboard and return it &#34;&#34;&#34;
+                return read_keyboard(duration, raw, get_char)
+        def kbhit(duration=0.001):
+                &#34;&#34;&#34; Indicates if a key is pressed or not &#34;&#34;&#34;
+                return read_keyboard(duration, True, test_char)
+        def get_char(stdins):
+                &#34;&#34;&#34; Get character &#34;&#34;&#34;
+                if stdins != []:
+                        return stdins[0].read()
+                return b&#34;&#34;
+        def test_char(stdins):
+                &#34;&#34;&#34; Test a character &#34;&#34;&#34;
+                if stdins != []:
+                        return True
+                return False
+        def read_keyboard(duration=0.001, raw=True, callback=None):
+                &#34;&#34;&#34; Read keyboard on os/x, linux or windows&#34;&#34;&#34;
+                # pylint:disable=import-error
+                # pylint:disable=unreachable
+                import msvcrt
+                import time
+                start = time.process_time()
+                end = start + duration
+                result = b&#34;&#34;
+                while True:
+                        break
+                        if msvcrt.kbhit():
+                                result = msvcrt.getch()
+                                break
+                        current = time.process_time()
+                        if time.process_time() &gt; end:
+                                break
+                        else:
+                                time.sleep(duration/100)
+                return result
+        def kbflush(duration=0.5):
+                &#34;&#34;&#34; Flush all keys not yet read &#34;&#34;&#34;
 else:
         def getch(raw = True, duration=MAXINT, interchar=0.01):
                 &#34;&#34;&#34; Wait a key pressed on keyboard and return it &#34;&#34;&#34;
@@ -110,7 +149,7 @@ else:
                 return False
 
         def read_keyboard(duration=0.001, raw=True, callback=None):
-                &#34;&#34;&#34; Read keyboard on os/x, linux or windows&#34;&#34;&#34;
+                &#34;&#34;&#34; Read keyboard on os/x, linux &#34;&#34;&#34;
                 import tty
                 import termios
                 import fcntl
@@ -174,6 +213,7 @@ def refresh_screen_size():
 
 def get_screen_size(force=False):
         &#34;&#34;&#34; Get the VT100 screen size &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global screen_size, refresh_size
         refresh_size += 1
         if refresh_size == 5:
@@ -219,6 +259,7 @@ def get_screen_size(force=False):
 </summary>
 <pre><code class="python">def get_screen_size(force=False):
         &#34;&#34;&#34; Get the VT100 screen size &#34;&#34;&#34;
+        # pylint:disable=global-variable-not-assigned
         global screen_size, refresh_size
         refresh_size += 1
         if refresh_size == 5:
@@ -275,13 +316,13 @@ def get_screen_size(force=False):
 <span>def <span class="ident">read_keyboard</span></span>(<span>duration=0.001, raw=True, callback=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Read keyboard on os/x, linux or windows</p></div>
+<div class="desc"><p>Read keyboard on os/x, linux</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_keyboard(duration=0.001, raw=True, callback=None):
-        &#34;&#34;&#34; Read keyboard on os/x, linux or windows&#34;&#34;&#34;
+        &#34;&#34;&#34; Read keyboard on os/x, linux &#34;&#34;&#34;
         import tty
         import termios
         import fcntl

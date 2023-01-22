@@ -30,496 +30,402 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to view recent motion detection &#34;&#34;&#34;
-from server.httpserver import HttpServer
-from server.server     import Server
-from htmltemplate      import *
-from webpage.mainpage  import main_frame
-from motion            import Historic
-from video             import Camera
-from tools             import lang,info, strings
+# pylint:disable=anomalous-unicode-escape-in-string
+from server.httpserver     import HttpServer
+from server.server         import Server
+from htmltemplate          import *
+from webpage.mainpage      import main_frame
+from webpage.streamingpage import Streaming
+from motion                import Historic
+from video                 import Camera
+from tools                 import lang,info, strings
+
+def get_days_pagination(last_days, request):
+        &#34;&#34;&#34; Get the pagination html part of days &#34;&#34;&#34;
+        current_day = b&#34;&#34;
+        last_days = list(last_days)
+
+        if len(last_days) &gt; 0:
+                last_days.sort()
+                last_days.reverse()
+
+                pages = []
+
+                day_id = int(request.params.get(b&#34;day_id&#34;,0))
+                max_days = 5
+                if len(last_days) &gt; max_days:
+                        if day_id - 2 &lt; 0:
+                                begin_day = 0
+                                end_day   = len(last_days) if len(last_days) &lt; max_days else max_days
+                        elif day_id + 3 &gt; len(last_days):
+                                end_day   = len(last_days)
+                                begin_day = 0 if len(last_days) &lt; max_days else len(last_days) - max_days
+                        else:
+                                begin_day = day_id - max_days // 2
+                                end_day   = day_id + (max_days//2 + 1)
+
+                        if begin_day &gt; 0:
+                                pages.append(PageItem(text=b&#34;...&#34;, class_=b&#34;&#34;, href=b&#34;/historic?day_id=%d&#34;%(begin_day-1)))
+                else:
+                        begin_day = 0
+                        end_day = len(last_days)
+
+                i = begin_day
+                for day in last_days[begin_day:end_day]:
+                        pages.append(PageItem(text=day[8:10],
+                                class_=b&#34;&#34;,
+                                active=b&#34;active&#34; if day_id == i else b&#34;&#34;,
+                                href=b&#34;/historic?day_id=%d&#34;%i if day_id != i else b&#34;&#34;))
+                        if day_id == i:
+                                current_day = day
+                        i += 1
+
+                if len(last_days) &gt; max_days:
+                        if end_day &lt; len(last_days):
+                                pages.append(PageItem(text=b&#34;...&#34;, class_=b&#34;&#34;, href=b&#34;/historic?day_id=%d&#34;%(end_day)))
+
+                pagination_begin = Pagination(pages, class_=b&#34;pagination-sm&#34;, id=b&#34;pagination_begin&#34;)
+                pagination_end   = Pagination(pages, class_=b&#34;pagination-sm&#34;, id=b&#34;pagination_end&#34;)
+                result = pagination_begin, pagination_end,current_day
+        else:
+                result = None,None,current_day
+        return result
+
 
 @HttpServer.add_route(b&#39;/historic&#39;, menu=lang.menu_motion, item=lang.item_historic, available=info.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
         &#34;&#34;&#34; Historic motion detection page &#34;&#34;&#34;
+        Streaming.stop()
         Historic.get_root()
-        if len(request.params) == 0:
-                detailled = False
-        else:
-                detailled = True
-        pageContent = [\
-                Tag(b&#34;&#34;&#34;
-                &lt;script type=&#39;text/javascript&#39;&gt;
+        last_days = await Historic.get_last_days()
+        pagination_begin, pagination_end,current_day = get_days_pagination(last_days, request)
 
-                document.onkeydown = check_key;
-                window.onload = load_historic;
+        if pagination_end is not None and pagination_begin is not None:
+                page_content = [\
+                        pagination_begin,
+                        Tag(b&#34;&#34;&#34;
 
-                var historic = null;
-                var images = [];
-                var current_id = 0;
-                var last_id = 0;
-                var previousId = 0;
-                var historic_request = new XMLHttpRequest();
-                var image_request    = new XMLHttpRequest();
+                        &lt;div class=&#34;modal&#34; id=&#34;zoom_window&#34;&gt;
+                                &lt;div class=&#34;modal-dialog modal-fullscreen&#34;&gt;
+                                        &lt;div class=&#34;modal-content&#34;&gt;
+                                                &lt;div class=&#34;modal-header&#34;&gt;
+                                                        &lt;button type=&#34;button&#34; class=&#34;btn &#34; data-bs-dismiss=&#34;modal&#34;&gt;Close&lt;/button&gt;
+                                                        &lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34;&gt;&lt;/button&gt;
+                                                &lt;/div&gt;
+                                                &lt;div class=&#34;modal-body&#34; &gt;
+                                                        &lt;canvas id=&#34;zoom_image&#34; class=&#34;w-100&#34; data-bs-dismiss=&#34;modal&#34;/&gt;
+                                                &lt;/div&gt;
+                                        &lt;/div&gt;
+                                &lt;/div&gt;
+                        &lt;/div&gt;
 
-                setInterval(show, 200);
+                        &lt;script type=&#39;text/javascript&#39;&gt;
 
-                const MOTION_FILENAME =0;
-                const MOTION_WIDTH    =1;
-                const MOTION_HEIGHT   =2;
-                const MOTION_DIFFS    =3;
-                const MOTION_SQUAREX  =4;
-                const MOTION_SQUAREY  =5;
+                        window.onload = load_historic;
 
-                function download(fileUrl) 
-                {
-                        var a = document.createElement(&#34;a&#34;);
-                        a.href = fileUrl;
-                        filename = fileUrl.split(&#34;/&#34;).pop();
-                        a.setAttribute(&#34;download&#34;, filename);
-                        a.click();
-                }
+                        var current_day = &#39;%s&#39;;
 
-                function download_motion()
-                {
-                        download(&#34;/historic/download/&#34; + historic[current_id][MOTION_FILENAME]);
-                }
+                        var historic = null;
+                        var last_id = 0;
+                        var historic_request = new XMLHttpRequest();
+                        var image_request    = new XMLHttpRequest();
 
-                function load_historic()
-                {
-                        var canvas = document.getElementById(&#39;motion&#39;); 
-                        canvas.addEventListener(&#34;mousedown&#34;, function (e) { get_click_position(canvas, e); });
-                        historic_request.onreadystatechange = historic_loaded;
-                        historic_request.open(&#34;GET&#34;,&#34;historic/historic.json&#34;,true);
-                        historic_request.send();
-                }
+                        const MOTION_FILENAME =0;
+                        const MOTION_WIDTH    =1;
+                        const MOTION_HEIGHT   =2;
+                        const MOTION_DIFFS    =3;
+                        const MOTION_SQUAREX  =4;
+                        const MOTION_SQUAREY  =5;
 
-                function historic_loaded() 
-                {
-                        if (historic_request.readyState === XMLHttpRequest.DONE)
+                        function load_historic()
                         {
-                                if (historic_request.status === 200)
+                                historic_request.onreadystatechange = historic_loaded;
+                                historic_request.open(&#34;GET&#34;,&#34;historic/historic.json&#34;,true);
+                                historic_request.send();
+                        }
+
+                        function historic_loaded() 
+                        {
+                                if (historic_request.readyState === XMLHttpRequest.DONE)
                                 {
-                                        historic = JSON.parse(historic_request.responseText);
-                                        load_image();
+                                        if (historic_request.status === 200)
+                                        {
+                                                historic = JSON.parse(historic_request.responseText);
+                                                select_day();
+                                                load_image();
+                                        }
                                 }
                         }
-                }
 
-                function load_image()
-                {
-                        if (historic.length &gt; 0)
+                        function load_image()
                         {
-                                var motion = historic[last_id];
-                                image_request.onreadystatechange = image_loaded;
-                                image_request.open(&#34;GET&#34;,&#34;/historic/images/&#34; + motion[MOTION_FILENAME],true);
-                                image_request.send();
-                        }
-                        else
-                        {
-                                var ctx = document.getElementById(&#39;motion&#39;).getContext(&#39;2d&#39;);
-                                ctx.font = &#39;25px Arial&#39;;
-                                ctx.fillStyle = &#34;black&#34;;
-                                ctx.fillText(&#34;%s&#34;, 10, 20);
-                        }
-                }
-
-                function image_loaded()
-                {
-                        if (image_request.readyState === XMLHttpRequest.DONE)
-                        {
-                                if (image_request.status === 200)
+                                if (historic.length &gt; 0)
                                 {
                                         var motion = historic[last_id];
-                                        var image = new Image();
-                                        image.id     = last_id;
-                                        image.src    = &#39;data:image/jpeg;base64,&#39; + image_request.response;
-                                        image.width  = motion[MOTION_WIDTH] /15;
-                                        image.height = motion[MOTION_HEIGHT]/15;
-                                        image.alt    = get_name(motion[MOTION_FILENAME]);
-                                        image.title  = get_name(motion[MOTION_FILENAME]);
-                                        image.style  = &#34;padding: 1px;&#34;;
-                                        image.onclick = e =&gt; 
+                                        image_request.onreadystatechange = image_loaded;
+                                        image_request.open(&#34;GET&#34;,&#34;/historic/images/&#34; + motion[MOTION_FILENAME],true);
+                                        image_request.send();
+                                }
+                        }
+
+                        function rtrim(x, characters)
+                        {
+                                var start = 0;
+                                var end = x.length - 1;
+                                while (characters.indexOf(x[end]) &gt;= 0)
+                                {
+                                        end -= 1;
+                                }
+                                return x.substr(0, end + 1);
+                        }
+
+                        function ltrim(x, characters) 
+                        {
+                                var start = 0;
+                                while (characters.indexOf(x[start]) &gt;= 0)
+                                {
+                                        start += 1;
+                                }
+                                var end = x.length - 1;
+                                return x.substr(start);
+                        }
+
+                        function get_day(id)
+                        {
+                                var filename = historic[id][MOTION_FILENAME];
+                                filename = ltrim(filename, &#34;/&#34;);
+                                filename = filename.split(&#34;/&#34;);
+                                return filename[1]+&#34;/&#34;+filename[2]+&#34;/&#34;+filename[3];
+                        }
+
+                        function select_day()
+                        {
+                                if (historic.length &gt; 0)
+                                {
+                                        for (i = 0; i &lt; historic.length; i++)
+                                        {
+                                                if (get_day(i) == current_day)
                                                 {
-                                                        click_motion(parseInt(e.target.id,10));
-                                                };
-                                        images.push(image);
-                                        document.getElementById(&#39;motions&#39;).appendChild(image);
-                                        last_id = last_id + 1;
-                                        if (last_id &lt; historic.length-1)
+                                                        last_id = i;
+                                                        break;
+                                                }
+                                        }
+                                }
+                        }
+
+                        function get_quality()
+                        {
+                                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+                                {
+                                        return 1;
+                                }
+                                else
+                                {
+                                        return 2;
+                                }
+                        }
+
+                        function image_loaded()
+                        {
+                                if (image_request.readyState === XMLHttpRequest.DONE)
+                                {
+                                        if (image_request.status === 200)
+                                        {
+                                                var motion = historic[last_id];
+
+                                                var div = document.createElement(&#34;div&#34;);
+                                                        div.className = &#34;col-lg-2  pb-1&#34;;
+
+                                                        var canvas = document.createElement(&#34;canvas&#34;);
+                                                                canvas.width     = motion[MOTION_WIDTH ] * get_quality();
+                                                                canvas.height    = motion[MOTION_HEIGHT] * get_quality();
+                                                                canvas.id        = last_id;
+                                                                canvas.className = &#34;w-100&#34;;
+                                                                canvas.setAttribute(&#34;data-bs-toggle&#34;,&#34;modal&#34;);
+                                                                canvas.setAttribute(&#34;data-bs-target&#34;,&#34;#zoom_window&#34;);
+                                                                canvas.onclick = e =&gt; 
+                                                                        {
+                                                                                var view = document.getElementById(&#39;zoom_image&#39;);
+                                                                                var destCtx = view.getContext(&#39;2d&#39;);
+                                                                                view.width     = motion[MOTION_WIDTH ] * get_quality();
+                                                                                view.height    = motion[MOTION_HEIGHT] * get_quality();
+
+                                                                                destCtx.drawImage(canvas, 0, 0);
+                                                                        };
+
+                                                        var image = new Image();
+                                                                image.src        = &#39;data:image/jpeg;base64,&#39; + image_request.response;
+                                                                image.onload     = function(){show_motion(canvas.id, image);};
+
+                                                        div.appendChild(canvas);
+
+                                                if (last_id == 0)
+                                                {
+                                                        document.getElementById(&#39;motions&#39;).replaceChildren(div);
+                                                }
+                                                else
+                                                {
+                                                        document.getElementById(&#39;motions&#39;).appendChild(div);
+                                                }
+                                                last_id = last_id + 1;
+                                                if (last_id &lt; historic.length-1)
+                                                {
+                                                        if (get_day(last_id) == current_day)
+                                                        {
+                                                                setTimeout(load_image, 1);
+                                                        }
+                                                }
+                                        }
+                                        else 
                                         {
                                                 setTimeout(load_image, 1);
                                         }
                                 }
                         }
-                }
 
-                function show()
-                {
-                        show_motion(current_id);
-                }
-
-                function show_motion(id)
-                {
-                        var motion = historic[id];
-                        var ctx = document.getElementById(&#39;motion&#39;).getContext(&#39;2d&#39;);
-                        
-                        var offsetX = 30;
-                        var offsetY = 30;
-                        ctx.drawImage(document.getElementById(id), offsetX, offsetY, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
-                        var x;
-                        var y;
-
-                        // Show thumb image selected
-                        document.getElementById(previousId).style.border = &#34;&#34;;
-                        document.getElementById(id).style.border = &#34;5px solid dodgerblue&#34;;
-                        previousId = id;
-
-                        var squarex = motion[MOTION_SQUAREX];
-                        var squarey = motion[MOTION_SQUAREY];
-                        var maxx = motion[MOTION_WIDTH] /squarex;
-                        var maxy = motion[MOTION_HEIGHT]/squarey;
-                        
-                        if (%d)
+                        function get_difference(motion, x, y)
                         {
+                                var squarex = motion[MOTION_SQUAREX];
+                                var maxx    = motion[MOTION_WIDTH] /squarex;
+                                var bitpos  = y*maxx + x;
+                                if (typeof motion[MOTION_DIFFS] === &#39;string&#39;)
+                                {
+                                        return motion[MOTION_DIFFS][bitpos];
+                                }
+                                else
+                                {
+                                        var word = parseInt(bitpos/32);
+                                        var bit  = 31-bitpos%%32;
+                                        var mask = 1 &lt;&lt; bit;
+                                        var val  = motion[MOTION_DIFFS][word];
+                                        if (val &amp; mask)
+                                        {
+                                                return &#34;#&#34;;
+                                        }
+                                        else
+                                        {
+                                                return &#34; &#34;;
+                                        }
+                                }
+                        }
+
+                        function show_motion(id, image)
+                        {
+                                var x;
+                                var y;
+
+                                var motion = historic[id];
+                                var canvas = document.getElementById(id);
+                                var ctx = canvas.getContext(&#39;2d&#39;);
+
+                                var squarex = motion[MOTION_SQUAREX] * get_quality();
+                                var squarey = motion[MOTION_SQUAREY] * get_quality();
+                                var maxx = (motion[MOTION_WIDTH] /squarex) * get_quality();
+                                var maxy = (motion[MOTION_HEIGHT]/squarey) * get_quality();
+
+                                ctx.drawImage(image, 0, 0, motion[MOTION_WIDTH ]  , motion[MOTION_HEIGHT], 0, 0, motion[MOTION_WIDTH ] * get_quality(), motion[MOTION_HEIGHT] * get_quality());
+
+                                ctx.strokeStyle = &#34;red&#34;;
+                                ctx.lineWidth =  1 * get_quality();
                                 for (y = 0; y &lt; maxy; y ++)
                                 {
                                         for (x = 0; x &lt; maxx; x ++)
                                         {
-                                                detection = motion[MOTION_DIFFS][y*maxx + x];
-                                                if (detection != &#34; &#34;)
+                                                var detection = get_difference(motion, x, y);
+                                                if (x &gt;= 1)
                                                 {
-                                                        ctx.strokeStyle = &#34;yellow&#34;;
-                                                        ctx.strokeRect(offsetX + (x * squarex + 15),offsetY + (y*squarey +15), squarex-30, squarey-30);
+                                                        var previous = get_difference(motion, x-1, y);
+                                                        if (previous != detection)
+                                                        {
+                                                                ctx.beginPath();
+                                                                ctx.moveTo(0 + x*squarex, 0 + y*squarey);
+                                                                ctx.lineTo(0 + x*squarex, 0 + y*squarey + squarey);
+                                                                ctx.stroke();
+                                                        }
                                                 }
                                         }
                                 }
-                        }
-
-                        ctx.strokeStyle = &#34;red&#34;;
-                        for (y = 0; y &lt; maxy; y ++)
-                        {
+                                
                                 for (x = 0; x &lt; maxx; x ++)
                                 {
-                                        var detection = motion[MOTION_DIFFS][y*maxx + x];
-                                        if (x &gt;= 1)
+                                        for (y = 0; y &lt; maxy; y ++)
                                         {
-                                                var previous = motion[MOTION_DIFFS][y*maxx + x -1];
-                                                if (previous != detection)
+                                                var detection = get_difference(motion, x, y);
+                                                if (y &gt;= 1)
                                                 {
-                                                        ctx.beginPath();
-                                                        ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
-                                                        ctx.lineTo(offsetX + x*squarex, offsetY + y*squarey + squarey);
-                                                        ctx.stroke();
-                                                }
-                                        }
-                                }
-                        }
-                        
-                        for (x = 0; x &lt; maxx; x ++)
-                        {
-                                for (y = 0; y &lt; maxy; y ++)
-                                {
-                                        var detection = motion[MOTION_DIFFS][y*maxx + x];
-                                        if (y &gt;= 1)
-                                        {
-                                                var previous = motion[MOTION_DIFFS][(y-1)*maxx + x];
-                                                if (previous != detection)
-                                                {
-                                                        ctx.beginPath();
-                                                        ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
-                                                        ctx.lineTo(offsetX + x*squarex + squarex, offsetY + y*squarey);
-                                                        ctx.stroke();
-                                                }
-                                        }
-                                }
-                        }
-
-                        // Show text image
-                        ctx.font = &#39;20px monospace&#39;;
-                        ctx.fillStyle = &#34;white&#34;;
-                        ctx.rect(0, offsetY + motion[MOTION_HEIGHT],  motion[MOTION_WIDTH], 100);
-                        ctx.fill();
-
-                        ctx.fillStyle = &#34;black&#34;;
-                        ctx.fillText(get_name(motion[MOTION_FILENAME]),  10, offsetY + motion[MOTION_HEIGHT] + 20);
-
-                        // Show arrows
-                        ctx.fillStyle = &#39;rgba(255,255,255,10)&#39;;
-                        ctx.font = &#39;30px monospace&#39;;
-                        
-                        // Previous
-                        ctx.fillText(&#34;\u25C0\uFE0F&#34;, 0, offsetY + motion[MOTION_HEIGHT]/2); 
-                        
-                        // Next
-                        ctx.fillText(&#34;\u25B6\uFE0F&#34;, offsetX + motion[MOTION_WIDTH], offsetY + motion[MOTION_HEIGHT]/2);
-
-                        // Previous day
-                        ctx.fillText(&#34;\u23EA&#34;,  offsetX + motion[MOTION_WIDTH]/2, 25); 
-                        
-                        // Next day
-                        ctx.fillText(&#34;\u23E9&#34;, offsetX + motion[MOTION_WIDTH]/2,25+ offsetY + motion[MOTION_HEIGHT]);
-
-                        // Begin
-                        ctx.fillText(&#34;\u23EE\uFE0F&#34;,0, 25);
-
-                        // End
-                        ctx.fillText(&#34;\u23ED\uFE0F&#34;, offsetX + motion[MOTION_WIDTH], 25+offsetY + motion[MOTION_HEIGHT]);
-                }
-
-                // Convert the filename into text displayed
-                function get_name(filename)
-                {
-                        filename = filename.split(&#34;.&#34;)[0];
-                        lst = filename.split(&#34;/&#34;);
-                        filename = lst[lst.length-1];
-                        filename = filename.replace(&#34;D= &#34;,&#34;D=&#34;);
-                        spl = filename.split(&#34; &#34;);
-
-                        if (spl.length == 3)
-                        {
-                                date = spl[0].split(&#34;_&#34;)[0];
-                                hour = spl[0].split(&#34;_&#34;)[1];
-
-                                date = date.replaceAll(&#34;-&#34;,&#34;/&#34;) + &#34; &#34; + hour.replaceAll(&#34;-&#34;,&#34;:&#34;);
-                                last = spl[1] + &#34; &#34; + spl[2];
-                                result = date + &#34; &#34;+ last;
-                        }
-                        else
-                        {
-                                result = filename;
-                        }
-                        return result;
-                }
-
-                function get_date(filename)
-                {
-                        return get_name(filename).substring(0,10);
-                }
-
-                function click_motion(id)
-                {
-                        current_id = id;
-                        show_motion(id);
-                }
-
-                function first_motion()
-                {
-                        current_id = 0;
-                        show_motion(current_id);
-                }
-
-                function last_motion()
-                {
-                        current_id = last_id-1;
-                        show_motion(current_id);
-                }
-
-                function next_motion()
-                {
-                        if (current_id + 1 &lt; last_id)
-                        {
-                                current_id = current_id + 1;
-                                show_motion(current_id);
-                        }
-                }
-
-                function previous_motion()
-                {
-                        if (current_id &gt; 0)
-                        {
-                                current_id = current_id -1;
-                                show_motion(current_id);
-                        }
-                }
-
-                function next_day_motion()
-                {
-                        if (current_id + 1 &lt; last_id)
-                        {
-                                var new_id = current_id;
-
-                                do
-                                {
-                                        new_id += 1;
-                                        if (get_date(historic[new_id][MOTION_FILENAME]) != get_date(historic[current_id][MOTION_FILENAME]))
-                                        {
-                                                current_id = new_id;
-                                                show_motion(current_id);
-                                                break;
-                                        }
-                                }
-                                while (new_id + 1 &lt; last_id);
-                        }
-                }
-
-                function previous_day_motion()
-                {
-                        if (current_id &gt; 0)
-                        {
-                                var new_id = current_id;
-
-                                do
-                                {
-                                        new_id -= 1;
-
-                                        if (get_date(historic[new_id][MOTION_FILENAME]) != get_date(historic[current_id][MOTION_FILENAME]))
-                                        {
-                                                current_id = new_id;
-
-                                                do
-                                                {
-                                                        new_id -= 1;
-                                                        if (get_date(historic[new_id][MOTION_FILENAME]) == get_date(historic[current_id][MOTION_FILENAME]))
+                                                        var previous = get_difference(motion, x, y-1);
+                                                        if (previous != detection)
                                                         {
-                                                                current_id = new_id;
-                                                        }
-                                                        else
-                                                        {
-                                                                break;
+                                                                ctx.beginPath();
+                                                                ctx.moveTo(0 + x*squarex, 0 + y*squarey);
+                                                                ctx.lineTo(0 + x*squarex + squarex, 0 + y*squarey);
+                                                                ctx.stroke();
                                                         }
                                                 }
-                                                while(new_id - 1 &gt;= 0);
-                                                show_motion(current_id);
-                                                break;
                                         }
                                 }
-                                while (new_id - 1 &gt;= 0);
-                        }
-                }
 
-                function check_key(e)
-                {
-                        e = e || window.event;
 
-                        if (e.keyCode == &#39;38&#39;) // up arrow
-                        {
-                                previous_day_motion();
-                        }
-                        else if (e.keyCode == &#39;40&#39;) // down arrow
-                        {
-                                next_day_motion();
-                        }
-                        else if (e.keyCode == &#39;37&#39;) // left arrow
-                        {
-                                previous_motion();
-                        }
-                        else if (e.keyCode == &#39;39&#39;)// right arrow
-                        {
-                                next_motion();
-                        }
-                        else if (e.keyCode == &#39;35&#39;) // end
-                        {
-                        }
-                        else if (e.keyCode == &#39;36&#39;) // home
-                        {
-                        }
-                        else if (e.keyCode == &#39;33&#39;) // page up
-                        {
-                                first_motion();
-                        }
-                        else if (e.keyCode == &#39;34&#39;) // page down
-                        {
-                                last_motion();
-                        }
-                }
+                                var font_size = 35 * get_quality();
+                                ctx.font = font_size + &#34;px monospace&#34;;
+                                var width = ctx.measureText(get_name(motion[MOTION_FILENAME])).width;
+                                ctx.fillStyle = &#39;rgba(0,0,0,0.3)&#39;;
 
-                function get_click_position(canvas, e)
-                {
-                        const rect = canvas.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const y = e.clientY - rect.top;
+                                ctx.fillRect(0,(motion[MOTION_HEIGHT] * get_quality())-font_size, 
+                                        width+get_quality(), font_size+10);
 
-                        // If click on first
-                        if (x &lt; 100 &amp;&amp; y &lt; 100)
-                        {
-                                first_motion();
+                                ctx.fillStyle = &#39;rgba(255,255,255,0.5)&#39;;
+                                ctx.fillText(get_name(motion[MOTION_FILENAME]),  3, (motion[MOTION_HEIGHT] * get_quality() - 5*get_quality() ));
                         }
-                        // If click on last
-                        else if (x &gt; (rect.width - 100) &amp;&amp; y &gt; (rect.height -100))
+
+                        // Convert the filename into text displayed
+                        function get_name(filename)
                         {
-                                last_motion();
-                        }
-                        // If the click is in the middle
-                        else if (x &gt; rect.width/3 &amp;&amp; x &lt; (2*rect.width/3) &amp;&amp; y &gt; rect.height/3 &amp;&amp; y &lt; (2*rect.height/3))
-                        {
-                                // Download image
-                                if (confirm(&#34;Download this image ?&#34;))
+                                filename = filename.split(&#34;.&#34;)[0];
+                                lst = filename.split(&#34;/&#34;);
+                                filename = lst[lst.length-1];
+                                filename = filename.replace(&#34;D= &#34;,&#34;D=&#34;);
+                                spl = filename.split(&#34; &#34;);
+
+                                if (spl.length == 3)
                                 {
-                                        download_motion();
-                                }
-                        }
-                        else
-                        {
-                                if (x &lt; rect.width / 2)
-                                {
-                                        if (y &lt; rect.height / 2)
-                                        {
-                                                if (x &lt; y)
-                                                {
-                                                        previous_motion();
-                                                }
-                                                else
-                                                {
-                                                        previous_day_motion();
-                                                }
-                                        }
-                                        else
-                                        {
-                                                if (x &lt; rect.height - y)
-                                                {
-                                                        previous_motion();
-                                                }
-                                                else
-                                                {
-                                                        next_day_motion();
-                                                }
-                                        }
+                                        date = spl[0].split(&#34;_&#34;)[0];
+                                        hour = spl[0].split(&#34;_&#34;)[1];
+
+                                        date = date.replaceAll(&#34;-&#34;,&#34;/&#34;) + &#34; &#34; + hour.replaceAll(&#34;-&#34;,&#34;:&#34;);
+                                        last = spl[1] + &#34; &#34; + spl[2];
+                                        result = date + &#34; &#34;+ last;
                                 }
                                 else
                                 {
-                                        if (y &lt; rect.height / 2)
-                                        {
-                                                if (rect.width - x &lt; y)
-                                                {
-                                                        next_motion();
-                                                }
-                                                else
-                                                {
-                                                        previous_day_motion();
-                                                }
-                                        }
-                                        else
-                                        {
-                                                if (rect.width - x &lt; rect.height - y)
-                                                {
-                                                        next_motion();
-                                                }
-                                                else
-                                                {
-                                                        next_day_motion();
-                                                }
-                                        }
+                                        result = filename;
                                 }
+                                return result;
                         }
-                }
 
-                &lt;/script&gt;
-                &lt;canvas id=&#34;motion&#34; width=&#34;%d&#34; height=&#34;%d&#34; &gt;&lt;/canvas&gt;
-                &lt;br&gt;
-                &lt;div id=&#34;motions&#34;&gt;&lt;/div&gt;
-                &#34;&#34;&#34;%(lang.historic_not_available, detailled, 860,660)),
-        ]
-        page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
+                        function get_date(filename)
+                        {
+                                return get_name(filename).substring(0,10);
+                        }
+                        &lt;/script&gt;
+                        &lt;div id=&#34;motions&#34; class=&#34;row&#34;&gt;&lt;/div&gt;
+                        &#34;&#34;&#34;%(current_day)),
+                        Br(),
+                        pagination_end
+                ]
+        else:
+                page_content = Tag(b&#34;&lt;span&gt;%s&lt;/span&gt;&#34;%lang.historic_not_available)
+        page = main_frame(request, response, args,lang.last_motion_detections,Form(page_content))
         await response.send_page(page)
 
 @HttpServer.add_route(b&#39;/historic/historic.json&#39;, available=info.iscamera() and Camera.is_activated())
 async def historic_json(request, response, args):
         &#34;&#34;&#34; Send historic json file &#34;&#34;&#34;
         Server.slow_down()
-        if await Historic.locked() is False:
+        try:
                 await response.send_buffer(b&#34;historic.json&#34;, await Historic.get_json())
-        else:
-                await response.send_buffer(b&#34;historic.json&#34;, b&#34;[]&#34;)
+        except Exception as err:
+                await response.send_not_found(err)
 
 @HttpServer.add_route(b&#39;/historic/images/.*&#39;, available=info.iscamera() and Camera.is_activated())
 async def historic_image(request, response, args):
@@ -531,7 +437,7 @@ async def historic_image(request, response, args):
                         await Historic.acquire()
                         await response.send_file(strings.tostrings(request.path[len(&#34;/historic/images/&#34;):]), base64=True)
                 else:
-                        await response.send_error(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
+                        await response.send_not_found()
         finally:
                 if reserved:
                         await Historic.release()
@@ -547,7 +453,7 @@ async def download_image(request, response, args):
                         await Historic.acquire()
                         await response.send_file(strings.tostrings(request.path[len(&#34;/historic/download/&#34;):]), base64=False)
                 else:
-                        await response.send_error(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
+                        await response.send_not_found()
         finally:
                 if reserved:
                         await Historic.release()
@@ -580,11 +486,72 @@ async def download_image(request, response, args):
                         await Historic.acquire()
                         await response.send_file(strings.tostrings(request.path[len(&#34;/historic/download/&#34;):]), base64=False)
                 else:
-                        await response.send_error(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
+                        await response.send_not_found()
         finally:
                 if reserved:
                         await Historic.release()
                         await Camera.unreserve(Historic)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.historicpage.get_days_pagination"><code class="name flex">
+<span>def <span class="ident">get_days_pagination</span></span>(<span>last_days, request)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the pagination html part of days</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_days_pagination(last_days, request):
+        &#34;&#34;&#34; Get the pagination html part of days &#34;&#34;&#34;
+        current_day = b&#34;&#34;
+        last_days = list(last_days)
+
+        if len(last_days) &gt; 0:
+                last_days.sort()
+                last_days.reverse()
+
+                pages = []
+
+                day_id = int(request.params.get(b&#34;day_id&#34;,0))
+                max_days = 5
+                if len(last_days) &gt; max_days:
+                        if day_id - 2 &lt; 0:
+                                begin_day = 0
+                                end_day   = len(last_days) if len(last_days) &lt; max_days else max_days
+                        elif day_id + 3 &gt; len(last_days):
+                                end_day   = len(last_days)
+                                begin_day = 0 if len(last_days) &lt; max_days else len(last_days) - max_days
+                        else:
+                                begin_day = day_id - max_days // 2
+                                end_day   = day_id + (max_days//2 + 1)
+
+                        if begin_day &gt; 0:
+                                pages.append(PageItem(text=b&#34;...&#34;, class_=b&#34;&#34;, href=b&#34;/historic?day_id=%d&#34;%(begin_day-1)))
+                else:
+                        begin_day = 0
+                        end_day = len(last_days)
+
+                i = begin_day
+                for day in last_days[begin_day:end_day]:
+                        pages.append(PageItem(text=day[8:10],
+                                class_=b&#34;&#34;,
+                                active=b&#34;active&#34; if day_id == i else b&#34;&#34;,
+                                href=b&#34;/historic?day_id=%d&#34;%i if day_id != i else b&#34;&#34;))
+                        if day_id == i:
+                                current_day = day
+                        i += 1
+
+                if len(last_days) &gt; max_days:
+                        if end_day &lt; len(last_days):
+                                pages.append(PageItem(text=b&#34;...&#34;, class_=b&#34;&#34;, href=b&#34;/historic?day_id=%d&#34;%(end_day)))
+
+                pagination_begin = Pagination(pages, class_=b&#34;pagination-sm&#34;, id=b&#34;pagination_begin&#34;)
+                pagination_end   = Pagination(pages, class_=b&#34;pagination-sm&#34;, id=b&#34;pagination_end&#34;)
+                result = pagination_begin, pagination_end,current_day
+        else:
+                result = None,None,current_day
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.webpage.historicpage.historic"><code class="name flex">
@@ -599,475 +566,327 @@ async def download_image(request, response, args):
 <pre><code class="python">@HttpServer.add_route(b&#39;/historic&#39;, menu=lang.menu_motion, item=lang.item_historic, available=info.iscamera() and Camera.is_activated())
 async def historic(request, response, args):
         &#34;&#34;&#34; Historic motion detection page &#34;&#34;&#34;
+        Streaming.stop()
         Historic.get_root()
-        if len(request.params) == 0:
-                detailled = False
-        else:
-                detailled = True
-        pageContent = [\
-                Tag(b&#34;&#34;&#34;
-                &lt;script type=&#39;text/javascript&#39;&gt;
+        last_days = await Historic.get_last_days()
+        pagination_begin, pagination_end,current_day = get_days_pagination(last_days, request)
 
-                document.onkeydown = check_key;
-                window.onload = load_historic;
+        if pagination_end is not None and pagination_begin is not None:
+                page_content = [\
+                        pagination_begin,
+                        Tag(b&#34;&#34;&#34;
 
-                var historic = null;
-                var images = [];
-                var current_id = 0;
-                var last_id = 0;
-                var previousId = 0;
-                var historic_request = new XMLHttpRequest();
-                var image_request    = new XMLHttpRequest();
+                        &lt;div class=&#34;modal&#34; id=&#34;zoom_window&#34;&gt;
+                                &lt;div class=&#34;modal-dialog modal-fullscreen&#34;&gt;
+                                        &lt;div class=&#34;modal-content&#34;&gt;
+                                                &lt;div class=&#34;modal-header&#34;&gt;
+                                                        &lt;button type=&#34;button&#34; class=&#34;btn &#34; data-bs-dismiss=&#34;modal&#34;&gt;Close&lt;/button&gt;
+                                                        &lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34;&gt;&lt;/button&gt;
+                                                &lt;/div&gt;
+                                                &lt;div class=&#34;modal-body&#34; &gt;
+                                                        &lt;canvas id=&#34;zoom_image&#34; class=&#34;w-100&#34; data-bs-dismiss=&#34;modal&#34;/&gt;
+                                                &lt;/div&gt;
+                                        &lt;/div&gt;
+                                &lt;/div&gt;
+                        &lt;/div&gt;
 
-                setInterval(show, 200);
+                        &lt;script type=&#39;text/javascript&#39;&gt;
 
-                const MOTION_FILENAME =0;
-                const MOTION_WIDTH    =1;
-                const MOTION_HEIGHT   =2;
-                const MOTION_DIFFS    =3;
-                const MOTION_SQUAREX  =4;
-                const MOTION_SQUAREY  =5;
+                        window.onload = load_historic;
 
-                function download(fileUrl) 
-                {
-                        var a = document.createElement(&#34;a&#34;);
-                        a.href = fileUrl;
-                        filename = fileUrl.split(&#34;/&#34;).pop();
-                        a.setAttribute(&#34;download&#34;, filename);
-                        a.click();
-                }
+                        var current_day = &#39;%s&#39;;
 
-                function download_motion()
-                {
-                        download(&#34;/historic/download/&#34; + historic[current_id][MOTION_FILENAME]);
-                }
+                        var historic = null;
+                        var last_id = 0;
+                        var historic_request = new XMLHttpRequest();
+                        var image_request    = new XMLHttpRequest();
 
-                function load_historic()
-                {
-                        var canvas = document.getElementById(&#39;motion&#39;); 
-                        canvas.addEventListener(&#34;mousedown&#34;, function (e) { get_click_position(canvas, e); });
-                        historic_request.onreadystatechange = historic_loaded;
-                        historic_request.open(&#34;GET&#34;,&#34;historic/historic.json&#34;,true);
-                        historic_request.send();
-                }
+                        const MOTION_FILENAME =0;
+                        const MOTION_WIDTH    =1;
+                        const MOTION_HEIGHT   =2;
+                        const MOTION_DIFFS    =3;
+                        const MOTION_SQUAREX  =4;
+                        const MOTION_SQUAREY  =5;
 
-                function historic_loaded() 
-                {
-                        if (historic_request.readyState === XMLHttpRequest.DONE)
+                        function load_historic()
                         {
-                                if (historic_request.status === 200)
+                                historic_request.onreadystatechange = historic_loaded;
+                                historic_request.open(&#34;GET&#34;,&#34;historic/historic.json&#34;,true);
+                                historic_request.send();
+                        }
+
+                        function historic_loaded() 
+                        {
+                                if (historic_request.readyState === XMLHttpRequest.DONE)
                                 {
-                                        historic = JSON.parse(historic_request.responseText);
-                                        load_image();
+                                        if (historic_request.status === 200)
+                                        {
+                                                historic = JSON.parse(historic_request.responseText);
+                                                select_day();
+                                                load_image();
+                                        }
                                 }
                         }
-                }
 
-                function load_image()
-                {
-                        if (historic.length &gt; 0)
+                        function load_image()
                         {
-                                var motion = historic[last_id];
-                                image_request.onreadystatechange = image_loaded;
-                                image_request.open(&#34;GET&#34;,&#34;/historic/images/&#34; + motion[MOTION_FILENAME],true);
-                                image_request.send();
-                        }
-                        else
-                        {
-                                var ctx = document.getElementById(&#39;motion&#39;).getContext(&#39;2d&#39;);
-                                ctx.font = &#39;25px Arial&#39;;
-                                ctx.fillStyle = &#34;black&#34;;
-                                ctx.fillText(&#34;%s&#34;, 10, 20);
-                        }
-                }
-
-                function image_loaded()
-                {
-                        if (image_request.readyState === XMLHttpRequest.DONE)
-                        {
-                                if (image_request.status === 200)
+                                if (historic.length &gt; 0)
                                 {
                                         var motion = historic[last_id];
-                                        var image = new Image();
-                                        image.id     = last_id;
-                                        image.src    = &#39;data:image/jpeg;base64,&#39; + image_request.response;
-                                        image.width  = motion[MOTION_WIDTH] /15;
-                                        image.height = motion[MOTION_HEIGHT]/15;
-                                        image.alt    = get_name(motion[MOTION_FILENAME]);
-                                        image.title  = get_name(motion[MOTION_FILENAME]);
-                                        image.style  = &#34;padding: 1px;&#34;;
-                                        image.onclick = e =&gt; 
+                                        image_request.onreadystatechange = image_loaded;
+                                        image_request.open(&#34;GET&#34;,&#34;/historic/images/&#34; + motion[MOTION_FILENAME],true);
+                                        image_request.send();
+                                }
+                        }
+
+                        function rtrim(x, characters)
+                        {
+                                var start = 0;
+                                var end = x.length - 1;
+                                while (characters.indexOf(x[end]) &gt;= 0)
+                                {
+                                        end -= 1;
+                                }
+                                return x.substr(0, end + 1);
+                        }
+
+                        function ltrim(x, characters) 
+                        {
+                                var start = 0;
+                                while (characters.indexOf(x[start]) &gt;= 0)
+                                {
+                                        start += 1;
+                                }
+                                var end = x.length - 1;
+                                return x.substr(start);
+                        }
+
+                        function get_day(id)
+                        {
+                                var filename = historic[id][MOTION_FILENAME];
+                                filename = ltrim(filename, &#34;/&#34;);
+                                filename = filename.split(&#34;/&#34;);
+                                return filename[1]+&#34;/&#34;+filename[2]+&#34;/&#34;+filename[3];
+                        }
+
+                        function select_day()
+                        {
+                                if (historic.length &gt; 0)
+                                {
+                                        for (i = 0; i &lt; historic.length; i++)
+                                        {
+                                                if (get_day(i) == current_day)
                                                 {
-                                                        click_motion(parseInt(e.target.id,10));
-                                                };
-                                        images.push(image);
-                                        document.getElementById(&#39;motions&#39;).appendChild(image);
-                                        last_id = last_id + 1;
-                                        if (last_id &lt; historic.length-1)
+                                                        last_id = i;
+                                                        break;
+                                                }
+                                        }
+                                }
+                        }
+
+                        function get_quality()
+                        {
+                                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+                                {
+                                        return 1;
+                                }
+                                else
+                                {
+                                        return 2;
+                                }
+                        }
+
+                        function image_loaded()
+                        {
+                                if (image_request.readyState === XMLHttpRequest.DONE)
+                                {
+                                        if (image_request.status === 200)
+                                        {
+                                                var motion = historic[last_id];
+
+                                                var div = document.createElement(&#34;div&#34;);
+                                                        div.className = &#34;col-lg-2  pb-1&#34;;
+
+                                                        var canvas = document.createElement(&#34;canvas&#34;);
+                                                                canvas.width     = motion[MOTION_WIDTH ] * get_quality();
+                                                                canvas.height    = motion[MOTION_HEIGHT] * get_quality();
+                                                                canvas.id        = last_id;
+                                                                canvas.className = &#34;w-100&#34;;
+                                                                canvas.setAttribute(&#34;data-bs-toggle&#34;,&#34;modal&#34;);
+                                                                canvas.setAttribute(&#34;data-bs-target&#34;,&#34;#zoom_window&#34;);
+                                                                canvas.onclick = e =&gt; 
+                                                                        {
+                                                                                var view = document.getElementById(&#39;zoom_image&#39;);
+                                                                                var destCtx = view.getContext(&#39;2d&#39;);
+                                                                                view.width     = motion[MOTION_WIDTH ] * get_quality();
+                                                                                view.height    = motion[MOTION_HEIGHT] * get_quality();
+
+                                                                                destCtx.drawImage(canvas, 0, 0);
+                                                                        };
+
+                                                        var image = new Image();
+                                                                image.src        = &#39;data:image/jpeg;base64,&#39; + image_request.response;
+                                                                image.onload     = function(){show_motion(canvas.id, image);};
+
+                                                        div.appendChild(canvas);
+
+                                                if (last_id == 0)
+                                                {
+                                                        document.getElementById(&#39;motions&#39;).replaceChildren(div);
+                                                }
+                                                else
+                                                {
+                                                        document.getElementById(&#39;motions&#39;).appendChild(div);
+                                                }
+                                                last_id = last_id + 1;
+                                                if (last_id &lt; historic.length-1)
+                                                {
+                                                        if (get_day(last_id) == current_day)
+                                                        {
+                                                                setTimeout(load_image, 1);
+                                                        }
+                                                }
+                                        }
+                                        else 
                                         {
                                                 setTimeout(load_image, 1);
                                         }
                                 }
                         }
-                }
 
-                function show()
-                {
-                        show_motion(current_id);
-                }
-
-                function show_motion(id)
-                {
-                        var motion = historic[id];
-                        var ctx = document.getElementById(&#39;motion&#39;).getContext(&#39;2d&#39;);
-                        
-                        var offsetX = 30;
-                        var offsetY = 30;
-                        ctx.drawImage(document.getElementById(id), offsetX, offsetY, motion[MOTION_WIDTH], motion[MOTION_HEIGHT]);
-                        var x;
-                        var y;
-
-                        // Show thumb image selected
-                        document.getElementById(previousId).style.border = &#34;&#34;;
-                        document.getElementById(id).style.border = &#34;5px solid dodgerblue&#34;;
-                        previousId = id;
-
-                        var squarex = motion[MOTION_SQUAREX];
-                        var squarey = motion[MOTION_SQUAREY];
-                        var maxx = motion[MOTION_WIDTH] /squarex;
-                        var maxy = motion[MOTION_HEIGHT]/squarey;
-                        
-                        if (%d)
+                        function get_difference(motion, x, y)
                         {
+                                var squarex = motion[MOTION_SQUAREX];
+                                var maxx    = motion[MOTION_WIDTH] /squarex;
+                                var bitpos  = y*maxx + x;
+                                if (typeof motion[MOTION_DIFFS] === &#39;string&#39;)
+                                {
+                                        return motion[MOTION_DIFFS][bitpos];
+                                }
+                                else
+                                {
+                                        var word = parseInt(bitpos/32);
+                                        var bit  = 31-bitpos%%32;
+                                        var mask = 1 &lt;&lt; bit;
+                                        var val  = motion[MOTION_DIFFS][word];
+                                        if (val &amp; mask)
+                                        {
+                                                return &#34;#&#34;;
+                                        }
+                                        else
+                                        {
+                                                return &#34; &#34;;
+                                        }
+                                }
+                        }
+
+                        function show_motion(id, image)
+                        {
+                                var x;
+                                var y;
+
+                                var motion = historic[id];
+                                var canvas = document.getElementById(id);
+                                var ctx = canvas.getContext(&#39;2d&#39;);
+
+                                var squarex = motion[MOTION_SQUAREX] * get_quality();
+                                var squarey = motion[MOTION_SQUAREY] * get_quality();
+                                var maxx = (motion[MOTION_WIDTH] /squarex) * get_quality();
+                                var maxy = (motion[MOTION_HEIGHT]/squarey) * get_quality();
+
+                                ctx.drawImage(image, 0, 0, motion[MOTION_WIDTH ]  , motion[MOTION_HEIGHT], 0, 0, motion[MOTION_WIDTH ] * get_quality(), motion[MOTION_HEIGHT] * get_quality());
+
+                                ctx.strokeStyle = &#34;red&#34;;
+                                ctx.lineWidth =  1 * get_quality();
                                 for (y = 0; y &lt; maxy; y ++)
                                 {
                                         for (x = 0; x &lt; maxx; x ++)
                                         {
-                                                detection = motion[MOTION_DIFFS][y*maxx + x];
-                                                if (detection != &#34; &#34;)
+                                                var detection = get_difference(motion, x, y);
+                                                if (x &gt;= 1)
                                                 {
-                                                        ctx.strokeStyle = &#34;yellow&#34;;
-                                                        ctx.strokeRect(offsetX + (x * squarex + 15),offsetY + (y*squarey +15), squarex-30, squarey-30);
+                                                        var previous = get_difference(motion, x-1, y);
+                                                        if (previous != detection)
+                                                        {
+                                                                ctx.beginPath();
+                                                                ctx.moveTo(0 + x*squarex, 0 + y*squarey);
+                                                                ctx.lineTo(0 + x*squarex, 0 + y*squarey + squarey);
+                                                                ctx.stroke();
+                                                        }
                                                 }
                                         }
                                 }
-                        }
-
-                        ctx.strokeStyle = &#34;red&#34;;
-                        for (y = 0; y &lt; maxy; y ++)
-                        {
+                                
                                 for (x = 0; x &lt; maxx; x ++)
                                 {
-                                        var detection = motion[MOTION_DIFFS][y*maxx + x];
-                                        if (x &gt;= 1)
+                                        for (y = 0; y &lt; maxy; y ++)
                                         {
-                                                var previous = motion[MOTION_DIFFS][y*maxx + x -1];
-                                                if (previous != detection)
+                                                var detection = get_difference(motion, x, y);
+                                                if (y &gt;= 1)
                                                 {
-                                                        ctx.beginPath();
-                                                        ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
-                                                        ctx.lineTo(offsetX + x*squarex, offsetY + y*squarey + squarey);
-                                                        ctx.stroke();
-                                                }
-                                        }
-                                }
-                        }
-                        
-                        for (x = 0; x &lt; maxx; x ++)
-                        {
-                                for (y = 0; y &lt; maxy; y ++)
-                                {
-                                        var detection = motion[MOTION_DIFFS][y*maxx + x];
-                                        if (y &gt;= 1)
-                                        {
-                                                var previous = motion[MOTION_DIFFS][(y-1)*maxx + x];
-                                                if (previous != detection)
-                                                {
-                                                        ctx.beginPath();
-                                                        ctx.moveTo(offsetX + x*squarex, offsetY + y*squarey);
-                                                        ctx.lineTo(offsetX + x*squarex + squarex, offsetY + y*squarey);
-                                                        ctx.stroke();
-                                                }
-                                        }
-                                }
-                        }
-
-                        // Show text image
-                        ctx.font = &#39;20px monospace&#39;;
-                        ctx.fillStyle = &#34;white&#34;;
-                        ctx.rect(0, offsetY + motion[MOTION_HEIGHT],  motion[MOTION_WIDTH], 100);
-                        ctx.fill();
-
-                        ctx.fillStyle = &#34;black&#34;;
-                        ctx.fillText(get_name(motion[MOTION_FILENAME]),  10, offsetY + motion[MOTION_HEIGHT] + 20);
-
-                        // Show arrows
-                        ctx.fillStyle = &#39;rgba(255,255,255,10)&#39;;
-                        ctx.font = &#39;30px monospace&#39;;
-                        
-                        // Previous
-                        ctx.fillText(&#34;\u25C0\uFE0F&#34;, 0, offsetY + motion[MOTION_HEIGHT]/2); 
-                        
-                        // Next
-                        ctx.fillText(&#34;\u25B6\uFE0F&#34;, offsetX + motion[MOTION_WIDTH], offsetY + motion[MOTION_HEIGHT]/2);
-
-                        // Previous day
-                        ctx.fillText(&#34;\u23EA&#34;,  offsetX + motion[MOTION_WIDTH]/2, 25); 
-                        
-                        // Next day
-                        ctx.fillText(&#34;\u23E9&#34;, offsetX + motion[MOTION_WIDTH]/2,25+ offsetY + motion[MOTION_HEIGHT]);
-
-                        // Begin
-                        ctx.fillText(&#34;\u23EE\uFE0F&#34;,0, 25);
-
-                        // End
-                        ctx.fillText(&#34;\u23ED\uFE0F&#34;, offsetX + motion[MOTION_WIDTH], 25+offsetY + motion[MOTION_HEIGHT]);
-                }
-
-                // Convert the filename into text displayed
-                function get_name(filename)
-                {
-                        filename = filename.split(&#34;.&#34;)[0];
-                        lst = filename.split(&#34;/&#34;);
-                        filename = lst[lst.length-1];
-                        filename = filename.replace(&#34;D= &#34;,&#34;D=&#34;);
-                        spl = filename.split(&#34; &#34;);
-
-                        if (spl.length == 3)
-                        {
-                                date = spl[0].split(&#34;_&#34;)[0];
-                                hour = spl[0].split(&#34;_&#34;)[1];
-
-                                date = date.replaceAll(&#34;-&#34;,&#34;/&#34;) + &#34; &#34; + hour.replaceAll(&#34;-&#34;,&#34;:&#34;);
-                                last = spl[1] + &#34; &#34; + spl[2];
-                                result = date + &#34; &#34;+ last;
-                        }
-                        else
-                        {
-                                result = filename;
-                        }
-                        return result;
-                }
-
-                function get_date(filename)
-                {
-                        return get_name(filename).substring(0,10);
-                }
-
-                function click_motion(id)
-                {
-                        current_id = id;
-                        show_motion(id);
-                }
-
-                function first_motion()
-                {
-                        current_id = 0;
-                        show_motion(current_id);
-                }
-
-                function last_motion()
-                {
-                        current_id = last_id-1;
-                        show_motion(current_id);
-                }
-
-                function next_motion()
-                {
-                        if (current_id + 1 &lt; last_id)
-                        {
-                                current_id = current_id + 1;
-                                show_motion(current_id);
-                        }
-                }
-
-                function previous_motion()
-                {
-                        if (current_id &gt; 0)
-                        {
-                                current_id = current_id -1;
-                                show_motion(current_id);
-                        }
-                }
-
-                function next_day_motion()
-                {
-                        if (current_id + 1 &lt; last_id)
-                        {
-                                var new_id = current_id;
-
-                                do
-                                {
-                                        new_id += 1;
-                                        if (get_date(historic[new_id][MOTION_FILENAME]) != get_date(historic[current_id][MOTION_FILENAME]))
-                                        {
-                                                current_id = new_id;
-                                                show_motion(current_id);
-                                                break;
-                                        }
-                                }
-                                while (new_id + 1 &lt; last_id);
-                        }
-                }
-
-                function previous_day_motion()
-                {
-                        if (current_id &gt; 0)
-                        {
-                                var new_id = current_id;
-
-                                do
-                                {
-                                        new_id -= 1;
-
-                                        if (get_date(historic[new_id][MOTION_FILENAME]) != get_date(historic[current_id][MOTION_FILENAME]))
-                                        {
-                                                current_id = new_id;
-
-                                                do
-                                                {
-                                                        new_id -= 1;
-                                                        if (get_date(historic[new_id][MOTION_FILENAME]) == get_date(historic[current_id][MOTION_FILENAME]))
+                                                        var previous = get_difference(motion, x, y-1);
+                                                        if (previous != detection)
                                                         {
-                                                                current_id = new_id;
-                                                        }
-                                                        else
-                                                        {
-                                                                break;
+                                                                ctx.beginPath();
+                                                                ctx.moveTo(0 + x*squarex, 0 + y*squarey);
+                                                                ctx.lineTo(0 + x*squarex + squarex, 0 + y*squarey);
+                                                                ctx.stroke();
                                                         }
                                                 }
-                                                while(new_id - 1 &gt;= 0);
-                                                show_motion(current_id);
-                                                break;
                                         }
                                 }
-                                while (new_id - 1 &gt;= 0);
-                        }
-                }
 
-                function check_key(e)
-                {
-                        e = e || window.event;
 
-                        if (e.keyCode == &#39;38&#39;) // up arrow
-                        {
-                                previous_day_motion();
-                        }
-                        else if (e.keyCode == &#39;40&#39;) // down arrow
-                        {
-                                next_day_motion();
-                        }
-                        else if (e.keyCode == &#39;37&#39;) // left arrow
-                        {
-                                previous_motion();
-                        }
-                        else if (e.keyCode == &#39;39&#39;)// right arrow
-                        {
-                                next_motion();
-                        }
-                        else if (e.keyCode == &#39;35&#39;) // end
-                        {
-                        }
-                        else if (e.keyCode == &#39;36&#39;) // home
-                        {
-                        }
-                        else if (e.keyCode == &#39;33&#39;) // page up
-                        {
-                                first_motion();
-                        }
-                        else if (e.keyCode == &#39;34&#39;) // page down
-                        {
-                                last_motion();
-                        }
-                }
+                                var font_size = 35 * get_quality();
+                                ctx.font = font_size + &#34;px monospace&#34;;
+                                var width = ctx.measureText(get_name(motion[MOTION_FILENAME])).width;
+                                ctx.fillStyle = &#39;rgba(0,0,0,0.3)&#39;;
 
-                function get_click_position(canvas, e)
-                {
-                        const rect = canvas.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const y = e.clientY - rect.top;
+                                ctx.fillRect(0,(motion[MOTION_HEIGHT] * get_quality())-font_size, 
+                                        width+get_quality(), font_size+10);
 
-                        // If click on first
-                        if (x &lt; 100 &amp;&amp; y &lt; 100)
-                        {
-                                first_motion();
+                                ctx.fillStyle = &#39;rgba(255,255,255,0.5)&#39;;
+                                ctx.fillText(get_name(motion[MOTION_FILENAME]),  3, (motion[MOTION_HEIGHT] * get_quality() - 5*get_quality() ));
                         }
-                        // If click on last
-                        else if (x &gt; (rect.width - 100) &amp;&amp; y &gt; (rect.height -100))
+
+                        // Convert the filename into text displayed
+                        function get_name(filename)
                         {
-                                last_motion();
-                        }
-                        // If the click is in the middle
-                        else if (x &gt; rect.width/3 &amp;&amp; x &lt; (2*rect.width/3) &amp;&amp; y &gt; rect.height/3 &amp;&amp; y &lt; (2*rect.height/3))
-                        {
-                                // Download image
-                                if (confirm(&#34;Download this image ?&#34;))
+                                filename = filename.split(&#34;.&#34;)[0];
+                                lst = filename.split(&#34;/&#34;);
+                                filename = lst[lst.length-1];
+                                filename = filename.replace(&#34;D= &#34;,&#34;D=&#34;);
+                                spl = filename.split(&#34; &#34;);
+
+                                if (spl.length == 3)
                                 {
-                                        download_motion();
-                                }
-                        }
-                        else
-                        {
-                                if (x &lt; rect.width / 2)
-                                {
-                                        if (y &lt; rect.height / 2)
-                                        {
-                                                if (x &lt; y)
-                                                {
-                                                        previous_motion();
-                                                }
-                                                else
-                                                {
-                                                        previous_day_motion();
-                                                }
-                                        }
-                                        else
-                                        {
-                                                if (x &lt; rect.height - y)
-                                                {
-                                                        previous_motion();
-                                                }
-                                                else
-                                                {
-                                                        next_day_motion();
-                                                }
-                                        }
+                                        date = spl[0].split(&#34;_&#34;)[0];
+                                        hour = spl[0].split(&#34;_&#34;)[1];
+
+                                        date = date.replaceAll(&#34;-&#34;,&#34;/&#34;) + &#34; &#34; + hour.replaceAll(&#34;-&#34;,&#34;:&#34;);
+                                        last = spl[1] + &#34; &#34; + spl[2];
+                                        result = date + &#34; &#34;+ last;
                                 }
                                 else
                                 {
-                                        if (y &lt; rect.height / 2)
-                                        {
-                                                if (rect.width - x &lt; y)
-                                                {
-                                                        next_motion();
-                                                }
-                                                else
-                                                {
-                                                        previous_day_motion();
-                                                }
-                                        }
-                                        else
-                                        {
-                                                if (rect.width - x &lt; rect.height - y)
-                                                {
-                                                        next_motion();
-                                                }
-                                                else
-                                                {
-                                                        next_day_motion();
-                                                }
-                                        }
+                                        result = filename;
                                 }
+                                return result;
                         }
-                }
 
-                &lt;/script&gt;
-                &lt;canvas id=&#34;motion&#34; width=&#34;%d&#34; height=&#34;%d&#34; &gt;&lt;/canvas&gt;
-                &lt;br&gt;
-                &lt;div id=&#34;motions&#34;&gt;&lt;/div&gt;
-                &#34;&#34;&#34;%(lang.historic_not_available, detailled, 860,660)),
-        ]
-        page = main_frame(request, response, args,lang.last_motion_detections,pageContent)
+                        function get_date(filename)
+                        {
+                                return get_name(filename).substring(0,10);
+                        }
+                        &lt;/script&gt;
+                        &lt;div id=&#34;motions&#34; class=&#34;row&#34;&gt;&lt;/div&gt;
+                        &#34;&#34;&#34;%(current_day)),
+                        Br(),
+                        pagination_end
+                ]
+        else:
+                page_content = Tag(b&#34;&lt;span&gt;%s&lt;/span&gt;&#34;%lang.historic_not_available)
+        page = main_frame(request, response, args,lang.last_motion_detections,Form(page_content))
         await response.send_page(page)</code></pre>
 </details>
 </dd>
@@ -1090,7 +909,7 @@ async def historic_image(request, response, args):
                         await Historic.acquire()
                         await response.send_file(strings.tostrings(request.path[len(&#34;/historic/images/&#34;):]), base64=True)
                 else:
-                        await response.send_error(status=b&#34;404&#34;, content=b&#34;Image not found&#34;)
+                        await response.send_not_found()
         finally:
                 if reserved:
                         await Historic.release()
@@ -1110,10 +929,10 @@ async def historic_image(request, response, args):
 async def historic_json(request, response, args):
         &#34;&#34;&#34; Send historic json file &#34;&#34;&#34;
         Server.slow_down()
-        if await Historic.locked() is False:
+        try:
                 await response.send_buffer(b&#34;historic.json&#34;, await Historic.get_json())
-        else:
-                await response.send_buffer(b&#34;historic.json&#34;, b&#34;[]&#34;)</code></pre>
+        except Exception as err:
+                await response.send_not_found(err)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1135,6 +954,7 @@ async def historic_json(request, response, args):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="lib.webpage.historicpage.download_image" href="#lib.webpage.historicpage.download_image">download_image</a></code></li>
+<li><code><a title="lib.webpage.historicpage.get_days_pagination" href="#lib.webpage.historicpage.get_days_pagination">get_days_pagination</a></code></li>
 <li><code><a title="lib.webpage.historicpage.historic" href="#lib.webpage.historicpage.historic">historic</a></code></li>
 <li><code><a title="lib.webpage.historicpage.historic_image" href="#lib.webpage.historicpage.historic_image">historic_image</a></code></li>
 <li><code><a title="lib.webpage.historicpage.historic_json" href="#lib.webpage.historicpage.historic_json">historic_json</a></code></li>

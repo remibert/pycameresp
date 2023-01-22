@@ -29,6 +29,7 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Classes for exchanging files between the device and the computer &#34;&#34;&#34;
 import time
 import os
@@ -36,9 +37,9 @@ import io
 import binascii
 try:
         import filesystem
-        import strings
+        import date
 except:
-        from tools import filesystem, strings
+        from tools import filesystem, date
 if filesystem.ismicropython():
         # pylint:disable=import-error
         import micropython
@@ -145,8 +146,8 @@ class DateReader(Reader):
         def read_second(self, byte):
                 &#34;&#34;&#34; Read second &#34;&#34;&#34;
                 if self.second.read_byte(byte) is not None:
-                        date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
-                        self.value = time.mktime(tuple(date))
+                        date_ = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+                        self.value = time.mktime(tuple(date_))
                         return self.value
 
 class FilenameReader(Reader):
@@ -465,7 +466,7 @@ class FileWriter:
                         out_file.write(b&#34;# %s\x0D\x0A&#34;%filename_.encode(&#34;utf8&#34;))
 
                         # Send the file date
-                        year,month,day,hour,minute,second,_,_ = strings.local_time(filesystem.filetime(filename))[:8]
+                        year,month,day,hour,minute,second,_,_ = date.local_time(filesystem.filetime(filename))[:8]
                         out_file.write(b&#34;# %04d/%02d/%02d %02d:%02d:%02d\x0D\x0A&#34;%(year,month,day,hour,minute,second))
 
                         # Send the file size
@@ -879,8 +880,8 @@ class UploadCommand:
         def read_second(self, byte):
                 &#34;&#34;&#34; Read second &#34;&#34;&#34;
                 if self.second.read_byte(byte) is not None:
-                        date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
-                        self.value = time.mktime(tuple(date))
+                        date_ = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+                        self.value = time.mktime(tuple(date_))
                         return self.value</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -961,8 +962,8 @@ class UploadCommand:
 <pre><code class="python">def read_second(self, byte):
         &#34;&#34;&#34; Read second &#34;&#34;&#34;
         if self.second.read_byte(byte) is not None:
-                date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
-                self.value = time.mktime(tuple(date))
+                date_ = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+                self.value = time.mktime(tuple(date_))
                 return self.value</code></pre>
 </details>
 </dd>
@@ -1495,7 +1496,7 @@ class UploadCommand:
                         out_file.write(b&#34;# %s\x0D\x0A&#34;%filename_.encode(&#34;utf8&#34;))
 
                         # Send the file date
-                        year,month,day,hour,minute,second,_,_ = strings.local_time(filesystem.filetime(filename))[:8]
+                        year,month,day,hour,minute,second,_,_ = date.local_time(filesystem.filetime(filename))[:8]
                         out_file.write(b&#34;# %04d/%02d/%02d %02d:%02d:%02d\x0D\x0A&#34;%(year,month,day,hour,minute,second))
 
                         # Send the file size
@@ -1586,7 +1587,7 @@ class UploadCommand:
                 out_file.write(b&#34;# %s\x0D\x0A&#34;%filename_.encode(&#34;utf8&#34;))
 
                 # Send the file date
-                year,month,day,hour,minute,second,_,_ = strings.local_time(filesystem.filetime(filename))[:8]
+                year,month,day,hour,minute,second,_,_ = date.local_time(filesystem.filetime(filename))[:8]
                 out_file.write(b&#34;# %04d/%02d/%02d %02d:%02d:%02d\x0D\x0A&#34;%(year,month,day,hour,minute,second))
 
                 # Send the file size

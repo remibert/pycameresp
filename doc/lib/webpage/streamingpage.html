@@ -67,30 +67,21 @@ class Streaming:
                 Streaming.durty[0] = False
 
         @staticmethod
-        def get_html(request, width=None, height=None):
+        def get_html(request):
                 &#34;&#34;&#34; Return streaming html part with javascript code &#34;&#34;&#34;
                 Streaming.activity()
                 Streaming.streaming_id[0] += id(request)
-                if width is not None and height is not None:
-                        size = b&#39;width=&#34;%d&#34; height=&#34;%d&#34;&#39;%(width, height)
-                else:
-                        size = b&#34;&#34;
                 return Tag(b&#34;&#34;&#34;
                 &lt;p&gt;
                         &lt;div style=&#34;position: relative;&#34;&gt;
-                                &lt;img id=&#34;video-stream&#34; src=&#34;&#34; %s/&gt;
+                                &lt;img id=&#34;video-stream&#34; src=&#34;&#34; width=&#34;100%%&#34;/&gt;
                                 &lt;table id=&#34;zone_masking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
                         &lt;/div&gt;
                 &lt;/p&gt;
                 &lt;script&gt;
                         var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
                         document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start?streaming_id=%d`;
-                &lt;/script&gt;&#34;&#34;&#34;%(size, request.port+1,Streaming.streaming_id[0]))
-
-        @staticmethod
-        def inactivity_timeout(timer):
-                &#34;&#34;&#34; Suspend video streaming after delay &#34;&#34;&#34;
-                Streaming.streaming_id[0] += 1
+                &lt;/script&gt;&#34;&#34;&#34;%(request.port+1,Streaming.streaming_id[0]))
 
         @staticmethod
         def activity():
@@ -98,12 +89,17 @@ class Streaming:
                 if Streaming.inactivity[0]:
                         Streaming.inactivity[0].stop()
                         Streaming.inactivity[0] = None
-                Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivity_timeout, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
+                Streaming.inactivity[0] = tasking.Inactivity(Streaming.stop, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
 
         @staticmethod
         def get_streaming_id():
                 &#34;&#34;&#34; Return the current streaming id &#34;&#34;&#34;
                 return Streaming.streaming_id[0]
+
+        @staticmethod
+        def stop():
+                &#34;&#34;&#34; Stop streaming &#34;&#34;&#34;
+                Streaming.streaming_id[0] += 1
 
 @HttpServer.add_route(b&#39;/camera/start&#39;, available=info.iscamera() and Camera.is_activated())
 async def camera_start_streaming(request, response, args):
@@ -294,30 +290,21 @@ async def camera_start_streaming(request, response, args):
                 Streaming.durty[0] = False
 
         @staticmethod
-        def get_html(request, width=None, height=None):
+        def get_html(request):
                 &#34;&#34;&#34; Return streaming html part with javascript code &#34;&#34;&#34;
                 Streaming.activity()
                 Streaming.streaming_id[0] += id(request)
-                if width is not None and height is not None:
-                        size = b&#39;width=&#34;%d&#34; height=&#34;%d&#34;&#39;%(width, height)
-                else:
-                        size = b&#34;&#34;
                 return Tag(b&#34;&#34;&#34;
                 &lt;p&gt;
                         &lt;div style=&#34;position: relative;&#34;&gt;
-                                &lt;img id=&#34;video-stream&#34; src=&#34;&#34; %s/&gt;
+                                &lt;img id=&#34;video-stream&#34; src=&#34;&#34; width=&#34;100%%&#34;/&gt;
                                 &lt;table id=&#34;zone_masking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
                         &lt;/div&gt;
                 &lt;/p&gt;
                 &lt;script&gt;
                         var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
                         document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start?streaming_id=%d`;
-                &lt;/script&gt;&#34;&#34;&#34;%(size, request.port+1,Streaming.streaming_id[0]))
-
-        @staticmethod
-        def inactivity_timeout(timer):
-                &#34;&#34;&#34; Suspend video streaming after delay &#34;&#34;&#34;
-                Streaming.streaming_id[0] += 1
+                &lt;/script&gt;&#34;&#34;&#34;%(request.port+1,Streaming.streaming_id[0]))
 
         @staticmethod
         def activity():
@@ -325,12 +312,17 @@ async def camera_start_streaming(request, response, args):
                 if Streaming.inactivity[0]:
                         Streaming.inactivity[0].stop()
                         Streaming.inactivity[0] = None
-                Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivity_timeout, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
+                Streaming.inactivity[0] = tasking.Inactivity(Streaming.stop, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
 
         @staticmethod
         def get_streaming_id():
                 &#34;&#34;&#34; Return the current streaming id &#34;&#34;&#34;
-                return Streaming.streaming_id[0]</code></pre>
+                return Streaming.streaming_id[0]
+
+        @staticmethod
+        def stop():
+                &#34;&#34;&#34; Stop streaming &#34;&#34;&#34;
+                Streaming.streaming_id[0] += 1</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -368,7 +360,7 @@ def activity():
         if Streaming.inactivity[0]:
                 Streaming.inactivity[0].stop()
                 Streaming.inactivity[0] = None
-        Streaming.inactivity[0] = tasking.Inactivity(Streaming.inactivity_timeout, duration=watchdog.LONG_WATCH_DOG, timer_id=1)</code></pre>
+        Streaming.inactivity[0] = tasking.Inactivity(Streaming.stop, duration=watchdog.LONG_WATCH_DOG, timer_id=1)</code></pre>
 </details>
 </dd>
 <dt id="lib.webpage.streamingpage.Streaming.get_config"><code class="name flex">
@@ -387,7 +379,7 @@ def get_config():
 </details>
 </dd>
 <dt id="lib.webpage.streamingpage.Streaming.get_html"><code class="name flex">
-<span>def <span class="ident">get_html</span></span>(<span>request, width=None, height=None)</span>
+<span>def <span class="ident">get_html</span></span>(<span>request)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return streaming html part with javascript code</p></div>
@@ -396,25 +388,21 @@ def get_config():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def get_html(request, width=None, height=None):
+def get_html(request):
         &#34;&#34;&#34; Return streaming html part with javascript code &#34;&#34;&#34;
         Streaming.activity()
         Streaming.streaming_id[0] += id(request)
-        if width is not None and height is not None:
-                size = b&#39;width=&#34;%d&#34; height=&#34;%d&#34;&#39;%(width, height)
-        else:
-                size = b&#34;&#34;
         return Tag(b&#34;&#34;&#34;
         &lt;p&gt;
                 &lt;div style=&#34;position: relative;&#34;&gt;
-                        &lt;img id=&#34;video-stream&#34; src=&#34;&#34; %s/&gt;
+                        &lt;img id=&#34;video-stream&#34; src=&#34;&#34; width=&#34;100%%&#34;/&gt;
                         &lt;table id=&#34;zone_masking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
                 &lt;/div&gt;
         &lt;/p&gt;
         &lt;script&gt;
                 var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
                 document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start?streaming_id=%d`;
-        &lt;/script&gt;&#34;&#34;&#34;%(size, request.port+1,Streaming.streaming_id[0]))</code></pre>
+        &lt;/script&gt;&#34;&#34;&#34;%(request.port+1,Streaming.streaming_id[0]))</code></pre>
 </details>
 </dd>
 <dt id="lib.webpage.streamingpage.Streaming.get_streaming_id"><code class="name flex">
@@ -430,21 +418,6 @@ def get_html(request, width=None, height=None):
 def get_streaming_id():
         &#34;&#34;&#34; Return the current streaming id &#34;&#34;&#34;
         return Streaming.streaming_id[0]</code></pre>
-</details>
-</dd>
-<dt id="lib.webpage.streamingpage.Streaming.inactivity_timeout"><code class="name flex">
-<span>def <span class="ident">inactivity_timeout</span></span>(<span>timer)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Suspend video streaming after delay</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def inactivity_timeout(timer):
-        &#34;&#34;&#34; Suspend video streaming after delay &#34;&#34;&#34;
-        Streaming.streaming_id[0] += 1</code></pre>
 </details>
 </dd>
 <dt id="lib.webpage.streamingpage.Streaming.is_durty"><code class="name flex">
@@ -493,6 +466,21 @@ def set_config(config):
         Streaming.durty[0] = True</code></pre>
 </details>
 </dd>
+<dt id="lib.webpage.streamingpage.Streaming.stop"><code class="name flex">
+<span>def <span class="ident">stop</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stop streaming</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def stop():
+        &#34;&#34;&#34; Stop streaming &#34;&#34;&#34;
+        Streaming.streaming_id[0] += 1</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -526,10 +514,10 @@ def set_config(config):
 <li><code><a title="lib.webpage.streamingpage.Streaming.get_html" href="#lib.webpage.streamingpage.Streaming.get_html">get_html</a></code></li>
 <li><code><a title="lib.webpage.streamingpage.Streaming.get_streaming_id" href="#lib.webpage.streamingpage.Streaming.get_streaming_id">get_streaming_id</a></code></li>
 <li><code><a title="lib.webpage.streamingpage.Streaming.inactivity" href="#lib.webpage.streamingpage.Streaming.inactivity">inactivity</a></code></li>
-<li><code><a title="lib.webpage.streamingpage.Streaming.inactivity_timeout" href="#lib.webpage.streamingpage.Streaming.inactivity_timeout">inactivity_timeout</a></code></li>
 <li><code><a title="lib.webpage.streamingpage.Streaming.is_durty" href="#lib.webpage.streamingpage.Streaming.is_durty">is_durty</a></code></li>
 <li><code><a title="lib.webpage.streamingpage.Streaming.reset_durty" href="#lib.webpage.streamingpage.Streaming.reset_durty">reset_durty</a></code></li>
 <li><code><a title="lib.webpage.streamingpage.Streaming.set_config" href="#lib.webpage.streamingpage.Streaming.set_config">set_config</a></code></li>
+<li><code><a title="lib.webpage.streamingpage.Streaming.stop" href="#lib.webpage.streamingpage.Streaming.stop">stop</a></code></li>
 <li><code><a title="lib.webpage.streamingpage.Streaming.streaming_id" href="#lib.webpage.streamingpage.Streaming.streaming_id">streaming_id</a></code></li>
 </ul>
 </li>

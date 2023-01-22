@@ -37,13 +37,12 @@ The first time use command (get source, install required software and build firm
 And after juste for rebuild use command :
 - **python3 build.py --patch --build "ESP32CAM"**
 
-Replace **ESP32CAM** by your prefered firmware, add double quote if you want to use wildcards for build many firmwares, for example ESP32 GENERIC :
-- **python3 build.py --patch --build "GENERIC"** 
+Replace **ESP32CAM** by your prefered firmware, add double quote if you want to use wildcards for build many firmwares, for example ESP32 GENERIC SPIRAM :
 - **python3 build.py --patch --build "GENERIC_SPIRAM"** 
 
 Or for all ESP32 S2
-- **python3 build.py --patch --build "ESP32CAM" "GENERIC" "GENERIC_SPIRAM"** 
+- **python3 build.py --patch --build "ESP32CAM" "GENERIC_SPIRAM"** 
 
 To build ESP32 S3 you must clean all and add option --s3  :
-- **python3 build.py --clean --s3 --patch --build "GENERIC_S3_*"**
+- **python3 build.py --clean --s3 --patch --build "GENERIC_S3_SPIRAM"**
 

@@ -29,6 +29,7 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-iterating-dictionary
 &#34;&#34;&#34; Syntax highlight for python in the editor &#34;&#34;&#34;
 PYTHON_KEYWORDS = b&#34;and as assert break class continue def del elif else except exec finally for from global if import in is lambda None not or pass print raise return try while self as join abs apply bool buffer callable chr cmp coerce compile complex delattr dir dict divmod eval execfile filter float getattr globals hasattr hash hex id input int intern isinstance issubclass len list locals long map max min oct open ord pow range raw_input reduce reload repr round setattr slice str tuple type unichr unicode vars xrange zip with yield True False async await&#34;
 
@@ -80,10 +81,11 @@ class Colorizer:
                                 pos = -1
                                 # If a keyword start
                                 if char in self.lexicon.keys():
-                                        pos = j
-                                        state = STATE_KEYWORD
-                                        word  = charactere
-                                        keywords = self.lexicon[char]
+                                        if not (0x41 &lt;= previous_char &lt;= 0x5A or 0x61 &lt;= previous_char &lt;= 0x7A or 0x30 &lt;= previous_char &lt;= 0x39 or previous_char == 0x5F):
+                                                pos = j
+                                                state = STATE_KEYWORD
+                                                word  = charactere
+                                                keywords = self.lexicon[char]
                                 # If decimal number started
                                 elif 0x31 &lt;= char &lt;= 0x39:
                                         if 0x41 &lt;= previous_char &lt;= 0x5A or 0x61 &lt;= previous_char &lt;= 0x7A or 0x30 &lt;= previous_char &lt;= 0x39 or previous_char == 0x5F:
@@ -189,7 +191,7 @@ class Colorizer:
                                         keywords = None
                         # If decimal detected
                         elif state == STATE_DECIMAL:
-                                if char &gt;= 0x30 and char &lt;= 0x39:
+                                if char &gt;= 0x30 and char &lt;= 0x39 or char == 0x5F:
                                         word += charactere
                                 elif char == 0x2E:
                                         if b&#34;.&#34; not in word:
@@ -396,10 +398,11 @@ class Colorizer:
                                 pos = -1
                                 # If a keyword start
                                 if char in self.lexicon.keys():
-                                        pos = j
-                                        state = STATE_KEYWORD
-                                        word  = charactere
-                                        keywords = self.lexicon[char]
+                                        if not (0x41 &lt;= previous_char &lt;= 0x5A or 0x61 &lt;= previous_char &lt;= 0x7A or 0x30 &lt;= previous_char &lt;= 0x39 or previous_char == 0x5F):
+                                                pos = j
+                                                state = STATE_KEYWORD
+                                                word  = charactere
+                                                keywords = self.lexicon[char]
                                 # If decimal number started
                                 elif 0x31 &lt;= char &lt;= 0x39:
                                         if 0x41 &lt;= previous_char &lt;= 0x5A or 0x61 &lt;= previous_char &lt;= 0x7A or 0x30 &lt;= previous_char &lt;= 0x39 or previous_char == 0x5F:
@@ -505,7 +508,7 @@ class Colorizer:
                                         keywords = None
                         # If decimal detected
                         elif state == STATE_DECIMAL:
-                                if char &gt;= 0x30 and char &lt;= 0x39:
+                                if char &gt;= 0x30 and char &lt;= 0x39 or char == 0x5F:
                                         word += charactere
                                 elif char == 0x2E:
                                         if b&#34;.&#34; not in word:
@@ -693,10 +696,11 @@ class Colorizer:
                         pos = -1
                         # If a keyword start
                         if char in self.lexicon.keys():
-                                pos = j
-                                state = STATE_KEYWORD
-                                word  = charactere
-                                keywords = self.lexicon[char]
+                                if not (0x41 &lt;= previous_char &lt;= 0x5A or 0x61 &lt;= previous_char &lt;= 0x7A or 0x30 &lt;= previous_char &lt;= 0x39 or previous_char == 0x5F):
+                                        pos = j
+                                        state = STATE_KEYWORD
+                                        word  = charactere
+                                        keywords = self.lexicon[char]
                         # If decimal number started
                         elif 0x31 &lt;= char &lt;= 0x39:
                                 if 0x41 &lt;= previous_char &lt;= 0x5A or 0x61 &lt;= previous_char &lt;= 0x7A or 0x30 &lt;= previous_char &lt;= 0x39 or previous_char == 0x5F:
@@ -802,7 +806,7 @@ class Colorizer:
                                 keywords = None
                 # If decimal detected
                 elif state == STATE_DECIMAL:
-                        if char &gt;= 0x30 and char &lt;= 0x39:
+                        if char &gt;= 0x30 and char &lt;= 0x39 or char == 0x5F:
                                 word += charactere
                         elif char == 0x2E:
                                 if b&#34;.&#34; not in word:

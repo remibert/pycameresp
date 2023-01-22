@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>lib.electricmeter.webpage API documentation</title>
+<meta name="description" content="Function define the web page to view recent motion detection" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.electricmeter.webpage</code></h1>
+</header>
+<section id="section-intro">
+<p>Function define the web page to view recent motion detection</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under MIT License
+# Copyright (c) 2021 Remi BERTHOLET
+&#34;&#34;&#34; Function define the web page to view recent motion detection &#34;&#34;&#34;
+# pylint:disable=anomalous-unicode-escape-in-string
+# pylint:disable=wrong-import-order
+# import time
+# import uos
+import json
+from server.httpserver      import HttpServer
+from htmltemplate           import *
+from webpage.mainpage       import main_frame, manage_default_button
+from tools                  import date, strings, lang
+from electricmeter.config   import RateConfig, TimeSlotConfig, RatesConfig, TimeSlotsConfig, GeolocationConfig
+from electricmeter          import electricmeter, em_lang
+
+
+@HttpServer.add_route(b&#39;/hourly&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_hour)
+async def hourly_page_page(request, response, args):
+        &#34;&#34;&#34; Daily consumption graph hour by hour &#34;&#34;&#34;
+        geolocation = GeolocationConfig.get_config()
+        day  = date.html_to_date(request.params.get(b&#34;day&#34;,b&#34;&#34;))
+
+        if   request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;next&#34;:
+                day += 86400
+        elif request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;previous&#34;:
+                day -= 86400
+
+        temperature = request.params.get(b&#34;temperature&#34;)
+        if temperature is None or temperature == b&#34;0&#34;:
+                with_temperature = b&#34;false&#34;
+                temperature = None
+        else:
+                with_temperature = b&#34;true&#34;
+
+        step = int(request.params.get(b&#34;step&#34;,b&#34;30&#34;))
+        steps = []
+        for s in [1,2,5,10,15,30]:
+                if s == step:
+                        selected = True
+                else:
+                        selected = False
+                steps.append(Option(text=b&#34;%d %s&#34;%(s, em_lang.step_minutes), value=b&#34;%d&#34;%s, selected=selected))
+
+        unit = request.params.get(b&#34;unit&#34;,b&#34;power&#34;)
+
+        with  open(WWW_DIR + &#34;electricmeter.html&#34;, &#34;rb&#34;) as file:
+                content = file.read()
+
+        page_content = \
+        [
+                Div(
+                [
+                        Div(
+                        [
+                                Button(type=b&#34;submit&#34;, text=b&#34;&amp;lt;-&#34;, name=b&#34;direction&#34;,  value=b&#34;previous&#34;),Space(),
+                                Button(type=b&#34;submit&#34;, text=b&#34;-&amp;gt;&#34;, name=b&#34;direction&#34;,  value=b&#34;next&#34;)
+                        ], class_=b&#39;col-md-2 mb-1&#39;),
+                        Div(
+                        [
+                                Input (type=b&#34;date&#34;,   class_=b&#34;form-label border rounded p-1&#34;, name=b&#34;day&#34;, value= date.date_to_html(day), event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;),Space(),
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div(
+                        [
+                                Select(steps, spacer=b&#34;&#34;, text=em_lang.step_minutes, name=b&#34;step&#34;,                 event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div([
+                                Select(
+                                [
+                                        Option(text=em_lang.type_price, value=b&#34;price&#34;, selected= True if unit == b&#34;price&#34; else False),
+                                        Option(text=em_lang.type_power, value=b&#34;power&#34;, selected= True if unit == b&#34;power&#34; else False),
+                                ], spacer=b&#34;&#34;, text=em_lang.step_minutes, name=b&#34;unit&#34;,                 event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-1&#39;),
+                        Div(
+                        [
+                                Switch(text=em_lang.temperature, name=b&#34;temperature&#34;, checked=temperature, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-2&#39;)
+                ], class_=b&#34;row&#34;),
+
+                Tag(content%(b&#34;hourly&#34;,
+                        step,
+                        date.date_to_html(day),
+                        lang.translate_date(day),
+                        unit,
+                        em_lang.power_consumed,
+                        geolocation.latitude,
+                        geolocation.longitude,
+                        with_temperature))
+        ]
+        page = main_frame(request, response, args,em_lang.title_electricmeter + em_lang.item_hour.lower(),Form(page_content))
+        await response.send_page(page)
+
+
+@HttpServer.add_route(b&#39;/hourly_datas&#39;)
+async def hourly_page_datas(request, response, args):
+        &#34;&#34;&#34; Send pulses of hours and rates &#34;&#34;&#34;
+        day    = date.html_to_date(request.params.get(b&#34;day&#34;,b&#34;&#34;))
+        result = {&#34;pulses&#34;:None}
+        result[&#34;rates&#34;] = strings.tostrings(TimeSlotsConfig.get_cost(day))
+        try:
+                result[&#34;pulses&#34;] = electricmeter.HourlyCounter.get_datas(day)
+                await response.send_buffer(b&#34;pulses&#34;, buffer=strings.tobytes(json.dumps(result)), mime_type=b&#34;application/json&#34;)
+        except Exception as err:
+                await response.send_not_found(err)
+
+
+@HttpServer.add_route(b&#39;/power_datas&#39;)
+async def power_page_datas(request, response, args):
+        &#34;&#34;&#34; Send current power consumed &#34;&#34;&#34;
+        try:
+                power = {&#34;power&#34;:electricmeter.HourlyCounter.get_power()}
+                await response.send_buffer(b&#34;pulses&#34;, buffer=strings.tobytes(json.dumps(power)), mime_type=b&#34;application/json&#34;)
+        except Exception as err:
+                await response.send_not_found(err)
+
+
+@HttpServer.add_route(b&#39;/daily&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_day)
+async def daily_page(request, response, args):
+        &#34;&#34;&#34; Consumption graph day by day &#34;&#34;&#34;
+        geolocation = GeolocationConfig.get_config()
+        y,m = date.local_time()[:2]
+        year   = int(request.params.get(b&#34;year&#34;,b&#34;%d&#34;%y))
+        month  = int(request.params.get(b&#34;month&#34;,b&#34;%d&#34;%m))
+
+        if   request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;next&#34;:
+                if month == 12:
+                        month = 1
+                        year += 1
+                else:
+                        month += 1
+        elif request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;previous&#34;:
+                if month == 1:
+                        month = 12
+                        year -= 1
+                else:
+                        month -= 1
+
+        day  = date.html_to_date(b&#34;%04d-%02d-01&#34;%(year, month))
+
+        unit = request.params.get(b&#34;unit&#34;,b&#34;power&#34;)
+        temperature = request.params.get(b&#34;temperature&#34;)
+        if temperature is None or temperature == b&#34;0&#34;:
+                with_temperature = b&#34;false&#34;
+                temperature = None
+        else:
+                with_temperature = b&#34;true&#34;
+
+        months_combo = []
+        month_id = 1
+        for m in lang.months:
+                months_combo.append(Option(text=m, value=b&#34;%d&#34;%month_id, selected= True if month_id == month else False))
+                month_id += 1
+
+        with  open(WWW_DIR + &#34;electricmeter.html&#34;, &#34;rb&#34;) as file:
+                content = file.read()
+
+        page_content = \
+        [
+                Div(
+                [
+                        Div(
+                        [
+                                Button(type=b&#34;submit&#34;, text=b&#34;&amp;lt;-&#34;, name=b&#34;direction&#34;,  value=b&#34;previous&#34;),Space(),
+                                Button(type=b&#34;submit&#34;, text=b&#34;-&amp;gt;&#34;, name=b&#34;direction&#34;,  value=b&#34;next&#34;)
+                        ], class_=b&#39;col-md-2 mb-2&#39;),
+                        Div(
+                        [
+                                Edit (name=b&#34;year&#34;, spacer=b&#34;&#34;, type=b&#34;number&#34;, step=b&#34;1&#34;,  required=True, value=b&#34;%d&#34;%year, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;),
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div(
+                        [
+                                Select(months_combo, spacer=b&#34;&#34;, name=b&#34;month&#34;, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;),
+                        ], class_=b&#39;col-md-2 mb-2&#39;),
+                        Div(
+                        [
+                                Select(
+                                [
+                                        Option(text=em_lang.type_price, value=b&#34;price&#34;, selected= True if unit == b&#34;price&#34; else False),
+                                        Option(text=em_lang.type_power, value=b&#34;power&#34;, selected= True if unit == b&#34;power&#34; else False),
+                                ], spacer=b&#34;&#34;, text=em_lang.step_minutes, name=b&#34;unit&#34;,                 event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div(
+                        [
+                                Switch(text=em_lang.temperature, name=b&#34;temperature&#34;, checked=temperature, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-2&#39;)
+                ], class_=b&#34;row&#34;),
+                Tag(content%(b&#34;daily&#34;, 86400, date.date_to_html(day), lang.translate_date(day, False), unit, em_lang.power_consumed, geolocation.latitude, geolocation.longitude, with_temperature))
+        ]
+        page = main_frame(request, response, args, em_lang.title_electricmeter + em_lang.item_day.lower(),Form(page_content))
+        await response.send_page(page)
+
+
+@HttpServer.add_route(b&#39;/daily_datas&#39;)
+async def daily_datas(request, response, args):
+        &#34;&#34;&#34; Send pulses of month and rates &#34;&#34;&#34;
+        await electricmeter.MonthlyCounter.refresh()
+        month    = date.html_to_date(request.params.get(b&#34;month&#34;,b&#34;&#34;))
+        result = {&#34;time_slots&#34;:None}
+        result[&#34;rates&#34;] = strings.tostrings(TimeSlotsConfig.get_cost(month))
+        try:
+                result[&#34;time_slots&#34;] = electricmeter.DailyCounter.get_datas(month)
+                await response.send_buffer(b&#34;pulses&#34;, buffer=strings.tobytes(json.dumps(result)), mime_type=b&#34;application/json&#34;)
+        except Exception as err:
+                await response.send_not_found(err)
+
+
+@HttpServer.add_route(b&#39;/monthly&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_month)
+async def monthly_page(request, response, args):
+        &#34;&#34;&#34; Consumption graph month by month &#34;&#34;&#34;
+        geolocation = GeolocationConfig.get_config()
+        y = date.local_time()[0]
+        year   = int(request.params.get(b&#34;year&#34;,b&#34;%d&#34;%y))
+
+        if   request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;next&#34;:
+                year += 1
+        elif request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;previous&#34;:
+                year -= 1
+
+        month  = date.html_to_date(b&#34;%04d-01-01&#34;%(year))
+        unit = request.params.get(b&#34;unit&#34;,b&#34;power&#34;)
+
+
+        with  open(WWW_DIR + &#34;electricmeter.html&#34;, &#34;rb&#34;) as file:
+                content = file.read()
+
+        page_content = \
+        [
+                Div(
+                [
+                        Div(
+                        [
+                                Button(type=b&#34;submit&#34;, text=b&#34;&amp;lt;-&#34;, name=b&#34;direction&#34;,  value=b&#34;previous&#34;),Space(),
+                                Button(type=b&#34;submit&#34;, text=b&#34;-&amp;gt;&#34;, name=b&#34;direction&#34;,  value=b&#34;next&#34;)
+                        ], class_=b&#39;col-md-2 mb-2&#39;),
+                        Div(\
+                        [
+                                Edit (name=b&#34;year&#34;, spacer=b&#34;&#34;, type=b&#34;number&#34;, step=b&#34;1&#34;,  required=True, value=b&#34;%d&#34;%year, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;),
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div(
+                        [
+                                Select(
+                                [
+                                        Option(text=em_lang.type_price, value=b&#34;price&#34;, selected= True if unit == b&#34;price&#34; else False),
+                                        Option(text=em_lang.type_power, value=b&#34;power&#34;, selected= True if unit == b&#34;power&#34; else False),
+                                ], spacer=b&#34;&#34;, text=em_lang.step_minutes, name=b&#34;unit&#34;,                 event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ],class_=b&#39;col-md-2&#39;)
+                ], class_=b&#34;row&#34;),
+
+                Tag(content%(b&#34;monthly&#34;, 86400, date.date_to_html(month), lang.translate_date(month, False), unit, em_lang.power_consumed, geolocation.latitude, geolocation.longitude, b&#34;&#34;))
+        ]
+        page = main_frame(request, response, args, em_lang.title_electricmeter + em_lang.item_month.lower(),Form(page_content))
+        await response.send_page(page)
+
+
+@HttpServer.add_route(b&#39;/monthly_datas&#39;)
+async def monthly_datas(request, response, args):
+        &#34;&#34;&#34; Send pulses of month and rates &#34;&#34;&#34;
+        await electricmeter.MonthlyCounter.refresh()
+        year   = date.html_to_date(request.params.get(b&#34;year&#34;,b&#34;&#34;))
+        result = {&#34;time_slots&#34;:None}
+        result[&#34;rates&#34;] = strings.tostrings(TimeSlotsConfig.get_cost(year))
+        try:
+                result[&#34;time_slots&#34;] = electricmeter.MonthlyCounter.get_datas(year)
+                await response.send_buffer(b&#34;pulses&#34;, buffer=strings.tobytes(json.dumps(result)), mime_type=b&#34;application/json&#34;)
+        except Exception as err:
+                await response.send_not_found(err)
+
+
+@HttpServer.add_route(b&#39;/rate&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_rate)
+async def rate_page(request, response, args):
+        &#34;&#34;&#34; Electric rate configuration page &#34;&#34;&#34;
+        rates   = RatesConfig.get_config()
+        current = RateConfig()
+        # If new rate added
+        if request.params.get(b&#34;add&#34;,None) is not None:
+                current.update(request.params, show_error=False)
+                rates.append(current)
+                rates.save()
+        # If a rate must be deleted
+        elif request.params.get(b&#34;remove&#34;,None) is not None:
+                rates.remove(request.params.get(b&#34;remove&#34;,b&#34;none&#34;))
+                rates.save()
+        # If a rate must be edited
+        elif request.params.get(b&#34;edit&#34;,None) is not None:
+                current.update(rates.get(request.params.get(b&#34;edit&#34;,b&#34;none&#34;)))
+
+        # List all rates
+        rate_items = []
+        identifier = 0
+        while True:
+                rate = rates.get(identifier)
+                if rate is not None:
+                        rate_items.append(
+                                        ListItem(
+                                        [
+                                                Link(text=b&#34; %s : %f %s %s %s &#34;%(rate[b&#34;name&#34;], rate[b&#34;price&#34;], rate[b&#34;currency&#34;], em_lang.from_the, lang.translate_date(rate[b&#34;validity_date&#34;])), href=b&#34;rate?edit=%d&#34;%identifier ),
+                                                Link(text=em_lang.remove_button , class_=b&#34;btn position-absolute top-50 end-0 translate-middle-y&#34;, href=b&#34;rate?remove=%d&#34;%identifier, onclick=b&#34;return window.confirm(&#39;%s&#39;)&#34;%em_lang.remove_dialog)
+                                        ]))
+                else:
+                        break
+                identifier += 1
+
+        # Build page
+        page = main_frame(request, response, args, em_lang.title_rate,
+        [
+                Form(
+                [
+                        Edit  (text=em_lang.name,          name=b&#34;name&#34;,          placeholder=em_lang.field_rate,     required=True, value=current.name),
+                        Edit  (text=em_lang.validy_date,   name=b&#34;validity_date&#34;, type=b&#34;date&#34;,                    required=True, value=b&#34;%04d-%02d-%02d&#34;%date.local_time(current.validity_date)[:3]),
+                        Edit  (text=em_lang.price,         name=b&#34;price&#34;,         type=b&#34;number&#34;, step=b&#34;0.0001&#34;,  required=True, value=b&#34;%f&#34;%current.price),
+                        Edit  (text=em_lang.currency,      name=b&#34;currency&#34;,      placeholder=em_lang.field_currency, required=True, value=current.currency),
+                        Submit(text=em_lang.add_button,    name=b&#34;add&#34;)
+                ]),
+                List(rate_items)
+        ])
+        await response.send_page(page)
+
+
+@HttpServer.add_route(b&#39;/time_slots&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_time_slots)
+async def time_slots_page(request, response, args):
+        &#34;&#34;&#34; Electric time slots configuration page &#34;&#34;&#34;
+        time_slots = TimeSlotsConfig.get_config()
+        rates   = RatesConfig.get_config()
+        current = TimeSlotConfig()
+
+        # If new time_slot added
+        if request.params.get(b&#34;add&#34;,None) is not None:
+                current.update(request.params, show_error=False)
+                time_slots.append(current)
+                time_slots.save()
+        # If a time_slot must be deleted
+        elif request.params.get(b&#34;remove&#34;,None) is not None:
+                time_slots.remove(request.params.get(b&#34;remove&#34;,b&#34;none&#34;))
+                time_slots.save()
+        # If a rate must be edited
+        elif request.params.get(b&#34;edit&#34;,None) is not None:
+                current.update(time_slots.get(request.params.get(b&#34;edit&#34;,b&#34;none&#34;)))
+
+        # List all rates names
+        rates_combo = []
+        names       = {}
+        identifier  = 0
+        while True:
+                rate = rates.get(identifier)
+                if rate is not None:
+                        if rate[b&#34;name&#34;] not in names:
+                                rates_combo.append(Option(text=rate[b&#34;name&#34;], value=rate[b&#34;name&#34;], selected=b&#34;selected&#34; if current.rate == rate[b&#34;name&#34;] else b&#34;&#34;))
+                else:
+                        break
+                names[rate[b&#34;name&#34;]] = b&#34;&#34;
+                identifier += 1
+
+        # List all rates
+        time_slots_items = []
+        identifier = 0
+        while True:
+                time_slot = time_slots.get(identifier)
+                if time_slot is not None:
+                        time_slots_items.append(
+                                        ListItem(
+                                        [
+                                                Label(text=b&#34;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;, style=b&#34;background-color: %s&#34;%time_slot[b&#34;color&#34;]),
+                                                Space(),Space(),
+                                                Link(text=b&#34;%s - %s : %s &#34;%(date.time_to_html(time_slot[b&#34;start_time&#34;]), date.time_to_html(time_slot[b&#34;end_time&#34;]), time_slot[b&#34;rate&#34;]),href=b&#34;time_slots?edit=%d&#34;%identifier),
+                                                Link(text=em_lang.remove_button , class_=b&#34;btn position-absolute top-50 end-0 translate-middle-y&#34;, href=b&#34;time_slots?remove=%d&#34;%identifier, onclick=b&#34;return window.confirm(&#39;%s&#39;)&#34;%em_lang.remove_dialog)
+                                        ]))
+                else:
+                        break
+                identifier += 1
+
+        # Build page
+        page = main_frame(request, response, args, em_lang.title_time_slots,
+        [
+                Form(
+                [
+                        Edit (text=em_lang.field_start,      name=b&#34;start_time&#34;, type=b&#34;time&#34;, required=True, value=date.time_to_html(current.start_time)),
+                        Edit (text=em_lang.field_end,        name=b&#34;end_time&#34;,   type=b&#34;time&#34;, required=True, value=date.time_to_html(current.end_time)),
+                        Label(text=em_lang.field_time_rate),
+                        Select(rates_combo,name=b&#34;rate&#34;,                                    required=True),
+                        Edit (text=em_lang.field_color,      name=b&#34;color&#34;, type=b&#34;color&#34;,     required=True, value=current.color),
+                        Submit(text=em_lang.add_button,      name=b&#34;add&#34;)
+                ]),
+                List(time_slots_items)
+        ])
+        await response.send_page(page)
+
+
+@HttpServer.add_route(b&#39;/geolocation&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_geolocation)
+async def geolocation_page(request, response, args):
+        &#34;&#34;&#34; Determines the geolocation of the device &#34;&#34;&#34;
+        config = GeolocationConfig.get_config()
+        disabled, action, submit = manage_default_button(request, config)
+
+        page = main_frame(request, response, args, em_lang.item_geolocation,
+                Form(
+                [
+                        Edit  (text=em_lang.latitude,  name=b&#34;latitude&#34;,  type=b&#34;number&#34;, step=b&#34;0.0001&#34;, required=True, min=b&#34;-90.&#34;,  max=b&#34;90.&#34; , value=b&#34;%.3f&#34;%config.latitude, disabled=disabled),
+                        Edit  (text=em_lang.longitude, name=b&#34;longitude&#34;, type=b&#34;number&#34;, step=b&#34;0.0001&#34;, required=True, min=b&#34;-180.&#34;, max=b&#34;180.&#34;, value=b&#34;%.3f&#34;%config.longitude,disabled=disabled),
+                        submit, None
+                ]))
+        await response.send_page(page)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.electricmeter.webpage.daily_datas"><code class="name flex">
+<span>async def <span class="ident">daily_datas</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send pulses of month and rates</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/daily_datas&#39;)
+async def daily_datas(request, response, args):
+        &#34;&#34;&#34; Send pulses of month and rates &#34;&#34;&#34;
+        await electricmeter.MonthlyCounter.refresh()
+        month    = date.html_to_date(request.params.get(b&#34;month&#34;,b&#34;&#34;))
+        result = {&#34;time_slots&#34;:None}
+        result[&#34;rates&#34;] = strings.tostrings(TimeSlotsConfig.get_cost(month))
+        try:
+                result[&#34;time_slots&#34;] = electricmeter.DailyCounter.get_datas(month)
+                await response.send_buffer(b&#34;pulses&#34;, buffer=strings.tobytes(json.dumps(result)), mime_type=b&#34;application/json&#34;)
+        except Exception as err:
+                await response.send_not_found(err)</code></pre>
+</details>
+</dd>
+<dt id="lib.electricmeter.webpage.daily_page"><code class="name flex">
+<span>async def <span class="ident">daily_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Consumption graph day by day</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/daily&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_day)
+async def daily_page(request, response, args):
+        &#34;&#34;&#34; Consumption graph day by day &#34;&#34;&#34;
+        geolocation = GeolocationConfig.get_config()
+        y,m = date.local_time()[:2]
+        year   = int(request.params.get(b&#34;year&#34;,b&#34;%d&#34;%y))
+        month  = int(request.params.get(b&#34;month&#34;,b&#34;%d&#34;%m))
+
+        if   request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;next&#34;:
+                if month == 12:
+                        month = 1
+                        year += 1
+                else:
+                        month += 1
+        elif request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;previous&#34;:
+                if month == 1:
+                        month = 12
+                        year -= 1
+                else:
+                        month -= 1
+
+        day  = date.html_to_date(b&#34;%04d-%02d-01&#34;%(year, month))
+
+        unit = request.params.get(b&#34;unit&#34;,b&#34;power&#34;)
+        temperature = request.params.get(b&#34;temperature&#34;)
+        if temperature is None or temperature == b&#34;0&#34;:
+                with_temperature = b&#34;false&#34;
+                temperature = None
+        else:
+                with_temperature = b&#34;true&#34;
+
+        months_combo = []
+        month_id = 1
+        for m in lang.months:
+                months_combo.append(Option(text=m, value=b&#34;%d&#34;%month_id, selected= True if month_id == month else False))
+                month_id += 1
+
+        with  open(WWW_DIR + &#34;electricmeter.html&#34;, &#34;rb&#34;) as file:
+                content = file.read()
+
+        page_content = \
+        [
+                Div(
+                [
+                        Div(
+                        [
+                                Button(type=b&#34;submit&#34;, text=b&#34;&amp;lt;-&#34;, name=b&#34;direction&#34;,  value=b&#34;previous&#34;),Space(),
+                                Button(type=b&#34;submit&#34;, text=b&#34;-&amp;gt;&#34;, name=b&#34;direction&#34;,  value=b&#34;next&#34;)
+                        ], class_=b&#39;col-md-2 mb-2&#39;),
+                        Div(
+                        [
+                                Edit (name=b&#34;year&#34;, spacer=b&#34;&#34;, type=b&#34;number&#34;, step=b&#34;1&#34;,  required=True, value=b&#34;%d&#34;%year, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;),
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div(
+                        [
+                                Select(months_combo, spacer=b&#34;&#34;, name=b&#34;month&#34;, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;),
+                        ], class_=b&#39;col-md-2 mb-2&#39;),
+                        Div(
+                        [
+                                Select(
+                                [
+                                        Option(text=em_lang.type_price, value=b&#34;price&#34;, selected= True if unit == b&#34;price&#34; else False),
+                                        Option(text=em_lang.type_power, value=b&#34;power&#34;, selected= True if unit == b&#34;power&#34; else False),
+                                ], spacer=b&#34;&#34;, text=em_lang.step_minutes, name=b&#34;unit&#34;,                 event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div(
+                        [
+                                Switch(text=em_lang.temperature, name=b&#34;temperature&#34;, checked=temperature, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-2&#39;)
+                ], class_=b&#34;row&#34;),
+                Tag(content%(b&#34;daily&#34;, 86400, date.date_to_html(day), lang.translate_date(day, False), unit, em_lang.power_consumed, geolocation.latitude, geolocation.longitude, with_temperature))
+        ]
+        page = main_frame(request, response, args, em_lang.title_electricmeter + em_lang.item_day.lower(),Form(page_content))
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+<dt id="lib.electricmeter.webpage.geolocation_page"><code class="name flex">
+<span>async def <span class="ident">geolocation_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Determines the geolocation of the device</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/geolocation&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_geolocation)
+async def geolocation_page(request, response, args):
+        &#34;&#34;&#34; Determines the geolocation of the device &#34;&#34;&#34;
+        config = GeolocationConfig.get_config()
+        disabled, action, submit = manage_default_button(request, config)
+
+        page = main_frame(request, response, args, em_lang.item_geolocation,
+                Form(
+                [
+                        Edit  (text=em_lang.latitude,  name=b&#34;latitude&#34;,  type=b&#34;number&#34;, step=b&#34;0.0001&#34;, required=True, min=b&#34;-90.&#34;,  max=b&#34;90.&#34; , value=b&#34;%.3f&#34;%config.latitude, disabled=disabled),
+                        Edit  (text=em_lang.longitude, name=b&#34;longitude&#34;, type=b&#34;number&#34;, step=b&#34;0.0001&#34;, required=True, min=b&#34;-180.&#34;, max=b&#34;180.&#34;, value=b&#34;%.3f&#34;%config.longitude,disabled=disabled),
+                        submit, None
+                ]))
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+<dt id="lib.electricmeter.webpage.hourly_page_datas"><code class="name flex">
+<span>async def <span class="ident">hourly_page_datas</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send pulses of hours and rates</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/hourly_datas&#39;)
+async def hourly_page_datas(request, response, args):
+        &#34;&#34;&#34; Send pulses of hours and rates &#34;&#34;&#34;
+        day    = date.html_to_date(request.params.get(b&#34;day&#34;,b&#34;&#34;))
+        result = {&#34;pulses&#34;:None}
+        result[&#34;rates&#34;] = strings.tostrings(TimeSlotsConfig.get_cost(day))
+        try:
+                result[&#34;pulses&#34;] = electricmeter.HourlyCounter.get_datas(day)
+                await response.send_buffer(b&#34;pulses&#34;, buffer=strings.tobytes(json.dumps(result)), mime_type=b&#34;application/json&#34;)
+        except Exception as err:
+                await response.send_not_found(err)</code></pre>
+</details>
+</dd>
+<dt id="lib.electricmeter.webpage.hourly_page_page"><code class="name flex">
+<span>async def <span class="ident">hourly_page_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Daily consumption graph hour by hour</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/hourly&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_hour)
+async def hourly_page_page(request, response, args):
+        &#34;&#34;&#34; Daily consumption graph hour by hour &#34;&#34;&#34;
+        geolocation = GeolocationConfig.get_config()
+        day  = date.html_to_date(request.params.get(b&#34;day&#34;,b&#34;&#34;))
+
+        if   request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;next&#34;:
+                day += 86400
+        elif request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;previous&#34;:
+                day -= 86400
+
+        temperature = request.params.get(b&#34;temperature&#34;)
+        if temperature is None or temperature == b&#34;0&#34;:
+                with_temperature = b&#34;false&#34;
+                temperature = None
+        else:
+                with_temperature = b&#34;true&#34;
+
+        step = int(request.params.get(b&#34;step&#34;,b&#34;30&#34;))
+        steps = []
+        for s in [1,2,5,10,15,30]:
+                if s == step:
+                        selected = True
+                else:
+                        selected = False
+                steps.append(Option(text=b&#34;%d %s&#34;%(s, em_lang.step_minutes), value=b&#34;%d&#34;%s, selected=selected))
+
+        unit = request.params.get(b&#34;unit&#34;,b&#34;power&#34;)
+
+        with  open(WWW_DIR + &#34;electricmeter.html&#34;, &#34;rb&#34;) as file:
+                content = file.read()
+
+        page_content = \
+        [
+                Div(
+                [
+                        Div(
+                        [
+                                Button(type=b&#34;submit&#34;, text=b&#34;&amp;lt;-&#34;, name=b&#34;direction&#34;,  value=b&#34;previous&#34;),Space(),
+                                Button(type=b&#34;submit&#34;, text=b&#34;-&amp;gt;&#34;, name=b&#34;direction&#34;,  value=b&#34;next&#34;)
+                        ], class_=b&#39;col-md-2 mb-1&#39;),
+                        Div(
+                        [
+                                Input (type=b&#34;date&#34;,   class_=b&#34;form-label border rounded p-1&#34;, name=b&#34;day&#34;, value= date.date_to_html(day), event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;),Space(),
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div(
+                        [
+                                Select(steps, spacer=b&#34;&#34;, text=em_lang.step_minutes, name=b&#34;step&#34;,                 event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div([
+                                Select(
+                                [
+                                        Option(text=em_lang.type_price, value=b&#34;price&#34;, selected= True if unit == b&#34;price&#34; else False),
+                                        Option(text=em_lang.type_power, value=b&#34;power&#34;, selected= True if unit == b&#34;power&#34; else False),
+                                ], spacer=b&#34;&#34;, text=em_lang.step_minutes, name=b&#34;unit&#34;,                 event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-1&#39;),
+                        Div(
+                        [
+                                Switch(text=em_lang.temperature, name=b&#34;temperature&#34;, checked=temperature, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ], class_=b&#39;col-md-2&#39;)
+                ], class_=b&#34;row&#34;),
+
+                Tag(content%(b&#34;hourly&#34;,
+                        step,
+                        date.date_to_html(day),
+                        lang.translate_date(day),
+                        unit,
+                        em_lang.power_consumed,
+                        geolocation.latitude,
+                        geolocation.longitude,
+                        with_temperature))
+        ]
+        page = main_frame(request, response, args,em_lang.title_electricmeter + em_lang.item_hour.lower(),Form(page_content))
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+<dt id="lib.electricmeter.webpage.monthly_datas"><code class="name flex">
+<span>async def <span class="ident">monthly_datas</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send pulses of month and rates</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/monthly_datas&#39;)
+async def monthly_datas(request, response, args):
+        &#34;&#34;&#34; Send pulses of month and rates &#34;&#34;&#34;
+        await electricmeter.MonthlyCounter.refresh()
+        year   = date.html_to_date(request.params.get(b&#34;year&#34;,b&#34;&#34;))
+        result = {&#34;time_slots&#34;:None}
+        result[&#34;rates&#34;] = strings.tostrings(TimeSlotsConfig.get_cost(year))
+        try:
+                result[&#34;time_slots&#34;] = electricmeter.MonthlyCounter.get_datas(year)
+                await response.send_buffer(b&#34;pulses&#34;, buffer=strings.tobytes(json.dumps(result)), mime_type=b&#34;application/json&#34;)
+        except Exception as err:
+                await response.send_not_found(err)</code></pre>
+</details>
+</dd>
+<dt id="lib.electricmeter.webpage.monthly_page"><code class="name flex">
+<span>async def <span class="ident">monthly_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Consumption graph month by month</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/monthly&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_month)
+async def monthly_page(request, response, args):
+        &#34;&#34;&#34; Consumption graph month by month &#34;&#34;&#34;
+        geolocation = GeolocationConfig.get_config()
+        y = date.local_time()[0]
+        year   = int(request.params.get(b&#34;year&#34;,b&#34;%d&#34;%y))
+
+        if   request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;next&#34;:
+                year += 1
+        elif request.params.get(b&#34;direction&#34;,b&#34;&#34;) == b&#34;previous&#34;:
+                year -= 1
+
+        month  = date.html_to_date(b&#34;%04d-01-01&#34;%(year))
+        unit = request.params.get(b&#34;unit&#34;,b&#34;power&#34;)
+
+
+        with  open(WWW_DIR + &#34;electricmeter.html&#34;, &#34;rb&#34;) as file:
+                content = file.read()
+
+        page_content = \
+        [
+                Div(
+                [
+                        Div(
+                        [
+                                Button(type=b&#34;submit&#34;, text=b&#34;&amp;lt;-&#34;, name=b&#34;direction&#34;,  value=b&#34;previous&#34;),Space(),
+                                Button(type=b&#34;submit&#34;, text=b&#34;-&amp;gt;&#34;, name=b&#34;direction&#34;,  value=b&#34;next&#34;)
+                        ], class_=b&#39;col-md-2 mb-2&#39;),
+                        Div(\
+                        [
+                                Edit (name=b&#34;year&#34;, spacer=b&#34;&#34;, type=b&#34;number&#34;, step=b&#34;1&#34;,  required=True, value=b&#34;%d&#34;%year, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;),
+                        ], class_=b&#39;col-md-2&#39;),
+                        Div(
+                        [
+                                Select(
+                                [
+                                        Option(text=em_lang.type_price, value=b&#34;price&#34;, selected= True if unit == b&#34;price&#34; else False),
+                                        Option(text=em_lang.type_power, value=b&#34;power&#34;, selected= True if unit == b&#34;power&#34; else False),
+                                ], spacer=b&#34;&#34;, text=em_lang.step_minutes, name=b&#34;unit&#34;,                 event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;)
+                        ],class_=b&#39;col-md-2&#39;)
+                ], class_=b&#34;row&#34;),
+
+                Tag(content%(b&#34;monthly&#34;, 86400, date.date_to_html(month), lang.translate_date(month, False), unit, em_lang.power_consumed, geolocation.latitude, geolocation.longitude, b&#34;&#34;))
+        ]
+        page = main_frame(request, response, args, em_lang.title_electricmeter + em_lang.item_month.lower(),Form(page_content))
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+<dt id="lib.electricmeter.webpage.power_page_datas"><code class="name flex">
+<span>async def <span class="ident">power_page_datas</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send current power consumed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/power_datas&#39;)
+async def power_page_datas(request, response, args):
+        &#34;&#34;&#34; Send current power consumed &#34;&#34;&#34;
+        try:
+                power = {&#34;power&#34;:electricmeter.HourlyCounter.get_power()}
+                await response.send_buffer(b&#34;pulses&#34;, buffer=strings.tobytes(json.dumps(power)), mime_type=b&#34;application/json&#34;)
+        except Exception as err:
+                await response.send_not_found(err)</code></pre>
+</details>
+</dd>
+<dt id="lib.electricmeter.webpage.rate_page"><code class="name flex">
+<span>async def <span class="ident">rate_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Electric rate configuration page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/rate&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_rate)
+async def rate_page(request, response, args):
+        &#34;&#34;&#34; Electric rate configuration page &#34;&#34;&#34;
+        rates   = RatesConfig.get_config()
+        current = RateConfig()
+        # If new rate added
+        if request.params.get(b&#34;add&#34;,None) is not None:
+                current.update(request.params, show_error=False)
+                rates.append(current)
+                rates.save()
+        # If a rate must be deleted
+        elif request.params.get(b&#34;remove&#34;,None) is not None:
+                rates.remove(request.params.get(b&#34;remove&#34;,b&#34;none&#34;))
+                rates.save()
+        # If a rate must be edited
+        elif request.params.get(b&#34;edit&#34;,None) is not None:
+                current.update(rates.get(request.params.get(b&#34;edit&#34;,b&#34;none&#34;)))
+
+        # List all rates
+        rate_items = []
+        identifier = 0
+        while True:
+                rate = rates.get(identifier)
+                if rate is not None:
+                        rate_items.append(
+                                        ListItem(
+                                        [
+                                                Link(text=b&#34; %s : %f %s %s %s &#34;%(rate[b&#34;name&#34;], rate[b&#34;price&#34;], rate[b&#34;currency&#34;], em_lang.from_the, lang.translate_date(rate[b&#34;validity_date&#34;])), href=b&#34;rate?edit=%d&#34;%identifier ),
+                                                Link(text=em_lang.remove_button , class_=b&#34;btn position-absolute top-50 end-0 translate-middle-y&#34;, href=b&#34;rate?remove=%d&#34;%identifier, onclick=b&#34;return window.confirm(&#39;%s&#39;)&#34;%em_lang.remove_dialog)
+                                        ]))
+                else:
+                        break
+                identifier += 1
+
+        # Build page
+        page = main_frame(request, response, args, em_lang.title_rate,
+        [
+                Form(
+                [
+                        Edit  (text=em_lang.name,          name=b&#34;name&#34;,          placeholder=em_lang.field_rate,     required=True, value=current.name),
+                        Edit  (text=em_lang.validy_date,   name=b&#34;validity_date&#34;, type=b&#34;date&#34;,                    required=True, value=b&#34;%04d-%02d-%02d&#34;%date.local_time(current.validity_date)[:3]),
+                        Edit  (text=em_lang.price,         name=b&#34;price&#34;,         type=b&#34;number&#34;, step=b&#34;0.0001&#34;,  required=True, value=b&#34;%f&#34;%current.price),
+                        Edit  (text=em_lang.currency,      name=b&#34;currency&#34;,      placeholder=em_lang.field_currency, required=True, value=current.currency),
+                        Submit(text=em_lang.add_button,    name=b&#34;add&#34;)
+                ]),
+                List(rate_items)
+        ])
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+<dt id="lib.electricmeter.webpage.time_slots_page"><code class="name flex">
+<span>async def <span class="ident">time_slots_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Electric time slots configuration page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@HttpServer.add_route(b&#39;/time_slots&#39;, menu=em_lang.menu_electricmeter, item=em_lang.item_time_slots)
+async def time_slots_page(request, response, args):
+        &#34;&#34;&#34; Electric time slots configuration page &#34;&#34;&#34;
+        time_slots = TimeSlotsConfig.get_config()
+        rates   = RatesConfig.get_config()
+        current = TimeSlotConfig()
+
+        # If new time_slot added
+        if request.params.get(b&#34;add&#34;,None) is not None:
+                current.update(request.params, show_error=False)
+                time_slots.append(current)
+                time_slots.save()
+        # If a time_slot must be deleted
+        elif request.params.get(b&#34;remove&#34;,None) is not None:
+                time_slots.remove(request.params.get(b&#34;remove&#34;,b&#34;none&#34;))
+                time_slots.save()
+        # If a rate must be edited
+        elif request.params.get(b&#34;edit&#34;,None) is not None:
+                current.update(time_slots.get(request.params.get(b&#34;edit&#34;,b&#34;none&#34;)))
+
+        # List all rates names
+        rates_combo = []
+        names       = {}
+        identifier  = 0
+        while True:
+                rate = rates.get(identifier)
+                if rate is not None:
+                        if rate[b&#34;name&#34;] not in names:
+                                rates_combo.append(Option(text=rate[b&#34;name&#34;], value=rate[b&#34;name&#34;], selected=b&#34;selected&#34; if current.rate == rate[b&#34;name&#34;] else b&#34;&#34;))
+                else:
+                        break
+                names[rate[b&#34;name&#34;]] = b&#34;&#34;
+                identifier += 1
+
+        # List all rates
+        time_slots_items = []
+        identifier = 0
+        while True:
+                time_slot = time_slots.get(identifier)
+                if time_slot is not None:
+                        time_slots_items.append(
+                                        ListItem(
+                                        [
+                                                Label(text=b&#34;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;, style=b&#34;background-color: %s&#34;%time_slot[b&#34;color&#34;]),
+                                                Space(),Space(),
+                                                Link(text=b&#34;%s - %s : %s &#34;%(date.time_to_html(time_slot[b&#34;start_time&#34;]), date.time_to_html(time_slot[b&#34;end_time&#34;]), time_slot[b&#34;rate&#34;]),href=b&#34;time_slots?edit=%d&#34;%identifier),
+                                                Link(text=em_lang.remove_button , class_=b&#34;btn position-absolute top-50 end-0 translate-middle-y&#34;, href=b&#34;time_slots?remove=%d&#34;%identifier, onclick=b&#34;return window.confirm(&#39;%s&#39;)&#34;%em_lang.remove_dialog)
+                                        ]))
+                else:
+                        break
+                identifier += 1
+
+        # Build page
+        page = main_frame(request, response, args, em_lang.title_time_slots,
+        [
+                Form(
+                [
+                        Edit (text=em_lang.field_start,      name=b&#34;start_time&#34;, type=b&#34;time&#34;, required=True, value=date.time_to_html(current.start_time)),
+                        Edit (text=em_lang.field_end,        name=b&#34;end_time&#34;,   type=b&#34;time&#34;, required=True, value=date.time_to_html(current.end_time)),
+                        Label(text=em_lang.field_time_rate),
+                        Select(rates_combo,name=b&#34;rate&#34;,                                    required=True),
+                        Edit (text=em_lang.field_color,      name=b&#34;color&#34;, type=b&#34;color&#34;,     required=True, value=current.color),
+                        Submit(text=em_lang.add_button,      name=b&#34;add&#34;)
+                ]),
+                List(time_slots_items)
+        ])
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.electricmeter" href="index.html">lib.electricmeter</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="two-column">
+<li><code><a title="lib.electricmeter.webpage.daily_datas" href="#lib.electricmeter.webpage.daily_datas">daily_datas</a></code></li>
+<li><code><a title="lib.electricmeter.webpage.daily_page" href="#lib.electricmeter.webpage.daily_page">daily_page</a></code></li>
+<li><code><a title="lib.electricmeter.webpage.geolocation_page" href="#lib.electricmeter.webpage.geolocation_page">geolocation_page</a></code></li>
+<li><code><a title="lib.electricmeter.webpage.hourly_page_datas" href="#lib.electricmeter.webpage.hourly_page_datas">hourly_page_datas</a></code></li>
+<li><code><a title="lib.electricmeter.webpage.hourly_page_page" href="#lib.electricmeter.webpage.hourly_page_page">hourly_page_page</a></code></li>
+<li><code><a title="lib.electricmeter.webpage.monthly_datas" href="#lib.electricmeter.webpage.monthly_datas">monthly_datas</a></code></li>
+<li><code><a title="lib.electricmeter.webpage.monthly_page" href="#lib.electricmeter.webpage.monthly_page">monthly_page</a></code></li>
+<li><code><a title="lib.electricmeter.webpage.power_page_datas" href="#lib.electricmeter.webpage.power_page_datas">power_page_datas</a></code></li>
+<li><code><a title="lib.electricmeter.webpage.rate_page" href="#lib.electricmeter.webpage.rate_page">rate_page</a></code></li>
+<li><code><a title="lib.electricmeter.webpage.time_slots_page" href="#lib.electricmeter.webpage.time_slots_page">time_slots_page</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

@@ -39,6 +39,7 @@ except:
         from tools import fnmatch
 
 try:
+        import uasyncio
         import uos
 except:
         pass
@@ -56,15 +57,15 @@ def exists(filename):
                         pass
         return False
 
-previousFileInfo = []
+previous_file_info = []
 def fileinfo(path):
         &#34;&#34;&#34; Get the file informations &#34;&#34;&#34;
-        global previousFileInfo
-        if len(previousFileInfo) == 0:
-                previousFileInfo = [path, os.stat(path)]
-        elif previousFileInfo[0] != path:
-                previousFileInfo = [path, os.stat(path)]
-        return previousFileInfo[1]
+        global previous_file_info
+        if len(previous_file_info) == 0:
+                previous_file_info = [path, os.stat(path)]
+        elif previous_file_info[0] != path:
+                previous_file_info = [path, os.stat(path)]
+        return previous_file_info[1]
 
 def isdir(path):
         &#34;&#34;&#34; Indicates if the path is a directory &#34;&#34;&#34;
@@ -98,18 +99,18 @@ def splitext(p):
         sep=&#39;\\&#39;
         altsep = &#39;/&#39;
         extsep = &#39;.&#39;
-        sepIndex = p.rfind(sep)
+        sep_index = p.rfind(sep)
         if altsep:
                 altsepIndex = p.rfind(altsep)
-                sepIndex = max(sepIndex, altsepIndex)
+                sep_index = max(sep_index, altsepIndex)
 
-        dotIndex = p.rfind(extsep)
-        if dotIndex &gt; sepIndex:
-                filenameIndex = sepIndex + 1
-                while filenameIndex &lt; dotIndex:
-                        if p[filenameIndex:filenameIndex+1] != extsep:
-                                return p[:dotIndex], p[dotIndex:]
-                        filenameIndex += 1
+        dot_index = p.rfind(extsep)
+        if dot_index &gt; sep_index:
+                filename_index = sep_index + 1
+                while filename_index &lt; dot_index:
+                        if p[filename_index:filename_index+1] != extsep:
+                                return p[:dot_index], p[dot_index:]
+                        filename_index += 1
         return p, p[:0]
 
 def split(p):
@@ -208,15 +209,19 @@ def scandir(path, pattern, recursive, displayer=None):
         if path == &#34;&#34;:
                 path = &#34;.&#34;
         if path is not None and pattern is not None:
-                for file in os.listdir(path):
+                for file_info in uos.ilistdir(path):
+                        name = file_info[0]
+                        typ  = file_info[1]
                         if path != &#34;&#34;:
-                                filename = path + &#34;/&#34; + file
+                                filename = path + &#34;/&#34; + name
                         else:
-                                filename = file
+                                filename = name
                         if sys.platform != &#34;win32&#34;:
                                 filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
                                 filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
-                        if isdir(filename):
+
+                        # if directory
+                        if typ &amp; 0xF000 == 0x4000:
                                 if displayer:
                                         displayer.show(filename)
                                 else:
@@ -226,12 +231,51 @@ def scandir(path, pattern, recursive, displayer=None):
                                         filenames += fils
                                         directories += dirs
                         else:
-                                if fnmatch.fnmatch(file, pattern):
+                                if fnmatch.fnmatch(name, pattern):
                                         if displayer:
                                                 displayer.show(filename)
                                                 filenames = [&#34;&#34;]
                                         else:
                                                 filenames.append(filename)
+        return directories, filenames
+
+async def ascandir(path, pattern, recursive, displayer=None):
+        &#34;&#34;&#34; Asynchronous scan recursively a directory &#34;&#34;&#34;
+        filenames   = []
+        directories = []
+        if path == &#34;&#34;:
+                path = &#34;.&#34;
+        if path is not None and pattern is not None:
+                for file_info in uos.ilistdir(path):
+                        name = file_info[0]
+                        typ  = file_info[1]
+                        if path != &#34;&#34;:
+                                filename = path + &#34;/&#34; + name
+                        else:
+                                filename = name
+                        if sys.platform != &#34;win32&#34;:
+                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+
+                        # if directory
+                        if typ &amp; 0xF000 == 0x4000:
+                                if displayer:
+                                        displayer.show(filename)
+                                else:
+                                        directories.append(filename)
+                                if recursive:
+                                        dirs,fils = await ascandir(filename, pattern, recursive, displayer)
+                                        filenames += fils
+                                        directories += dirs
+                        else:
+                                if fnmatch.fnmatch(name, pattern):
+                                        if displayer:
+                                                displayer.show(filename)
+                                                filenames = [&#34;&#34;]
+                                        else:
+                                                filenames.append(filename)
+                if ismicropython():
+                        await uasyncio.sleep_ms(3)
         return directories, filenames
 
 def prefix(files):
@@ -381,6 +425,55 @@ def normpath(path):
         return cwd</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.filesystem.ascandir"><code class="name flex">
+<span>async def <span class="ident">ascandir</span></span>(<span>path, pattern, recursive, displayer=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Asynchronous scan recursively a directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def ascandir(path, pattern, recursive, displayer=None):
+        &#34;&#34;&#34; Asynchronous scan recursively a directory &#34;&#34;&#34;
+        filenames   = []
+        directories = []
+        if path == &#34;&#34;:
+                path = &#34;.&#34;
+        if path is not None and pattern is not None:
+                for file_info in uos.ilistdir(path):
+                        name = file_info[0]
+                        typ  = file_info[1]
+                        if path != &#34;&#34;:
+                                filename = path + &#34;/&#34; + name
+                        else:
+                                filename = name
+                        if sys.platform != &#34;win32&#34;:
+                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+                                filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
+
+                        # if directory
+                        if typ &amp; 0xF000 == 0x4000:
+                                if displayer:
+                                        displayer.show(filename)
+                                else:
+                                        directories.append(filename)
+                                if recursive:
+                                        dirs,fils = await ascandir(filename, pattern, recursive, displayer)
+                                        filenames += fils
+                                        directories += dirs
+                        else:
+                                if fnmatch.fnmatch(name, pattern):
+                                        if displayer:
+                                                displayer.show(filename)
+                                                filenames = [&#34;&#34;]
+                                        else:
+                                                filenames.append(filename)
+                if ismicropython():
+                        await uasyncio.sleep_ms(3)
+        return directories, filenames</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.filesystem.exists"><code class="name flex">
 <span>def <span class="ident">exists</span></span>(<span>filename)</span>
 </code></dt>
@@ -415,12 +508,12 @@ def normpath(path):
 </summary>
 <pre><code class="python">def fileinfo(path):
         &#34;&#34;&#34; Get the file informations &#34;&#34;&#34;
-        global previousFileInfo
-        if len(previousFileInfo) == 0:
-                previousFileInfo = [path, os.stat(path)]
-        elif previousFileInfo[0] != path:
-                previousFileInfo = [path, os.stat(path)]
-        return previousFileInfo[1]</code></pre>
+        global previous_file_info
+        if len(previous_file_info) == 0:
+                previous_file_info = [path, os.stat(path)]
+        elif previous_file_info[0] != path:
+                previous_file_info = [path, os.stat(path)]
+        return previous_file_info[1]</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.filesystem.filesize"><code class="name flex">
@@ -685,15 +778,19 @@ def normpath(path):
         if path == &#34;&#34;:
                 path = &#34;.&#34;
         if path is not None and pattern is not None:
-                for file in os.listdir(path):
+                for file_info in uos.ilistdir(path):
+                        name = file_info[0]
+                        typ  = file_info[1]
                         if path != &#34;&#34;:
-                                filename = path + &#34;/&#34; + file
+                                filename = path + &#34;/&#34; + name
                         else:
-                                filename = file
+                                filename = name
                         if sys.platform != &#34;win32&#34;:
                                 filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
                                 filename = filename.replace(&#34;//&#34;,&#34;/&#34;)
-                        if isdir(filename):
+
+                        # if directory
+                        if typ &amp; 0xF000 == 0x4000:
                                 if displayer:
                                         displayer.show(filename)
                                 else:
@@ -703,7 +800,7 @@ def normpath(path):
                                         filenames += fils
                                         directories += dirs
                         else:
-                                if fnmatch.fnmatch(file, pattern):
+                                if fnmatch.fnmatch(name, pattern):
                                         if displayer:
                                                 displayer.show(filename)
                                                 filenames = [&#34;&#34;]
@@ -745,18 +842,18 @@ def normpath(path):
         sep=&#39;\\&#39;
         altsep = &#39;/&#39;
         extsep = &#39;.&#39;
-        sepIndex = p.rfind(sep)
+        sep_index = p.rfind(sep)
         if altsep:
                 altsepIndex = p.rfind(altsep)
-                sepIndex = max(sepIndex, altsepIndex)
+                sep_index = max(sep_index, altsepIndex)
 
-        dotIndex = p.rfind(extsep)
-        if dotIndex &gt; sepIndex:
-                filenameIndex = sepIndex + 1
-                while filenameIndex &lt; dotIndex:
-                        if p[filenameIndex:filenameIndex+1] != extsep:
-                                return p[:dotIndex], p[dotIndex:]
-                        filenameIndex += 1
+        dot_index = p.rfind(extsep)
+        if dot_index &gt; sep_index:
+                filename_index = sep_index + 1
+                while filename_index &lt; dot_index:
+                        if p[filename_index:filename_index+1] != extsep:
+                                return p[:dot_index], p[dot_index:]
+                        filename_index += 1
         return p, p[:0]</code></pre>
 </details>
 </dd>
@@ -780,6 +877,7 @@ def normpath(path):
 <ul class="two-column">
 <li><code><a title="lib.tools.filesystem.abspath" href="#lib.tools.filesystem.abspath">abspath</a></code></li>
 <li><code><a title="lib.tools.filesystem.abspathbytes" href="#lib.tools.filesystem.abspathbytes">abspathbytes</a></code></li>
+<li><code><a title="lib.tools.filesystem.ascandir" href="#lib.tools.filesystem.ascandir">ascandir</a></code></li>
 <li><code><a title="lib.tools.filesystem.exists" href="#lib.tools.filesystem.exists">exists</a></code></li>
 <li><code><a title="lib.tools.filesystem.fileinfo" href="#lib.tools.filesystem.fileinfo">fileinfo</a></code></li>
 <li><code><a title="lib.tools.filesystem.filesize" href="#lib.tools.filesystem.filesize">filesize</a></code></li>

@@ -18,6 +18,7 @@ Below are the directory details :
 - **modules/lib/motion** : motion detection python sources
 - **modules/lib/tools** : tools used for all python sources
 - **modules/lib/server** : Ftp, Http, Pushover, Telnet, Ntp synchronization, user and session python sources
+- **modules/lib/electricmeter** : used to monitor the consumption of an electric meter (not present in the firmware)
 - **modules/lib/wifi** : Wifi and accesspoint python sources
 - **modules/config** : Configuration saved in this directory
 

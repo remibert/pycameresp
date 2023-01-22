@@ -34,7 +34,7 @@ from server.httpserver        import HttpServer
 from htmltemplate.htmlclasses import *
 from webpage.mainpage         import main_frame, manage_default_button
 import wifi
-from tools                    import lang,strings,logger
+from tools                    import lang,strings,logger,support
 
 def static_ip_html(config, disabled):
         &#34;&#34;&#34; Html to get static ip &#34;&#34;&#34;
@@ -114,10 +114,10 @@ async def wifi_config(request, response, args):
                 pass
         # If the save button clicked
         elif action == b&#34;save&#34;:
-                network.update(request.params)
+                network.update(request.params, show_error=False)
                 network.save()
                 network = select_network(0, True)
-                config.update(request.params)
+                config.update(request.params, show_error=False)
                 config.default = network.ssid
                 config.save()
                 forced  = b&#34;none&#34;
@@ -146,11 +146,11 @@ async def wifi_config(request, response, args):
 
         if action in [b&#34;previous&#34;,b&#34;next&#34;,b&#34;change&#34;,b&#34;forget&#34;,b&#34;modify&#34;,b&#34;default&#34;]:
                 submit = \
-                        Submit (text=lang.save  ,     name=b&#34;action&#34;,  value=b&#34;save&#34;    , style=b&#34;margin-right:0.5em&#34;), \
-                        Submit (text=lang.lt ,        name=b&#34;action&#34;,  value=b&#34;previous&#34;, style=b&#34;margin-right:0.5em&#34;), \
-                        Submit (text=lang.gt ,        name=b&#34;action&#34;,  value=b&#34;next&#34;    , style=b&#34;margin-right:0.5em&#34;), \
-                        Submit (text=lang.forget,     name=b&#34;action&#34;,  value=b&#34;forget&#34;  , style=b&#34;margin-right:0.5em&#34;), \
-                        Submit (text=lang.set_default,name=b&#34;action&#34;,  value=b&#34;default&#34; , style=b&#34;margin-right:0.5em&#34;), \
+                        Submit (text=lang.save  ,     name=b&#34;action&#34;,  value=b&#34;save&#34;    ), Space(), \
+                        Submit (text=lang.lt ,        name=b&#34;action&#34;,  value=b&#34;previous&#34;), Space(), \
+                        Submit (text=lang.gt ,        name=b&#34;action&#34;,  value=b&#34;next&#34;    ), Space(), \
+                        Submit (text=lang.forget,     name=b&#34;action&#34;,  value=b&#34;forget&#34;  ), Space(), \
+                        Submit (text=lang.set_default,name=b&#34;action&#34;,  value=b&#34;default&#34; ), Space(), \
                         Input  (                      name=b&#34;forced&#34;,  value=forced     , type=b&#34;hidden&#34;), \
                         Input  (                      name=b&#34;current&#34;, value=current    , type=b&#34;hidden&#34;)
 
@@ -162,26 +162,27 @@ async def wifi_config(request, response, args):
                 submit = Submit(text=lang.modify, name=b&#34;action&#34;, value=b&#34;modify&#34;)
 
         page = main_frame(request, response, args, lang.wifi_configuration,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.hostname ,   name=b&#34;hostname&#34;,  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled),
-                Switch(text=lang.fallback_to_the, name=b&#34;fallback&#34;, checked=config.fallback, disabled=disabled),Br(),
-                Card(
-                        [
-                                CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
-                                CardBody([
-                                        ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b&#34;ssid&#34;, value=network.ssid, disabled=disabled),
-                                        Edit(text=lang.password,    name=b&#34;wifi_password&#34;, placeholder=lang.enter_password,      type=b&#34;password&#34;,value=network.wifi_password, disabled=disabled),
-                                ])
-                        ]),Br(),
-                Card(
-                        [
-                                CardHeader([\
-                                        Switch(text=lang.dynamic_ip, checked=dynamic, name=b&#34;dynamic&#34;, onchange=b&#34;this.form.submit()&#34;, disabled=disabled)]),
-                                CardBody([\
-                                        None if dynamic else static_ip_html(network, disabled)])
-                        ]),
-                Br(),
-                submit)
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Edit(text=lang.hostname ,   name=b&#34;hostname&#34;,  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled) if support.hostname() else None,
+                        Switch(text=lang.fallback_to_the, name=b&#34;fallback&#34;, checked=config.fallback, disabled=disabled),
+                        Card(
+                                [
+                                        CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
+                                        CardBody([
+                                                ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b&#34;ssid&#34;, value=network.ssid, disabled=disabled),
+                                                Edit(text=lang.password,    name=b&#34;wifi_password&#34;, placeholder=lang.enter_password,      type=b&#34;password&#34;,value=network.wifi_password, disabled=disabled),
+                                        ])
+                                ]),
+                        Card(
+                                [
+                                        CardHeader([\
+                                                Switch(text=lang.dynamic_ip, spacer=b&#34;mb-0&#34;, checked=dynamic, name=b&#34;dynamic&#34;, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;, disabled=disabled)]),
+                                        None if dynamic else CardBody([\
+                                                static_ip_html(network, disabled)])
+                                ]),
+                        submit
+                ]))
         await response.send_page(page)
 
 @HttpServer.add_route(b&#39;/accesspoint&#39;, menu=lang.menu_network, item=lang.item_access_point)
@@ -201,22 +202,25 @@ async def access_point(request, response, args):
         # pylint: disable=missing-parentheses-for-call-in-test
         # pylint: disable=using-constant-test
         page = main_frame(request, response, args, lang.access_point_configuration if access_point else b&#34;Wifi configuration&#34;,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                Card(
-                        [
-                                CardHeader(text=lang.wifi),
-                                CardBody([
-                                        Edit(text=lang.ssid, placeholder=lang.enter_ssid, name=b&#34;ssid&#34;, value=config.ssid, disabled=disabled),
-                                        Edit(text=lang.password,    name=b&#34;wifi_password&#34;,type=b&#34;password&#34;, placeholder=lang.enter_password,      value=config.wifi_password, disabled=disabled),
-                                        Select(authmodes,text=lang.authentication_mode,name=b&#34;authmode&#34;, disabled=disabled),
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Card(
+                                [
+                                        CardHeader(text=lang.wifi),
+                                        CardBody([
+                                                Edit(text=lang.ssid, placeholder=lang.enter_ssid, name=b&#34;ssid&#34;, value=config.ssid, disabled=disabled),
+                                                Edit(text=lang.password,    name=b&#34;wifi_password&#34;,type=b&#34;password&#34;, placeholder=lang.enter_password,      value=config.wifi_password, disabled=disabled),
+                                                Label(text=lang.authentication_mode),
+                                                Select(authmodes,name=b&#34;authmode&#34;, disabled=disabled),
+                                        ]),
                                 ]),
-                        ]),Br(),
-                Card(
-                        [
-                                CardHeader(text=lang.static_ip),
-                                CardBody(static_ip_html(config, disabled))
-                        ]),Br(),
-                submit)
+                        Card(
+                                [
+                                        CardHeader(text=lang.static_ip),
+                                        CardBody(static_ip_html(config, disabled))
+                                ]) if support.static_ip_accesspoint() else None ,
+                        submit
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </section>
@@ -253,22 +257,25 @@ async def access_point(request, response, args):
         # pylint: disable=missing-parentheses-for-call-in-test
         # pylint: disable=using-constant-test
         page = main_frame(request, response, args, lang.access_point_configuration if access_point else b&#34;Wifi configuration&#34;,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                Card(
-                        [
-                                CardHeader(text=lang.wifi),
-                                CardBody([
-                                        Edit(text=lang.ssid, placeholder=lang.enter_ssid, name=b&#34;ssid&#34;, value=config.ssid, disabled=disabled),
-                                        Edit(text=lang.password,    name=b&#34;wifi_password&#34;,type=b&#34;password&#34;, placeholder=lang.enter_password,      value=config.wifi_password, disabled=disabled),
-                                        Select(authmodes,text=lang.authentication_mode,name=b&#34;authmode&#34;, disabled=disabled),
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Card(
+                                [
+                                        CardHeader(text=lang.wifi),
+                                        CardBody([
+                                                Edit(text=lang.ssid, placeholder=lang.enter_ssid, name=b&#34;ssid&#34;, value=config.ssid, disabled=disabled),
+                                                Edit(text=lang.password,    name=b&#34;wifi_password&#34;,type=b&#34;password&#34;, placeholder=lang.enter_password,      value=config.wifi_password, disabled=disabled),
+                                                Label(text=lang.authentication_mode),
+                                                Select(authmodes,name=b&#34;authmode&#34;, disabled=disabled),
+                                        ]),
                                 ]),
-                        ]),Br(),
-                Card(
-                        [
-                                CardHeader(text=lang.static_ip),
-                                CardBody(static_ip_html(config, disabled))
-                        ]),Br(),
-                submit)
+                        Card(
+                                [
+                                        CardHeader(text=lang.static_ip),
+                                        CardBody(static_ip_html(config, disabled))
+                                ]) if support.static_ip_accesspoint() else None ,
+                        submit
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </dd>
@@ -375,10 +382,10 @@ async def wifi_config(request, response, args):
                 pass
         # If the save button clicked
         elif action == b&#34;save&#34;:
-                network.update(request.params)
+                network.update(request.params, show_error=False)
                 network.save()
                 network = select_network(0, True)
-                config.update(request.params)
+                config.update(request.params, show_error=False)
                 config.default = network.ssid
                 config.save()
                 forced  = b&#34;none&#34;
@@ -407,11 +414,11 @@ async def wifi_config(request, response, args):
 
         if action in [b&#34;previous&#34;,b&#34;next&#34;,b&#34;change&#34;,b&#34;forget&#34;,b&#34;modify&#34;,b&#34;default&#34;]:
                 submit = \
-                        Submit (text=lang.save  ,     name=b&#34;action&#34;,  value=b&#34;save&#34;    , style=b&#34;margin-right:0.5em&#34;), \
-                        Submit (text=lang.lt ,        name=b&#34;action&#34;,  value=b&#34;previous&#34;, style=b&#34;margin-right:0.5em&#34;), \
-                        Submit (text=lang.gt ,        name=b&#34;action&#34;,  value=b&#34;next&#34;    , style=b&#34;margin-right:0.5em&#34;), \
-                        Submit (text=lang.forget,     name=b&#34;action&#34;,  value=b&#34;forget&#34;  , style=b&#34;margin-right:0.5em&#34;), \
-                        Submit (text=lang.set_default,name=b&#34;action&#34;,  value=b&#34;default&#34; , style=b&#34;margin-right:0.5em&#34;), \
+                        Submit (text=lang.save  ,     name=b&#34;action&#34;,  value=b&#34;save&#34;    ), Space(), \
+                        Submit (text=lang.lt ,        name=b&#34;action&#34;,  value=b&#34;previous&#34;), Space(), \
+                        Submit (text=lang.gt ,        name=b&#34;action&#34;,  value=b&#34;next&#34;    ), Space(), \
+                        Submit (text=lang.forget,     name=b&#34;action&#34;,  value=b&#34;forget&#34;  ), Space(), \
+                        Submit (text=lang.set_default,name=b&#34;action&#34;,  value=b&#34;default&#34; ), Space(), \
                         Input  (                      name=b&#34;forced&#34;,  value=forced     , type=b&#34;hidden&#34;), \
                         Input  (                      name=b&#34;current&#34;, value=current    , type=b&#34;hidden&#34;)
 
@@ -423,26 +430,27 @@ async def wifi_config(request, response, args):
                 submit = Submit(text=lang.modify, name=b&#34;action&#34;, value=b&#34;modify&#34;)
 
         page = main_frame(request, response, args, lang.wifi_configuration,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                Edit(text=lang.hostname ,   name=b&#34;hostname&#34;,  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled),
-                Switch(text=lang.fallback_to_the, name=b&#34;fallback&#34;, checked=config.fallback, disabled=disabled),Br(),
-                Card(
-                        [
-                                CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
-                                CardBody([
-                                        ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b&#34;ssid&#34;, value=network.ssid, disabled=disabled),
-                                        Edit(text=lang.password,    name=b&#34;wifi_password&#34;, placeholder=lang.enter_password,      type=b&#34;password&#34;,value=network.wifi_password, disabled=disabled),
-                                ])
-                        ]),Br(),
-                Card(
-                        [
-                                CardHeader([\
-                                        Switch(text=lang.dynamic_ip, checked=dynamic, name=b&#34;dynamic&#34;, onchange=b&#34;this.form.submit()&#34;, disabled=disabled)]),
-                                CardBody([\
-                                        None if dynamic else static_ip_html(network, disabled)])
-                        ]),
-                Br(),
-                submit)
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Edit(text=lang.hostname ,   name=b&#34;hostname&#34;,  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled) if support.hostname() else None,
+                        Switch(text=lang.fallback_to_the, name=b&#34;fallback&#34;, checked=config.fallback, disabled=disabled),
+                        Card(
+                                [
+                                        CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
+                                        CardBody([
+                                                ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b&#34;ssid&#34;, value=network.ssid, disabled=disabled),
+                                                Edit(text=lang.password,    name=b&#34;wifi_password&#34;, placeholder=lang.enter_password,      type=b&#34;password&#34;,value=network.wifi_password, disabled=disabled),
+                                        ])
+                                ]),
+                        Card(
+                                [
+                                        CardHeader([\
+                                                Switch(text=lang.dynamic_ip, spacer=b&#34;mb-0&#34;, checked=dynamic, name=b&#34;dynamic&#34;, event=b&#39;onchange=&#34;this.form.submit()&#34;&#39;, disabled=disabled)]),
+                                        None if dynamic else CardBody([\
+                                                static_ip_html(network, disabled)])
+                                ]),
+                        submit
+                ]))
         await response.send_page(page)</code></pre>
 </details>
 </dd>

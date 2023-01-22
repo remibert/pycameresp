@@ -36,6 +36,7 @@ This automatically creates the content of file lib/htmltemplate/htmlclasses.py</
 &#34;&#34;&#34; This script parse the template.html file and creates the template classes
 that can be used to compose a web page.
 This automatically creates the content of file lib/htmltemplate/htmlclasses.py &#34;&#34;&#34;
+# pylint:disable=consider-using-f-string
 import re
 
 def findall(pattern, text):
@@ -60,7 +61,7 @@ def findall(pattern, text):
                 elif end_tag is not None:
                         end_tag += s
                         if var != &#34;&#34;:
-                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;]:
+                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;,&#34;required&#34;,&#34;novalidate&#34;]:
                                         end_format += &#34; b&#39;%s&#39; if self.%s else b&#39;&#39;,&#34;%(var, var)
                                 else:
                                         end_format += &#34;self.%s,&#34;%var
@@ -68,7 +69,7 @@ def findall(pattern, text):
                 else:
                         begin_tag += s
                         if var != &#34;&#34;:
-                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;]:
+                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;,&#34;required&#34;,&#34;novalidate&#34;]:
                                         begin_format += &#34; b&#39;%s&#39; if self.%s else b&#39;&#39;,&#34;%(var, var)
                                 else:
                                         begin_format += &#34;self.%s,&#34;%var
@@ -83,10 +84,11 @@ def parse(force=False):
         &#34;&#34;&#34; Parse the www/template.html and createsthe content of file lib/htmltemplate/htmlclasses.py &#34;&#34;&#34;
         from htmltemplate import WWW_DIR, TEMPLATE_FILE, TEMPLATE_PY
         # pylint: disable=duplicate-string-formatting-argument
+        # pylint:disable=unspecified-encoding
         print(&#34;Parse html template&#34;)
         lines = open(WWW_DIR+TEMPLATE_FILE).readlines()
         py_class_file = open(TEMPLATE_PY,&#34;w&#34;)
-        py_class_file.write(&#34;&#39;&#39;&#39; File automatically generated with template.html content &#39;&#39;&#39;\n# pylint:disable=missing-function-docstring\n# pylint:disable=trailing-whitespace\n# pylint:disable=too-many-lines\nfrom htmltemplate.template import Template \n&#34;)
+        py_class_file.write(&#34;&#39;&#39;&#39; File automatically generated with template.html content &#39;&#39;&#39;\n# pylint:disable=missing-function-docstring\n# pylint:disable=global-variable-not-assigned\n# pylint:disable=trailing-whitespace\n# pylint:disable=too-many-lines\nfrom htmltemplate.template import Template \n&#34;)
 
         stack = []
         for line in lines:
@@ -148,12 +150,13 @@ def parse(force=False):
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, b&#34;*&#34;)\n&#39;.format(attribute,attribute))
                                         elif attribute in [&#34;id&#34;,&#34;name&#34;]:
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, b&#34;%d&#34;%id(self))\n&#39;.format(attribute,attribute))
-                                        elif attribute in [&#34;disabled&#34;,&#34;active&#34;]:
+                                        elif attribute in [&#34;disabled&#34;,&#34;active&#34;,&#34;novalidate&#34;,&#34;required&#34;]:
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, False)\n&#39;.format(attribute,attribute))
                                         elif attribute in [&#34;checked&#34;]:
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, True)\n&#39;.format(attribute,attribute))
                                         else:
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, b&#34;&#34;)\n&#39;.format(attribute,attribute))
+                                py_class_file.write(&#39;\tself.end_init(**params)\n&#39;)
                                 py_class_file.write(&#39;\treturn self\n&#39;)
                         else:
                                 raise SyntaxError()
@@ -204,7 +207,7 @@ def parse(force=False):
                 elif end_tag is not None:
                         end_tag += s
                         if var != &#34;&#34;:
-                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;]:
+                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;,&#34;required&#34;,&#34;novalidate&#34;]:
                                         end_format += &#34; b&#39;%s&#39; if self.%s else b&#39;&#39;,&#34;%(var, var)
                                 else:
                                         end_format += &#34;self.%s,&#34;%var
@@ -212,7 +215,7 @@ def parse(force=False):
                 else:
                         begin_tag += s
                         if var != &#34;&#34;:
-                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;]:
+                                if var in [&#34;disabled&#34;,&#34;checked&#34;,&#34;active&#34;,&#34;selected&#34;,&#34;required&#34;,&#34;novalidate&#34;]:
                                         begin_format += &#34; b&#39;%s&#39; if self.%s else b&#39;&#39;,&#34;%(var, var)
                                 else:
                                         begin_format += &#34;self.%s,&#34;%var
@@ -237,10 +240,11 @@ def parse(force=False):
         &#34;&#34;&#34; Parse the www/template.html and createsthe content of file lib/htmltemplate/htmlclasses.py &#34;&#34;&#34;
         from htmltemplate import WWW_DIR, TEMPLATE_FILE, TEMPLATE_PY
         # pylint: disable=duplicate-string-formatting-argument
+        # pylint:disable=unspecified-encoding
         print(&#34;Parse html template&#34;)
         lines = open(WWW_DIR+TEMPLATE_FILE).readlines()
         py_class_file = open(TEMPLATE_PY,&#34;w&#34;)
-        py_class_file.write(&#34;&#39;&#39;&#39; File automatically generated with template.html content &#39;&#39;&#39;\n# pylint:disable=missing-function-docstring\n# pylint:disable=trailing-whitespace\n# pylint:disable=too-many-lines\nfrom htmltemplate.template import Template \n&#34;)
+        py_class_file.write(&#34;&#39;&#39;&#39; File automatically generated with template.html content &#39;&#39;&#39;\n# pylint:disable=missing-function-docstring\n# pylint:disable=global-variable-not-assigned\n# pylint:disable=trailing-whitespace\n# pylint:disable=too-many-lines\nfrom htmltemplate.template import Template \n&#34;)
 
         stack = []
         for line in lines:
@@ -302,12 +306,13 @@ def parse(force=False):
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, b&#34;*&#34;)\n&#39;.format(attribute,attribute))
                                         elif attribute in [&#34;id&#34;,&#34;name&#34;]:
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, b&#34;%d&#34;%id(self))\n&#39;.format(attribute,attribute))
-                                        elif attribute in [&#34;disabled&#34;,&#34;active&#34;]:
+                                        elif attribute in [&#34;disabled&#34;,&#34;active&#34;,&#34;novalidate&#34;,&#34;required&#34;]:
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, False)\n&#39;.format(attribute,attribute))
                                         elif attribute in [&#34;checked&#34;]:
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, True)\n&#39;.format(attribute,attribute))
                                         else:
                                                 py_class_file.write(&#39;\tself.{:&lt;12} = params.get(&#34;{}&#34;, b&#34;&#34;)\n&#39;.format(attribute,attribute))
+                                py_class_file.write(&#39;\tself.end_init(**params)\n&#39;)
                                 py_class_file.write(&#39;\treturn self\n&#39;)
                         else:
                                 raise SyntaxError()

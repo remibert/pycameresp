@@ -75,10 +75,12 @@ async def presence(request, response, args):
                 i += 1
 
         page = main_frame(request, response, args,lang.presence_detection_configuration,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                editSmartphones,
-                Switch(text=lang.notification, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
-                submit)
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        editSmartphones,
+                        Switch(text=lang.notification, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),
+                        submit
+                ]))
 
         await response.send_page(page)</code></pre>
 </details>
@@ -135,10 +137,12 @@ async def presence(request, response, args):
                 i += 1
 
         page = main_frame(request, response, args,lang.presence_detection_configuration,
-                Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),Br(),
-                editSmartphones,
-                Switch(text=lang.notification, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),Br(),
-                submit)
+                Form([
+                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        editSmartphones,
+                        Switch(text=lang.notification, name=b&#34;notify&#34;, checked=config.notify, disabled=disabled),
+                        submit
+                ]))
 
         await response.send_page(page)</code></pre>
 </details>
