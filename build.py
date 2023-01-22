@@ -19,7 +19,7 @@ import time
 # ffmpeg -i video.mov -vf "fps=3,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 output.gif
 # 640x360
 
-MICROPYTHON_VERSION ="12f99481518b0ebcb14f00b2323865a845c2a4f1"
+MICROPYTHON_VERSION ="f4811b0b42f10aa12fc2f94c0459344d84c89eb8"#"12f99481518b0ebcb14f00b2323865a845c2a4f1"
 ESP_IDF_VERSION     ="-b v4.4.2"
 ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24"    # Very stable version but cannot be rebuild with chip esp32s3
 ESP32_CAMERA_VERSION_S3="5c8349f4cf169c8a61283e0da9b8cff10994d3f3" # Reliability problem but Esp32 S3 firmware can build with it

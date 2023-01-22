@@ -13,6 +13,7 @@ var LATITUDE = %f;
 var LONGITUDE = %f;
 var WITH_TEMPERATURE = "%s";
 var chartjs = null;
+var chart = null;
 
 function pad(num, size) 
 {
@@ -37,7 +38,7 @@ function get_max_days_in_month()
 	var month = spl[1];
 	var monthStart = new Date(year, month - 1, 1);
 	var monthEnd = new Date(year, month, 1);
-	var result = (monthEnd - monthStart) / (1000 * 60 * 60 * 24);
+	var result = parseInt((monthEnd - monthStart) / (1000 * 60 * 60 * 24),10);
 	return result;
 }
 
@@ -130,14 +131,9 @@ class MainChart
 		this.chart    = null;
 	}
 
-	get_labels()
-	{
-		return this.labels;
-	}
-
 	show(meteo=null)
 	{
-		if (!(chartjs === null))
+		if (chartjs !== null)
 		{
 			chartjs.destroy();
 			chartjs = null;
@@ -160,7 +156,7 @@ class MainChart
 				labels: this.get_labels(),
 				datasets: this.get_datasets(meteo)
 			},
-			options: 
+			options:
 			{
 				responsive: true,
 				animation:
@@ -179,74 +175,11 @@ class MainChart
 						text: this.get_legend()
 					}
 				},
-				scales:
-				{
-					x:
-					{
-						stacked: true,
-					},
-					y:
-					{
-						stacked: true
-					}
-				}
+				scales: this.get_scales()
 			}
 		});
 	}
 
-	get_meteo(datasets, meteo)
-	{
-		if (meteo !== null)
-		{
-			datasets.push(
-					{ 
-						type: "line",
-						data: meteo.daily.temperature_2m_max,
-						label: meteo.daily_units.temperature_2m_max,
-						backgroundColor: "#F10B0B",
-						borderColor: "#F10B0B",
-						fill: false,
-						pointRadius:1,
-						borderWidth:1,
-						scales:
-						{
-							x:
-							{
-								stacked: true,
-							},
-							y:
-							{
-								stacked: false
-							}
-						},
-						stack:"temp max"
-						
-					});
-			datasets.push(
-				{ 
-					type: "line",
-					data: meteo.daily.temperature_2m_min,
-					label: meteo.daily_units.temperature_2m_min,
-					backgroundColor: "#0BCEF1",
-					borderColor: "#0BCEF1",
-					fill: false,
-					pointRadius:1,
-					borderWidth:1,
-					scales:
-						{
-							x:
-							{
-								stacked: true,
-							},
-							y:
-							{
-								stacked: false
-							}
-						},
-					stack:"temp in"
-				});
-		}
-	}
 
 	get_consumption(datasets)
 	{
@@ -295,16 +228,51 @@ class MainChart
 					pointRadius:1,
 					borderWidth:0,
 					stack:"Power",
+					yAxisID: 'y',
 				});
 		}
+	}
+
+	get_labels()
+	{
+		return this.labels;
+	}
+
+	get_scales()
+	{
+		var result = {
+			x:
+			{
+				stacked: true
+			},
+			y:
+			{
+				stacked: true,
+				display: true,
+				position: 'left',
+			},
+			ytemp:
+			{
+				type: 'linear',
+				display: true,
+				position: 'right',
+				stacked: true,
+			}
+		}
+		return result;
 	}
 
 	get_datasets(meteo=null)
 	{
 		var result = [];
-		this.get_meteo(result, meteo);
+		this.get_data_meteo(result, meteo);
 		this.get_consumption(result);
 		return result;
+	}
+
+	get_data_meteo(datasets, meteo)
+	{
+		return null;
 	}
 
 	get_legend()
@@ -341,6 +309,49 @@ class MainChart
 		document.getElementById("legend").innerHTML="<ul>" + capitalize(legend) + "</ul>";
 		return result;
 	}
+
+	static async get_meteo(startDate, endDate, type)
+	{
+		var dataMeteo = null;
+		if (WITH_TEMPERATURE === "true")
+		{
+			var dateDay = new Date(DAY);
+			var currentDay = new Date();
+			var urlMeteo = "";
+			var paramMeteo = 
+				"start_date=" + startDate +
+				"&end_date="  + endDate +
+				"&latitude="  + LATITUDE + 
+				"&longitude=" + LONGITUDE + 
+				"&timezone=auto" ;
+
+			dateDay    = dateDay.getTime()    / 1000 / 86400;
+			currentDay = currentDay.getTime() / 1000 / 86400;
+
+			if (dateDay > (currentDay - 30*5))
+			{
+				urlMeteo = "https://api.open-meteo.com/v1/forecast?" + paramMeteo;
+			}
+			else
+			{
+				urlMeteo = "https://archive-api.open-meteo.com/v1/archive?" + paramMeteo;
+			}
+
+			if (TYPE === "daily")
+			{
+				urlMeteo += "&" + type + "=temperature_2m_max,temperature_2m_min";
+			}
+			else if (TYPE === "hourly")
+			{
+				urlMeteo += "&" + type + "=temperature_2m";
+			}
+
+			const meteo = await fetch(urlMeteo);
+			
+			dataMeteo = await meteo.json();
+		}
+		return dataMeteo;
+	}
 }
 
 class HourlyChart extends MainChart
@@ -348,6 +359,7 @@ class HourlyChart extends MainChart
 	constructor()
 	{
 		super();
+		this.meteo = null;
 		this.size = 1440/STEP;
 		this.labels = new Array(this.size);
 		this.labels.fill(0);
@@ -395,6 +407,96 @@ class HourlyChart extends MainChart
 			this.labels[i] = pad((i*STEP)/60, 2) + ":" + pad((i*STEP)%%60, 2);
 		}
 	}
+
+	get_data_meteo(datasets, meteo)
+	{
+		if (meteo !== null)
+		{
+			var datas = [];
+			var delta = 1440/STEP/24;
+			var i = 0;
+			var hour = 0;
+
+			for (hour = 0; hour < 24; hour ++)
+			{
+			
+				for (i = 0; i < delta; i++)
+				{
+					datas.push(meteo.hourly.temperature_2m[hour]);
+				}
+			}
+			datasets.push(
+				{ 
+					type: "line",
+					data: datas,
+					label: meteo.hourly_units.temperature_2m,
+					backgroundColor: "#F10B0B",
+					borderColor: "#F10B0B",
+					fill: false,
+					pointRadius:0,
+					borderWidth:1,
+					scales:
+					{
+						x:
+						{
+							stacked: true,
+						},
+						y:
+						{
+							stacked: false
+						}
+					},
+					stack:"temp",
+					yAxisID: 'ytemp',
+				});
+		}
+	}
+
+	get_scale()
+	{
+		var result = {
+			x:
+			{
+				stacked: true
+			},
+			y:
+			{
+				stacked: true
+			}
+		}
+	}
+
+	static async manage()
+	{
+		const d = new Date();
+		var currentDay = d.getFullYear() + "-" + pad(d.getMonth()+1,2) + "-" + pad(d.getDate(),2);
+
+		this.meteo = await MainChart.get_meteo(DAY, DAY, TYPE);
+		HourlyChart.refresh_chart();
+		if (DAY === currentDay)
+		{
+			setInterval(HourlyChart.refresh_chart, 5000);
+			setInterval(HourlyChart.refresh_power, 1000);
+		}
+	}
+
+	static async refresh_chart()
+	{
+		if (chart === null)
+		{
+			chart = new HourlyChart();
+		}
+		const response = await fetch('/hourly_datas?day='+DAY);
+		chart.parse(await response.json());
+		chart.show(this.meteo);
+	}
+
+	static async refresh_power()
+	{
+		const response = await fetch('/power_datas');
+		var data = await response.json();
+		document.getElementById("power").innerHTML= POWER + " : " + (data.power/1000).toFixed(3) + " kWh";
+	}
 }
 
 class DailyChart extends MainChart
@@ -407,6 +509,29 @@ class DailyChart extends MainChart
 		for (let i = 0; i < this.size; i++)
 		{
 			this.labels[i] = i+1;
+		}
+	}
+
+	get_scale()
+	{
+		var result = {
+			x:
+			{
+				stacked: true
+			},
+			y:
+			{
+				stacked: true,
+				display: true,
+				position: 'right',
+			},
+			ytemp:
+			{
+				type: 'linear',
+				display: false,
+				position: 'left',
+				stacked: true,
+			}
 		}
 	}
 
@@ -440,23 +565,69 @@ class DailyChart extends MainChart
 		});
 	}
 
+	get_data_meteo(datasets, meteo)
+	{
+		if (meteo !== null)
+		{
+			datasets.push(
+					{ 
+						type: "line",
+						data: meteo.daily.temperature_2m_max,
+						label: meteo.daily_units.temperature_2m_max,
+						backgroundColor: "#F10B0B",
+						borderColor: "#F10B0B",
+						fill: false,
+						pointRadius:1,
+						borderWidth:1,
+						// scales:
+						// {
+						// 	x:
+						// 	{
+						// 		stacked: true,
+						// 	},
+						// 	y:
+						// 	{
+						// 		stacked: false
+						// 	}
+						// },
+						stack:"temp max",
+						yAxisID: 'ytemp',
+						
+					});
+			datasets.push(
+				{ 
+					type: "line",
+					data: meteo.daily.temperature_2m_min,
+					label: meteo.daily_units.temperature_2m_min,
+					backgroundColor: "#0BCEF1",
+					borderColor: "#0BCEF1",
+					fill: false,
+					pointRadius:1,
+					borderWidth:1,
+					// scales:
+					// 	{
+					// 		x:
+					// 		{
+					// 			stacked: true,
+					// 		},
+					// 		y:
+					// 		{
+					// 			stacked: false
+					// 		}
+					// 	},
+					stack:"temp in",
+					yAxisID: 'ytemp',
+				});
+		}
+	}
+
 	static async manage()
 	{
 		var chart = new DailyChart();
-		var dataMeteo = null;
 		const response = await fetch('/daily_datas?month='+DAY);
 		chart.parse(await response.json());
 
-		var localWeatherUrl = "https://api.open-meteo.com/v1/forecast?" + 
-			"start_date=" + get_first_day_month() +
-			"&end_date="   + get_last_day_month() +
-			"&latitude="   + LATITUDE + 
-			"&longitude=" + LONGITUDE + 
-			"&daily=temperature_2m_max,temperature_2m_min" + 
-			"&timezone=auto" ;
-		const meteo = await fetch(localWeatherUrl);
-		
-		dataMeteo = await meteo.json();
+		var dataMeteo = await this.get_meteo(get_first_day_month(), get_last_day_month(), TYPE);
 		chart.show(dataMeteo);
 	}
 }
@@ -471,6 +642,20 @@ class MonthlyChart extends MainChart
 		for (let i = 0; i < this.size; i++)
 		{
 			this.labels[i] = i+1;
+		}
+	}
+
+	get_scale()
+	{
+		var result = {
+			x:
+			{
+				stacked: true
+			},
+			y:
+			{
+				stacked: true
+			}
 		}
 	}
 
@@ -513,31 +698,9 @@ class MonthlyChart extends MainChart
 	}
 }
 
-async function manage_hourly()
-{
-	var chart = new HourlyChart();
-	const response = await fetch('/hourly_datas?day='+DAY);
-	chart.parse(await response.json());
-	chart.show();
-}
-
-async function refresh_power()
-{
-	const response = await fetch('/power_datas');
-	data = await response.json();
-	document.getElementById("power").innerHTML= POWER + " : " + (data.power/1000).toFixed(3) + " kWh";
-}
-
 if (TYPE  === "hourly")
 {
-	manage_hourly();
-	const d = new Date();
-	var currentDay = d.getFullYear() + "-" + pad(d.getMonth()+1,2) + "-" + pad(d.getDate(),2);
-	if (DAY === currentDay)
-	{
-		setInterval(manage_hourly, 5000);
-		setInterval(refresh_power, 1000);
-	}
+	HourlyChart.manage();
 }
 else if (TYPE === "daily")
 {

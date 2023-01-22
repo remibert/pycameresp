@@ -25,6 +25,13 @@ async def hourly_page_page(request, response, args):
 	elif request.params.get(b"direction",b"") == b"previous":
 		day -= 86400
 
+	temperature = request.params.get(b"temperature")
+	if temperature is None or temperature == b"0":
+		with_temperature = b"false"
+		temperature = None
+	else:
+		with_temperature = b"true"
+
 	step = int(request.params.get(b"step",b"30"))
 	steps = []
 	for s in [1,2,5,10,15,30]:
@@ -39,26 +46,35 @@ async def hourly_page_page(request, response, args):
 	with  open(WWW_DIR + "electricmeter.html", "rb") as file:
 		content = file.read()
 
-	page_content = [\
+	page_content = \
+	[
 		Div(
+		[
+			Div(
 			[
-				Div([
-					Button(type=b"submit", text=b"&lt;-", name=b"direction",  value=b"previous"),Space(),
-					Input (type=b"date",   class_=b"form-label", name=b"day", value= date.date_to_html(day), event=b'onchange="this.form.submit()"'),Space(),
-					Button(type=b"submit", text=b"-&gt;", name=b"direction",  value=b"next")],
-					class_=b'col-md-4'),
-				Div(
-					[Select(steps, spacer=b"", text=em_lang.step_minutes, name=b"step",                 event=b'onchange="this.form.submit()"')],
-					class_=b'col-md-4'),
-				Div(
-					[Select(
-						[
-							Option(text=em_lang.type_price, value=b"price", selected= True if unit == b"price" else False),
-							Option(text=em_lang.type_power, value=b"power", selected= True if unit == b"power" else False),
-						], spacer=b"", text=em_lang.step_minutes, name=b"unit",                 event=b'onchange="this.form.submit()"')],
-					class_=b'col-md-4')
-			],
-			class_=b"row"),
+				Button(type=b"submit", text=b"&lt;-", name=b"direction",  value=b"previous"),Space(),
+				Button(type=b"submit", text=b"-&gt;", name=b"direction",  value=b"next")
+			], class_=b'col-md-2 mb-1'),
+			Div(
+			[
+				Input (type=b"date",   class_=b"form-label border rounded p-1", name=b"day", value= date.date_to_html(day), event=b'onchange="this.form.submit()"'),Space(),
+			], class_=b'col-md-2'),
+			Div(
+			[
+				Select(steps, spacer=b"", text=em_lang.step_minutes, name=b"step",                 event=b'onchange="this.form.submit()"')
+			], class_=b'col-md-2'),
+			Div([
+				Select(
+				[
+					Option(text=em_lang.type_price, value=b"price", selected= True if unit == b"price" else False),
+					Option(text=em_lang.type_power, value=b"power", selected= True if unit == b"power" else False),
+				], spacer=b"", text=em_lang.step_minutes, name=b"unit",                 event=b'onchange="this.form.submit()"')
+			], class_=b'col-md-1'),
+			Div(
+			[
+				Switch(text=em_lang.temperature, name=b"temperature", checked=temperature, event=b'onchange="this.form.submit()"')
+			], class_=b'col-md-2')
+		], class_=b"row"),
 
 		Tag(content%(b"hourly",
 			step,
@@ -68,7 +84,7 @@ async def hourly_page_page(request, response, args):
 			em_lang.power_consumed,
 			geolocation.latitude,
 			geolocation.longitude,
-			b""))
+			with_temperature))
 	]
 	page = main_frame(request, response, args,em_lang.title_electricmeter + em_lang.item_hour.lower(),Form(page_content))
 	await response.send_page(page)
@@ -104,7 +120,22 @@ async def daily_page(request, response, args):
 	y,m = date.local_time()[:2]
 	year   = int(request.params.get(b"year",b"%d"%y))
 	month  = int(request.params.get(b"month",b"%d"%m))
+
+	if   request.params.get(b"direction",b"") == b"next":
+		if month == 12:
+			month = 1
+			year += 1
+		else:
+			month += 1
+	elif request.params.get(b"direction",b"") == b"previous":
+		if month == 1:
+			month = 12
+			year -= 1
+		else:
+			month -= 1
+
 	day  = date.html_to_date(b"%04d-%02d-01"%(year, month))
+
 	unit = request.params.get(b"unit",b"power")
 	temperature = request.params.get(b"temperature")
 	if temperature is None or temperature == b"0":
@@ -122,29 +153,36 @@ async def daily_page(request, response, args):
 	with  open(WWW_DIR + "electricmeter.html", "rb") as file:
 		content = file.read()
 
-	page_content = [\
+	page_content = \
+	[
 		Div(
+		[
+			Div(
 			[
-				Div([
-					Edit (name=b"year", spacer=b"", type=b"number", step=b"1",  required=True, value=b"%d"%year, event=b'onchange="this.form.submit()"'),
-					],
-					class_=b'col-md-3'),
-				Div([
-					Select(months_combo, spacer=b"", name=b"month", event=b'onchange="this.form.submit()"')],
-					class_=b'col-md-3 mb-2'),
-				Div(
-					[Select(
-						[
-							Option(text=em_lang.type_price, value=b"price", selected= True if unit == b"price" else False),
-							Option(text=em_lang.type_power, value=b"power", selected= True if unit == b"power" else False),
-						], spacer=b"", text=em_lang.step_minutes, name=b"unit",                 event=b'onchange="this.form.submit()"')],
-					class_=b'col-md-3'),
-				Div(
-					Switch(text=em_lang.temperature, name=b"temperature", checked=temperature, event=b'onchange="this.form.submit()"'),
-					class_=b'col-md-3')
-			],
-			class_=b"row"),
-
+				Button(type=b"submit", text=b"&lt;-", name=b"direction",  value=b"previous"),Space(),
+				Button(type=b"submit", text=b"-&gt;", name=b"direction",  value=b"next")
+			], class_=b'col-md-2 mb-2'),
+			Div(
+			[
+				Edit (name=b"year", spacer=b"", type=b"number", step=b"1",  required=True, value=b"%d"%year, event=b'onchange="this.form.submit()"'),
+			], class_=b'col-md-2'),
+			Div(
+			[
+				Select(months_combo, spacer=b"", name=b"month", event=b'onchange="this.form.submit()"'),
+			], class_=b'col-md-2 mb-2'),
+			Div(
+			[
+				Select(
+				[
+					Option(text=em_lang.type_price, value=b"price", selected= True if unit == b"price" else False),
+					Option(text=em_lang.type_power, value=b"power", selected= True if unit == b"power" else False),
+				], spacer=b"", text=em_lang.step_minutes, name=b"unit",                 event=b'onchange="this.form.submit()"')
+			], class_=b'col-md-2'),
+			Div(
+			[
+				Switch(text=em_lang.temperature, name=b"temperature", checked=temperature, event=b'onchange="this.form.submit()"')
+			], class_=b'col-md-2')
+		], class_=b"row"),
 		Tag(content%(b"daily", 86400, date.date_to_html(day), lang.translate_date(day, False), unit, em_lang.power_consumed, geolocation.latitude, geolocation.longitude, with_temperature))
 	]
 	page = main_frame(request, response, args, em_lang.title_electricmeter + em_lang.item_day.lower(),Form(page_content))
@@ -171,28 +209,41 @@ async def monthly_page(request, response, args):
 	geolocation = GeolocationConfig.get_config()
 	y = date.local_time()[0]
 	year   = int(request.params.get(b"year",b"%d"%y))
+
+	if   request.params.get(b"direction",b"") == b"next":
+		year += 1
+	elif request.params.get(b"direction",b"") == b"previous":
+		year -= 1
+
 	month  = date.html_to_date(b"%04d-01-01"%(year))
 	unit = request.params.get(b"unit",b"power")
+
 
 	with  open(WWW_DIR + "electricmeter.html", "rb") as file:
 		content = file.read()
 
-	page_content = [\
+	page_content = \
+	[
 		Div(
+		[
+			Div(
 			[
-				Div([
-					Edit (name=b"year", spacer=b"", type=b"number", step=b"1",  required=True, value=b"%d"%year, event=b'onchange="this.form.submit()"'),
-					],
-					class_=b'col-md-6'),
-				Div(
-					[Select(
-						[
-							Option(text=em_lang.type_price, value=b"price", selected= True if unit == b"price" else False),
-							Option(text=em_lang.type_power, value=b"power", selected= True if unit == b"power" else False),
-						], spacer=b"", text=em_lang.step_minutes, name=b"unit",                 event=b'onchange="this.form.submit()"')],
-					class_=b'col-md-6')
-			],
-			class_=b"row"),
+				Button(type=b"submit", text=b"&lt;-", name=b"direction",  value=b"previous"),Space(),
+				Button(type=b"submit", text=b"-&gt;", name=b"direction",  value=b"next")
+			], class_=b'col-md-2 mb-2'),
+			Div(\
+			[
+				Edit (name=b"year", spacer=b"", type=b"number", step=b"1",  required=True, value=b"%d"%year, event=b'onchange="this.form.submit()"'),
+			], class_=b'col-md-2'),
+			Div(
+			[
+				Select(
+				[
+					Option(text=em_lang.type_price, value=b"price", selected= True if unit == b"price" else False),
+					Option(text=em_lang.type_power, value=b"power", selected= True if unit == b"power" else False),
+				], spacer=b"", text=em_lang.step_minutes, name=b"unit",                 event=b'onchange="this.form.submit()"')
+			],class_=b'col-md-2')
+		], class_=b"row"),
 
 		Tag(content%(b"monthly", 86400, date.date_to_html(month), lang.translate_date(month, False), unit, em_lang.power_consumed, geolocation.latitude, geolocation.longitude, b""))
 	]
@@ -250,16 +301,17 @@ async def rate_page(request, response, args):
 
 	# Build page
 	page = main_frame(request, response, args, em_lang.title_rate,
+	[
+		Form(
 		[
-			Form([
-				Edit  (text=em_lang.name,          name=b"name",          placeholder=em_lang.field_rate,     required=True, value=current.name),
-				Edit  (text=em_lang.validy_date,   name=b"validity_date", type=b"date",                    required=True, value=b"%04d-%02d-%02d"%date.local_time(current.validity_date)[:3]),
-				Edit  (text=em_lang.price,         name=b"price",         type=b"number", step=b"0.0001",  required=True, value=b"%f"%current.price),
-				Edit  (text=em_lang.currency,      name=b"currency",      placeholder=em_lang.field_currency, required=True, value=current.currency),
-				Submit(text=em_lang.add_button,    name=b"add")
-			]),
-			List(rate_items)
-		])
+			Edit  (text=em_lang.name,          name=b"name",          placeholder=em_lang.field_rate,     required=True, value=current.name),
+			Edit  (text=em_lang.validy_date,   name=b"validity_date", type=b"date",                    required=True, value=b"%04d-%02d-%02d"%date.local_time(current.validity_date)[:3]),
+			Edit  (text=em_lang.price,         name=b"price",         type=b"number", step=b"0.0001",  required=True, value=b"%f"%current.price),
+			Edit  (text=em_lang.currency,      name=b"currency",      placeholder=em_lang.field_currency, required=True, value=current.currency),
+			Submit(text=em_lang.add_button,    name=b"add")
+		]),
+		List(rate_items)
+	])
 	await response.send_page(page)
 
 
@@ -317,17 +369,18 @@ async def time_slots_page(request, response, args):
 
 	# Build page
 	page = main_frame(request, response, args, em_lang.title_time_slots,
+	[
+		Form(
 		[
-			Form([
-				Edit (text=em_lang.field_start,      name=b"start_time", type=b"time", required=True, value=date.time_to_html(current.start_time)),
-				Edit (text=em_lang.field_end,        name=b"end_time",   type=b"time", required=True, value=date.time_to_html(current.end_time)),
-				Label(text=em_lang.field_time_rate),
-				Select(rates_combo,name=b"rate",                                    required=True),
-				Edit (text=em_lang.field_color,      name=b"color", type=b"color",     required=True, value=current.color),
-				Submit(text=em_lang.add_button,      name=b"add")
-			]),
-			List(time_slots_items)
-		])
+			Edit (text=em_lang.field_start,      name=b"start_time", type=b"time", required=True, value=date.time_to_html(current.start_time)),
+			Edit (text=em_lang.field_end,        name=b"end_time",   type=b"time", required=True, value=date.time_to_html(current.end_time)),
+			Label(text=em_lang.field_time_rate),
+			Select(rates_combo,name=b"rate",                                    required=True),
+			Edit (text=em_lang.field_color,      name=b"color", type=b"color",     required=True, value=current.color),
+			Submit(text=em_lang.add_button,      name=b"add")
+		]),
+		List(time_slots_items)
+	])
 	await response.send_page(page)
 
 
@@ -338,7 +391,8 @@ async def geolocation_page(request, response, args):
 	disabled, action, submit = manage_default_button(request, config)
 
 	page = main_frame(request, response, args, em_lang.item_geolocation,
-		Form([
+		Form(
+		[
 			Edit  (text=em_lang.latitude,  name=b"latitude",  type=b"number", step=b"0.0001", required=True, min=b"-90.",  max=b"90." , value=b"%.3f"%config.latitude, disabled=disabled),
 			Edit  (text=em_lang.longitude, name=b"longitude", type=b"number", step=b"0.0001", required=True, min=b"-180.", max=b"180.", value=b"%.3f"%config.longitude,disabled=disabled),
 			submit, None
