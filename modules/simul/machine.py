@@ -109,7 +109,7 @@ class WDT:
 
 class RTC:
 	""" Real time clock """
-	def datetime(self, date_):
+	def datetime(self, current_date):
 		""" Date time """
 		return None
 class SDCard:

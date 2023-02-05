@@ -12,7 +12,7 @@ from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
 from video.video     import Camera
-from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem,date
+from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem,date,info
 
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
@@ -632,11 +632,6 @@ class Detection:
 			message, image = self.detection
 			# Release image buffer
 			self.motion.deinit_image(image)
-
-		# Force garbage collection each 20 images
-		if self.motion:
-			if self.motion.index %30 == 0:
-				collect()
 
 	async def capture(self, activated):
 		""" Capture motion """

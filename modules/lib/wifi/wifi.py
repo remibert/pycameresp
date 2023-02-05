@@ -169,10 +169,14 @@ class Wifi:
 					AccessPoint.start(Station.is_fallback())
 				else:
 					# If no activity detected on access point
-					if (info.uptime_sec() - info.get_last_activity()) > 3*60:
-						# Retry to search network
-						if Station.is_activated():
-							Wifi.set_state(WIFI_CLOSE)
+					if (info.uptime_sec() - info.get_last_activity()) > 5*60:
+						if Station.is_configured():
+							# Retry to search network
+							if Station.is_activated():
+								Wifi.set_state(WIFI_CLOSE)
+						else:
+							if Station.is_activated():
+								logger.syslog("Wifi SSID and password not yet configured")
 
 			# If the wan reponding
 			elif state in [WAN_CONNECTED, LAN_CONNECTED, WIFI_CONNECTED]:

@@ -78,12 +78,12 @@ class FtpServerCore:
 		""" Destroy ftp instance """
 		self.close()
 
-	def get_file_description(self, filename, typ, size, date_, now, full):
+	def get_file_description(self, filename, typ, size, current_date, now, full):
 		""" Build list of file description """
 		if full:
 			file_permissions = b"drwxr-xr-x" if (typ & 0xF000 == 0x4000) else b"-rw-r--r--"
 
-			d = date.local_time(date_)
+			d = date.local_time(current_date)
 			year,month,day,hour,minute,_,_,_ = d[:8]
 
 			if year != now[0] and month != now[1]:
@@ -113,7 +113,7 @@ class FtpServerCore:
 				accepted = fnmatch.fnmatch(strings.tostrings(filename), strings.tostrings(pattern))
 			if accepted:
 				if quantity > 100:
-					date_ = 0
+					current_date = 0
 				else:
 					sta = (0,0,0,0,0,0,0,0,0)
 					try:
@@ -122,9 +122,9 @@ class FtpServerCore:
 							sta = filesystem.fileinfo(strings.tostrings(filesystem.abspathbytes(path,strings.tobytes(filename))))
 					except Exception:
 						pass
-					date_ = sta[8]
+					current_date = sta[8]
 
-				description += self.get_file_description(filename, typ, size, date_, now, full)
+				description += self.get_file_description(filename, typ, size, current_date, now, full)
 				counter += 1
 				if counter == 20:
 					counter = 0

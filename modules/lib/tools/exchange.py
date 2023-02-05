@@ -117,8 +117,8 @@ class DateReader(Reader):
 	def read_second(self, byte):
 		""" Read second """
 		if self.second.read_byte(byte) is not None:
-			date_ = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
-			self.value = time.mktime(tuple(date_))
+			current_date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+			self.value = time.mktime(tuple(current_date))
 			return self.value
 
 class FilenameReader(Reader):

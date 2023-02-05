@@ -292,11 +292,11 @@ class PythonPrompt:
 						break
 		return result
 
-	def set_date(self, date_ = None):
+	def set_date(self, current_date = None):
 		""" Set date time in device """
 		result = True
 		self.executor.execute("import machine")
-		year,month,day,hour,minute,second = date.local_time(date_)[:6]
+		year,month,day,hour,minute,second = date.local_time(current_date)[:6]
 		if self.executor.execute("machine.RTC().datetime((%d,%d,%d,%d,%d,%d,%d,%d))"%(year, month, day, 0, hour, minute, second, 0), synchrone=True) is not None:
 			result = False
 		return result

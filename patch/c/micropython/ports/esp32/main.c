@@ -235,7 +235,9 @@ soft_reset_exit:
 //# REMI BERTHOLET END
     machine_pins_deinit();
     machine_deinit();
+    #if MICROPY_PY_USOCKET_EVENTS
     usocket_events_deinit();
+    #endif
 
     mp_deinit();
     fflush(stdout);

@@ -2,7 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Function which sets the internal clock of the card based on an ntp server """
-from tools import logger, strings, date
+from tools import logger, date
 
 def get_ntp_time():
 	""" Return the time from a NTP server """

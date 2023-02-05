@@ -113,7 +113,7 @@ class FlashDialog(QDialog):
 
 			firmwares.append(DOWNLOAD_VERSION + "ESP32CAM-firmware.bin")
 			firmwares.append(DOWNLOAD_VERSION + "GENERIC_SPIRAM-firmware.bin")
-			firmwares.append(DOWNLOAD_VERSION + "GENERIC-firmware.bin")
+			firmwares.append(DOWNLOAD_VERSION + "GENERIC_S3_SPIRAM-firmware.bin")
 			self.dialog.firmware.addItems(firmwares)
 			self.dialog.firmware.setCurrentIndex(0)
 			self.dialog.select_firmware.clicked.connect(self.on_firmware_clicked)

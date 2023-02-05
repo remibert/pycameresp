@@ -226,9 +226,9 @@ class Server:
 	@staticmethod
 	def is_one_per_day():
 		""" Indicates if the action must be done on per day """
-		date_ = date.date_to_bytes()[:14]
-		if Server.context.one_per_day is None or (date_[-2:] == b"12" and date_ != Server.context.one_per_day):
-			Server.context.one_per_day = date_
+		current_date = date.date_to_bytes()[:14]
+		if Server.context.one_per_day is None or (current_date[-2:] == b"12" and current_date != Server.context.one_per_day):
+			Server.context.one_per_day = current_date
 			return True
 		return False
 

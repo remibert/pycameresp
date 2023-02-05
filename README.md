@@ -1,4 +1,4 @@
-Pycameresp is designed to be a completely autonomous motion detector on ESP32-CAM. It can also works on other Esp32 with SPIRAM and on NodeMCU Esp32 but with some limitations, it is necessary to select the correct firmware for your device.
+Pycameresp is designed to be a completely autonomous motion detector on ESP32-CAM. The web server, ftp, wifi manager, shell, editor also works on other Esp32 with SPIRAM, it is necessary to select the correct firmware for your device.
 
 The firmware is based on an improved version of [micropython](http://micropython.org), it is ready to use because all pycameresp modules are embedded in the firmware (for boost performance and saving RAM).
 But it is a standard micropython platform, the start of pycameresp is in the main.py, and therefore fully modifiable.

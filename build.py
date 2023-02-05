@@ -18,14 +18,18 @@ import time
 # Mov to gif :
 # ffmpeg -i video.mov -vf "fps=3,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 output.gif
 # 640x360
-# 
+#
 # Vmware share folder add next lines in /etc/fstab :
-# vmhgfs-fuse   /mnt/hgfs    fuse    defaults,allow_other    0    0 
+# vmhgfs-fuse   /mnt/hgfs    fuse    defaults,allow_other    0    0
 
-MICROPYTHON_VERSION ="f4811b0b42f10aa12fc2f94c0459344d84c89eb8"
-ESP_IDF_VERSION     ="-b v4.4.2"
+MICROPYTHON_VERSION ="9ea64a36acefd593012eedaa8e52bcd2afc0c736"
+ESP_IDF_VERSION_S3     ="6407ecb3f8d2cc07c4c230e7e64f2046af5c86f7" # v4.4.3  !! Difficulty connecting to access point with ESP32 CAMM
+
+ESP_IDF_VERSION     ="7ab8f793ca5b026f37ae812bcc103e3aa698d164" # v4.2.2 Work perfectly with wifi access point on ESP32CAM
+
 ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24"    # Very stable version but cannot be rebuild with chip esp32s3
 ESP32_CAMERA_VERSION_S3="5c8349f4cf169c8a61283e0da9b8cff10994d3f3" # Reliability problem but Esp32 S3 firmware can build with it
+
 
 if sys.platform == "win32":
 	PIP      = "3"
@@ -71,7 +75,10 @@ git submodule update --init --recursive
 # Get espressif #
 #################
 cd "%(OUTPUT_DIR)s"
-git clone %(ESP_IDF_VERSION)s --recursive https://github.com/espressif/esp-idf.git
+git clone --recursive https://github.com/espressif/esp-idf.git
+cd "%(OUTPUT_DIR)s/esp-idf"
+git checkout %(ESP_IDF_VERSION)s
+git submodule update --init --recursive
 
 ##############
 # Get camera #
@@ -82,7 +89,29 @@ cd "%(OUTPUT_DIR)s/esp32-camera"
 git checkout %(ESP32_CAMERA_VERSION)s
 
 cd "%(OUTPUT_DIR)s/esp-idf/components"
-ln -s "%(OUTPUT_DIR)s/esp32-camera" esp32-camera"""
+ln -s "%(OUTPUT_DIR)s/esp32-camera" esp32-camera
+
+####################
+# Get espressif S3 #
+####################
+cd "%(OUTPUT_DIR)s"
+git clone --recursive https://github.com/espressif/esp-idf.git esp-idf-s3
+cd "%(OUTPUT_DIR)s/esp-idf-s3"
+git checkout %(ESP_IDF_VERSION_S3)s
+git submodule update --init --recursive
+
+##############
+# Get camera #
+##############
+cd "%(OUTPUT_DIR)s"
+git clone https://github.com/espressif/esp32-camera.git esp32-camera-s3
+cd "%(OUTPUT_DIR)s/esp32-camera-s3"
+git checkout %(ESP32_CAMERA_VERSION_S3)s
+
+cd "%(OUTPUT_DIR)s/esp-idf-s3/components"
+ln -s "%(OUTPUT_DIR)s/esp32-camera-s3" esp32-camera
+
+"""
 
 BUILD_DOC_COMMANDS= '''
 
@@ -93,14 +122,27 @@ cd %(PYCAMERESP_DIR)s/modules/lib
 export PYTHONPATH=../simul;pdoc3 --html -o ../../doc --force .
 '''
 
-BUILD_ESP_COMMANDS = '''
-
+SET_ESP_COMMANDS='''
 #####################
 # Set env espressif #
 #####################
 cd "%(OUTPUT_DIR)s/esp-idf"
 bash install.sh
 source ./export.sh
+
+'''
+
+SET_ESP_S3_COMMANDS='''
+########################
+# Set env espressif S3 #
+########################
+cd "%(OUTPUT_DIR)s/esp-idf-s3"
+bash install.sh
+source ./export.sh
+
+'''
+
+BUILD_ESP_COMMANDS = '''
 
 ###################
 # Build mpy-cross #
@@ -115,6 +157,7 @@ cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
 make submodules -j 8
 make BOARD=%(BOARD)s -j 8
 cp "%(OUTPUT_DIR)s/micropython/ports/esp32/build-%(BOARD)s/firmware.bin" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.bin"
+
 '''
 
 BUILD_RP2_COMMANDS = '''
@@ -132,6 +175,7 @@ cd "%(OUTPUT_DIR)s/micropython/ports/rp2"
 make submodules
 make BOARD=%(BOARD)s
 cp "%(OUTPUT_DIR)s/micropython/ports/rp2/build-%(BOARD)s/firmware.uf2" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.uf2"
+
 '''
 
 ZIP_MODULES = '''
@@ -141,6 +185,7 @@ ZIP_MODULES = '''
 ####################
 cd %(PYCAMERESP_DIR)s
 python3 "%(PYCAMERESP_DIR)s/scripts/zip_mpy.py" "%(OUTPUT_DIR)s" "%(BOARD)s" "%(PYCAMERESP_DIR)s"
+
 '''
 
 PATCH_COMMANDS = '''
@@ -156,6 +201,7 @@ rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/electricmeter"
 rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/electricmeter"
 cd %(PYCAMERESP_DIR)s
 python3        "%(PYCAMERESP_DIR)s/scripts/patchInisetup.py"    "%(OUTPUT_DIR)s"
+
 '''
 
 INSTALL_TOOLS_COMMANDS='''
@@ -186,12 +232,13 @@ pip%(PIP)s install --upgrade esptool
 pip%(PIP)s install pyserial
 pip%(PIP)s install requests
 pip%(PIP)s install pdoc3
+
 '''
 
 CLEAN_COMMANDS='''
 
 #######################
-# Cleanup all sources #
+# Cleanup micropython #
 #######################
 cd "%(OUTPUT_DIR)s/micropython"
 git fetch --all
@@ -201,34 +248,53 @@ git checkout %(MICROPYTHON_VERSION)s
 cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
 git submodule update --init --recursive
 
+###################
+# Cleanup ESP-IDF #
+###################
+
 cd "%(OUTPUT_DIR)s/esp32-camera"
 git fetch --all
-git reset --hard 
+git reset --hard %(ESP32_CAMERA_VERSION)s
 git clean -fdx
 git checkout %(ESP32_CAMERA_VERSION)s
 
 cd "%(OUTPUT_DIR)s/esp-idf"
 git fetch --all
-git reset --hard 
+git reset --hard %(ESP_IDF_VERSION)s
 git clean -fdx
 git checkout %(ESP_IDF_VERSION)s
+git submodule update --init --recursive
 
 cd "%(OUTPUT_DIR)s/esp-idf/components"
 ln -s "%(OUTPUT_DIR)s/esp32-camera" esp32-camera
+
+######################
+# Cleanup ESP-IDF-S3 #
+######################
+
+cd "%(OUTPUT_DIR)s/esp32-camera-s3"
+git fetch --all
+git reset --hard %(ESP32_CAMERA_VERSION_S3)s
+git clean -fdx
+git checkout %(ESP32_CAMERA_VERSION_S3)s
+
+cd "%(OUTPUT_DIR)s/esp-idf-s3"
+git fetch --all
+git reset --hard %(ESP_IDF_VERSION_S3)s
+git clean -fdx
+git checkout %(ESP_IDF_VERSION_S3)s
+git submodule update --init --recursive
+
+cd "%(OUTPUT_DIR)s/esp-idf-s3/components"
+ln -s "%(OUTPUT_DIR)s/esp32-camera-s3" esp32-camera
+
+
 '''
 
 # Presence of an old unused camera component version in the firmware, causes a problem to rebuild GENERIC_S3.
 # This patch switch to recent version.
-S3_PATCH_COMMANDS='''
 
-#############################################
-# Replace Camera version for build ESP32 S3 #
-#############################################
-cd "%(OUTPUT_DIR)s/esp32-camera"
-git checkout %(ESP32_CAMERA_VERSION_S3)s
-'''
-
-def execute(commands):
+def execute(commands, s3=False):
 	""" Execute shell commands """
 	commands = commands%globals()
 	for command in commands.split("\n"):
@@ -265,7 +331,10 @@ def execute(commands):
 			elif cmd[0] == "remove":
 				os.remove(cmd[1])
 			elif cmd[0] == "source":
-				os.environ["IDF_PATH"] = OUTPUT_DIR + os.sep + "esp-idf"
+				if s3:
+					os.environ["IDF_PATH"] = OUTPUT_DIR + os.sep + "esp-idf-s3"
+				else:
+					os.environ["IDF_PATH"] = OUTPUT_DIR + os.sep + "esp-idf"
 				pipe = subprocess.Popen(""". ./export.sh; env""", stdout=subprocess.PIPE, shell=True)
 				lines = pipe.communicate()[0]
 				for line in lines.split(b"\n"):
@@ -309,7 +378,9 @@ def main():
 
 		if (args.get or args.all):
 			if  not os.path.exists(OUTPUT_DIR + os.sep + "esp32-camera") or \
+				not os.path.exists(OUTPUT_DIR + os.sep + "esp32-camera-s3") or \
 				not os.path.exists(OUTPUT_DIR + os.sep + "esp-idf") or \
+				not os.path.exists(OUTPUT_DIR + os.sep + "esp-idf-s3") or \
 				not os.path.exists(OUTPUT_DIR + os.sep + "micropython"):
 				execute(GET_COMMANDS)
 			else:
@@ -318,15 +389,12 @@ def main():
 		if args.clean or args.all:
 			execute(CLEAN_COMMANDS)
 
-		if args.s3:
-			execute(S3_PATCH_COMMANDS)
-
 		if args.doc:
 			execute(BUILD_DOC_COMMANDS)
 
 		if args.patch or args.all:
 			execute(PATCH_COMMANDS)
-		
+
 		if args.zippy:
 			execute(ZIP_MODULES)
 
@@ -349,6 +417,11 @@ def main():
 							if args.rp2:
 								execute(BUILD_RP2_COMMANDS)
 							else:
+								if args.s3:
+									execute(SET_ESP_S3_COMMANDS, args.s3)
+								else:
+									execute(SET_ESP_COMMANDS, args.s3)
+								print("IDF_PATH='%s'"%os.environ["IDF_PATH"])
 								execute(BUILD_ESP_COMMANDS)
 							execute(ZIP_MODULES)
 

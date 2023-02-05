@@ -165,6 +165,14 @@ class Station:
 		return Station.config
 
 	@staticmethod
+	def is_configured():
+		""" Indicates if the wifi has been configured """
+		Station.reload_config()
+		if len(Station.network.list_known()) == 0:
+			return False
+		return True
+
+	@staticmethod
 	def is_connected():
 		""" Indicates if the wifi is connected """
 		if Station.wlan:

@@ -12,7 +12,7 @@ try:
 	import uos
 except:
 	import os as uos
-	
+
 try:
 	from tools import logger,strings,filesystem,date
 except Exception as err:
@@ -45,8 +45,8 @@ class JsonConfig:
 			file.close()
 			self.modification_date = uos.stat(filename)[8]
 			return True
-		except Exception as err:
-			logger.syslog(err, "Cannot save %s "%(filename))
+		except Exception as _err:
+			logger.syslog(_err, "Cannot save %s "%(filename))
 			return False
 
 	def to_string(self):
@@ -159,8 +159,8 @@ class JsonConfig:
 					# pylint: disable=exec-used
 					exec("a = self_config.%s"%execval)
 					existing = True
-				except Exception as err:
-					if "'NoneType' object" in str(err):
+				except Exception as _err:
+					if "'NoneType' object" in str(_err):
 						result = None
 					existing = False
 
@@ -171,8 +171,8 @@ class JsonConfig:
 				else:
 					if name != b"action" and show_error and result is not None:
 						print("%s.%s not existing"%(self.__class__.__name__, strings.tostrings(name)))
-			except Exception as err:
-				logger.syslog(err, "Error on %s"%(execval))
+			except Exception as _err:
+				logger.syslog(_err, "Error on %s"%(execval))
 				result = False
 		self_config = None
 		return result
@@ -190,15 +190,15 @@ class JsonConfig:
 			self.update(data)
 			file.close()
 			return True
-		except OSError as err:
-			if err.args[0] == 2:
+		except OSError as _err:
+			if _err.args[0] == 2:
 				if errorlog:
 					logger.syslog("Not existing %s "%(filename))
 			else:
-				logger.syslog(err, "Cannot load %s "%(filename))
+				logger.syslog(_err, "Cannot load %s "%(filename))
 			return False
-		except Exception as err:
-			logger.syslog(err, "Cannot load %s "%(filename))
+		except Exception as _err:
+			logger.syslog(_err, "Cannot load %s "%(filename))
 			return False
 
 	def forget(self, part_filename=""):

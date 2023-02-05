@@ -2,6 +2,7 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Periodic task, wifi management, get wan_ip, synchronize time """
+import gc
 import uasyncio
 from server.server import ServerConfig, Server
 import wifi
@@ -78,13 +79,22 @@ class Periodic:
 				if support.battery():
 					battery.Battery.reset_brownout()
 
+			# Periodic garbage to avoid memory fragmentation
+			if polling_id % 7 == 0:
+				gc.collect()
+				try:
+					# pylint:disable=no-member
+					gc.threshold(gc.mem_free() // 5 + gc.mem_alloc())
+				except:
+					pass
+
+			# Check if any problems have occurred and if a reboot is needed
+			if polling_id % 3607 == 0:
+				if info.get_issues_counter() > 15:
+					system.reboot("Reboot required, %d problems detected"%info.get_issues_counter())
+
 			# Reset watch dog
 			watchdog.WatchDog.feed()
 			await uasyncio.sleep(1)
 			polling_id += 1
 			self.current_time += 1
-
-			# Check if any problems have occurred and if a reboot is needed
-			if polling_id % 3607:
-				if info.get_issues_counter() > 15:
-					system.reboot("Reboot required, %d problems detected"%info.get_issues_counter())

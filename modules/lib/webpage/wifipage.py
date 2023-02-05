@@ -125,7 +125,7 @@ async def wifi_config(request, response, args):
 			Input  (                      name=b"forced",  value=forced     , type=b"hidden"), \
 			Input  (                      name=b"current", value=current    , type=b"hidden")
 
-		if wifi.Station.is_active():
+		if wifi.Station.is_active() or wifi.AccessPoint().is_active():
 			networks = wifi.Station.scan()
 			for net in networks:
 				ssids.append(Option(value=net[0]))

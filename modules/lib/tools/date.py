@@ -5,21 +5,21 @@
 import sys
 import time
 
-def local_time(date_=None):
+def local_time(current_date=None):
 	""" Safe local time, it return 2000/1/1 00:00:00 if date can be extracted """
 	try:
-		year,month,day,hour,minute,second,weekday,yearday = time.localtime(date_)[:8]
+		year,month,day,hour,minute,second,weekday,yearday = time.localtime(current_date)[:8]
 	except:
 		year,month,day,hour,minute,second,weekday,yearday = 2000,1,1,0,0,0,0,0
 	return year,month,day,hour,minute,second,weekday,yearday
 
-def date_to_string(date_ = None):
+def date_to_string(current_date = None):
 	""" Get a string with the current date """
-	return date_to_bytes(date_).decode("utf8")
+	return date_to_bytes(current_date).decode("utf8")
 
-def date_to_bytes(date_ = None):
+def date_to_bytes(current_date = None):
 	""" Get a bytes with the current date """
-	year,month,day,hour,minute,second = local_time(date_)[:6]
+	year,month,day,hour,minute,second = local_time(current_date)[:6]
 	return b"%04d/%02d/%02d  %02d:%02d:%02d"%(year,month,day,hour,minute,second)
 
 def date_ms_to_string():
@@ -39,11 +39,11 @@ def mktime(t):
 		result = time.mktime((year, month, day, hour, minute, second, weekday, yearday, 0))
 	return result
 
-def html_to_date(date_, separator=b"-"):
+def html_to_date(current_date, separator=b"-"):
 	""" Convert html date into time integer """
 	result = 0
 	try:
-		year, month, day = date_.split(separator)
+		year, month, day = current_date.split(separator)
 		year  = int( year.lstrip(b"0"))
 		month = int(month.lstrip(b"0"))
 		day   = int(  day.lstrip(b"0"))
@@ -52,9 +52,9 @@ def html_to_date(date_, separator=b"-"):
 		result = (time.time() // 86400) * 86400
 	return result
 
-def date_to_html(date_ = None, separator=b"-"):
+def date_to_html(current_date = None, separator=b"-"):
 	""" Get a html date with the current date """
-	year,month,day = local_time(date_)[:3]
+	year,month,day = local_time(current_date)[:3]
 	return b"%04d%s%02d%s%02d"%(year,separator,month,separator,day)
 
 
@@ -87,16 +87,16 @@ def time_to_html(t = None, seconds=False):
 		result = result[:-3]
 	return result
 
-def date_to_filename(date_ = None):
+def date_to_filename(current_date = None):
 	""" Get a filename with a date """
-	filename = date_to_string(date_)
+	filename = date_to_string(current_date)
 	filename = filename.replace("  "," ")
 	filename = filename.replace(" ","_")
 	filename = filename.replace("/","-")
 	filename = filename.replace(":","-")
 	return filename
 
-def date_to_path(date_=None):
+def date_to_path(current_date=None):
 	""" Get a path with year/month/day/hour """
-	year,month,day,hour,minute = local_time(date_)[:5]
+	year,month,day,hour,minute = local_time(current_date)[:5]
 	return b"%04d/%02d/%02d/%02dh%02d"%(year,month,day,hour,minute)

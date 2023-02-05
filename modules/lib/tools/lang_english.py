@@ -206,3 +206,4 @@ date_format                             =b"%(weekday)s, %(month)s %(day)d, %(yea
 month_format                            =b"%(year)d %(month)s"
 weekdays                                = [monday,tuesday,wednesday,thursday,friday,saturday,sunday]
 months                                  = [january,february,march,april,may,june,july,august,september,october,november,december]
+activation_precaution                   =b"The camera should be activated only when you are connected to your wifi network. When the wifi access point mode is active with camera then this produces instabilities."
