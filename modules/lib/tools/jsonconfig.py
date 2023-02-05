@@ -63,7 +63,7 @@ class JsonConfig:
 		""" List all configuration files """
 		result = []
 		pattern = self.get_filename() + ".*"
-		for fileinfo in uos.ilistdir(self.config_root()):
+		for fileinfo in filesystem.list_directory(self.config_root()):
 			name = fileinfo[0]
 			typ  = fileinfo[1]
 			if typ & 0xF000 != 0x4000:

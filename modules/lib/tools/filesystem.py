@@ -173,6 +173,21 @@ def ismicropython():
 		return True
 	return False
 
+try:
+	import uos
+	list_directory = uos.ilistdir
+except:
+	def list_directory(path_):
+		""" List directory """
+		result = []
+		for filename in os.listdir(path_):
+			fileinfo_ = os.stat(path_ + "/" + filename)
+			typ = fileinfo_[0]
+			size = fileinfo_[6]
+
+			result.append((filename, typ, 0, size))
+		return result
+
 def scandir(path, pattern, recursive, displayer=None):
 	""" Scan recursively a directory """
 	filenames   = []
@@ -180,7 +195,7 @@ def scandir(path, pattern, recursive, displayer=None):
 	if path == "":
 		path = "."
 	if path is not None and pattern is not None:
-		for file_info in uos.ilistdir(path):
+		for file_info in list_directory(path):
 			name = file_info[0]
 			typ  = file_info[1]
 			if path != "":
@@ -217,7 +232,7 @@ async def ascandir(path, pattern, recursive, displayer=None):
 	if path == "":
 		path = "."
 	if path is not None and pattern is not None:
-		for file_info in uos.ilistdir(path):
+		for file_info in list_directory(path):
 			name = file_info[0]
 			typ  = file_info[1]
 			if path != "":

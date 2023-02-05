@@ -187,7 +187,7 @@ class Historic:
 	async def scan_dir(path, pattern, older=True, directory=True):
 		""" Scan directory """
 		result = []
-		for fileinfo in uos.ilistdir(path):
+		for fileinfo in filesystem.list_directory(path):
 			name = fileinfo[0]
 			typ  = fileinfo[1]
 			if directory:
@@ -267,7 +267,7 @@ class Historic:
 			dirs_to_remove  = []
 
 			# Parse all directories in sdcard (WARNING : TO AVOID CRASH, NEVER DELETE DIRECTORY OR FILE IN ilistdir LOOP)
-			for fileinfo in uos.ilistdir(directory):
+			for fileinfo in filesystem.list_directory(directory):
 				filename = fileinfo[0]
 				typ      = fileinfo[1]
 				# If file found

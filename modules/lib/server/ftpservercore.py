@@ -100,7 +100,7 @@ class FtpServerCore:
 		description = b""
 		quantity = 0
 		counter = 0
-		for fileinfo in uos.ilistdir(strings.tostrings(path)):
+		for fileinfo in filesystem.list_directory(strings.tostrings(path)):
 			filename = fileinfo[0]
 			typ = fileinfo[1]
 			if len(fileinfo) > 3:
