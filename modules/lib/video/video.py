@@ -47,7 +47,7 @@ class Reservation:
 			if result:
 				break
 			timeout -= 1
-			if timeout <= 0:
+			if timeout < 0:
 				break
 			await uasyncio.sleep_ms(1000)
 		return result

@@ -56,6 +56,7 @@ class Server:
 	suspended = [False]
 	slow_speed = [None]
 	tasks = {}
+	tasknames = {}
 	context = None
 	daily_notifier = None
 
@@ -85,8 +86,9 @@ class Server:
 		Server.suspended[0] = False
 
 	@staticmethod
-	async def wait_resume(duration=None):
+	async def wait_resume(duration=None, name=""):
 		""" Wait the resume of task servers """
+		Server.tasknames[id(uasyncio.current_task())] = name
 		if duration is not None:
 			Server.tasks[id(uasyncio.current_task())] = True
 			await uasyncio.sleep(duration)
@@ -118,17 +120,18 @@ class Server:
 		result = True
 		for key, value in Server.tasks.items():
 			if value is False:
+				# print("Buzy %s"%Server.tasknames[key])
 				result = False
 		return result
 
 	@staticmethod
 	async def wait_all_suspended():
 		""" Wait all servers suspended """
-		for i in range(30):
+		for i in range(20):
 			if Server.is_all_waiting() is True:
 				break
 			else:
-				if i % 6 == 0:
+				if i % 4 == 0:
 					print("Wait all servers suspended...")
 				await uasyncio.sleep(0.5)
 				watchdog.WatchDog.feed()

@@ -150,7 +150,7 @@ class Presence:
 			Presence.activated = Presence.config.activated
 
 		# Wait before new ping
-		await Server.wait_resume(Presence.pollingDuration)
+		await Server.wait_resume(Presence.pollingDuration, name="presence")
 		return True
 
 async def detect_presence():

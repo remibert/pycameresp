@@ -351,9 +351,9 @@ class Historic:
 		""" Internal periodic task """
 		from server.server import Server
 		if filesystem.ismicropython():
-			await Server.wait_resume(31)
+			await Server.wait_resume(31, "historic")
 		else:
-			await Server.wait_resume(1)
+			await Server.wait_resume(1, "historic")
 
 		if Historic.motion_in_progress[0] is False:
 			if sdcard.SdCard.is_mounted() is False:

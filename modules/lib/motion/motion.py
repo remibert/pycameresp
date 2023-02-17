@@ -514,6 +514,7 @@ class Detection:
 		self.refresh_config_counter = 0
 		self.last_detection = 0
 		self.cadencer = NotificationCadencer()
+		self.last_notification_suspended = 0
 
 	def load_config(self):
 		""" Load motion configuration """
@@ -541,7 +542,7 @@ class Detection:
 		""" Detect motion """
 		result = False
 		# Wait the server resume
-		await Server.wait_resume()
+		await Server.wait_resume(name="motion")
 
 		# Release previously alocated image
 		self.release_image()
@@ -649,11 +650,17 @@ class Detection:
 		# If camera not stabilized speed start
 		if self.motion and self.motion.is_stabilized() is True:
 			frequency = self.polling_frequency*500 if Server.is_slow() else self.polling_frequency
-			await uasyncio.sleep_ms(frequency)
+			if frequency > 1000:
+				while frequency > 0:
+					await uasyncio.sleep_ms(500)
+					frequency -= 500
+					await Server.wait_resume(name="motion")
+			else:
+				await uasyncio.sleep_ms(frequency)
 
 		try:
 			# Waits for the camera's availability
-			reserved = await video.Camera.reserve(self, timeout=60)
+			reserved = await video.Camera.reserve(self, timeout=1)
 
 			# If reserved
 			if reserved:
@@ -703,7 +710,9 @@ class Detection:
 					Historic.set_motion_state(False)
 				result = True
 			else:
-				Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
+				if self.last_notification_suspended + 120 < int(time.time()):
+					self.last_notification_suspended = int(time.time())
+					Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
 				result = True
 
 		finally:
