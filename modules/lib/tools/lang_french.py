@@ -3,10 +3,10 @@
 # Copyright (c) 2021 Remi BERTHOLET
 
 # POUR DES RAISONS DE PERFORMANCE DU SERVEUR WEB, SEUL LES CHAINES BINAIRES SONT SUPPORTEES : b"..."
-# é \xC3\xA9 &eacute;
-# è \xC3\xA8 &egrave;
-# à \xC3\xA0  &agrave;
-# ê 0xC3,0xAA &ecirc;
+# é \xC3\xA9
+# è \xC3\xA8
+# à \xC3\xA0
+# ê \xC3\xAA
 # https://lwp.interglacial.com/appf_01.htm
 menu_system                             =b"   Syst\xC3\xA8me"
 item_information                        =b"   Information"
@@ -211,3 +211,8 @@ date_format                             =b"%(weekday)s %(day)d %(month)s %(year)
 month_format                            =b"%(month)s %(year)d"
 weekdays                                = [monday,tuesday,wednesday,thursday,friday,saturday,sunday]
 months                                  = [january,february,march,april,may,june,july,august,september,october,november,december]
+webhook_inhabited_house                 = b"Webhook : maison contenant des occupants"
+webhook_empty_house                     = b"Webhook : maison vide"
+webhook_motion_detected                 = b"Webhook : mouvements d\xC3\xA9tect\xC3\xA9s"
+webhook_no_motion_detected              = b"Webhook : plus aucun mouvement d\xC3\xA9tect\xC3\xA9"
+url_http_required                       = b"Laisser vide ou mettez un lien http, https non support\xC3\xA9"

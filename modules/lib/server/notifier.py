@@ -3,13 +3,41 @@
 """ Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
+import uasyncio
 import wifi
-from tools import logger,strings
+from server.httpclient import *
+from tools import logger,strings,tasking
+
+
+class Notification:
+	""" Notification message """
+	def __init__(self, message, image, forced, display):
+		""" Notification constructor """
+		self.message = message
+		self.image   = image
+		self.forced  = forced
+		self.display = display
+
+
+class WebHook:
+	""" Notification via webhook """
+	def __init__(self, name, url):
+		self.url = url
+		self.name = name
+
 
 class Notifier:
 	""" Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
 	notifiers = []
 	postponed = []
+	webhooks  = {}
+	wake_up_event = None
+
+	@staticmethod
+	def init():
+		""" Initialize """
+		if Notifier.wake_up_event is None:
+			Notifier.wake_up_event = uasyncio.Event()
 
 	@staticmethod
 	def add(callback):
@@ -32,18 +60,32 @@ class Notifier:
 		return False
 
 	@staticmethod
-	async def notify(message, image=None, forced=False, display=True, enabled=True):
+	def wake_up():
+		""" Wake up notifier it to perform tasks """
+		Notifier.init()
+		Notifier.wake_up_event.set()
+
+	@staticmethod
+	def notify(message, image=None, forced=False, display=True, enabled=True):
 		""" Notify message for all notifier registered """
 		logger.syslog("Notification '%s' %s"%(strings.tostrings(message), "" if enabled else "not sent"), display=display)
 
 		if enabled or forced:
 			# Add message into postponed list
-			Notifier.postponed.append([message, image, forced, display])
-
-			# Try to send all message postponed
-			return await Notifier.flush()
+			Notifier.postponed.append(Notification(message, image, forced, display))
+			Notifier.wake_up()
 		else:
 			return True
+
+	@staticmethod
+	def webhook(name, url):
+		""" Notify webhook """
+		if len(url):
+			logger.syslog("Webhook name='%s' url='%s'"%(name,strings.tostrings(url)))
+
+			# Add message into postponed list
+			Notifier.webhooks[name] = WebHook(name, url)
+			Notifier.wake_up()
 
 	@staticmethod
 	async def flush():
@@ -52,8 +94,8 @@ class Notifier:
 		# If postponed message list too long
 		if len(Notifier.postponed) > 10:
 			# Remove older
-			message, image, forced, display = Notifier.postponed[0]
-			logger.syslog("Notification '%s' failed to send"%strings.tostrings(message), display=display)
+			notification = Notifier.postponed[0]
+			logger.syslog("Notification '%s' failed to send"%strings.tostrings(notification.message), display=notification.display)
 			del Notifier.postponed[0]
 
 		# If wan available
@@ -64,14 +106,25 @@ class Notifier:
 			# Try to send message
 			for notifier in Notifier.notifiers:
 				for notification in Notifier.postponed:
-					message, image, forced, display = notification
-					res = await notifier(message, image, forced, display=display)
+					res = await notifier(notification.message, notification.image, notification.forced, display=notification.display)
 					if res is False:
 						result = False
 						wanOk = False
 						break
 					elif res is True:
 						wanOk = True
+
+			# If all message notified
+			if result:
+				Notifier.postponed.clear()
+
+			# Call webhook
+			for webhook in Notifier.webhooks.values():
+				if await HttpClient.request(method=b"GET", url=webhook.url) is None:
+					result = False
+
+			# Clear all webhook
+			Notifier.webhooks.clear()
 
 			# If wan connected
 			if wanOk is True:
@@ -81,8 +134,24 @@ class Notifier:
 				wifi.Wifi.wan_disconnected()
 
 			# If all message notified
-			if result:
-				Notifier.postponed.clear()
-			else:
+			if result is False:
 				logger.syslog("Cannot send notification")
 		return result
+
+	@staticmethod
+	async def task():
+		""" Run the task """
+		# If no notification should be sent
+		if len(Notifier.postponed) == 0 and len(Notifier.webhooks) == 0:
+			Notifier.init()
+			# Wait notification
+			await Notifier.wake_up_event.wait()
+
+			# Clear event notification event
+			Notifier.wake_up_event.clear()
+		# Flush all notifications postponed
+		await Notifier.flush()
+
+async def notifier_task():
+	""" Notifier task """
+	await tasking.task_monitoring(Notifier.task)

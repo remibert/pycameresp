@@ -18,7 +18,7 @@ class PushOverConfig(jsonconfig.JsonConfig):
 		self.token = b""
 		self.user = b""
 
-class Notification:
+class PushOverNotifier:
 	""" Class that manages a push over notification """
 	def __init__(self, host, port, token=None, user=None):
 		""" Constructor
@@ -94,7 +94,7 @@ class Notification:
 
 async def async_notify(user, token, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
-	notification = Notification(host=b"api.pushover.net", port=80, token=token, user=user)
+	notification = PushOverNotifier(host=b"api.pushover.net", port=80, token=token, user=user)
 	return await notification.notify(b"%s : %s"%(wifi.Station.get_hostname(), strings.tobytes(message)), image, display)
 
 def notify(user, token, message, image=None):

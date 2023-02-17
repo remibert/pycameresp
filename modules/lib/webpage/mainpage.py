@@ -8,7 +8,7 @@ from server.server   import Server
 from wifi.station import Station
 from tools import lang
 
-def main_page(request, response, args, title_frame, content=None):
+def main_page(request, response, args, title_frame, content=None, menu_visible=True):
 	""" Function define the main web page with menu, it check also the login password """
 	try:
 		title  = args["title"]
@@ -27,22 +27,29 @@ def main_page(request, response, args, title_frame, content=None):
 	# Create main page if logged
 	page = PasswordPage.login(request, response, 15*60)
 
-	if page is None:
-		menu_items = []
-		menu_bar = []
-		previous_menu = None
-		for menu,  item , index, href in HttpServer.get_menus():
-			menu_item = MenuItem(text=item, href=href, active=(active==index))
+	if b"logout" in request.params and page is None:
+		content = None
 
-			if previous_menu != menu:
-				if previous_menu is not None:
-					menu_bar.append(Menu(menu_items, text=previous_menu))
-				menu_items = [menu_item]
-				previous_menu = menu
-			else:
-				menu_items.append(menu_item)
-		menu_bar.append(Menu(menu_items, text=previous_menu))
-		page = Page([stylesheet, MenuBar(menu_bar), Div(content)], class_=b"container", title=title, style=b"padding-top: 4.5rem;")
+	if page is None:
+		if menu_visible:
+			menu_items = []
+			menu_bar = []
+			previous_menu = None
+			for menu,  item , index, href in HttpServer.get_menus():
+				menu_item = MenuItem(text=item, href=href, active=(active==index))
+
+				if previous_menu != menu:
+					if previous_menu is not None:
+						menu_bar.append(Menu(menu_items, text=previous_menu))
+					menu_items = [menu_item]
+					previous_menu = menu
+				else:
+					menu_items.append(menu_item)
+			menu_bar.append(Menu(menu_items, text=previous_menu))
+			page_content = [stylesheet, MenuBar(menu_bar), Div(content)]
+		else:
+			page_content = [stylesheet, content]
+		page = Page(page_content, class_=b"container", title=title, style=b"padding-top: 4.5rem;")
 	else:
 		page = Page([page] + [stylesheet], title=lang.login)
 	Server.slow_down()

@@ -5,6 +5,7 @@
 import time
 import wifi
 import uasyncio
+from server.notifier import Notifier
 from tools import jsonconfig,logger,builddate,region,lang,watchdog,info,strings,support,filesystem,date
 if info.iscamera():
 	from video.video import Camera
@@ -33,11 +34,10 @@ class ServerContext:
 		self.preload       = preload
 		self.http_port      = http_port
 		self.server_started = False
-		self.notifier      = None
 		self.get_wan_ip_async = None
 		self.wan_ip = None
 		self.server_config  = ServerConfig()
-		self.region_config  = region.RegionConfig()
+		self.region_config  = region.RegionConfig.get()
 		self.set_date = None
 		self.one_per_day = None
 		self.flushed = False
@@ -147,6 +147,9 @@ class Server:
 		from server.periodic import periodic_task
 		loop.create_task(periodic_task())
 
+		from server.notifier import notifier_task
+		loop.create_task(notifier_task())
+
 	@staticmethod
 	async def synchronize_wan_ip(forced):
 		""" Synchronize wan ip """
@@ -179,7 +182,7 @@ class Server:
 						message = Server.daily_notifier()
 					except:
 						message = Server.default_daily_notifier()
-					await Server.context.notifier.notify(message)
+					Notifier.notify(message)
 
 	@staticmethod
 	async def synchronize_time():
@@ -242,9 +245,9 @@ class Server:
 				Server.context.server_started = True
 
 				# Add notifier if no notifier registered
-				if Server.context.notifier.is_empty():
+				if Notifier.is_empty():
 					from server.pushover import notify_message
-					Server.context.notifier.add(notify_message)
+					Notifier.add(notify_message)
 
 				# If telnet activated
 				if Server.context.server_config.telnet:
@@ -283,14 +286,14 @@ class Server:
 			await Server.start_server()
 
 			# Polling for wifi
-			if polling_id %179 == 0:
+			if polling_id %67 == 0:
 				await wifi.Wifi.manage()
 
 			# Polling for notification not sent
-			if polling_id %181 == 0 and Server.context.flushed is False:
+			if polling_id %61 == 0 and Server.context.flushed is False:
 				if wifi.Wifi.is_wan_available():
 					await Server.synchronize_time()
-					await Server.context.notifier.flush()
+					Notifier.wake_up()
 					if wifi.Wifi.is_wan_connected():
 						Server.context.flushed = True
 
@@ -316,9 +319,6 @@ class Server:
 
 			# If server can start
 			if Server.context.server_postponed == 0:
-				from server.notifier import Notifier
-				Server.context.notifier = Notifier
-
 				# Start wifi
 				await wifi.Wifi.manage()
 
@@ -328,6 +328,6 @@ class Server:
 					await Server.synchronize_time()
 
 					# Flush notification not sent
-					await Server.context.notifier.flush()
+					Notifier.wake_up()
 					if wifi.Wifi.is_wan_connected():
 						Server.context.flushed = True

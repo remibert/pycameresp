@@ -47,9 +47,9 @@ class Periodic:
 				else:
 					notif = False
 				if notif:
-					await Notifier.notify(lang.login_success_detected, display=False, enabled=self.server_config.notify)
+					Notifier.notify(lang.login_success_detected, display=False, enabled=self.server_config.notify)
 			else:
-				await Notifier.notify(lang.login_failed_detected,  display=False, enabled=self.server_config.notify)
+				Notifier.notify(lang.login_failed_detected,  display=False, enabled=self.server_config.notify)
 
 	async def task(self):
 		""" Periodic task method """

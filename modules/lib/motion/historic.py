@@ -5,7 +5,6 @@
 import re
 import json
 import uasyncio
-import uos
 from tools import logger,sdcard,tasking,filesystem,strings,info
 
 MAX_DAYS_DISPLAYED = 28

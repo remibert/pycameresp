@@ -14,6 +14,7 @@ import time
 from binascii import hexlify, b2a_base64
 import collections
 import server.stream
+import server.urlparser
 from tools import logger,filesystem,strings
 
 MIMES = {\
@@ -66,33 +67,6 @@ class Http:
 	def __del__(self):
 		if self.content_file is not None:
 			filesystem.remove(self.content_file)
-
-	def quote(self, text):
-		""" Insert in the string the character not supported in an url """
-		result = b""
-		for char in text:
-			if (ord(char) >= 0x41 and ord(char) < 0x5A) or (ord(char) >= 0x61 and ord(char) < 0x7A):
-				result += char
-			elif char == b" ":
-				result += b"+"
-			else:
-				result += b"%%%02X"%ord(char)
-		return result
-
-	def unquote(self, url):
-		""" Remove from a string special character in the url """
-		url = url.replace(b'+', b' ')
-		spl = url.split(b'%')
-		try :
-			result = spl[0]
-			for part in range(1, len(spl)) :
-				try :
-					result += bytes([int(spl[part][:2], 16)]) + spl[part][2:]
-				except :
-					result += b'%' + spl[part]
-			return result
-		except :
-			return url
 
 	def get_expiration(self, expiration):
 		""" Get cookie expiration date """
@@ -174,39 +148,18 @@ class Http:
 		""" Unserialize the request or response in the stream """
 		data = await streamio.readline()
 		if data != b"":
+			urlparser = server.urlparser.UrlParser(data, True)
 			spl = data.split()
 			if len(spl) >= 2:
-				self.method = spl[0]
+				self.method = urlparser.method
 				path = spl[1]
 				if self.request is False:
 					self.status = path
-				paths = path.split(b"?", 1)
-				if len(paths) > 1:
-					self.unserialize_params(paths[1])
-				self.path = self.unquote(paths[0])
-
+				self.path   = urlparser.path
+				self.params = urlparser.params
 				await self.unserialize_headers(streamio)
 			else:
 				await self.read_content(streamio)
-
-	def unserialize_params(self, url):
-		""" Extract parameters from url """
-		if url:
-			pairs = url.split(b"&")
-			for pair in pairs:
-				param = [self.unquote(x) for x in pair.split(b"=", 1)]
-				if len(param) == 1:
-					param.append(True)
-				previous_value = self.params.get(param[0])
-				if previous_value is not None:
-					if previous_value == b'0' and param[1] == b'':
-						self.params[param[0]] = b'1'
-					else:
-						if not isinstance(previous_value, list):
-							self.params[param[0]] = [previous_value]
-						self.params[param[0]].append(param[1])
-				else:
-					self.params[param[0]] = param[1]
 
 	async def read_content(self, streamio):
 		""" Read the content of http request """
@@ -233,13 +186,19 @@ class Http:
 		# Data too big write in file
 		else:
 			self.content_file = "%d.tmp"%id(self)
+
+			print("Begin upload reception")
 			if chunk is False:
 				attrib = "wb"
 			else:
 				attrib = "ab"
 			with open(self.content_file, attrib) as content:
 				while content.tell() < length:
-					content.write(await streamio.read(length - len(self.content)))
+					buffer = await streamio.read(length - content.tell())
+					content.write(buffer)
+					length_read = content.tell()
+					print("  %d%% received"%(length_read*100 // length))
+			print("End upload reception")
 
 	def get_content_filename(self):
 		""" Copy the content into file """
@@ -257,7 +216,7 @@ class Http:
 			if header == b"\r\n":
 				if self.method == b"POST":
 					await self.read_content(streamio)
-					self.unserialize_params(self.content)
+					self.params = server.urlparser.UrlParser.parse_params(self.content)
 				elif self.request is False or self.method == b"PUT":
 					await self.read_content(streamio)
 				break

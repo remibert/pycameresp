@@ -1021,6 +1021,7 @@ shell_commands = \
 	"reboot"     :[reboot                                  ],
 	"help"       :[help                                    ],
 	"man"        :[man             ,"command"              ],
+	"memdump"    :[info.memdump                            ],
 	"df"         :[df              ,"mountpoint"           ],
 	"ip2host"    :[ip2host         ,"ip_address"           ],
 	"host2ip"    :[host2ip         ,"hostname"             ],

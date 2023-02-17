@@ -184,9 +184,11 @@ async def motion(request, response, args):
 			Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),
 			Switch(text=lang.notification_motion, name=b"notify",       checked=config.notify,       disabled=disabled),
 			Switch(text=lang.notification_state,  name=b"notify_state", checked=config.notify_state, disabled=disabled),
-			Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence", checked=config.suspend_on_presence, disabled=disabled),
-			Switch(text=lang.permanent_detection,                      name=b"permanent_detection", checked=config.permanent_detection, disabled=disabled),
-			Switch(text=lang.turn_on_flash,                            name=b"light_compensation",  checked=config.light_compensation,  disabled=disabled),
+			Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence",     checked=config.suspend_on_presence, disabled=disabled),
+			Switch(text=lang.permanent_detection,                      name=b"permanent_detection",     checked=config.permanent_detection, disabled=disabled),
+			Switch(text=lang.turn_on_flash,                            name=b"light_compensation",      checked=config.light_compensation,  disabled=disabled),
+			Edit(text=lang.webhook_motion_detected,                    name=b"webhook_motion_detected",        placeholder=lang.url_http_required, value=config.webhook_motion_detected,   disabled=disabled),
+			Edit(text=lang.webhook_no_motion_detected,                 name=b"webhook_no_motion_detected",     placeholder=lang.url_http_required, value=config.webhook_no_motion_detected, disabled=disabled),
 			submit
 		]))
 	await response.send_page(page)

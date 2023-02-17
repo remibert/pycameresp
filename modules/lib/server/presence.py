@@ -19,6 +19,12 @@ class PresenceConfig(jsonconfig.JsonConfig):
 		# Ip addresses of smartphones
 		self.smartphones = [b"",b"",b"",b"",b""]
 
+		# Webhook when the house contains its occupants
+		self.webhook_inhabited_house = b""
+
+		# Webhook when the house is empty
+		self.webhook_empty_house = b""
+
 		# Notify presence
 		self.notify = False
 
@@ -111,14 +117,16 @@ class Presence:
 					msg = b""
 					for present in presents:
 						msg += b"%s "%present
-					await Notifier.notify(lang.presence_of_s%(msg), enabled=Presence.config.notify)
+					Notifier.notify(lang.presence_of_s%(msg), enabled=Presence.config.notify)
+					Notifier.webhook("Presence",Presence.config.webhook_inhabited_house)
 					Presence.set_detection(True)
 			# If no smartphone detected
 			elif currentDetected is False:
 				# If smartphone previously detected
 				if Presence.is_detected() != currentDetected:
 					# Notify the house in empty
-					await Notifier.notify(lang.empty_house, enabled=Presence.config.notify)
+					Notifier.notify(lang.empty_house, enabled=Presence.config.notify)
+					Notifier.webhook("Presence",Presence.config.webhook_empty_house)
 					Presence.set_detection(False)
 
 			# If all smartphones not responded during a long time
@@ -135,9 +143,9 @@ class Presence:
 		# If the presence detection change
 		if Presence.activated != Presence.config.activated:
 			if Presence.config.activated:
-				await Notifier.notify(lang.presence_detection_on, enabled=Presence.config.notify)
+				Notifier.notify(lang.presence_detection_on, enabled=Presence.config.notify)
 			else:
-				await Notifier.notify(lang.presence_detection_off, enabled=Presence.config.notify)
+				Notifier.notify(lang.presence_detection_off, enabled=Presence.config.notify)
 
 			Presence.activated = Presence.config.activated
 

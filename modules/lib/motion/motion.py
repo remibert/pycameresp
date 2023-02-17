@@ -12,8 +12,9 @@ from server.server   import Server
 from server.presence import Presence
 from motion.historic import Historic
 from video.video     import Camera
-from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem,date,info
+from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem,date
 
+STATE_DURATION = 30
 class MotionConfig(jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
 	def __init__(self):
@@ -54,6 +55,12 @@ class MotionConfig(jsonconfig.JsonConfig):
 		# Permanent detection without notification.
 		# To keep all motion detection in the presence of occupants
 		self.permanent_detection = False
+
+		# Webhook when motion detected
+		self.webhook_motion_detected = b""
+
+		# Webhook when no motion detected
+		self.webhook_no_motion_detected = b""
 
 		# Empty mask is equal disable masking
 		self.mask = b""
@@ -314,7 +321,7 @@ class Motion:
 
 				# Save image to sdcard
 				if await image.save() is False:
-					await Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
+					Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
 			else:
 				# Destroy image
 				self.deinit_image(image)
@@ -436,7 +443,7 @@ class Motion:
 						index = image.index
 					diffs += b"%d:%d%s%s"%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, 'big'), trace)
 			if display:
-				line = b"\r%s %s L%d (%d) "%(date.time_to_html(), bytes(diffs), mean_light, index)
+				line = b"\r%s %s L%d (%d) "%(date.time_to_html(seconds=True), bytes(diffs), mean_light, index)
 				if filesystem.ismicropython():
 					sys.stdout.write(line)
 				else:
@@ -505,6 +512,7 @@ class Detection:
 		self.detection = None
 		self.activated = None
 		self.refresh_config_counter = 0
+		self.last_detection = 0
 		self.cadencer = NotificationCadencer()
 
 	def load_config(self):
@@ -540,7 +548,7 @@ class Detection:
 
 		# If the motion detection activated
 		activated = await self.is_activated()
-		if activated or self.is_pemanent():
+		if activated or self.is_permanent():
 			try:
 				# Capture motion
 				result = await self.capture(activated)
@@ -579,9 +587,9 @@ class Detection:
 			collect()
 
 			if result:
-				await Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
+				Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
 			else:
-				await Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
+				Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
 			self.activated = result
 
 		# If camera activated and motion activated
@@ -591,12 +599,12 @@ class Detection:
 			result = False
 
 		# If motion disabled
-		if result is False and self.is_pemanent() is False:
+		if result is False and self.is_permanent() is False:
 			# Wait moment before next loop
 			await uasyncio.sleep_ms(500)
 		return result
 
-	def is_pemanent(self):
+	def is_permanent(self):
 		""" Indicates if pemanent detection activated """
 		result = False
 		# If motion activated
@@ -615,6 +623,7 @@ class Detection:
 			self.motion = Motion(self.motion_config, self.pir_detection)
 			if self.motion.open() is False:
 				self.motion = None
+				# pylint:disable=broad-exception-raised
 				raise Exception("Cannot open camera")
 			else:
 				firstInit = True
@@ -656,14 +665,30 @@ class Detection:
 
 				# If motion detected and detection activated
 				if self.detection is not None and activated is True:
+
 					# Notify motion with push over
 					message, image = self.detection
 
+					# If no previous detection
+					if self.last_detection == 0:
+						# Send webhook motion detected
+						Notifier.webhook("Motion",self.motion_config.webhook_motion_detected)
+
+					self.last_detection = int(time.time())
+
 					# If the notifications are not too frequent
 					if self.cadencer.can_notify():
-						await Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
+						Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
 					else:
 						logger.syslog("Notification '%s' too frequent ignored" %message)
+				else:
+					# If motion detected recently
+					if self.last_detection > 0:
+						# If no more motion detection
+						if self.last_detection + STATE_DURATION < int(time.time()):
+							# Send webhook no motion detected
+							Notifier.webhook("Motion",self.motion_config.webhook_no_motion_detected)
+							self.last_detection = 0
 				# Detect motion
 				detected, change_polling = self.motion.detect()
 
@@ -678,7 +703,7 @@ class Detection:
 					Historic.set_motion_state(False)
 				result = True
 			else:
-				await Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
+				Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
 				result = True
 
 		finally:

@@ -9,9 +9,10 @@ from tools             import lang, region
 @HttpServer.add_route(b'/region', menu=lang.menu_account, item=lang.item_region)
 async def region_page(request, response, args):
 	""" Function define the web page to manage lang and time """
-	config = region.RegionConfig()
+	config = region.RegionConfig.get()
 	disabled, action, submit = manage_default_button(request, config)
 	langages = []
+
 	for langage in [b"english",b"french"]:
 		if config.lang == langage:
 			selected = b"selected"
@@ -20,6 +21,7 @@ async def region_page(request, response, args):
 		langages.append(Option(text=langage, selected=selected, value=langage))
 
 	if action == b"save":
+		config.save()
 		alert = AlertError(text=lang.taken_into_account)
 	else:
 		alert = None

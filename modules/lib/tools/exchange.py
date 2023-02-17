@@ -311,6 +311,7 @@ class FileReader:
 
 					# Create directory
 					filename = filesystem.normpath(directory + "/" + self.filename.get())
+
 					filesystem.makedir(filesystem.split(filename)[0], True)
 
 					# Write file

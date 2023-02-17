@@ -50,6 +50,12 @@ def meminfo():
 		result = lang.no_information
 	return result
 
+def memdump():
+	""" Dump memory allocated """
+	if filesystem.ismicropython():
+		import micropython
+		micropython.mem_info("level")
+
 def flash_size(mountpoint=None):
 	""" Get flash informations """
 	import uos

@@ -17,6 +17,7 @@ async def change_password(request, response, args):
 async def logout(request, response, args):
 	""" Function to close account """
 	if not User.is_empty():
+		request.params[b"logout"] = b"1"
 		page = main_frame(request, response, args, lang.logout, PasswordPage.logout(request,response))
 	else:
 		page = main_frame(request, response, args, lang.logout, None)

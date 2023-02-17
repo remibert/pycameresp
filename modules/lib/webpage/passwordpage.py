@@ -50,10 +50,10 @@ class PasswordPage:
 		""" Common dialog of login password page """
 		if alert is not None:
 			alert = AlertError(text=alert)
-		dialog = [alert, Form([content, Submit(text=submit)], method=b"post", action=action)]
+		dialog = [alert, Div([content, Submit(text=submit)], action=action)]
 		if modal:
 			dialog = Div(Modal(dialog),class_=b"modal-sm")
-		return Form([dialog])
+		return Form([dialog],method=b"post")
 
 	@staticmethod
 	def login(request, response, duration):

@@ -51,7 +51,7 @@ if sys.implementation.name == "micropython":
 			await self.writer.aclose()
 else:
 	trace = None
-	#~ trace = open("stream.txt","wb")
+	# trace = open("stream.txt","wb")
 	class Stream:
 		""" Class stream """
 		def __init__(self, reader, writer):
@@ -83,6 +83,10 @@ else:
 			data = self.buffer[:length]
 			l = len(data)
 			self.buffer = self.buffer[length:]
+			if trace:
+				trace.write(b"\n# read\n")
+				trace.write(data)
+				trace.flush()
 			return data
 
 		async def write(self, data):
@@ -92,6 +96,7 @@ else:
 			if self.writer.is_closing():
 				raise OSError(104,"Error")
 			if trace:
+				trace.write(b"\n# write\n")
 				trace.write(data)
 				trace.flush()
 

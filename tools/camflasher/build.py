@@ -69,7 +69,7 @@ elif sys.platform == "linux":
 	NO_COLOR = "\x1B[m"
 elif sys.platform == "darwin":
 	ICONS   = "icons/camflasher.icns"
-	TARGET  = "osx"
+	TARGET  = "osx_"+platform.processor()
 	EXE     = "%(NAME)s.dmg"%globals()
 	PIP     = "3"
 	UIC     = 6

@@ -48,7 +48,7 @@ async def upload_config(request, response, args):
 async def download_config(request, response, args):
 	""" Download configuration """
 	Server.slow_down()
-	archiver.download_files("config.cfg", path="./config",pattern="*.json", recursive=False)
+	archiver.download_files("config.cfg", path="./config", pattern="*.json", excludes=["*.tmp","sd/*"], recursive=False)
 	await response.send_file(b"config.cfg", headers=request.headers)
 	filesystem.remove("config.cfg")
 
@@ -63,7 +63,7 @@ async def upload_file_system(request, response, args):
 async def download_file_system(request, response, args):
 	""" Download file system """
 	Server.slow_down()
-	archiver.download_files("fileSystem.cfs", path="./",pattern="*.*", recursive=True)
+	archiver.download_files("fileSystem.cfs", path="./",pattern="*.*", excludes=["*.tmp","sd/*","syslog.*","pulses/*","www/bootstrap.*"], recursive=True)
 	await response.send_file(b"fileSystem.cfs", headers=request.headers)
 	filesystem.remove("fileSystem.cfs")
 

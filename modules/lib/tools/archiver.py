@@ -2,9 +2,9 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Archiver files functions """
-from tools import logger,filesystem,exchange
+from tools import logger,filesystem,exchange, fnmatch
 
-def download_files(download_filename, path="./config",pattern="*.json", recursive=False):
+def download_files(download_filename, path="./config", pattern="*.json", excludes=None, recursive=False):
 	""" Download many file into only one file """
 	result = True
 
@@ -21,8 +21,18 @@ def download_files(download_filename, path="./config",pattern="*.json", recursiv
 		file_write = exchange.FileWriter()
 		# For all files found
 		for filename in files:
-			# All files except .tmp and sdcard
-			if filename[-4:] != ".tmp" and filename[:4] != "/sd/" and filename[5:] != "./sd/":
+			exclude = False
+			if excludes is not None:
+				if type(excludes) == type(""):
+					excludes = [excludes]
+
+				if type(excludes) == type([]):
+					for pattern in excludes:
+						if fnmatch.fnmatch(filesystem.normpath(filename),pattern):
+							exclude = True
+							break
+
+			if exclude is False:
 				logger.syslog("  Download '%s'"%(filename))
 				if file_write.write(filename, None, out_file) is False:
 					result = False
@@ -47,9 +57,11 @@ def upload_files(upload_filename, directory="/"):
 			simulated = True
 
 		read_size = filesystem.filesize(upload_filename)
-
 		while in_file.tell() < read_size:
 			file_reader = exchange.FileReader(simulated)
+			if filesystem.ismicropython() is False:
+				directory = "/tmp"
+
 			res = file_reader.read(directory, in_file)
 			logger.syslog("  Upload %s %s"%(file_reader.filename.get(), "" if res else "failed"))
 

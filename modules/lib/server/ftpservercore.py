@@ -8,7 +8,6 @@
 """ Ftp server implementation core class """
 import socket
 import os
-import uos
 from server import stream
 from server.server import Server
 from server.user import User
