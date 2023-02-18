@@ -77,7 +77,7 @@ class HttpClient:
 					# Wait response
 					result = await HttpClient.read_chunked(streamio, request)
 				except Exception as err:
-					logger.syslog(err)
+					logger.syslog("Http request failed")
 				finally:
 					if streamio:
 						await streamio.close()

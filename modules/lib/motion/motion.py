@@ -10,6 +10,7 @@ import video
 from server.notifier import Notifier
 from server.server   import Server
 from server.presence import Presence
+from server.webhook  import WebhookConfig
 from motion.historic import Historic
 from video.video     import Camera
 from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem,date
@@ -55,12 +56,6 @@ class MotionConfig(jsonconfig.JsonConfig):
 		# Permanent detection without notification.
 		# To keep all motion detection in the presence of occupants
 		self.permanent_detection = False
-
-		# Webhook when motion detected
-		self.webhook_motion_detected = b""
-
-		# Webhook when no motion detected
-		self.webhook_no_motion_detected = b""
 
 		# Empty mask is equal disable masking
 		self.mask = b""
@@ -522,6 +517,9 @@ class Detection:
 		self.motion_config      = MotionConfig()
 		if self.motion_config.load() is False:
 			self.motion_config.save()
+		self.webhook      = WebhookConfig()
+		if self.webhook.load() is False:
+			self.webhook.save()
 
 	def refresh_config(self):
 		""" Refresh the configuration : it can be changed by web page """
@@ -532,6 +530,13 @@ class Detection:
 				logger.syslog("Change motion config %s"%self.motion_config.to_string(), display=False)
 				if self.motion:
 					self.motion.refresh_config()
+			# If configuration changed
+			if self.webhook.is_changed():
+				self.webhook.load()
+				logger.syslog("Change webhook config %s"%self.webhook.to_string(), display=False)
+				if self.motion:
+					self.motion.refresh_config()
+
 		self.refresh_config_counter += 1
 
 	async def run(self):
@@ -678,8 +683,9 @@ class Detection:
 
 					# If no previous detection
 					if self.last_detection == 0:
-						# Send webhook motion detected
-						Notifier.webhook("Motion",self.motion_config.webhook_motion_detected)
+						if self.webhook.activated:
+							# Send webhook motion detected
+							Notifier.webhook("Motion",self.webhook.motion_detected)
 
 					self.last_detection = int(time.time())
 
@@ -693,8 +699,9 @@ class Detection:
 					if self.last_detection > 0:
 						# If no more motion detection
 						if self.last_detection + STATE_DURATION < int(time.time()):
-							# Send webhook no motion detected
-							Notifier.webhook("Motion",self.motion_config.webhook_no_motion_detected)
+							if self.webhook.activated:
+								# Send webhook no motion detected
+								Notifier.webhook("Motion",self.webhook.no_motion_detected)
 							self.last_detection = 0
 				# Detect motion
 				detected, change_polling = self.motion.detect()

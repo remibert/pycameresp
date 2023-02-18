@@ -49,8 +49,6 @@ async def presence(request, response, args):
 		Form([
 			Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
 			editSmartphones,
-			Edit(text=lang.webhook_inhabited_house, name=b"webhook_inhabited_house", placeholder=lang.url_http_required, value=config.webhook_inhabited_house, disabled=disabled),
-			Edit(text=lang.webhook_empty_house,     name=b"webhook_empty_house",     placeholder=lang.url_http_required, value=config.webhook_empty_house,     disabled=disabled),
 			Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),
 			submit
 		]))

@@ -364,7 +364,7 @@ class FileReader:
 			else:
 				chunk_id = 0
 				if printer is not None:
-					printer("  %-40s", end="")
+					printer("  %-40s"%"", end="")
 				while size > 0:
 					count = 0
 					part = b""

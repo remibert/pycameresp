@@ -787,7 +787,7 @@ def get_command(command_name):
 				command_flags.append(item)
 	except  Exception as err:
 		# pylint: disable=raise-missing-from
-		raise Exception("Command not found '%s'"%command_name)
+		raise RuntimeError("Command not found '%s'"%command_name)
 	return command_name, command_function, command_params, command_flags
 
 def exec_command(args):
@@ -816,20 +816,20 @@ def exec_command(args):
 									flags[commandFlag[1]] = commandFlag[2]
 									break
 							else:
-								raise Exception("Illegal option '%s' for"%arg)
+								raise RuntimeError("Illegal option '%s'"%arg)
 						elif arg[0] == "-":
 							for commandFlag in command_flags:
 								if arg.strip() == commandFlag[0].strip():
 									flags[commandFlag[1]] = commandFlag[2]
 									break
 							else:
-								raise Exception("Illegal option '%s' for"%arg)
+								raise RuntimeError("Illegal option '%s'"%arg)
 						elif arg[0] == ">":
 							output_redirection = True
 						else:
 							if output_redirection is None:
 								if paramsCount >= len(command_params):
-									raise Exception("Too many parameters for")
+									raise RuntimeError("Too many parameters on '%s'"%command_name)
 								else:
 									flags[command_params[paramsCount]] = arg
 									paramsCount += 1

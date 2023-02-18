@@ -338,17 +338,35 @@ class StreamThread(threading.Thread):
 					drop_filename = drop_filename[1:]
 				drop_filename = drop_filename.replace("\\","/")
 
+				# If pycameresp file
+				if os.path.splitext(filename_)[1].lower() == ".cfs":
+					with open(filename_,"rb") as cfs_file:
+						try:
+							tempdir = tempfile.TemporaryDirectory()
+							read_size = os.path.getsize(filename_)
+							while cfs_file.tell() < read_size:
+								file_reader = FileReader()
+								if file_reader.read(tempdir.name, cfs_file):
+									tmp_filename = os.path.join(tempdir.name,file_reader.filename.data.decode("utf8"))
+									file_writer.write(tmp_filename, self.stream, self.stream, file_reader.filename.data.decode("utf8"), self.print)
+								else:
+									break
+						finally:
+							tempdir.cleanup()
 				# If the content of zip must be extracted
-				if self.zip_extract and os.path.splitext(filename_)[1].lower() == ".zip":
+				elif self.zip_extract and os.path.splitext(filename_)[1].lower() == ".zip":
 					with zipfile.ZipFile(filename_,"r") as zip_file:
 						for file in zip_file.infolist():
-							zip_content = tempfile.NamedTemporaryFile(delete=False)
-							zip_content.write(zip_file.read(file.filename))
-							zip_content.close()
-							try:
-								file_writer.write(zip_content.name, self.stream, self.stream, file.filename, self.print)
-							finally:
-								os.unlink(zip_content.name)
+							if file.is_dir() is False:
+								zip_content = tempfile.NamedTemporaryFile(delete=False)
+								zip_content.write(zip_file.read(file.filename))
+								zip_content.close()
+								try:
+									file_writer.write(zip_content.name, self.stream, self.stream, file.filename, self.print)
+								finally:
+									os.unlink(zip_content.name)
+							else:
+								pass
 				else:
 					file_writer.write(filename_, self.stream, self.stream, drop_filename, self.print)
 			self.stream.write(b"exit\r\n")

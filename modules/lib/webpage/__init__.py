@@ -12,6 +12,7 @@ from webpage.regionpage         import *
 from webpage.presencepage       import *
 from webpage.awakepage          import *
 from webpage.systempage         import *
+from webpage.webhookpage        import *
 from tools                      import info,support
 
 if support.battery():

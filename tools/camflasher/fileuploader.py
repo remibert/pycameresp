@@ -158,7 +158,7 @@ class CommandExecutor:
 				self.responses.put(command)
 		if self.waiting_counter > 100:
 			self.waiting_counter = self.waiting_counter
-			raise Exception("Not response")
+			raise RuntimeError("Not response")
 
 	def wait_response(self, synchrone, prompt_command):
 		""" Wait response of command """
@@ -184,7 +184,7 @@ class CommandExecutor:
 						break
 					# checks if the response matches to the response awaited
 					elif prompt_response.is_awaited_response() is False:
-						raise Exception("Unexpected response")
+						raise RuntimeError("Unexpected response")
 		# Else asynchrone response awaited
 		else:
 			# Receive response
@@ -200,7 +200,7 @@ class CommandExecutor:
 
 				# checks if the response matches to the response awaited
 				if prompt_response.is_awaited_response() is False:
-					raise Exception("Unexpected response")
+					raise RuntimeError("Unexpected response")
 		return result
 
 	def execute(self, command, awaited_response=None, synchrone=False):

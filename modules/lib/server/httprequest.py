@@ -588,3 +588,16 @@ class HttpRequest(Http):
 		if streamio is None:
 			streamio = self.streamio
 		await self.serialize(streamio)
+
+	@staticmethod
+	def to_html(message):
+		""" Convert message with special characters into html text """
+		result = b""
+		for char in message:
+			if (char >= 0x30 and char <= 0x39) or \
+			   (char >= 0x41 and char <= 0x5A) or \
+			   (char >= 0x61 and char <= 0x7A):
+				result += char.to_bytes(1,"big")
+			else:
+				result += b"&#%d;"%char
+		return result

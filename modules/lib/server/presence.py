@@ -7,6 +7,7 @@ import wifi
 from server.ping import async_ping
 from server.notifier import Notifier
 from server.server import Server
+from server.webhook import WebhookConfig
 from tools import logger,jsonconfig,lang,tasking
 
 class PresenceConfig(jsonconfig.JsonConfig):
@@ -18,12 +19,6 @@ class PresenceConfig(jsonconfig.JsonConfig):
 
 		# Ip addresses of smartphones
 		self.smartphones = [b"",b"",b"",b"",b""]
-
-		# Webhook when the house contains its occupants
-		self.webhook_inhabited_house = b""
-
-		# Webhook when the house is empty
-		self.webhook_empty_house = b""
 
 		# Notify presence
 		self.notify = False
@@ -57,6 +52,7 @@ class Presence:
 		Presence.readConfig = 0.
 		Presence.pollingDuration = Presence.FAST_POLLING
 		Presence.config = PresenceConfig()
+		Presence.webhook = WebhookConfig()
 		Presence.activated = None
 		Presence.lastTime = 0
 		Presence.lastDnsTime = 0
@@ -73,6 +69,11 @@ class Presence:
 					if Presence.config.load() is False:
 						Presence.config.save()
 					logger.syslog("Change presence config %s"%Presence.config.to_string(), display=False)
+
+				if Presence.webhook.is_changed():
+					if Presence.webhook.load() is False:
+						Presence.webhook.save()
+
 			Presence.configRefreshCounter += 1
 
 		if Presence.config.activated is True and wifi.Wifi.is_lan_available():
@@ -118,7 +119,8 @@ class Presence:
 					for present in presents:
 						msg += b"%s "%present
 					Notifier.notify(lang.presence_of_s%(msg), enabled=Presence.config.notify)
-					Notifier.webhook("Presence",Presence.config.webhook_inhabited_house)
+					if Presence.webhook.activated:
+						Notifier.webhook("Presence",Presence.webhook.inhabited_house)
 					Presence.set_detection(True)
 			# If no smartphone detected
 			elif currentDetected is False:
@@ -126,7 +128,8 @@ class Presence:
 				if Presence.is_detected() != currentDetected:
 					# Notify the house in empty
 					Notifier.notify(lang.empty_house, enabled=Presence.config.notify)
-					Notifier.webhook("Presence",Presence.config.webhook_empty_house)
+					if Presence.webhook.activated:
+						Notifier.webhook("Presence",Presence.webhook.empty_house)
 					Presence.set_detection(False)
 
 			# If all smartphones not responded during a long time

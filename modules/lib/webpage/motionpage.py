@@ -187,8 +187,6 @@ async def motion(request, response, args):
 			Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence",     checked=config.suspend_on_presence, disabled=disabled),
 			Switch(text=lang.permanent_detection,                      name=b"permanent_detection",     checked=config.permanent_detection, disabled=disabled),
 			Switch(text=lang.turn_on_flash,                            name=b"light_compensation",      checked=config.light_compensation,  disabled=disabled),
-			Edit(text=lang.webhook_motion_detected,                    name=b"webhook_motion_detected",        placeholder=lang.url_http_required, value=config.webhook_motion_detected,   disabled=disabled),
-			Edit(text=lang.webhook_no_motion_detected,                 name=b"webhook_no_motion_detected",     placeholder=lang.url_http_required, value=config.webhook_no_motion_detected, disabled=disabled),
 			submit
 		]))
 	await response.send_page(page)
