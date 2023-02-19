@@ -41,6 +41,14 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/modules/lib/server/telnet.py",
 			"cwd"    : "${workspaceFolder}/modules",
+		},
+		{
+			"name": "CfsConverter",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/tools/cfsconverter/cfsconverter.py",
+			"cwd"    : "${workspaceFolder}/tools/cfsconverter",
 		}
+
 	]
 }

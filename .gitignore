@@ -13,3 +13,4 @@ modules/lib/config/*.*
 key.txt
 *.pulses
 modules/pulses/*
+images/Thumbs.db
