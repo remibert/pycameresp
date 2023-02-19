@@ -63,7 +63,7 @@ async def upload_file_system(request, response, args):
 async def download_file_system(request, response, args):
 	""" Download file system """
 	Server.slow_down()
-	archiver.download_files("fileSystem.cfs", path="./",pattern="*.*", excludes=["*.tmp","sd/*","syslog.*","pulses/*","www/bootstrap.*",".DS_Store"], recursive=True)
+	archiver.download_files("fileSystem.cfs", path="./",pattern="*.*", excludes=["*.tmp","config/*","sd/*","syslog.*","www/bootstrap.*",".DS_Store"], recursive=True)
 	await response.send_file(b"fileSystem.cfs", headers=request.headers)
 	filesystem.remove("fileSystem.cfs")
 

@@ -198,7 +198,13 @@ cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/python/micropython/"*  "%(OUTPUT_DIR)s/
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/esp32/modules"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/rp2/modules"
 rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/electricmeter"
+rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/sample"
+rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/config"
+rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/*.log"
 rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/electricmeter"
+rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/sample"
+rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/config"
+rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/*.log"
 cd %(PYCAMERESP_DIR)s
 python3        "%(PYCAMERESP_DIR)s/scripts/patchInisetup.py"    "%(OUTPUT_DIR)s"
 

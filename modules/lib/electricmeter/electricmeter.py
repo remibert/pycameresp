@@ -4,11 +4,10 @@ import time
 import collections
 import uasyncio
 import machine
-import wifi
 from server.server import Server
 from electricmeter.config   import TimeSlotsConfig
 from electricmeter          import em_lang
-from tools import filesystem, date, strings, fnmatch, logger, tasking, info
+from tools import filesystem, date, strings, fnmatch, logger, tasking, info, system
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-iterating-dictionary
 # pylint:disable=missing-function-docstring
@@ -119,6 +118,13 @@ class HourlyCounter:
 		self.previous_pulse_time = None
 		self.day_pulses_counter = 0
 		self.pulse_sensor = PulseSensor(gpio)
+		system.add_action(self.action_before_reboot)
+
+	def action_before_reboot(self):
+		""" Action to do before reboot """
+		logger.syslog("Save pulses before reboot")
+		# Save pulses file
+		HourlyCounter.save(HourlyCounter.get_filename(self.day))
 	
 	async def manage(self):
 		""" Manage the counter """
@@ -151,7 +157,7 @@ class HourlyCounter:
 				self.day = day
 
 		# Each ten minutes
-		if time.time() > (self.last_save + 67):
+		if time.time() > (self.last_save + 599):
 			# Save pulses file
 			HourlyCounter.save(HourlyCounter.get_filename(self.day))
 
@@ -536,8 +542,6 @@ def daily_notifier():
 	message += cost.get_message(em_lang.item_day, selected_date)
 	cost = DailyCost()
 	message += cost.get_message(em_lang.item_month, selected_date)
-	message += " - Lan Ip : %s\n"%wifi.Station.get_info()[0]
-	message += " - Wan Ip : %s\n"%Server.context.wan_ip
 	message += " - Uptime : %s\n"%strings.tostrings(info.uptime())
 	return message
 

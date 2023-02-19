@@ -865,7 +865,7 @@ def prefix(files):
 	except IndexError:
 		return ""
 
-def zip_dir(nameOrFile, directory, includes = ["*"], excludes = [], display = False, renames = None):
+def zip_dir(nameOrFile, directory, includes = ["*"], excludes = [], display = False, renames = None, prefix=None):
 	""" Unflat the directory 
 	>>> makedir("testunit")
 	>>> zip_dir("testunit/zip.zip","./rbtools","Co*.py","Color*.py",True)
@@ -888,8 +888,9 @@ def zip_dir(nameOrFile, directory, includes = ["*"], excludes = [], display = Fa
 		if split(nameOrFile)[0] != "":
 			makedir(split(nameOrFile)[0])
 
-	prefix = split(normalize_path(commonprefix(all_)))[0]
-	
+	if prefix is None:
+		prefix = split(normalize_path(commonprefix(all_)))[0]
+
 	# Create archive file
 	archive = ZipFile(nameOrFile,"w", ZIP_DEFLATED)
 	

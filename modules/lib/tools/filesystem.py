@@ -194,7 +194,7 @@ def scandir(path, pattern, recursive, displayer=None):
 	directories = []
 	if path == "":
 		path = "."
-	if path is not None and pattern is not None:
+	if path is not None and pattern is not None and exists(path) and isdir(path):
 		for file_info in list_directory(path):
 			name = file_info[0]
 			typ  = file_info[1]
@@ -231,7 +231,7 @@ async def ascandir(path, pattern, recursive, displayer=None):
 	directories = []
 	if path == "":
 		path = "."
-	if path is not None and pattern is not None:
+	if path is not None and pattern is not None and exists(path) and isdir(path):
 		for file_info in list_directory(path):
 			name = file_info[0]
 			typ  = file_info[1]

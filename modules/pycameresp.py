@@ -104,14 +104,3 @@ def run_tasks(loop):
 		from tools import logger, system
 		logger.syslog(err)
 		system.reboot("Crash in main")
-
-# # Sample of user task
-# async def sample_task():
-# 	count = 0
-# 	while True:
-# 		await uasyncio.sleep(1)
-# 		print(count)
-# 		count += 1
-
-# # Register the user task, monitor all exceptions
-# pycameresp.create_user_task(loop, sample_task)

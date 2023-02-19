@@ -53,6 +53,10 @@ class WLAN:
 			self._ifconfig = (ipAddress, "255.255.255.0","192.168.1.1","192.168.1.1")
 		return self._ifconfig
 
+	def status(self):
+		""" Status of wan """
+		return 0
+
 	def scan(self):
 		""" Scan """
 		if self._active:

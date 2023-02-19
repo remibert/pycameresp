@@ -1,11 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-
 # pylint:disable=wrong-import-order
-# pylint:disable=wrong-import-position
-# pylint:disable=unused-import
-# pylint:disable=redefined-outer-name
-
 """ Main module """
 import pycameresp
 import uasyncio
@@ -22,15 +17,8 @@ device = "ESP32CAM" # "ESP32ONE" "M5CAMERA-B"
 # Create camera and motion detection asynchronous task
 pycameresp.create_camera_task(loop, device)
 
-def sample_html_page_loader():
-	""" Html page loader. Html pages are loaded in memory only when the web server is used """
-	try   :
-		import sample
-	except:
-		pass
-
 # Create servers, network tools, wifi manager asynchronous task
-pycameresp.create_network_task(loop, sample_html_page_loader)
+pycameresp.create_network_task(loop)
 
 # Create shell asynchronous task
 pycameresp.create_shell_task(loop)

@@ -7,7 +7,6 @@ from binascii import *
 filesToAdd = [
 	("","modules/main.py"),
 	("","modules/pycameresp.py"),
-	("","modules/sample.py"),
 ]
 
 if __name__ == "__main__":

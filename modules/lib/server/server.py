@@ -153,6 +153,9 @@ class Server:
 		from server.notifier import notifier_task
 		loop.create_task(notifier_task())
 
+		from tools.starter import starter_task
+		loop.create_task(starter_task(loop))
+
 	@staticmethod
 	async def synchronize_wan_ip(forced):
 		""" Synchronize wan ip """
@@ -314,7 +317,7 @@ class Server:
 				await Server.synchronize_wan_ip(forced)
 
 			# Save current time
-			if polling_id % 59 == 0:
+			if polling_id % 599 == 0:
 				Server.context.region_config.current_time = time.time()
 				Server.context.region_config.save()
 		else:
