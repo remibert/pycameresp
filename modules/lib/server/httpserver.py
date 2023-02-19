@@ -18,6 +18,7 @@ class HttpServer:
 	wildroutes = []
 	menus = []
 	www_dir = None
+	pages_loader = []
 
 	def __init__(self, port=80, loader=None, preload=False, name=""):
 		""" Constructor """
@@ -58,6 +59,10 @@ class HttpServer:
 			else:
 				self.call_preload(self.loader)
 			self.loader = None
+
+			if len(HttpServer.pages_loader) > 0:
+				for loader in HttpServer.pages_loader:
+					self.call_preload(loader)
 			HttpServer.www_dir = WWW_DIR
 			loaded = True
 
@@ -69,6 +74,12 @@ class HttpServer:
 
 		if loaded:
 			logger.syslog("Http ready on %d"%self.port)
+
+
+	@staticmethod
+	def add_page_loader(page_loader):
+		""" Add an html page loader which will be called when connecting to the http server """
+		HttpServer.pages_loader.append(page_loader)
 
 	@staticmethod
 	def add_route(url, **kwargs):
