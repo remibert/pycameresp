@@ -197,6 +197,7 @@ cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/c/micropython/"*       "%(OUTPUT_DIR)s/
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/python/micropython/"*  "%(OUTPUT_DIR)s/micropython"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/esp32/modules"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/rp2/modules"
+cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/c/esp-idf/"*           "%(OUTPUT_DIR)s/esp-idf"
 rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/electricmeter"
 rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/sample"
 rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/config"
