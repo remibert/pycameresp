@@ -107,7 +107,7 @@ void mp_task(void *pvParameter) {
     void *mp_task_heap = NULL;
 
 //# REMI BERTHOLET START
-    esp_log_write(ESP_LOG_WARN, "main", "Start Pycameresp (%d)\n",esp_spiram_get_chip_size());
+    esp_log_write(ESP_LOG_WARN, "main", "Start Pycameresp\n");
 //# REMI BERTHOLET END
     #if CONFIG_SPIRAM_USE_MALLOC
     // SPIRAM is issued using MALLOC, fallback to normal allocation rules
