@@ -136,6 +136,9 @@ class Notifier:
 			# If all message notified
 			if result is False:
 				logger.syslog("Cannot send notification")
+		else:
+			# Wait wifi available
+			await uasyncio.sleep(3)
 		return result
 
 	@staticmethod
@@ -143,10 +146,8 @@ class Notifier:
 		""" Run the task """
 		# If no notification should be sent
 		if len(Notifier.postponed) == 0 and len(Notifier.webhooks) == 0:
-			Notifier.init()
 			# Wait notification
 			await Notifier.wake_up_event.wait()
-
 			# Clear event notification event
 			Notifier.wake_up_event.clear()
 		# Flush all notifications postponed
@@ -154,4 +155,5 @@ class Notifier:
 
 async def notifier_task():
 	""" Notifier task """
+	Notifier.init()
 	await tasking.task_monitoring(Notifier.task)

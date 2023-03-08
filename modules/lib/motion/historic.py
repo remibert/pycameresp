@@ -257,7 +257,7 @@ class Historic:
 	@staticmethod
 	async def remove_files(directory, simulate=False, force=False):
 		""" Remove all files in the directory """
-		import shell
+		import shellcore
 		dir_not_empty = False
 		enough_space = False
 		force = True
@@ -277,7 +277,7 @@ class Historic:
 				dir_not_empty = True
 
 			for file_to_remove in files_to_remove:
-				shell.rmfile(file_to_remove, simulate=simulate, force=force)
+				shellcore.rmfile(file_to_remove, simulate=simulate, force=force)
 				if sdcard.SdCard.is_not_enough_space(low=False) is False:
 					enough_space = True
 					break
@@ -286,9 +286,9 @@ class Historic:
 				for dir_to_remove in dirs_to_remove:
 					await Historic.remove_files(dir_to_remove, simulate=simulate, force=force)
 				if dir_not_empty:
-					shell.rm(directory, recursive=True, simulate=simulate, force=force)
+					shellcore.rm(directory, recursive=True, simulate=simulate, force=force)
 				else:
-					shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
+					shellcore.rmdir(directory, recursive=True, simulate=simulate, force=force)
 
 	@staticmethod
 	async def reduce_history():

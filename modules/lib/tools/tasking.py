@@ -69,5 +69,7 @@ async def task_monitoring(task, *args, **params):
 		config.load()
 		Notifier.notify(lang.reboot_after_many%strings.tobytes(lastError), enabled=config.notify)
 		await uasyncio.sleep_ms(10000)
+	except Exception as err:
+		logger.exception(err)
 	finally:
 		system.reboot()

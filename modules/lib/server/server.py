@@ -260,7 +260,7 @@ class Server:
 					if support.telnet():
 						# Load and start telnet
 						import server.telnet
-						server.telnet.start()
+						server.telnet.Telnet.start()
 
 				# If ftp activated
 				if Server.context.server_config.ftp:
@@ -279,9 +279,6 @@ class Server:
 						if Camera.is_activated():
 							# Load and start streaming http server
 							server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name="StreamingServer")
-
-				from server.presence import detect_presence
-				Server.context.loop.create_task(detect_presence())
 
 	@staticmethod
 	async def manage(polling_id):

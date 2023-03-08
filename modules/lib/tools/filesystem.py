@@ -3,6 +3,7 @@
 """ Miscellaneous path functions """
 import os
 import sys
+import time
 
 try:
 	import fnmatch
@@ -29,9 +30,14 @@ def exists(filename):
 	return False
 
 previous_file_info = []
+previous_get = 0
 def fileinfo(path):
 	""" Get the file informations """
-	global previous_file_info
+	global previous_file_info, previous_get
+	current_time = time.time()
+	if previous_get + 3 < current_time:
+		previous_get = current_time
+		previous_file_info = []
 	if len(previous_file_info) == 0:
 		previous_file_info = [path, os.stat(path)]
 	elif previous_file_info[0] != path:

@@ -82,8 +82,13 @@ def create_network_task(loop, html_loader = None):
 def create_shell_task(loop):
 	""" Create shell asynchronous task (press any key to get shell prompt) """
 	# pylint:disable=unused-import
-	from shell import async_shell
-	loop.create_task(async_shell())
+	from shell.shell import shell_task
+	loop.create_task(shell_task())
+
+def create_presence_task(loop):
+	""" Create presence detection task (determine if an occupant is present in the house) """
+	from server.presence import presence_task
+	loop.create_task(presence_task())
 
 def create_user_task(loop, function, *args, **params):
 	""" Create user task """
