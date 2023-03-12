@@ -82,7 +82,7 @@ class Reservation:
                         if result:
                                 break
                         timeout -= 1
-                        if timeout &lt;= 0:
+                        if timeout &lt; 0:
                                 break
                         await uasyncio.sleep_ms(1000)
                 return result
@@ -1602,7 +1602,7 @@ def vflip(val=None):
                         if result:
                                 break
                         timeout -= 1
-                        if timeout &lt;= 0:
+                        if timeout &lt; 0:
                                 break
                         await uasyncio.sleep_ms(1000)
                 return result
@@ -1729,7 +1729,7 @@ to the web page. It stop the motion detection during this phase</p></div>
                 if result:
                         break
                 timeout -= 1
-                if timeout &lt;= 0:
+                if timeout &lt; 0:
                         break
                 await uasyncio.sleep_ms(1000)
         return result</code></pre>

@@ -113,6 +113,20 @@
 #ifndef MICROPY_PY_MACHINE_I2S
 #define MICROPY_PY_MACHINE_I2S              (1)
 #endif
+#define MICROPY_PY_NETWORK (1)
+#ifndef MICROPY_PY_NETWORK_HOSTNAME_DEFAULT
+#if CONFIG_IDF_TARGET_ESP32
+#define MICROPY_PY_NETWORK_HOSTNAME_DEFAULT "mpy-esp32"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#define MICROPY_PY_NETWORK_HOSTNAME_DEFAULT "mpy-esp32s2"
+#elif CONFIG_IDF_TARGET_ESP32S3
+#define MICROPY_PY_NETWORK_HOSTNAME_DEFAULT "mpy-esp32s3"
+#elif CONFIG_IDF_TARGET_ESP32C3
+#define MICROPY_PY_NETWORK_HOSTNAME_DEFAULT "mpy-esp32c3"
+#endif
+#endif
+#define MICROPY_PY_NETWORK_INCLUDEFILE      "ports/esp32/modnetwork.h"
+#define MICROPY_PY_NETWORK_MODULE_GLOBALS_INCLUDEFILE "ports/esp32/modnetwork_globals.h"
 #ifndef MICROPY_PY_NETWORK_WLAN
 #define MICROPY_PY_NETWORK_WLAN             (1)
 #endif
@@ -126,9 +140,6 @@
 #define MICROPY_PY_USSL_FINALISER           (1)
 #define MICROPY_PY_UWEBSOCKET               (1)
 #define MICROPY_PY_WEBREPL                  (1)
-#ifndef MICROPY_PY_BTREE
-	#define MICROPY_PY_BTREE                    (1)
-#endif
 #define MICROPY_PY_ONEWIRE                  (1)
 #define MICROPY_PY_UPLATFORM                (1)
 #define MICROPY_PY_USOCKET_EVENTS           (MICROPY_PY_WEBREPL)

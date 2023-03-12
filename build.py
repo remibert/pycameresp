@@ -22,7 +22,7 @@ import time
 # Vmware share folder add next lines in /etc/fstab :
 # vmhgfs-fuse   /mnt/hgfs    fuse    defaults,allow_other    0    0
 
-MICROPYTHON_VERSION ="9ea64a36acefd593012eedaa8e52bcd2afc0c736"
+MICROPYTHON_VERSION ="668a7bd28a49980b239fd7666684885382526988"
 ESP_IDF_VERSION_S3     ="6407ecb3f8d2cc07c4c230e7e64f2046af5c86f7" # v4.4.3  !! Difficulty connecting to access point with ESP32 CAMM
 
 ESP_IDF_VERSION     ="7ab8f793ca5b026f37ae812bcc103e3aa698d164" # v4.2.2 Work perfectly with wifi access point on ESP32CAM

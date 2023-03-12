@@ -213,9 +213,9 @@ async def motion(request, response, args):
                         Slider(text=lang.motion_detection_sensitivity,          name=b&#34;sensitivity&#34;,        min=b&#34;0&#34;,  max=b&#34;100&#34;, step=b&#34;5&#34;,  value=b&#34;%d&#34;%config.sensitivity,         disabled=disabled),
                         Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),
                         Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),
-                        Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),
-                        Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;, checked=config.permanent_detection, disabled=disabled),
-                        Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,  checked=config.light_compensation,  disabled=disabled),
+                        Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;,     checked=config.suspend_on_presence, disabled=disabled),
+                        Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;,     checked=config.permanent_detection, disabled=disabled),
+                        Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,      checked=config.light_compensation,  disabled=disabled),
                         submit
                 ]))
         await response.send_page(page)
@@ -278,9 +278,9 @@ async def motion(request, response, args):
                         Slider(text=lang.motion_detection_sensitivity,          name=b&#34;sensitivity&#34;,        min=b&#34;0&#34;,  max=b&#34;100&#34;, step=b&#34;5&#34;,  value=b&#34;%d&#34;%config.sensitivity,         disabled=disabled),
                         Switch(text=lang.notification_motion, name=b&#34;notify&#34;,       checked=config.notify,       disabled=disabled),
                         Switch(text=lang.notification_state,  name=b&#34;notify_state&#34;, checked=config.notify_state, disabled=disabled),
-                        Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;, checked=config.suspend_on_presence, disabled=disabled),
-                        Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;, checked=config.permanent_detection, disabled=disabled),
-                        Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,  checked=config.light_compensation,  disabled=disabled),
+                        Switch(text=lang.suspends_motion_detection,                name=b&#34;suspend_on_presence&#34;,     checked=config.suspend_on_presence, disabled=disabled),
+                        Switch(text=lang.permanent_detection,                      name=b&#34;permanent_detection&#34;,     checked=config.permanent_detection, disabled=disabled),
+                        Switch(text=lang.turn_on_flash,                            name=b&#34;light_compensation&#34;,      checked=config.light_compensation,  disabled=disabled),
                         submit
                 ]))
         await response.send_page(page)</code></pre>

@@ -32,6 +32,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 
 # POUR DES RAISONS DE PERFORMANCE DU SERVEUR WEB, SEUL LES CHAINES BINAIRES SONT SUPPORTEES : b&#34;...&#34;
+# é \xC3\xA9
+# è \xC3\xA8
+# à \xC3\xA0
+# ê \xC3\xAA
+# https://lwp.interglacial.com/appf_01.htm
 menu_system                             =b&#34;   Syst\xC3\xA8me&#34;
 item_information                        =b&#34;   Information&#34;
 item_system                             =b&#34; Maintenance&#34;
@@ -51,6 +56,7 @@ menu_server                             =b&#34;  Serveur&#34;
 item_presence                           =b&#34;Pr\xC3\xA9sence&#34;
 item_server                             =b&#34;Configuration&#34;
 item_notification                       =b&#34;Notification&#34;
+item_webhook                            =b&#34;Webhook&#34;
 
 menu_motion                             =b&#34; Mouvement&#34;
 item_motion                             =b&#34;   Configuration&#34;
@@ -92,6 +98,7 @@ turn_on_flash                           =b&#34;Allumer le flash LED lorsque la l
 pushover_on                             =b&#34;Notification pushover activ\xC3\xA9e&#34;
 pushover_off                            =b&#34;Notification pushover d\xC3\xA9sactiv\xC3\xA9e&#34;
 notification_configuration              =b&#34;Configuration notification&#34;
+webhook_configuration                   =b&#34;Configuration des webhooks&#34;
 pushover_user                           =b&#34;Cl\xC3\xA9 utilisateur&#34;
 enter_pushover_user                     =b&#34;Entrer la cl\xC3\xA9 utilisateur de pushover&#34;
 pushover_token                          =b&#34;API Jeton&#34;
@@ -234,7 +241,12 @@ december                                =b&#34;d\xC3\xA9cembre&#34;
 date_format                             =b&#34;%(weekday)s %(day)d %(month)s %(year)d&#34;
 month_format                            =b&#34;%(month)s %(year)d&#34;
 weekdays                                = [monday,tuesday,wednesday,thursday,friday,saturday,sunday]
-months                                  = [january,february,march,april,may,june,july,august,september,october,november,december]</code></pre>
+months                                  = [january,february,march,april,may,june,july,august,september,october,november,december]
+webhook_inhabited_house                 = b&#34;Maison contenant des occupants&#34;
+webhook_empty_house                     = b&#34;Maison vide&#34;
+webhook_motion_detected                 = b&#34;Mouvements d\xC3\xA9tect\xC3\xA9s&#34;
+webhook_no_motion_detected              = b&#34;Plus aucun mouvement d\xC3\xA9tect\xC3\xA9&#34;
+url_http_required                       = b&#34;Laisser vide ou mettez un lien http, https non support\xC3\xA9&#34;</code></pre>
 </details>
 </section>
 <section>

@@ -32,13 +32,41 @@
 &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
+import uasyncio
 import wifi
-from tools import logger,strings
+from server.httpclient import *
+from tools import logger,strings,tasking
+
+
+class Notification:
+        &#34;&#34;&#34; Notification message &#34;&#34;&#34;
+        def __init__(self, message, image, forced, display):
+                &#34;&#34;&#34; Notification constructor &#34;&#34;&#34;
+                self.message = message
+                self.image   = image
+                self.forced  = forced
+                self.display = display
+
+
+class WebHook:
+        &#34;&#34;&#34; Notification via webhook &#34;&#34;&#34;
+        def __init__(self, name, url):
+                self.url = url
+                self.name = name
+
 
 class Notifier:
         &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
         notifiers = []
         postponed = []
+        webhooks  = {}
+        wake_up_event = None
+
+        @staticmethod
+        def init():
+                &#34;&#34;&#34; Initialize &#34;&#34;&#34;
+                if Notifier.wake_up_event is None:
+                        Notifier.wake_up_event = uasyncio.Event()
 
         @staticmethod
         def add(callback):
@@ -61,18 +89,32 @@ class Notifier:
                 return False
 
         @staticmethod
-        async def notify(message, image=None, forced=False, display=True, enabled=True):
+        def wake_up():
+                &#34;&#34;&#34; Wake up notifier it to perform tasks &#34;&#34;&#34;
+                Notifier.init()
+                Notifier.wake_up_event.set()
+
+        @staticmethod
+        def notify(message, image=None, forced=False, display=True, enabled=True):
                 &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
                 logger.syslog(&#34;Notification &#39;%s&#39; %s&#34;%(strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
                 if enabled or forced:
                         # Add message into postponed list
-                        Notifier.postponed.append([message, image, forced, display])
-
-                        # Try to send all message postponed
-                        return await Notifier.flush()
+                        Notifier.postponed.append(Notification(message, image, forced, display))
+                        Notifier.wake_up()
                 else:
                         return True
+
+        @staticmethod
+        def webhook(name, url):
+                &#34;&#34;&#34; Notify webhook &#34;&#34;&#34;
+                if len(url):
+                        logger.syslog(&#34;Webhook name=&#39;%s&#39; url=&#39;%s&#39;&#34;%(name,strings.tostrings(url)))
+
+                        # Add message into postponed list
+                        Notifier.webhooks[name] = WebHook(name, url)
+                        Notifier.wake_up()
 
         @staticmethod
         async def flush():
@@ -81,8 +123,8 @@ class Notifier:
                 # If postponed message list too long
                 if len(Notifier.postponed) &gt; 10:
                         # Remove older
-                        message, image, forced, display = Notifier.postponed[0]
-                        logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(message), display=display)
+                        notification = Notifier.postponed[0]
+                        logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(notification.message), display=notification.display)
                         del Notifier.postponed[0]
 
                 # If wan available
@@ -93,14 +135,25 @@ class Notifier:
                         # Try to send message
                         for notifier in Notifier.notifiers:
                                 for notification in Notifier.postponed:
-                                        message, image, forced, display = notification
-                                        res = await notifier(message, image, forced, display=display)
+                                        res = await notifier(notification.message, notification.image, notification.forced, display=notification.display)
                                         if res is False:
                                                 result = False
                                                 wanOk = False
                                                 break
                                         elif res is True:
                                                 wanOk = True
+
+                        # If all message notified
+                        if result:
+                                Notifier.postponed.clear()
+
+                        # Call webhook
+                        for webhook in Notifier.webhooks.values():
+                                if await HttpClient.request(method=b&#34;GET&#34;, url=webhook.url) is None:
+                                        result = False
+
+                        # Clear all webhook
+                        Notifier.webhooks.clear()
 
                         # If wan connected
                         if wanOk is True:
@@ -110,11 +163,29 @@ class Notifier:
                                 wifi.Wifi.wan_disconnected()
 
                         # If all message notified
-                        if result:
-                                Notifier.postponed.clear()
-                        else:
+                        if result is False:
                                 logger.syslog(&#34;Cannot send notification&#34;)
-                return result</code></pre>
+                else:
+                        # Wait wifi available
+                        await uasyncio.sleep(3)
+                return result
+
+        @staticmethod
+        async def task():
+                &#34;&#34;&#34; Run the task &#34;&#34;&#34;
+                # If no notification should be sent
+                if len(Notifier.postponed) == 0 and len(Notifier.webhooks) == 0:
+                        # Wait notification
+                        await Notifier.wake_up_event.wait()
+                        # Clear event notification event
+                        Notifier.wake_up_event.clear()
+                # Flush all notifications postponed
+                await Notifier.flush()
+
+async def notifier_task():
+        &#34;&#34;&#34; Notifier task &#34;&#34;&#34;
+        Notifier.init()
+        await tasking.task_monitoring(Notifier.task)</code></pre>
 </details>
 </section>
 <section>
@@ -122,10 +193,49 @@ class Notifier:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.server.notifier.notifier_task"><code class="name flex">
+<span>async def <span class="ident">notifier_task</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Notifier task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def notifier_task():
+        &#34;&#34;&#34; Notifier task &#34;&#34;&#34;
+        Notifier.init()
+        await tasking.task_monitoring(Notifier.task)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="lib.server.notifier.Notification"><code class="flex name class">
+<span>class <span class="ident">Notification</span></span>
+<span>(</span><span>message, image, forced, display)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Notification message </p>
+<p>Notification constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Notification:
+        &#34;&#34;&#34; Notification message &#34;&#34;&#34;
+        def __init__(self, message, image, forced, display):
+                &#34;&#34;&#34; Notification constructor &#34;&#34;&#34;
+                self.message = message
+                self.image   = image
+                self.forced  = forced
+                self.display = display</code></pre>
+</details>
+</dd>
 <dt id="lib.server.notifier.Notifier"><code class="flex name class">
 <span>class <span class="ident">Notifier</span></span>
 </code></dt>
@@ -139,6 +249,14 @@ class Notifier:
         &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
         notifiers = []
         postponed = []
+        webhooks  = {}
+        wake_up_event = None
+
+        @staticmethod
+        def init():
+                &#34;&#34;&#34; Initialize &#34;&#34;&#34;
+                if Notifier.wake_up_event is None:
+                        Notifier.wake_up_event = uasyncio.Event()
 
         @staticmethod
         def add(callback):
@@ -161,18 +279,32 @@ class Notifier:
                 return False
 
         @staticmethod
-        async def notify(message, image=None, forced=False, display=True, enabled=True):
+        def wake_up():
+                &#34;&#34;&#34; Wake up notifier it to perform tasks &#34;&#34;&#34;
+                Notifier.init()
+                Notifier.wake_up_event.set()
+
+        @staticmethod
+        def notify(message, image=None, forced=False, display=True, enabled=True):
                 &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
                 logger.syslog(&#34;Notification &#39;%s&#39; %s&#34;%(strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
                 if enabled or forced:
                         # Add message into postponed list
-                        Notifier.postponed.append([message, image, forced, display])
-
-                        # Try to send all message postponed
-                        return await Notifier.flush()
+                        Notifier.postponed.append(Notification(message, image, forced, display))
+                        Notifier.wake_up()
                 else:
                         return True
+
+        @staticmethod
+        def webhook(name, url):
+                &#34;&#34;&#34; Notify webhook &#34;&#34;&#34;
+                if len(url):
+                        logger.syslog(&#34;Webhook name=&#39;%s&#39; url=&#39;%s&#39;&#34;%(name,strings.tostrings(url)))
+
+                        # Add message into postponed list
+                        Notifier.webhooks[name] = WebHook(name, url)
+                        Notifier.wake_up()
 
         @staticmethod
         async def flush():
@@ -181,8 +313,8 @@ class Notifier:
                 # If postponed message list too long
                 if len(Notifier.postponed) &gt; 10:
                         # Remove older
-                        message, image, forced, display = Notifier.postponed[0]
-                        logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(message), display=display)
+                        notification = Notifier.postponed[0]
+                        logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(notification.message), display=notification.display)
                         del Notifier.postponed[0]
 
                 # If wan available
@@ -193,14 +325,25 @@ class Notifier:
                         # Try to send message
                         for notifier in Notifier.notifiers:
                                 for notification in Notifier.postponed:
-                                        message, image, forced, display = notification
-                                        res = await notifier(message, image, forced, display=display)
+                                        res = await notifier(notification.message, notification.image, notification.forced, display=notification.display)
                                         if res is False:
                                                 result = False
                                                 wanOk = False
                                                 break
                                         elif res is True:
                                                 wanOk = True
+
+                        # If all message notified
+                        if result:
+                                Notifier.postponed.clear()
+
+                        # Call webhook
+                        for webhook in Notifier.webhooks.values():
+                                if await HttpClient.request(method=b&#34;GET&#34;, url=webhook.url) is None:
+                                        result = False
+
+                        # Clear all webhook
+                        Notifier.webhooks.clear()
 
                         # If wan connected
                         if wanOk is True:
@@ -210,11 +353,24 @@ class Notifier:
                                 wifi.Wifi.wan_disconnected()
 
                         # If all message notified
-                        if result:
-                                Notifier.postponed.clear()
-                        else:
+                        if result is False:
                                 logger.syslog(&#34;Cannot send notification&#34;)
-                return result</code></pre>
+                else:
+                        # Wait wifi available
+                        await uasyncio.sleep(3)
+                return result
+
+        @staticmethod
+        async def task():
+                &#34;&#34;&#34; Run the task &#34;&#34;&#34;
+                # If no notification should be sent
+                if len(Notifier.postponed) == 0 and len(Notifier.webhooks) == 0:
+                        # Wait notification
+                        await Notifier.wake_up_event.wait()
+                        # Clear event notification event
+                        Notifier.wake_up_event.clear()
+                # Flush all notifications postponed
+                await Notifier.flush()</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -223,6 +379,14 @@ class Notifier:
 <div class="desc"></div>
 </dd>
 <dt id="lib.server.notifier.Notifier.postponed"><code class="name">var <span class="ident">postponed</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.notifier.Notifier.wake_up_event"><code class="name">var <span class="ident">wake_up_event</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.notifier.Notifier.webhooks"><code class="name">var <span class="ident">webhooks</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -260,8 +424,8 @@ async def flush():
         # If postponed message list too long
         if len(Notifier.postponed) &gt; 10:
                 # Remove older
-                message, image, forced, display = Notifier.postponed[0]
-                logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(message), display=display)
+                notification = Notifier.postponed[0]
+                logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(notification.message), display=notification.display)
                 del Notifier.postponed[0]
 
         # If wan available
@@ -272,14 +436,25 @@ async def flush():
                 # Try to send message
                 for notifier in Notifier.notifiers:
                         for notification in Notifier.postponed:
-                                message, image, forced, display = notification
-                                res = await notifier(message, image, forced, display=display)
+                                res = await notifier(notification.message, notification.image, notification.forced, display=notification.display)
                                 if res is False:
                                         result = False
                                         wanOk = False
                                         break
                                 elif res is True:
                                         wanOk = True
+
+                # If all message notified
+                if result:
+                        Notifier.postponed.clear()
+
+                # Call webhook
+                for webhook in Notifier.webhooks.values():
+                        if await HttpClient.request(method=b&#34;GET&#34;, url=webhook.url) is None:
+                                result = False
+
+                # Clear all webhook
+                Notifier.webhooks.clear()
 
                 # If wan connected
                 if wanOk is True:
@@ -289,11 +464,28 @@ async def flush():
                         wifi.Wifi.wan_disconnected()
 
                 # If all message notified
-                if result:
-                        Notifier.postponed.clear()
-                else:
+                if result is False:
                         logger.syslog(&#34;Cannot send notification&#34;)
+        else:
+                # Wait wifi available
+                await uasyncio.sleep(3)
         return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.notifier.Notifier.init"><code class="name flex">
+<span>def <span class="ident">init</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initialize</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def init():
+        &#34;&#34;&#34; Initialize &#34;&#34;&#34;
+        if Notifier.wake_up_event is None:
+                Notifier.wake_up_event = uasyncio.Event()</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.is_empty"><code class="name flex">
@@ -314,7 +506,7 @@ def is_empty():
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.notify"><code class="name flex">
-<span>async def <span class="ident">notify</span></span>(<span>message, image=None, forced=False, display=True, enabled=True)</span>
+<span>def <span class="ident">notify</span></span>(<span>message, image=None, forced=False, display=True, enabled=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Notify message for all notifier registered</p></div>
@@ -323,16 +515,14 @@ def is_empty():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def notify(message, image=None, forced=False, display=True, enabled=True):
+def notify(message, image=None, forced=False, display=True, enabled=True):
         &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
         logger.syslog(&#34;Notification &#39;%s&#39; %s&#34;%(strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
         if enabled or forced:
                 # Add message into postponed list
-                Notifier.postponed.append([message, image, forced, display])
-
-                # Try to send all message postponed
-                return await Notifier.flush()
+                Notifier.postponed.append(Notification(message, image, forced, display))
+                Notifier.wake_up()
         else:
                 return True</code></pre>
 </details>
@@ -355,7 +545,82 @@ def remove(callback):
                         break</code></pre>
 </details>
 </dd>
+<dt id="lib.server.notifier.Notifier.task"><code class="name flex">
+<span>async def <span class="ident">task</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Run the task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def task():
+        &#34;&#34;&#34; Run the task &#34;&#34;&#34;
+        # If no notification should be sent
+        if len(Notifier.postponed) == 0 and len(Notifier.webhooks) == 0:
+                # Wait notification
+                await Notifier.wake_up_event.wait()
+                # Clear event notification event
+                Notifier.wake_up_event.clear()
+        # Flush all notifications postponed
+        await Notifier.flush()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.notifier.Notifier.wake_up"><code class="name flex">
+<span>def <span class="ident">wake_up</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Wake up notifier it to perform tasks</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def wake_up():
+        &#34;&#34;&#34; Wake up notifier it to perform tasks &#34;&#34;&#34;
+        Notifier.init()
+        Notifier.wake_up_event.set()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.notifier.Notifier.webhook"><code class="name flex">
+<span>def <span class="ident">webhook</span></span>(<span>name, url)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Notify webhook</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def webhook(name, url):
+        &#34;&#34;&#34; Notify webhook &#34;&#34;&#34;
+        if len(url):
+                logger.syslog(&#34;Webhook name=&#39;%s&#39; url=&#39;%s&#39;&#34;%(name,strings.tostrings(url)))
+
+                # Add message into postponed list
+                Notifier.webhooks[name] = WebHook(name, url)
+                Notifier.wake_up()</code></pre>
+</details>
+</dd>
 </dl>
+</dd>
+<dt id="lib.server.notifier.WebHook"><code class="flex name class">
+<span>class <span class="ident">WebHook</span></span>
+<span>(</span><span>name, url)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Notification via webhook</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class WebHook:
+        &#34;&#34;&#34; Notification via webhook &#34;&#34;&#34;
+        def __init__(self, name, url):
+                self.url = url
+                self.name = name</code></pre>
+</details>
 </dd>
 </dl>
 </section>
@@ -371,19 +636,36 @@ def remove(callback):
 <li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.server.notifier.notifier_task" href="#lib.server.notifier.notifier_task">notifier_task</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="lib.server.notifier.Notification" href="#lib.server.notifier.Notification">Notification</a></code></h4>
+</li>
 <li>
 <h4><code><a title="lib.server.notifier.Notifier" href="#lib.server.notifier.Notifier">Notifier</a></code></h4>
 <ul class="two-column">
 <li><code><a title="lib.server.notifier.Notifier.add" href="#lib.server.notifier.Notifier.add">add</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.flush" href="#lib.server.notifier.Notifier.flush">flush</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.init" href="#lib.server.notifier.Notifier.init">init</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.is_empty" href="#lib.server.notifier.Notifier.is_empty">is_empty</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.notifiers" href="#lib.server.notifier.Notifier.notifiers">notifiers</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.notify" href="#lib.server.notifier.Notifier.notify">notify</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.postponed" href="#lib.server.notifier.Notifier.postponed">postponed</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.remove" href="#lib.server.notifier.Notifier.remove">remove</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.task" href="#lib.server.notifier.Notifier.task">task</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.wake_up" href="#lib.server.notifier.Notifier.wake_up">wake_up</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.wake_up_event" href="#lib.server.notifier.Notifier.wake_up_event">wake_up_event</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.webhook" href="#lib.server.notifier.Notifier.webhook">webhook</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.webhooks" href="#lib.server.notifier.Notifier.webhooks">webhooks</a></code></li>
 </ul>
+</li>
+<li>
+<h4><code><a title="lib.server.notifier.WebHook" href="#lib.server.notifier.WebHook">WebHook</a></code></h4>
 </li>
 </ul>
 </li>

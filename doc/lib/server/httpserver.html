@@ -53,6 +53,7 @@ class HttpServer:
         wildroutes = []
         menus = []
         www_dir = None
+        pages_loader = []
 
         def __init__(self, port=80, loader=None, preload=False, name=&#34;&#34;):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
@@ -93,6 +94,10 @@ class HttpServer:
                         else:
                                 self.call_preload(self.loader)
                         self.loader = None
+
+                        if len(HttpServer.pages_loader) &gt; 0:
+                                for loader in HttpServer.pages_loader:
+                                        self.call_preload(loader)
                         HttpServer.www_dir = WWW_DIR
                         loaded = True
 
@@ -104,6 +109,12 @@ class HttpServer:
 
                 if loaded:
                         logger.syslog(&#34;Http ready on %d&#34;%self.port)
+
+
+        @staticmethod
+        def add_page_loader(page_loader):
+                &#34;&#34;&#34; Add an html page loader which will be called when connecting to the http server &#34;&#34;&#34;
+                HttpServer.pages_loader.append(page_loader)
 
         @staticmethod
         def add_route(url, **kwargs):
@@ -280,6 +291,7 @@ preload : True = preload the server at the start, False = load the server at the
         wildroutes = []
         menus = []
         www_dir = None
+        pages_loader = []
 
         def __init__(self, port=80, loader=None, preload=False, name=&#34;&#34;):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
@@ -320,6 +332,10 @@ preload : True = preload the server at the start, False = load the server at the
                         else:
                                 self.call_preload(self.loader)
                         self.loader = None
+
+                        if len(HttpServer.pages_loader) &gt; 0:
+                                for loader in HttpServer.pages_loader:
+                                        self.call_preload(loader)
                         HttpServer.www_dir = WWW_DIR
                         loaded = True
 
@@ -331,6 +347,12 @@ preload : True = preload the server at the start, False = load the server at the
 
                 if loaded:
                         logger.syslog(&#34;Http ready on %d&#34;%self.port)
+
+
+        @staticmethod
+        def add_page_loader(page_loader):
+                &#34;&#34;&#34; Add an html page loader which will be called when connecting to the http server &#34;&#34;&#34;
+                HttpServer.pages_loader.append(page_loader)
 
         @staticmethod
         def add_route(url, **kwargs):
@@ -430,6 +452,10 @@ preload : True = preload the server at the start, False = load the server at the
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="lib.server.httpserver.HttpServer.pages_loader"><code class="name">var <span class="ident">pages_loader</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="lib.server.httpserver.HttpServer.routes"><code class="name">var <span class="ident">routes</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -445,6 +471,21 @@ preload : True = preload the server at the start, False = load the server at the
 </dl>
 <h3>Static methods</h3>
 <dl>
+<dt id="lib.server.httpserver.HttpServer.add_page_loader"><code class="name flex">
+<span>def <span class="ident">add_page_loader</span></span>(<span>page_loader)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add an html page loader which will be called when connecting to the http server</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def add_page_loader(page_loader):
+        &#34;&#34;&#34; Add an html page loader which will be called when connecting to the http server &#34;&#34;&#34;
+        HttpServer.pages_loader.append(page_loader)</code></pre>
+</details>
+</dd>
 <dt id="lib.server.httpserver.HttpServer.add_route"><code class="name flex">
 <span>def <span class="ident">add_route</span></span>(<span>url, **kwargs)</span>
 </code></dt>
@@ -649,6 +690,10 @@ You must define the content of a callback, which only import the python module w
                 else:
                         self.call_preload(self.loader)
                 self.loader = None
+
+                if len(HttpServer.pages_loader) &gt; 0:
+                        for loader in HttpServer.pages_loader:
+                                self.call_preload(loader)
                 HttpServer.www_dir = WWW_DIR
                 loaded = True
 
@@ -688,11 +733,13 @@ You must define the content of a callback, which only import the python module w
 <li>
 <h4><code><a title="lib.server.httpserver.HttpServer" href="#lib.server.httpserver.HttpServer">HttpServer</a></code></h4>
 <ul class="two-column">
+<li><code><a title="lib.server.httpserver.HttpServer.add_page_loader" href="#lib.server.httpserver.HttpServer.add_page_loader">add_page_loader</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.add_route" href="#lib.server.httpserver.HttpServer.add_route">add_route</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.call_preload" href="#lib.server.httpserver.HttpServer.call_preload">call_preload</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.get_menus" href="#lib.server.httpserver.HttpServer.get_menus">get_menus</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.menus" href="#lib.server.httpserver.HttpServer.menus">menus</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.on_connection" href="#lib.server.httpserver.HttpServer.on_connection">on_connection</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.pages_loader" href="#lib.server.httpserver.HttpServer.pages_loader">pages_loader</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.preload" href="#lib.server.httpserver.HttpServer.preload">preload</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.remove_route" href="#lib.server.httpserver.HttpServer.remove_route">remove_route</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.routes" href="#lib.server.httpserver.HttpServer.routes">routes</a></code></li>

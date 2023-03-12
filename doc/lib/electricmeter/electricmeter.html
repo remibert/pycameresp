@@ -33,11 +33,10 @@ import time
 import collections
 import uasyncio
 import machine
-import wifi
 from server.server import Server
 from electricmeter.config   import TimeSlotsConfig
 from electricmeter          import em_lang
-from tools import filesystem, date, strings, fnmatch, logger, tasking, info
+from tools import filesystem, date, strings, fnmatch, logger, tasking, info, system
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-iterating-dictionary
 # pylint:disable=missing-function-docstring
@@ -148,6 +147,13 @@ class HourlyCounter:
                 self.previous_pulse_time = None
                 self.day_pulses_counter = 0
                 self.pulse_sensor = PulseSensor(gpio)
+                system.add_action(self.action_before_reboot)
+
+        def action_before_reboot(self):
+                &#34;&#34;&#34; Action to do before reboot &#34;&#34;&#34;
+                logger.syslog(&#34;Save pulses before reboot&#34;)
+                # Save pulses file
+                HourlyCounter.save(HourlyCounter.get_filename(self.day))
         
         async def manage(self):
                 &#34;&#34;&#34; Manage the counter &#34;&#34;&#34;
@@ -180,7 +186,7 @@ class HourlyCounter:
                                 self.day = day
 
                 # Each ten minutes
-                if time.time() &gt; (self.last_save + 67):
+                if time.time() &gt; (self.last_save + 599):
                         # Save pulses file
                         HourlyCounter.save(HourlyCounter.get_filename(self.day))
 
@@ -565,8 +571,6 @@ def daily_notifier():
         message += cost.get_message(em_lang.item_day, selected_date)
         cost = DailyCost()
         message += cost.get_message(em_lang.item_month, selected_date)
-        message += &#34; - Lan Ip : %s\n&#34;%wifi.Station.get_info()[0]
-        message += &#34; - Wan Ip : %s\n&#34;%Server.context.wan_ip
         message += &#34; - Uptime : %s\n&#34;%strings.tostrings(info.uptime())
         return message
 
@@ -621,8 +625,6 @@ def create_electric_meter(loop, gpio=21):
         message += cost.get_message(em_lang.item_day, selected_date)
         cost = DailyCost()
         message += cost.get_message(em_lang.item_month, selected_date)
-        message += &#34; - Lan Ip : %s\n&#34;%wifi.Station.get_info()[0]
-        message += &#34; - Wan Ip : %s\n&#34;%Server.context.wan_ip
         message += &#34; - Uptime : %s\n&#34;%strings.tostrings(info.uptime())
         return message</code></pre>
 </details>
@@ -1122,6 +1124,13 @@ async def update(filenames, daily_to_update):
                 self.previous_pulse_time = None
                 self.day_pulses_counter = 0
                 self.pulse_sensor = PulseSensor(gpio)
+                system.add_action(self.action_before_reboot)
+
+        def action_before_reboot(self):
+                &#34;&#34;&#34; Action to do before reboot &#34;&#34;&#34;
+                logger.syslog(&#34;Save pulses before reboot&#34;)
+                # Save pulses file
+                HourlyCounter.save(HourlyCounter.get_filename(self.day))
         
         async def manage(self):
                 &#34;&#34;&#34; Manage the counter &#34;&#34;&#34;
@@ -1154,7 +1163,7 @@ async def update(filenames, daily_to_update):
                                 self.day = day
 
                 # Each ten minutes
-                if time.time() &gt; (self.last_save + 67):
+                if time.time() &gt; (self.last_save + 599):
                         # Save pulses file
                         HourlyCounter.save(HourlyCounter.get_filename(self.day))
 
@@ -1413,6 +1422,22 @@ async def task(gpio):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="lib.electricmeter.electricmeter.HourlyCounter.action_before_reboot"><code class="name flex">
+<span>def <span class="ident">action_before_reboot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Action to do before reboot</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def action_before_reboot(self):
+        &#34;&#34;&#34; Action to do before reboot &#34;&#34;&#34;
+        logger.syslog(&#34;Save pulses before reboot&#34;)
+        # Save pulses file
+        HourlyCounter.save(HourlyCounter.get_filename(self.day))</code></pre>
+</details>
+</dd>
 <dt id="lib.electricmeter.electricmeter.HourlyCounter.manage"><code class="name flex">
 <span>async def <span class="ident">manage</span></span>(<span>self)</span>
 </code></dt>
@@ -1453,7 +1478,7 @@ async def task(gpio):
                         self.day = day
 
         # Each ten minutes
-        if time.time() &gt; (self.last_save + 67):
+        if time.time() &gt; (self.last_save + 599):
                 # Save pulses file
                 HourlyCounter.save(HourlyCounter.get_filename(self.day))
 
@@ -2076,7 +2101,8 @@ async def update(filenames, monthly_to_update):
 </li>
 <li>
 <h4><code><a title="lib.electricmeter.electricmeter.HourlyCounter" href="#lib.electricmeter.electricmeter.HourlyCounter">HourlyCounter</a></code></h4>
-<ul class="two-column">
+<ul class="">
+<li><code><a title="lib.electricmeter.electricmeter.HourlyCounter.action_before_reboot" href="#lib.electricmeter.electricmeter.HourlyCounter.action_before_reboot">action_before_reboot</a></code></li>
 <li><code><a title="lib.electricmeter.electricmeter.HourlyCounter.counter" href="#lib.electricmeter.electricmeter.HourlyCounter.counter">counter</a></code></li>
 <li><code><a title="lib.electricmeter.electricmeter.HourlyCounter.get_datas" href="#lib.electricmeter.electricmeter.HourlyCounter.get_datas">get_datas</a></code></li>
 <li><code><a title="lib.electricmeter.electricmeter.HourlyCounter.get_filename" href="#lib.electricmeter.electricmeter.HourlyCounter.get_filename">get_filename</a></code></li>

@@ -34,7 +34,6 @@
 import re
 import json
 import uasyncio
-import uos
 from tools import logger,sdcard,tasking,filesystem,strings,info
 
 MAX_DAYS_DISPLAYED = 28
@@ -216,7 +215,7 @@ class Historic:
         async def scan_dir(path, pattern, older=True, directory=True):
                 &#34;&#34;&#34; Scan directory &#34;&#34;&#34;
                 result = []
-                for fileinfo in uos.ilistdir(path):
+                for fileinfo in filesystem.list_directory(path):
                         name = fileinfo[0]
                         typ  = fileinfo[1]
                         if directory:
@@ -287,7 +286,7 @@ class Historic:
         @staticmethod
         async def remove_files(directory, simulate=False, force=False):
                 &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
-                import shell
+                import shellcore
                 dir_not_empty = False
                 enough_space = False
                 force = True
@@ -296,7 +295,7 @@ class Historic:
                         dirs_to_remove  = []
 
                         # Parse all directories in sdcard (WARNING : TO AVOID CRASH, NEVER DELETE DIRECTORY OR FILE IN ilistdir LOOP)
-                        for fileinfo in uos.ilistdir(directory):
+                        for fileinfo in filesystem.list_directory(directory):
                                 filename = fileinfo[0]
                                 typ      = fileinfo[1]
                                 # If file found
@@ -307,7 +306,7 @@ class Historic:
                                 dir_not_empty = True
 
                         for file_to_remove in files_to_remove:
-                                shell.rmfile(file_to_remove, simulate=simulate, force=force)
+                                shellcore.rmfile(file_to_remove, simulate=simulate, force=force)
                                 if sdcard.SdCard.is_not_enough_space(low=False) is False:
                                         enough_space = True
                                         break
@@ -316,9 +315,9 @@ class Historic:
                                 for dir_to_remove in dirs_to_remove:
                                         await Historic.remove_files(dir_to_remove, simulate=simulate, force=force)
                                 if dir_not_empty:
-                                        shell.rm(directory, recursive=True, simulate=simulate, force=force)
+                                        shellcore.rm(directory, recursive=True, simulate=simulate, force=force)
                                 else:
-                                        shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
+                                        shellcore.rmdir(directory, recursive=True, simulate=simulate, force=force)
 
         @staticmethod
         async def reduce_history():
@@ -341,8 +340,8 @@ class Historic:
                         await Historic.acquire()
                         for item in Historic.historic:
                                 filename = item[0].lstrip(&#34;/&#34;).split(&#34;/&#34;)
-                                date_ = b&#34;%s/%s/%s&#34;%(strings.tobytes(filename[1]),strings.tobytes(filename[2]),strings.tobytes(filename[3]))
-                                last_days.add(date_)
+                                path = b&#34;%s/%s/%s&#34;%(strings.tobytes(filename[1]),strings.tobytes(filename[2]),strings.tobytes(filename[3]))
+                                last_days.add(path)
                 finally:
                         await Historic.release()
                 return last_days
@@ -381,9 +380,9 @@ class Historic:
                 &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
                 from server.server import Server
                 if filesystem.ismicropython():
-                        await Server.wait_resume(31)
+                        await Server.wait_resume(31, &#34;historic&#34;)
                 else:
-                        await Server.wait_resume(1)
+                        await Server.wait_resume(1, &#34;historic&#34;)
 
                 if Historic.motion_in_progress[0] is False:
                         if sdcard.SdCard.is_mounted() is False:
@@ -598,7 +597,7 @@ class Historic:
         async def scan_dir(path, pattern, older=True, directory=True):
                 &#34;&#34;&#34; Scan directory &#34;&#34;&#34;
                 result = []
-                for fileinfo in uos.ilistdir(path):
+                for fileinfo in filesystem.list_directory(path):
                         name = fileinfo[0]
                         typ  = fileinfo[1]
                         if directory:
@@ -669,7 +668,7 @@ class Historic:
         @staticmethod
         async def remove_files(directory, simulate=False, force=False):
                 &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
-                import shell
+                import shellcore
                 dir_not_empty = False
                 enough_space = False
                 force = True
@@ -678,7 +677,7 @@ class Historic:
                         dirs_to_remove  = []
 
                         # Parse all directories in sdcard (WARNING : TO AVOID CRASH, NEVER DELETE DIRECTORY OR FILE IN ilistdir LOOP)
-                        for fileinfo in uos.ilistdir(directory):
+                        for fileinfo in filesystem.list_directory(directory):
                                 filename = fileinfo[0]
                                 typ      = fileinfo[1]
                                 # If file found
@@ -689,7 +688,7 @@ class Historic:
                                 dir_not_empty = True
 
                         for file_to_remove in files_to_remove:
-                                shell.rmfile(file_to_remove, simulate=simulate, force=force)
+                                shellcore.rmfile(file_to_remove, simulate=simulate, force=force)
                                 if sdcard.SdCard.is_not_enough_space(low=False) is False:
                                         enough_space = True
                                         break
@@ -698,9 +697,9 @@ class Historic:
                                 for dir_to_remove in dirs_to_remove:
                                         await Historic.remove_files(dir_to_remove, simulate=simulate, force=force)
                                 if dir_not_empty:
-                                        shell.rm(directory, recursive=True, simulate=simulate, force=force)
+                                        shellcore.rm(directory, recursive=True, simulate=simulate, force=force)
                                 else:
-                                        shell.rmdir(directory, recursive=True, simulate=simulate, force=force)
+                                        shellcore.rmdir(directory, recursive=True, simulate=simulate, force=force)
 
         @staticmethod
         async def reduce_history():
@@ -723,8 +722,8 @@ class Historic:
                         await Historic.acquire()
                         for item in Historic.historic:
                                 filename = item[0].lstrip(&#34;/&#34;).split(&#34;/&#34;)
-                                date_ = b&#34;%s/%s/%s&#34;%(strings.tobytes(filename[1]),strings.tobytes(filename[2]),strings.tobytes(filename[3]))
-                                last_days.add(date_)
+                                path = b&#34;%s/%s/%s&#34;%(strings.tobytes(filename[1]),strings.tobytes(filename[2]),strings.tobytes(filename[3]))
+                                last_days.add(path)
                 finally:
                         await Historic.release()
                 return last_days
@@ -763,9 +762,9 @@ class Historic:
                 &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
                 from server.server import Server
                 if filesystem.ismicropython():
-                        await Server.wait_resume(31)
+                        await Server.wait_resume(31, &#34;historic&#34;)
                 else:
-                        await Server.wait_resume(1)
+                        await Server.wait_resume(1, &#34;historic&#34;)
 
                 if Historic.motion_in_progress[0] is False:
                         if sdcard.SdCard.is_mounted() is False:
@@ -1041,8 +1040,8 @@ async def get_last_days():
                 await Historic.acquire()
                 for item in Historic.historic:
                         filename = item[0].lstrip(&#34;/&#34;).split(&#34;/&#34;)
-                        date_ = b&#34;%s/%s/%s&#34;%(strings.tobytes(filename[1]),strings.tobytes(filename[2]),strings.tobytes(filename[3]))
-                        last_days.add(date_)
+                        path = b&#34;%s/%s/%s&#34;%(strings.tobytes(filename[1]),strings.tobytes(filename[2]),strings.tobytes(filename[3]))
+                        last_days.add(path)
         finally:
                 await Historic.release()
         return last_days</code></pre>
@@ -1094,9 +1093,9 @@ async def periodic():
         &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
         from server.server import Server
         if filesystem.ismicropython():
-                await Server.wait_resume(31)
+                await Server.wait_resume(31, &#34;historic&#34;)
         else:
-                await Server.wait_resume(1)
+                await Server.wait_resume(1, &#34;historic&#34;)
 
         if Historic.motion_in_progress[0] is False:
                 if sdcard.SdCard.is_mounted() is False:
@@ -1172,7 +1171,7 @@ async def release():
 <pre><code class="python">@staticmethod
 async def remove_files(directory, simulate=False, force=False):
         &#34;&#34;&#34; Remove all files in the directory &#34;&#34;&#34;
-        import shell
+        import shellcore
         dir_not_empty = False
         enough_space = False
         force = True
@@ -1181,7 +1180,7 @@ async def remove_files(directory, simulate=False, force=False):
                 dirs_to_remove  = []
 
                 # Parse all directories in sdcard (WARNING : TO AVOID CRASH, NEVER DELETE DIRECTORY OR FILE IN ilistdir LOOP)
-                for fileinfo in uos.ilistdir(directory):
+                for fileinfo in filesystem.list_directory(directory):
                         filename = fileinfo[0]
                         typ      = fileinfo[1]
                         # If file found
@@ -1192,7 +1191,7 @@ async def remove_files(directory, simulate=False, force=False):
                         dir_not_empty = True
 
                 for file_to_remove in files_to_remove:
-                        shell.rmfile(file_to_remove, simulate=simulate, force=force)
+                        shellcore.rmfile(file_to_remove, simulate=simulate, force=force)
                         if sdcard.SdCard.is_not_enough_space(low=False) is False:
                                 enough_space = True
                                 break
@@ -1201,9 +1200,9 @@ async def remove_files(directory, simulate=False, force=False):
                         for dir_to_remove in dirs_to_remove:
                                 await Historic.remove_files(dir_to_remove, simulate=simulate, force=force)
                         if dir_not_empty:
-                                shell.rm(directory, recursive=True, simulate=simulate, force=force)
+                                shellcore.rm(directory, recursive=True, simulate=simulate, force=force)
                         else:
-                                shell.rmdir(directory, recursive=True, simulate=simulate, force=force)</code></pre>
+                                shellcore.rmdir(directory, recursive=True, simulate=simulate, force=force)</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.historic.Historic.remove_older"><code class="name flex">
@@ -1258,7 +1257,7 @@ async def remove_older(force=False):
 async def scan_dir(path, pattern, older=True, directory=True):
         &#34;&#34;&#34; Scan directory &#34;&#34;&#34;
         result = []
-        for fileinfo in uos.ilistdir(path):
+        for fileinfo in filesystem.list_directory(path):
                 name = fileinfo[0]
                 typ  = fileinfo[1]
                 if directory:

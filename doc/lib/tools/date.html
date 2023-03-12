@@ -34,21 +34,21 @@
 import sys
 import time
 
-def local_time(date_=None):
+def local_time(current_date=None):
         &#34;&#34;&#34; Safe local time, it return 2000/1/1 00:00:00 if date can be extracted &#34;&#34;&#34;
         try:
-                year,month,day,hour,minute,second,weekday,yearday = time.localtime(date_)[:8]
+                year,month,day,hour,minute,second,weekday,yearday = time.localtime(current_date)[:8]
         except:
                 year,month,day,hour,minute,second,weekday,yearday = 2000,1,1,0,0,0,0,0
         return year,month,day,hour,minute,second,weekday,yearday
 
-def date_to_string(date_ = None):
+def date_to_string(current_date = None):
         &#34;&#34;&#34; Get a string with the current date &#34;&#34;&#34;
-        return date_to_bytes(date_).decode(&#34;utf8&#34;)
+        return date_to_bytes(current_date).decode(&#34;utf8&#34;)
 
-def date_to_bytes(date_ = None):
+def date_to_bytes(current_date = None):
         &#34;&#34;&#34; Get a bytes with the current date &#34;&#34;&#34;
-        year,month,day,hour,minute,second = local_time(date_)[:6]
+        year,month,day,hour,minute,second = local_time(current_date)[:6]
         return b&#34;%04d/%02d/%02d  %02d:%02d:%02d&#34;%(year,month,day,hour,minute,second)
 
 def date_ms_to_string():
@@ -68,11 +68,11 @@ def mktime(t):
                 result = time.mktime((year, month, day, hour, minute, second, weekday, yearday, 0))
         return result
 
-def html_to_date(date_, separator=b&#34;-&#34;):
+def html_to_date(current_date, separator=b&#34;-&#34;):
         &#34;&#34;&#34; Convert html date into time integer &#34;&#34;&#34;
         result = 0
         try:
-                year, month, day = date_.split(separator)
+                year, month, day = current_date.split(separator)
                 year  = int( year.lstrip(b&#34;0&#34;))
                 month = int(month.lstrip(b&#34;0&#34;))
                 day   = int(  day.lstrip(b&#34;0&#34;))
@@ -81,9 +81,9 @@ def html_to_date(date_, separator=b&#34;-&#34;):
                 result = (time.time() // 86400) * 86400
         return result
 
-def date_to_html(date_ = None, separator=b&#34;-&#34;):
+def date_to_html(current_date = None, separator=b&#34;-&#34;):
         &#34;&#34;&#34; Get a html date with the current date &#34;&#34;&#34;
-        year,month,day = local_time(date_)[:3]
+        year,month,day = local_time(current_date)[:3]
         return b&#34;%04d%s%02d%s%02d&#34;%(year,separator,month,separator,day)
 
 
@@ -116,18 +116,18 @@ def time_to_html(t = None, seconds=False):
                 result = result[:-3]
         return result
 
-def date_to_filename(date_ = None):
+def date_to_filename(current_date = None):
         &#34;&#34;&#34; Get a filename with a date &#34;&#34;&#34;
-        filename = date_to_string(date_)
+        filename = date_to_string(current_date)
         filename = filename.replace(&#34;  &#34;,&#34; &#34;)
         filename = filename.replace(&#34; &#34;,&#34;_&#34;)
         filename = filename.replace(&#34;/&#34;,&#34;-&#34;)
         filename = filename.replace(&#34;:&#34;,&#34;-&#34;)
         return filename
 
-def date_to_path(date_=None):
+def date_to_path(current_date=None):
         &#34;&#34;&#34; Get a path with year/month/day/hour &#34;&#34;&#34;
-        year,month,day,hour,minute = local_time(date_)[:5]
+        year,month,day,hour,minute = local_time(current_date)[:5]
         return b&#34;%04d/%02d/%02d/%02dh%02d&#34;%(year,month,day,hour,minute)</code></pre>
 </details>
 </section>
@@ -157,7 +157,7 @@ def date_to_path(date_=None):
 </details>
 </dd>
 <dt id="lib.tools.date.date_to_bytes"><code class="name flex">
-<span>def <span class="ident">date_to_bytes</span></span>(<span>date_=None)</span>
+<span>def <span class="ident">date_to_bytes</span></span>(<span>current_date=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a bytes with the current date</p></div>
@@ -165,14 +165,14 @@ def date_to_path(date_=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def date_to_bytes(date_ = None):
+<pre><code class="python">def date_to_bytes(current_date = None):
         &#34;&#34;&#34; Get a bytes with the current date &#34;&#34;&#34;
-        year,month,day,hour,minute,second = local_time(date_)[:6]
+        year,month,day,hour,minute,second = local_time(current_date)[:6]
         return b&#34;%04d/%02d/%02d  %02d:%02d:%02d&#34;%(year,month,day,hour,minute,second)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.date.date_to_filename"><code class="name flex">
-<span>def <span class="ident">date_to_filename</span></span>(<span>date_=None)</span>
+<span>def <span class="ident">date_to_filename</span></span>(<span>current_date=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a filename with a date</p></div>
@@ -180,9 +180,9 @@ def date_to_path(date_=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def date_to_filename(date_ = None):
+<pre><code class="python">def date_to_filename(current_date = None):
         &#34;&#34;&#34; Get a filename with a date &#34;&#34;&#34;
-        filename = date_to_string(date_)
+        filename = date_to_string(current_date)
         filename = filename.replace(&#34;  &#34;,&#34; &#34;)
         filename = filename.replace(&#34; &#34;,&#34;_&#34;)
         filename = filename.replace(&#34;/&#34;,&#34;-&#34;)
@@ -191,7 +191,7 @@ def date_to_path(date_=None):
 </details>
 </dd>
 <dt id="lib.tools.date.date_to_html"><code class="name flex">
-<span>def <span class="ident">date_to_html</span></span>(<span>date_=None, separator=b'-')</span>
+<span>def <span class="ident">date_to_html</span></span>(<span>current_date=None, separator=b'-')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a html date with the current date</p></div>
@@ -199,14 +199,14 @@ def date_to_path(date_=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def date_to_html(date_ = None, separator=b&#34;-&#34;):
+<pre><code class="python">def date_to_html(current_date = None, separator=b&#34;-&#34;):
         &#34;&#34;&#34; Get a html date with the current date &#34;&#34;&#34;
-        year,month,day = local_time(date_)[:3]
+        year,month,day = local_time(current_date)[:3]
         return b&#34;%04d%s%02d%s%02d&#34;%(year,separator,month,separator,day)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.date.date_to_path"><code class="name flex">
-<span>def <span class="ident">date_to_path</span></span>(<span>date_=None)</span>
+<span>def <span class="ident">date_to_path</span></span>(<span>current_date=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a path with year/month/day/hour</p></div>
@@ -214,14 +214,14 @@ def date_to_path(date_=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def date_to_path(date_=None):
+<pre><code class="python">def date_to_path(current_date=None):
         &#34;&#34;&#34; Get a path with year/month/day/hour &#34;&#34;&#34;
-        year,month,day,hour,minute = local_time(date_)[:5]
+        year,month,day,hour,minute = local_time(current_date)[:5]
         return b&#34;%04d/%02d/%02d/%02dh%02d&#34;%(year,month,day,hour,minute)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.date.date_to_string"><code class="name flex">
-<span>def <span class="ident">date_to_string</span></span>(<span>date_=None)</span>
+<span>def <span class="ident">date_to_string</span></span>(<span>current_date=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Get a string with the current date</p></div>
@@ -229,13 +229,13 @@ def date_to_path(date_=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def date_to_string(date_ = None):
+<pre><code class="python">def date_to_string(current_date = None):
         &#34;&#34;&#34; Get a string with the current date &#34;&#34;&#34;
-        return date_to_bytes(date_).decode(&#34;utf8&#34;)</code></pre>
+        return date_to_bytes(current_date).decode(&#34;utf8&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.date.html_to_date"><code class="name flex">
-<span>def <span class="ident">html_to_date</span></span>(<span>date_, separator=b'-')</span>
+<span>def <span class="ident">html_to_date</span></span>(<span>current_date, separator=b'-')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert html date into time integer</p></div>
@@ -243,11 +243,11 @@ def date_to_path(date_=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def html_to_date(date_, separator=b&#34;-&#34;):
+<pre><code class="python">def html_to_date(current_date, separator=b&#34;-&#34;):
         &#34;&#34;&#34; Convert html date into time integer &#34;&#34;&#34;
         result = 0
         try:
-                year, month, day = date_.split(separator)
+                year, month, day = current_date.split(separator)
                 year  = int( year.lstrip(b&#34;0&#34;))
                 month = int(month.lstrip(b&#34;0&#34;))
                 day   = int(  day.lstrip(b&#34;0&#34;))
@@ -287,7 +287,7 @@ def date_to_path(date_=None):
 </details>
 </dd>
 <dt id="lib.tools.date.local_time"><code class="name flex">
-<span>def <span class="ident">local_time</span></span>(<span>date_=None)</span>
+<span>def <span class="ident">local_time</span></span>(<span>current_date=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Safe local time, it return 2000/1/1 00:00:00 if date can be extracted</p></div>
@@ -295,10 +295,10 @@ def date_to_path(date_=None):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def local_time(date_=None):
+<pre><code class="python">def local_time(current_date=None):
         &#34;&#34;&#34; Safe local time, it return 2000/1/1 00:00:00 if date can be extracted &#34;&#34;&#34;
         try:
-                year,month,day,hour,minute,second,weekday,yearday = time.localtime(date_)[:8]
+                year,month,day,hour,minute,second,weekday,yearday = time.localtime(current_date)[:8]
         except:
                 year,month,day,hour,minute,second,weekday,yearday = 2000,1,1,0,0,0,0,0
         return year,month,day,hour,minute,second,weekday,yearday</code></pre>

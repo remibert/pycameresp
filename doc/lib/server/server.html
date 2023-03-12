@@ -34,6 +34,7 @@
 import time
 import wifi
 import uasyncio
+from server.notifier import Notifier
 from tools import jsonconfig,logger,builddate,region,lang,watchdog,info,strings,support,filesystem,date
 if info.iscamera():
         from video.video import Camera
@@ -62,11 +63,10 @@ class ServerContext:
                 self.preload       = preload
                 self.http_port      = http_port
                 self.server_started = False
-                self.notifier      = None
                 self.get_wan_ip_async = None
                 self.wan_ip = None
                 self.server_config  = ServerConfig()
-                self.region_config  = region.RegionConfig()
+                self.region_config  = region.RegionConfig.get()
                 self.set_date = None
                 self.one_per_day = None
                 self.flushed = False
@@ -85,6 +85,7 @@ class Server:
         suspended = [False]
         slow_speed = [None]
         tasks = {}
+        tasknames = {}
         context = None
         daily_notifier = None
 
@@ -114,8 +115,9 @@ class Server:
                 Server.suspended[0] = False
 
         @staticmethod
-        async def wait_resume(duration=None):
+        async def wait_resume(duration=None, name=&#34;&#34;):
                 &#34;&#34;&#34; Wait the resume of task servers &#34;&#34;&#34;
+                Server.tasknames[id(uasyncio.current_task())] = name
                 if duration is not None:
                         Server.tasks[id(uasyncio.current_task())] = True
                         await uasyncio.sleep(duration)
@@ -147,17 +149,18 @@ class Server:
                 result = True
                 for key, value in Server.tasks.items():
                         if value is False:
+                                # print(&#34;Buzy %s&#34;%Server.tasknames[key])
                                 result = False
                 return result
 
         @staticmethod
         async def wait_all_suspended():
                 &#34;&#34;&#34; Wait all servers suspended &#34;&#34;&#34;
-                for i in range(30):
+                for i in range(20):
                         if Server.is_all_waiting() is True:
                                 break
                         else:
-                                if i % 6 == 0:
+                                if i % 4 == 0:
                                         print(&#34;Wait all servers suspended...&#34;)
                                 await uasyncio.sleep(0.5)
                                 watchdog.WatchDog.feed()
@@ -175,6 +178,12 @@ class Server:
 
                 from server.periodic import periodic_task
                 loop.create_task(periodic_task())
+
+                from server.notifier import notifier_task
+                loop.create_task(notifier_task())
+
+                from tools.starter import starter_task
+                loop.create_task(starter_task(loop))
 
         @staticmethod
         async def synchronize_wan_ip(forced):
@@ -208,7 +217,7 @@ class Server:
                                                 message = Server.daily_notifier()
                                         except:
                                                 message = Server.default_daily_notifier()
-                                        await Server.context.notifier.notify(message)
+                                        Notifier.notify(message)
 
         @staticmethod
         async def synchronize_time():
@@ -255,9 +264,9 @@ class Server:
         @staticmethod
         def is_one_per_day():
                 &#34;&#34;&#34; Indicates if the action must be done on per day &#34;&#34;&#34;
-                date_ = date.date_to_bytes()[:14]
-                if Server.context.one_per_day is None or (date_[-2:] == b&#34;12&#34; and date_ != Server.context.one_per_day):
-                        Server.context.one_per_day = date_
+                current_date = date.date_to_bytes()[:14]
+                if Server.context.one_per_day is None or (current_date[-2:] == b&#34;12&#34; and current_date != Server.context.one_per_day):
+                        Server.context.one_per_day = current_date
                         return True
                 return False
 
@@ -271,16 +280,16 @@ class Server:
                                 Server.context.server_started = True
 
                                 # Add notifier if no notifier registered
-                                if Server.context.notifier.is_empty():
+                                if Notifier.is_empty():
                                         from server.pushover import notify_message
-                                        Server.context.notifier.add(notify_message)
+                                        Notifier.add(notify_message)
 
                                 # If telnet activated
                                 if Server.context.server_config.telnet:
                                         if support.telnet():
                                                 # Load and start telnet
                                                 import server.telnet
-                                                server.telnet.start()
+                                                server.telnet.Telnet.start()
 
                                 # If ftp activated
                                 if Server.context.server_config.ftp:
@@ -300,9 +309,6 @@ class Server:
                                                         # Load and start streaming http server
                                                         server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)
 
-                                from server.presence import detect_presence
-                                Server.context.loop.create_task(detect_presence())
-
         @staticmethod
         async def manage(polling_id):
                 &#34;&#34;&#34; Manage the network and server &#34;&#34;&#34;
@@ -312,14 +318,14 @@ class Server:
                         await Server.start_server()
 
                         # Polling for wifi
-                        if polling_id %179 == 0:
+                        if polling_id %67 == 0:
                                 await wifi.Wifi.manage()
 
                         # Polling for notification not sent
-                        if polling_id %181 == 0 and Server.context.flushed is False:
+                        if polling_id %61 == 0 and Server.context.flushed is False:
                                 if wifi.Wifi.is_wan_available():
                                         await Server.synchronize_time()
-                                        await Server.context.notifier.flush()
+                                        Notifier.wake_up()
                                         if wifi.Wifi.is_wan_connected():
                                                 Server.context.flushed = True
 
@@ -337,7 +343,7 @@ class Server:
                                 await Server.synchronize_wan_ip(forced)
 
                         # Save current time
-                        if polling_id % 59 == 0:
+                        if polling_id % 599 == 0:
                                 Server.context.region_config.current_time = time.time()
                                 Server.context.region_config.save()
                 else:
@@ -345,9 +351,6 @@ class Server:
 
                         # If server can start
                         if Server.context.server_postponed == 0:
-                                from server.notifier import Notifier
-                                Server.context.notifier = Notifier
-
                                 # Start wifi
                                 await wifi.Wifi.manage()
 
@@ -357,7 +360,7 @@ class Server:
                                         await Server.synchronize_time()
 
                                         # Flush notification not sent
-                                        await Server.context.notifier.flush()
+                                        Notifier.wake_up()
                                         if wifi.Wifi.is_wan_connected():
                                                 Server.context.flushed = True</code></pre>
 </details>
@@ -385,6 +388,7 @@ class Server:
         suspended = [False]
         slow_speed = [None]
         tasks = {}
+        tasknames = {}
         context = None
         daily_notifier = None
 
@@ -414,8 +418,9 @@ class Server:
                 Server.suspended[0] = False
 
         @staticmethod
-        async def wait_resume(duration=None):
+        async def wait_resume(duration=None, name=&#34;&#34;):
                 &#34;&#34;&#34; Wait the resume of task servers &#34;&#34;&#34;
+                Server.tasknames[id(uasyncio.current_task())] = name
                 if duration is not None:
                         Server.tasks[id(uasyncio.current_task())] = True
                         await uasyncio.sleep(duration)
@@ -447,17 +452,18 @@ class Server:
                 result = True
                 for key, value in Server.tasks.items():
                         if value is False:
+                                # print(&#34;Buzy %s&#34;%Server.tasknames[key])
                                 result = False
                 return result
 
         @staticmethod
         async def wait_all_suspended():
                 &#34;&#34;&#34; Wait all servers suspended &#34;&#34;&#34;
-                for i in range(30):
+                for i in range(20):
                         if Server.is_all_waiting() is True:
                                 break
                         else:
-                                if i % 6 == 0:
+                                if i % 4 == 0:
                                         print(&#34;Wait all servers suspended...&#34;)
                                 await uasyncio.sleep(0.5)
                                 watchdog.WatchDog.feed()
@@ -475,6 +481,12 @@ class Server:
 
                 from server.periodic import periodic_task
                 loop.create_task(periodic_task())
+
+                from server.notifier import notifier_task
+                loop.create_task(notifier_task())
+
+                from tools.starter import starter_task
+                loop.create_task(starter_task(loop))
 
         @staticmethod
         async def synchronize_wan_ip(forced):
@@ -508,7 +520,7 @@ class Server:
                                                 message = Server.daily_notifier()
                                         except:
                                                 message = Server.default_daily_notifier()
-                                        await Server.context.notifier.notify(message)
+                                        Notifier.notify(message)
 
         @staticmethod
         async def synchronize_time():
@@ -555,9 +567,9 @@ class Server:
         @staticmethod
         def is_one_per_day():
                 &#34;&#34;&#34; Indicates if the action must be done on per day &#34;&#34;&#34;
-                date_ = date.date_to_bytes()[:14]
-                if Server.context.one_per_day is None or (date_[-2:] == b&#34;12&#34; and date_ != Server.context.one_per_day):
-                        Server.context.one_per_day = date_
+                current_date = date.date_to_bytes()[:14]
+                if Server.context.one_per_day is None or (current_date[-2:] == b&#34;12&#34; and current_date != Server.context.one_per_day):
+                        Server.context.one_per_day = current_date
                         return True
                 return False
 
@@ -571,16 +583,16 @@ class Server:
                                 Server.context.server_started = True
 
                                 # Add notifier if no notifier registered
-                                if Server.context.notifier.is_empty():
+                                if Notifier.is_empty():
                                         from server.pushover import notify_message
-                                        Server.context.notifier.add(notify_message)
+                                        Notifier.add(notify_message)
 
                                 # If telnet activated
                                 if Server.context.server_config.telnet:
                                         if support.telnet():
                                                 # Load and start telnet
                                                 import server.telnet
-                                                server.telnet.start()
+                                                server.telnet.Telnet.start()
 
                                 # If ftp activated
                                 if Server.context.server_config.ftp:
@@ -600,9 +612,6 @@ class Server:
                                                         # Load and start streaming http server
                                                         server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)
 
-                                from server.presence import detect_presence
-                                Server.context.loop.create_task(detect_presence())
-
         @staticmethod
         async def manage(polling_id):
                 &#34;&#34;&#34; Manage the network and server &#34;&#34;&#34;
@@ -612,14 +621,14 @@ class Server:
                         await Server.start_server()
 
                         # Polling for wifi
-                        if polling_id %179 == 0:
+                        if polling_id %67 == 0:
                                 await wifi.Wifi.manage()
 
                         # Polling for notification not sent
-                        if polling_id %181 == 0 and Server.context.flushed is False:
+                        if polling_id %61 == 0 and Server.context.flushed is False:
                                 if wifi.Wifi.is_wan_available():
                                         await Server.synchronize_time()
-                                        await Server.context.notifier.flush()
+                                        Notifier.wake_up()
                                         if wifi.Wifi.is_wan_connected():
                                                 Server.context.flushed = True
 
@@ -637,7 +646,7 @@ class Server:
                                 await Server.synchronize_wan_ip(forced)
 
                         # Save current time
-                        if polling_id % 59 == 0:
+                        if polling_id % 599 == 0:
                                 Server.context.region_config.current_time = time.time()
                                 Server.context.region_config.save()
                 else:
@@ -645,9 +654,6 @@ class Server:
 
                         # If server can start
                         if Server.context.server_postponed == 0:
-                                from server.notifier import Notifier
-                                Server.context.notifier = Notifier
-
                                 # Start wifi
                                 await wifi.Wifi.manage()
 
@@ -657,7 +663,7 @@ class Server:
                                         await Server.synchronize_time()
 
                                         # Flush notification not sent
-                                        await Server.context.notifier.flush()
+                                        Notifier.wake_up()
                                         if wifi.Wifi.is_wan_connected():
                                                 Server.context.flushed = True</code></pre>
 </details>
@@ -676,6 +682,10 @@ class Server:
 <div class="desc"></div>
 </dd>
 <dt id="lib.server.server.Server.suspended"><code class="name">var <span class="ident">suspended</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.server.Server.tasknames"><code class="name">var <span class="ident">tasknames</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -731,7 +741,13 @@ def init(loop=None, page_loader=None, preload=False, http_port=80):
         logger.syslog(&#34;Version: %s&#34;%strings.tostrings(builddate.date))
 
         from server.periodic import periodic_task
-        loop.create_task(periodic_task())</code></pre>
+        loop.create_task(periodic_task())
+
+        from server.notifier import notifier_task
+        loop.create_task(notifier_task())
+
+        from tools.starter import starter_task
+        loop.create_task(starter_task(loop))</code></pre>
 </details>
 </dd>
 <dt id="lib.server.server.Server.is_all_waiting"><code class="name flex">
@@ -749,6 +765,7 @@ def is_all_waiting():
         result = True
         for key, value in Server.tasks.items():
                 if value is False:
+                        # print(&#34;Buzy %s&#34;%Server.tasknames[key])
                         result = False
         return result</code></pre>
 </details>
@@ -765,9 +782,9 @@ def is_all_waiting():
 <pre><code class="python">@staticmethod
 def is_one_per_day():
         &#34;&#34;&#34; Indicates if the action must be done on per day &#34;&#34;&#34;
-        date_ = date.date_to_bytes()[:14]
-        if Server.context.one_per_day is None or (date_[-2:] == b&#34;12&#34; and date_ != Server.context.one_per_day):
-                Server.context.one_per_day = date_
+        current_date = date.date_to_bytes()[:14]
+        if Server.context.one_per_day is None or (current_date[-2:] == b&#34;12&#34; and current_date != Server.context.one_per_day):
+                Server.context.one_per_day = current_date
                 return True
         return False</code></pre>
 </details>
@@ -811,14 +828,14 @@ async def manage(polling_id):
                 await Server.start_server()
 
                 # Polling for wifi
-                if polling_id %179 == 0:
+                if polling_id %67 == 0:
                         await wifi.Wifi.manage()
 
                 # Polling for notification not sent
-                if polling_id %181 == 0 and Server.context.flushed is False:
+                if polling_id %61 == 0 and Server.context.flushed is False:
                         if wifi.Wifi.is_wan_available():
                                 await Server.synchronize_time()
-                                await Server.context.notifier.flush()
+                                Notifier.wake_up()
                                 if wifi.Wifi.is_wan_connected():
                                         Server.context.flushed = True
 
@@ -836,7 +853,7 @@ async def manage(polling_id):
                         await Server.synchronize_wan_ip(forced)
 
                 # Save current time
-                if polling_id % 59 == 0:
+                if polling_id % 599 == 0:
                         Server.context.region_config.current_time = time.time()
                         Server.context.region_config.save()
         else:
@@ -844,9 +861,6 @@ async def manage(polling_id):
 
                 # If server can start
                 if Server.context.server_postponed == 0:
-                        from server.notifier import Notifier
-                        Server.context.notifier = Notifier
-
                         # Start wifi
                         await wifi.Wifi.manage()
 
@@ -856,7 +870,7 @@ async def manage(polling_id):
                                 await Server.synchronize_time()
 
                                 # Flush notification not sent
-                                await Server.context.notifier.flush()
+                                Notifier.wake_up()
                                 if wifi.Wifi.is_wan_connected():
                                         Server.context.flushed = True</code></pre>
 </details>
@@ -925,16 +939,16 @@ async def start_server():
                         Server.context.server_started = True
 
                         # Add notifier if no notifier registered
-                        if Server.context.notifier.is_empty():
+                        if Notifier.is_empty():
                                 from server.pushover import notify_message
-                                Server.context.notifier.add(notify_message)
+                                Notifier.add(notify_message)
 
                         # If telnet activated
                         if Server.context.server_config.telnet:
                                 if support.telnet():
                                         # Load and start telnet
                                         import server.telnet
-                                        server.telnet.start()
+                                        server.telnet.Telnet.start()
 
                         # If ftp activated
                         if Server.context.server_config.ftp:
@@ -952,10 +966,7 @@ async def start_server():
                                 if info.iscamera():
                                         if Camera.is_activated():
                                                 # Load and start streaming http server
-                                                server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)
-
-                        from server.presence import detect_presence
-                        Server.context.loop.create_task(detect_presence())</code></pre>
+                                                server.httpserver.start(loop=Server.context.loop, loader=Server.context.page_loader, preload=Server.context.preload, port=Server.context.http_port +1, name=&#34;StreamingServer&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.server.Server.suspend"><code class="name flex">
@@ -1066,7 +1077,7 @@ async def synchronize_wan_ip(forced):
                                         message = Server.daily_notifier()
                                 except:
                                         message = Server.default_daily_notifier()
-                                await Server.context.notifier.notify(message)</code></pre>
+                                Notifier.notify(message)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.server.Server.wait_all_suspended"><code class="name flex">
@@ -1081,18 +1092,18 @@ async def synchronize_wan_ip(forced):
 <pre><code class="python">@staticmethod
 async def wait_all_suspended():
         &#34;&#34;&#34; Wait all servers suspended &#34;&#34;&#34;
-        for i in range(30):
+        for i in range(20):
                 if Server.is_all_waiting() is True:
                         break
                 else:
-                        if i % 6 == 0:
+                        if i % 4 == 0:
                                 print(&#34;Wait all servers suspended...&#34;)
                         await uasyncio.sleep(0.5)
                         watchdog.WatchDog.feed()</code></pre>
 </details>
 </dd>
 <dt id="lib.server.server.Server.wait_resume"><code class="name flex">
-<span>async def <span class="ident">wait_resume</span></span>(<span>duration=None)</span>
+<span>async def <span class="ident">wait_resume</span></span>(<span>duration=None, name='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Wait the resume of task servers</p></div>
@@ -1101,8 +1112,9 @@ async def wait_all_suspended():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def wait_resume(duration=None):
+async def wait_resume(duration=None, name=&#34;&#34;):
         &#34;&#34;&#34; Wait the resume of task servers &#34;&#34;&#34;
+        Server.tasknames[id(uasyncio.current_task())] = name
         if duration is not None:
                 Server.tasks[id(uasyncio.current_task())] = True
                 await uasyncio.sleep(duration)
@@ -1164,11 +1176,10 @@ async def wait_resume(duration=None):
                 self.preload       = preload
                 self.http_port      = http_port
                 self.server_started = False
-                self.notifier      = None
                 self.get_wan_ip_async = None
                 self.wan_ip = None
                 self.server_config  = ServerConfig()
-                self.region_config  = region.RegionConfig()
+                self.region_config  = region.RegionConfig.get()
                 self.set_date = None
                 self.one_per_day = None
                 self.flushed = False
@@ -1219,6 +1230,7 @@ async def wait_resume(duration=None):
 <li><code><a title="lib.server.server.Server.suspended" href="#lib.server.server.Server.suspended">suspended</a></code></li>
 <li><code><a title="lib.server.server.Server.synchronize_time" href="#lib.server.server.Server.synchronize_time">synchronize_time</a></code></li>
 <li><code><a title="lib.server.server.Server.synchronize_wan_ip" href="#lib.server.server.Server.synchronize_wan_ip">synchronize_wan_ip</a></code></li>
+<li><code><a title="lib.server.server.Server.tasknames" href="#lib.server.server.Server.tasknames">tasknames</a></code></li>
 <li><code><a title="lib.server.server.Server.tasks" href="#lib.server.server.Server.tasks">tasks</a></code></li>
 <li><code><a title="lib.server.server.Server.wait_all_suspended" href="#lib.server.server.Server.wait_all_suspended">wait_all_suspended</a></code></li>
 <li><code><a title="lib.server.server.Server.wait_resume" href="#lib.server.server.Server.wait_resume">wait_resume</a></code></li>

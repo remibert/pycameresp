@@ -32,6 +32,7 @@
 &#34;&#34;&#34; Miscellaneous path functions &#34;&#34;&#34;
 import os
 import sys
+import time
 
 try:
         import fnmatch
@@ -58,9 +59,14 @@ def exists(filename):
         return False
 
 previous_file_info = []
+previous_get = 0
 def fileinfo(path):
         &#34;&#34;&#34; Get the file informations &#34;&#34;&#34;
-        global previous_file_info
+        global previous_file_info, previous_get
+        current_time = time.time()
+        if previous_get + 3 &lt; current_time:
+                previous_get = current_time
+                previous_file_info = []
         if len(previous_file_info) == 0:
                 previous_file_info = [path, os.stat(path)]
         elif previous_file_info[0] != path:
@@ -202,14 +208,29 @@ def ismicropython():
                 return True
         return False
 
+try:
+        import uos
+        list_directory = uos.ilistdir
+except:
+        def list_directory(path_):
+                &#34;&#34;&#34; List directory &#34;&#34;&#34;
+                result = []
+                for filename in os.listdir(path_):
+                        fileinfo_ = os.stat(path_ + &#34;/&#34; + filename)
+                        typ = fileinfo_[0]
+                        size = fileinfo_[6]
+
+                        result.append((filename, typ, 0, size))
+                return result
+
 def scandir(path, pattern, recursive, displayer=None):
         &#34;&#34;&#34; Scan recursively a directory &#34;&#34;&#34;
         filenames   = []
         directories = []
         if path == &#34;&#34;:
                 path = &#34;.&#34;
-        if path is not None and pattern is not None:
-                for file_info in uos.ilistdir(path):
+        if path is not None and pattern is not None and exists(path) and isdir(path):
+                for file_info in list_directory(path):
                         name = file_info[0]
                         typ  = file_info[1]
                         if path != &#34;&#34;:
@@ -245,8 +266,8 @@ async def ascandir(path, pattern, recursive, displayer=None):
         directories = []
         if path == &#34;&#34;:
                 path = &#34;.&#34;
-        if path is not None and pattern is not None:
-                for file_info in uos.ilistdir(path):
+        if path is not None and pattern is not None and exists(path) and isdir(path):
+                for file_info in list_directory(path):
                         name = file_info[0]
                         typ  = file_info[1]
                         if path != &#34;&#34;:
@@ -440,8 +461,8 @@ def normpath(path):
         directories = []
         if path == &#34;&#34;:
                 path = &#34;.&#34;
-        if path is not None and pattern is not None:
-                for file_info in uos.ilistdir(path):
+        if path is not None and pattern is not None and exists(path) and isdir(path):
+                for file_info in list_directory(path):
                         name = file_info[0]
                         typ  = file_info[1]
                         if path != &#34;&#34;:
@@ -508,7 +529,11 @@ def normpath(path):
 </summary>
 <pre><code class="python">def fileinfo(path):
         &#34;&#34;&#34; Get the file informations &#34;&#34;&#34;
-        global previous_file_info
+        global previous_file_info, previous_get
+        current_time = time.time()
+        if previous_get + 3 &lt; current_time:
+                previous_get = current_time
+                previous_file_info = []
         if len(previous_file_info) == 0:
                 previous_file_info = [path, os.stat(path)]
         elif previous_file_info[0] != path:
@@ -777,8 +802,8 @@ def normpath(path):
         directories = []
         if path == &#34;&#34;:
                 path = &#34;.&#34;
-        if path is not None and pattern is not None:
-                for file_info in uos.ilistdir(path):
+        if path is not None and pattern is not None and exists(path) and isdir(path):
+                for file_info in list_directory(path):
                         name = file_info[0]
                         typ  = file_info[1]
                         if path != &#34;&#34;:

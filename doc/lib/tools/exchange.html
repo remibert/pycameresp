@@ -146,8 +146,8 @@ class DateReader(Reader):
         def read_second(self, byte):
                 &#34;&#34;&#34; Read second &#34;&#34;&#34;
                 if self.second.read_byte(byte) is not None:
-                        date_ = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
-                        self.value = time.mktime(tuple(date_))
+                        current_date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+                        self.value = time.mktime(tuple(current_date))
                         return self.value
 
 class FilenameReader(Reader):
@@ -340,6 +340,7 @@ class FileReader:
 
                                         # Create directory
                                         filename = filesystem.normpath(directory + &#34;/&#34; + self.filename.get())
+
                                         filesystem.makedir(filesystem.split(filename)[0], True)
 
                                         # Write file
@@ -392,7 +393,7 @@ class FileReader:
                         else:
                                 chunk_id = 0
                                 if printer is not None:
-                                        printer(&#34;  %-40s&#34;, end=&#34;&#34;)
+                                        printer(&#34;  %-40s&#34;%&#34;&#34;, end=&#34;&#34;)
                                 while size &gt; 0:
                                         count = 0
                                         part = b&#34;&#34;
@@ -880,8 +881,8 @@ class UploadCommand:
         def read_second(self, byte):
                 &#34;&#34;&#34; Read second &#34;&#34;&#34;
                 if self.second.read_byte(byte) is not None:
-                        date_ = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
-                        self.value = time.mktime(tuple(date_))
+                        current_date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+                        self.value = time.mktime(tuple(current_date))
                         return self.value</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -962,8 +963,8 @@ class UploadCommand:
 <pre><code class="python">def read_second(self, byte):
         &#34;&#34;&#34; Read second &#34;&#34;&#34;
         if self.second.read_byte(byte) is not None:
-                date_ = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
-                self.value = time.mktime(tuple(date_))
+                current_date = [self.year.get(), self.month.get(), self.day.get(), self.hour.get(), self.minute.get(), self.second.get(), 0, 0, 0]
+                self.value = time.mktime(tuple(current_date))
                 return self.value</code></pre>
 </details>
 </dd>
@@ -1108,6 +1109,7 @@ class UploadCommand:
 
                                         # Create directory
                                         filename = filesystem.normpath(directory + &#34;/&#34; + self.filename.get())
+
                                         filesystem.makedir(filesystem.split(filename)[0], True)
 
                                         # Write file
@@ -1160,7 +1162,7 @@ class UploadCommand:
                         else:
                                 chunk_id = 0
                                 if printer is not None:
-                                        printer(&#34;  %-40s&#34;, end=&#34;&#34;)
+                                        printer(&#34;  %-40s&#34;%&#34;&#34;, end=&#34;&#34;)
                                 while size &gt; 0:
                                         count = 0
                                         part = b&#34;&#34;
@@ -1234,6 +1236,7 @@ class UploadCommand:
 
                                 # Create directory
                                 filename = filesystem.normpath(directory + &#34;/&#34; + self.filename.get())
+
                                 filesystem.makedir(filesystem.split(filename)[0], True)
 
                                 # Write file
@@ -1411,7 +1414,7 @@ class UploadCommand:
                 else:
                         chunk_id = 0
                         if printer is not None:
-                                printer(&#34;  %-40s&#34;, end=&#34;&#34;)
+                                printer(&#34;  %-40s&#34;%&#34;&#34;, end=&#34;&#34;)
                         while size &gt; 0:
                                 count = 0
                                 part = b&#34;&#34;

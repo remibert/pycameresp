@@ -31,9 +31,9 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Archiver files functions &#34;&#34;&#34;
-from tools import logger,filesystem,exchange
+from tools import logger,filesystem,exchange, fnmatch
 
-def download_files(download_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
+def download_files(download_filename, path=&#34;./config&#34;, pattern=&#34;*.json&#34;, excludes=None, recursive=False):
         &#34;&#34;&#34; Download many file into only one file &#34;&#34;&#34;
         result = True
 
@@ -50,8 +50,18 @@ def download_files(download_filename, path=&#34;./config&#34;,pattern=&#34;*.jso
                 file_write = exchange.FileWriter()
                 # For all files found
                 for filename in files:
-                        # All files except .tmp and sdcard
-                        if filename[-4:] != &#34;.tmp&#34; and filename[:4] != &#34;/sd/&#34; and filename[5:] != &#34;./sd/&#34;:
+                        exclude = False
+                        if excludes is not None:
+                                if type(excludes) == type(&#34;&#34;):
+                                        excludes = [excludes]
+
+                                if type(excludes) == type([]):
+                                        for pattern in excludes:
+                                                if fnmatch.fnmatch(filesystem.normpath(filename),pattern):
+                                                        exclude = True
+                                                        break
+
+                        if exclude is False:
                                 logger.syslog(&#34;  Download &#39;%s&#39;&#34;%(filename))
                                 if file_write.write(filename, None, out_file) is False:
                                         result = False
@@ -76,9 +86,11 @@ def upload_files(upload_filename, directory=&#34;/&#34;):
                         simulated = True
 
                 read_size = filesystem.filesize(upload_filename)
-
                 while in_file.tell() &lt; read_size:
                         file_reader = exchange.FileReader(simulated)
+                        if filesystem.ismicropython() is False:
+                                directory = &#34;/tmp&#34;
+
                         res = file_reader.read(directory, in_file)
                         logger.syslog(&#34;  Upload %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 
@@ -100,7 +112,7 @@ def upload_files(upload_filename, directory=&#34;/&#34;):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="lib.tools.archiver.download_files"><code class="name flex">
-<span>def <span class="ident">download_files</span></span>(<span>download_filename, path='./config', pattern='*.json', recursive=False)</span>
+<span>def <span class="ident">download_files</span></span>(<span>download_filename, path='./config', pattern='*.json', excludes=None, recursive=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Download many file into only one file</p></div>
@@ -108,7 +120,7 @@ def upload_files(upload_filename, directory=&#34;/&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def download_files(download_filename, path=&#34;./config&#34;,pattern=&#34;*.json&#34;, recursive=False):
+<pre><code class="python">def download_files(download_filename, path=&#34;./config&#34;, pattern=&#34;*.json&#34;, excludes=None, recursive=False):
         &#34;&#34;&#34; Download many file into only one file &#34;&#34;&#34;
         result = True
 
@@ -125,8 +137,18 @@ def upload_files(upload_filename, directory=&#34;/&#34;):
                 file_write = exchange.FileWriter()
                 # For all files found
                 for filename in files:
-                        # All files except .tmp and sdcard
-                        if filename[-4:] != &#34;.tmp&#34; and filename[:4] != &#34;/sd/&#34; and filename[5:] != &#34;./sd/&#34;:
+                        exclude = False
+                        if excludes is not None:
+                                if type(excludes) == type(&#34;&#34;):
+                                        excludes = [excludes]
+
+                                if type(excludes) == type([]):
+                                        for pattern in excludes:
+                                                if fnmatch.fnmatch(filesystem.normpath(filename),pattern):
+                                                        exclude = True
+                                                        break
+
+                        if exclude is False:
                                 logger.syslog(&#34;  Download &#39;%s&#39;&#34;%(filename))
                                 if file_write.write(filename, None, out_file) is False:
                                         result = False
@@ -161,9 +183,11 @@ def upload_files(upload_filename, directory=&#34;/&#34;):
                         simulated = True
 
                 read_size = filesystem.filesize(upload_filename)
-
                 while in_file.tell() &lt; read_size:
                         file_reader = exchange.FileReader(simulated)
+                        if filesystem.ismicropython() is False:
+                                directory = &#34;/tmp&#34;
+
                         res = file_reader.read(directory, in_file)
                         logger.syslog(&#34;  Upload %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 

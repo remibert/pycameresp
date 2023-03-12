@@ -29,6 +29,8 @@ Help of this command :
 		-a, --all             install tools, get source, patch, and build selected firmwares
 		-c, --clean           clean micropython sources to remove all patch
 		-s, --s3              build Esp32 S3 without problem
+		-r, --rp2             build raspberry pico RP2 and RP2 W
+		-z, --zippy           zip python modules
 		-o OUTPUTDIR, --outputdir OUTPUTDIR                    output directory
 
 The first time use command (get source, install required software and build firmware) : 
@@ -45,4 +47,7 @@ Or for all ESP32 S2
 
 To build ESP32 S3 you must clean all and add option --s3  :
 - **python3 build.py --clean --s3 --patch --build "GENERIC_S3_SPIRAM"**
+
+To build Pico PI and Pico PI W you must clean all and enter command :
+- **python3 build.py --clean --rp2 --patch --build "PICO" "PICO_W"**
 

@@ -79,6 +79,12 @@ def meminfo():
                 result = lang.no_information
         return result
 
+def memdump():
+        &#34;&#34;&#34; Dump memory allocated &#34;&#34;&#34;
+        if filesystem.ismicropython():
+                import micropython
+                micropython.mem_info(&#34;level&#34;)
+
 def flash_size(mountpoint=None):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
         import uos
@@ -346,6 +352,22 @@ def get_issues_counter():
                         return True</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.info.memdump"><code class="name flex">
+<span>def <span class="ident">memdump</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Dump memory allocated</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def memdump():
+        &#34;&#34;&#34; Dump memory allocated &#34;&#34;&#34;
+        if filesystem.ismicropython():
+                import micropython
+                micropython.mem_info(&#34;level&#34;)</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.info.meminfo"><code class="name flex">
 <span>def <span class="ident">meminfo</span></span>(<span>)</span>
 </code></dt>
@@ -506,6 +528,7 @@ def get_issues_counter():
 <li><code><a title="lib.tools.info.get_last_activity" href="#lib.tools.info.get_last_activity">get_last_activity</a></code></li>
 <li><code><a title="lib.tools.info.increase_issues_counter" href="#lib.tools.info.increase_issues_counter">increase_issues_counter</a></code></li>
 <li><code><a title="lib.tools.info.iscamera" href="#lib.tools.info.iscamera">iscamera</a></code></li>
+<li><code><a title="lib.tools.info.memdump" href="#lib.tools.info.memdump">memdump</a></code></li>
 <li><code><a title="lib.tools.info.meminfo" href="#lib.tools.info.meminfo">meminfo</a></code></li>
 <li><code><a title="lib.tools.info.set_last_activity" href="#lib.tools.info.set_last_activity">set_last_activity</a></code></li>
 <li><code><a title="lib.tools.info.sysinfo" href="#lib.tools.info.sysinfo">sysinfo</a></code></li>

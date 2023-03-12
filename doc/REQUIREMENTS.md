@@ -2,10 +2,7 @@
 
 # Requirements
 
-Micropython on ESP32 does not leave much space in RAM, a SPIRAM is recommended.
-
-Despite everything, the servers, the shell, the text editor can operate on an ESP32 without spiram, 
-it is necessary to generate the firmware embedding the python scripts, in this case less memory is consumed.
+Micropython on ESP32 does not leave much space in RAM, a SPIRAM is recommended, but the platform can however work, it is then necessary to limit the number of servers used.
 
 For motion capture you absolutely need an ESP32CAM.
 
@@ -20,4 +17,8 @@ Below are the devices compatible with pycameresp :
 ![M5StackCamera](/images/Device_M5StackCamera.jpg "M5StackCamera")
 ![BPI-Leaf-S3](/images/Device_BPI-Leaf-S3.png "BPI-Leaf-S3")
 
-**Devices without spiram have been removed, the platform can work, but we often fall into a lack of memory.**
+![NODEMCU](/images/Device_NODEMCU.jpg "NODE MCU")
+![LOLIN32](/images/Device_LOLIN32.jpg "LOLIN32")
+![PicoPi](/images/Device_PicoPi.png "Pico PI and Pico PI W")
+![SONOFF R3](/images/Device_SonoffR3.png "SONOFF R3")
+

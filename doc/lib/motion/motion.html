@@ -39,10 +39,12 @@ import video
 from server.notifier import Notifier
 from server.server   import Server
 from server.presence import Presence
+from server.webhook  import WebhookConfig
 from motion.historic import Historic
 from video.video     import Camera
 from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem,date
 
+STATE_DURATION = 30
 class MotionConfig(jsonconfig.JsonConfig):
         &#34;&#34;&#34; Configuration class of motion detection &#34;&#34;&#34;
         def __init__(self):
@@ -343,7 +345,7 @@ class Motion:
 
                                 # Save image to sdcard
                                 if await image.save() is False:
-                                        await Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
+                                        Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
                         else:
                                 # Destroy image
                                 self.deinit_image(image)
@@ -465,7 +467,7 @@ class Motion:
                                                 index = image.index
                                         diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                         if display:
-                                line = b&#34;\r%s %s L%d (%d) &#34;%(date.time_to_html(), bytes(diffs), mean_light, index)
+                                line = b&#34;\r%s %s L%d (%d) &#34;%(date.time_to_html(seconds=True), bytes(diffs), mean_light, index)
                                 if filesystem.ismicropython():
                                         sys.stdout.write(line)
                                 else:
@@ -534,7 +536,9 @@ class Detection:
                 self.detection = None
                 self.activated = None
                 self.refresh_config_counter = 0
+                self.last_detection = 0
                 self.cadencer = NotificationCadencer()
+                self.last_notification_suspended = 0
 
         def load_config(self):
                 &#34;&#34;&#34; Load motion configuration &#34;&#34;&#34;
@@ -542,6 +546,9 @@ class Detection:
                 self.motion_config      = MotionConfig()
                 if self.motion_config.load() is False:
                         self.motion_config.save()
+                self.webhook      = WebhookConfig()
+                if self.webhook.load() is False:
+                        self.webhook.save()
 
         def refresh_config(self):
                 &#34;&#34;&#34; Refresh the configuration : it can be changed by web page &#34;&#34;&#34;
@@ -552,6 +559,13 @@ class Detection:
                                 logger.syslog(&#34;Change motion config %s&#34;%self.motion_config.to_string(), display=False)
                                 if self.motion:
                                         self.motion.refresh_config()
+                        # If configuration changed
+                        if self.webhook.is_changed():
+                                self.webhook.load()
+                                logger.syslog(&#34;Change webhook config %s&#34;%self.webhook.to_string(), display=False)
+                                if self.motion:
+                                        self.motion.refresh_config()
+
                 self.refresh_config_counter += 1
 
         async def run(self):
@@ -562,14 +576,14 @@ class Detection:
                 &#34;&#34;&#34; Detect motion &#34;&#34;&#34;
                 result = False
                 # Wait the server resume
-                await Server.wait_resume()
+                await Server.wait_resume(name=&#34;motion&#34;)
 
                 # Release previously alocated image
                 self.release_image()
 
                 # If the motion detection activated
                 activated = await self.is_activated()
-                if activated or self.is_pemanent():
+                if activated or self.is_permanent():
                         try:
                                 # Capture motion
                                 result = await self.capture(activated)
@@ -608,9 +622,9 @@ class Detection:
                         collect()
 
                         if result:
-                                await Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
+                                Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
                         else:
-                                await Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
+                                Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
                         self.activated = result
 
                 # If camera activated and motion activated
@@ -620,12 +634,12 @@ class Detection:
                         result = False
 
                 # If motion disabled
-                if result is False and self.is_pemanent() is False:
+                if result is False and self.is_permanent() is False:
                         # Wait moment before next loop
                         await uasyncio.sleep_ms(500)
                 return result
 
-        def is_pemanent(self):
+        def is_permanent(self):
                 &#34;&#34;&#34; Indicates if pemanent detection activated &#34;&#34;&#34;
                 result = False
                 # If motion activated
@@ -644,6 +658,7 @@ class Detection:
                         self.motion = Motion(self.motion_config, self.pir_detection)
                         if self.motion.open() is False:
                                 self.motion = None
+                                # pylint:disable=broad-exception-raised
                                 raise Exception(&#34;Cannot open camera&#34;)
                         else:
                                 firstInit = True
@@ -662,11 +677,6 @@ class Detection:
                         # Release image buffer
                         self.motion.deinit_image(image)
 
-                # Force garbage collection each 20 images
-                if self.motion:
-                        if self.motion.index %30 == 0:
-                                collect()
-
         async def capture(self, activated):
                 &#34;&#34;&#34; Capture motion &#34;&#34;&#34;
                 result = False
@@ -674,11 +684,17 @@ class Detection:
                 # If camera not stabilized speed start
                 if self.motion and self.motion.is_stabilized() is True:
                         frequency = self.polling_frequency*500 if Server.is_slow() else self.polling_frequency
-                        await uasyncio.sleep_ms(frequency)
+                        if frequency &gt; 1000:
+                                while frequency &gt; 0:
+                                        await uasyncio.sleep_ms(500)
+                                        frequency -= 500
+                                        await Server.wait_resume(name=&#34;motion&#34;)
+                        else:
+                                await uasyncio.sleep_ms(frequency)
 
                 try:
                         # Waits for the camera&#39;s availability
-                        reserved = await video.Camera.reserve(self, timeout=60)
+                        reserved = await video.Camera.reserve(self, timeout=1)
 
                         # If reserved
                         if reserved:
@@ -690,14 +706,32 @@ class Detection:
 
                                 # If motion detected and detection activated
                                 if self.detection is not None and activated is True:
+
                                         # Notify motion with push over
                                         message, image = self.detection
 
+                                        # If no previous detection
+                                        if self.last_detection == 0:
+                                                if self.webhook.activated:
+                                                        # Send webhook motion detected
+                                                        Notifier.webhook(&#34;Motion&#34;,self.webhook.motion_detected)
+
+                                        self.last_detection = int(time.time())
+
                                         # If the notifications are not too frequent
                                         if self.cadencer.can_notify():
-                                                await Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
+                                                Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
                                         else:
                                                 logger.syslog(&#34;Notification &#39;%s&#39; too frequent ignored&#34; %message)
+                                else:
+                                        # If motion detected recently
+                                        if self.last_detection &gt; 0:
+                                                # If no more motion detection
+                                                if self.last_detection + STATE_DURATION &lt; int(time.time()):
+                                                        if self.webhook.activated:
+                                                                # Send webhook no motion detected
+                                                                Notifier.webhook(&#34;Motion&#34;,self.webhook.no_motion_detected)
+                                                        self.last_detection = 0
                                 # Detect motion
                                 detected, change_polling = self.motion.detect()
 
@@ -712,7 +746,9 @@ class Detection:
                                         Historic.set_motion_state(False)
                                 result = True
                         else:
-                                await Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
+                                if self.last_notification_suspended + 120 &lt; int(time.time()):
+                                        self.last_notification_suspended = int(time.time())
+                                        Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
                                 result = True
 
                 finally:
@@ -841,7 +877,9 @@ async def detect_motion(pir_detection):
                 self.detection = None
                 self.activated = None
                 self.refresh_config_counter = 0
+                self.last_detection = 0
                 self.cadencer = NotificationCadencer()
+                self.last_notification_suspended = 0
 
         def load_config(self):
                 &#34;&#34;&#34; Load motion configuration &#34;&#34;&#34;
@@ -849,6 +887,9 @@ async def detect_motion(pir_detection):
                 self.motion_config      = MotionConfig()
                 if self.motion_config.load() is False:
                         self.motion_config.save()
+                self.webhook      = WebhookConfig()
+                if self.webhook.load() is False:
+                        self.webhook.save()
 
         def refresh_config(self):
                 &#34;&#34;&#34; Refresh the configuration : it can be changed by web page &#34;&#34;&#34;
@@ -859,6 +900,13 @@ async def detect_motion(pir_detection):
                                 logger.syslog(&#34;Change motion config %s&#34;%self.motion_config.to_string(), display=False)
                                 if self.motion:
                                         self.motion.refresh_config()
+                        # If configuration changed
+                        if self.webhook.is_changed():
+                                self.webhook.load()
+                                logger.syslog(&#34;Change webhook config %s&#34;%self.webhook.to_string(), display=False)
+                                if self.motion:
+                                        self.motion.refresh_config()
+
                 self.refresh_config_counter += 1
 
         async def run(self):
@@ -869,14 +917,14 @@ async def detect_motion(pir_detection):
                 &#34;&#34;&#34; Detect motion &#34;&#34;&#34;
                 result = False
                 # Wait the server resume
-                await Server.wait_resume()
+                await Server.wait_resume(name=&#34;motion&#34;)
 
                 # Release previously alocated image
                 self.release_image()
 
                 # If the motion detection activated
                 activated = await self.is_activated()
-                if activated or self.is_pemanent():
+                if activated or self.is_permanent():
                         try:
                                 # Capture motion
                                 result = await self.capture(activated)
@@ -915,9 +963,9 @@ async def detect_motion(pir_detection):
                         collect()
 
                         if result:
-                                await Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
+                                Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
                         else:
-                                await Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
+                                Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
                         self.activated = result
 
                 # If camera activated and motion activated
@@ -927,12 +975,12 @@ async def detect_motion(pir_detection):
                         result = False
 
                 # If motion disabled
-                if result is False and self.is_pemanent() is False:
+                if result is False and self.is_permanent() is False:
                         # Wait moment before next loop
                         await uasyncio.sleep_ms(500)
                 return result
 
-        def is_pemanent(self):
+        def is_permanent(self):
                 &#34;&#34;&#34; Indicates if pemanent detection activated &#34;&#34;&#34;
                 result = False
                 # If motion activated
@@ -951,6 +999,7 @@ async def detect_motion(pir_detection):
                         self.motion = Motion(self.motion_config, self.pir_detection)
                         if self.motion.open() is False:
                                 self.motion = None
+                                # pylint:disable=broad-exception-raised
                                 raise Exception(&#34;Cannot open camera&#34;)
                         else:
                                 firstInit = True
@@ -969,11 +1018,6 @@ async def detect_motion(pir_detection):
                         # Release image buffer
                         self.motion.deinit_image(image)
 
-                # Force garbage collection each 20 images
-                if self.motion:
-                        if self.motion.index %30 == 0:
-                                collect()
-
         async def capture(self, activated):
                 &#34;&#34;&#34; Capture motion &#34;&#34;&#34;
                 result = False
@@ -981,11 +1025,17 @@ async def detect_motion(pir_detection):
                 # If camera not stabilized speed start
                 if self.motion and self.motion.is_stabilized() is True:
                         frequency = self.polling_frequency*500 if Server.is_slow() else self.polling_frequency
-                        await uasyncio.sleep_ms(frequency)
+                        if frequency &gt; 1000:
+                                while frequency &gt; 0:
+                                        await uasyncio.sleep_ms(500)
+                                        frequency -= 500
+                                        await Server.wait_resume(name=&#34;motion&#34;)
+                        else:
+                                await uasyncio.sleep_ms(frequency)
 
                 try:
                         # Waits for the camera&#39;s availability
-                        reserved = await video.Camera.reserve(self, timeout=60)
+                        reserved = await video.Camera.reserve(self, timeout=1)
 
                         # If reserved
                         if reserved:
@@ -997,14 +1047,32 @@ async def detect_motion(pir_detection):
 
                                 # If motion detected and detection activated
                                 if self.detection is not None and activated is True:
+
                                         # Notify motion with push over
                                         message, image = self.detection
 
+                                        # If no previous detection
+                                        if self.last_detection == 0:
+                                                if self.webhook.activated:
+                                                        # Send webhook motion detected
+                                                        Notifier.webhook(&#34;Motion&#34;,self.webhook.motion_detected)
+
+                                        self.last_detection = int(time.time())
+
                                         # If the notifications are not too frequent
                                         if self.cadencer.can_notify():
-                                                await Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
+                                                Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
                                         else:
                                                 logger.syslog(&#34;Notification &#39;%s&#39; too frequent ignored&#34; %message)
+                                else:
+                                        # If motion detected recently
+                                        if self.last_detection &gt; 0:
+                                                # If no more motion detection
+                                                if self.last_detection + STATE_DURATION &lt; int(time.time()):
+                                                        if self.webhook.activated:
+                                                                # Send webhook no motion detected
+                                                                Notifier.webhook(&#34;Motion&#34;,self.webhook.no_motion_detected)
+                                                        self.last_detection = 0
                                 # Detect motion
                                 detected, change_polling = self.motion.detect()
 
@@ -1019,7 +1087,9 @@ async def detect_motion(pir_detection):
                                         Historic.set_motion_state(False)
                                 result = True
                         else:
-                                await Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
+                                if self.last_notification_suspended + 120 &lt; int(time.time()):
+                                        self.last_notification_suspended = int(time.time())
+                                        Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
                                 result = True
 
                 finally:
@@ -1045,11 +1115,17 @@ async def detect_motion(pir_detection):
         # If camera not stabilized speed start
         if self.motion and self.motion.is_stabilized() is True:
                 frequency = self.polling_frequency*500 if Server.is_slow() else self.polling_frequency
-                await uasyncio.sleep_ms(frequency)
+                if frequency &gt; 1000:
+                        while frequency &gt; 0:
+                                await uasyncio.sleep_ms(500)
+                                frequency -= 500
+                                await Server.wait_resume(name=&#34;motion&#34;)
+                else:
+                        await uasyncio.sleep_ms(frequency)
 
         try:
                 # Waits for the camera&#39;s availability
-                reserved = await video.Camera.reserve(self, timeout=60)
+                reserved = await video.Camera.reserve(self, timeout=1)
 
                 # If reserved
                 if reserved:
@@ -1061,14 +1137,32 @@ async def detect_motion(pir_detection):
 
                         # If motion detected and detection activated
                         if self.detection is not None and activated is True:
+
                                 # Notify motion with push over
                                 message, image = self.detection
 
+                                # If no previous detection
+                                if self.last_detection == 0:
+                                        if self.webhook.activated:
+                                                # Send webhook motion detected
+                                                Notifier.webhook(&#34;Motion&#34;,self.webhook.motion_detected)
+
+                                self.last_detection = int(time.time())
+
                                 # If the notifications are not too frequent
                                 if self.cadencer.can_notify():
-                                        await Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
+                                        Notifier.notify(message, image.get(), enabled=self.motion_config.notify)
                                 else:
                                         logger.syslog(&#34;Notification &#39;%s&#39; too frequent ignored&#34; %message)
+                        else:
+                                # If motion detected recently
+                                if self.last_detection &gt; 0:
+                                        # If no more motion detection
+                                        if self.last_detection + STATE_DURATION &lt; int(time.time()):
+                                                if self.webhook.activated:
+                                                        # Send webhook no motion detected
+                                                        Notifier.webhook(&#34;Motion&#34;,self.webhook.no_motion_detected)
+                                                self.last_detection = 0
                         # Detect motion
                         detected, change_polling = self.motion.detect()
 
@@ -1083,7 +1177,9 @@ async def detect_motion(pir_detection):
                                 Historic.set_motion_state(False)
                         result = True
                 else:
-                        await Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
+                        if self.last_notification_suspended + 120 &lt; int(time.time()):
+                                self.last_notification_suspended = int(time.time())
+                                Notifier.notify(lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
                         result = True
 
         finally:
@@ -1105,14 +1201,14 @@ async def detect_motion(pir_detection):
         &#34;&#34;&#34; Detect motion &#34;&#34;&#34;
         result = False
         # Wait the server resume
-        await Server.wait_resume()
+        await Server.wait_resume(name=&#34;motion&#34;)
 
         # Release previously alocated image
         self.release_image()
 
         # If the motion detection activated
         activated = await self.is_activated()
-        if activated or self.is_pemanent():
+        if activated or self.is_permanent():
                 try:
                         # Capture motion
                         result = await self.capture(activated)
@@ -1150,6 +1246,7 @@ async def detect_motion(pir_detection):
                 self.motion = Motion(self.motion_config, self.pir_detection)
                 if self.motion.open() is False:
                         self.motion = None
+                        # pylint:disable=broad-exception-raised
                         raise Exception(&#34;Cannot open camera&#34;)
                 else:
                         firstInit = True
@@ -1190,9 +1287,9 @@ async def detect_motion(pir_detection):
                 collect()
 
                 if result:
-                        await Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
+                        Notifier.notify(lang.motion_detection_on, enabled=self.motion_config.notify_state)
                 else:
-                        await Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
+                        Notifier.notify(lang.motion_detection_off, enabled=self.motion_config.notify_state)
                 self.activated = result
 
         # If camera activated and motion activated
@@ -1202,14 +1299,14 @@ async def detect_motion(pir_detection):
                 result = False
 
         # If motion disabled
-        if result is False and self.is_pemanent() is False:
+        if result is False and self.is_permanent() is False:
                 # Wait moment before next loop
                 await uasyncio.sleep_ms(500)
         return result</code></pre>
 </details>
 </dd>
-<dt id="lib.motion.motion.Detection.is_pemanent"><code class="name flex">
-<span>def <span class="ident">is_pemanent</span></span>(<span>self)</span>
+<dt id="lib.motion.motion.Detection.is_permanent"><code class="name flex">
+<span>def <span class="ident">is_permanent</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Indicates if pemanent detection activated</p></div>
@@ -1217,7 +1314,7 @@ async def detect_motion(pir_detection):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_pemanent(self):
+<pre><code class="python">def is_permanent(self):
         &#34;&#34;&#34; Indicates if pemanent detection activated &#34;&#34;&#34;
         result = False
         # If motion activated
@@ -1242,7 +1339,10 @@ async def detect_motion(pir_detection):
         # Open motion configuration
         self.motion_config      = MotionConfig()
         if self.motion_config.load() is False:
-                self.motion_config.save()</code></pre>
+                self.motion_config.save()
+        self.webhook      = WebhookConfig()
+        if self.webhook.load() is False:
+                self.webhook.save()</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.Detection.refresh_config"><code class="name flex">
@@ -1263,6 +1363,13 @@ async def detect_motion(pir_detection):
                         logger.syslog(&#34;Change motion config %s&#34;%self.motion_config.to_string(), display=False)
                         if self.motion:
                                 self.motion.refresh_config()
+                # If configuration changed
+                if self.webhook.is_changed():
+                        self.webhook.load()
+                        logger.syslog(&#34;Change webhook config %s&#34;%self.webhook.to_string(), display=False)
+                        if self.motion:
+                                self.motion.refresh_config()
+
         self.refresh_config_counter += 1</code></pre>
 </details>
 </dd>
@@ -1281,12 +1388,7 @@ async def detect_motion(pir_detection):
         if self.detection:
                 message, image = self.detection
                 # Release image buffer
-                self.motion.deinit_image(image)
-
-        # Force garbage collection each 20 images
-        if self.motion:
-                if self.motion.index %30 == 0:
-                        collect()</code></pre>
+                self.motion.deinit_image(image)</code></pre>
 </details>
 </dd>
 <dt id="lib.motion.motion.Detection.run"><code class="name flex">
@@ -1861,7 +1963,7 @@ async def detect_motion(pir_detection):
 
                                 # Save image to sdcard
                                 if await image.save() is False:
-                                        await Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
+                                        Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
                         else:
                                 # Destroy image
                                 self.deinit_image(image)
@@ -1983,7 +2085,7 @@ async def detect_motion(pir_detection):
                                                 index = image.index
                                         diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                         if display:
-                                line = b&#34;\r%s %s L%d (%d) &#34;%(date.time_to_html(), bytes(diffs), mean_light, index)
+                                line = b&#34;\r%s %s L%d (%d) &#34;%(date.time_to_html(seconds=True), bytes(diffs), mean_light, index)
                                 if filesystem.ismicropython():
                                         sys.stdout.write(line)
                                 else:
@@ -2093,7 +2195,7 @@ async def detect_motion(pir_detection):
 
                         # Save image to sdcard
                         if await image.save() is False:
-                                await Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
+                                Notifier.notify(lang.failed_to_save, enabled=self.config.notify)
                 else:
                         # Destroy image
                         self.deinit_image(image)
@@ -2193,7 +2295,7 @@ async def detect_motion(pir_detection):
                                         index = image.index
                                 diffs += b&#34;%d:%d%s%s&#34;%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, &#39;big&#39;), trace)
                 if display:
-                        line = b&#34;\r%s %s L%d (%d) &#34;%(date.time_to_html(), bytes(diffs), mean_light, index)
+                        line = b&#34;\r%s %s L%d (%d) &#34;%(date.time_to_html(seconds=True), bytes(diffs), mean_light, index)
                         if filesystem.ismicropython():
                                 sys.stdout.write(line)
                         else:
@@ -2760,7 +2862,7 @@ def get(width=None, height=None):
 <li><code><a title="lib.motion.motion.Detection.detect" href="#lib.motion.motion.Detection.detect">detect</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.init_motion" href="#lib.motion.motion.Detection.init_motion">init_motion</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.is_activated" href="#lib.motion.motion.Detection.is_activated">is_activated</a></code></li>
-<li><code><a title="lib.motion.motion.Detection.is_pemanent" href="#lib.motion.motion.Detection.is_pemanent">is_pemanent</a></code></li>
+<li><code><a title="lib.motion.motion.Detection.is_permanent" href="#lib.motion.motion.Detection.is_permanent">is_permanent</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.load_config" href="#lib.motion.motion.Detection.load_config">load_config</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.refresh_config" href="#lib.motion.motion.Detection.refresh_config">refresh_config</a></code></li>
 <li><code><a title="lib.motion.motion.Detection.release_image" href="#lib.motion.motion.Detection.release_image">release_image</a></code></li>

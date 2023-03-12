@@ -45,7 +45,7 @@ try:
         import uos
 except:
         import os as uos
-        
+
 try:
         from tools import logger,strings,filesystem,date
 except Exception as err:
@@ -78,8 +78,8 @@ class JsonConfig:
                         file.close()
                         self.modification_date = uos.stat(filename)[8]
                         return True
-                except Exception as err:
-                        logger.syslog(err, &#34;Cannot save %s &#34;%(filename))
+                except Exception as _err:
+                        logger.syslog(_err, &#34;Cannot save %s &#34;%(filename))
                         return False
 
         def to_string(self):
@@ -96,7 +96,7 @@ class JsonConfig:
                 &#34;&#34;&#34; List all configuration files &#34;&#34;&#34;
                 result = []
                 pattern = self.get_filename() + &#34;.*&#34;
-                for fileinfo in uos.ilistdir(self.config_root()):
+                for fileinfo in filesystem.list_directory(self.config_root()):
                         name = fileinfo[0]
                         typ  = fileinfo[1]
                         if typ &amp; 0xF000 != 0x4000:
@@ -192,8 +192,8 @@ class JsonConfig:
                                         # pylint: disable=exec-used
                                         exec(&#34;a = self_config.%s&#34;%execval)
                                         existing = True
-                                except Exception as err:
-                                        if &#34;&#39;NoneType&#39; object&#34; in str(err):
+                                except Exception as _err:
+                                        if &#34;&#39;NoneType&#39; object&#34; in str(_err):
                                                 result = None
                                         existing = False
 
@@ -204,8 +204,8 @@ class JsonConfig:
                                 else:
                                         if name != b&#34;action&#34; and show_error and result is not None:
                                                 print(&#34;%s.%s not existing&#34;%(self.__class__.__name__, strings.tostrings(name)))
-                        except Exception as err:
-                                logger.syslog(err, &#34;Error on %s&#34;%(execval))
+                        except Exception as _err:
+                                logger.syslog(_err, &#34;Error on %s&#34;%(execval))
                                 result = False
                 self_config = None
                 return result
@@ -223,15 +223,15 @@ class JsonConfig:
                         self.update(data)
                         file.close()
                         return True
-                except OSError as err:
-                        if err.args[0] == 2:
+                except OSError as _err:
+                        if _err.args[0] == 2:
                                 if errorlog:
                                         logger.syslog(&#34;Not existing %s &#34;%(filename))
                         else:
-                                logger.syslog(err, &#34;Cannot load %s &#34;%(filename))
+                                logger.syslog(_err, &#34;Cannot load %s &#34;%(filename))
                         return False
-                except Exception as err:
-                        logger.syslog(err, &#34;Cannot load %s &#34;%(filename))
+                except Exception as _err:
+                        logger.syslog(_err, &#34;Cannot load %s &#34;%(filename))
                         return False
 
         def forget(self, part_filename=&#34;&#34;):
@@ -297,8 +297,8 @@ class JsonConfig:
                         file.close()
                         self.modification_date = uos.stat(filename)[8]
                         return True
-                except Exception as err:
-                        logger.syslog(err, &#34;Cannot save %s &#34;%(filename))
+                except Exception as _err:
+                        logger.syslog(_err, &#34;Cannot save %s &#34;%(filename))
                         return False
 
         def to_string(self):
@@ -315,7 +315,7 @@ class JsonConfig:
                 &#34;&#34;&#34; List all configuration files &#34;&#34;&#34;
                 result = []
                 pattern = self.get_filename() + &#34;.*&#34;
-                for fileinfo in uos.ilistdir(self.config_root()):
+                for fileinfo in filesystem.list_directory(self.config_root()):
                         name = fileinfo[0]
                         typ  = fileinfo[1]
                         if typ &amp; 0xF000 != 0x4000:
@@ -411,8 +411,8 @@ class JsonConfig:
                                         # pylint: disable=exec-used
                                         exec(&#34;a = self_config.%s&#34;%execval)
                                         existing = True
-                                except Exception as err:
-                                        if &#34;&#39;NoneType&#39; object&#34; in str(err):
+                                except Exception as _err:
+                                        if &#34;&#39;NoneType&#39; object&#34; in str(_err):
                                                 result = None
                                         existing = False
 
@@ -423,8 +423,8 @@ class JsonConfig:
                                 else:
                                         if name != b&#34;action&#34; and show_error and result is not None:
                                                 print(&#34;%s.%s not existing&#34;%(self.__class__.__name__, strings.tostrings(name)))
-                        except Exception as err:
-                                logger.syslog(err, &#34;Error on %s&#34;%(execval))
+                        except Exception as _err:
+                                logger.syslog(_err, &#34;Error on %s&#34;%(execval))
                                 result = False
                 self_config = None
                 return result
@@ -442,15 +442,15 @@ class JsonConfig:
                         self.update(data)
                         file.close()
                         return True
-                except OSError as err:
-                        if err.args[0] == 2:
+                except OSError as _err:
+                        if _err.args[0] == 2:
                                 if errorlog:
                                         logger.syslog(&#34;Not existing %s &#34;%(filename))
                         else:
-                                logger.syslog(err, &#34;Cannot load %s &#34;%(filename))
+                                logger.syslog(_err, &#34;Cannot load %s &#34;%(filename))
                         return False
-                except Exception as err:
-                        logger.syslog(err, &#34;Cannot load %s &#34;%(filename))
+                except Exception as _err:
+                        logger.syslog(_err, &#34;Cannot load %s &#34;%(filename))
                         return False
 
         def forget(self, part_filename=&#34;&#34;):
@@ -585,7 +585,7 @@ class JsonConfig:
         &#34;&#34;&#34; List all configuration files &#34;&#34;&#34;
         result = []
         pattern = self.get_filename() + &#34;.*&#34;
-        for fileinfo in uos.ilistdir(self.config_root()):
+        for fileinfo in filesystem.list_directory(self.config_root()):
                 name = fileinfo[0]
                 typ  = fileinfo[1]
                 if typ &amp; 0xF000 != 0x4000:
@@ -616,15 +616,15 @@ class JsonConfig:
                 self.update(data)
                 file.close()
                 return True
-        except OSError as err:
-                if err.args[0] == 2:
+        except OSError as _err:
+                if _err.args[0] == 2:
                         if errorlog:
                                 logger.syslog(&#34;Not existing %s &#34;%(filename))
                 else:
-                        logger.syslog(err, &#34;Cannot load %s &#34;%(filename))
+                        logger.syslog(_err, &#34;Cannot load %s &#34;%(filename))
                 return False
-        except Exception as err:
-                logger.syslog(err, &#34;Cannot load %s &#34;%(filename))
+        except Exception as _err:
+                logger.syslog(_err, &#34;Cannot load %s &#34;%(filename))
                 return False</code></pre>
 </details>
 </dd>
@@ -671,8 +671,8 @@ class JsonConfig:
                 file.close()
                 self.modification_date = uos.stat(filename)[8]
                 return True
-        except Exception as err:
-                logger.syslog(err, &#34;Cannot save %s &#34;%(filename))
+        except Exception as _err:
+                logger.syslog(_err, &#34;Cannot save %s &#34;%(filename))
                 return False</code></pre>
 </details>
 </dd>
@@ -768,8 +768,8 @@ class JsonConfig:
                                 # pylint: disable=exec-used
                                 exec(&#34;a = self_config.%s&#34;%execval)
                                 existing = True
-                        except Exception as err:
-                                if &#34;&#39;NoneType&#39; object&#34; in str(err):
+                        except Exception as _err:
+                                if &#34;&#39;NoneType&#39; object&#34; in str(_err):
                                         result = None
                                 existing = False
 
@@ -780,8 +780,8 @@ class JsonConfig:
                         else:
                                 if name != b&#34;action&#34; and show_error and result is not None:
                                         print(&#34;%s.%s not existing&#34;%(self.__class__.__name__, strings.tostrings(name)))
-                except Exception as err:
-                        logger.syslog(err, &#34;Error on %s&#34;%(execval))
+                except Exception as _err:
+                        logger.syslog(_err, &#34;Error on %s&#34;%(execval))
                         result = False
         self_config = None
         return result</code></pre>

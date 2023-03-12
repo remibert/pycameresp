@@ -1,19 +1,31 @@
-Pycameresp is designed to be a completely autonomous motion detector on ESP32-CAM. The web server, ftp, wifi manager, shell, editor also works on other Esp32 with SPIRAM, it is necessary to select the correct firmware for your device.
+Pycameresp is originally designed to be a completely standalone motion detector on ESP32-CAM, but all servers and other functionality also work on generic Esp32 and Pico PI, Pico PI W.
 
-The firmware is based on an improved version of [micropython](http://micropython.org), it is ready to use because all pycameresp modules are embedded in the firmware (for boost performance and saving RAM).
-But it is a standard micropython platform, the start of pycameresp is in the main.py, and therefore fully modifiable.
+---
+The following features are available on all Esp32 and Pico Pi :
 
-----
+ - WiFi network management with configuration via web interface. 
+ - Automatic Wifi connection and reconnection in case of deconnection.
+ - All servers running simultaneously (FTP, HTTP, Telnet) and password protected.
+ - Notifications can be sent to smartphone.
+ - Web interface for installation, configuration, consultation.
+ - Periodic time adjustment with NTP synchronization.
+ - Recording activities and errors in the rotating log file.
+ - Remote maintenance using telnet and built-in shell.
+ - Built-in text editor with syntax highlighting capable of executing scripts directly from the board.
 
-The firmware features are :
-- Real-time motion detection with camera (ESP32-CAM)
-- Smartphones notifications
-- Live video stream of camera (ESP32-CAM)
-- Configuration and consultation web page
-- Smartphone presence detection on the wifi network (automatic activation/deactivation of motion detection)
-- Shell to enter command lines with text editor executed directly on the device
-- WiFi manager with automatic recovery after loss of radio signal
-- Synchronization of the internal clock with ntp server, to be always on time
+The following features are available on Esp32 with camera for motion detection :
+- Live video stream of camera
+- Detection of house inhabitants smartphones for automatic activation/deactivation of motion detection.
+- Consultation and configuration of motion detections from the web interface.
+- Space management available on the sdcard.
+- Notification on smartphone of motion detection with sending of the captured image.
+
+The firmware is based on an improved version of [micropython](http://micropython.org), it is ready to use, because all pycameresp modules are embedded in the firmware.
+
+The start of pycameresp is in the main.py, and therefore fully modifiable.
+
+The focus is on reducing RAM consumption and reliability, 
+the entire platform can operates several months without requiring humain intervention.
 
 ---
 Other informations :

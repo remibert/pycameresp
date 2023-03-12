@@ -48,6 +48,7 @@ import time
 from binascii import hexlify, b2a_base64
 import collections
 import server.stream
+import server.urlparser
 from tools import logger,filesystem,strings
 
 MIMES = {\
@@ -100,33 +101,6 @@ class Http:
         def __del__(self):
                 if self.content_file is not None:
                         filesystem.remove(self.content_file)
-
-        def quote(self, text):
-                &#34;&#34;&#34; Insert in the string the character not supported in an url &#34;&#34;&#34;
-                result = b&#34;&#34;
-                for char in text:
-                        if (ord(char) &gt;= 0x41 and ord(char) &lt; 0x5A) or (ord(char) &gt;= 0x61 and ord(char) &lt; 0x7A):
-                                result += char
-                        elif char == b&#34; &#34;:
-                                result += b&#34;+&#34;
-                        else:
-                                result += b&#34;%%%02X&#34;%ord(char)
-                return result
-
-        def unquote(self, url):
-                &#34;&#34;&#34; Remove from a string special character in the url &#34;&#34;&#34;
-                url = url.replace(b&#39;+&#39;, b&#39; &#39;)
-                spl = url.split(b&#39;%&#39;)
-                try :
-                        result = spl[0]
-                        for part in range(1, len(spl)) :
-                                try :
-                                        result += bytes([int(spl[part][:2], 16)]) + spl[part][2:]
-                                except :
-                                        result += b&#39;%&#39; + spl[part]
-                        return result
-                except :
-                        return url
 
         def get_expiration(self, expiration):
                 &#34;&#34;&#34; Get cookie expiration date &#34;&#34;&#34;
@@ -208,39 +182,18 @@ class Http:
                 &#34;&#34;&#34; Unserialize the request or response in the stream &#34;&#34;&#34;
                 data = await streamio.readline()
                 if data != b&#34;&#34;:
+                        urlparser = server.urlparser.UrlParser(data, True)
                         spl = data.split()
                         if len(spl) &gt;= 2:
-                                self.method = spl[0]
+                                self.method = urlparser.method
                                 path = spl[1]
                                 if self.request is False:
                                         self.status = path
-                                paths = path.split(b&#34;?&#34;, 1)
-                                if len(paths) &gt; 1:
-                                        self.unserialize_params(paths[1])
-                                self.path = self.unquote(paths[0])
-
+                                self.path   = urlparser.path
+                                self.params = urlparser.params
                                 await self.unserialize_headers(streamio)
                         else:
                                 await self.read_content(streamio)
-
-        def unserialize_params(self, url):
-                &#34;&#34;&#34; Extract parameters from url &#34;&#34;&#34;
-                if url:
-                        pairs = url.split(b&#34;&amp;&#34;)
-                        for pair in pairs:
-                                param = [self.unquote(x) for x in pair.split(b&#34;=&#34;, 1)]
-                                if len(param) == 1:
-                                        param.append(True)
-                                previous_value = self.params.get(param[0])
-                                if previous_value is not None:
-                                        if previous_value == b&#39;0&#39; and param[1] == b&#39;&#39;:
-                                                self.params[param[0]] = b&#39;1&#39;
-                                        else:
-                                                if not isinstance(previous_value, list):
-                                                        self.params[param[0]] = [previous_value]
-                                                self.params[param[0]].append(param[1])
-                                else:
-                                        self.params[param[0]] = param[1]
 
         async def read_content(self, streamio):
                 &#34;&#34;&#34; Read the content of http request &#34;&#34;&#34;
@@ -267,13 +220,19 @@ class Http:
                 # Data too big write in file
                 else:
                         self.content_file = &#34;%d.tmp&#34;%id(self)
+
+                        print(&#34;Begin upload reception&#34;)
                         if chunk is False:
                                 attrib = &#34;wb&#34;
                         else:
                                 attrib = &#34;ab&#34;
                         with open(self.content_file, attrib) as content:
                                 while content.tell() &lt; length:
-                                        content.write(await streamio.read(length - len(self.content)))
+                                        buffer = await streamio.read(length - content.tell())
+                                        content.write(buffer)
+                                        length_read = content.tell()
+                                        print(&#34;  %d%% received&#34;%(length_read*100 // length))
+                        print(&#34;End upload reception&#34;)
 
         def get_content_filename(self):
                 &#34;&#34;&#34; Copy the content into file &#34;&#34;&#34;
@@ -291,7 +250,7 @@ class Http:
                         if header == b&#34;\r\n&#34;:
                                 if self.method == b&#34;POST&#34;:
                                         await self.read_content(streamio)
-                                        self.unserialize_params(self.content)
+                                        self.params = server.urlparser.UrlParser.parse_params(self.content)
                                 elif self.request is False or self.method == b&#34;PUT&#34;:
                                         await self.read_content(streamio)
                                 break
@@ -662,7 +621,20 @@ class HttpRequest(Http):
                 &#34;&#34;&#34; Send request to server &#34;&#34;&#34;
                 if streamio is None:
                         streamio = self.streamio
-                await self.serialize(streamio)</code></pre>
+                await self.serialize(streamio)
+
+        @staticmethod
+        def to_html(message):
+                &#34;&#34;&#34; Convert message with special characters into html text &#34;&#34;&#34;
+                result = b&#34;&#34;
+                for char in message:
+                        if (char &gt;= 0x30 and char &lt;= 0x39) or \
+                           (char &gt;= 0x41 and char &lt;= 0x5A) or \
+                           (char &gt;= 0x61 and char &lt;= 0x7A):
+                                result += char.to_bytes(1,&#34;big&#34;)
+                        else:
+                                result += b&#34;&amp;#%d;&#34;%char
+                return result</code></pre>
 </details>
 </section>
 <section>
@@ -992,33 +964,6 @@ class HttpRequest(Http):
                 if self.content_file is not None:
                         filesystem.remove(self.content_file)
 
-        def quote(self, text):
-                &#34;&#34;&#34; Insert in the string the character not supported in an url &#34;&#34;&#34;
-                result = b&#34;&#34;
-                for char in text:
-                        if (ord(char) &gt;= 0x41 and ord(char) &lt; 0x5A) or (ord(char) &gt;= 0x61 and ord(char) &lt; 0x7A):
-                                result += char
-                        elif char == b&#34; &#34;:
-                                result += b&#34;+&#34;
-                        else:
-                                result += b&#34;%%%02X&#34;%ord(char)
-                return result
-
-        def unquote(self, url):
-                &#34;&#34;&#34; Remove from a string special character in the url &#34;&#34;&#34;
-                url = url.replace(b&#39;+&#39;, b&#39; &#39;)
-                spl = url.split(b&#39;%&#39;)
-                try :
-                        result = spl[0]
-                        for part in range(1, len(spl)) :
-                                try :
-                                        result += bytes([int(spl[part][:2], 16)]) + spl[part][2:]
-                                except :
-                                        result += b&#39;%&#39; + spl[part]
-                        return result
-                except :
-                        return url
-
         def get_expiration(self, expiration):
                 &#34;&#34;&#34; Get cookie expiration date &#34;&#34;&#34;
                 result = b&#34;; Max-Age=%d&#34;%expiration
@@ -1099,39 +1044,18 @@ class HttpRequest(Http):
                 &#34;&#34;&#34; Unserialize the request or response in the stream &#34;&#34;&#34;
                 data = await streamio.readline()
                 if data != b&#34;&#34;:
+                        urlparser = server.urlparser.UrlParser(data, True)
                         spl = data.split()
                         if len(spl) &gt;= 2:
-                                self.method = spl[0]
+                                self.method = urlparser.method
                                 path = spl[1]
                                 if self.request is False:
                                         self.status = path
-                                paths = path.split(b&#34;?&#34;, 1)
-                                if len(paths) &gt; 1:
-                                        self.unserialize_params(paths[1])
-                                self.path = self.unquote(paths[0])
-
+                                self.path   = urlparser.path
+                                self.params = urlparser.params
                                 await self.unserialize_headers(streamio)
                         else:
                                 await self.read_content(streamio)
-
-        def unserialize_params(self, url):
-                &#34;&#34;&#34; Extract parameters from url &#34;&#34;&#34;
-                if url:
-                        pairs = url.split(b&#34;&amp;&#34;)
-                        for pair in pairs:
-                                param = [self.unquote(x) for x in pair.split(b&#34;=&#34;, 1)]
-                                if len(param) == 1:
-                                        param.append(True)
-                                previous_value = self.params.get(param[0])
-                                if previous_value is not None:
-                                        if previous_value == b&#39;0&#39; and param[1] == b&#39;&#39;:
-                                                self.params[param[0]] = b&#39;1&#39;
-                                        else:
-                                                if not isinstance(previous_value, list):
-                                                        self.params[param[0]] = [previous_value]
-                                                self.params[param[0]].append(param[1])
-                                else:
-                                        self.params[param[0]] = param[1]
 
         async def read_content(self, streamio):
                 &#34;&#34;&#34; Read the content of http request &#34;&#34;&#34;
@@ -1158,13 +1082,19 @@ class HttpRequest(Http):
                 # Data too big write in file
                 else:
                         self.content_file = &#34;%d.tmp&#34;%id(self)
+
+                        print(&#34;Begin upload reception&#34;)
                         if chunk is False:
                                 attrib = &#34;wb&#34;
                         else:
                                 attrib = &#34;ab&#34;
                         with open(self.content_file, attrib) as content:
                                 while content.tell() &lt; length:
-                                        content.write(await streamio.read(length - len(self.content)))
+                                        buffer = await streamio.read(length - content.tell())
+                                        content.write(buffer)
+                                        length_read = content.tell()
+                                        print(&#34;  %d%% received&#34;%(length_read*100 // length))
+                        print(&#34;End upload reception&#34;)
 
         def get_content_filename(self):
                 &#34;&#34;&#34; Copy the content into file &#34;&#34;&#34;
@@ -1182,7 +1112,7 @@ class HttpRequest(Http):
                         if header == b&#34;\r\n&#34;:
                                 if self.method == b&#34;POST&#34;:
                                         await self.read_content(streamio)
-                                        self.unserialize_params(self.content)
+                                        self.params = server.urlparser.UrlParser.parse_params(self.content)
                                 elif self.request is False or self.method == b&#34;PUT&#34;:
                                         await self.read_content(streamio)
                                 break
@@ -1440,28 +1370,6 @@ class HttpRequest(Http):
         return self.status</code></pre>
 </details>
 </dd>
-<dt id="lib.server.httprequest.Http.quote"><code class="name flex">
-<span>def <span class="ident">quote</span></span>(<span>self, text)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Insert in the string the character not supported in an url</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def quote(self, text):
-        &#34;&#34;&#34; Insert in the string the character not supported in an url &#34;&#34;&#34;
-        result = b&#34;&#34;
-        for char in text:
-                if (ord(char) &gt;= 0x41 and ord(char) &lt; 0x5A) or (ord(char) &gt;= 0x61 and ord(char) &lt; 0x7A):
-                        result += char
-                elif char == b&#34; &#34;:
-                        result += b&#34;+&#34;
-                else:
-                        result += b&#34;%%%02X&#34;%ord(char)
-        return result</code></pre>
-</details>
-</dd>
 <dt id="lib.server.httprequest.Http.read_content"><code class="name flex">
 <span>async def <span class="ident">read_content</span></span>(<span>self, streamio)</span>
 </code></dt>
@@ -1506,13 +1414,19 @@ class HttpRequest(Http):
         # Data too big write in file
         else:
                 self.content_file = &#34;%d.tmp&#34;%id(self)
+
+                print(&#34;Begin upload reception&#34;)
                 if chunk is False:
                         attrib = &#34;wb&#34;
                 else:
                         attrib = &#34;ab&#34;
                 with open(self.content_file, attrib) as content:
                         while content.tell() &lt; length:
-                                content.write(await streamio.read(length - len(self.content)))</code></pre>
+                                buffer = await streamio.read(length - content.tell())
+                                content.write(buffer)
+                                length_read = content.tell()
+                                print(&#34;  %d%% received&#34;%(length_read*100 // length))
+                print(&#34;End upload reception&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.httprequest.Http.serialize"><code class="name flex">
@@ -1736,31 +1650,6 @@ class HttpRequest(Http):
         self.status = status</code></pre>
 </details>
 </dd>
-<dt id="lib.server.httprequest.Http.unquote"><code class="name flex">
-<span>def <span class="ident">unquote</span></span>(<span>self, url)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Remove from a string special character in the url</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def unquote(self, url):
-        &#34;&#34;&#34; Remove from a string special character in the url &#34;&#34;&#34;
-        url = url.replace(b&#39;+&#39;, b&#39; &#39;)
-        spl = url.split(b&#39;%&#39;)
-        try :
-                result = spl[0]
-                for part in range(1, len(spl)) :
-                        try :
-                                result += bytes([int(spl[part][:2], 16)]) + spl[part][2:]
-                        except :
-                                result += b&#39;%&#39; + spl[part]
-                return result
-        except :
-                return url</code></pre>
-</details>
-</dd>
 <dt id="lib.server.httprequest.Http.unserialize"><code class="name flex">
 <span>async def <span class="ident">unserialize</span></span>(<span>self, streamio)</span>
 </code></dt>
@@ -1774,17 +1663,15 @@ class HttpRequest(Http):
         &#34;&#34;&#34; Unserialize the request or response in the stream &#34;&#34;&#34;
         data = await streamio.readline()
         if data != b&#34;&#34;:
+                urlparser = server.urlparser.UrlParser(data, True)
                 spl = data.split()
                 if len(spl) &gt;= 2:
-                        self.method = spl[0]
+                        self.method = urlparser.method
                         path = spl[1]
                         if self.request is False:
                                 self.status = path
-                        paths = path.split(b&#34;?&#34;, 1)
-                        if len(paths) &gt; 1:
-                                self.unserialize_params(paths[1])
-                        self.path = self.unquote(paths[0])
-
+                        self.path   = urlparser.path
+                        self.params = urlparser.params
                         await self.unserialize_headers(streamio)
                 else:
                         await self.read_content(streamio)</code></pre>
@@ -1806,7 +1693,7 @@ class HttpRequest(Http):
                 if header == b&#34;\r\n&#34;:
                         if self.method == b&#34;POST&#34;:
                                 await self.read_content(streamio)
-                                self.unserialize_params(self.content)
+                                self.params = server.urlparser.UrlParser.parse_params(self.content)
                         elif self.request is False or self.method == b&#34;PUT&#34;:
                                 await self.read_content(streamio)
                         break
@@ -1818,35 +1705,6 @@ class HttpRequest(Http):
                                 self.cookies[cookieName.strip()] = cookieValue.strip()
                 else:
                         self.headers[name] = value.strip()</code></pre>
-</details>
-</dd>
-<dt id="lib.server.httprequest.Http.unserialize_params"><code class="name flex">
-<span>def <span class="ident">unserialize_params</span></span>(<span>self, url)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Extract parameters from url</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def unserialize_params(self, url):
-        &#34;&#34;&#34; Extract parameters from url &#34;&#34;&#34;
-        if url:
-                pairs = url.split(b&#34;&amp;&#34;)
-                for pair in pairs:
-                        param = [self.unquote(x) for x in pair.split(b&#34;=&#34;, 1)]
-                        if len(param) == 1:
-                                param.append(True)
-                        previous_value = self.params.get(param[0])
-                        if previous_value is not None:
-                                if previous_value == b&#39;0&#39; and param[1] == b&#39;&#39;:
-                                        self.params[param[0]] = b&#39;1&#39;
-                                else:
-                                        if not isinstance(previous_value, list):
-                                                self.params[param[0]] = [previous_value]
-                                        self.params[param[0]].append(param[1])
-                        else:
-                                self.params[param[0]] = param[1]</code></pre>
 </details>
 </dd>
 </dl>
@@ -1879,12 +1737,51 @@ class HttpRequest(Http):
                 &#34;&#34;&#34; Send request to server &#34;&#34;&#34;
                 if streamio is None:
                         streamio = self.streamio
-                await self.serialize(streamio)</code></pre>
+                await self.serialize(streamio)
+
+        @staticmethod
+        def to_html(message):
+                &#34;&#34;&#34; Convert message with special characters into html text &#34;&#34;&#34;
+                result = b&#34;&#34;
+                for char in message:
+                        if (char &gt;= 0x30 and char &lt;= 0x39) or \
+                           (char &gt;= 0x41 and char &lt;= 0x5A) or \
+                           (char &gt;= 0x61 and char &lt;= 0x7A):
+                                result += char.to_bytes(1,&#34;big&#34;)
+                        else:
+                                result += b&#34;&amp;#%d;&#34;%char
+                return result</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="lib.server.httprequest.Http" href="#lib.server.httprequest.Http">Http</a></li>
 </ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.server.httprequest.HttpRequest.to_html"><code class="name flex">
+<span>def <span class="ident">to_html</span></span>(<span>message)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert message with special characters into html text</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def to_html(message):
+        &#34;&#34;&#34; Convert message with special characters into html text &#34;&#34;&#34;
+        result = b&#34;&#34;
+        for char in message:
+                if (char &gt;= 0x30 and char &lt;= 0x39) or \
+                   (char &gt;= 0x41 and char &lt;= 0x5A) or \
+                   (char &gt;= 0x61 and char &lt;= 0x7A):
+                        result += char.to_bytes(1,&#34;big&#34;)
+                else:
+                        result += b&#34;&amp;#%d;&#34;%char
+        return result</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="lib.server.httprequest.HttpRequest.receive"><code class="name flex">
@@ -1933,7 +1830,6 @@ class HttpRequest(Http):
 <li><code><a title="lib.server.httprequest.Http.get_id" href="#lib.server.httprequest.Http.get_id">get_id</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.get_path" href="#lib.server.httprequest.Http.get_path">get_path</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.get_status" href="#lib.server.httprequest.Http.get_status">get_status</a></code></li>
-<li><code><a title="lib.server.httprequest.Http.quote" href="#lib.server.httprequest.Http.quote">quote</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.read_content" href="#lib.server.httprequest.Http.read_content">read_content</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.read_data" href="#lib.server.httprequest.Http.read_data">read_data</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.serialize" href="#lib.server.httprequest.Http.serialize">serialize</a></code></li>
@@ -1945,10 +1841,8 @@ class HttpRequest(Http):
 <li><code><a title="lib.server.httprequest.Http.set_method" href="#lib.server.httprequest.Http.set_method">set_method</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.set_path" href="#lib.server.httprequest.Http.set_path">set_path</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.set_status" href="#lib.server.httprequest.Http.set_status">set_status</a></code></li>
-<li><code><a title="lib.server.httprequest.Http.unquote" href="#lib.server.httprequest.Http.unquote">unquote</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.unserialize" href="#lib.server.httprequest.Http.unserialize">unserialize</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.unserialize_headers" href="#lib.server.httprequest.Http.unserialize_headers">unserialize_headers</a></code></li>
-<li><code><a title="lib.server.httprequest.Http.unserialize_params" href="#lib.server.httprequest.Http.unserialize_params">unserialize_params</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2170,7 +2064,6 @@ class HttpRequest(Http):
 <li><code><a title="lib.server.httprequest.Http.get_id" href="#lib.server.httprequest.Http.get_id">get_id</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.get_path" href="#lib.server.httprequest.Http.get_path">get_path</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.get_status" href="#lib.server.httprequest.Http.get_status">get_status</a></code></li>
-<li><code><a title="lib.server.httprequest.Http.quote" href="#lib.server.httprequest.Http.quote">quote</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.read_content" href="#lib.server.httprequest.Http.read_content">read_content</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.read_data" href="#lib.server.httprequest.Http.read_data">read_data</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.serialize" href="#lib.server.httprequest.Http.serialize">serialize</a></code></li>
@@ -2182,10 +2075,8 @@ class HttpRequest(Http):
 <li><code><a title="lib.server.httprequest.Http.set_method" href="#lib.server.httprequest.Http.set_method">set_method</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.set_path" href="#lib.server.httprequest.Http.set_path">set_path</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.set_status" href="#lib.server.httprequest.Http.set_status">set_status</a></code></li>
-<li><code><a title="lib.server.httprequest.Http.unquote" href="#lib.server.httprequest.Http.unquote">unquote</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.unserialize" href="#lib.server.httprequest.Http.unserialize">unserialize</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.unserialize_headers" href="#lib.server.httprequest.Http.unserialize_headers">unserialize_headers</a></code></li>
-<li><code><a title="lib.server.httprequest.Http.unserialize_params" href="#lib.server.httprequest.Http.unserialize_params">unserialize_params</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2483,7 +2374,6 @@ class HttpRequest(Http):
 <li><code><a title="lib.server.httprequest.Http.get_id" href="#lib.server.httprequest.Http.get_id">get_id</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.get_path" href="#lib.server.httprequest.Http.get_path">get_path</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.get_status" href="#lib.server.httprequest.Http.get_status">get_status</a></code></li>
-<li><code><a title="lib.server.httprequest.Http.quote" href="#lib.server.httprequest.Http.quote">quote</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.read_content" href="#lib.server.httprequest.Http.read_content">read_content</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.read_data" href="#lib.server.httprequest.Http.read_data">read_data</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.serialize" href="#lib.server.httprequest.Http.serialize">serialize</a></code></li>
@@ -2495,10 +2385,8 @@ class HttpRequest(Http):
 <li><code><a title="lib.server.httprequest.Http.set_method" href="#lib.server.httprequest.Http.set_method">set_method</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.set_path" href="#lib.server.httprequest.Http.set_path">set_path</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.set_status" href="#lib.server.httprequest.Http.set_status">set_status</a></code></li>
-<li><code><a title="lib.server.httprequest.Http.unquote" href="#lib.server.httprequest.Http.unquote">unquote</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.unserialize" href="#lib.server.httprequest.Http.unserialize">unserialize</a></code></li>
 <li><code><a title="lib.server.httprequest.Http.unserialize_headers" href="#lib.server.httprequest.Http.unserialize_headers">unserialize_headers</a></code></li>
-<li><code><a title="lib.server.httprequest.Http.unserialize_params" href="#lib.server.httprequest.Http.unserialize_params">unserialize_params</a></code></li>
 </ul>
 </li>
 <li>
@@ -2506,6 +2394,7 @@ class HttpRequest(Http):
 <ul class="">
 <li><code><a title="lib.server.httprequest.HttpRequest.receive" href="#lib.server.httprequest.HttpRequest.receive">receive</a></code></li>
 <li><code><a title="lib.server.httprequest.HttpRequest.send" href="#lib.server.httprequest.HttpRequest.send">send</a></code></li>
+<li><code><a title="lib.server.httprequest.HttpRequest.to_html" href="#lib.server.httprequest.HttpRequest.to_html">to_html</a></code></li>
 </ul>
 </li>
 <li>

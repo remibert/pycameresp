@@ -154,7 +154,7 @@ async def wifi_config(request, response, args):
                         Input  (                      name=b&#34;forced&#34;,  value=forced     , type=b&#34;hidden&#34;), \
                         Input  (                      name=b&#34;current&#34;, value=current    , type=b&#34;hidden&#34;)
 
-                if wifi.Station.is_active():
+                if wifi.Station.is_active() or wifi.AccessPoint().is_active():
                         networks = wifi.Station.scan()
                         for net in networks:
                                 ssids.append(Option(value=net[0]))
@@ -422,7 +422,7 @@ async def wifi_config(request, response, args):
                         Input  (                      name=b&#34;forced&#34;,  value=forced     , type=b&#34;hidden&#34;), \
                         Input  (                      name=b&#34;current&#34;, value=current    , type=b&#34;hidden&#34;)
 
-                if wifi.Station.is_active():
+                if wifi.Station.is_active() or wifi.AccessPoint().is_active():
                         networks = wifi.Station.scan()
                         for net in networks:
                                 ssids.append(Option(value=net[0]))

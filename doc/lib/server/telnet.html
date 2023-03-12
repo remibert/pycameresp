@@ -32,251 +32,71 @@
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
 &#34;&#34;&#34; Telnet class &#34;&#34;&#34;
-import sys
 import socket
-import errno
-from io import IOBase
-import time
-from server.user import User
-from tools import logger,strings
+import sys
+import uos
+from tools import logger
 
-try:
-        import wifi
-        hostname = strings.tobytes(wifi.Station.get_hostname())
-except:
-        hostname = strings.tobytes(sys.platform)
-last_client_socket = None
-server_socket = None
+class Telnet:
+        &#34;&#34;&#34; Telnet class connection &#34;&#34;&#34;
+        client = [None]
+        server = [None]
 
-class TelnetLogin:
-        &#34;&#34;&#34; Class to manage the username and password &#34;&#34;&#34;
-        count_failed = [0]
-        def __init__(self, output):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.output = output
-                if User.is_empty():
-                        self.footer()
-                        self.state = 2
-                else:
-                        self.state = 0
-                self.clean()
-                self.header()
-                self.refresh()
+        @staticmethod
+        def accept(socket_server):
+                &#34;&#34;&#34; Accept telnet connection &#34;&#34;&#34;
+                # Attach new clients to dupterm and
+                # send telnet control characters to disable line mode
+                # and stop local echoing
+                Telnet.close_client()
+                import server.telnetcore
+                Telnet.client[0], remote_addr = socket_server.accept()
+                logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
+                Telnet.client[0].setblocking(False)
+                Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
+                Telnet.client[0].sendall(bytes([255, 252, 34])) # dont allow line mode
+                Telnet.client[0].sendall(bytes([255, 251, 1])) # turn off local echo
+                uos.dupterm(server.telnetcore.TelnetWrapper(Telnet.client[0]))
 
-        def header(self):
-                &#34;&#34;&#34; Show header &#34;&#34;&#34;
-                message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
-                self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))
-
-        def footer(self):
-                &#34;&#34;&#34; Show footer &#34;&#34;&#34;
-                self.output.write(b&#34;\r\n%s\r\n&#34;%(b&#34;-&#34;*30))
-
-        def clean(self):
-                &#34;&#34;&#34; Clean the login &#34;&#34;&#34;
-                self.input_buffer = b&#34;&#34;
-                self.input_char   = b&#34;&#34;
-                self.password     = b&#34;&#34;
-                self.login        = b&#34;&#34;
-
-        def input(self, b):
-                &#34;&#34;&#34; Input value &#34;&#34;&#34;
-                # pylint:disable=attribute-defined-outside-init
-                result = None
-                self.input_char += b[0].to_bytes(1,&#34;little&#34;)
-
-                # Check if the character is complete
-                if strings.is_key_ended(self.input_char):
-                        # If escape sequence detected
-                        if self.input_char[0] == 0x1B:
-                                # Ignore escape sequence
-                                self.input_char = b&#34;&#34;
-                        # If return detected
-                        elif self.input_char[0] == 0x0D:
-                                result = self.input_buffer
-                                self.input_buffer = b&#34;&#34;
-                                self.input_char = b&#34;&#34;
-                        # If tabulation sequence detected
-                        elif self.input_char[0] == 0x09:
-                                # Ignore escape sequence
-                                self.input_char = b&#34;&#34;
-                        # If line feed detected
-                        elif self.input_char[0] == 0x0A:
-                                self.input_char = b&#34;&#34;
-                        # If delete detected
-                        elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
-                                if len(self.input_buffer) &gt; 0:
-                                        self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
-                                self.input_char = b&#34;&#34;
-                        # Else other character
-                        else:
-                                self.input_buffer += self.input_char
-                                self.input_char = b&#34;&#34;
-                return result
-
-        def refresh(self):
-                &#34;&#34;&#34; Refresh the line displayed &#34;&#34;&#34;
-                if self.state == 0:
-                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
-                elif self.state == 1:
-                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(strings.tostrings(self.input_buffer)))))
-
-        def valid(self, buffer):
-                &#34;&#34;&#34; Valid data entered &#34;&#34;&#34;
-                result = False
-                # pylint:disable=attribute-defined-outside-init
-                if self.state == 0:
-                        self.login = buffer
-                        self.state += 1
-                        self.output.write(&#34;\n&#34;)
-                elif self.state == 1:
-                        self.password = buffer
-                        self.state += 1
-                        self.output.write(&#34;\r\n&#34;)
-                        # If password is a success
-                        if User.check(self.login, self.password, display=False):
-                                if self.count_failed[0] &gt;&gt; 2:
-                                        time.sleep(15)
-                                self.output.write(b&#34;Login successful\r\n&#34;)
-                                self.footer()
-                                self.state += 1
-                                self.count_failed[0] = 0
-                                result = True
-                        else:
-                                self.count_failed[0] += 1
-                                duration = 3 + (30*(self.count_failed[0] &gt;&gt; 2))
-                                time.sleep(duration)
-                                self.output.write(b&#34;Login failed\r\n&#34;)
-                                self.state = 0
-                        self.clean()
-                return result
-
-        def manage(self, character):
-                &#34;&#34;&#34; Manage the login &#34;&#34;&#34;
-                result = False
-                buffer = self.input(character)
-                if buffer is not None:
-                        result = self.valid(buffer)
-                self.refresh()
-                return result
-
-        def is_logged(self):
-                &#34;&#34;&#34; Indicates if the login successful &#34;&#34;&#34;
-                return self.state &gt;= 2
-
-# Provide necessary functions for dupterm and replace telnet control characters that come in.
-class TelnetWrapper(IOBase):
-        &#34;&#34;&#34; Telnet wrapper class &#34;&#34;&#34;
-        def __init__(self, sock):
-                # pylint: disable=super-init-not-called
-                self.socket = sock
-                self.discard_count = 0
-                self.login = TelnetLogin(sock)
-
-        def readinto(self, b):
-                &#34;&#34;&#34; Read into the buffer &#34;&#34;&#34;
-                readbytes = 0
-                for i in range(len(b)):
+        @staticmethod
+        def close_client():
+                &#34;&#34;&#34; Close the opened client &#34;&#34;&#34;
+                if Telnet.client[0]:
+                        # close any previous clients
+                        uos.dupterm(None)
+                        Telnet.client[0].close()
+                        Telnet.client[0] = None
                         try:
-                                byte = 0
-                                # discard telnet control characters and
-                                # null bytes
-                                while(byte == 0):
-                                        byte = self.socket.recv(1)[0]
-                                        if byte == 0xFF:
-                                                self.discard_count = 2
-                                                byte = 0
-                                        elif self.discard_count &gt; 0:
-                                                self.discard_count -= 1
-                                                byte = 0
-                                b[i] = byte
-                                readbytes += 1
-                        except (IndexError, OSError) as e:
-                                if type(e) == IndexError or len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
-                                        if readbytes == 0:
-                                                return None
-                                        else:
-                                                return readbytes
-                                else:
-                                        raise
-                if self.login.is_logged() is False:
-                        self.login.manage(b)
-                        b[0] = 0
-                return readbytes
+                                del sys.modules[&#34;server.telnetcore&#34;]
+                        except:
+                                pass
 
-        def write(self, data):
-                &#34;&#34;&#34; Write data &#34;&#34;&#34;
-                # we need to write all the data but it&#39;s a non-blocking socket
-                # so loop until it&#39;s all written eating EAGAIN exceptions
-                if self.login.is_logged():
-                        while len(data) &gt; 0:
-                                try:
-                                        written_bytes = self.socket.write(data)
-                                        data = data[written_bytes:]
-                                except OSError as e:
-                                        if len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
-                                                # can&#39;t write yet, try again
-                                                pass
-                                        else:
-                                                # something else...propagate the exception
-                                                raise
-
-        def close(self):
-                self.socket.close()
-
-# Attach new clients to dupterm and
-# send telnet control characters to disable line mode
-# and stop local echoing
-def accept_telnet_connect(telnet_server):
-        &#34;&#34;&#34; Accept telnet connection &#34;&#34;&#34;
-        import uos
-        global last_client_socket
-
-        if last_client_socket:
-                # close any previous clients
+        @staticmethod
+        def stop():
+                &#34;&#34;&#34; Stop telnet server &#34;&#34;&#34;
+                # pylint:disable=global-variable-not-assigned
                 uos.dupterm(None)
-                last_client_socket.close()
-        last_client_socket, remote_addr = telnet_server.accept()
-        logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
-        last_client_socket.setblocking(False)
-        last_client_socket.setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
+                if Telnet.server[0]:
+                        Telnet.server[0].close()
+                        Telnet.server[0] = None
+                Telnet.close_client()
 
-        last_client_socket.sendall(bytes([255, 252, 34])) # dont allow line mode
-        last_client_socket.sendall(bytes([255, 251, 1])) # turn off local echo
-
-        uos.dupterm(TelnetWrapper(last_client_socket))
-
-def stop():
-        &#34;&#34;&#34; Stop telnet server &#34;&#34;&#34;
-        import uos
-        # pylint:disable=global-variable-not-assigned
-        global server_socket, last_client_socket
-        uos.dupterm(None)
-        if server_socket:
-                server_socket.close()
-        if last_client_socket:
-                last_client_socket.close()
-
-# start listening for telnet connections on port 23
-def start(port=23):
-        &#34;&#34;&#34; Start telnet server &#34;&#34;&#34;
-        try:
-                stop()
-                global server_socket
-                server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-                ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
-                addr = ai[0][4]
-
-                server_socket.bind(addr)
-                server_socket.listen(1)
-                server_socket.setsockopt(socket.SOL_SOCKET, 20, accept_telnet_connect)
-
-                logger.syslog(&#34;Telnet start %d&#34;%port)
-
-        except Exception as err:
-                logger.syslog(&#34;Telnet not available &#39;%s&#39;&#34;%str(err))</code></pre>
+        @staticmethod
+        def start(port=23):
+                &#34;&#34;&#34; Start telnet server &#34;&#34;&#34;
+                # start listening for telnet connections on port 23
+                try:
+                        Telnet.stop()
+                        Telnet.server[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                        ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
+                        addr = ai[0][4]
+                        Telnet.server[0].bind(addr)
+                        Telnet.server[0].listen(1)
+                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
+                        logger.syslog(&#34;Telnet start %d&#34;%port)
+                except Exception as err:
+                        logger.syslog(&#34;Telnet unavailable &#39;%s&#39;&#34;%str(err))</code></pre>
 </details>
 </section>
 <section>
@@ -284,10 +104,95 @@ def start(port=23):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="lib.server.telnet.accept_telnet_connect"><code class="name flex">
-<span>def <span class="ident">accept_telnet_connect</span></span>(<span>telnet_server)</span>
+<dt id="lib.server.telnet.Telnet"><code class="flex name class">
+<span>class <span class="ident">Telnet</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Telnet class connection</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Telnet:
+        &#34;&#34;&#34; Telnet class connection &#34;&#34;&#34;
+        client = [None]
+        server = [None]
+
+        @staticmethod
+        def accept(socket_server):
+                &#34;&#34;&#34; Accept telnet connection &#34;&#34;&#34;
+                # Attach new clients to dupterm and
+                # send telnet control characters to disable line mode
+                # and stop local echoing
+                Telnet.close_client()
+                import server.telnetcore
+                Telnet.client[0], remote_addr = socket_server.accept()
+                logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
+                Telnet.client[0].setblocking(False)
+                Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
+                Telnet.client[0].sendall(bytes([255, 252, 34])) # dont allow line mode
+                Telnet.client[0].sendall(bytes([255, 251, 1])) # turn off local echo
+                uos.dupterm(server.telnetcore.TelnetWrapper(Telnet.client[0]))
+
+        @staticmethod
+        def close_client():
+                &#34;&#34;&#34; Close the opened client &#34;&#34;&#34;
+                if Telnet.client[0]:
+                        # close any previous clients
+                        uos.dupterm(None)
+                        Telnet.client[0].close()
+                        Telnet.client[0] = None
+                        try:
+                                del sys.modules[&#34;server.telnetcore&#34;]
+                        except:
+                                pass
+
+        @staticmethod
+        def stop():
+                &#34;&#34;&#34; Stop telnet server &#34;&#34;&#34;
+                # pylint:disable=global-variable-not-assigned
+                uos.dupterm(None)
+                if Telnet.server[0]:
+                        Telnet.server[0].close()
+                        Telnet.server[0] = None
+                Telnet.close_client()
+
+        @staticmethod
+        def start(port=23):
+                &#34;&#34;&#34; Start telnet server &#34;&#34;&#34;
+                # start listening for telnet connections on port 23
+                try:
+                        Telnet.stop()
+                        Telnet.server[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                        ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
+                        addr = ai[0][4]
+                        Telnet.server[0].bind(addr)
+                        Telnet.server[0].listen(1)
+                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
+                        logger.syslog(&#34;Telnet start %d&#34;%port)
+                except Exception as err:
+                        logger.syslog(&#34;Telnet unavailable &#39;%s&#39;&#34;%str(err))</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.telnet.Telnet.client"><code class="name">var <span class="ident">client</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.telnet.Telnet.server"><code class="name">var <span class="ident">server</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.server.telnet.Telnet.accept"><code class="name flex">
+<span>def <span class="ident">accept</span></span>(<span>socket_server)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Accept telnet connection</p></div>
@@ -295,27 +200,47 @@ def start(port=23):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def accept_telnet_connect(telnet_server):
+<pre><code class="python">@staticmethod
+def accept(socket_server):
         &#34;&#34;&#34; Accept telnet connection &#34;&#34;&#34;
-        import uos
-        global last_client_socket
-
-        if last_client_socket:
-                # close any previous clients
-                uos.dupterm(None)
-                last_client_socket.close()
-        last_client_socket, remote_addr = telnet_server.accept()
+        # Attach new clients to dupterm and
+        # send telnet control characters to disable line mode
+        # and stop local echoing
+        Telnet.close_client()
+        import server.telnetcore
+        Telnet.client[0], remote_addr = socket_server.accept()
         logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
-        last_client_socket.setblocking(False)
-        last_client_socket.setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
-
-        last_client_socket.sendall(bytes([255, 252, 34])) # dont allow line mode
-        last_client_socket.sendall(bytes([255, 251, 1])) # turn off local echo
-
-        uos.dupterm(TelnetWrapper(last_client_socket))</code></pre>
+        Telnet.client[0].setblocking(False)
+        Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
+        Telnet.client[0].sendall(bytes([255, 252, 34])) # dont allow line mode
+        Telnet.client[0].sendall(bytes([255, 251, 1])) # turn off local echo
+        uos.dupterm(server.telnetcore.TelnetWrapper(Telnet.client[0]))</code></pre>
 </details>
 </dd>
-<dt id="lib.server.telnet.start"><code class="name flex">
+<dt id="lib.server.telnet.Telnet.close_client"><code class="name flex">
+<span>def <span class="ident">close_client</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Close the opened client</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def close_client():
+        &#34;&#34;&#34; Close the opened client &#34;&#34;&#34;
+        if Telnet.client[0]:
+                # close any previous clients
+                uos.dupterm(None)
+                Telnet.client[0].close()
+                Telnet.client[0] = None
+                try:
+                        del sys.modules[&#34;server.telnetcore&#34;]
+                except:
+                        pass</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnet.Telnet.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>port=23)</span>
 </code></dt>
 <dd>
@@ -324,28 +249,25 @@ def start(port=23):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start(port=23):
+<pre><code class="python">@staticmethod
+def start(port=23):
         &#34;&#34;&#34; Start telnet server &#34;&#34;&#34;
+        # start listening for telnet connections on port 23
         try:
-                stop()
-                global server_socket
-                server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
+                Telnet.stop()
+                Telnet.server[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                Telnet.server[0].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
                 addr = ai[0][4]
-
-                server_socket.bind(addr)
-                server_socket.listen(1)
-                server_socket.setsockopt(socket.SOL_SOCKET, 20, accept_telnet_connect)
-
+                Telnet.server[0].bind(addr)
+                Telnet.server[0].listen(1)
+                Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
                 logger.syslog(&#34;Telnet start %d&#34;%port)
-
         except Exception as err:
-                logger.syslog(&#34;Telnet not available &#39;%s&#39;&#34;%str(err))</code></pre>
+                logger.syslog(&#34;Telnet unavailable &#39;%s&#39;&#34;%str(err))</code></pre>
 </details>
 </dd>
-<dt id="lib.server.telnet.stop"><code class="name flex">
+<dt id="lib.server.telnet.Telnet.stop"><code class="name flex">
 <span>def <span class="ident">stop</span></span>(<span>)</span>
 </code></dt>
 <dd>
@@ -354,498 +276,15 @@ def start(port=23):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def stop():
+<pre><code class="python">@staticmethod
+def stop():
         &#34;&#34;&#34; Stop telnet server &#34;&#34;&#34;
-        import uos
         # pylint:disable=global-variable-not-assigned
-        global server_socket, last_client_socket
         uos.dupterm(None)
-        if server_socket:
-                server_socket.close()
-        if last_client_socket:
-                last_client_socket.close()</code></pre>
-</details>
-</dd>
-</dl>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="lib.server.telnet.TelnetLogin"><code class="flex name class">
-<span>class <span class="ident">TelnetLogin</span></span>
-<span>(</span><span>output)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Class to manage the username and password </p>
-<p>Constructor</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class TelnetLogin:
-        &#34;&#34;&#34; Class to manage the username and password &#34;&#34;&#34;
-        count_failed = [0]
-        def __init__(self, output):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.output = output
-                if User.is_empty():
-                        self.footer()
-                        self.state = 2
-                else:
-                        self.state = 0
-                self.clean()
-                self.header()
-                self.refresh()
-
-        def header(self):
-                &#34;&#34;&#34; Show header &#34;&#34;&#34;
-                message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
-                self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))
-
-        def footer(self):
-                &#34;&#34;&#34; Show footer &#34;&#34;&#34;
-                self.output.write(b&#34;\r\n%s\r\n&#34;%(b&#34;-&#34;*30))
-
-        def clean(self):
-                &#34;&#34;&#34; Clean the login &#34;&#34;&#34;
-                self.input_buffer = b&#34;&#34;
-                self.input_char   = b&#34;&#34;
-                self.password     = b&#34;&#34;
-                self.login        = b&#34;&#34;
-
-        def input(self, b):
-                &#34;&#34;&#34; Input value &#34;&#34;&#34;
-                # pylint:disable=attribute-defined-outside-init
-                result = None
-                self.input_char += b[0].to_bytes(1,&#34;little&#34;)
-
-                # Check if the character is complete
-                if strings.is_key_ended(self.input_char):
-                        # If escape sequence detected
-                        if self.input_char[0] == 0x1B:
-                                # Ignore escape sequence
-                                self.input_char = b&#34;&#34;
-                        # If return detected
-                        elif self.input_char[0] == 0x0D:
-                                result = self.input_buffer
-                                self.input_buffer = b&#34;&#34;
-                                self.input_char = b&#34;&#34;
-                        # If tabulation sequence detected
-                        elif self.input_char[0] == 0x09:
-                                # Ignore escape sequence
-                                self.input_char = b&#34;&#34;
-                        # If line feed detected
-                        elif self.input_char[0] == 0x0A:
-                                self.input_char = b&#34;&#34;
-                        # If delete detected
-                        elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
-                                if len(self.input_buffer) &gt; 0:
-                                        self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
-                                self.input_char = b&#34;&#34;
-                        # Else other character
-                        else:
-                                self.input_buffer += self.input_char
-                                self.input_char = b&#34;&#34;
-                return result
-
-        def refresh(self):
-                &#34;&#34;&#34; Refresh the line displayed &#34;&#34;&#34;
-                if self.state == 0:
-                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
-                elif self.state == 1:
-                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(strings.tostrings(self.input_buffer)))))
-
-        def valid(self, buffer):
-                &#34;&#34;&#34; Valid data entered &#34;&#34;&#34;
-                result = False
-                # pylint:disable=attribute-defined-outside-init
-                if self.state == 0:
-                        self.login = buffer
-                        self.state += 1
-                        self.output.write(&#34;\n&#34;)
-                elif self.state == 1:
-                        self.password = buffer
-                        self.state += 1
-                        self.output.write(&#34;\r\n&#34;)
-                        # If password is a success
-                        if User.check(self.login, self.password, display=False):
-                                if self.count_failed[0] &gt;&gt; 2:
-                                        time.sleep(15)
-                                self.output.write(b&#34;Login successful\r\n&#34;)
-                                self.footer()
-                                self.state += 1
-                                self.count_failed[0] = 0
-                                result = True
-                        else:
-                                self.count_failed[0] += 1
-                                duration = 3 + (30*(self.count_failed[0] &gt;&gt; 2))
-                                time.sleep(duration)
-                                self.output.write(b&#34;Login failed\r\n&#34;)
-                                self.state = 0
-                        self.clean()
-                return result
-
-        def manage(self, character):
-                &#34;&#34;&#34; Manage the login &#34;&#34;&#34;
-                result = False
-                buffer = self.input(character)
-                if buffer is not None:
-                        result = self.valid(buffer)
-                self.refresh()
-                return result
-
-        def is_logged(self):
-                &#34;&#34;&#34; Indicates if the login successful &#34;&#34;&#34;
-                return self.state &gt;= 2</code></pre>
-</details>
-<h3>Class variables</h3>
-<dl>
-<dt id="lib.server.telnet.TelnetLogin.count_failed"><code class="name">var <span class="ident">count_failed</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.server.telnet.TelnetLogin.clean"><code class="name flex">
-<span>def <span class="ident">clean</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Clean the login</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def clean(self):
-        &#34;&#34;&#34; Clean the login &#34;&#34;&#34;
-        self.input_buffer = b&#34;&#34;
-        self.input_char   = b&#34;&#34;
-        self.password     = b&#34;&#34;
-        self.login        = b&#34;&#34;</code></pre>
-</details>
-</dd>
-<dt id="lib.server.telnet.TelnetLogin.footer"><code class="name flex">
-<span>def <span class="ident">footer</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Show footer</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def footer(self):
-        &#34;&#34;&#34; Show footer &#34;&#34;&#34;
-        self.output.write(b&#34;\r\n%s\r\n&#34;%(b&#34;-&#34;*30))</code></pre>
-</details>
-</dd>
-<dt id="lib.server.telnet.TelnetLogin.header"><code class="name flex">
-<span>def <span class="ident">header</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Show header</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def header(self):
-        &#34;&#34;&#34; Show header &#34;&#34;&#34;
-        message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
-        self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))</code></pre>
-</details>
-</dd>
-<dt id="lib.server.telnet.TelnetLogin.input"><code class="name flex">
-<span>def <span class="ident">input</span></span>(<span>self, b)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Input value</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def input(self, b):
-        &#34;&#34;&#34; Input value &#34;&#34;&#34;
-        # pylint:disable=attribute-defined-outside-init
-        result = None
-        self.input_char += b[0].to_bytes(1,&#34;little&#34;)
-
-        # Check if the character is complete
-        if strings.is_key_ended(self.input_char):
-                # If escape sequence detected
-                if self.input_char[0] == 0x1B:
-                        # Ignore escape sequence
-                        self.input_char = b&#34;&#34;
-                # If return detected
-                elif self.input_char[0] == 0x0D:
-                        result = self.input_buffer
-                        self.input_buffer = b&#34;&#34;
-                        self.input_char = b&#34;&#34;
-                # If tabulation sequence detected
-                elif self.input_char[0] == 0x09:
-                        # Ignore escape sequence
-                        self.input_char = b&#34;&#34;
-                # If line feed detected
-                elif self.input_char[0] == 0x0A:
-                        self.input_char = b&#34;&#34;
-                # If delete detected
-                elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
-                        if len(self.input_buffer) &gt; 0:
-                                self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
-                        self.input_char = b&#34;&#34;
-                # Else other character
-                else:
-                        self.input_buffer += self.input_char
-                        self.input_char = b&#34;&#34;
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.server.telnet.TelnetLogin.is_logged"><code class="name flex">
-<span>def <span class="ident">is_logged</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Indicates if the login successful</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def is_logged(self):
-        &#34;&#34;&#34; Indicates if the login successful &#34;&#34;&#34;
-        return self.state &gt;= 2</code></pre>
-</details>
-</dd>
-<dt id="lib.server.telnet.TelnetLogin.manage"><code class="name flex">
-<span>def <span class="ident">manage</span></span>(<span>self, character)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Manage the login</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def manage(self, character):
-        &#34;&#34;&#34; Manage the login &#34;&#34;&#34;
-        result = False
-        buffer = self.input(character)
-        if buffer is not None:
-                result = self.valid(buffer)
-        self.refresh()
-        return result</code></pre>
-</details>
-</dd>
-<dt id="lib.server.telnet.TelnetLogin.refresh"><code class="name flex">
-<span>def <span class="ident">refresh</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Refresh the line displayed</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def refresh(self):
-        &#34;&#34;&#34; Refresh the line displayed &#34;&#34;&#34;
-        if self.state == 0:
-                self.output.write(strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
-        elif self.state == 1:
-                self.output.write(strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(strings.tostrings(self.input_buffer)))))</code></pre>
-</details>
-</dd>
-<dt id="lib.server.telnet.TelnetLogin.valid"><code class="name flex">
-<span>def <span class="ident">valid</span></span>(<span>self, buffer)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Valid data entered</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def valid(self, buffer):
-        &#34;&#34;&#34; Valid data entered &#34;&#34;&#34;
-        result = False
-        # pylint:disable=attribute-defined-outside-init
-        if self.state == 0:
-                self.login = buffer
-                self.state += 1
-                self.output.write(&#34;\n&#34;)
-        elif self.state == 1:
-                self.password = buffer
-                self.state += 1
-                self.output.write(&#34;\r\n&#34;)
-                # If password is a success
-                if User.check(self.login, self.password, display=False):
-                        if self.count_failed[0] &gt;&gt; 2:
-                                time.sleep(15)
-                        self.output.write(b&#34;Login successful\r\n&#34;)
-                        self.footer()
-                        self.state += 1
-                        self.count_failed[0] = 0
-                        result = True
-                else:
-                        self.count_failed[0] += 1
-                        duration = 3 + (30*(self.count_failed[0] &gt;&gt; 2))
-                        time.sleep(duration)
-                        self.output.write(b&#34;Login failed\r\n&#34;)
-                        self.state = 0
-                self.clean()
-        return result</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="lib.server.telnet.TelnetWrapper"><code class="flex name class">
-<span>class <span class="ident">TelnetWrapper</span></span>
-<span>(</span><span>sock)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Telnet wrapper class</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class TelnetWrapper(IOBase):
-        &#34;&#34;&#34; Telnet wrapper class &#34;&#34;&#34;
-        def __init__(self, sock):
-                # pylint: disable=super-init-not-called
-                self.socket = sock
-                self.discard_count = 0
-                self.login = TelnetLogin(sock)
-
-        def readinto(self, b):
-                &#34;&#34;&#34; Read into the buffer &#34;&#34;&#34;
-                readbytes = 0
-                for i in range(len(b)):
-                        try:
-                                byte = 0
-                                # discard telnet control characters and
-                                # null bytes
-                                while(byte == 0):
-                                        byte = self.socket.recv(1)[0]
-                                        if byte == 0xFF:
-                                                self.discard_count = 2
-                                                byte = 0
-                                        elif self.discard_count &gt; 0:
-                                                self.discard_count -= 1
-                                                byte = 0
-                                b[i] = byte
-                                readbytes += 1
-                        except (IndexError, OSError) as e:
-                                if type(e) == IndexError or len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
-                                        if readbytes == 0:
-                                                return None
-                                        else:
-                                                return readbytes
-                                else:
-                                        raise
-                if self.login.is_logged() is False:
-                        self.login.manage(b)
-                        b[0] = 0
-                return readbytes
-
-        def write(self, data):
-                &#34;&#34;&#34; Write data &#34;&#34;&#34;
-                # we need to write all the data but it&#39;s a non-blocking socket
-                # so loop until it&#39;s all written eating EAGAIN exceptions
-                if self.login.is_logged():
-                        while len(data) &gt; 0:
-                                try:
-                                        written_bytes = self.socket.write(data)
-                                        data = data[written_bytes:]
-                                except OSError as e:
-                                        if len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
-                                                # can&#39;t write yet, try again
-                                                pass
-                                        else:
-                                                # something else...propagate the exception
-                                                raise
-
-        def close(self):
-                self.socket.close()</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>io.IOBase</li>
-<li>_io._IOBase</li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.server.telnet.TelnetWrapper.close"><code class="name flex">
-<span>def <span class="ident">close</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Flush and close the IO object.</p>
-<p>This method has no effect if the file is already closed.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def close(self):
-        self.socket.close()</code></pre>
-</details>
-</dd>
-<dt id="lib.server.telnet.TelnetWrapper.readinto"><code class="name flex">
-<span>def <span class="ident">readinto</span></span>(<span>self, b)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Read into the buffer</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def readinto(self, b):
-        &#34;&#34;&#34; Read into the buffer &#34;&#34;&#34;
-        readbytes = 0
-        for i in range(len(b)):
-                try:
-                        byte = 0
-                        # discard telnet control characters and
-                        # null bytes
-                        while(byte == 0):
-                                byte = self.socket.recv(1)[0]
-                                if byte == 0xFF:
-                                        self.discard_count = 2
-                                        byte = 0
-                                elif self.discard_count &gt; 0:
-                                        self.discard_count -= 1
-                                        byte = 0
-                        b[i] = byte
-                        readbytes += 1
-                except (IndexError, OSError) as e:
-                        if type(e) == IndexError or len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
-                                if readbytes == 0:
-                                        return None
-                                else:
-                                        return readbytes
-                        else:
-                                raise
-        if self.login.is_logged() is False:
-                self.login.manage(b)
-                b[0] = 0
-        return readbytes</code></pre>
-</details>
-</dd>
-<dt id="lib.server.telnet.TelnetWrapper.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, data)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Write data</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def write(self, data):
-        &#34;&#34;&#34; Write data &#34;&#34;&#34;
-        # we need to write all the data but it&#39;s a non-blocking socket
-        # so loop until it&#39;s all written eating EAGAIN exceptions
-        if self.login.is_logged():
-                while len(data) &gt; 0:
-                        try:
-                                written_bytes = self.socket.write(data)
-                                data = data[written_bytes:]
-                        except OSError as e:
-                                if len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
-                                        # can&#39;t write yet, try again
-                                        pass
-                                else:
-                                        # something else...propagate the exception
-                                        raise</code></pre>
+        if Telnet.server[0]:
+                Telnet.server[0].close()
+                Telnet.server[0] = None
+        Telnet.close_client()</code></pre>
 </details>
 </dd>
 </dl>
@@ -864,35 +303,17 @@ def start(port=23):
 <li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="lib.server.telnet.accept_telnet_connect" href="#lib.server.telnet.accept_telnet_connect">accept_telnet_connect</a></code></li>
-<li><code><a title="lib.server.telnet.start" href="#lib.server.telnet.start">start</a></code></li>
-<li><code><a title="lib.server.telnet.stop" href="#lib.server.telnet.stop">stop</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="lib.server.telnet.TelnetLogin" href="#lib.server.telnet.TelnetLogin">TelnetLogin</a></code></h4>
+<h4><code><a title="lib.server.telnet.Telnet" href="#lib.server.telnet.Telnet">Telnet</a></code></h4>
 <ul class="two-column">
-<li><code><a title="lib.server.telnet.TelnetLogin.clean" href="#lib.server.telnet.TelnetLogin.clean">clean</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetLogin.count_failed" href="#lib.server.telnet.TelnetLogin.count_failed">count_failed</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetLogin.footer" href="#lib.server.telnet.TelnetLogin.footer">footer</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetLogin.header" href="#lib.server.telnet.TelnetLogin.header">header</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetLogin.input" href="#lib.server.telnet.TelnetLogin.input">input</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetLogin.is_logged" href="#lib.server.telnet.TelnetLogin.is_logged">is_logged</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetLogin.manage" href="#lib.server.telnet.TelnetLogin.manage">manage</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetLogin.refresh" href="#lib.server.telnet.TelnetLogin.refresh">refresh</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetLogin.valid" href="#lib.server.telnet.TelnetLogin.valid">valid</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="lib.server.telnet.TelnetWrapper" href="#lib.server.telnet.TelnetWrapper">TelnetWrapper</a></code></h4>
-<ul class="">
-<li><code><a title="lib.server.telnet.TelnetWrapper.close" href="#lib.server.telnet.TelnetWrapper.close">close</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetWrapper.readinto" href="#lib.server.telnet.TelnetWrapper.readinto">readinto</a></code></li>
-<li><code><a title="lib.server.telnet.TelnetWrapper.write" href="#lib.server.telnet.TelnetWrapper.write">write</a></code></li>
+<li><code><a title="lib.server.telnet.Telnet.accept" href="#lib.server.telnet.Telnet.accept">accept</a></code></li>
+<li><code><a title="lib.server.telnet.Telnet.client" href="#lib.server.telnet.Telnet.client">client</a></code></li>
+<li><code><a title="lib.server.telnet.Telnet.close_client" href="#lib.server.telnet.Telnet.close_client">close_client</a></code></li>
+<li><code><a title="lib.server.telnet.Telnet.server" href="#lib.server.telnet.Telnet.server">server</a></code></li>
+<li><code><a title="lib.server.telnet.Telnet.start" href="#lib.server.telnet.Telnet.start">start</a></code></li>
+<li><code><a title="lib.server.telnet.Telnet.stop" href="#lib.server.telnet.Telnet.stop">stop</a></code></li>
 </ul>
 </li>
 </ul>

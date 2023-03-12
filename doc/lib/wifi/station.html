@@ -194,6 +194,14 @@ class Station:
                 return Station.config
 
         @staticmethod
+        def is_configured():
+                &#34;&#34;&#34; Indicates if the wifi has been configured &#34;&#34;&#34;
+                Station.reload_config()
+                if len(Station.network.list_known()) == 0:
+                        return False
+                return True
+
+        @staticmethod
         def is_connected():
                 &#34;&#34;&#34; Indicates if the wifi is connected &#34;&#34;&#34;
                 if Station.wlan:
@@ -604,6 +612,14 @@ class Station:
                         if Station.config.is_changed():
                                 Station.config.load()
                 return Station.config
+
+        @staticmethod
+        def is_configured():
+                &#34;&#34;&#34; Indicates if the wifi has been configured &#34;&#34;&#34;
+                Station.reload_config()
+                if len(Station.network.list_known()) == 0:
+                        return False
+                return True
 
         @staticmethod
         def is_connected():
@@ -1086,6 +1102,24 @@ def is_active():
         return Station.wlan.active()</code></pre>
 </details>
 </dd>
+<dt id="lib.wifi.station.Station.is_configured"><code class="name flex">
+<span>def <span class="ident">is_configured</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the wifi has been configured</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def is_configured():
+        &#34;&#34;&#34; Indicates if the wifi has been configured &#34;&#34;&#34;
+        Station.reload_config()
+        if len(Station.network.list_known()) == 0:
+                return False
+        return True</code></pre>
+</details>
+</dd>
 <dt id="lib.wifi.station.Station.is_connected"><code class="name flex">
 <span>def <span class="ident">is_connected</span></span>(<span>)</span>
 </code></dt>
@@ -1384,6 +1418,7 @@ def stop():
 <li><code><a title="lib.wifi.station.Station.init" href="#lib.wifi.station.Station.init">init</a></code></li>
 <li><code><a title="lib.wifi.station.Station.is_activated" href="#lib.wifi.station.Station.is_activated">is_activated</a></code></li>
 <li><code><a title="lib.wifi.station.Station.is_active" href="#lib.wifi.station.Station.is_active">is_active</a></code></li>
+<li><code><a title="lib.wifi.station.Station.is_configured" href="#lib.wifi.station.Station.is_configured">is_configured</a></code></li>
 <li><code><a title="lib.wifi.station.Station.is_connected" href="#lib.wifi.station.Station.is_connected">is_connected</a></code></li>
 <li><code><a title="lib.wifi.station.Station.is_fallback" href="#lib.wifi.station.Station.is_fallback">is_fallback</a></code></li>
 <li><code><a title="lib.wifi.station.Station.is_ip_on_interface" href="#lib.wifi.station.Station.is_ip_on_interface">is_ip_on_interface</a></code></li>

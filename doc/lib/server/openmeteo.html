@@ -34,80 +34,12 @@ See <a href="https://open-meteo.com">https://open-meteo.com</a></p>
 &#34;&#34;&#34; These classes are used to get meteo informations.
 See https://open-meteo.com &#34;&#34;&#34;
 # pylint:disable=wrong-import-position
-import json
-import uasyncio
-from server.stream import *
-from server.httprequest import *
-import wifi
+from server.httpclient import *
 from tools import logger,strings
-
-class Meteo:
-        &#34;&#34;&#34; Class that manages a push over notification &#34;&#34;&#34;
-        def __init__(self, host, port):
-                &#34;&#34;&#34; Constructor
-                host : hostname b&#34;api.open-meteo.com&#34;
-                port : port of pushover (80) &#34;&#34;&#34;
-                self.host  = host
-                self.port  = port
-
-        async def get(self, parameters, display=True):
-                &#34;&#34;&#34; Get meteo &#34;&#34;&#34;
-                result = None
-                if wifi.Station.is_active():
-                        try:
-                                streamio = None
-                                # Open pushover connection
-                                reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
-                                streamio = Stream(reader, writer)
-
-                                # Create multipart request
-                                request = HttpRequest(streamio)
-                                request.set_method(b&#34;GET&#34;)
-                                request.set_path  (b&#34;/v1/forecast&#34;+parameters)
-                                request.set_header(b&#34;Host&#34;,self.host)
-                                request.set_header(b&#34;Accept&#34;,         b&#34;*/*&#34;)
-                                request.set_header(b&#34;Connection&#34;,     b&#34;keep-alive&#34;)
-
-                                response = await read_chunked(streamio, request)
-                                result = strings.tostrings(response.get_content())
-                                with open(&#34;res.json&#34;,&#34;wb&#34;) as file:
-                                        file.write(response.get_content())
-                                result = json.loads(result)
-
-                        except Exception as err:
-                                logger.syslog(err)
-                        finally:
-                                if streamio:
-                                        await streamio.close()
-                else:
-                        logger.syslog(&#34;Get meteo not sent : wifi not connected&#34;, display=display)
-                return result
-
-async def read_chunked(streamio, request):
-        &#34;&#34;&#34; Read http chunked response &#34;&#34;&#34;
-        response = HttpResponse(streamio)
-        ack      = HttpResponse(streamio)
-        await request.send()
-
-        while True:
-                await response.receive()
-                # print(response.get_content())
-                if response.status == b&#34;200&#34;:
-                        if response.headers.get(b&#34;Transfer-Encoding&#34;,b&#34;&#34;) == b&#34;chunked&#34;:
-                                if response.chunk_size == 0:
-                                        break
-                                else:
-                                        await ack.send_ok()
-                        else:
-                                break
-                else:
-                        break
-        return response
 
 async def async_get_meteo(parameters, display=True):
         &#34;&#34;&#34; Asyncio get meteo (only in asyncio) &#34;&#34;&#34;
-        meteo = Meteo(host=b&#34;api.open-meteo.com&#34;, port=80)
-        return await meteo.get(parameters, display=display)
+        return await HttpClient.request(method=b&#34;GET&#34;, url=b&#34;http://api.open-meteo.com:80/v1/forecast?&#34;+parameters)
 
 def get_meteo(parameters):
         &#34;&#34;&#34; Get meteo function &#34;&#34;&#34;
@@ -133,8 +65,7 @@ def get_meteo(parameters):
 </summary>
 <pre><code class="python">async def async_get_meteo(parameters, display=True):
         &#34;&#34;&#34; Asyncio get meteo (only in asyncio) &#34;&#34;&#34;
-        meteo = Meteo(host=b&#34;api.open-meteo.com&#34;, port=80)
-        return await meteo.get(parameters, display=display)</code></pre>
+        return await HttpClient.request(method=b&#34;GET&#34;, url=b&#34;http://api.open-meteo.com:80/v1/forecast?&#34;+parameters)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.openmeteo.get_meteo"><code class="name flex">
@@ -152,145 +83,9 @@ def get_meteo(parameters):
         loop.run_until_complete(async_get_meteo(parameters=parameters))</code></pre>
 </details>
 </dd>
-<dt id="lib.server.openmeteo.read_chunked"><code class="name flex">
-<span>async def <span class="ident">read_chunked</span></span>(<span>streamio, request)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Read http chunked response</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def read_chunked(streamio, request):
-        &#34;&#34;&#34; Read http chunked response &#34;&#34;&#34;
-        response = HttpResponse(streamio)
-        ack      = HttpResponse(streamio)
-        await request.send()
-
-        while True:
-                await response.receive()
-                # print(response.get_content())
-                if response.status == b&#34;200&#34;:
-                        if response.headers.get(b&#34;Transfer-Encoding&#34;,b&#34;&#34;) == b&#34;chunked&#34;:
-                                if response.chunk_size == 0:
-                                        break
-                                else:
-                                        await ack.send_ok()
-                        else:
-                                break
-                else:
-                        break
-        return response</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="lib.server.openmeteo.Meteo"><code class="flex name class">
-<span>class <span class="ident">Meteo</span></span>
-<span>(</span><span>host, port)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Class that manages a push over notification </p>
-<p>Constructor
-host : hostname b"api.open-meteo.com"
-port : port of pushover (80)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Meteo:
-        &#34;&#34;&#34; Class that manages a push over notification &#34;&#34;&#34;
-        def __init__(self, host, port):
-                &#34;&#34;&#34; Constructor
-                host : hostname b&#34;api.open-meteo.com&#34;
-                port : port of pushover (80) &#34;&#34;&#34;
-                self.host  = host
-                self.port  = port
-
-        async def get(self, parameters, display=True):
-                &#34;&#34;&#34; Get meteo &#34;&#34;&#34;
-                result = None
-                if wifi.Station.is_active():
-                        try:
-                                streamio = None
-                                # Open pushover connection
-                                reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
-                                streamio = Stream(reader, writer)
-
-                                # Create multipart request
-                                request = HttpRequest(streamio)
-                                request.set_method(b&#34;GET&#34;)
-                                request.set_path  (b&#34;/v1/forecast&#34;+parameters)
-                                request.set_header(b&#34;Host&#34;,self.host)
-                                request.set_header(b&#34;Accept&#34;,         b&#34;*/*&#34;)
-                                request.set_header(b&#34;Connection&#34;,     b&#34;keep-alive&#34;)
-
-                                response = await read_chunked(streamio, request)
-                                result = strings.tostrings(response.get_content())
-                                with open(&#34;res.json&#34;,&#34;wb&#34;) as file:
-                                        file.write(response.get_content())
-                                result = json.loads(result)
-
-                        except Exception as err:
-                                logger.syslog(err)
-                        finally:
-                                if streamio:
-                                        await streamio.close()
-                else:
-                        logger.syslog(&#34;Get meteo not sent : wifi not connected&#34;, display=display)
-                return result</code></pre>
-</details>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.server.openmeteo.Meteo.get"><code class="name flex">
-<span>async def <span class="ident">get</span></span>(<span>self, parameters, display=True)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get meteo</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def get(self, parameters, display=True):
-        &#34;&#34;&#34; Get meteo &#34;&#34;&#34;
-        result = None
-        if wifi.Station.is_active():
-                try:
-                        streamio = None
-                        # Open pushover connection
-                        reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
-                        streamio = Stream(reader, writer)
-
-                        # Create multipart request
-                        request = HttpRequest(streamio)
-                        request.set_method(b&#34;GET&#34;)
-                        request.set_path  (b&#34;/v1/forecast&#34;+parameters)
-                        request.set_header(b&#34;Host&#34;,self.host)
-                        request.set_header(b&#34;Accept&#34;,         b&#34;*/*&#34;)
-                        request.set_header(b&#34;Connection&#34;,     b&#34;keep-alive&#34;)
-
-                        response = await read_chunked(streamio, request)
-                        result = strings.tostrings(response.get_content())
-                        with open(&#34;res.json&#34;,&#34;wb&#34;) as file:
-                                file.write(response.get_content())
-                        result = json.loads(result)
-
-                except Exception as err:
-                        logger.syslog(err)
-                finally:
-                        if streamio:
-                                await streamio.close()
-        else:
-                logger.syslog(&#34;Get meteo not sent : wifi not connected&#34;, display=display)
-        return result</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -308,17 +103,6 @@ port : port of pushover (80)</p></div>
 <ul class="">
 <li><code><a title="lib.server.openmeteo.async_get_meteo" href="#lib.server.openmeteo.async_get_meteo">async_get_meteo</a></code></li>
 <li><code><a title="lib.server.openmeteo.get_meteo" href="#lib.server.openmeteo.get_meteo">get_meteo</a></code></li>
-<li><code><a title="lib.server.openmeteo.read_chunked" href="#lib.server.openmeteo.read_chunked">read_chunked</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="lib.server.openmeteo.Meteo" href="#lib.server.openmeteo.Meteo">Meteo</a></code></h4>
-<ul class="">
-<li><code><a title="lib.server.openmeteo.Meteo.get" href="#lib.server.openmeteo.Meteo.get">get</a></code></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

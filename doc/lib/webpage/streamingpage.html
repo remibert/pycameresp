@@ -112,8 +112,8 @@ async def camera_start_streaming(request, response, args):
                 writer = None
                 currentstreaming_id = int(request.params[b&#34;streaming_id&#34;])
                 reserved = await Camera.reserve(request, timeout=20, suspension=15)
-                # print(&#34;Start streaming %d&#34;%currentstreaming_id)
                 if reserved:
+                        failed = False
                         Camera.open()
 
                         response.set_status(b&#34;200&#34;)
@@ -140,7 +140,8 @@ async def camera_start_streaming(request, response, args):
                         try:
                                 await writer.write(frame%(b&#34;&#34;, length, length))
                                 await writer.write(image)
-                        except:
+                        except Exception as err:
+                                failed = True
                                 currentstreaming_id = 0
 
                         while currentstreaming_id == Streaming.get_streaming_id():
@@ -152,15 +153,19 @@ async def camera_start_streaming(request, response, args):
                                 try:
                                         await writer.write(frame%(identifier, length, length))
                                         await writer.write(image)
-                                except:
+                                except Exception as err:
+                                        failed = True
                                         break
                                 if micropython is False:
                                         await uasyncio.sleep(0.1)
+                        if failed is False:
+                                await writer.write(identifier)
+                else:
+                        pass
         except Exception as err:
                 logger.syslog(err)
         finally:
                 if reserved:
-                        # print(&#34;End streaming %d&#34;%currentstreaming_id)
                         await Camera.unreserve(request)
                 if writer:
                         await writer.close()</code></pre>
@@ -193,8 +198,8 @@ async def camera_start_streaming(request, response, args):
                 writer = None
                 currentstreaming_id = int(request.params[b&#34;streaming_id&#34;])
                 reserved = await Camera.reserve(request, timeout=20, suspension=15)
-                # print(&#34;Start streaming %d&#34;%currentstreaming_id)
                 if reserved:
+                        failed = False
                         Camera.open()
 
                         response.set_status(b&#34;200&#34;)
@@ -221,7 +226,8 @@ async def camera_start_streaming(request, response, args):
                         try:
                                 await writer.write(frame%(b&#34;&#34;, length, length))
                                 await writer.write(image)
-                        except:
+                        except Exception as err:
+                                failed = True
                                 currentstreaming_id = 0
 
                         while currentstreaming_id == Streaming.get_streaming_id():
@@ -233,15 +239,19 @@ async def camera_start_streaming(request, response, args):
                                 try:
                                         await writer.write(frame%(identifier, length, length))
                                         await writer.write(image)
-                                except:
+                                except Exception as err:
+                                        failed = True
                                         break
                                 if micropython is False:
                                         await uasyncio.sleep(0.1)
+                        if failed is False:
+                                await writer.write(identifier)
+                else:
+                        pass
         except Exception as err:
                 logger.syslog(err)
         finally:
                 if reserved:
-                        # print(&#34;End streaming %d&#34;%currentstreaming_id)
                         await Camera.unreserve(request)
                 if writer:
                         await writer.close()</code></pre>

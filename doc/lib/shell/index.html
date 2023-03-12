@@ -31,7 +31,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Class defining a minimalist shell and text editor , directly executable on the board. &#34;&#34;&#34;
 # pylint: disable=redefined-builtin
-from shell.shell import *</code></pre>
+
+def sh():
+    &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
+    from shell.shellcore import shell_sh
+    shell_sh()</code></pre>
 </details>
 </section>
 <section>
@@ -50,6 +54,11 @@ This allows you to make quick and easy changes directly on the board, …</p></d
 <dt><code class="name"><a title="lib.shell.shell" href="shell.html">lib.shell.shell</a></code></dt>
 <dd>
 <div class="desc"><p>Class defining a minimalist shell, directly executable on the board.
+We modify directories, list, delete, move files, edit files &hellip;</p></div>
+</dd>
+<dt><code class="name"><a title="lib.shell.shellcore" href="shellcore.html">lib.shell.shellcore</a></code></dt>
+<dd>
+<div class="desc"><p>Class defining a minimalist shell, directly executable on the board.
 We modify directories, list, delete, move files, edit files &hellip;
 The commands are …</p></div>
 </dd>
@@ -58,6 +67,24 @@ The commands are …</p></div>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.shell.sh"><code class="name flex">
+<span>def <span class="ident">sh</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start the shell</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sh():
+    &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
+    from shell.shellcore import shell_sh
+    shell_sh()</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -78,6 +105,12 @@ The commands are …</p></div>
 <li><code><a title="lib.shell.editor" href="editor.html">lib.shell.editor</a></code></li>
 <li><code><a title="lib.shell.editor_py" href="editor_py.html">lib.shell.editor_py</a></code></li>
 <li><code><a title="lib.shell.shell" href="shell.html">lib.shell.shell</a></code></li>
+<li><code><a title="lib.shell.shellcore" href="shellcore.html">lib.shell.shellcore</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.shell.sh" href="#lib.shell.sh">sh</a></code></li>
 </ul>
 </li>
 </ul>

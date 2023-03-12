@@ -295,20 +295,12 @@ If you have pushover notifications enabled, you will receive all detections on t
 
 The red frames indicate the areas that have triggered a notification.
 
-Action on the image :
-
-- ⏮ : click on top left corner of image switches to first motion detection (also page up key)
-- ⏭ : bottom right corner of image switches to last motion detection (also page down key)
-- ⏪ : click on the top of the image to switches to the previous day of motion detection (also up arrow key)
-- ⏩ : click on the bottom of the image switches to the next day of motion detection (also down arrow key)
-- ◀️ : click on the left of the image switches to the previous motion detection (also left arrow key)
-- ▶️ : click on the left of the image switches to the next motion detection (also right arrow key)
-- ⏺ : click in the middle of the image to save the image on your computer
-
 The image information is : 
 - **YYYY/MM/DD hh:mm:ss** : date and time of the motion detection,
 - **Id=xxx** : identification number of the images since the launch of the detection,
 - **D=xxx** : number of squares in the image that have changed since the previous image (see red frames).
+
+The carousel contains the day numbers, to see a given day, click on its number.
 
 # System menu
 
@@ -320,6 +312,8 @@ The system menu a lot of different things. It allows reboot, file exchange, get 
 - For **Esp32ONE**, edit the main.py and change the ```device="ESP32CAM"``` by ```device="ESP32ONE"```.
 
 Note: the **Esp32ONE** does not allow the camera to operate at the same time as the sd card.
+
+Other cameras can probably be supported, you need to edit the pycameresp.py file, in function create_camera_task add the right GPIOs.
 
 # Shell access
 

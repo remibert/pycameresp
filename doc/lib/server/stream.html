@@ -80,7 +80,7 @@ if sys.implementation.name == &#34;micropython&#34;:
                         await self.writer.aclose()
 else:
         trace = None
-        #~ trace = open(&#34;stream.txt&#34;,&#34;wb&#34;)
+        # trace = open(&#34;stream.txt&#34;,&#34;wb&#34;)
         class Stream:
                 &#34;&#34;&#34; Class stream &#34;&#34;&#34;
                 def __init__(self, reader, writer):
@@ -112,6 +112,10 @@ else:
                         data = self.buffer[:length]
                         l = len(data)
                         self.buffer = self.buffer[length:]
+                        if trace:
+                                trace.write(b&#34;\n# read\n&#34;)
+                                trace.write(data)
+                                trace.flush()
                         return data
 
                 async def write(self, data):
@@ -121,6 +125,7 @@ else:
                         if self.writer.is_closing():
                                 raise OSError(104,&#34;Error&#34;)
                         if trace:
+                                trace.write(b&#34;\n# write\n&#34;)
                                 trace.write(data)
                                 trace.flush()
 
@@ -644,6 +649,10 @@ def is_enough_memory():
         data = self.buffer[:length]
         l = len(data)
         self.buffer = self.buffer[length:]
+        if trace:
+                trace.write(b&#34;\n# read\n&#34;)
+                trace.write(data)
+                trace.flush()
         return data</code></pre>
 </details>
 </dd>
@@ -689,6 +698,7 @@ It then returns only the requested row. This significantly increases read perfor
         if self.writer.is_closing():
                 raise OSError(104,&#34;Error&#34;)
         if trace:
+                trace.write(b&#34;\n# write\n&#34;)
                 trace.write(data)
                 trace.flush()
 
