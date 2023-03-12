@@ -50,7 +50,7 @@ elif sys.platform == "darwin":
 	COLOR_3  = "\x1B[95m"
 	NO_COLOR = "\x1B[m"
 
-OUTPUT_DIR = os.path.abspath(os.path.normpath(os.environ.setdefault("PYCAMERESP_FIRMWARE",os.path.dirname(__file__)+os.path.sep+"firmware")))
+OUTPUT_DIR =os.path.abspath(os.path.normpath(os.environ.setdefault("PYCAMERESP_FIRMWARE",os.path.abspath(os.path.dirname(__file__))+os.path.sep+"firmware")))
 
 if len(sys.argv) > 1:
 	BOARD = sys.argv[1]
