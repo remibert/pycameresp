@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>lib.server.telnetcore API documentation</title>
+<meta name="description" content="Telnet class" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.server.telnetcore</code></h1>
+</header>
+<section id="section-intro">
+<p>Telnet class</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Based on https://github.com/cpopp/MicroTelnetServer/blob/master/utelnet/utelnetserver.py
+# Add user login
+# pylint:disable=consider-using-f-string
+# pylint:disable=consider-using-enumerate
+&#34;&#34;&#34; Telnet class &#34;&#34;&#34;
+import sys
+import errno
+from io import IOBase
+import time
+from server.user import User
+from tools import strings
+
+class TelnetLogin:
+        &#34;&#34;&#34; Class to manage the username and password &#34;&#34;&#34;
+        count_failed = [0]
+        def __init__(self, output):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.output = output
+                if User.is_empty():
+                        self.footer()
+                        self.state = 2
+                else:
+                        self.state = 0
+                self.clean()
+                self.header()
+                self.refresh()
+
+        def header(self):
+                &#34;&#34;&#34; Show header &#34;&#34;&#34;
+                try:
+                        import wifi
+                        hostname = strings.tobytes(wifi.Station.get_hostname())
+                except:
+                        hostname = strings.tobytes(sys.platform)
+                message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
+                self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))
+
+        def footer(self):
+                &#34;&#34;&#34; Show footer &#34;&#34;&#34;
+                self.output.write(b&#34;\r\n%s\r\n&#34;%(b&#34;-&#34;*30))
+
+        def clean(self):
+                &#34;&#34;&#34; Clean the login &#34;&#34;&#34;
+                self.input_buffer = b&#34;&#34;
+                self.input_char   = b&#34;&#34;
+                self.password     = b&#34;&#34;
+                self.login        = b&#34;&#34;
+
+        def input(self, b):
+                &#34;&#34;&#34; Input value &#34;&#34;&#34;
+                # pylint:disable=attribute-defined-outside-init
+                result = None
+                self.input_char += b[0].to_bytes(1,&#34;little&#34;)
+
+                # Check if the character is complete
+                if strings.is_key_ended(self.input_char):
+                        # If escape sequence detected
+                        if self.input_char[0] == 0x1B:
+                                # Ignore escape sequence
+                                self.input_char = b&#34;&#34;
+                        # If return detected
+                        elif self.input_char[0] == 0x0D:
+                                result = self.input_buffer
+                                self.input_buffer = b&#34;&#34;
+                                self.input_char = b&#34;&#34;
+                        # If tabulation sequence detected
+                        elif self.input_char[0] == 0x09:
+                                # Ignore escape sequence
+                                self.input_char = b&#34;&#34;
+                        # If line feed detected
+                        elif self.input_char[0] == 0x0A:
+                                self.input_char = b&#34;&#34;
+                        # If delete detected
+                        elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
+                                if len(self.input_buffer) &gt; 0:
+                                        self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
+                                self.input_char = b&#34;&#34;
+                        # Else other character
+                        else:
+                                self.input_buffer += self.input_char
+                                self.input_char = b&#34;&#34;
+                return result
+
+        def refresh(self):
+                &#34;&#34;&#34; Refresh the line displayed &#34;&#34;&#34;
+                if self.state == 0:
+                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
+                elif self.state == 1:
+                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(strings.tostrings(self.input_buffer)))))
+
+        def valid(self, buffer):
+                &#34;&#34;&#34; Valid data entered &#34;&#34;&#34;
+                result = False
+                # pylint:disable=attribute-defined-outside-init
+                if self.state == 0:
+                        self.login = buffer
+                        self.state += 1
+                        self.output.write(&#34;\n&#34;)
+                elif self.state == 1:
+                        self.password = buffer
+                        self.state += 1
+                        self.output.write(&#34;\r\n&#34;)
+                        # If password is a success
+                        if User.check(self.login, self.password, display=False):
+                                if self.count_failed[0] &gt;&gt; 2:
+                                        time.sleep(15)
+                                self.output.write(b&#34;Login successful\r\n&#34;)
+                                self.footer()
+                                self.state += 1
+                                self.count_failed[0] = 0
+                                result = True
+                        else:
+                                self.count_failed[0] += 1
+                                duration = 3 + (30*(self.count_failed[0] &gt;&gt; 2))
+                                time.sleep(duration)
+                                self.output.write(b&#34;Login failed\r\n&#34;)
+                                self.state = 0
+                        self.clean()
+                return result
+
+        def manage(self, character):
+                &#34;&#34;&#34; Manage the login &#34;&#34;&#34;
+                result = False
+                buffer = self.input(character)
+                if buffer is not None:
+                        result = self.valid(buffer)
+                self.refresh()
+                return result
+
+        def is_logged(self):
+                &#34;&#34;&#34; Indicates if the login successful &#34;&#34;&#34;
+                return self.state &gt;= 2
+
+# Provide necessary functions for dupterm and replace telnet control characters that come in.
+class TelnetWrapper(IOBase):
+        &#34;&#34;&#34; Telnet wrapper class &#34;&#34;&#34;
+        def __init__(self, sock):
+                # pylint: disable=super-init-not-called
+                self.socket = sock
+                self.discard_count = 0
+                self.login = TelnetLogin(sock)
+
+        def readinto(self, b):
+                &#34;&#34;&#34; Read into the buffer &#34;&#34;&#34;
+                readbytes = 0
+                for i in range(len(b)):
+                        try:
+                                byte = 0
+                                # discard telnet control characters and
+                                # null bytes
+                                while(byte == 0):
+                                        byte = self.socket.recv(1)[0]
+                                        if byte == 0xFF:
+                                                self.discard_count = 2
+                                                byte = 0
+                                        elif self.discard_count &gt; 0:
+                                                self.discard_count -= 1
+                                                byte = 0
+                                b[i] = byte
+                                readbytes += 1
+                        except (IndexError, OSError) as e:
+                                if type(e) == IndexError or len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
+                                        if readbytes == 0:
+                                                return None
+                                        else:
+                                                return readbytes
+                                else:
+                                        raise
+                if self.login.is_logged() is False:
+                        self.login.manage(b)
+                        b[0] = 0
+                return readbytes
+
+        def write(self, data):
+                &#34;&#34;&#34; Write data &#34;&#34;&#34;
+                # we need to write all the data but it&#39;s a non-blocking socket
+                # so loop until it&#39;s all written eating EAGAIN exceptions
+                if self.login.is_logged():
+                        while len(data) &gt; 0:
+                                try:
+                                        written_bytes = self.socket.write(data)
+                                        data = data[written_bytes:]
+                                except OSError as e:
+                                        if len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
+                                                # can&#39;t write yet, try again
+                                                pass
+                                        else:
+                                                # something else...propagate the exception
+                                                raise
+
+        def close(self):
+                self.socket.close()</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.server.telnetcore.TelnetLogin"><code class="flex name class">
+<span>class <span class="ident">TelnetLogin</span></span>
+<span>(</span><span>output)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class to manage the username and password </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TelnetLogin:
+        &#34;&#34;&#34; Class to manage the username and password &#34;&#34;&#34;
+        count_failed = [0]
+        def __init__(self, output):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.output = output
+                if User.is_empty():
+                        self.footer()
+                        self.state = 2
+                else:
+                        self.state = 0
+                self.clean()
+                self.header()
+                self.refresh()
+
+        def header(self):
+                &#34;&#34;&#34; Show header &#34;&#34;&#34;
+                try:
+                        import wifi
+                        hostname = strings.tobytes(wifi.Station.get_hostname())
+                except:
+                        hostname = strings.tobytes(sys.platform)
+                message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
+                self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))
+
+        def footer(self):
+                &#34;&#34;&#34; Show footer &#34;&#34;&#34;
+                self.output.write(b&#34;\r\n%s\r\n&#34;%(b&#34;-&#34;*30))
+
+        def clean(self):
+                &#34;&#34;&#34; Clean the login &#34;&#34;&#34;
+                self.input_buffer = b&#34;&#34;
+                self.input_char   = b&#34;&#34;
+                self.password     = b&#34;&#34;
+                self.login        = b&#34;&#34;
+
+        def input(self, b):
+                &#34;&#34;&#34; Input value &#34;&#34;&#34;
+                # pylint:disable=attribute-defined-outside-init
+                result = None
+                self.input_char += b[0].to_bytes(1,&#34;little&#34;)
+
+                # Check if the character is complete
+                if strings.is_key_ended(self.input_char):
+                        # If escape sequence detected
+                        if self.input_char[0] == 0x1B:
+                                # Ignore escape sequence
+                                self.input_char = b&#34;&#34;
+                        # If return detected
+                        elif self.input_char[0] == 0x0D:
+                                result = self.input_buffer
+                                self.input_buffer = b&#34;&#34;
+                                self.input_char = b&#34;&#34;
+                        # If tabulation sequence detected
+                        elif self.input_char[0] == 0x09:
+                                # Ignore escape sequence
+                                self.input_char = b&#34;&#34;
+                        # If line feed detected
+                        elif self.input_char[0] == 0x0A:
+                                self.input_char = b&#34;&#34;
+                        # If delete detected
+                        elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
+                                if len(self.input_buffer) &gt; 0:
+                                        self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
+                                self.input_char = b&#34;&#34;
+                        # Else other character
+                        else:
+                                self.input_buffer += self.input_char
+                                self.input_char = b&#34;&#34;
+                return result
+
+        def refresh(self):
+                &#34;&#34;&#34; Refresh the line displayed &#34;&#34;&#34;
+                if self.state == 0:
+                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
+                elif self.state == 1:
+                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(strings.tostrings(self.input_buffer)))))
+
+        def valid(self, buffer):
+                &#34;&#34;&#34; Valid data entered &#34;&#34;&#34;
+                result = False
+                # pylint:disable=attribute-defined-outside-init
+                if self.state == 0:
+                        self.login = buffer
+                        self.state += 1
+                        self.output.write(&#34;\n&#34;)
+                elif self.state == 1:
+                        self.password = buffer
+                        self.state += 1
+                        self.output.write(&#34;\r\n&#34;)
+                        # If password is a success
+                        if User.check(self.login, self.password, display=False):
+                                if self.count_failed[0] &gt;&gt; 2:
+                                        time.sleep(15)
+                                self.output.write(b&#34;Login successful\r\n&#34;)
+                                self.footer()
+                                self.state += 1
+                                self.count_failed[0] = 0
+                                result = True
+                        else:
+                                self.count_failed[0] += 1
+                                duration = 3 + (30*(self.count_failed[0] &gt;&gt; 2))
+                                time.sleep(duration)
+                                self.output.write(b&#34;Login failed\r\n&#34;)
+                                self.state = 0
+                        self.clean()
+                return result
+
+        def manage(self, character):
+                &#34;&#34;&#34; Manage the login &#34;&#34;&#34;
+                result = False
+                buffer = self.input(character)
+                if buffer is not None:
+                        result = self.valid(buffer)
+                self.refresh()
+                return result
+
+        def is_logged(self):
+                &#34;&#34;&#34; Indicates if the login successful &#34;&#34;&#34;
+                return self.state &gt;= 2</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.telnetcore.TelnetLogin.count_failed"><code class="name">var <span class="ident">count_failed</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.telnetcore.TelnetLogin.clean"><code class="name flex">
+<span>def <span class="ident">clean</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Clean the login</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clean(self):
+        &#34;&#34;&#34; Clean the login &#34;&#34;&#34;
+        self.input_buffer = b&#34;&#34;
+        self.input_char   = b&#34;&#34;
+        self.password     = b&#34;&#34;
+        self.login        = b&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnetcore.TelnetLogin.footer"><code class="name flex">
+<span>def <span class="ident">footer</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Show footer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def footer(self):
+        &#34;&#34;&#34; Show footer &#34;&#34;&#34;
+        self.output.write(b&#34;\r\n%s\r\n&#34;%(b&#34;-&#34;*30))</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnetcore.TelnetLogin.header"><code class="name flex">
+<span>def <span class="ident">header</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Show header</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def header(self):
+        &#34;&#34;&#34; Show header &#34;&#34;&#34;
+        try:
+                import wifi
+                hostname = strings.tobytes(wifi.Station.get_hostname())
+        except:
+                hostname = strings.tobytes(sys.platform)
+        message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
+        self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnetcore.TelnetLogin.input"><code class="name flex">
+<span>def <span class="ident">input</span></span>(<span>self, b)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Input value</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def input(self, b):
+        &#34;&#34;&#34; Input value &#34;&#34;&#34;
+        # pylint:disable=attribute-defined-outside-init
+        result = None
+        self.input_char += b[0].to_bytes(1,&#34;little&#34;)
+
+        # Check if the character is complete
+        if strings.is_key_ended(self.input_char):
+                # If escape sequence detected
+                if self.input_char[0] == 0x1B:
+                        # Ignore escape sequence
+                        self.input_char = b&#34;&#34;
+                # If return detected
+                elif self.input_char[0] == 0x0D:
+                        result = self.input_buffer
+                        self.input_buffer = b&#34;&#34;
+                        self.input_char = b&#34;&#34;
+                # If tabulation sequence detected
+                elif self.input_char[0] == 0x09:
+                        # Ignore escape sequence
+                        self.input_char = b&#34;&#34;
+                # If line feed detected
+                elif self.input_char[0] == 0x0A:
+                        self.input_char = b&#34;&#34;
+                # If delete detected
+                elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
+                        if len(self.input_buffer) &gt; 0:
+                                self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
+                        self.input_char = b&#34;&#34;
+                # Else other character
+                else:
+                        self.input_buffer += self.input_char
+                        self.input_char = b&#34;&#34;
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnetcore.TelnetLogin.is_logged"><code class="name flex">
+<span>def <span class="ident">is_logged</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the login successful</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_logged(self):
+        &#34;&#34;&#34; Indicates if the login successful &#34;&#34;&#34;
+        return self.state &gt;= 2</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnetcore.TelnetLogin.manage"><code class="name flex">
+<span>def <span class="ident">manage</span></span>(<span>self, character)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage the login</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def manage(self, character):
+        &#34;&#34;&#34; Manage the login &#34;&#34;&#34;
+        result = False
+        buffer = self.input(character)
+        if buffer is not None:
+                result = self.valid(buffer)
+        self.refresh()
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnetcore.TelnetLogin.refresh"><code class="name flex">
+<span>def <span class="ident">refresh</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Refresh the line displayed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def refresh(self):
+        &#34;&#34;&#34; Refresh the line displayed &#34;&#34;&#34;
+        if self.state == 0:
+                self.output.write(strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
+        elif self.state == 1:
+                self.output.write(strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(strings.tostrings(self.input_buffer)))))</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnetcore.TelnetLogin.valid"><code class="name flex">
+<span>def <span class="ident">valid</span></span>(<span>self, buffer)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Valid data entered</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def valid(self, buffer):
+        &#34;&#34;&#34; Valid data entered &#34;&#34;&#34;
+        result = False
+        # pylint:disable=attribute-defined-outside-init
+        if self.state == 0:
+                self.login = buffer
+                self.state += 1
+                self.output.write(&#34;\n&#34;)
+        elif self.state == 1:
+                self.password = buffer
+                self.state += 1
+                self.output.write(&#34;\r\n&#34;)
+                # If password is a success
+                if User.check(self.login, self.password, display=False):
+                        if self.count_failed[0] &gt;&gt; 2:
+                                time.sleep(15)
+                        self.output.write(b&#34;Login successful\r\n&#34;)
+                        self.footer()
+                        self.state += 1
+                        self.count_failed[0] = 0
+                        result = True
+                else:
+                        self.count_failed[0] += 1
+                        duration = 3 + (30*(self.count_failed[0] &gt;&gt; 2))
+                        time.sleep(duration)
+                        self.output.write(b&#34;Login failed\r\n&#34;)
+                        self.state = 0
+                self.clean()
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.telnetcore.TelnetWrapper"><code class="flex name class">
+<span>class <span class="ident">TelnetWrapper</span></span>
+<span>(</span><span>sock)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Telnet wrapper class</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TelnetWrapper(IOBase):
+        &#34;&#34;&#34; Telnet wrapper class &#34;&#34;&#34;
+        def __init__(self, sock):
+                # pylint: disable=super-init-not-called
+                self.socket = sock
+                self.discard_count = 0
+                self.login = TelnetLogin(sock)
+
+        def readinto(self, b):
+                &#34;&#34;&#34; Read into the buffer &#34;&#34;&#34;
+                readbytes = 0
+                for i in range(len(b)):
+                        try:
+                                byte = 0
+                                # discard telnet control characters and
+                                # null bytes
+                                while(byte == 0):
+                                        byte = self.socket.recv(1)[0]
+                                        if byte == 0xFF:
+                                                self.discard_count = 2
+                                                byte = 0
+                                        elif self.discard_count &gt; 0:
+                                                self.discard_count -= 1
+                                                byte = 0
+                                b[i] = byte
+                                readbytes += 1
+                        except (IndexError, OSError) as e:
+                                if type(e) == IndexError or len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
+                                        if readbytes == 0:
+                                                return None
+                                        else:
+                                                return readbytes
+                                else:
+                                        raise
+                if self.login.is_logged() is False:
+                        self.login.manage(b)
+                        b[0] = 0
+                return readbytes
+
+        def write(self, data):
+                &#34;&#34;&#34; Write data &#34;&#34;&#34;
+                # we need to write all the data but it&#39;s a non-blocking socket
+                # so loop until it&#39;s all written eating EAGAIN exceptions
+                if self.login.is_logged():
+                        while len(data) &gt; 0:
+                                try:
+                                        written_bytes = self.socket.write(data)
+                                        data = data[written_bytes:]
+                                except OSError as e:
+                                        if len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
+                                                # can&#39;t write yet, try again
+                                                pass
+                                        else:
+                                                # something else...propagate the exception
+                                                raise
+
+        def close(self):
+                self.socket.close()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>io.IOBase</li>
+<li>_io._IOBase</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.telnetcore.TelnetWrapper.close"><code class="name flex">
+<span>def <span class="ident">close</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Flush and close the IO object.</p>
+<p>This method has no effect if the file is already closed.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close(self):
+        self.socket.close()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnetcore.TelnetWrapper.readinto"><code class="name flex">
+<span>def <span class="ident">readinto</span></span>(<span>self, b)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read into the buffer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def readinto(self, b):
+        &#34;&#34;&#34; Read into the buffer &#34;&#34;&#34;
+        readbytes = 0
+        for i in range(len(b)):
+                try:
+                        byte = 0
+                        # discard telnet control characters and
+                        # null bytes
+                        while(byte == 0):
+                                byte = self.socket.recv(1)[0]
+                                if byte == 0xFF:
+                                        self.discard_count = 2
+                                        byte = 0
+                                elif self.discard_count &gt; 0:
+                                        self.discard_count -= 1
+                                        byte = 0
+                        b[i] = byte
+                        readbytes += 1
+                except (IndexError, OSError) as e:
+                        if type(e) == IndexError or len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
+                                if readbytes == 0:
+                                        return None
+                                else:
+                                        return readbytes
+                        else:
+                                raise
+        if self.login.is_logged() is False:
+                self.login.manage(b)
+                b[0] = 0
+        return readbytes</code></pre>
+</details>
+</dd>
+<dt id="lib.server.telnetcore.TelnetWrapper.write"><code class="name flex">
+<span>def <span class="ident">write</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Write data</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write(self, data):
+        &#34;&#34;&#34; Write data &#34;&#34;&#34;
+        # we need to write all the data but it&#39;s a non-blocking socket
+        # so loop until it&#39;s all written eating EAGAIN exceptions
+        if self.login.is_logged():
+                while len(data) &gt; 0:
+                        try:
+                                written_bytes = self.socket.write(data)
+                                data = data[written_bytes:]
+                        except OSError as e:
+                                if len(e.args) &gt; 0 and e.args[0] == errno.EAGAIN:
+                                        # can&#39;t write yet, try again
+                                        pass
+                                else:
+                                        # something else...propagate the exception
+                                        raise</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.server.telnetcore.TelnetLogin" href="#lib.server.telnetcore.TelnetLogin">TelnetLogin</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.server.telnetcore.TelnetLogin.clean" href="#lib.server.telnetcore.TelnetLogin.clean">clean</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetLogin.count_failed" href="#lib.server.telnetcore.TelnetLogin.count_failed">count_failed</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetLogin.footer" href="#lib.server.telnetcore.TelnetLogin.footer">footer</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetLogin.header" href="#lib.server.telnetcore.TelnetLogin.header">header</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetLogin.input" href="#lib.server.telnetcore.TelnetLogin.input">input</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetLogin.is_logged" href="#lib.server.telnetcore.TelnetLogin.is_logged">is_logged</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetLogin.manage" href="#lib.server.telnetcore.TelnetLogin.manage">manage</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetLogin.refresh" href="#lib.server.telnetcore.TelnetLogin.refresh">refresh</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetLogin.valid" href="#lib.server.telnetcore.TelnetLogin.valid">valid</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.telnetcore.TelnetWrapper" href="#lib.server.telnetcore.TelnetWrapper">TelnetWrapper</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.telnetcore.TelnetWrapper.close" href="#lib.server.telnetcore.TelnetWrapper.close">close</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetWrapper.readinto" href="#lib.server.telnetcore.TelnetWrapper.readinto">readinto</a></code></li>
+<li><code><a title="lib.server.telnetcore.TelnetWrapper.write" href="#lib.server.telnetcore.TelnetWrapper.write">write</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
