@@ -18,33 +18,33 @@ Camflasher with shell commands **upload** and **download**, allows to upload or 
 
 - Download the firmware associated with your device :
 
-	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V15/ESP32CAM-firmware.bin)
+	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V16/ESP32CAM-firmware.bin)
 
-	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V15/GENERIC_SPIRAM-firmware.bin)
+	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V16/GENERIC_SPIRAM-firmware.bin)
 
 
 - Or download the zip for standard micropython firmware :
 
-	- [Shell with editor](https://github.com/remibert/pycameresp/releases/download/V15/shell.zip)
+	- [Shell with editor](https://github.com/remibert/pycameresp/releases/download/V16/shell.zip)
 
-	- [Wifi manager, Http server](https://github.com/remibert/pycameresp/releases/download/V15/server.zip)
+	- [Wifi manager, Http server](https://github.com/remibert/pycameresp/releases/download/V16/server.zip)
 
 - Text editor source files running on python3 and micropython :
 
-	- [Text editor](https://github.com/remibert/pycameresp/releases/download/V15/editor.zip)
+	- [Text editor](https://github.com/remibert/pycameresp/releases/download/V16/editor.zip)
 
 It is possible to run the shell with editor, or the servers on a standard micropython platform. The servers, the wifi manager, requires having enough ram and wifi support (ESP32 with SPIRAM for example). Unzip archive and install it with rshell.
 
 
 
 - Download the camflasher application and unzip it :
-	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V15/CamFlasher_windows_10_64.zip)
+	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V16/CamFlasher_windows_10_64.zip)
 
-	- [CamFlasher for OSX Ventura Intel](https://github.com/remibert/pycameresp/releases/download/V15/CamFlasher_osx_i386.zip)
+	- [CamFlasher for OSX Ventura Intel](https://github.com/remibert/pycameresp/releases/download/V16/CamFlasher_osx_i386.zip)
 
-	- [CamFlasher for OSX Ventura M1](https://github.com/remibert/pycameresp/releases/download/V15/CamFlasher_osx_arm.zip)
+	- [CamFlasher for OSX Ventura M1](https://github.com/remibert/pycameresp/releases/download/V16/CamFlasher_osx_arm.zip)
 
-	- [CamFlasher for Debian 11 x86_64](https://github.com/remibert/pycameresp/releases/download/V15/CamFlasher_linux.zip)
+	- [CamFlasher for Debian 11 x86_64](https://github.com/remibert/pycameresp/releases/download/V16/CamFlasher_linux.zip)
 
 		- On linux to be able to operate without being a super user you must enter the commands :
 
