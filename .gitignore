@@ -14,3 +14,6 @@ key.txt
 *.pulses
 modules/pulses/*
 images/Thumbs.db
+*.hourly
+*.daily
+*.monthly
