@@ -1682,7 +1682,7 @@ class Editor:
 		self.trace = None
 		if filesystem.ismicropython() is False:
 			if filename == "newfile.py":
-				self.trace = open("key.txt","w")
+				self.trace = open(self.cfg.config_root() + "/key.txt","w")
 
 		if (not filesystem.exists(filename) and read_only is True) or filesystem.isdir(filename):
 			print("Cannot open '%s'"%self.displayed_filename)

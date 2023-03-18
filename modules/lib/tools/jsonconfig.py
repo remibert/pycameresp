@@ -32,7 +32,7 @@ class JsonConfig:
 		if filesystem.ismicropython():
 			return "/config"
 		else:
-			return "config"
+			return uos.path.expanduser('~') + "/.pycameresp"
 
 	def save(self, file = None, part_filename=""):
 		""" Save object in json file """
