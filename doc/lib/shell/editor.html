@@ -1719,7 +1719,7 @@ class Editor:
                 self.trace = None
                 if filesystem.ismicropython() is False:
                         if filename == &#34;newfile.py&#34;:
-                                self.trace = open(&#34;key.txt&#34;,&#34;w&#34;)
+                                self.trace = open(self.cfg.config_root() + &#34;/key.txt&#34;,&#34;w&#34;)
 
                 if (not filesystem.exists(filename) and read_only is True) or filesystem.isdir(filename):
                         print(&#34;Cannot open &#39;%s&#39;&#34;%self.displayed_filename)
@@ -2130,7 +2130,7 @@ if __name__ == &#34;__main__&#34;:
                 self.trace = None
                 if filesystem.ismicropython() is False:
                         if filename == &#34;newfile.py&#34;:
-                                self.trace = open(&#34;key.txt&#34;,&#34;w&#34;)
+                                self.trace = open(self.cfg.config_root() + &#34;/key.txt&#34;,&#34;w&#34;)
 
                 if (not filesystem.exists(filename) and read_only is True) or filesystem.isdir(filename):
                         print(&#34;Cannot open &#39;%s&#39;&#34;%self.displayed_filename)

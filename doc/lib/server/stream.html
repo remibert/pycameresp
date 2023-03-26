@@ -136,6 +136,7 @@ else:
                 async def close(self):
                         &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
                         self.writer.close()
+                        #self.reader.close()
 
 
 class Socket:
@@ -628,7 +629,8 @@ def is_enough_memory():
 </summary>
 <pre><code class="python">async def close(self):
         &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
-        self.writer.close()</code></pre>
+        self.writer.close()
+        #self.reader.close()</code></pre>
 </details>
 </dd>
 <dt id="lib.server.stream.Stream.read"><code class="name flex">

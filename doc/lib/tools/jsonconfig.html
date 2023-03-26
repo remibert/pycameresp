@@ -65,7 +65,7 @@ class JsonConfig:
                 if filesystem.ismicropython():
                         return &#34;/config&#34;
                 else:
-                        return &#34;config&#34;
+                        return uos.path.expanduser(&#39;~&#39;) + &#34;/.pycameresp&#34;
 
         def save(self, file = None, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Save object in json file &#34;&#34;&#34;
@@ -284,7 +284,7 @@ class JsonConfig:
                 if filesystem.ismicropython():
                         return &#34;/config&#34;
                 else:
-                        return &#34;config&#34;
+                        return uos.path.expanduser(&#39;~&#39;) + &#34;/.pycameresp&#34;
 
         def save(self, file = None, part_filename=&#34;&#34;):
                 &#34;&#34;&#34; Save object in json file &#34;&#34;&#34;
@@ -488,7 +488,7 @@ class JsonConfig:
         if filesystem.ismicropython():
                 return &#34;/config&#34;
         else:
-                return &#34;config&#34;</code></pre>
+                return uos.path.expanduser(&#39;~&#39;) + &#34;/.pycameresp&#34;</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.jsonconfig.JsonConfig.exists"><code class="name flex">
