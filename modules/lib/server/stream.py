@@ -107,6 +107,7 @@ else:
 		async def close(self):
 			""" Close the stream """
 			self.writer.close()
+			#self.reader.close()
 
 
 class Socket:
