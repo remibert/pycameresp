@@ -4,6 +4,6 @@
 # pylint: disable=redefined-builtin
 
 def sh():
-    """ Start the shell """
-    from shell.shellcore import shell_sh
-    shell_sh()
+	""" Start the shell """
+	from shell.commands import commands
+	commands()

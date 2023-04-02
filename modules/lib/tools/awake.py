@@ -3,7 +3,8 @@
 # pylint:disable=consider-using-f-string
 """ Manage the battery """
 import machine
-from tools import jsonconfig,logger
+import uasyncio
+from tools import jsonconfig,logger,tasking
 
 class AwakeConfig(jsonconfig.JsonConfig):
 	""" Awake configuration """
@@ -21,19 +22,17 @@ class Awake:
 	""" Manage the awake """
 	config = None
 	awake_counter = [0] # Decrease each second
-	refresh_counter = [0]
 
 	@staticmethod
-	def init():
+	def init(**kwargs):
 		""" Init awake class """
 		# If config not yet read
 		if Awake.config is None:
 			Awake.config = AwakeConfig()
-			# If config failed to read
-			if Awake.config.load() is False:
-				# Write default config
-				Awake.config.save()
-		Awake.keep_awake()
+			Awake.config.load_create()
+			Awake.keep_awake()
+		else:
+			Awake.config.refresh()
 
 	@staticmethod
 	def set_pin_wake_up():
@@ -72,14 +71,9 @@ class Awake:
 			Awake.awake_counter[0] = Awake.config.awake_duration
 
 	@staticmethod
-	def manage():
-		""" Manage the awake duration """
-		if Awake.config is None:
-			Awake.init()
-		if Awake.refresh_counter[0] % 10 == 0:
-			if Awake.config.is_changed():
-				Awake.config.load()
-		Awake.refresh_counter[0] += 1
+	async def task(**kwargs):
+		""" Awake task core """
+		Awake.init(**kwargs)
 
 		if Awake.config.activated:
 			Awake.awake_counter[0] -= 1
@@ -89,3 +83,11 @@ class Awake:
 				# Set the wake up on PIR detection
 				Awake.set_pin_wake_up()
 				machine.deepsleep(Awake.config.sleep_duration*1000)
+			await uasyncio.sleep(1)
+		else:
+			await uasyncio.sleep(60)
+
+	@staticmethod
+	def start(**kwargs):
+		""" Start awake task """
+		tasking.Tasks.create_monitor(Awake.task, **kwargs)

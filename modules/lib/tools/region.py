@@ -23,6 +23,5 @@ class RegionConfig(jsonconfig.JsonConfig):
 			region_config = RegionConfig()
 			if region_config.load() is False:
 				region_config.save()
-		if region_config.is_changed():
-			region_config.load()
+		region_config.refresh()
 		return region_config

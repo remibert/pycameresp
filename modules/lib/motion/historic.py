@@ -347,13 +347,12 @@ class Historic:
 				logger.syslog("End cleanup historic : %s"%(strings.tostrings(info.flashinfo(mountpoint=sdcard.SdCard.get_mountpoint()))))
 
 	@staticmethod
-	async def periodic():
+	async def task():
 		""" Internal periodic task """
-		from server.server import Server
 		if filesystem.ismicropython():
-			await Server.wait_resume(31, "historic")
+			await tasking.Tasks.wait_resume(31, "historic")
 		else:
-			await Server.wait_resume(1, "historic")
+			await tasking.Tasks.wait_resume(1, "historic")
 
 		if Historic.motion_in_progress[0] is False:
 			if sdcard.SdCard.is_mounted() is False:
@@ -364,9 +363,9 @@ class Historic:
 		return True
 
 	@staticmethod
-	async def periodic_task():
-		""" Execute periodic treatment """
-		await tasking.task_monitoring(Historic.periodic)
+	def start():
+		""" Start motion detection historic task """
+		tasking.Tasks.create_monitor(Historic.task)
 
 	@staticmethod
 	async def test():

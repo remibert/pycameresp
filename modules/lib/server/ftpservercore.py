@@ -9,11 +9,10 @@
 import socket
 import os
 from server import stream
-from server.server import Server
 from server.user import User
 from wifi.accesspoint import AccessPoint
 from wifi.station import Station
-from tools import logger,fnmatch,filesystem,strings,date
+from tools import logger,fnmatch,filesystem,strings,date,tasking
 
 MONTHS  = [b"Jan", b"Feb", b"Mar", b"Apr", b"May", b"Jun", b"Jul", b"Aug", b"Sep", b"Oct", b"Nov", b"Dec"]
 
@@ -403,7 +402,7 @@ class FtpServerCore:
 
 	async def receive_command(self):
 		""" Ftp command reception """
-		Server.slow_down()
+		tasking.Tasks.slow_down()
 		try:
 			self.received = await self.client.readline()
 		except Exception as err:
@@ -426,7 +425,7 @@ class FtpServerCore:
 
 	async def treat_command(self):
 		""" Treat ftp command """
-		Server.slow_down()
+		tasking.Tasks.slow_down()
 		if self.quit is False:
 			try:
 				command = strings.tostrings(self.command)
@@ -448,7 +447,7 @@ class FtpServerCore:
 
 	async def on_connection(self, reader, writer):
 		""" Asyncio on ftp connection method """
-		Server.slow_down()
+		tasking.Tasks.slow_down()
 		self.remoteaddr = strings.tobytes(writer.get_extra_info('peername')[0])
 		self.addr = self.get_ip()
 		self.log("Connected from %s"%strings.tostrings(self.remoteaddr), write=True)

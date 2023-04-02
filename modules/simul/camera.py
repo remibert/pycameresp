@@ -92,30 +92,7 @@ def capture():
 		return data
 	return None
 
-def configure(pin_pwdn = 32,
-		pin_reset= -1,
-		pin_xclk =  0,
-		pin_sscb_sda = 26,
-		pin_sscb_scl = 27,
-		pin_d7   = 35,
-		pin_d6   = 34,
-		pin_d5   = 39,
-		pin_d4   = 36,
-		pin_d3   = 21,
-		pin_d2   = 19,
-		pin_d1   = 18,
-		pin_d0   =  5,
-		pin_vsync= 25,
-		pin_href = 23,
-		pin_pclk = 22,
-		xclk_freq_hz=20000000,
-		ledc_timer=0,
-		ledc_channel=0,
-		pixel_format=3,
-		frame_size=13,
-		jpeg_quality=12,
-		fb_count=1,
-		flash_led=4):
+def configure(**kwargs):
 	""" Configure the structure for camera initialization.
 		- pin_pwdn           : GPIO pin for camera power down line
 		- pin_reset          : GPIO pin for camera pin_reset line
@@ -193,10 +170,6 @@ class Motion:
 	def extract(self):
 		""" Extract the motion informations """
 		return []
-
-	def get_size(self):
-		""" Return the size of image buffer """
-		return 0
 
 	def get_max_light(self):
 		""" Get maximal light detected """

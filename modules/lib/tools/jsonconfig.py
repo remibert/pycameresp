@@ -6,6 +6,7 @@ All configuration classes end the name with the word Config.
 For each of these classes, a json file with the same name is stored in the config directory of the board. """
 # pylint:disable=consider-using-dict-items
 # pylint:disable=consider-iterating-dictionary
+import time
 import json
 import re
 try:
@@ -26,6 +27,7 @@ class JsonConfig:
 	def __init__(self):
 		""" Constructor """
 		self.modification_date = 0
+		self.last_refresh = 0
 
 	def config_root(self):
 		""" Configuration root path """
@@ -34,16 +36,18 @@ class JsonConfig:
 		else:
 			return uos.path.expanduser('~') + "/.pycameresp"
 
-	def save(self, file = None, part_filename=""):
+	def save(self, file=None, part_filename=""):
 		""" Save object in json file """
 		try:
 			filename = self.get_pathname(strings.tofilename(part_filename))
 			file, filename = self.open(file=file, read_write="w", part_filename=part_filename)
 			data = self.__dict__.copy()
 			del data["modification_date"]
+			del data["last_refresh"]
 			json.dump(strings.tostrings(data),file,separators=(',', ':'))
 			file.close()
 			self.modification_date = uos.stat(filename)[8]
+			self.last_refresh = time.time()
 			return True
 		except Exception as _err:
 			logger.syslog(_err, "Cannot save %s "%(filename))
@@ -177,7 +181,7 @@ class JsonConfig:
 		self_config = None
 		return result
 
-	def load(self, file = None, part_filename="", tobytes=True, errorlog=True):
+	def load(self, file=None, part_filename="", tobytes=True, errorlog=True):
 		""" Load object with the file specified """
 		filename = ""
 		try:
@@ -189,6 +193,7 @@ class JsonConfig:
 				data = strings.tobytes(data)
 			self.update(data)
 			file.close()
+			self.last_refresh = time.time()
 			return True
 		except OSError as _err:
 			if _err.args[0] == 2:
@@ -207,13 +212,26 @@ class JsonConfig:
 
 	def is_changed(self, part_filename=""):
 		""" Indicates if the configuration changed """
-		try:
-			modification_date = uos.stat(self.get_pathname(strings.tofilename(part_filename)))[8]
-			if self.modification_date != modification_date:
-				self.modification_date = modification_date
-				return True
-		except:
-			pass
+		if self.last_refresh + 10 < time.time():
+			try:
+				modification_date = uos.stat(self.get_pathname(strings.tofilename(part_filename)))[8]
+				if self.modification_date != modification_date:
+					self.modification_date = modification_date
+					return True
+			except:
+				pass
+		return False
+
+	def load_create(self, file=None, part_filename="", tobytes=True, errorlog=True):
+		""" Load and create file if not existing """
+		if self.load(file, part_filename, tobytes, errorlog) is False:
+			self.save(file, part_filename)
+
+	def refresh(self, file=None, part_filename="", tobytes=True, errorlog=True):
+		""" refresh the configuration if it has changed since then """
+		if self.is_changed(part_filename):
+			self.load(file, part_filename, tobytes, errorlog)
+			return True
 		return False
 
 	def exists(self, part_filename=""):

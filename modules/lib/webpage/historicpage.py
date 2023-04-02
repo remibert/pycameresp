@@ -3,13 +3,12 @@
 """ Function define the web page to view recent motion detection """
 # pylint:disable=anomalous-unicode-escape-in-string
 from server.httpserver     import HttpServer
-from server.server         import Server
 from htmltemplate          import *
 from webpage.mainpage      import main_frame
 from webpage.streamingpage import Streaming
 from motion                import Historic
 from video                 import Camera
-from tools                 import lang,info, strings
+from tools                 import lang,info, strings,tasking
 
 def get_days_pagination(last_days, request):
 	""" Get the pagination html part of days """
@@ -392,7 +391,7 @@ async def historic(request, response, args):
 @HttpServer.add_route(b'/historic/historic.json', available=info.iscamera() and Camera.is_activated())
 async def historic_json(request, response, args):
 	""" Send historic json file """
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	try:
 		await response.send_buffer(b"historic.json", await Historic.get_json())
 	except Exception as err:
@@ -401,7 +400,7 @@ async def historic_json(request, response, args):
 @HttpServer.add_route(b'/historic/images/.*', available=info.iscamera() and Camera.is_activated())
 async def historic_image(request, response, args):
 	""" Send historic image """
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
 	try:
 		if reserved:
@@ -417,7 +416,7 @@ async def historic_image(request, response, args):
 @HttpServer.add_route(b'/historic/download/.*', available=info.iscamera() and Camera.is_activated())
 async def download_image(request, response, args):
 	""" Download historic image """
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
 	try:
 		if reserved:

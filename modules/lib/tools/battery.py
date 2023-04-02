@@ -34,7 +34,6 @@ if support.battery():
 		""" Manage the battery information """
 		config = None
 		level = [-2]
-		refresh = [0]
 
 		@staticmethod
 		def init():
@@ -103,7 +102,6 @@ if support.battery():
 			y = a*x + b
 			return y
 
-
 		@staticmethod
 		def protect():
 			""" Protect the battery """
@@ -131,7 +129,6 @@ if support.battery():
 				else:
 					logger.syslog("Sleep infinite")
 					machine.deepsleep()
-
 
 		@staticmethod
 		def manage_level():
@@ -174,8 +171,7 @@ if support.battery():
 			""" Checks the number of brownout reset """
 			deepsleep = False
 
-			if Battery.config.is_changed():
-				Battery.config.load()
+			Battery.config.refresh()
 
 			if Battery.config.brownout_detection:
 				# If the reset can probably due to insufficient battery
@@ -202,19 +198,20 @@ if support.battery():
 					Battery.config.save()
 
 		@staticmethod
-		async def periodic():
+		async def task():
 			""" Internal periodic task """
 			if Battery.config is not None:
-				if Battery.refresh[0] % 10 == 0:
-					if Battery.config.is_changed():
-						Battery.config.load()
-				Battery.refresh[0] += 1
+				Battery.config.refresh()
 			else:
 				Battery.protect()
 			await uasyncio.sleep(11)
 			return True
 
 		@staticmethod
-		async def periodic_task():
-			""" Execute periodic treatment """
-			await tasking.task_monitoring(Battery.periodic)
+		def start(**kwargs):
+			""" Start battery monitoring task """
+			if support.battery():
+				Battery.protect()
+				tasking.Tasks.create_monitor(Battery.task)
+			else:
+				logger.syslog("Battery management not supported on this hardware")

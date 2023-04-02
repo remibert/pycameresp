@@ -78,8 +78,7 @@ class AccessPoint:
 				AccessPoint.config.save()
 				logger.syslog("Access point not initialized")
 		else:
-			if AccessPoint.config.is_changed():
-				AccessPoint.config.load()
+			AccessPoint.config.refresh()
 		return AccessPoint.config
 
 	@staticmethod

@@ -329,31 +329,33 @@ STATIC mp_obj_t configure_make_new(const mp_obj_type_t *type, size_t n_args, siz
 	// Constructor parameters
 	static const mp_arg_t allowed_args[] = 
 	{
-		// Default value for esp32one see https://www.waveshare.com/esp32-one.htm
-		{ MP_QSTR_pin_pwdn         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  32            } },
-		{ MP_QSTR_pin_reset        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  -1            } },
-		{ MP_QSTR_pin_xclk         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =   4            } },
-		{ MP_QSTR_pin_sscb_sda     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  18            } },
-		{ MP_QSTR_pin_sscb_scl     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  23            } },
-		{ MP_QSTR_pin_d7           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  36            } },
-		{ MP_QSTR_pin_d6           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  37            } },
-		{ MP_QSTR_pin_d5           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  38            } },
-		{ MP_QSTR_pin_d4           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  39            } },
-		{ MP_QSTR_pin_d3           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  35            } },
-		{ MP_QSTR_pin_d2           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  14            } },
-		{ MP_QSTR_pin_d1           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  13            } },
-		{ MP_QSTR_pin_d0           ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  34            } },
-		{ MP_QSTR_pin_vsync        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  5             } },
-		{ MP_QSTR_pin_href         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  27            } },
-		{ MP_QSTR_pin_pclk         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  25            } },
-		{ MP_QSTR_xclk_freq_hz     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  20000000      } },
-		{ MP_QSTR_ledc_timer       ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  LEDC_TIMER_0  } },
-		{ MP_QSTR_ledc_channel     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  LEDC_CHANNEL_0} },
-		{ MP_QSTR_pixel_format     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  PIXFORMAT_JPEG} },
-		{ MP_QSTR_frame_size       ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  FRAMESIZE_UXGA} },
-		{ MP_QSTR_jpeg_quality     ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  12            } },
-		{ MP_QSTR_fb_count         ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  1             } },
-		{ MP_QSTR_flash_led        ,        MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int =  0             } },
+		// Default value :
+		//                                                            ESP32CAM          ESP32ONE 
+		{ MP_QSTR_pin_pwdn     , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=32             /* 32             */}},
+		{ MP_QSTR_pin_reset    , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=-1             /* -1             */}},
+		{ MP_QSTR_pin_xclk     , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int= 0             /*  4             */}},
+		{ MP_QSTR_pin_sscb_sda , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=26             /* 18             */}},
+		{ MP_QSTR_pin_sscb_scl , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=27             /* 23             */}},
+		{ MP_QSTR_pin_d7       , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=35             /* 36             */}},
+		{ MP_QSTR_pin_d6       , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=34             /* 37             */}},
+		{ MP_QSTR_pin_d5       , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=39             /* 38             */}},
+		{ MP_QSTR_pin_d4       , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=36             /* 39             */}},
+		{ MP_QSTR_pin_d3       , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=21             /* 35             */}},
+		{ MP_QSTR_pin_d2       , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=19             /* 14             */}},
+		{ MP_QSTR_pin_d1       , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=18             /* 13             */}},
+		{ MP_QSTR_pin_d0       , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int= 5             /* 34             */}},
+		{ MP_QSTR_pin_vsync    , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=25             /*  5             */}},
+		{ MP_QSTR_pin_href     , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=23             /* 27             */}},
+		{ MP_QSTR_pin_pclk     , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=22             /* 25             */}},
+		{ MP_QSTR_xclk_freq_hz , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=20000000       /* 20000000       */}},
+		{ MP_QSTR_ledc_timer   , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=LEDC_TIMER_0   /* LEDC_TIMER_0   */}},
+		{ MP_QSTR_ledc_channel , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=LEDC_CHANNEL_0 /* LEDC_CHANNEL_0 */}},
+		{ MP_QSTR_pixel_format , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=PIXFORMAT_JPEG /* PIXFORMAT_JPEG */}},
+		{ MP_QSTR_frame_size   , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=FRAMESIZE_UXGA /* FRAMESIZE_UXGA */}},
+		{ MP_QSTR_jpeg_quality , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=12             /* 12             */}},
+		{ MP_QSTR_fb_count     , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=1              /* 1              */}},
+		{ MP_QSTR_flash_led    , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=4              /* 0              */}},
+		// for esp32one see https://www.waveshare.com/esp32-one.htm
 	};
 	
 	// Parsing parameters

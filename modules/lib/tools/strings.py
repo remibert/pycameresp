@@ -191,7 +191,7 @@ def dump(buff, withColor=True):
 		string += "\x1B[m"
 	return string
 
-def dump_line (data, line = None, width = 0):
+def dump_line(data, line = None, width = 0):
 	""" dump a data data in hexadecimal on one line """
 	size = len(data)
 	fill = 0

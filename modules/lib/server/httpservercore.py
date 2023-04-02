@@ -14,10 +14,10 @@ from tools import logger
 class HttpServerCore:
 	""" Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
 	if the server not used, it not consum memory """
-	def __init__(self, port, name):
+	def __init__(self, **kwargs):
 		""" Constructor """
-		self.port = port
-		self.name = name
+		self.port = kwargs.get("port",80)
+		self.name = kwargs.get("name","HttpServer")
 
 	async def on_connection(self, reader, writer):
 		""" Asynchronous connection call back """

@@ -4,7 +4,7 @@ import time
 import collections
 import uasyncio
 import machine
-from server.server import Server
+from server import notifier
 from electricmeter.config   import TimeSlotsConfig
 from electricmeter          import em_lang
 from tools import filesystem, date, strings, fnmatch, logger, tasking, info, system
@@ -221,10 +221,11 @@ class HourlyCounter:
 		self.pulse_sensor.simulate(pulses)
 
 	@staticmethod
-	async def task(gpio):
+	async def task(**kwargs):
 		""" Task to count wh from the electric meter """
-		HourlyCounter.counter = HourlyCounter(gpio)
-		await tasking.task_monitoring(HourlyCounter.counter.manage)
+		if HourlyCounter.counter is None:
+			HourlyCounter.counter = HourlyCounter(kwargs.get("gpio",21))
+		await HourlyCounter.counter.manage()
 
 	@staticmethod
 	def get_datas(selected_date):
@@ -459,7 +460,7 @@ class MonthlyCounter:
 	@staticmethod
 	async def task():
 		""" Task to count wh from the electric meter """
-		await tasking.task_monitoring(MonthlyCounter.manage)
+		await tasking.Tasks.monitor(MonthlyCounter.manage)
 
 class Consumption:
 	""" Stores the consumption of a time slot """
@@ -534,21 +535,25 @@ class DailyCost(Cost):
 					break
 		return consumptions
 
-def daily_notifier():
-	""" Get electricmeter daily notification """
-	selected_date = time.time() - 86400
-	message = "\n"
-	cost = HourlyCost()
-	message += cost.get_message(em_lang.item_day, selected_date)
-	cost = DailyCost()
-	message += cost.get_message(em_lang.item_month, selected_date)
-	message += " - Uptime : %s\n"%strings.tostrings(info.uptime())
-	return message
+class ElectricMeter:
+	""" Task to count wh from the electric meter """
+	@staticmethod
+	def start(**kwargs):
+		""" Start electric meter task """
+		notifier.Notifier.set_daily_notifier(ElectricMeter.daily_notifier)
+		tasking.Tasks.create_task(HourlyCounter.task(**kwargs))
+		tasking.Tasks.create_task(MonthlyCounter.task())
+		if filesystem.ismicropython() is False:
+			tasking.Tasks.create_task(HourlyCounter.pulse_simulator())
 
-def create_electric_meter(loop, gpio=21):
-	""" Create user task """
-	Server.set_daily_notifier(daily_notifier)
-	loop.create_task(HourlyCounter.task(gpio))
-	loop.create_task(MonthlyCounter.task())
-	if filesystem.ismicropython() is False:
-		loop.create_task(HourlyCounter.pulse_simulator())
+	@staticmethod
+	def daily_notifier():
+		""" Get electricmeter daily notification """
+		selected_date = time.time() - 86400
+		message = "\n"
+		cost = HourlyCost()
+		message += cost.get_message(em_lang.item_day, selected_date)
+		cost = DailyCost()
+		message += cost.get_message(em_lang.item_month, selected_date)
+		message += " - Uptime : %s\n"%strings.tostrings(info.uptime())
+		return message

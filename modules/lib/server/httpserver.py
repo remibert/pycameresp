@@ -10,28 +10,57 @@ The core of the server is in the other class HttpServerCore, which is loaded int
 It takes a little while the first time you connect, but limits memory consumption if not in use.
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True. """
 import re
-from tools import logger,filesystem,strings
+from server.server import ServerConfig
+from tools import logger,filesystem,strings,tasking
+# import server.httpserver
+
+class HttpServerInstance(tasking.ServerInstance):
+	""" Instance of server Http """
+	def __init__(self, **kwargs):
+		""" Constructor """
+		tasking.ServerInstance.__init__(self, **kwargs)
+		self.server = None
+		self.kwargs = kwargs
+
+	def preload(self):
+		""" Method used to preload page template.
+		You must define the content of a callback, which only import the python module with your pages """
+		started = False
+		if HttpServer.preload():
+			started = True
+
+		if self.server is None:
+			logger.syslog("Http '%s' started"%self.kwargs.get("name",""))
+			from server.httpservercore import HttpServerCore
+			self.server = HttpServerCore(**self.kwargs)
+			started = True
+
+		if started:
+			logger.syslog("Http '%s' ready on %d"%(self.kwargs.get("name",""), self.kwargs.get("port",0)))
+
+	async def on_connection(self, reader, writer):
+		""" Http server connection detected """
+		try:
+			# Preload the server
+			self.preload()
+
+			# Call on connection method
+			await self.server.on_connection(reader, writer)
+		except Exception as err:
+			logger.syslog(err)
 
 class HttpServer:
 	""" Http main class """
-	routes = {}
-	wildroutes = []
-	menus = []
-	www_dir = None
-	pages_loader = []
+	routes       = {}
+	wildroutes   = []
+	menus        = []
+	www_dir      = None
+	pages = []
+	loaded       = [False]
+	config = None
 
-	def __init__(self, port=80, loader=None, preload=False, name=""):
-		""" Constructor """
-		self.server = None
-		self.loader = loader
-		self.port = port
-		self.name = name
-		if preload:
-			self.preload()
-		else:
-			logger.syslog("Http waiting on %d"%self.port)
-
-	def call_preload(self, loader):
+	@staticmethod
+	def call_preload(loader):
 		""" Call preload html page callback """
 		if loader is not None:
 			if filesystem.ismicropython():
@@ -45,41 +74,29 @@ class HttpServer:
 			except Exception as err:
 				logger.syslog(err)
 
-	def preload(self):
+	@staticmethod
+	def preload():
 		""" Method used to preload page template.
 		You must define the content of a callback, which only import the python module with your pages """
-		loaded = False
-
-		if self.loader:
+		result = False
+		if HttpServer.loaded[0] is False:
 			from htmltemplate import WWW_DIR
 			logger.syslog("Html load pages")
-			if type(self.loader) == type([]):
-				for loader in self.loader:
-					self.call_preload(loader)
-			else:
-				self.call_preload(self.loader)
-			self.loader = None
-
-			if len(HttpServer.pages_loader) > 0:
-				for loader in HttpServer.pages_loader:
-					self.call_preload(loader)
+			if len(HttpServer.pages) > 0:
+				for loader in HttpServer.pages:
+					HttpServer.call_preload(loader)
 			HttpServer.www_dir = WWW_DIR
-			loaded = True
-
-		if self.server is None:
-			logger.syslog("Http start server")
-			from server.httpservercore import HttpServerCore
-			self.server = HttpServerCore(self.port, self.name)
-			loaded = True
-
-		if loaded:
-			logger.syslog("Http ready on %d"%self.port)
-
+			result = True
+			HttpServer.loaded[0] = True
+		return result
 
 	@staticmethod
-	def add_page_loader(page_loader):
+	def add_pages():
 		""" Add an html page loader which will be called when connecting to the http server """
-		HttpServer.pages_loader.append(page_loader)
+		def add_pages(function):
+			HttpServer.pages.append(function)
+			return function
+		return add_pages
 
 	@staticmethod
 	def add_route(url, **kwargs):
@@ -156,39 +173,29 @@ class HttpServer:
 		""" Treat the case of static pages """
 		path = strings.tobytes(HttpServer.www_dir) + request.path
 		path = path.replace(b"//",b"/")
-
 		if b".." in path:
 			await response.send_error(status=b"403",content=b"Forbidden")
 		else:
 			await response.send_file(path, headers=request.headers)
 
-	async def on_connection(self, reader, writer):
-		""" Http server connection detected """
-		try:
-			# Preload the server
-			self.preload()
+	@staticmethod
+	def init():
+		""" Initialize http server """
+		if HttpServer.config is None:
+			HttpServer.config = ServerConfig()
+			HttpServer.config.load_create()
+		else:
+			HttpServer.config.refresh()
 
-			# Call on connection method
-			await self.server.on_connection(reader, writer)
-		except Exception as err:
-			logger.syslog(err)
-
-def start(loop=None, port=80, loader=None, preload=False, name=""):
-	""" Start http server.
-	loop : asyncio loop object
-	port : tcp/ip port of the server
-	preload : True = preload the server at the start, False = load the server at the first connection """
-	import uasyncio
-	server = HttpServer(port=port, loader=loader, preload=preload, name=name)
-
-	if loop is None:
-		loop = uasyncio.get_event_loop()
-		run_forever = True
-	else:
-		run_forever = False
-
-	asyncServer = uasyncio.start_server(server.on_connection, "0.0.0.0",port,backlog=5)
-
-	loop.create_task(asyncServer)
-	if run_forever:
-		loop.run_forever()
+	@staticmethod
+	def start(**kwargs):
+		""" Start http server instance on selected port """
+		HttpServer.init()
+		# If http activated
+		if HttpServer.config.http:
+			kwargs["port"] = kwargs.get("http_port",80)
+			kwargs["name"] = kwargs.get("name","Http")
+			kwargs["backlog"] = kwargs.get("backlog",5)
+			tasking.Tasks.create_server(HttpServerInstance(**kwargs))
+		else:
+			logger.syslog("Http server disabled in config")

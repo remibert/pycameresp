@@ -33,7 +33,9 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/modules/main.py",
 			"cwd"    : "${workspaceFolder}/modules",
-			"justMyCode": false
+			"justMyCode": false,
+			// "console": "externalTerminal",
+
 		},
 		{
 			"name": "Telnet",
@@ -48,6 +50,13 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/tools/cfsconverter/cfsconverter.py",
 			"cwd"    : "${workspaceFolder}/tools/cfsconverter",
+		},
+		{
+			"name": "TestMqtt",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/modules/testmqtt.py",
+			"cwd"    : "${workspaceFolder}/modules",
 		}
 
 	]

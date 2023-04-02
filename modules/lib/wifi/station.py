@@ -160,8 +160,8 @@ class Station:
 				Station.config.save()
 				logger.syslog("Wifi not initialized")
 		else:
-			if Station.config.is_changed():
-				Station.config.load()
+			Station.config.refresh()
+		hostname.Hostname.set_hostname(Station.config.hostname)
 		return Station.config
 
 	@staticmethod

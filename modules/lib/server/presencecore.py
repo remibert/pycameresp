@@ -6,17 +6,12 @@ import time
 import wifi
 from server.ping import async_ping
 from server.notifier import Notifier
-# from server.server import Server
-# from server.webhook import WebhookConfig
-# from tools import logger,jsonconfig,lang,tasking
-from tools import lang
+from tools import lang,topic
 
 class PresenceCore:
 	""" Presence detection of smartphones """
 	ABSENCE_TIMEOUT   = 1201
 	NO_ANSWER_TIMEOUT = 607
-	# FAST_POLLING      = 7.
-	# SLOW_POLLING      = 53
 	DNS_POLLING       = 67
 
 	PING_TIMEOUT      = 0.5
@@ -80,18 +75,14 @@ class PresenceCore:
 				msg = b""
 				for present in presents:
 					msg += b"%s "%present
-				Notifier.notify(lang.presence_of_s%(msg), enabled=presence_config.notify)
-				if webhook_config.activated:
-					Notifier.webhook("Presence",webhook_config.inhabited_house)
+				Notifier.notify(topic=topic.presence_detected, value=topic.value_on,  message=lang.presence_of_s%(msg), enabled=presence_config.notify,url=webhook_config.inhabited_house)
 				PresenceCore.set_detection(True)
 		# If no smartphone detected
 		elif current_detected is False:
 			# If smartphone previously detected
 			if PresenceCore.is_detected() != current_detected:
 				# Notify the house in empty
-				Notifier.notify(lang.empty_house, enabled=presence_config.notify)
-				if webhook_config.activated:
-					Notifier.webhook("Presence",webhook_config.empty_house)
+				Notifier.notify(topic=topic.presence_detected, value=topic.value_off, message=lang.empty_house, enabled=presence_config.notify,url=webhook_config.empty_house)
 				PresenceCore.set_detection(False)
 
 		# If all smartphones not responded during a long time

@@ -28,6 +28,7 @@ item_presence                           =b"Pr\xC3\xA9sence"
 item_server                             =b"Configuration"
 item_notification                       =b"Notification"
 item_webhook                            =b"Webhook"
+item_mqtt                               =b"Server Mqtt"
 
 menu_motion                             =b" Mouvement"
 item_motion                             =b"   Configuration"
@@ -218,3 +219,10 @@ webhook_empty_house                     = b"Maison vide"
 webhook_motion_detected                 = b"Mouvements d\xC3\xA9tect\xC3\xA9s"
 webhook_no_motion_detected              = b"Plus aucun mouvement d\xC3\xA9tect\xC3\xA9"
 url_http_required                       = b"Laisser vide ou mettez un lien http, https non support\xC3\xA9"
+
+mqtt_configuration                      = b"Configuration du broker Mqtt"
+mqtt_host                               = b"Host ou addresse ip"
+mqtt_port                               = b"Port"
+mqtt_password                           = b"Mot de passe"
+mqtt_username                           = b"Nom d'utilisateur"
+

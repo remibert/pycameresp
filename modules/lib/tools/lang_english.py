@@ -23,6 +23,7 @@ item_presence                           =b"Presence"
 item_server                             =b"Configuration"
 item_notification                       =b"Notification"
 item_webhook                            =b"Webhook"
+item_mqtt                               =b"Mqtt server"
 
 menu_motion                             =b" Motion"
 item_motion                             =b"  Configuration"
@@ -212,4 +213,12 @@ webhook_inhabited_house                 = b"House contains its occupants"
 webhook_empty_house                     = b"House is empty"
 webhook_motion_detected                 = b"Motion is detected"
 webhook_no_motion_detected              = b"No more motion is detected"
+
 url_http_required                       = b"Leave empty or put an http link, https not supported"
+
+mqtt_configuration                      = b"Mqtt broker configuration"
+mqtt_host                               = b"Host or ip address"
+mqtt_port                               = b"Port"
+mqtt_password                           = b"Password"
+mqtt_username                           = b"Username"
+

@@ -1,6 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ These classes are used to interact with domoticz or other application """
+from server import notifier, httpclient
 from tools import jsonconfig
 
 class WebhookConfig(jsonconfig.JsonConfig):
@@ -23,3 +24,24 @@ class WebhookConfig(jsonconfig.JsonConfig):
 
 		# Webhook when the house is empty
 		self.empty_house = b""
+
+class WebHook:
+	""" Webhook """
+	@staticmethod
+	@notifier.Notifier.add()
+	async def notify_message(notification):
+		""" Notify message """
+		config = WebhookConfig()
+		if config.load() is False:
+			config.save()
+
+		if config.activated or notification.forced and notification.url is not None:
+			if WebHook.notify_message not in notification.sent:
+				result = await httpclient.HttpClient.request(method=b"GET", url=notification.url)
+				if result is True:
+					notification.sent.append(WebHook.notify_message)
+			else:
+				result = None
+		else:
+			result = None
+		return result

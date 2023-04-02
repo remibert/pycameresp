@@ -6,7 +6,7 @@ from htmltemplate          import *
 from webpage.mainpage      import main_frame, manage_default_button
 from webpage.streamingpage import *
 from video                 import CameraConfig, Camera
-from motion                import SnapConfig, MotionConfig
+from motion.motioncore     import SnapConfig, MotionConfig
 import uasyncio
 from tools                 import lang, info
 

@@ -5,6 +5,7 @@ See https://www.pushover.net """
 # pylint:disable=wrong-import-position
 import uasyncio
 from server.stream import *
+from server import notifier
 from server.httprequest import *
 import wifi
 from tools import logger,jsonconfig,strings
@@ -18,7 +19,7 @@ class PushOverConfig(jsonconfig.JsonConfig):
 		self.token = b""
 		self.user = b""
 
-class PushOverNotifier:
+class PushOver:
 	""" Class that manages a push over notification """
 	def __init__(self, host, port, token=None, user=None):
 		""" Constructor
@@ -83,7 +84,9 @@ class PushOverNotifier:
 
 				# Close all connection with push over server
 				result = True
+				wifi.Wifi.wan_connected()
 			except Exception as err:
+				wifi.Wifi.wan_disconnected()
 				logger.syslog(err)
 			finally:
 				if streamio:
@@ -92,24 +95,33 @@ class PushOverNotifier:
 			logger.syslog("Notification not sent : wifi not connected", display=display)
 		return result
 
+	@staticmethod
+	@notifier.Notifier.add()
+	async def notify_message(notification):
+		""" Notify message """
+		config = PushOverConfig()
+		config.load_create()
+
+		if config.activated or notification.forced:
+			if notification.message is not None or notification.data is not None:
+				if PushOver.notify_message not in notification.sent:
+					result = await async_notify(config.user, config.token, notification.message, notification.data, display=notification.display)
+					if result is True:
+						notification.sent.append(PushOver.notify_message)
+				else:
+					result = True
+			else:
+				result = True
+		else:
+			result = None
+		return result
+
 async def async_notify(user, token, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
-	notification = PushOverNotifier(host=b"api.pushover.net", port=80, token=token, user=user)
+	notification = PushOver(host=b"api.pushover.net", port=80, token=token, user=user)
 	return await notification.notify(b"%s : %s"%(wifi.Station.get_hostname(), strings.tobytes(message)), image, display)
 
 def notify(user, token, message, image=None):
 	""" Notification function """
 	loop = uasyncio.get_event_loop()
 	loop.run_until_complete(async_notify(user=user, token=token, message=message, image=image))
-
-async def notify_message(message, image = None, forced=False, display=True):
-	""" Notify message """
-	config = PushOverConfig()
-	if config.load() is False:
-		config.save()
-
-	if config.activated or forced:
-		result = await async_notify(config.user, config.token, message, image, display=display)
-	else:
-		result = None
-	return result

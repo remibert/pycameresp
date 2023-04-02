@@ -118,31 +118,7 @@ class Camera:
 	config = None
 
 	@staticmethod
-	def gpio_config(
-		pin_pwdn     = 32,
-		pin_reset    = -1,
-		pin_xclk     =  0,
-		pin_sscb_sda = 26,
-		pin_sscb_scl = 27,
-		pin_d7       = 35,
-		pin_d6       = 34,
-		pin_d5       = 39,
-		pin_d4       = 36,
-		pin_d3       = 21,
-		pin_d2       = 19,
-		pin_d1       = 18,
-		pin_d0       =  5,
-		pin_vsync    = 25,
-		pin_href     = 23,
-		pin_pclk     = 22,
-		xclk_freq_hz = 20000000,
-		ledc_timer   = 0,
-		ledc_channel = 0,
-		pixel_format = 3,
-		frame_size   = 13,
-		jpeg_quality = 12,
-		fb_count     = 1,
-		flash_led    = 4):
+	def gpio_config(**kwargs):
 		""" Configure the structure for camera initialization. It must be done before the first call of Camera.open.
 			The defaults values are for ESP32CAM.
 			- pin_pwdn           : GPIO pin for camera power down line
@@ -171,31 +147,7 @@ class Camera:
 			- flash_led          : GPIO pin for flash led or 0 to disable """
 		Camera.get_config()
 		if Camera.is_activated():
-			camera.configure(
-				pin_pwdn     = pin_pwdn,
-				pin_reset    = pin_reset,
-				pin_xclk     = pin_xclk,
-				pin_sscb_sda = pin_sscb_sda,
-				pin_sscb_scl = pin_sscb_scl,
-				pin_d7       = pin_d7,
-				pin_d6       = pin_d6,
-				pin_d5       = pin_d5,
-				pin_d4       = pin_d4,
-				pin_d3       = pin_d3,
-				pin_d2       = pin_d2,
-				pin_d1       = pin_d1,
-				pin_d0       = pin_d0,
-				pin_vsync    = pin_vsync,
-				pin_href     = pin_href,
-				pin_pclk     = pin_pclk,
-				xclk_freq_hz = xclk_freq_hz,
-				ledc_timer   = ledc_timer,
-				ledc_channel = ledc_channel,
-				pixel_format = pixel_format,
-				frame_size   = frame_size,
-				jpeg_quality = jpeg_quality,
-				fb_count     = fb_count,
-				flash_led    = flash_led)
+			camera.configure(**kwargs)
 
 	@staticmethod
 	def open():
@@ -440,8 +392,7 @@ class Camera:
 			if Camera.config.load() is False:
 				Camera.config.save()
 		else:
-			if Camera.config.is_changed():
-				Camera.config.load()
+			Camera.config.refresh()
 		return Camera.config
 
 	@staticmethod

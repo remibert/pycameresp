@@ -3,7 +3,6 @@
 """ Function define the web page to see the camera streaming """
 from server.httpserver  import HttpServer
 from server.httprequest import *
-from server.server      import Server
 from htmltemplate       import *
 from video              import Camera
 import uasyncio
@@ -75,7 +74,7 @@ class Streaming:
 @HttpServer.add_route(b'/camera/start', available=info.iscamera() and Camera.is_activated())
 async def camera_start_streaming(request, response, args):
 	""" Start video streaming """
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	if request.name != "StreamingServer":
 		return
 

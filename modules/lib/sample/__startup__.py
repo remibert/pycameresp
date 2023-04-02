@@ -5,22 +5,16 @@
 """ Example of task starter """
 import uasyncio
 from server.httpserver import HttpServer
+from tools import tasking
 import pycameresp
 
-def html_page_loader():
+# Addition of the html page loader, the call will be made during the first connection to the server
+@HttpServer.add_pages()
+def html_pages():
 	""" Load html pages when connecting to http server """
 	import sample.sample
 
-def startup(loop):
-	""" This function is called automatically by the starter.
-	It must receive the asynchronous loop object as a parameter. """
-	# Addition of the html page loader, the call will be made during the first connection to the server
-	HttpServer.add_page_loader(html_page_loader)
-
-	# Register the user task, monitor all exceptions
-	pycameresp.create_user_task(loop, sample_task)
-
-async def sample_task():
+async def task():
 	""" Example of asynchronous task """
 	# This task is protected against exceptions, if an uncaught exception occurs, this task will be automatically restarted.
 	# If there are too many unhandled exceptions, the device reboots.
@@ -29,5 +23,12 @@ async def sample_task():
 
 	while True:
 		print("Sample HELLO WORLD task %d"%count)
-		await uasyncio.sleep(10)
+		await uasyncio.sleep(60)
 		count += 1
+
+def startup(**kwargs):
+	""" This function is called automatically by the starter.
+	It must receive the asynchronous loop object as a parameter. """
+	# Register the user task, monitor all exceptions
+	from sample import mqttsample
+	tasking.Tasks.create_monitor(task)

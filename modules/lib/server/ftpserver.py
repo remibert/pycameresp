@@ -10,18 +10,18 @@ The core of the server is in the other class FtpServerCore, which is loaded into
 It takes a little while the first time you connect, but limits memory consumption if not in use.
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True.
 """
-import uasyncio
-from tools import logger
+from server.server import ServerConfig
+from tools import logger, tasking
 
-class Ftp:
+class Ftp(tasking.ServerInstance):
+	""" Ftp server instance """
+	config = None
+
 	""" Ftp main class """
-	def __init__(self, port=21, preload=False):
+	def __init__(self, **kwargs):
+		tasking.ServerInstance.__init__(self, **kwargs)
 		self.server_class = None
-		self.port = port
-		if preload:
-			self.preload()
-		else:
-			logger.syslog("Ftp waiting on %d"%self.port)
+		self.port = kwargs.get("port",21)
 
 	def preload(self):
 		""" Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) """
@@ -49,33 +49,23 @@ class Ftp:
 		except Exception as err:
 			logger.syslog(err)
 
-def start(loop=None, port=21, preload=False):
-	""" Start the ftp server with asyncio loop.
-	loop : asyncio loop object
-	port : tcp/ip port of the server
-	preload : True = preload the server at the start, False = load the server at the first connection """
-	server = Ftp(port, preload)
+	@staticmethod
+	def init():
+		""" Initialize http server """
+		if Ftp.config is None:
+			Ftp.config = ServerConfig()
+			Ftp.config.load_create()
+		else:
+			Ftp.config.refresh()
 
-	# If asyncio loop not created
-	if loop is None:
-		# Create asyncio loop
-		loop = uasyncio.get_event_loop()
-
-		# Run for ever in this case the ftp server
-		run_forever = True
-	else:
-		# The ftp server is called on asyncio connection
-		run_forever = False
-
-	# Start ftp server on port specified
-	asyncServer = uasyncio.start_server(server.on_connection, "0.0.0.0", port, backlog=1)
-
-	# Create asyncio task
-	loop.create_task(asyncServer)
-
-	# If ftp server is stand alone mode
-	if run_forever:
-		loop.run_forever()
-
-if __name__ == "__main__":
-	start()
+	@staticmethod
+	def start(**kwargs):
+		""" Start the ftp server with asyncio loop.
+		ftp_port : tcp/ip ftp port of the server default 21  """
+		Ftp.init()
+		if Ftp.config.ftp:
+			kwargs["port"] = kwargs.get("ftp_port",21)
+			kwargs["name"] = "Ftp"
+			tasking.Tasks.create_server(Ftp(**kwargs))
+		else:
+			logger.syslog("Ftp server disabled in config")

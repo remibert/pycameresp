@@ -2,11 +2,10 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to manage board """
 from server.httpserver import HttpServer
-from server.server     import Server
 from wifi.station      import Station
 from htmltemplate      import *
 from webpage.mainpage  import main_frame
-from tools             import lang,archiver,filesystem,logger,system
+from tools             import lang,archiver,filesystem,logger,system,tasking
 
 @HttpServer.add_route(b'/system', menu=lang.menu_system, item=lang.item_system)
 async def system_page(request, response, args):
@@ -39,7 +38,7 @@ async def system_page(request, response, args):
 @HttpServer.add_route(b'/system/upload_config')
 async def upload_config(request, response, args):
 	""" Upload configuration """
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	file = request.get_content_filename()
 	archiver.upload_files(file)
 	await response.send_ok()
@@ -47,7 +46,7 @@ async def upload_config(request, response, args):
 @HttpServer.add_route(b'/system/download_config')
 async def download_config(request, response, args):
 	""" Download configuration """
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	archiver.download_files("config.cfg", path="./config", pattern="*.json", excludes=["*.tmp","sd/*",".DS_Store"], recursive=False)
 	await response.send_file(b"config.cfg", headers=request.headers)
 	filesystem.remove("config.cfg")
@@ -55,14 +54,14 @@ async def download_config(request, response, args):
 @HttpServer.add_route(b'/system/upload_file_system')
 async def upload_file_system(request, response, args):
 	""" Upload file system """
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	archiver.upload_files(request.get_content_filename())
 	await reboot(request, response, args)
 
 @HttpServer.add_route(b'/system/download_file_system')
 async def download_file_system(request, response, args):
 	""" Download file system """
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	archiver.download_files("fileSystem.cfs", path="./",pattern="*.*", excludes=["*.tmp","config/*","sd/*","syslog.*","www/bootstrap.*",".DS_Store"], recursive=True)
 	await response.send_file(b"fileSystem.cfs", headers=request.headers)
 	filesystem.remove("fileSystem.cfs")
@@ -70,7 +69,7 @@ async def download_file_system(request, response, args):
 @HttpServer.add_route(b'/system/download_syslog')
 async def download_syslog(request, response, args):
 	""" Download syslog """
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	await response.send_file([b"syslog.log.4",b"syslog.log.3",b"syslog.log.2",b"syslog.log.1",b"syslog.log"], headers=request.headers)
 
 @HttpServer.add_route(b'/system/reboot')

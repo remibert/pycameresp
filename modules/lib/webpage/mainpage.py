@@ -4,9 +4,8 @@
 from htmltemplate import *
 from webpage.passwordpage import PasswordPage
 from server.httpserver import HttpServer
-from server.server   import Server
 from wifi.station import Station
-from tools import lang
+from tools import lang,tasking
 
 def main_page(request, response, args, title_frame, content=None, menu_visible=True):
 	""" Function define the main web page with menu, it check also the login password """
@@ -52,7 +51,7 @@ def main_page(request, response, args, title_frame, content=None, menu_visible=T
 		page = Page(page_content, class_=b"container", title=title, style=b"padding-top: 4.5rem;")
 	else:
 		page = Page([page] + [stylesheet], title=lang.login)
-	Server.slow_down()
+	tasking.Tasks.slow_down()
 	return page
 
 def main_frame(request, response, args, title_frame, *content):

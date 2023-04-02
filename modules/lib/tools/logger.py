@@ -10,7 +10,6 @@ except:
 	import filesystem
 	import strings
 
-
 def exception(err, msg=""):
 	""" Return the content of exception into a string """
 	file = io.StringIO()
@@ -67,8 +66,7 @@ def log(msg):
 		log_file.flush()
 		log_file.close()
 	except:
-		print("No space")
-
+		print("No space, flash full")
 
 def html_exception(err):
 	""" Return the content of exception into an html bytes """

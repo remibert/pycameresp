@@ -881,7 +881,7 @@ def parse_command_line(commandLine):
 	for command in commands:
 		exec_command(command)
 
-def shell_sh(path=None, throw=False):
+def commands(path=None, throw=False):
 	""" Start the shell """
 	global shell_exited, shell_commands
 	current_dir = uos.getcwd()

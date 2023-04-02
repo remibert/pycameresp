@@ -3,6 +3,7 @@
 # pylint:disable=wrong-import-position
 # pylint:disable=wrong-import-order
 # pylint:disable=ungrouped-imports
+# pylint:disable=unused-import
 """ Main pycameresp module """
 try:
 	import machine
@@ -10,31 +11,111 @@ try:
 	# Force high frequency of esp32
 	machine.freq(240000000)
 except:
-	import sys
-	sys.path.append("lib")
-	sys.path.append("simul")
-	sys.path.append("sample")
+	pass
 
-def create_battery_task(loop):
-	""" Create async task for battery level monitoring """
-	from tools import support
-	if support.battery():
+from tools import tasking
+
+def start(**kwargs):
+	""" Start pycameresp tasks 
+	Parameters :
+		- battery : activate battery survey (default False)
+		- mqtt : activate mqtt client (default False)
+		- ntp : activate ntp time synchronisation (default False)
+		- http : activate http server (default False)
+		- telnet : activate telnet server (default False)
+		- pushover : activate pushover notification (default False)
+		- presence : active presence of occupant in the house (default False)
+		- motion : activate motion detection (default False)
+		- starter : activate autostart of extension modules (default False)
+		- shell : activate shell (default False)
+		- webhook : activate webhook notification (default False)
+	"""
+	http_started = False
+	device = kwargs.get("device","ESP32CAM")
+
+	# Manage the awake of device
+	from tools.awake import Awake
+	pin_wake_up = Awake.is_pin_wake_up()
+	Awake.start()
+
+	# Manage the battery level
+	if kwargs.get("battery",False):
 		from tools.battery import Battery
-		Battery.protect()
-		loop.create_task(Battery.periodic_task())
+		Battery.start()
 
-def create_camera_task(loop, device):
-	""" Create async task for motion detection and camera streaming """
+	# Manage the network task
+	if  kwargs.get("mqtt",False) or kwargs.get("ntp",False)    or kwargs.get("http",False) or kwargs.get("webhook",False) or\
+		kwargs.get("ftp",False)  or kwargs.get("telnet",False) or kwargs.get("presence",False) or kwargs.get("pushover",False):
+
+		# Manage the wifi task
+		from wifi.wifi import Wifi
+		Wifi.start()
+
+		# Manage the periodic task (periodic gc, watchdog)
+		from server.periodic import Periodic
+		Periodic.start()
+
+		# Manage the notifier task
+		from server.notifier import Notifier
+		Notifier.start()
+
+	# Manage the http server (http_port=80)
+	if kwargs.get("http",False):
+		from server.httpserver import HttpServer
+		HttpServer.start(**kwargs)
+		http_started = True
+		@HttpServer.add_pages()
+		def pages_loader():
+			import webpage
+
+	# Manage the get of wan ip address
+	if kwargs.get("wanip",False):
+		from server.wanip import WanIp
+		WanIp.start()
+
+	# Manage the pushover notificiation
+	if kwargs.get("pushover",False):
+		from server.pushover import PushOver
+
+	# Manage the webhook notification
+	if kwargs.get("webhook",False):
+		from server.webhook import WebHook
+
+	# Manage the ftp server (ftp_port=21)
+	if kwargs.get("ftp",False):
+		from server.ftpserver import Ftp
+		Ftp.start(**kwargs)
+
+	# Manage the telnet server (telnet_port=23)
+	if kwargs.get("telnet",False):
+		from server.telnet import Telnet
+		Telnet.start(**kwargs)
+
+	# Manage the mqtt client
+	if kwargs.get("mqtt",False):
+		from server.mqttclient import MqttClient
+		MqttClient.start(**kwargs)
+
+	# Manage the time synchronisation
+	if kwargs.get("ntp",False):
+		from server.ntp import Ntp
+		Ntp.start()
+
+	# Manage the autostart add on component
+	if kwargs.get("starter",False):
+		from tools.starter import Starter
+		Starter.start(**kwargs)
+
+	# Manage the shell and commands line
+	if kwargs.get("shell",False):
+		from shell.shelltask import Shell
+		Shell.start()
+
 	from tools.info import iscamera
 
 	# If camera is available (required specific firmware)
 	if iscamera():
-		# Check if the wakeup was caused by a pin state change
-		from tools.awake import Awake
-		pin_wake_up = Awake.is_pin_wake_up()
-
 		from video import Camera
-
 		if Camera.is_activated():
 			if device == "ESP32ONE":
 				from tools import sdcard
@@ -57,55 +138,34 @@ def create_camera_task(loop, device):
 					pin_vsync=25, pin_href=26, pin_pclk=21, xclk_freq_hz=20000000, ledc_timer=0,
 					ledc_channel=0 , pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
 				sdcard.SdCard.set_slot(slot=None) # No sdcard available
+			else:
+				# ESP32CAM default configuration
+				pass
 
 			# Start camera before wifi to avoid problems
 			Camera.open()
 
-			# Start motion detection
-			import motion
-			motion.start(loop, pin_wake_up)
+			# If motion detection activated
+			if kwargs.get("motion",False):
+				# Manage motion detection history
+				from motion.historic import Historic
+				Historic.start()
 
-def default_loader():
-	""" The html pages only loaded when the connection of http server is done.
-	This reduces memory consumption if the server is not used """
-	#pylint:disable=unused-import
-	import webpage
+				# Manage motion detection
+				from motion.motion import Motion
+				Motion.start(pin_wake_up=pin_wake_up)
 
-def create_network_task(loop, html_loader = None):
-	""" Create all servers Http, Ftp, Telnet and wifi manager """
-	import server
-	page_loader = [default_loader]
-	if html_loader is not None:
-		page_loader.append(html_loader)
-	server.init(loop=loop, page_loader=page_loader)
+				# Detects the presence of occupants in the house
+				from server.presence import Presence
+				Presence.start()
 
-def create_shell_task(loop):
-	""" Create shell asynchronous task (press any key to get shell prompt) """
-	# pylint:disable=unused-import
-	from shell.shell import shell_task
-	loop.create_task(shell_task())
+				# If http server started
+				if http_started:
+					# Start streaming http server
+					args = kwargs.copy()
+					args["name"] = "StreamingServer"
+					args["http_port"] = kwargs.get("http_port",80)+1
+					HttpServer.start(**args)
 
-def create_presence_task(loop):
-	""" Create presence detection task (determine if an occupant is present in the house) """
-	from server.presence import presence_task
-	loop.create_task(presence_task())
-
-def create_user_task(loop, function, *args, **params):
-	""" Create user task """
-	from tools import tasking
-	async def task(*args, **params):
-		await tasking.task_monitoring(function, *args, **params)
-	loop.create_task(task(*args, **params))
-
-def run_tasks(loop):
-	""" Start all async task """
-	try:
-		# Run asyncio for ever
-		loop.run_forever()
-	except KeyboardInterrupt:
-		from tools import logger
-		logger.syslog("Ctr-C in main")
-	except Exception as err:
-		from tools import logger, system
-		logger.syslog(err)
-		system.reboot("Crash in main")
+	# Run all asynchronous tasks
+	tasking.Tasks.run()
