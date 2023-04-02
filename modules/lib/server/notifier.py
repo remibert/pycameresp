@@ -21,6 +21,7 @@ class Notification:
 		self.display = kwargs.get("display",True)
 		self.url     = kwargs.get("url",    None)
 		self.sent    = []
+		self.retry   = 0
 
 class Notifier:
 	""" Class used to manage a list of notifier, and postpone notification if wifi station not yet connected """
@@ -120,44 +121,41 @@ class Notifier:
 	@staticmethod
 	async def flush():
 		""" Flush postponed message if wan connected """
-		result = False
+		sleep_duration = 127
 
 		# If wan available
 		if wifi.Wifi.is_wan_available():
 			result = True
-
 			# Try to send message
 			for notification in Notifier.postponed:
 				for notifier in Notifier.notifiers:
-					res = await notifier(notification)
-					if res is False:
-						result = False
+					if len(Notifier.notifiers) > len(notification.sent):
+						res = await notifier(notification)
+						if res is False:
+							result = False
+							if notification.retry == 0:
+								logger.syslog("Cannot send notification")
+							notification.retry += 1
+
+			not_sent = []
+			for notification in Notifier.postponed:
+				if len(Notifier.notifiers) > len(notification.sent):
+					if notification.retry < 32:
+						not_sent.append(notification)
+
+			Notifier.postponed = not_sent
 
 			# If all message notified
-			if result:
-				Notifier.postponed.clear()
-			else:
-				logger.syslog("Cannot send notification")
-				await uasyncio.sleep(1)
+			if result is False:
+				sleep_duration = 19
 		else:
-			# Wait wifi available
-			await uasyncio.sleep(3)
-		return result
+			sleep_duration = 5
+		return sleep_duration
 
 	@staticmethod
 	async def task():
 		""" Run the task """
 		Notifier.init()
-		# If no notification should be sent
-		if len(Notifier.postponed) == 0:
-			try:
-				# Wait notification
-				await uasyncio.wait_for(Notifier.wake_up_event.wait(), 7)
-			except:
-				pass
-
-			# Clear event notification event
-			Notifier.wake_up_event.clear()
 
 		if Notifier.is_one_per_day() or Notifier.daily_notification[0] is True:
 			Notifier.daily_notification[0] = False
@@ -166,8 +164,17 @@ class Notifier:
 				message = Notifier.daily_callback()
 				Notifier.notify(topic=topic.information, message=message)
 
-		# Flush all notifications postponed
-		await Notifier.flush()
+		# If no notification should be sent
+		sleep_duration = await Notifier.flush()
+
+		try:
+			# Wait notification
+			await uasyncio.wait_for(Notifier.wake_up_event.wait(), sleep_duration)
+			# Clear event notification event
+			Notifier.wake_up_event.clear()
+		except:
+			pass
+
 
 	@staticmethod
 	def daily_notify():

@@ -14,7 +14,7 @@ def html_pages():
 	""" Load html pages when connecting to http server """
 	import sample.sample
 
-async def task():
+async def task(**kwargs):
 	""" Example of asynchronous task """
 	# This task is protected against exceptions, if an uncaught exception occurs, this task will be automatically restarted.
 	# If there are too many unhandled exceptions, the device reboots.
