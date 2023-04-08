@@ -34,10 +34,11 @@
 &#34;&#34;&#34; Telnet class &#34;&#34;&#34;
 import sys
 import errno
-from io import IOBase
+import io
 import time
-from server.user import User
-from tools import strings
+import server.user
+import wifi.hostname
+import tools.strings
 
 class TelnetLogin:
         &#34;&#34;&#34; Class to manage the username and password &#34;&#34;&#34;
@@ -45,7 +46,7 @@ class TelnetLogin:
         def __init__(self, output):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.output = output
-                if User.is_empty():
+                if server.user.User.is_empty():
                         self.footer()
                         self.state = 2
                 else:
@@ -57,10 +58,9 @@ class TelnetLogin:
         def header(self):
                 &#34;&#34;&#34; Show header &#34;&#34;&#34;
                 try:
-                        import wifi
-                        hostname = strings.tobytes(wifi.Station.get_hostname())
+                        hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
                 except:
-                        hostname = strings.tobytes(sys.platform)
+                        hostname = tools.strings.tobytes(sys.platform)
                 message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
                 self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))
 
@@ -82,7 +82,7 @@ class TelnetLogin:
                 self.input_char += b[0].to_bytes(1,&#34;little&#34;)
 
                 # Check if the character is complete
-                if strings.is_key_ended(self.input_char):
+                if tools.strings.is_key_ended(self.input_char):
                         # If escape sequence detected
                         if self.input_char[0] == 0x1B:
                                 # Ignore escape sequence
@@ -102,7 +102,7 @@ class TelnetLogin:
                         # If delete detected
                         elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
                                 if len(self.input_buffer) &gt; 0:
-                                        self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
+                                        self.input_buffer = tools.strings.tobytes(tools.strings.tostrings(self.input_buffer)[:-1])
                                 self.input_char = b&#34;&#34;
                         # Else other character
                         else:
@@ -113,9 +113,9 @@ class TelnetLogin:
         def refresh(self):
                 &#34;&#34;&#34; Refresh the line displayed &#34;&#34;&#34;
                 if self.state == 0:
-                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
+                        self.output.write(tools.strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
                 elif self.state == 1:
-                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(strings.tostrings(self.input_buffer)))))
+                        self.output.write(tools.strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(tools.strings.tostrings(self.input_buffer)))))
 
         def valid(self, buffer):
                 &#34;&#34;&#34; Valid data entered &#34;&#34;&#34;
@@ -130,7 +130,7 @@ class TelnetLogin:
                         self.state += 1
                         self.output.write(&#34;\r\n&#34;)
                         # If password is a success
-                        if User.check(self.login, self.password, display=False):
+                        if server.user.User.check(self.login, self.password, display=False):
                                 if self.count_failed[0] &gt;&gt; 2:
                                         time.sleep(15)
                                 self.output.write(b&#34;Login successful\r\n&#34;)
@@ -161,7 +161,7 @@ class TelnetLogin:
                 return self.state &gt;= 2
 
 # Provide necessary functions for dupterm and replace telnet control characters that come in.
-class TelnetWrapper(IOBase):
+class TelnetWrapper(io.IOBase):
         &#34;&#34;&#34; Telnet wrapper class &#34;&#34;&#34;
         def __init__(self, sock):
                 # pylint: disable=super-init-not-called
@@ -218,6 +218,7 @@ class TelnetWrapper(IOBase):
                                                 raise
 
         def close(self):
+                &#34;&#34;&#34; Close telnet connection &#34;&#34;&#34;
                 self.socket.close()</code></pre>
 </details>
 </section>
@@ -247,7 +248,7 @@ class TelnetWrapper(IOBase):
         def __init__(self, output):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 self.output = output
-                if User.is_empty():
+                if server.user.User.is_empty():
                         self.footer()
                         self.state = 2
                 else:
@@ -259,10 +260,9 @@ class TelnetWrapper(IOBase):
         def header(self):
                 &#34;&#34;&#34; Show header &#34;&#34;&#34;
                 try:
-                        import wifi
-                        hostname = strings.tobytes(wifi.Station.get_hostname())
+                        hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
                 except:
-                        hostname = strings.tobytes(sys.platform)
+                        hostname = tools.strings.tobytes(sys.platform)
                 message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
                 self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))
 
@@ -284,7 +284,7 @@ class TelnetWrapper(IOBase):
                 self.input_char += b[0].to_bytes(1,&#34;little&#34;)
 
                 # Check if the character is complete
-                if strings.is_key_ended(self.input_char):
+                if tools.strings.is_key_ended(self.input_char):
                         # If escape sequence detected
                         if self.input_char[0] == 0x1B:
                                 # Ignore escape sequence
@@ -304,7 +304,7 @@ class TelnetWrapper(IOBase):
                         # If delete detected
                         elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
                                 if len(self.input_buffer) &gt; 0:
-                                        self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
+                                        self.input_buffer = tools.strings.tobytes(tools.strings.tostrings(self.input_buffer)[:-1])
                                 self.input_char = b&#34;&#34;
                         # Else other character
                         else:
@@ -315,9 +315,9 @@ class TelnetWrapper(IOBase):
         def refresh(self):
                 &#34;&#34;&#34; Refresh the line displayed &#34;&#34;&#34;
                 if self.state == 0:
-                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
+                        self.output.write(tools.strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
                 elif self.state == 1:
-                        self.output.write(strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(strings.tostrings(self.input_buffer)))))
+                        self.output.write(tools.strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(tools.strings.tostrings(self.input_buffer)))))
 
         def valid(self, buffer):
                 &#34;&#34;&#34; Valid data entered &#34;&#34;&#34;
@@ -332,7 +332,7 @@ class TelnetWrapper(IOBase):
                         self.state += 1
                         self.output.write(&#34;\r\n&#34;)
                         # If password is a success
-                        if User.check(self.login, self.password, display=False):
+                        if server.user.User.check(self.login, self.password, display=False):
                                 if self.count_failed[0] &gt;&gt; 2:
                                         time.sleep(15)
                                 self.output.write(b&#34;Login successful\r\n&#34;)
@@ -414,10 +414,9 @@ class TelnetWrapper(IOBase):
 <pre><code class="python">def header(self):
         &#34;&#34;&#34; Show header &#34;&#34;&#34;
         try:
-                import wifi
-                hostname = strings.tobytes(wifi.Station.get_hostname())
+                hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
         except:
-                hostname = strings.tobytes(sys.platform)
+                hostname = tools.strings.tobytes(sys.platform)
         message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
         self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))</code></pre>
 </details>
@@ -438,7 +437,7 @@ class TelnetWrapper(IOBase):
         self.input_char += b[0].to_bytes(1,&#34;little&#34;)
 
         # Check if the character is complete
-        if strings.is_key_ended(self.input_char):
+        if tools.strings.is_key_ended(self.input_char):
                 # If escape sequence detected
                 if self.input_char[0] == 0x1B:
                         # Ignore escape sequence
@@ -458,7 +457,7 @@ class TelnetWrapper(IOBase):
                 # If delete detected
                 elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
                         if len(self.input_buffer) &gt; 0:
-                                self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
+                                self.input_buffer = tools.strings.tobytes(tools.strings.tostrings(self.input_buffer)[:-1])
                         self.input_char = b&#34;&#34;
                 # Else other character
                 else:
@@ -512,9 +511,9 @@ class TelnetWrapper(IOBase):
 <pre><code class="python">def refresh(self):
         &#34;&#34;&#34; Refresh the line displayed &#34;&#34;&#34;
         if self.state == 0:
-                self.output.write(strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
+                self.output.write(tools.strings.tostrings(b&#34;\x1B[2K\rUsername : %s&#34;%self.input_buffer))
         elif self.state == 1:
-                self.output.write(strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(strings.tostrings(self.input_buffer)))))</code></pre>
+                self.output.write(tools.strings.tostrings(b&#34;\x1B[2K\rPassword : %s&#34;%(b&#34;*&#34;*len(tools.strings.tostrings(self.input_buffer)))))</code></pre>
 </details>
 </dd>
 <dt id="lib.server.telnetcore.TelnetLogin.valid"><code class="name flex">
@@ -539,7 +538,7 @@ class TelnetWrapper(IOBase):
                 self.state += 1
                 self.output.write(&#34;\r\n&#34;)
                 # If password is a success
-                if User.check(self.login, self.password, display=False):
+                if server.user.User.check(self.login, self.password, display=False):
                         if self.count_failed[0] &gt;&gt; 2:
                                 time.sleep(15)
                         self.output.write(b&#34;Login successful\r\n&#34;)
@@ -569,7 +568,7 @@ class TelnetWrapper(IOBase):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TelnetWrapper(IOBase):
+<pre><code class="python">class TelnetWrapper(io.IOBase):
         &#34;&#34;&#34; Telnet wrapper class &#34;&#34;&#34;
         def __init__(self, sock):
                 # pylint: disable=super-init-not-called
@@ -626,6 +625,7 @@ class TelnetWrapper(IOBase):
                                                 raise
 
         def close(self):
+                &#34;&#34;&#34; Close telnet connection &#34;&#34;&#34;
                 self.socket.close()</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -639,13 +639,13 @@ class TelnetWrapper(IOBase):
 <span>def <span class="ident">close</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Flush and close the IO object.</p>
-<p>This method has no effect if the file is already closed.</p></div>
+<div class="desc"><p>Close telnet connection</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def close(self):
+        &#34;&#34;&#34; Close telnet connection &#34;&#34;&#34;
         self.socket.close()</code></pre>
 </details>
 </dd>

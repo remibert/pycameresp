@@ -32,20 +32,16 @@
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Presence detection (determine if an occupant is present in the house) &#34;&#34;&#34;
 import time
-import wifi
-from server.ping import async_ping
-from server.notifier import Notifier
-# from server.server import Server
-# from server.webhook import WebhookConfig
-# from tools import logger,jsonconfig,lang,tasking
-from tools import lang
+import wifi.wifi
+import server.ping
+import server.notifier
+import tools.lang
+import tools.topic
 
 class PresenceCore:
         &#34;&#34;&#34; Presence detection of smartphones &#34;&#34;&#34;
         ABSENCE_TIMEOUT   = 1201
         NO_ANSWER_TIMEOUT = 607
-        # FAST_POLLING      = 7.
-        # SLOW_POLLING      = 53
         DNS_POLLING       = 67
 
         PING_TIMEOUT      = 0.5
@@ -70,12 +66,12 @@ class PresenceCore:
                 &#34;&#34;&#34; Detect the presence or not of smartphones &#34;&#34;&#34;
                 if PresenceCore.last_dns_time + PresenceCore.DNS_POLLING &lt; time.time():
                         PresenceCore.last_dns_time = time.time()
-                        sent,received,success = await async_ping(wifi.Wifi.get_dns(), count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
+                        sent,received,success = await server.ping.async_ping(wifi.wifi.Wifi.get_dns(), count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
 
                         if received == 0:
-                                wifi.Wifi.lan_disconnected()
+                                wifi.wifi.Wifi.lan_disconnected()
                         else:
-                                wifi.Wifi.lan_connected()
+                                wifi.wifi.Wifi.lan_connected()
 
                 presents = []
                 current_detected = None
@@ -87,14 +83,14 @@ class PresenceCore:
                                 smartphone_in_list = True
 
                                 # Ping smartphone
-                                sent,received,success = await async_ping(smartphone, count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
+                                sent,received,success = await server.ping.async_ping(smartphone, count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
 
                                 # If a response received from smartphone
                                 if received &gt; 0:
                                         presents.append(smartphone)
                                         PresenceCore.last_time = time.time()
                                         current_detected = True
-                                        wifi.Wifi.lan_connected()
+                                        wifi.wifi.Wifi.lan_connected()
 
                 # If no smartphones detected during a very long time
                 if PresenceCore.last_time + PresenceCore.ABSENCE_TIMEOUT &lt; time.time():
@@ -109,18 +105,14 @@ class PresenceCore:
                                 msg = b&#34;&#34;
                                 for present in presents:
                                         msg += b&#34;%s &#34;%present
-                                Notifier.notify(lang.presence_of_s%(msg), enabled=presence_config.notify)
-                                if webhook_config.activated:
-                                        Notifier.webhook(&#34;Presence&#34;,webhook_config.inhabited_house)
+                                server.notifier.Notifier.notify(topic=tools.topic.presence_detected, value=tools.topic.value_on,  message=tools.lang.presence_of_s%(msg), enabled=presence_config.notify,url=webhook_config.inhabited_house)
                                 PresenceCore.set_detection(True)
                 # If no smartphone detected
                 elif current_detected is False:
                         # If smartphone previously detected
                         if PresenceCore.is_detected() != current_detected:
                                 # Notify the house in empty
-                                Notifier.notify(lang.empty_house, enabled=presence_config.notify)
-                                if webhook_config.activated:
-                                        Notifier.webhook(&#34;Presence&#34;,webhook_config.empty_house)
+                                server.notifier.Notifier.notify(topic=tools.topic.presence_detected, value=tools.topic.value_off, message=tools.lang.empty_house, enabled=presence_config.notify,url=webhook_config.empty_house)
                                 PresenceCore.set_detection(False)
 
                 # If all smartphones not responded during a long time
@@ -155,8 +147,6 @@ class PresenceCore:
         &#34;&#34;&#34; Presence detection of smartphones &#34;&#34;&#34;
         ABSENCE_TIMEOUT   = 1201
         NO_ANSWER_TIMEOUT = 607
-        # FAST_POLLING      = 7.
-        # SLOW_POLLING      = 53
         DNS_POLLING       = 67
 
         PING_TIMEOUT      = 0.5
@@ -181,12 +171,12 @@ class PresenceCore:
                 &#34;&#34;&#34; Detect the presence or not of smartphones &#34;&#34;&#34;
                 if PresenceCore.last_dns_time + PresenceCore.DNS_POLLING &lt; time.time():
                         PresenceCore.last_dns_time = time.time()
-                        sent,received,success = await async_ping(wifi.Wifi.get_dns(), count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
+                        sent,received,success = await server.ping.async_ping(wifi.wifi.Wifi.get_dns(), count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
 
                         if received == 0:
-                                wifi.Wifi.lan_disconnected()
+                                wifi.wifi.Wifi.lan_disconnected()
                         else:
-                                wifi.Wifi.lan_connected()
+                                wifi.wifi.Wifi.lan_connected()
 
                 presents = []
                 current_detected = None
@@ -198,14 +188,14 @@ class PresenceCore:
                                 smartphone_in_list = True
 
                                 # Ping smartphone
-                                sent,received,success = await async_ping(smartphone, count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
+                                sent,received,success = await server.ping.async_ping(smartphone, count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
 
                                 # If a response received from smartphone
                                 if received &gt; 0:
                                         presents.append(smartphone)
                                         PresenceCore.last_time = time.time()
                                         current_detected = True
-                                        wifi.Wifi.lan_connected()
+                                        wifi.wifi.Wifi.lan_connected()
 
                 # If no smartphones detected during a very long time
                 if PresenceCore.last_time + PresenceCore.ABSENCE_TIMEOUT &lt; time.time():
@@ -220,18 +210,14 @@ class PresenceCore:
                                 msg = b&#34;&#34;
                                 for present in presents:
                                         msg += b&#34;%s &#34;%present
-                                Notifier.notify(lang.presence_of_s%(msg), enabled=presence_config.notify)
-                                if webhook_config.activated:
-                                        Notifier.webhook(&#34;Presence&#34;,webhook_config.inhabited_house)
+                                server.notifier.Notifier.notify(topic=tools.topic.presence_detected, value=tools.topic.value_on,  message=tools.lang.presence_of_s%(msg), enabled=presence_config.notify,url=webhook_config.inhabited_house)
                                 PresenceCore.set_detection(True)
                 # If no smartphone detected
                 elif current_detected is False:
                         # If smartphone previously detected
                         if PresenceCore.is_detected() != current_detected:
                                 # Notify the house in empty
-                                Notifier.notify(lang.empty_house, enabled=presence_config.notify)
-                                if webhook_config.activated:
-                                        Notifier.webhook(&#34;Presence&#34;,webhook_config.empty_house)
+                                server.notifier.Notifier.notify(topic=tools.topic.presence_detected, value=tools.topic.value_off, message=tools.lang.empty_house, enabled=presence_config.notify,url=webhook_config.empty_house)
                                 PresenceCore.set_detection(False)
 
                 # If all smartphones not responded during a long time
@@ -294,12 +280,12 @@ async def detect(presence_config, webhook_config):
         &#34;&#34;&#34; Detect the presence or not of smartphones &#34;&#34;&#34;
         if PresenceCore.last_dns_time + PresenceCore.DNS_POLLING &lt; time.time():
                 PresenceCore.last_dns_time = time.time()
-                sent,received,success = await async_ping(wifi.Wifi.get_dns(), count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
+                sent,received,success = await server.ping.async_ping(wifi.wifi.Wifi.get_dns(), count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
 
                 if received == 0:
-                        wifi.Wifi.lan_disconnected()
+                        wifi.wifi.Wifi.lan_disconnected()
                 else:
-                        wifi.Wifi.lan_connected()
+                        wifi.wifi.Wifi.lan_connected()
 
         presents = []
         current_detected = None
@@ -311,14 +297,14 @@ async def detect(presence_config, webhook_config):
                         smartphone_in_list = True
 
                         # Ping smartphone
-                        sent,received,success = await async_ping(smartphone, count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
+                        sent,received,success = await server.ping.async_ping(smartphone, count=PresenceCore.PING_COUNT, timeout=PresenceCore.PING_TIMEOUT, quiet=True)
 
                         # If a response received from smartphone
                         if received &gt; 0:
                                 presents.append(smartphone)
                                 PresenceCore.last_time = time.time()
                                 current_detected = True
-                                wifi.Wifi.lan_connected()
+                                wifi.wifi.Wifi.lan_connected()
 
         # If no smartphones detected during a very long time
         if PresenceCore.last_time + PresenceCore.ABSENCE_TIMEOUT &lt; time.time():
@@ -333,18 +319,14 @@ async def detect(presence_config, webhook_config):
                         msg = b&#34;&#34;
                         for present in presents:
                                 msg += b&#34;%s &#34;%present
-                        Notifier.notify(lang.presence_of_s%(msg), enabled=presence_config.notify)
-                        if webhook_config.activated:
-                                Notifier.webhook(&#34;Presence&#34;,webhook_config.inhabited_house)
+                        server.notifier.Notifier.notify(topic=tools.topic.presence_detected, value=tools.topic.value_on,  message=tools.lang.presence_of_s%(msg), enabled=presence_config.notify,url=webhook_config.inhabited_house)
                         PresenceCore.set_detection(True)
         # If no smartphone detected
         elif current_detected is False:
                 # If smartphone previously detected
                 if PresenceCore.is_detected() != current_detected:
                         # Notify the house in empty
-                        Notifier.notify(lang.empty_house, enabled=presence_config.notify)
-                        if webhook_config.activated:
-                                Notifier.webhook(&#34;Presence&#34;,webhook_config.empty_house)
+                        server.notifier.Notifier.notify(topic=tools.topic.presence_detected, value=tools.topic.value_off, message=tools.lang.empty_house, enabled=presence_config.notify,url=webhook_config.empty_house)
                         PresenceCore.set_detection(False)
 
         # If all smartphones not responded during a long time

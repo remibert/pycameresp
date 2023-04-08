@@ -189,4 +189,5 @@ class TelnetWrapper(io.IOBase):
 						raise
 
 	def close(self):
+		""" Close telnet connection """
 		self.socket.close()

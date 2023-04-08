@@ -3,8 +3,6 @@
 """ Function define the web page to view recent motion detection """
 # pylint:disable=anomalous-unicode-escape-in-string
 # pylint:disable=wrong-import-order
-# import time
-# import uos
 import json
 import server.httpserver
 from htmltemplate           import *
@@ -36,7 +34,7 @@ async def hourly_page_page(request, response, args):
 
 	step = int(request.params.get(b"step",b"30"))
 	steps = []
-	for s in [1,2,5,10,15,30]:
+	for s in [1,2,5,10,15,30,60,240,360]:
 		if s == step:
 			selected = True
 		else:
@@ -91,7 +89,6 @@ async def hourly_page_page(request, response, args):
 	page = webpage.mainpage.main_frame(request, response, args,electricmeter.em_lang.title_electricmeter + electricmeter.em_lang.item_hour.lower(),Form(page_content))
 	await response.send_page(page)
 
-
 @server.httpserver.HttpServer.add_route(b'/hourly_datas')
 async def hourly_page_datas(request, response, args):
 	""" Send pulses of hours and rates """
@@ -104,7 +101,6 @@ async def hourly_page_datas(request, response, args):
 	except Exception as err:
 		await response.send_not_found(err)
 
-
 @server.httpserver.HttpServer.add_route(b'/power_datas')
 async def power_page_datas(request, response, args):
 	""" Send current power consumed """
@@ -113,7 +109,6 @@ async def power_page_datas(request, response, args):
 		await response.send_buffer(b"pulses", buffer=tools.strings.tobytes(json.dumps(power)), mime_type=b"application/json")
 	except Exception as err:
 		await response.send_not_found(err)
-
 
 @server.httpserver.HttpServer.add_route(b'/daily', menu=electricmeter.em_lang.menu_electricmeter, item=electricmeter.em_lang.item_day)
 async def daily_page(request, response, args):
@@ -190,11 +185,9 @@ async def daily_page(request, response, args):
 	page = webpage.mainpage.main_frame(request, response, args, electricmeter.em_lang.title_electricmeter + electricmeter.em_lang.item_day.lower(),Form(page_content))
 	await response.send_page(page)
 
-
 @server.httpserver.HttpServer.add_route(b'/daily_datas')
 async def daily_datas(request, response, args):
 	""" Send pulses of month and rates """
-	await electricmeter.meter.MonthlyCounter.refresh()
 	month    = tools.date.html_to_date(request.params.get(b"month",b""))
 	result = {"time_slots":None}
 	result["rates"] = tools.strings.tostrings(electricmeter.config.TimeSlotsConfig.get_cost(month))
@@ -203,7 +196,6 @@ async def daily_datas(request, response, args):
 		await response.send_buffer(b"pulses", buffer=tools.strings.tobytes(json.dumps(result)), mime_type=b"application/json")
 	except Exception as err:
 		await response.send_not_found(err)
-
 
 @server.httpserver.HttpServer.add_route(b'/monthly', menu=electricmeter.em_lang.menu_electricmeter, item=electricmeter.em_lang.item_month)
 async def monthly_page(request, response, args):
@@ -219,7 +211,6 @@ async def monthly_page(request, response, args):
 
 	month  = tools.date.html_to_date(b"%04d-01-01"%(year))
 	unit = request.params.get(b"unit",b"power")
-
 
 	with  open(WWW_DIR + "electricmeter.html", "rb") as file:
 		content = file.read()
@@ -252,11 +243,9 @@ async def monthly_page(request, response, args):
 	page = webpage.mainpage.main_frame(request, response, args, electricmeter.em_lang.title_electricmeter + electricmeter.em_lang.item_month.lower(),Form(page_content))
 	await response.send_page(page)
 
-
 @server.httpserver.HttpServer.add_route(b'/monthly_datas')
 async def monthly_datas(request, response, args):
 	""" Send pulses of month and rates """
-	await electricmeter.meter.MonthlyCounter.refresh()
 	year   = tools.date.html_to_date(request.params.get(b"year",b""))
 	result = {"time_slots":None}
 	result["rates"] = tools.strings.tostrings(electricmeter.config.TimeSlotsConfig.get_cost(year))
@@ -265,7 +254,6 @@ async def monthly_datas(request, response, args):
 		await response.send_buffer(b"pulses", buffer=tools.strings.tobytes(json.dumps(result)), mime_type=b"application/json")
 	except Exception as err:
 		await response.send_not_found(err)
-
 
 @server.httpserver.HttpServer.add_route(b'/rate', menu=electricmeter.em_lang.menu_electricmeter, item=electricmeter.em_lang.item_rate)
 async def rate_page(request, response, args):
@@ -315,7 +303,6 @@ async def rate_page(request, response, args):
 		List(rate_items)
 	])
 	await response.send_page(page)
-
 
 @server.httpserver.HttpServer.add_route(b'/time_slots', menu=electricmeter.em_lang.menu_electricmeter, item=electricmeter.em_lang.item_time_slots)
 async def time_slots_page(request, response, args):
@@ -384,7 +371,6 @@ async def time_slots_page(request, response, args):
 		List(time_slots_items)
 	])
 	await response.send_page(page)
-
 
 @server.httpserver.HttpServer.add_route(b'/geolocation', menu=electricmeter.em_lang.menu_electricmeter, item=electricmeter.em_lang.item_geolocation)
 async def geolocation_page(request, response, args):

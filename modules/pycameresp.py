@@ -31,21 +31,24 @@ def start(**kwargs):
 		- webhook  : activate webhook notification (default False)
 		- wifi     : activate wifi manager (default False)
 	"""
-	http_started = False
-	device = kwargs.get("device","ESP32CAM")
+	# pylint:disable=consider-using-f-string
+	import tools.info
+	import tools.support
 
 	# Manage the periodic task (periodic garbage collection and watchdog)
 	import server.periodic
-	server.periodic.Periodic.start()
+	server.periodic.Periodic.start(**kwargs)
 
 	if kwargs.get("awake",False):
 		# Manage the awake of device
 		import tools.awake
 		pin_wake_up = tools.awake.Awake.is_pin_wake_up()
 		tools.awake.Awake.start()
+	else:
+		pin_wake_up = False
 
 	# Manage the battery level
-	if kwargs.get("battery",False):
+	if kwargs.get("battery",False) and tools.support.battery():
 		import tools.battery
 		tools.battery.Battery.start()
 
@@ -67,7 +70,6 @@ def start(**kwargs):
 	if kwargs.get("http",False):
 		import server.httpserver
 		server.httpserver.HttpServer.start(**kwargs)
-		http_started = True
 		@server.httpserver.HttpServer.add_pages()
 		def pages_loader():
 			import webpage
@@ -91,7 +93,7 @@ def start(**kwargs):
 		server.ftpserver.Ftp.start(**kwargs)
 
 	# Manage the telnet server (telnet_port=23)
-	if kwargs.get("telnet",False):
+	if kwargs.get("telnet",False) and tools.support.telnet():
 		import server.telnet
 		server.telnet.Telnet.start(**kwargs)
 
@@ -115,12 +117,11 @@ def start(**kwargs):
 		import shell.shelltask
 		shell.shelltask.Shell.start()
 
-	import tools.info
-
 	# If camera is available (required specific firmware)
 	if tools.info.iscamera() and (kwargs.get("motion",False) or kwargs.get("camera",False)) :
 		import video.video
 		if video.video.Camera.is_activated():
+			device = kwargs.get("device","ESP32CAM")
 			if device == "ESP32ONE":
 				import tools.sdcard
 
@@ -163,7 +164,7 @@ def start(**kwargs):
 				server.presence.Presence.start()
 
 				# If http server started
-				if http_started:
+				if kwargs.get("http",False):
 					# Start streaming http server
 					args = kwargs.copy()
 					args["name"] = "HttpStreaming"

@@ -30,9 +30,9 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Encryption utility functions &#34;&#34;&#34;
-from binascii import hexlify, b2a_base64, a2b_base64
+import binascii
 import hashlib
-from tools import strings
+import tools.strings
 
 aes_ = None
 def aes(key, mode):
@@ -43,27 +43,27 @@ def aes(key, mode):
                 aes_ = cryptolib.aes
         if len(key) % 16 != 0:
                 key = (key*16)[:16]
-        return  aes_(strings.tobytes(key), mode)
+        return  aes_(tools.strings.tobytes(key), mode)
 
 def encrypt(buffer, key):
         &#34;&#34;&#34; AES encryption of buffer &#34;&#34;&#34;
-        data = b2a_base64(buffer)
+        data = binascii.b2a_base64(buffer)
         data = data.rstrip()
         if len(data) % 16 != 0:
                 data = data + b&#34;=&#34;*(16-len(data)%16)
-        return aes(key,1).encrypt(strings.tobytes(data))
+        return aes(key,1).encrypt(tools.strings.tobytes(data))
 
 def decrypt(buffer, key):
         &#34;&#34;&#34; AES decryption of buffer &#34;&#34;&#34;
         data = aes(key, 1).decrypt(buffer)
-        data = a2b_base64(strings.tobytes(data))
+        data = binascii.a2b_base64(tools.strings.tobytes(data))
         return data
 
 def gethash(password):
         &#34;&#34;&#34; Get the hash associated to the password &#34;&#34;&#34;
         hash_ = hashlib.sha256()
         hash_.update(password)
-        return hexlify(hash_.digest())</code></pre>
+        return binascii.hexlify(hash_.digest())</code></pre>
 </details>
 </section>
 <section>
@@ -90,7 +90,7 @@ def gethash(password):
                 aes_ = cryptolib.aes
         if len(key) % 16 != 0:
                 key = (key*16)[:16]
-        return  aes_(strings.tobytes(key), mode)</code></pre>
+        return  aes_(tools.strings.tobytes(key), mode)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.encryption.decrypt"><code class="name flex">
@@ -105,7 +105,7 @@ def gethash(password):
 <pre><code class="python">def decrypt(buffer, key):
         &#34;&#34;&#34; AES decryption of buffer &#34;&#34;&#34;
         data = aes(key, 1).decrypt(buffer)
-        data = a2b_base64(strings.tobytes(data))
+        data = binascii.a2b_base64(tools.strings.tobytes(data))
         return data</code></pre>
 </details>
 </dd>
@@ -120,11 +120,11 @@ def gethash(password):
 </summary>
 <pre><code class="python">def encrypt(buffer, key):
         &#34;&#34;&#34; AES encryption of buffer &#34;&#34;&#34;
-        data = b2a_base64(buffer)
+        data = binascii.b2a_base64(buffer)
         data = data.rstrip()
         if len(data) % 16 != 0:
                 data = data + b&#34;=&#34;*(16-len(data)%16)
-        return aes(key,1).encrypt(strings.tobytes(data))</code></pre>
+        return aes(key,1).encrypt(tools.strings.tobytes(data))</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.encryption.gethash"><code class="name flex">
@@ -140,7 +140,7 @@ def gethash(password):
         &#34;&#34;&#34; Get the hash associated to the password &#34;&#34;&#34;
         hash_ = hashlib.sha256()
         hash_.update(password)
-        return hexlify(hash_.digest())</code></pre>
+        return binascii.hexlify(hash_.digest())</code></pre>
 </details>
 </dd>
 </dl>

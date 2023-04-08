@@ -30,13 +30,15 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to see the camera streaming &#34;&#34;&#34;
-from server.httpserver  import HttpServer
-from server.httprequest import *
-from server.server      import Server
-from htmltemplate       import *
-from video              import Camera
 import uasyncio
-from tools              import logger,tasking,info,watchdog
+import server.httpserver
+import server.httprequest
+from htmltemplate       import *
+import video.video
+import tools.logger
+import tools.tasking
+import tools.info
+import tools.watchdog
 
 class Streaming:
         &#34;&#34;&#34; Management class of video streaming of the camera via an html page &#34;&#34;&#34;
@@ -89,7 +91,7 @@ class Streaming:
                 if Streaming.inactivity[0]:
                         Streaming.inactivity[0].stop()
                         Streaming.inactivity[0] = None
-                Streaming.inactivity[0] = tasking.Inactivity(Streaming.stop, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
+                Streaming.inactivity[0] = tools.tasking.Inactivity(Streaming.stop, duration=tools.watchdog.LONG_WATCH_DOG, timer_id=1)
 
         @staticmethod
         def get_streaming_id():
@@ -101,20 +103,20 @@ class Streaming:
                 &#34;&#34;&#34; Stop streaming &#34;&#34;&#34;
                 Streaming.streaming_id[0] += 1
 
-@HttpServer.add_route(b&#39;/camera/start&#39;, available=info.iscamera() and Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b&#39;/camera/start&#39;, available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def camera_start_streaming(request, response, args):
         &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
-        Server.slow_down()
-        if request.name != &#34;StreamingServer&#34;:
+        tools.tasking.Tasks.slow_down()
+        if request.name != &#34;HttpStreaming&#34;:
                 return
 
         try:
                 writer = None
                 currentstreaming_id = int(request.params[b&#34;streaming_id&#34;])
-                reserved = await Camera.reserve(request, timeout=20, suspension=15)
+                reserved = await video.video.Camera.reserve(request, timeout=20, suspension=15)
                 if reserved:
                         failed = False
-                        Camera.open()
+                        video.video.Camera.open()
 
                         response.set_status(b&#34;200&#34;)
                         response.set_header(b&#34;Content-Type&#34;               ,b&#34;multipart/x-mixed-replace&#34;)
@@ -126,16 +128,16 @@ async def camera_start_streaming(request, response, args):
                         identifier = b&#34;\r\n%x\r\n\r\n--%s\r\n\r\n&#34;%(len(response.identifier) + 6, response.identifier)
                         frame = b&#39;%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n&#39;
 
-                        if filesystem.ismicropython():
+                        if tools.filesystem.ismicropython():
                                 micropython = True
                         else:
                                 micropython = False
 
                         if Streaming.is_durty():
-                                Camera.configure(Streaming.get_config())
+                                video.video.Camera.configure(Streaming.get_config())
                                 Streaming.reset_durty()
 
-                        image = Camera.capture()
+                        image = video.video.Camera.capture()
                         length = len(image)
                         try:
                                 await writer.write(frame%(b&#34;&#34;, length, length))
@@ -146,9 +148,9 @@ async def camera_start_streaming(request, response, args):
 
                         while currentstreaming_id == Streaming.get_streaming_id():
                                 if Streaming.is_durty():
-                                        Camera.configure(Streaming.get_config())
+                                        video.video.Camera.configure(Streaming.get_config())
                                         Streaming.reset_durty()
-                                image = Camera.capture()
+                                image = video.video.Camera.capture()
                                 length = len(image)
                                 try:
                                         await writer.write(frame%(identifier, length, length))
@@ -163,10 +165,10 @@ async def camera_start_streaming(request, response, args):
                 else:
                         pass
         except Exception as err:
-                logger.syslog(err)
+                tools.logger.syslog(err)
         finally:
                 if reserved:
-                        await Camera.unreserve(request)
+                        await video.video.Camera.unreserve(request)
                 if writer:
                         await writer.close()</code></pre>
 </details>
@@ -187,20 +189,20 @@ async def camera_start_streaming(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.add_route(b&#39;/camera/start&#39;, available=info.iscamera() and Camera.is_activated())
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera/start&#39;, available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def camera_start_streaming(request, response, args):
         &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
-        Server.slow_down()
-        if request.name != &#34;StreamingServer&#34;:
+        tools.tasking.Tasks.slow_down()
+        if request.name != &#34;HttpStreaming&#34;:
                 return
 
         try:
                 writer = None
                 currentstreaming_id = int(request.params[b&#34;streaming_id&#34;])
-                reserved = await Camera.reserve(request, timeout=20, suspension=15)
+                reserved = await video.video.Camera.reserve(request, timeout=20, suspension=15)
                 if reserved:
                         failed = False
-                        Camera.open()
+                        video.video.Camera.open()
 
                         response.set_status(b&#34;200&#34;)
                         response.set_header(b&#34;Content-Type&#34;               ,b&#34;multipart/x-mixed-replace&#34;)
@@ -212,16 +214,16 @@ async def camera_start_streaming(request, response, args):
                         identifier = b&#34;\r\n%x\r\n\r\n--%s\r\n\r\n&#34;%(len(response.identifier) + 6, response.identifier)
                         frame = b&#39;%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n&#39;
 
-                        if filesystem.ismicropython():
+                        if tools.filesystem.ismicropython():
                                 micropython = True
                         else:
                                 micropython = False
 
                         if Streaming.is_durty():
-                                Camera.configure(Streaming.get_config())
+                                video.video.Camera.configure(Streaming.get_config())
                                 Streaming.reset_durty()
 
-                        image = Camera.capture()
+                        image = video.video.Camera.capture()
                         length = len(image)
                         try:
                                 await writer.write(frame%(b&#34;&#34;, length, length))
@@ -232,9 +234,9 @@ async def camera_start_streaming(request, response, args):
 
                         while currentstreaming_id == Streaming.get_streaming_id():
                                 if Streaming.is_durty():
-                                        Camera.configure(Streaming.get_config())
+                                        video.video.Camera.configure(Streaming.get_config())
                                         Streaming.reset_durty()
-                                image = Camera.capture()
+                                image = video.video.Camera.capture()
                                 length = len(image)
                                 try:
                                         await writer.write(frame%(identifier, length, length))
@@ -249,10 +251,10 @@ async def camera_start_streaming(request, response, args):
                 else:
                         pass
         except Exception as err:
-                logger.syslog(err)
+                tools.logger.syslog(err)
         finally:
                 if reserved:
-                        await Camera.unreserve(request)
+                        await video.video.Camera.unreserve(request)
                 if writer:
                         await writer.close()</code></pre>
 </details>
@@ -322,7 +324,7 @@ async def camera_start_streaming(request, response, args):
                 if Streaming.inactivity[0]:
                         Streaming.inactivity[0].stop()
                         Streaming.inactivity[0] = None
-                Streaming.inactivity[0] = tasking.Inactivity(Streaming.stop, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
+                Streaming.inactivity[0] = tools.tasking.Inactivity(Streaming.stop, duration=tools.watchdog.LONG_WATCH_DOG, timer_id=1)
 
         @staticmethod
         def get_streaming_id():
@@ -370,7 +372,7 @@ def activity():
         if Streaming.inactivity[0]:
                 Streaming.inactivity[0].stop()
                 Streaming.inactivity[0] = None
-        Streaming.inactivity[0] = tasking.Inactivity(Streaming.stop, duration=watchdog.LONG_WATCH_DOG, timer_id=1)</code></pre>
+        Streaming.inactivity[0] = tools.tasking.Inactivity(Streaming.stop, duration=tools.watchdog.LONG_WATCH_DOG, timer_id=1)</code></pre>
 </details>
 </dd>
 <dt id="lib.webpage.streamingpage.Streaming.get_config"><code class="name flex">

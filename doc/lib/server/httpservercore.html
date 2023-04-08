@@ -35,29 +35,29 @@
 &#34;&#34;&#34;
 Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then if the server not used, it not consum memory
 &#34;&#34;&#34;
-from server.httpserver import HttpServer
-from server.httprequest import HttpRequest, HttpResponse
-from server.stream import Stream
-from tools import logger
+import server.httpserver
+import server.httprequest
+import server.stream
+import tools.logger
 
 class HttpServerCore:
         &#34;&#34;&#34; Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
         if the server not used, it not consum memory &#34;&#34;&#34;
-        def __init__(self, port, name):
+        def __init__(self, **kwargs):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.port = port
-                self.name = name
+                self.port = kwargs.get(&#34;port&#34;,80)
+                self.name = kwargs.get(&#34;name&#34;,&#34;HttpServer&#34;)
 
         async def on_connection(self, reader, writer):
                 &#34;&#34;&#34; Asynchronous connection call back &#34;&#34;&#34;
                 remoteaddr = writer.get_extra_info(&#39;peername&#39;)[0]
-                stream    = Stream(reader, writer)
-                request   = HttpRequest (stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
-                response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
+                stream    = server.stream.Stream(reader, writer)
+                request   = server.httprequest.HttpRequest (stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
+                response  = server.httprequest.HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
                 try:
                         await request.receive()
                         # print(request.path)
-                        function, args = HttpServer.search_route(request)
+                        function, args = server.httpserver.HttpServer.search_route(request)
                         if function is None:
                                 await response.send_not_found()
                         else:
@@ -70,7 +70,7 @@ class HttpServerCore:
                         else:
                                 await response.send_not_found(err)
                 except Exception as err:
-                        logger.syslog(err)
+                        tools.logger.syslog(err)
                         await response.send_not_found(err)
                 finally:
                         await stream.close()</code></pre>
@@ -87,7 +87,7 @@ class HttpServerCore:
 <dl>
 <dt id="lib.server.httpservercore.HttpServerCore"><code class="flex name class">
 <span>class <span class="ident">HttpServerCore</span></span>
-<span>(</span><span>port, name)</span>
+<span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
@@ -100,21 +100,21 @@ if the server not used, it not consum memory </p>
 <pre><code class="python">class HttpServerCore:
         &#34;&#34;&#34; Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
         if the server not used, it not consum memory &#34;&#34;&#34;
-        def __init__(self, port, name):
+        def __init__(self, **kwargs):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.port = port
-                self.name = name
+                self.port = kwargs.get(&#34;port&#34;,80)
+                self.name = kwargs.get(&#34;name&#34;,&#34;HttpServer&#34;)
 
         async def on_connection(self, reader, writer):
                 &#34;&#34;&#34; Asynchronous connection call back &#34;&#34;&#34;
                 remoteaddr = writer.get_extra_info(&#39;peername&#39;)[0]
-                stream    = Stream(reader, writer)
-                request   = HttpRequest (stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
-                response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
+                stream    = server.stream.Stream(reader, writer)
+                request   = server.httprequest.HttpRequest (stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
+                response  = server.httprequest.HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
                 try:
                         await request.receive()
                         # print(request.path)
-                        function, args = HttpServer.search_route(request)
+                        function, args = server.httpserver.HttpServer.search_route(request)
                         if function is None:
                                 await response.send_not_found()
                         else:
@@ -127,7 +127,7 @@ if the server not used, it not consum memory </p>
                         else:
                                 await response.send_not_found(err)
                 except Exception as err:
-                        logger.syslog(err)
+                        tools.logger.syslog(err)
                         await response.send_not_found(err)
                 finally:
                         await stream.close()</code></pre>
@@ -146,13 +146,13 @@ if the server not used, it not consum memory </p>
 <pre><code class="python">async def on_connection(self, reader, writer):
         &#34;&#34;&#34; Asynchronous connection call back &#34;&#34;&#34;
         remoteaddr = writer.get_extra_info(&#39;peername&#39;)[0]
-        stream    = Stream(reader, writer)
-        request   = HttpRequest (stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
-        response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
+        stream    = server.stream.Stream(reader, writer)
+        request   = server.httprequest.HttpRequest (stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
+        response  = server.httprequest.HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
         try:
                 await request.receive()
                 # print(request.path)
-                function, args = HttpServer.search_route(request)
+                function, args = server.httpserver.HttpServer.search_route(request)
                 if function is None:
                         await response.send_not_found()
                 else:
@@ -165,7 +165,7 @@ if the server not used, it not consum memory </p>
                 else:
                         await response.send_not_found(err)
         except Exception as err:
-                logger.syslog(err)
+                tools.logger.syslog(err)
                 await response.send_not_found(err)
         finally:
                 await stream.close()</code></pre>

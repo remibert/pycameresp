@@ -14,6 +14,7 @@ import tools.info
 import tools.system
 import tools.support
 import tools.topic
+import tools.builddate
 import tools.filesystem
 if tools.support.battery():
 	import tools.battery
@@ -70,7 +71,6 @@ class Periodic:
 			if polling_id % 5 == 0:
 				# Manage login user
 				await Periodic.check_login()
-
 				Periodic.server_config.refresh()
 
 			# Manage server
@@ -101,6 +101,9 @@ class Periodic:
 			Periodic.current_time += 1
 
 	@staticmethod
-	def start():
+	def start(**kwargs):
 		""" Start periodic treatment """
+		tools.logger.syslog(tools.info.sysinfo())
+		tools.logger.syslog("Version: %s"%(tools.strings.tostrings(tools.builddate.date)))
+		tools.logger.syslog("Config : %s"%kwargs)
 		tools.tasking.Tasks.create_monitor(Periodic.task)

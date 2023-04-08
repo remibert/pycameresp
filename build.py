@@ -22,7 +22,7 @@ import time
 # Vmware share folder add next lines in /etc/fstab :
 # vmhgfs-fuse   /mnt/hgfs    fuse    defaults,allow_other    0    0
 
-MICROPYTHON_VERSION ="668a7bd28a49980b239fd7666684885382526988"
+MICROPYTHON_VERSION ="cfd3b70934791abc07f9476a956781de92ddf715"
 ESP_IDF_VERSION_S3     ="6407ecb3f8d2cc07c4c230e7e64f2046af5c86f7" # v4.4.3  !! Difficulty connecting to access point with ESP32 CAMM
 
 ESP_IDF_VERSION     ="7ab8f793ca5b026f37ae812bcc103e3aa698d164" # v4.2.2 Work perfectly with wifi access point on ESP32CAM
@@ -298,6 +298,14 @@ ln -s "%(OUTPUT_DIR)s/esp32-camera-s3" esp32-camera
 
 '''
 
+PURGE_CSS='''
+#############
+# Purge CSS #
+#############
+
+purgecss --css modules/www/bootstrap.min.css.ref --content modules/www/*.html modules/www/*.js -o modules/www/bootstrap.min.css
+'''
+
 # Presence of an old unused camera component version in the firmware, causes a problem to rebuild GENERIC_S3.
 # This patch switch to recent version.
 
@@ -371,6 +379,7 @@ def main():
 	parser.add_argument("-s", "--s3",         help="build Esp32 S3 without problem",                                action="store_true")
 	parser.add_argument("-r", "--rp2",        help="build raspberry pico RP2 and RP2 W",                            action="store_true")
 	parser.add_argument("-z", "--zippy",      help="zip python modules",                                            action="store_true")
+	parser.add_argument("-u", "--purgecss",   help="purge css content",                                             action="store_true")
 	parser.add_argument("-o", "--outputdir",  help="output directory")
 	parser.add_argument('boards',  metavar='boards', type=str, help='Select boards to build micropython firmwares, for all firmwares use "*"', nargs="*")
 	args = parser.parse_args()
@@ -398,6 +407,9 @@ def main():
 
 		if args.doc:
 			execute(BUILD_DOC_COMMANDS)
+
+		if args.purgecss or args.patch or args.all:
+			execute(PURGE_CSS)
 
 		if args.patch or args.all:
 			execute(PATCH_COMMANDS)

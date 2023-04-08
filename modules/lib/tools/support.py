@@ -25,3 +25,9 @@ def battery():
 	if sys.platform == "rp2":
 		return False
 	return True
+
+def counter():
+	""" Indicates if hardware counter supported """
+	if sys.platform == "rp2":
+		return False
+	return True

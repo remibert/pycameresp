@@ -53,6 +53,12 @@ def battery():
         &#34;&#34;&#34; Indicates if battery setup supported &#34;&#34;&#34;
         if sys.platform == &#34;rp2&#34;:
                 return False
+        return True
+
+def counter():
+        &#34;&#34;&#34; Indicates if hardware counter supported &#34;&#34;&#34;
+        if sys.platform == &#34;rp2&#34;:
+                return False
         return True</code></pre>
 </details>
 </section>
@@ -74,6 +80,22 @@ def battery():
 </summary>
 <pre><code class="python">def battery():
         &#34;&#34;&#34; Indicates if battery setup supported &#34;&#34;&#34;
+        if sys.platform == &#34;rp2&#34;:
+                return False
+        return True</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.support.counter"><code class="name flex">
+<span>def <span class="ident">counter</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if hardware counter supported</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def counter():
+        &#34;&#34;&#34; Indicates if hardware counter supported &#34;&#34;&#34;
         if sys.platform == &#34;rp2&#34;:
                 return False
         return True</code></pre>
@@ -146,6 +168,7 @@ def battery():
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="lib.tools.support.battery" href="#lib.tools.support.battery">battery</a></code></li>
+<li><code><a title="lib.tools.support.counter" href="#lib.tools.support.counter">counter</a></code></li>
 <li><code><a title="lib.tools.support.hostname" href="#lib.tools.support.hostname">hostname</a></code></li>
 <li><code><a title="lib.tools.support.static_ip_accesspoint" href="#lib.tools.support.static_ip_accesspoint">static_ip_accesspoint</a></code></li>
 <li><code><a title="lib.tools.support.telnet" href="#lib.tools.support.telnet">telnet</a></code></li>

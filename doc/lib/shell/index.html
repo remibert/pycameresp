@@ -33,14 +33,21 @@
 # pylint: disable=redefined-builtin
 
 def sh():
-    &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
-    from shell.shellcore import shell_sh
-    shell_sh()</code></pre>
+        &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
+        import shell.commands
+        shell.commands.commands()</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="lib.shell.commands" href="commands.html">lib.shell.commands</a></code></dt>
+<dd>
+<div class="desc"><p>Class defining a minimalist shell, directly executable on the board.
+We modify directories, list, delete, move files, edit files ..
+The commands are
+…</p></div>
+</dd>
 <dt><code class="name"><a title="lib.shell.editor" href="editor.html">lib.shell.editor</a></code></dt>
 <dd>
 <div class="desc"><p>Class defining a VT100 text editor.
@@ -51,16 +58,10 @@ This allows you to make quick and easy changes directly on the board, …</p></d
 <dd>
 <div class="desc"><p>Syntax highlight for python in the editor</p></div>
 </dd>
-<dt><code class="name"><a title="lib.shell.shell" href="shell.html">lib.shell.shell</a></code></dt>
+<dt><code class="name"><a title="lib.shell.shelltask" href="shelltask.html">lib.shell.shelltask</a></code></dt>
 <dd>
 <div class="desc"><p>Class defining a minimalist shell, directly executable on the board.
 We modify directories, list, delete, move files, edit files &hellip;</p></div>
-</dd>
-<dt><code class="name"><a title="lib.shell.shellcore" href="shellcore.html">lib.shell.shellcore</a></code></dt>
-<dd>
-<div class="desc"><p>Class defining a minimalist shell, directly executable on the board.
-We modify directories, list, delete, move files, edit files &hellip;
-The commands are …</p></div>
 </dd>
 </dl>
 </section>
@@ -79,9 +80,9 @@ The commands are …</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def sh():
-    &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
-    from shell.shellcore import shell_sh
-    shell_sh()</code></pre>
+        &#34;&#34;&#34; Start the shell &#34;&#34;&#34;
+        import shell.commands
+        shell.commands.commands()</code></pre>
 </details>
 </dd>
 </dl>
@@ -102,10 +103,10 @@ The commands are …</p></div>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="lib.shell.commands" href="commands.html">lib.shell.commands</a></code></li>
 <li><code><a title="lib.shell.editor" href="editor.html">lib.shell.editor</a></code></li>
 <li><code><a title="lib.shell.editor_py" href="editor_py.html">lib.shell.editor_py</a></code></li>
-<li><code><a title="lib.shell.shell" href="shell.html">lib.shell.shell</a></code></li>
-<li><code><a title="lib.shell.shellcore" href="shellcore.html">lib.shell.shellcore</a></code></li>
+<li><code><a title="lib.shell.shelltask" href="shelltask.html">lib.shell.shelltask</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>

@@ -33,100 +33,109 @@
 &#34;&#34;&#34; Periodic task, wifi management, get wan_ip, synchronize time &#34;&#34;&#34;
 import gc
 import uasyncio
-from server.server import ServerConfig, Server
-import wifi
-from tools import lang, awake, tasking, watchdog, info, system, support
-
-async def periodic_task():
-        &#34;&#34;&#34; Periodic task &#34;&#34;&#34;
-        periodic = Periodic()
-        await tasking.task_monitoring(periodic.task)
+import server.user
+import server.server
+import wifi.wifi
+import tools.lang
+import tools.tasking
+import tools.watchdog
+import tools.info
+import tools.system
+import tools.support
+import tools.topic
+import tools.builddate
+import tools.filesystem
+if tools.support.battery():
+        import tools.battery
 
 class Periodic:
         &#34;&#34;&#34; Class to manage periodic task &#34;&#34;&#34;
-        def __init__(self):
+        server_config = None
+
+        @staticmethod
+        def init():
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.server_config = ServerConfig()
-                self.server_config.load()
-                self.get_login_state = None
-                self.last_success_notification = None
-                self.current_time = 0
-                watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
+                if Periodic.server_config is None:
+                        Periodic.server_config = server.server.ServerConfig()
+                        Periodic.server_config.load_create()
+                        Periodic.last_notif = None
+                        Periodic.current_time = 0
+                        tools.watchdog.WatchDog.start(tools.watchdog.SHORT_WATCH_DOG)
+                else:
+                        Periodic.server_config.refresh()
 
-        async def check_login(self):
+        @staticmethod
+        async def check_login():
                 &#34;&#34;&#34; Inform that login detected &#34;&#34;&#34;
-                # Login state not yet get
-                if self.get_login_state is None:
-                        from server.user import User
-                        self.get_login_state = User.get_login_state
-
                 # Get login state
-                login =  self.get_login_state()
+                login =  server.user.User.get_login_state()
 
                 # If login detected
                 if login is not None:
                         from server.notifier import Notifier
                         if login:
-                                if self.last_success_notification is None:
+                                if Periodic.last_notif is None:
                                         notif = True
-                                        self.last_success_notification = self.current_time
-                                elif self.last_success_notification + 5*60 &lt; self.current_time:
-                                        self.last_success_notification = self.current_time
+                                        Periodic.last_notif = Periodic.current_time
+                                elif Periodic.last_notif + 5*60 &lt; Periodic.current_time:
+                                        Periodic.last_notif = Periodic.current_time
                                         notif = True
                                 else:
                                         notif = False
                                 if notif:
-                                        Notifier.notify(lang.login_success_detected, display=False, enabled=self.server_config.notify)
+                                        Notifier.notify(topic=tools.topic.login, value=tools.topic.value_success, message=tools.lang.login_success_detected, display=False, enabled=Periodic.server_config.notify)
                         else:
-                                Notifier.notify(lang.login_failed_detected,  display=False, enabled=self.server_config.notify)
+                                Notifier.notify    (topic=tools.topic.login, value=tools.topic.value_failed,  message=tools.lang.login_failed_detected,  display=False, enabled=Periodic.server_config.notify)
 
-        async def task(self):
+        @staticmethod
+        async def task(**kwargs):
                 &#34;&#34;&#34; Periodic task method &#34;&#34;&#34;
-                if support.battery():
-                        from tools import battery
+                Periodic.init()
 
                 polling_id = 0
 
-                watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
+                tools.watchdog.WatchDog.start(tools.watchdog.SHORT_WATCH_DOG)
                 while True:
                         # Reload server config if changed
                         if polling_id % 5 == 0:
                                 # Manage login user
-                                await self.check_login()
-
-                                if self.server_config.is_changed():
-                                        self.server_config.load()
+                                await Periodic.check_login()
+                                Periodic.server_config.refresh()
 
                         # Manage server
-                        await Server.manage(polling_id)
-
-                        # Manage awake duration
-                        awake.Awake.manage()
+                        if wifi.wifi.Wifi.is_lan_connected():
+                                tools.tasking.Tasks.start_server()
 
                         # Reset brownout counter if wifi connected
-                        if wifi.Wifi.is_wan_connected():
-                                if support.battery():
-                                        battery.Battery.reset_brownout()
+                        if wifi.wifi.Wifi.is_wan_connected():
+                                if tools.support.battery():
+                                        tools.battery.Battery.reset_brownout()
 
                         # Periodic garbage to avoid memory fragmentation
                         if polling_id % 7 == 0:
                                 gc.collect()
-                                try:
+                                if tools.filesystem.ismicropython():
                                         # pylint:disable=no-member
                                         gc.threshold(gc.mem_free() // 5 + gc.mem_alloc())
-                                except:
-                                        pass
 
                         # Check if any problems have occurred and if a reboot is needed
                         if polling_id % 3607 == 0:
-                                if info.get_issues_counter() &gt; 15:
-                                        system.reboot(&#34;Reboot required, %d problems detected&#34;%info.get_issues_counter())
+                                if tools.info.get_issues_counter() &gt; 15:
+                                        tools.system.reboot(&#34;Reboot required, %d problems detected&#34;%tools.info.get_issues_counter())
 
                         # Reset watch dog
-                        watchdog.WatchDog.feed()
+                        tools.watchdog.WatchDog.feed()
                         await uasyncio.sleep(1)
                         polling_id += 1
-                        self.current_time += 1</code></pre>
+                        Periodic.current_time += 1
+
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start periodic treatment &#34;&#34;&#34;
+                tools.logger.syslog(tools.info.sysinfo())
+                tools.logger.syslog(&#34;Version: %s&#34;%(tools.strings.tostrings(tools.builddate.date)))
+                tools.logger.syslog(&#34;Config : %s&#34;%kwargs)
+                tools.tasking.Tasks.create_monitor(Periodic.task)</code></pre>
 </details>
 </section>
 <section>
@@ -134,24 +143,6 @@ class Periodic:
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="lib.server.periodic.periodic_task"><code class="name flex">
-<span>async def <span class="ident">periodic_task</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Periodic task</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def periodic_task():
-        &#34;&#34;&#34; Periodic task &#34;&#34;&#34;
-        periodic = Periodic()
-        await tasking.task_monitoring(periodic.task)</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -160,102 +151,111 @@ class Periodic:
 <span>class <span class="ident">Periodic</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Class to manage periodic task </p>
-<p>Constructor</p></div>
+<div class="desc"><p>Class to manage periodic task</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Periodic:
         &#34;&#34;&#34; Class to manage periodic task &#34;&#34;&#34;
-        def __init__(self):
+        server_config = None
+
+        @staticmethod
+        def init():
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.server_config = ServerConfig()
-                self.server_config.load()
-                self.get_login_state = None
-                self.last_success_notification = None
-                self.current_time = 0
-                watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
+                if Periodic.server_config is None:
+                        Periodic.server_config = server.server.ServerConfig()
+                        Periodic.server_config.load_create()
+                        Periodic.last_notif = None
+                        Periodic.current_time = 0
+                        tools.watchdog.WatchDog.start(tools.watchdog.SHORT_WATCH_DOG)
+                else:
+                        Periodic.server_config.refresh()
 
-        async def check_login(self):
+        @staticmethod
+        async def check_login():
                 &#34;&#34;&#34; Inform that login detected &#34;&#34;&#34;
-                # Login state not yet get
-                if self.get_login_state is None:
-                        from server.user import User
-                        self.get_login_state = User.get_login_state
-
                 # Get login state
-                login =  self.get_login_state()
+                login =  server.user.User.get_login_state()
 
                 # If login detected
                 if login is not None:
                         from server.notifier import Notifier
                         if login:
-                                if self.last_success_notification is None:
+                                if Periodic.last_notif is None:
                                         notif = True
-                                        self.last_success_notification = self.current_time
-                                elif self.last_success_notification + 5*60 &lt; self.current_time:
-                                        self.last_success_notification = self.current_time
+                                        Periodic.last_notif = Periodic.current_time
+                                elif Periodic.last_notif + 5*60 &lt; Periodic.current_time:
+                                        Periodic.last_notif = Periodic.current_time
                                         notif = True
                                 else:
                                         notif = False
                                 if notif:
-                                        Notifier.notify(lang.login_success_detected, display=False, enabled=self.server_config.notify)
+                                        Notifier.notify(topic=tools.topic.login, value=tools.topic.value_success, message=tools.lang.login_success_detected, display=False, enabled=Periodic.server_config.notify)
                         else:
-                                Notifier.notify(lang.login_failed_detected,  display=False, enabled=self.server_config.notify)
+                                Notifier.notify    (topic=tools.topic.login, value=tools.topic.value_failed,  message=tools.lang.login_failed_detected,  display=False, enabled=Periodic.server_config.notify)
 
-        async def task(self):
+        @staticmethod
+        async def task(**kwargs):
                 &#34;&#34;&#34; Periodic task method &#34;&#34;&#34;
-                if support.battery():
-                        from tools import battery
+                Periodic.init()
 
                 polling_id = 0
 
-                watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
+                tools.watchdog.WatchDog.start(tools.watchdog.SHORT_WATCH_DOG)
                 while True:
                         # Reload server config if changed
                         if polling_id % 5 == 0:
                                 # Manage login user
-                                await self.check_login()
-
-                                if self.server_config.is_changed():
-                                        self.server_config.load()
+                                await Periodic.check_login()
+                                Periodic.server_config.refresh()
 
                         # Manage server
-                        await Server.manage(polling_id)
-
-                        # Manage awake duration
-                        awake.Awake.manage()
+                        if wifi.wifi.Wifi.is_lan_connected():
+                                tools.tasking.Tasks.start_server()
 
                         # Reset brownout counter if wifi connected
-                        if wifi.Wifi.is_wan_connected():
-                                if support.battery():
-                                        battery.Battery.reset_brownout()
+                        if wifi.wifi.Wifi.is_wan_connected():
+                                if tools.support.battery():
+                                        tools.battery.Battery.reset_brownout()
 
                         # Periodic garbage to avoid memory fragmentation
                         if polling_id % 7 == 0:
                                 gc.collect()
-                                try:
+                                if tools.filesystem.ismicropython():
                                         # pylint:disable=no-member
                                         gc.threshold(gc.mem_free() // 5 + gc.mem_alloc())
-                                except:
-                                        pass
 
                         # Check if any problems have occurred and if a reboot is needed
                         if polling_id % 3607 == 0:
-                                if info.get_issues_counter() &gt; 15:
-                                        system.reboot(&#34;Reboot required, %d problems detected&#34;%info.get_issues_counter())
+                                if tools.info.get_issues_counter() &gt; 15:
+                                        tools.system.reboot(&#34;Reboot required, %d problems detected&#34;%tools.info.get_issues_counter())
 
                         # Reset watch dog
-                        watchdog.WatchDog.feed()
+                        tools.watchdog.WatchDog.feed()
                         await uasyncio.sleep(1)
                         polling_id += 1
-                        self.current_time += 1</code></pre>
+                        Periodic.current_time += 1
+
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start periodic treatment &#34;&#34;&#34;
+                tools.logger.syslog(tools.info.sysinfo())
+                tools.logger.syslog(&#34;Version: %s&#34;%(tools.strings.tostrings(tools.builddate.date)))
+                tools.logger.syslog(&#34;Config : %s&#34;%kwargs)
+                tools.tasking.Tasks.create_monitor(Periodic.task)</code></pre>
 </details>
-<h3>Methods</h3>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.periodic.Periodic.server_config"><code class="name">var <span class="ident">server_config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
 <dl>
 <dt id="lib.server.periodic.Periodic.check_login"><code class="name flex">
-<span>async def <span class="ident">check_login</span></span>(<span>self)</span>
+<span>async def <span class="ident">check_login</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Inform that login detected</p></div>
@@ -263,36 +263,72 @@ class Periodic:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def check_login(self):
+<pre><code class="python">@staticmethod
+async def check_login():
         &#34;&#34;&#34; Inform that login detected &#34;&#34;&#34;
-        # Login state not yet get
-        if self.get_login_state is None:
-                from server.user import User
-                self.get_login_state = User.get_login_state
-
         # Get login state
-        login =  self.get_login_state()
+        login =  server.user.User.get_login_state()
 
         # If login detected
         if login is not None:
                 from server.notifier import Notifier
                 if login:
-                        if self.last_success_notification is None:
+                        if Periodic.last_notif is None:
                                 notif = True
-                                self.last_success_notification = self.current_time
-                        elif self.last_success_notification + 5*60 &lt; self.current_time:
-                                self.last_success_notification = self.current_time
+                                Periodic.last_notif = Periodic.current_time
+                        elif Periodic.last_notif + 5*60 &lt; Periodic.current_time:
+                                Periodic.last_notif = Periodic.current_time
                                 notif = True
                         else:
                                 notif = False
                         if notif:
-                                Notifier.notify(lang.login_success_detected, display=False, enabled=self.server_config.notify)
+                                Notifier.notify(topic=tools.topic.login, value=tools.topic.value_success, message=tools.lang.login_success_detected, display=False, enabled=Periodic.server_config.notify)
                 else:
-                        Notifier.notify(lang.login_failed_detected,  display=False, enabled=self.server_config.notify)</code></pre>
+                        Notifier.notify    (topic=tools.topic.login, value=tools.topic.value_failed,  message=tools.lang.login_failed_detected,  display=False, enabled=Periodic.server_config.notify)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.periodic.Periodic.init"><code class="name flex">
+<span>def <span class="ident">init</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def init():
+        &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+        if Periodic.server_config is None:
+                Periodic.server_config = server.server.ServerConfig()
+                Periodic.server_config.load_create()
+                Periodic.last_notif = None
+                Periodic.current_time = 0
+                tools.watchdog.WatchDog.start(tools.watchdog.SHORT_WATCH_DOG)
+        else:
+                Periodic.server_config.refresh()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.periodic.Periodic.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start periodic treatment</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def start(**kwargs):
+        &#34;&#34;&#34; Start periodic treatment &#34;&#34;&#34;
+        tools.logger.syslog(tools.info.sysinfo())
+        tools.logger.syslog(&#34;Version: %s&#34;%(tools.strings.tostrings(tools.builddate.date)))
+        tools.logger.syslog(&#34;Config : %s&#34;%kwargs)
+        tools.tasking.Tasks.create_monitor(Periodic.task)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.periodic.Periodic.task"><code class="name flex">
-<span>async def <span class="ident">task</span></span>(<span>self)</span>
+<span>async def <span class="ident">task</span></span>(<span>**kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Periodic task method</p></div>
@@ -300,53 +336,47 @@ class Periodic:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def task(self):
+<pre><code class="python">@staticmethod
+async def task(**kwargs):
         &#34;&#34;&#34; Periodic task method &#34;&#34;&#34;
-        if support.battery():
-                from tools import battery
+        Periodic.init()
 
         polling_id = 0
 
-        watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
+        tools.watchdog.WatchDog.start(tools.watchdog.SHORT_WATCH_DOG)
         while True:
                 # Reload server config if changed
                 if polling_id % 5 == 0:
                         # Manage login user
-                        await self.check_login()
-
-                        if self.server_config.is_changed():
-                                self.server_config.load()
+                        await Periodic.check_login()
+                        Periodic.server_config.refresh()
 
                 # Manage server
-                await Server.manage(polling_id)
-
-                # Manage awake duration
-                awake.Awake.manage()
+                if wifi.wifi.Wifi.is_lan_connected():
+                        tools.tasking.Tasks.start_server()
 
                 # Reset brownout counter if wifi connected
-                if wifi.Wifi.is_wan_connected():
-                        if support.battery():
-                                battery.Battery.reset_brownout()
+                if wifi.wifi.Wifi.is_wan_connected():
+                        if tools.support.battery():
+                                tools.battery.Battery.reset_brownout()
 
                 # Periodic garbage to avoid memory fragmentation
                 if polling_id % 7 == 0:
                         gc.collect()
-                        try:
+                        if tools.filesystem.ismicropython():
                                 # pylint:disable=no-member
                                 gc.threshold(gc.mem_free() // 5 + gc.mem_alloc())
-                        except:
-                                pass
 
                 # Check if any problems have occurred and if a reboot is needed
                 if polling_id % 3607 == 0:
-                        if info.get_issues_counter() &gt; 15:
-                                system.reboot(&#34;Reboot required, %d problems detected&#34;%info.get_issues_counter())
+                        if tools.info.get_issues_counter() &gt; 15:
+                                tools.system.reboot(&#34;Reboot required, %d problems detected&#34;%tools.info.get_issues_counter())
 
                 # Reset watch dog
-                watchdog.WatchDog.feed()
+                tools.watchdog.WatchDog.feed()
                 await uasyncio.sleep(1)
                 polling_id += 1
-                self.current_time += 1</code></pre>
+                Periodic.current_time += 1</code></pre>
 </details>
 </dd>
 </dl>
@@ -365,17 +395,15 @@ class Periodic:
 <li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="lib.server.periodic.periodic_task" href="#lib.server.periodic.periodic_task">periodic_task</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
 <h4><code><a title="lib.server.periodic.Periodic" href="#lib.server.periodic.Periodic">Periodic</a></code></h4>
 <ul class="">
 <li><code><a title="lib.server.periodic.Periodic.check_login" href="#lib.server.periodic.Periodic.check_login">check_login</a></code></li>
+<li><code><a title="lib.server.periodic.Periodic.init" href="#lib.server.periodic.Periodic.init">init</a></code></li>
+<li><code><a title="lib.server.periodic.Periodic.server_config" href="#lib.server.periodic.Periodic.server_config">server_config</a></code></li>
+<li><code><a title="lib.server.periodic.Periodic.start" href="#lib.server.periodic.Periodic.start">start</a></code></li>
 <li><code><a title="lib.server.periodic.Periodic.task" href="#lib.server.periodic.Periodic.task">task</a></code></li>
 </ul>
 </li>

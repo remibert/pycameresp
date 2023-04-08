@@ -32,7 +32,9 @@
 &#34;&#34;&#34; System utilities functions &#34;&#34;&#34;
 # pylint:disable=global-variable-not-assigned
 import time
-from tools import filesystem, logger
+import tools.filesystem
+import tools.logger
+import tools.region
 
 actions = []
 
@@ -43,28 +45,27 @@ def add_action(action):
 def reboot(message=&#34;Reboot&#34;):
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
         global actions
-        from tools import region
-        region_config = region.RegionConfig.get()
+        region_config = tools.region.RegionConfig.get()
         if region_config.load():
                 region_config.current_time = time.time() + 8
                 region_config.save()
         try:
-                if filesystem.ismicropython():
+                if tools.filesystem.ismicropython():
                         import camera
                         camera.deinit()
         except:
                 pass
 
         if len(actions) &gt; 0:
-                logger.syslog(&#34;Execute actions before reboot&#34;)
+                tools.logger.syslog(&#34;Execute actions before reboot&#34;)
 
         for action in actions:
                 try:
                         action()
                 except Exception as err:
-                        logger.syslog(err)
+                        tools.logger.syslog(err)
 
-        logger.syslog(message)
+        tools.logger.syslog(message)
         try:
                 import machine
                 machine.deepsleep(1000)
@@ -105,28 +106,27 @@ def reboot(message=&#34;Reboot&#34;):
 <pre><code class="python">def reboot(message=&#34;Reboot&#34;):
         &#34;&#34;&#34; Reboot command &#34;&#34;&#34;
         global actions
-        from tools import region
-        region_config = region.RegionConfig.get()
+        region_config = tools.region.RegionConfig.get()
         if region_config.load():
                 region_config.current_time = time.time() + 8
                 region_config.save()
         try:
-                if filesystem.ismicropython():
+                if tools.filesystem.ismicropython():
                         import camera
                         camera.deinit()
         except:
                 pass
 
         if len(actions) &gt; 0:
-                logger.syslog(&#34;Execute actions before reboot&#34;)
+                tools.logger.syslog(&#34;Execute actions before reboot&#34;)
 
         for action in actions:
                 try:
                         action()
                 except Exception as err:
-                        logger.syslog(err)
+                        tools.logger.syslog(err)
 
-        logger.syslog(message)
+        tools.logger.syslog(message)
         try:
                 import machine
                 machine.deepsleep(1000)

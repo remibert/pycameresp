@@ -46,7 +46,7 @@ import socket
 import struct
 import uselect
 import uasyncio
-import wifi
+import wifi.station
 
 def ticks_us():
         &#34;&#34;&#34; Get tick in microseconds &#34;&#34;&#34;
@@ -254,7 +254,7 @@ class Ping:
 
 async def async_ping(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Asynchronous ping of host &#34;&#34;&#34;
-        if wifi.Station.is_active():
+        if wifi.station.Station.is_active():
                 ping_ = Ping()
                 return await ping_.async_ping(host, count, timeout, quiet)
         else:
@@ -262,7 +262,7 @@ async def async_ping(host, count=4, timeout=1, quiet=False):
 
 def ping(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Ping of host &#34;&#34;&#34;
-        if wifi.Station.is_active():
+        if wifi.station.Station.is_active():
                 ping_ = Ping()
                 return ping_.ping(host, count, timeout, quiet)
         else:
@@ -287,7 +287,7 @@ def ping(host, count=4, timeout=1, quiet=False):
 </summary>
 <pre><code class="python">async def async_ping(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Asynchronous ping of host &#34;&#34;&#34;
-        if wifi.Station.is_active():
+        if wifi.station.Station.is_active():
                 ping_ = Ping()
                 return await ping_.async_ping(host, count, timeout, quiet)
         else:
@@ -305,7 +305,7 @@ def ping(host, count=4, timeout=1, quiet=False):
 </summary>
 <pre><code class="python">def ping(host, count=4, timeout=1, quiet=False):
         &#34;&#34;&#34; Ping of host &#34;&#34;&#34;
-        if wifi.Station.is_active():
+        if wifi.station.Station.is_active():
                 ping_ = Ping()
                 return ping_.ping(host, count, timeout, quiet)
         else:

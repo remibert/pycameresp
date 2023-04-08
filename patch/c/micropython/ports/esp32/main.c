@@ -128,8 +128,6 @@ void mp_task(void *pvParameter) {
             mp_task_heap = NULL;
             break;
     }
-
-
     #elif CONFIG_ESP32S2_SPIRAM_SUPPORT || CONFIG_ESP32S3_SPIRAM_SUPPORT
     // Try to use the entire external SPIRAM directly for the heap
     size_t esp_spiram_size = esp_spiram_get_size();
@@ -189,7 +187,7 @@ soft_reset:
     #endif
 
     // run boot-up scripts
-    pyexec_frozen_module("_boot.py");
+    pyexec_frozen_module("_boot.py", false);
     pyexec_file_if_exists("boot.py");
     if (pyexec_mode_kind == PYEXEC_MODE_FRIENDLY_REPL) {
         int ret = pyexec_file_if_exists("main.py");

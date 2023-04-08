@@ -32,13 +32,16 @@
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Manage the battery &#34;&#34;&#34;
 import machine
-from tools import jsonconfig,logger
+import uasyncio
+import tools.jsonconfig
+import tools.logger
+import tools.tasking
 
-class AwakeConfig(jsonconfig.JsonConfig):
+class AwakeConfig(tools.jsonconfig.JsonConfig):
         &#34;&#34;&#34; Awake configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                jsonconfig.JsonConfig.__init__(self)
+                tools.jsonconfig.JsonConfig.__init__(self)
 
                 # GPIO wake up
                 self.activated = False  # Wake up on GPIO status
@@ -50,19 +53,17 @@ class Awake:
         &#34;&#34;&#34; Manage the awake &#34;&#34;&#34;
         config = None
         awake_counter = [0] # Decrease each second
-        refresh_counter = [0]
 
         @staticmethod
-        def init():
+        def init(**kwargs):
                 &#34;&#34;&#34; Init awake class &#34;&#34;&#34;
                 # If config not yet read
                 if Awake.config is None:
                         Awake.config = AwakeConfig()
-                        # If config failed to read
-                        if Awake.config.load() is False:
-                                # Write default config
-                                Awake.config.save()
-                Awake.keep_awake()
+                        Awake.config.load_create()
+                        Awake.keep_awake()
+                else:
+                        Awake.config.refresh()
 
         @staticmethod
         def set_pin_wake_up():
@@ -73,12 +74,12 @@ class Awake:
                                 import esp32
                                 wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
                                 esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                                logger.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
+                                tools.logger.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
                         else:
-                                logger.syslog(&#34;Pin wake up disabled&#34;)
+                                tools.logger.syslog(&#34;Pin wake up disabled&#34;)
                         return True
                 except Exception as err:
-                        logger.syslog(err,&#34;Cannot set wake up&#34;)
+                        tools.logger.syslog(err,&#34;Cannot set wake up&#34;)
                 return False
 
         @staticmethod
@@ -101,23 +102,26 @@ class Awake:
                         Awake.awake_counter[0] = Awake.config.awake_duration
 
         @staticmethod
-        def manage():
-                &#34;&#34;&#34; Manage the awake duration &#34;&#34;&#34;
-                if Awake.config is None:
-                        Awake.init()
-                if Awake.refresh_counter[0] % 10 == 0:
-                        if Awake.config.is_changed():
-                                Awake.config.load()
-                Awake.refresh_counter[0] += 1
+        async def task(**kwargs):
+                &#34;&#34;&#34; Awake task core &#34;&#34;&#34;
+                Awake.init(**kwargs)
 
                 if Awake.config.activated:
                         Awake.awake_counter[0] -= 1
                         if Awake.awake_counter[0] &lt;= 0:
-                                logger.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
+                                tools.logger.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
 
                                 # Set the wake up on PIR detection
                                 Awake.set_pin_wake_up()
-                                machine.deepsleep(Awake.config.sleep_duration*1000)</code></pre>
+                                machine.deepsleep(Awake.config.sleep_duration*1000)
+                        await uasyncio.sleep(1)
+                else:
+                        await uasyncio.sleep(60)
+
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start awake task &#34;&#34;&#34;
+                tools.tasking.Tasks.create_monitor(Awake.task, **kwargs)</code></pre>
 </details>
 </section>
 <section>
@@ -142,19 +146,17 @@ class Awake:
         &#34;&#34;&#34; Manage the awake &#34;&#34;&#34;
         config = None
         awake_counter = [0] # Decrease each second
-        refresh_counter = [0]
 
         @staticmethod
-        def init():
+        def init(**kwargs):
                 &#34;&#34;&#34; Init awake class &#34;&#34;&#34;
                 # If config not yet read
                 if Awake.config is None:
                         Awake.config = AwakeConfig()
-                        # If config failed to read
-                        if Awake.config.load() is False:
-                                # Write default config
-                                Awake.config.save()
-                Awake.keep_awake()
+                        Awake.config.load_create()
+                        Awake.keep_awake()
+                else:
+                        Awake.config.refresh()
 
         @staticmethod
         def set_pin_wake_up():
@@ -165,12 +167,12 @@ class Awake:
                                 import esp32
                                 wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
                                 esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                                logger.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
+                                tools.logger.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
                         else:
-                                logger.syslog(&#34;Pin wake up disabled&#34;)
+                                tools.logger.syslog(&#34;Pin wake up disabled&#34;)
                         return True
                 except Exception as err:
-                        logger.syslog(err,&#34;Cannot set wake up&#34;)
+                        tools.logger.syslog(err,&#34;Cannot set wake up&#34;)
                 return False
 
         @staticmethod
@@ -193,23 +195,26 @@ class Awake:
                         Awake.awake_counter[0] = Awake.config.awake_duration
 
         @staticmethod
-        def manage():
-                &#34;&#34;&#34; Manage the awake duration &#34;&#34;&#34;
-                if Awake.config is None:
-                        Awake.init()
-                if Awake.refresh_counter[0] % 10 == 0:
-                        if Awake.config.is_changed():
-                                Awake.config.load()
-                Awake.refresh_counter[0] += 1
+        async def task(**kwargs):
+                &#34;&#34;&#34; Awake task core &#34;&#34;&#34;
+                Awake.init(**kwargs)
 
                 if Awake.config.activated:
                         Awake.awake_counter[0] -= 1
                         if Awake.awake_counter[0] &lt;= 0:
-                                logger.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
+                                tools.logger.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
 
                                 # Set the wake up on PIR detection
                                 Awake.set_pin_wake_up()
-                                machine.deepsleep(Awake.config.sleep_duration*1000)</code></pre>
+                                machine.deepsleep(Awake.config.sleep_duration*1000)
+                        await uasyncio.sleep(1)
+                else:
+                        await uasyncio.sleep(60)
+
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start awake task &#34;&#34;&#34;
+                tools.tasking.Tasks.create_monitor(Awake.task, **kwargs)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -221,15 +226,11 @@ class Awake:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="lib.tools.awake.Awake.refresh_counter"><code class="name">var <span class="ident">refresh_counter</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="lib.tools.awake.Awake.init"><code class="name flex">
-<span>def <span class="ident">init</span></span>(<span>)</span>
+<span>def <span class="ident">init</span></span>(<span>**kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Init awake class</p></div>
@@ -238,16 +239,15 @@ class Awake:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def init():
+def init(**kwargs):
         &#34;&#34;&#34; Init awake class &#34;&#34;&#34;
         # If config not yet read
         if Awake.config is None:
                 Awake.config = AwakeConfig()
-                # If config failed to read
-                if Awake.config.load() is False:
-                        # Write default config
-                        Awake.config.save()
-        Awake.keep_awake()</code></pre>
+                Awake.config.load_create()
+                Awake.keep_awake()
+        else:
+                Awake.config.refresh()</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.awake.Awake.is_pin_wake_up"><code class="name flex">
@@ -289,35 +289,6 @@ def keep_awake():
                 Awake.awake_counter[0] = Awake.config.awake_duration</code></pre>
 </details>
 </dd>
-<dt id="lib.tools.awake.Awake.manage"><code class="name flex">
-<span>def <span class="ident">manage</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Manage the awake duration</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def manage():
-        &#34;&#34;&#34; Manage the awake duration &#34;&#34;&#34;
-        if Awake.config is None:
-                Awake.init()
-        if Awake.refresh_counter[0] % 10 == 0:
-                if Awake.config.is_changed():
-                        Awake.config.load()
-        Awake.refresh_counter[0] += 1
-
-        if Awake.config.activated:
-                Awake.awake_counter[0] -= 1
-                if Awake.awake_counter[0] &lt;= 0:
-                        logger.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
-
-                        # Set the wake up on PIR detection
-                        Awake.set_pin_wake_up()
-                        machine.deepsleep(Awake.config.sleep_duration*1000)</code></pre>
-</details>
-</dd>
 <dt id="lib.tools.awake.Awake.set_pin_wake_up"><code class="name flex">
 <span>def <span class="ident">set_pin_wake_up</span></span>(<span>)</span>
 </code></dt>
@@ -336,13 +307,55 @@ def set_pin_wake_up():
                         import esp32
                         wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
                         esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-                        logger.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
+                        tools.logger.syslog(&#34;Pin wake up on %d&#34;%Awake.config.wake_up_gpio)
                 else:
-                        logger.syslog(&#34;Pin wake up disabled&#34;)
+                        tools.logger.syslog(&#34;Pin wake up disabled&#34;)
                 return True
         except Exception as err:
-                logger.syslog(err,&#34;Cannot set wake up&#34;)
+                tools.logger.syslog(err,&#34;Cannot set wake up&#34;)
         return False</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.awake.Awake.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start awake task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def start(**kwargs):
+        &#34;&#34;&#34; Start awake task &#34;&#34;&#34;
+        tools.tasking.Tasks.create_monitor(Awake.task, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.awake.Awake.task"><code class="name flex">
+<span>async def <span class="ident">task</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Awake task core</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def task(**kwargs):
+        &#34;&#34;&#34; Awake task core &#34;&#34;&#34;
+        Awake.init(**kwargs)
+
+        if Awake.config.activated:
+                Awake.awake_counter[0] -= 1
+                if Awake.awake_counter[0] &lt;= 0:
+                        tools.logger.syslog(&#34;Sleep %d s&#34;%Awake.config.sleep_duration)
+
+                        # Set the wake up on PIR detection
+                        Awake.set_pin_wake_up()
+                        machine.deepsleep(Awake.config.sleep_duration*1000)
+                await uasyncio.sleep(1)
+        else:
+                await uasyncio.sleep(60)</code></pre>
 </details>
 </dd>
 </dl>
@@ -357,11 +370,11 @@ def set_pin_wake_up():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AwakeConfig(jsonconfig.JsonConfig):
+<pre><code class="python">class AwakeConfig(tools.jsonconfig.JsonConfig):
         &#34;&#34;&#34; Awake configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                jsonconfig.JsonConfig.__init__(self)
+                tools.jsonconfig.JsonConfig.__init__(self)
 
                 # GPIO wake up
                 self.activated = False  # Wake up on GPIO status
@@ -398,9 +411,9 @@ def set_pin_wake_up():
 <li><code><a title="lib.tools.awake.Awake.init" href="#lib.tools.awake.Awake.init">init</a></code></li>
 <li><code><a title="lib.tools.awake.Awake.is_pin_wake_up" href="#lib.tools.awake.Awake.is_pin_wake_up">is_pin_wake_up</a></code></li>
 <li><code><a title="lib.tools.awake.Awake.keep_awake" href="#lib.tools.awake.Awake.keep_awake">keep_awake</a></code></li>
-<li><code><a title="lib.tools.awake.Awake.manage" href="#lib.tools.awake.Awake.manage">manage</a></code></li>
-<li><code><a title="lib.tools.awake.Awake.refresh_counter" href="#lib.tools.awake.Awake.refresh_counter">refresh_counter</a></code></li>
 <li><code><a title="lib.tools.awake.Awake.set_pin_wake_up" href="#lib.tools.awake.Awake.set_pin_wake_up">set_pin_wake_up</a></code></li>
+<li><code><a title="lib.tools.awake.Awake.start" href="#lib.tools.awake.Awake.start">start</a></code></li>
+<li><code><a title="lib.tools.awake.Awake.task" href="#lib.tools.awake.Awake.task">task</a></code></li>
 </ul>
 </li>
 <li>

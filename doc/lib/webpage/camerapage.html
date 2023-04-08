@@ -30,54 +30,55 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to see the camera streaming &#34;&#34;&#34;
-from server.server         import Server
-from server.httprequest    import *
+import server.httprequest
 from htmltemplate          import *
-from webpage.mainpage      import main_frame
-from webpage.streamingpage import *
-from video                 import Camera
-from tools                 import lang,info
+import webpage.mainpage
+import webpage.streamingpage
+import video.video
+import tools.lang
+import tools.info
+import tools.tasking
 
-@HttpServer.add_route(b&#39;/camera&#39;, menu=lang.menu_camera, item=lang.item_camera, available=info.iscamera() and Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b&#39;/camera&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_camera, available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def camera_page(request, response, args):
         &#34;&#34;&#34; Camera streaming page &#34;&#34;&#34;
         framesizes = []
-        config = Camera.get_config()
-        Streaming.set_config(config)
+        config = video.video.Camera.get_config()
+        webpage.streamingpage.Streaming.set_config(config)
 
         for size in [b&#34;1600x1200&#34;,b&#34;1280x1024&#34;,b&#34;1024x768&#34;,b&#34;800x600&#34;,b&#34;640x480&#34;,b&#34;400x296&#34;,b&#34;320x240&#34;,b&#34;240x176&#34;,b&#34;160x120&#34;  ]:
                 framesizes.append(Option(value=size, text=size, selected= True if config.framesize == size else False))
-        page = main_frame(request, response, args, lang.camera,
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.camera,
                 Form([
-                                Streaming.get_html(request),
-                                ComboCmd(framesizes, text=lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
-                                SliderCmd(           text=lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
-                                # SliderCmd(           text=lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
-                                # SliderCmd(           text=lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
-                                # SliderCmd(           text=lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
-                                SliderCmd(           text=lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
-                                SwitchCmd(           text=lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
-                                SwitchCmd(           text=lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip)
+                                webpage.streamingpage.Streaming.get_html(request),
+                                ComboCmd(framesizes, text=tools.lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
+                                SliderCmd(           text=tools.lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
+                                # SliderCmd(           text=tools.lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
+                                # SliderCmd(           text=tools.lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
+                                # SliderCmd(           text=tools.lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
+                                SliderCmd(           text=tools.lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
+                                SwitchCmd(           text=tools.lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
+                                SwitchCmd(           text=tools.lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip)
                 ]))
         await response.send_page(page)
 
-@HttpServer.add_route(b&#39;/camera/configure&#39;)
+@server.httpserver.HttpServer.add_route(b&#39;/camera/configure&#39;)
 async def camera_configure(request, response, args):
         &#34;&#34;&#34; Real time camera configuration &#34;&#34;&#34;
-        Server.slow_down()
+        tools.tasking.Tasks.slow_down()
         # print(strings.tostrings(b&#34;%s=%s&#34;%(request.params[b&#34;name&#34;],request.params[b&#34;value&#34;])))
-        config = Camera.get_config()
+        config = video.video.Camera.get_config()
         config.update(request.params)
         config.save()
-        Streaming.set_config(config)
+        webpage.streamingpage.Streaming.set_config(config)
 
-        Streaming.activity()
+        webpage.streamingpage.Streaming.activity()
         await response.send_ok()
 
-@HttpServer.add_route(b&#39;/camera/onoff&#39;, menu=lang.menu_camera, item=lang.item_onoff, available=info.iscamera())
+@server.httpserver.HttpServer.add_route(b&#39;/camera/onoff&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_onoff, available=tools.info.iscamera())
 async def camera_on_off(request, response, args):
         &#34;&#34;&#34; Camera command page &#34;&#34;&#34;
-        config = Camera.get_config()
+        config = video.video.Camera.get_config()
         command = request.params.get(b&#34;action&#34;,b&#34;none&#34;)
         if command == b&#34;on&#34;:
                 config.activated = True
@@ -86,13 +87,13 @@ async def camera_on_off(request, response, args):
 
         if command in [b&#34;on&#34;,b&#34;off&#34;]:
                 config.save()
-                alert = AlertError(text=lang.taken_into_account)
+                alert = AlertError(text=tools.lang.taken_into_account)
         else:
                 alert = None
 
-        page = main_frame(request, response, args, lang.camera_onoff,
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.camera_onoff,
                 Form([
-                        Submit(text=lang.camera_off if config.activated else lang.camera_on,  name=b&#34;action&#34;, value=b&#34;off&#34; if config.activated else b&#34;on&#34; ), alert
+                        Submit(text=tools.lang.camera_off if config.activated else tools.lang.camera_on,  name=b&#34;action&#34;, value=b&#34;off&#34; if config.activated else b&#34;on&#34; ), alert
                 ]))
         await response.send_page(page)</code></pre>
 </details>
@@ -113,17 +114,17 @@ async def camera_on_off(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.add_route(b&#39;/camera/configure&#39;)
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera/configure&#39;)
 async def camera_configure(request, response, args):
         &#34;&#34;&#34; Real time camera configuration &#34;&#34;&#34;
-        Server.slow_down()
+        tools.tasking.Tasks.slow_down()
         # print(strings.tostrings(b&#34;%s=%s&#34;%(request.params[b&#34;name&#34;],request.params[b&#34;value&#34;])))
-        config = Camera.get_config()
+        config = video.video.Camera.get_config()
         config.update(request.params)
         config.save()
-        Streaming.set_config(config)
+        webpage.streamingpage.Streaming.set_config(config)
 
-        Streaming.activity()
+        webpage.streamingpage.Streaming.activity()
         await response.send_ok()</code></pre>
 </details>
 </dd>
@@ -136,10 +137,10 @@ async def camera_configure(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.add_route(b&#39;/camera/onoff&#39;, menu=lang.menu_camera, item=lang.item_onoff, available=info.iscamera())
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera/onoff&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_onoff, available=tools.info.iscamera())
 async def camera_on_off(request, response, args):
         &#34;&#34;&#34; Camera command page &#34;&#34;&#34;
-        config = Camera.get_config()
+        config = video.video.Camera.get_config()
         command = request.params.get(b&#34;action&#34;,b&#34;none&#34;)
         if command == b&#34;on&#34;:
                 config.activated = True
@@ -148,13 +149,13 @@ async def camera_on_off(request, response, args):
 
         if command in [b&#34;on&#34;,b&#34;off&#34;]:
                 config.save()
-                alert = AlertError(text=lang.taken_into_account)
+                alert = AlertError(text=tools.lang.taken_into_account)
         else:
                 alert = None
 
-        page = main_frame(request, response, args, lang.camera_onoff,
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.camera_onoff,
                 Form([
-                        Submit(text=lang.camera_off if config.activated else lang.camera_on,  name=b&#34;action&#34;, value=b&#34;off&#34; if config.activated else b&#34;on&#34; ), alert
+                        Submit(text=tools.lang.camera_off if config.activated else tools.lang.camera_on,  name=b&#34;action&#34;, value=b&#34;off&#34; if config.activated else b&#34;on&#34; ), alert
                 ]))
         await response.send_page(page)</code></pre>
 </details>
@@ -168,26 +169,26 @@ async def camera_on_off(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.add_route(b&#39;/camera&#39;, menu=lang.menu_camera, item=lang.item_camera, available=info.iscamera() and Camera.is_activated())
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_camera, available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def camera_page(request, response, args):
         &#34;&#34;&#34; Camera streaming page &#34;&#34;&#34;
         framesizes = []
-        config = Camera.get_config()
-        Streaming.set_config(config)
+        config = video.video.Camera.get_config()
+        webpage.streamingpage.Streaming.set_config(config)
 
         for size in [b&#34;1600x1200&#34;,b&#34;1280x1024&#34;,b&#34;1024x768&#34;,b&#34;800x600&#34;,b&#34;640x480&#34;,b&#34;400x296&#34;,b&#34;320x240&#34;,b&#34;240x176&#34;,b&#34;160x120&#34;  ]:
                 framesizes.append(Option(value=size, text=size, selected= True if config.framesize == size else False))
-        page = main_frame(request, response, args, lang.camera,
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.camera,
                 Form([
-                                Streaming.get_html(request),
-                                ComboCmd(framesizes, text=lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
-                                SliderCmd(           text=lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
-                                # SliderCmd(           text=lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
-                                # SliderCmd(           text=lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
-                                # SliderCmd(           text=lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
-                                SliderCmd(           text=lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
-                                SwitchCmd(           text=lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
-                                SwitchCmd(           text=lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip)
+                                webpage.streamingpage.Streaming.get_html(request),
+                                ComboCmd(framesizes, text=tools.lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
+                                SliderCmd(           text=tools.lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
+                                # SliderCmd(           text=tools.lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
+                                # SliderCmd(           text=tools.lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
+                                # SliderCmd(           text=tools.lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
+                                SliderCmd(           text=tools.lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
+                                SwitchCmd(           text=tools.lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
+                                SwitchCmd(           text=tools.lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip)
                 ]))
         await response.send_page(page)</code></pre>
 </details>

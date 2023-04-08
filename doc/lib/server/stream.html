@@ -30,114 +30,93 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; These classes are used to manage asynchronous stream. &#34;&#34;&#34;
+import io
+import tools.filesystem
 
-import sys
-from io import BytesIO
-if sys.implementation.name == &#34;micropython&#34;:
-        class Stream:
-                &#34;&#34;&#34; Class stream &#34;&#34;&#34;
-                def __init__(self, reader, writer):
-                        self.reader = reader
-                        self.writer = writer
-                        self.buffer = b&#34;&#34;
-
-                async def readline(self):
-                        &#34;&#34;&#34; The firt time, this method completely reads the stream.
-                        It then returns only the requested row. This significantly increases read performance. &#34;&#34;&#34;
-                        pos = self.buffer.find(b&#34;\r\n&#34;)
-                        if pos == -1:
-                                self.buffer += await self.reader.read(1440)
-                                pos = self.buffer.find(b&#34;\r\n&#34;)
-                        if pos == -1:
-                                result = self.buffer
-                                self.buffer = b&#34;&#34;
-                        else:
-                                result = self.buffer[:pos+2]
-                                self.buffer = self.buffer[pos+2:]
-                        return result
-
-                async def read(self, length):
-                        &#34;&#34;&#34; Read data from the stream &#34;&#34;&#34;
-                        if len(self.buffer) &lt; length:
-                                data = await self.reader.read(length - len(self.buffer))
-                                self.buffer += data
-
-                        data = self.buffer[:length]
-                        self.buffer = self.buffer[length:]
-                        return data
-
-                async def write(self, data):
-                        &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
-                        result = await self.writer.awrite(data)
-                        if result is None:
-                                result = len(data)
-                        else:
-                                result = -1
-                        return result
-
-                async def close(self):
-                        &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
-                        await self.writer.aclose()
-else:
-        trace = None
+class Stream:
+        &#34;&#34;&#34; Class stream &#34;&#34;&#34;
         # trace = open(&#34;stream.txt&#34;,&#34;wb&#34;)
-        class Stream:
-                &#34;&#34;&#34; Class stream &#34;&#34;&#34;
-                def __init__(self, reader, writer):
-                        self.reader = reader
-                        self.writer = writer
-                        self.buffer = b&#34;&#34;
+        trace = None
+        def __init__(self, reader, writer):
+                self.reader = reader
+                self.writer = writer
+                self.buffer = b&#34;&#34;
+                if tools.filesystem.ismicropython():
+                        self.close      = self.close_mic
+                        self.awrite     = self.awrite_mic
+                        self.is_closing = self.is_closing_mic
+                else:
+                        self.close      = self.close_pc
+                        self.awrite     = self.awrite_pc
+                        self.is_closing = self.is_closing_pc
 
-                async def readline(self):
-                        &#34;&#34;&#34; The firt time, this method completely reads the stream.
-                        It then returns only the requested row. This significantly increases read performance. &#34;&#34;&#34;
+        async def readline(self):
+                &#34;&#34;&#34; The firt time, this method completely reads the stream.
+                It then returns only the requested row. This significantly increases read performance. &#34;&#34;&#34;
+                pos = self.buffer.find(b&#34;\r\n&#34;)
+                if pos == -1:
+                        self.buffer += await self.reader.read(1440)
                         pos = self.buffer.find(b&#34;\r\n&#34;)
-                        if pos == -1:
-                                self.buffer += await self.reader.read(1440)
-                                pos = self.buffer.find(b&#34;\r\n&#34;)
-                        if pos == -1:
-                                result = self.buffer
-                                self.buffer = b&#34;&#34;
-                        else:
-                                result = self.buffer[:pos+2]
-                                self.buffer = self.buffer[pos+2:]
-                        return result
+                if pos == -1:
+                        result = self.buffer
+                        self.buffer = b&#34;&#34;
+                else:
+                        result = self.buffer[:pos+2]
+                        self.buffer = self.buffer[pos+2:]
+                return result
 
-                async def read(self, length):
-                        &#34;&#34;&#34; Read data from the stream &#34;&#34;&#34;
-                        if len(self.buffer) &lt; length:
-                                data = await self.reader.read(length - len(self.buffer))
-                                self.buffer += data
+        async def read(self, length):
+                &#34;&#34;&#34; Read data from the stream &#34;&#34;&#34;
+                if len(self.buffer) &lt; length:
+                        data = await self.reader.read(length - len(self.buffer))
+                        self.buffer += data
 
-                        data = self.buffer[:length]
-                        l = len(data)
-                        self.buffer = self.buffer[length:]
-                        if trace:
-                                trace.write(b&#34;\n# read\n&#34;)
-                                trace.write(data)
-                                trace.flush()
-                        return data
+                data = self.buffer[:length]
+                self.buffer = self.buffer[length:]
+                if Stream.trace:
+                        Stream.trace.write(b&#34;\n# read\n&#34;)
+                        Stream.trace.write(data)
+                        Stream.trace.flush()
+                return data
 
-                async def write(self, data):
-                        &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
-                        # print(&#34;&lt;-      %s&#34;%data[:-1])
-                        result = self.writer.write(data)
-                        if self.writer.is_closing():
-                                raise OSError(104,&#34;Error&#34;)
-                        if trace:
-                                trace.write(b&#34;\n# write\n&#34;)
-                                trace.write(data)
-                                trace.flush()
+        async def write(self, data):
+                &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
+                result = await self.awrite(data)
+                if self.is_closing():
+                        raise OSError(104,&#34;Closed connection&#34;)
+                if Stream.trace:
+                        Stream.trace.write(b&#34;\n# write\n&#34;)
+                        Stream.trace.write(data)
+                        Stream.trace.flush()
+                if result is None:
+                        result = len(data)
+                else:
+                        result = -1
+                return result
 
-                        if result is None:
-                                result = len(data)
-                        return result
+        async def awrite_mic(self, data):
+                &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
+                return await self.writer.awrite(data)
 
-                async def close(self):
-                        &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
-                        self.writer.close()
-                        #self.reader.close()
+        async def awrite_pc(self, data):
+                &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
+                return self.writer.write(data)
 
+        async def close_mic(self):
+                &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
+                await self.writer.aclose()
+
+        async def close_pc(self):
+                &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
+                self.writer.close()
+
+        def is_closing_pc(self):
+                &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
+                return self.writer.is_closing()
+
+        def is_closing_mic(self):
+                &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
+                return False
 
 class Socket:
         &#34;&#34;&#34; Class stream which wrap socket &#34;&#34;&#34;
@@ -166,7 +145,7 @@ class Bytesio:
         &#34;&#34;&#34; Class stream which wrap BytesIO &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.streamio = BytesIO()
+                self.streamio = io.BytesIO()
 
         async def read(self):
                 &#34;&#34;&#34; Read data from the stream &#34;&#34;&#34;
@@ -187,7 +166,7 @@ class Bufferedio:
         &#34;&#34;&#34; Class used to buffered stream write &#34;&#34;&#34;
         def __init__(self, streamio, part=1440*20):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.buffered = BytesIO()
+                self.buffered = io.BytesIO()
 
                 if Bufferedio.is_enough_memory():
                         self.part = part
@@ -224,7 +203,7 @@ class Bufferedio:
                         result = self.buffered.write(data)
                         if self.buffered.tell() &gt; self.part:
                                 await self.streamio.write(self.buffered.getvalue())
-                                self.buffered = BytesIO()
+                                self.buffered = io.BytesIO()
                 return result
 
         async def close(self):
@@ -263,7 +242,7 @@ class Bufferedio:
         &#34;&#34;&#34; Class used to buffered stream write &#34;&#34;&#34;
         def __init__(self, streamio, part=1440*20):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.buffered = BytesIO()
+                self.buffered = io.BytesIO()
 
                 if Bufferedio.is_enough_memory():
                         self.part = part
@@ -300,7 +279,7 @@ class Bufferedio:
                         result = self.buffered.write(data)
                         if self.buffered.tell() &gt; self.part:
                                 await self.streamio.write(self.buffered.getvalue())
-                                self.buffered = BytesIO()
+                                self.buffered = io.BytesIO()
                 return result
 
         async def close(self):
@@ -398,7 +377,7 @@ def is_enough_memory():
                 result = self.buffered.write(data)
                 if self.buffered.tell() &gt; self.part:
                         await self.streamio.write(self.buffered.getvalue())
-                        self.buffered = BytesIO()
+                        self.buffered = io.BytesIO()
         return result</code></pre>
 </details>
 </dd>
@@ -418,7 +397,7 @@ def is_enough_memory():
         &#34;&#34;&#34; Class stream which wrap BytesIO &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.streamio = BytesIO()
+                self.streamio = io.BytesIO()
 
         async def read(self):
                 &#34;&#34;&#34; Read data from the stream &#34;&#34;&#34;
@@ -573,10 +552,20 @@ def is_enough_memory():
 </summary>
 <pre><code class="python">class Stream:
         &#34;&#34;&#34; Class stream &#34;&#34;&#34;
+        # trace = open(&#34;stream.txt&#34;,&#34;wb&#34;)
+        trace = None
         def __init__(self, reader, writer):
                 self.reader = reader
                 self.writer = writer
                 self.buffer = b&#34;&#34;
+                if tools.filesystem.ismicropython():
+                        self.close      = self.close_mic
+                        self.awrite     = self.awrite_mic
+                        self.is_closing = self.is_closing_mic
+                else:
+                        self.close      = self.close_pc
+                        self.awrite     = self.awrite_pc
+                        self.is_closing = self.is_closing_pc
 
         async def readline(self):
                 &#34;&#34;&#34; The firt time, this method completely reads the stream.
@@ -601,25 +590,90 @@ def is_enough_memory():
 
                 data = self.buffer[:length]
                 self.buffer = self.buffer[length:]
+                if Stream.trace:
+                        Stream.trace.write(b&#34;\n# read\n&#34;)
+                        Stream.trace.write(data)
+                        Stream.trace.flush()
                 return data
 
         async def write(self, data):
                 &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
-                result = await self.writer.awrite(data)
+                result = await self.awrite(data)
+                if self.is_closing():
+                        raise OSError(104,&#34;Closed connection&#34;)
+                if Stream.trace:
+                        Stream.trace.write(b&#34;\n# write\n&#34;)
+                        Stream.trace.write(data)
+                        Stream.trace.flush()
                 if result is None:
                         result = len(data)
                 else:
                         result = -1
                 return result
 
-        async def close(self):
+        async def awrite_mic(self, data):
+                &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
+                return await self.writer.awrite(data)
+
+        async def awrite_pc(self, data):
+                &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
+                return self.writer.write(data)
+
+        async def close_mic(self):
                 &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
-                await self.writer.aclose()</code></pre>
+                await self.writer.aclose()
+
+        async def close_pc(self):
+                &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
+                self.writer.close()
+
+        def is_closing_pc(self):
+                &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
+                return self.writer.is_closing()
+
+        def is_closing_mic(self):
+                &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
+                return False</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.stream.Stream.trace"><code class="name">var <span class="ident">trace</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.server.stream.Stream.close"><code class="name flex">
-<span>async def <span class="ident">close</span></span>(<span>self)</span>
+<dt id="lib.server.stream.Stream.awrite_mic"><code class="name flex">
+<span>async def <span class="ident">awrite_mic</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Awrite micropython</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def awrite_mic(self, data):
+        &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
+        return await self.writer.awrite(data)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.stream.Stream.awrite_pc"><code class="name flex">
+<span>async def <span class="ident">awrite_pc</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Awrite micropython</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def awrite_pc(self, data):
+        &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
+        return self.writer.write(data)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.stream.Stream.close_mic"><code class="name flex">
+<span>async def <span class="ident">close_mic</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Close the stream</p></div>
@@ -627,10 +681,51 @@ def is_enough_memory():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def close(self):
+<pre><code class="python">async def close_mic(self):
         &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
-        self.writer.close()
-        #self.reader.close()</code></pre>
+        await self.writer.aclose()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.stream.Stream.close_pc"><code class="name flex">
+<span>async def <span class="ident">close_pc</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Close the stream</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def close_pc(self):
+        &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
+        self.writer.close()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.stream.Stream.is_closing_mic"><code class="name flex">
+<span>def <span class="ident">is_closing_mic</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if it closed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_closing_mic(self):
+        &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.server.stream.Stream.is_closing_pc"><code class="name flex">
+<span>def <span class="ident">is_closing_pc</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if it closed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_closing_pc(self):
+        &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
+        return self.writer.is_closing()</code></pre>
 </details>
 </dd>
 <dt id="lib.server.stream.Stream.read"><code class="name flex">
@@ -649,12 +744,11 @@ def is_enough_memory():
                 self.buffer += data
 
         data = self.buffer[:length]
-        l = len(data)
         self.buffer = self.buffer[length:]
-        if trace:
-                trace.write(b&#34;\n# read\n&#34;)
-                trace.write(data)
-                trace.flush()
+        if Stream.trace:
+                Stream.trace.write(b&#34;\n# read\n&#34;)
+                Stream.trace.write(data)
+                Stream.trace.flush()
         return data</code></pre>
 </details>
 </dd>
@@ -695,17 +789,17 @@ It then returns only the requested row. This significantly increases read perfor
 </summary>
 <pre><code class="python">async def write(self, data):
         &#34;&#34;&#34; Write data in the stream &#34;&#34;&#34;
-        # print(&#34;&lt;-      %s&#34;%data[:-1])
-        result = self.writer.write(data)
-        if self.writer.is_closing():
-                raise OSError(104,&#34;Error&#34;)
-        if trace:
-                trace.write(b&#34;\n# write\n&#34;)
-                trace.write(data)
-                trace.flush()
-
+        result = await self.awrite(data)
+        if self.is_closing():
+                raise OSError(104,&#34;Closed connection&#34;)
+        if Stream.trace:
+                Stream.trace.write(b&#34;\n# write\n&#34;)
+                Stream.trace.write(data)
+                Stream.trace.flush()
         if result is None:
                 result = len(data)
+        else:
+                result = -1
         return result</code></pre>
 </details>
 </dd>
@@ -755,10 +849,16 @@ It then returns only the requested row. This significantly increases read perfor
 </li>
 <li>
 <h4><code><a title="lib.server.stream.Stream" href="#lib.server.stream.Stream">Stream</a></code></h4>
-<ul class="">
-<li><code><a title="lib.server.stream.Stream.close" href="#lib.server.stream.Stream.close">close</a></code></li>
+<ul class="two-column">
+<li><code><a title="lib.server.stream.Stream.awrite_mic" href="#lib.server.stream.Stream.awrite_mic">awrite_mic</a></code></li>
+<li><code><a title="lib.server.stream.Stream.awrite_pc" href="#lib.server.stream.Stream.awrite_pc">awrite_pc</a></code></li>
+<li><code><a title="lib.server.stream.Stream.close_mic" href="#lib.server.stream.Stream.close_mic">close_mic</a></code></li>
+<li><code><a title="lib.server.stream.Stream.close_pc" href="#lib.server.stream.Stream.close_pc">close_pc</a></code></li>
+<li><code><a title="lib.server.stream.Stream.is_closing_mic" href="#lib.server.stream.Stream.is_closing_mic">is_closing_mic</a></code></li>
+<li><code><a title="lib.server.stream.Stream.is_closing_pc" href="#lib.server.stream.Stream.is_closing_pc">is_closing_pc</a></code></li>
 <li><code><a title="lib.server.stream.Stream.read" href="#lib.server.stream.Stream.read">read</a></code></li>
 <li><code><a title="lib.server.stream.Stream.readline" href="#lib.server.stream.Stream.readline">readline</a></code></li>
+<li><code><a title="lib.server.stream.Stream.trace" href="#lib.server.stream.Stream.trace">trace</a></code></li>
 <li><code><a title="lib.server.stream.Stream.write" href="#lib.server.stream.Stream.write">write</a></code></li>
 </ul>
 </li>

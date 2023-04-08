@@ -30,30 +30,32 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; All web pages defined here &#34;&#34;&#34;
-from webpage.passwordpage       import *
-from webpage.mainpage           import *
-from webpage.changepasswordpage import *
-from webpage.infopage           import *
-from webpage.pushoverpage       import *
-from webpage.serverpage         import *
-from webpage.wifipage           import *
-from webpage.regionpage         import *
-from webpage.presencepage       import *
-from webpage.awakepage          import *
-from webpage.systempage         import *
-from webpage.webhookpage        import *
-from tools                      import info,support
+import webpage.passwordpage
+import webpage.mainpage
+import webpage.changepasswordpage
+import webpage.infopage
+import webpage.pushoverpage
+import webpage.serverpage
+import webpage.wifipage
+import webpage.regionpage
+import webpage.presencepage
+import webpage.awakepage
+import webpage.systempage
+import webpage.webhookpage
+import webpage.mqttpage
+import tools.info
+import tools.support
 
-if support.battery():
+if tools.support.battery():
         # pylint:disable=ungrouped-imports
-        from webpage.batterypage        import *
+        import webpage.batterypage
 
-if info.iscamera():
+if tools.info.iscamera():
         # pylint:disable=ungrouped-imports
-        from webpage.streamingpage  import *
-        from webpage.camerapage     import *
-        from webpage.historicpage   import *
-        from webpage.motionpage     import *</code></pre>
+        import webpage.streamingpage
+        import webpage.camerapage
+        import webpage.historicpage
+        import webpage.motionpage</code></pre>
 </details>
 </section>
 <section>
@@ -90,6 +92,10 @@ if info.iscamera():
 <dt><code class="name"><a title="lib.webpage.motionpage" href="motionpage.html">lib.webpage.motionpage</a></code></dt>
 <dd>
 <div class="desc"><p>Function define the web page to see the camera streaming</p></div>
+</dd>
+<dt><code class="name"><a title="lib.webpage.mqttpage" href="mqttpage.html">lib.webpage.mqttpage</a></code></dt>
+<dd>
+<div class="desc"><p>Function define the web page to configure the mqtt broker</p></div>
 </dd>
 <dt><code class="name"><a title="lib.webpage.passwordpage" href="passwordpage.html">lib.webpage.passwordpage</a></code></dt>
 <dd>
@@ -157,6 +163,7 @@ if info.iscamera():
 <li><code><a title="lib.webpage.infopage" href="infopage.html">lib.webpage.infopage</a></code></li>
 <li><code><a title="lib.webpage.mainpage" href="mainpage.html">lib.webpage.mainpage</a></code></li>
 <li><code><a title="lib.webpage.motionpage" href="motionpage.html">lib.webpage.motionpage</a></code></li>
+<li><code><a title="lib.webpage.mqttpage" href="mqttpage.html">lib.webpage.mqttpage</a></code></li>
 <li><code><a title="lib.webpage.passwordpage" href="passwordpage.html">lib.webpage.passwordpage</a></code></li>
 <li><code><a title="lib.webpage.presencepage" href="presencepage.html">lib.webpage.presencepage</a></code></li>
 <li><code><a title="lib.webpage.pushoverpage" href="pushoverpage.html">lib.webpage.pushoverpage</a></code></li>

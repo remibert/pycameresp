@@ -33,9 +33,12 @@
 &#34;&#34;&#34; Manage the battery &#34;&#34;&#34;
 import uasyncio
 import machine
-from tools import jsonconfig,logger,tasking,support
+import tools.jsonconfig
+import tools.logger
+import tools.tasking
+import tools.support
 
-if support.battery():
+if tools.support.battery():
         try:
                 BROWNOUT_RESET = machine.BROWNOUT_RESET
         except:
@@ -43,11 +46,11 @@ if support.battery():
 
         MAX_BROWNOUT_RESET = 32
 
-        class BatteryConfig(jsonconfig.JsonConfig):
+        class BatteryConfig(tools.jsonconfig.JsonConfig):
                 &#34;&#34;&#34; Battery configuration &#34;&#34;&#34;
                 def __init__(self):
                         &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                        jsonconfig.JsonConfig.__init__(self)
+                        tools.jsonconfig.JsonConfig.__init__(self)
 
                         # Battery monitoring
                         self.activated = False # Monitoring status
@@ -63,7 +66,6 @@ if support.battery():
                 &#34;&#34;&#34; Manage the battery information &#34;&#34;&#34;
                 config = None
                 level = [-2]
-                refresh = [0]
 
                 @staticmethod
                 def init():
@@ -107,9 +109,9 @@ if support.battery():
                                                         level = 100
                                                 else:
                                                         level = int(level)
-                                        logger.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
+                                        tools.logger.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
                                 except Exception as err:
-                                        logger.syslog(err,&#34;Cannot read battery status&#34;)
+                                        tools.logger.syslog(err,&#34;Cannot read battery status&#34;)
                                 Battery.level[0] = level
                         return Battery.level[0]
 
@@ -132,7 +134,6 @@ if support.battery():
                         y = a*x + b
                         return y
 
-
                 @staticmethod
                 def protect():
                         &#34;&#34;&#34; Protect the battery &#34;&#34;&#34;
@@ -142,25 +143,24 @@ if support.battery():
                                 # Too many brownout reset
                                 # Slow deepsleep during 1 hour
                                 if Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60:
-                                        logger.syslog(&#34;Sleep 1 minute&#34;)
+                                        tools.logger.syslog(&#34;Sleep 1 minute&#34;)
                                         machine.deepsleep(600*1000)
                                 # Slow deepsleep during one day
                                 elif Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60 + 24:
-                                        logger.syslog(&#34;Sleep 1 hour&#34;)
+                                        tools.logger.syslog(&#34;Sleep 1 hour&#34;)
                                         machine.deepsleep(3600*1000)
                                 # Slow deepsleep during three days
                                 elif Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60 + 24 + 8:
-                                        logger.syslog(&#34;Sleep 3 hours&#34;)
+                                        tools.logger.syslog(&#34;Sleep 3 hours&#34;)
                                         machine.deepsleep(3*3600*1000)
                                 # Slow deepsleep during one week
                                 elif Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60 + 24 + 8 + 7:
-                                        logger.syslog(&#34;Sleep 24 hours&#34;)
+                                        tools.logger.syslog(&#34;Sleep 24 hours&#34;)
                                         machine.deepsleep(24*3600*1000)
                                 # Deepsleep infinite
                                 else:
-                                        logger.syslog(&#34;Sleep infinite&#34;)
+                                        tools.logger.syslog(&#34;Sleep infinite&#34;)
                                         machine.deepsleep()
-
 
                 @staticmethod
                 def manage_level():
@@ -181,7 +181,7 @@ if support.battery():
                                 # Case the battery has not enough current and must be protected
                                 if battery_protect:
                                         deepsleep = True
-                                        logger.syslog(&#34;Battery too low %d %%&#34;%battery_level)
+                                        tools.logger.syslog(&#34;Battery too low %d %%&#34;%battery_level)
                         return deepsleep
 
                 @staticmethod
@@ -195,16 +195,15 @@ if support.battery():
                                 machine.SOFT_RESET      : &#34;Soft&#34;,
                                 BROWNOUT_RESET          : &#34;Brownout&#34;,
                         }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
-                        logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
-                        logger.syslog(&#34;%s reset&#34;%causes)
+                        tools.logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
+                        tools.logger.syslog(&#34;%s reset&#34;%causes)
 
                 @staticmethod
                 def is_too_many_brownout():
                         &#34;&#34;&#34; Checks the number of brownout reset &#34;&#34;&#34;
                         deepsleep = False
 
-                        if Battery.config.is_changed():
-                                Battery.config.load()
+                        Battery.config.refresh()
 
                         if Battery.config.brownout_detection:
                                 # If the reset can probably due to insufficient battery
@@ -218,7 +217,7 @@ if support.battery():
                                 # if the number of consecutive brownout resets is too high
                                 if Battery.config.brownout_count &gt; MAX_BROWNOUT_RESET:
                                         # Battery too low, save the battery status
-                                        logger.syslog(&#34;Too many successive brownout reset %d&#34;%Battery.config.brownout_count)
+                                        tools.logger.syslog(&#34;Too many successive brownout reset %d&#34;%Battery.config.brownout_count)
                                         deepsleep = True
                         return deepsleep
 
@@ -231,22 +230,23 @@ if support.battery():
                                         Battery.config.save()
 
                 @staticmethod
-                async def periodic():
+                async def task():
                         &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
                         if Battery.config is not None:
-                                if Battery.refresh[0] % 10 == 0:
-                                        if Battery.config.is_changed():
-                                                Battery.config.load()
-                                Battery.refresh[0] += 1
+                                Battery.config.refresh()
                         else:
                                 Battery.protect()
                         await uasyncio.sleep(11)
                         return True
 
                 @staticmethod
-                async def periodic_task():
-                        &#34;&#34;&#34; Execute periodic treatment &#34;&#34;&#34;
-                        await tasking.task_monitoring(Battery.periodic)</code></pre>
+                def start(**kwargs):
+                        &#34;&#34;&#34; Start battery monitoring task &#34;&#34;&#34;
+                        if tools.support.battery():
+                                Battery.protect()
+                                tools.tasking.Tasks.create_monitor(Battery.task)
+                        else:
+                                tools.logger.syslog(&#34;Battery management not supported on this hardware&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -271,7 +271,6 @@ if support.battery():
         &#34;&#34;&#34; Manage the battery information &#34;&#34;&#34;
         config = None
         level = [-2]
-        refresh = [0]
 
         @staticmethod
         def init():
@@ -315,9 +314,9 @@ if support.battery():
                                                 level = 100
                                         else:
                                                 level = int(level)
-                                logger.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
+                                tools.logger.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
                         except Exception as err:
-                                logger.syslog(err,&#34;Cannot read battery status&#34;)
+                                tools.logger.syslog(err,&#34;Cannot read battery status&#34;)
                         Battery.level[0] = level
                 return Battery.level[0]
 
@@ -340,7 +339,6 @@ if support.battery():
                 y = a*x + b
                 return y
 
-
         @staticmethod
         def protect():
                 &#34;&#34;&#34; Protect the battery &#34;&#34;&#34;
@@ -350,25 +348,24 @@ if support.battery():
                         # Too many brownout reset
                         # Slow deepsleep during 1 hour
                         if Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60:
-                                logger.syslog(&#34;Sleep 1 minute&#34;)
+                                tools.logger.syslog(&#34;Sleep 1 minute&#34;)
                                 machine.deepsleep(600*1000)
                         # Slow deepsleep during one day
                         elif Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60 + 24:
-                                logger.syslog(&#34;Sleep 1 hour&#34;)
+                                tools.logger.syslog(&#34;Sleep 1 hour&#34;)
                                 machine.deepsleep(3600*1000)
                         # Slow deepsleep during three days
                         elif Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60 + 24 + 8:
-                                logger.syslog(&#34;Sleep 3 hours&#34;)
+                                tools.logger.syslog(&#34;Sleep 3 hours&#34;)
                                 machine.deepsleep(3*3600*1000)
                         # Slow deepsleep during one week
                         elif Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60 + 24 + 8 + 7:
-                                logger.syslog(&#34;Sleep 24 hours&#34;)
+                                tools.logger.syslog(&#34;Sleep 24 hours&#34;)
                                 machine.deepsleep(24*3600*1000)
                         # Deepsleep infinite
                         else:
-                                logger.syslog(&#34;Sleep infinite&#34;)
+                                tools.logger.syslog(&#34;Sleep infinite&#34;)
                                 machine.deepsleep()
-
 
         @staticmethod
         def manage_level():
@@ -389,7 +386,7 @@ if support.battery():
                         # Case the battery has not enough current and must be protected
                         if battery_protect:
                                 deepsleep = True
-                                logger.syslog(&#34;Battery too low %d %%&#34;%battery_level)
+                                tools.logger.syslog(&#34;Battery too low %d %%&#34;%battery_level)
                 return deepsleep
 
         @staticmethod
@@ -403,16 +400,15 @@ if support.battery():
                         machine.SOFT_RESET      : &#34;Soft&#34;,
                         BROWNOUT_RESET          : &#34;Brownout&#34;,
                 }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
-                logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
-                logger.syslog(&#34;%s reset&#34;%causes)
+                tools.logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
+                tools.logger.syslog(&#34;%s reset&#34;%causes)
 
         @staticmethod
         def is_too_many_brownout():
                 &#34;&#34;&#34; Checks the number of brownout reset &#34;&#34;&#34;
                 deepsleep = False
 
-                if Battery.config.is_changed():
-                        Battery.config.load()
+                Battery.config.refresh()
 
                 if Battery.config.brownout_detection:
                         # If the reset can probably due to insufficient battery
@@ -426,7 +422,7 @@ if support.battery():
                         # if the number of consecutive brownout resets is too high
                         if Battery.config.brownout_count &gt; MAX_BROWNOUT_RESET:
                                 # Battery too low, save the battery status
-                                logger.syslog(&#34;Too many successive brownout reset %d&#34;%Battery.config.brownout_count)
+                                tools.logger.syslog(&#34;Too many successive brownout reset %d&#34;%Battery.config.brownout_count)
                                 deepsleep = True
                 return deepsleep
 
@@ -439,22 +435,23 @@ if support.battery():
                                 Battery.config.save()
 
         @staticmethod
-        async def periodic():
+        async def task():
                 &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
                 if Battery.config is not None:
-                        if Battery.refresh[0] % 10 == 0:
-                                if Battery.config.is_changed():
-                                        Battery.config.load()
-                        Battery.refresh[0] += 1
+                        Battery.config.refresh()
                 else:
                         Battery.protect()
                 await uasyncio.sleep(11)
                 return True
 
         @staticmethod
-        async def periodic_task():
-                &#34;&#34;&#34; Execute periodic treatment &#34;&#34;&#34;
-                await tasking.task_monitoring(Battery.periodic)</code></pre>
+        def start(**kwargs):
+                &#34;&#34;&#34; Start battery monitoring task &#34;&#34;&#34;
+                if tools.support.battery():
+                        Battery.protect()
+                        tools.tasking.Tasks.create_monitor(Battery.task)
+                else:
+                        tools.logger.syslog(&#34;Battery management not supported on this hardware&#34;)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -463,10 +460,6 @@ if support.battery():
 <div class="desc"></div>
 </dd>
 <dt id="lib.tools.battery.Battery.level"><code class="name">var <span class="ident">level</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="lib.tools.battery.Battery.refresh"><code class="name">var <span class="ident">refresh</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -540,9 +533,9 @@ def get_level():
                                         level = 100
                                 else:
                                         level = int(level)
-                        logger.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
+                        tools.logger.syslog(&#34;Battery level %d %% (%d)&#34;%(level, int(val/count)))
                 except Exception as err:
-                        logger.syslog(err,&#34;Cannot read battery status&#34;)
+                        tools.logger.syslog(err,&#34;Cannot read battery status&#34;)
                 Battery.level[0] = level
         return Battery.level[0]</code></pre>
 </details>
@@ -598,8 +591,7 @@ def is_too_many_brownout():
         &#34;&#34;&#34; Checks the number of brownout reset &#34;&#34;&#34;
         deepsleep = False
 
-        if Battery.config.is_changed():
-                Battery.config.load()
+        Battery.config.refresh()
 
         if Battery.config.brownout_detection:
                 # If the reset can probably due to insufficient battery
@@ -613,7 +605,7 @@ def is_too_many_brownout():
                 # if the number of consecutive brownout resets is too high
                 if Battery.config.brownout_count &gt; MAX_BROWNOUT_RESET:
                         # Battery too low, save the battery status
-                        logger.syslog(&#34;Too many successive brownout reset %d&#34;%Battery.config.brownout_count)
+                        tools.logger.syslog(&#34;Too many successive brownout reset %d&#34;%Battery.config.brownout_count)
                         deepsleep = True
         return deepsleep</code></pre>
 </details>
@@ -638,8 +630,8 @@ def keep_reset_cause():
                 machine.SOFT_RESET      : &#34;Soft&#34;,
                 BROWNOUT_RESET          : &#34;Brownout&#34;,
         }.setdefault(machine.reset_cause(), &#34;%d&#34;%machine.reset_cause())
-        logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
-        logger.syslog(&#34;%s reset&#34;%causes)</code></pre>
+        tools.logger.syslog(&#34;%s Start %s&#34;%(&#39;-&#39;*10,&#39;-&#39;*10), display=False)
+        tools.logger.syslog(&#34;%s reset&#34;%causes)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.battery.Battery.manage_level"><code class="name flex">
@@ -671,46 +663,8 @@ def manage_level():
                 # Case the battery has not enough current and must be protected
                 if battery_protect:
                         deepsleep = True
-                        logger.syslog(&#34;Battery too low %d %%&#34;%battery_level)
+                        tools.logger.syslog(&#34;Battery too low %d %%&#34;%battery_level)
         return deepsleep</code></pre>
-</details>
-</dd>
-<dt id="lib.tools.battery.Battery.periodic"><code class="name flex">
-<span>async def <span class="ident">periodic</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Internal periodic task</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-async def periodic():
-        &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
-        if Battery.config is not None:
-                if Battery.refresh[0] % 10 == 0:
-                        if Battery.config.is_changed():
-                                Battery.config.load()
-                Battery.refresh[0] += 1
-        else:
-                Battery.protect()
-        await uasyncio.sleep(11)
-        return True</code></pre>
-</details>
-</dd>
-<dt id="lib.tools.battery.Battery.periodic_task"><code class="name flex">
-<span>async def <span class="ident">periodic_task</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Execute periodic treatment</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-async def periodic_task():
-        &#34;&#34;&#34; Execute periodic treatment &#34;&#34;&#34;
-        await tasking.task_monitoring(Battery.periodic)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.battery.Battery.protect"><code class="name flex">
@@ -731,23 +685,23 @@ def protect():
                 # Too many brownout reset
                 # Slow deepsleep during 1 hour
                 if Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60:
-                        logger.syslog(&#34;Sleep 1 minute&#34;)
+                        tools.logger.syslog(&#34;Sleep 1 minute&#34;)
                         machine.deepsleep(600*1000)
                 # Slow deepsleep during one day
                 elif Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60 + 24:
-                        logger.syslog(&#34;Sleep 1 hour&#34;)
+                        tools.logger.syslog(&#34;Sleep 1 hour&#34;)
                         machine.deepsleep(3600*1000)
                 # Slow deepsleep during three days
                 elif Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60 + 24 + 8:
-                        logger.syslog(&#34;Sleep 3 hours&#34;)
+                        tools.logger.syslog(&#34;Sleep 3 hours&#34;)
                         machine.deepsleep(3*3600*1000)
                 # Slow deepsleep during one week
                 elif Battery.config.brownout_count &lt; MAX_BROWNOUT_RESET + 60 + 24 + 8 + 7:
-                        logger.syslog(&#34;Sleep 24 hours&#34;)
+                        tools.logger.syslog(&#34;Sleep 24 hours&#34;)
                         machine.deepsleep(24*3600*1000)
                 # Deepsleep infinite
                 else:
-                        logger.syslog(&#34;Sleep infinite&#34;)
+                        tools.logger.syslog(&#34;Sleep infinite&#34;)
                         machine.deepsleep()</code></pre>
 </details>
 </dd>
@@ -769,6 +723,45 @@ def reset_brownout():
                         Battery.config.save()</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.battery.Battery.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start battery monitoring task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def start(**kwargs):
+        &#34;&#34;&#34; Start battery monitoring task &#34;&#34;&#34;
+        if tools.support.battery():
+                Battery.protect()
+                tools.tasking.Tasks.create_monitor(Battery.task)
+        else:
+                tools.logger.syslog(&#34;Battery management not supported on this hardware&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.battery.Battery.task"><code class="name flex">
+<span>async def <span class="ident">task</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Internal periodic task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def task():
+        &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
+        if Battery.config is not None:
+                Battery.config.refresh()
+        else:
+                Battery.protect()
+        await uasyncio.sleep(11)
+        return True</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 <dt id="lib.tools.battery.BatteryConfig"><code class="flex name class">
@@ -781,11 +774,11 @@ def reset_brownout():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class BatteryConfig(jsonconfig.JsonConfig):
+<pre><code class="python">class BatteryConfig(tools.jsonconfig.JsonConfig):
         &#34;&#34;&#34; Battery configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                jsonconfig.JsonConfig.__init__(self)
+                tools.jsonconfig.JsonConfig.__init__(self)
 
                 # Battery monitoring
                 self.activated = False # Monitoring status
@@ -830,11 +823,10 @@ def reset_brownout():
 <li><code><a title="lib.tools.battery.Battery.keep_reset_cause" href="#lib.tools.battery.Battery.keep_reset_cause">keep_reset_cause</a></code></li>
 <li><code><a title="lib.tools.battery.Battery.level" href="#lib.tools.battery.Battery.level">level</a></code></li>
 <li><code><a title="lib.tools.battery.Battery.manage_level" href="#lib.tools.battery.Battery.manage_level">manage_level</a></code></li>
-<li><code><a title="lib.tools.battery.Battery.periodic" href="#lib.tools.battery.Battery.periodic">periodic</a></code></li>
-<li><code><a title="lib.tools.battery.Battery.periodic_task" href="#lib.tools.battery.Battery.periodic_task">periodic_task</a></code></li>
 <li><code><a title="lib.tools.battery.Battery.protect" href="#lib.tools.battery.Battery.protect">protect</a></code></li>
-<li><code><a title="lib.tools.battery.Battery.refresh" href="#lib.tools.battery.Battery.refresh">refresh</a></code></li>
 <li><code><a title="lib.tools.battery.Battery.reset_brownout" href="#lib.tools.battery.Battery.reset_brownout">reset_brownout</a></code></li>
+<li><code><a title="lib.tools.battery.Battery.start" href="#lib.tools.battery.Battery.start">start</a></code></li>
+<li><code><a title="lib.tools.battery.Battery.task" href="#lib.tools.battery.Battery.task">task</a></code></li>
 </ul>
 </li>
 <li>

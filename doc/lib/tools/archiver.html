@@ -31,23 +31,26 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Archiver files functions &#34;&#34;&#34;
-from tools import logger,filesystem,exchange, fnmatch
+import tools.logger
+import tools.filesystem
+import tools.exchange
+import tools.fnmatch
 
 def download_files(download_filename, path=&#34;./config&#34;, pattern=&#34;*.json&#34;, excludes=None, recursive=False):
         &#34;&#34;&#34; Download many file into only one file &#34;&#34;&#34;
         result = True
 
-        logger.syslog(&#34;Download %s&#34;%download_filename)
-        filesystem.remove(download_filename)
+        tools.logger.syslog(&#34;Download %s&#34;%download_filename)
+        tools.filesystem.remove(download_filename)
 
         # Scan directory with pattern
-        _, files = filesystem.scandir(path=path, pattern=pattern, recursive=recursive)
+        _, files = tools.filesystem.scandir(path=path, pattern=pattern, recursive=recursive)
 
         try:
                 # Open out file
                 out_file = open(download_filename,&#34;wb&#34;)
 
-                file_write = exchange.FileWriter()
+                file_write = tools.exchange.FileWriter()
                 # For all files found
                 for filename in files:
                         exclude = False
@@ -57,50 +60,50 @@ def download_files(download_filename, path=&#34;./config&#34;, pattern=&#34;*.js
 
                                 if type(excludes) == type([]):
                                         for pattern in excludes:
-                                                if fnmatch.fnmatch(filesystem.normpath(filename),pattern):
+                                                if tools.fnmatch.fnmatch(tools.filesystem.normpath(filename),pattern):
                                                         exclude = True
                                                         break
 
                         if exclude is False:
-                                logger.syslog(&#34;  Download &#39;%s&#39;&#34;%(filename))
+                                tools.logger.syslog(&#34;  Download &#39;%s&#39;&#34;%(filename))
                                 if file_write.write(filename, None, out_file) is False:
                                         result = False
                                         break
         except Exception as err:
-                logger.syslog(err)
+                tools.logger.syslog(err)
                 result = False
         finally:
-                logger.syslog(&#34;Download %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                tools.logger.syslog(&#34;Download %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 out_file.close()
         return result
 
 def upload_files(upload_filename, directory=&#34;/&#34;):
         &#34;&#34;&#34; Upload files and write all files &#34;&#34;&#34;
         result = True
-        logger.syslog(&#34;Upload %s&#34;%upload_filename)
+        tools.logger.syslog(&#34;Upload %s&#34;%upload_filename)
         try:
                 in_file = open(upload_filename,&#34;rb&#34;)
-                if filesystem.ismicropython():
+                if tools.filesystem.ismicropython():
                         simulated = False
                 else:
                         simulated = True
 
-                read_size = filesystem.filesize(upload_filename)
+                read_size = tools.filesystem.filesize(upload_filename)
                 while in_file.tell() &lt; read_size:
-                        file_reader = exchange.FileReader(simulated)
-                        if filesystem.ismicropython() is False:
+                        file_reader = tools.exchange.FileReader(simulated)
+                        if tools.filesystem.ismicropython() is False:
                                 directory = &#34;/tmp&#34;
 
                         res = file_reader.read(directory, in_file)
-                        logger.syslog(&#34;  Upload %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
+                        tools.logger.syslog(&#34;  Upload %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 
         except Exception as err:
-                logger.syslog(err)
+                tools.logger.syslog(err)
                 result = False
         finally:
-                logger.syslog(&#34;Upload %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                tools.logger.syslog(&#34;Upload %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 in_file.close()
-        filesystem.remove(upload_filename)
+        tools.filesystem.remove(upload_filename)
         return result</code></pre>
 </details>
 </section>
@@ -124,17 +127,17 @@ def upload_files(upload_filename, directory=&#34;/&#34;):
         &#34;&#34;&#34; Download many file into only one file &#34;&#34;&#34;
         result = True
 
-        logger.syslog(&#34;Download %s&#34;%download_filename)
-        filesystem.remove(download_filename)
+        tools.logger.syslog(&#34;Download %s&#34;%download_filename)
+        tools.filesystem.remove(download_filename)
 
         # Scan directory with pattern
-        _, files = filesystem.scandir(path=path, pattern=pattern, recursive=recursive)
+        _, files = tools.filesystem.scandir(path=path, pattern=pattern, recursive=recursive)
 
         try:
                 # Open out file
                 out_file = open(download_filename,&#34;wb&#34;)
 
-                file_write = exchange.FileWriter()
+                file_write = tools.exchange.FileWriter()
                 # For all files found
                 for filename in files:
                         exclude = False
@@ -144,20 +147,20 @@ def upload_files(upload_filename, directory=&#34;/&#34;):
 
                                 if type(excludes) == type([]):
                                         for pattern in excludes:
-                                                if fnmatch.fnmatch(filesystem.normpath(filename),pattern):
+                                                if tools.fnmatch.fnmatch(tools.filesystem.normpath(filename),pattern):
                                                         exclude = True
                                                         break
 
                         if exclude is False:
-                                logger.syslog(&#34;  Download &#39;%s&#39;&#34;%(filename))
+                                tools.logger.syslog(&#34;  Download &#39;%s&#39;&#34;%(filename))
                                 if file_write.write(filename, None, out_file) is False:
                                         result = False
                                         break
         except Exception as err:
-                logger.syslog(err)
+                tools.logger.syslog(err)
                 result = False
         finally:
-                logger.syslog(&#34;Download %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                tools.logger.syslog(&#34;Download %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 out_file.close()
         return result</code></pre>
 </details>
@@ -174,30 +177,30 @@ def upload_files(upload_filename, directory=&#34;/&#34;):
 <pre><code class="python">def upload_files(upload_filename, directory=&#34;/&#34;):
         &#34;&#34;&#34; Upload files and write all files &#34;&#34;&#34;
         result = True
-        logger.syslog(&#34;Upload %s&#34;%upload_filename)
+        tools.logger.syslog(&#34;Upload %s&#34;%upload_filename)
         try:
                 in_file = open(upload_filename,&#34;rb&#34;)
-                if filesystem.ismicropython():
+                if tools.filesystem.ismicropython():
                         simulated = False
                 else:
                         simulated = True
 
-                read_size = filesystem.filesize(upload_filename)
+                read_size = tools.filesystem.filesize(upload_filename)
                 while in_file.tell() &lt; read_size:
-                        file_reader = exchange.FileReader(simulated)
-                        if filesystem.ismicropython() is False:
+                        file_reader = tools.exchange.FileReader(simulated)
+                        if tools.filesystem.ismicropython() is False:
                                 directory = &#34;/tmp&#34;
 
                         res = file_reader.read(directory, in_file)
-                        logger.syslog(&#34;  Upload %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
+                        tools.logger.syslog(&#34;  Upload %s %s&#34;%(file_reader.filename.get(), &#34;&#34; if res else &#34;failed&#34;))
 
         except Exception as err:
-                logger.syslog(err)
+                tools.logger.syslog(err)
                 result = False
         finally:
-                logger.syslog(&#34;Upload %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
+                tools.logger.syslog(&#34;Upload %s&#34;%(&#34;success&#34; if result else &#34;failed&#34;))
                 in_file.close()
-        filesystem.remove(upload_filename)
+        tools.filesystem.remove(upload_filename)
         return result</code></pre>
 </details>
 </dd>

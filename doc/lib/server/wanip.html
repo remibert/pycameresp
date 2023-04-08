@@ -31,54 +31,112 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Get the wan ip address &#34;&#34;&#34;
 import random
+import time
 import uasyncio
-from server.stream import *
-from server.httprequest import *
-from tools import logger,strings
+import wifi.wifi
+import server.stream
+import server.httprequest
+import server.server
+import server.notifier
+import tools.logger
+import tools.strings
+import tools.tasking
 
-async def request(host, port, path):
-        &#34;&#34;&#34; Asynchronous request to ip server &#34;&#34;&#34;
-        result = None
-        try:
-                streamio = None
-                reader,writer = await uasyncio.open_connection(strings.tostrings(host), port)
-                streamio = Stream(reader, writer)
-                req = HttpRequest(None)
-                req.set_path(strings.tobytes(path))
-                req.set_header(b&#34;HOST&#34;,strings.tobytes(host))
-                req.set_method(b&#34;GET&#34;)
-                req.set_header(b&#34;Accept&#34;         ,b&#34;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&#34;)
-                req.set_header(b&#34;User-Agent&#34;     ,b&#34;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15&#34;)
-                req.set_header(b&#34;Accept-Language&#34;,b&#34;fr-FR,fr;q=0.9&#34;)
-                req.set_header(b&#34;Connection&#34;     ,b&#34;keep-alive&#34;)
-                await req.send(streamio)
-                response = HttpResponse(streamio)
-                await response.receive(streamio)
-                if response.status == b&#34;200&#34;:
-                        result = response.get_content().strip()
+class WanIp:
+        &#34;&#34;&#34; Class to get the wan ip address &#34;&#34;&#34;
+        config = None
+        last_sync = 0
+        wan_ip = None
+        forced = [False]
 
-        except Exception as err:
-                logger.syslog(err)
-        finally:
-                if streamio:
-                        await streamio.close()
-        return result
+        @staticmethod
+        async def request(host, port, path):
+                &#34;&#34;&#34; Asynchronous request to ip server &#34;&#34;&#34;
+                result = None
+                try:
+                        streamio = None
+                        reader,writer = await uasyncio.open_connection(tools.strings.tostrings(host), port)
+                        streamio = server.stream.Stream(reader, writer)
+                        req = server.httprequest.HttpRequest(None)
+                        req.set_path(tools.strings.tobytes(path))
+                        req.set_header(b&#34;HOST&#34;,tools.strings.tobytes(host))
+                        req.set_method(b&#34;GET&#34;)
+                        req.set_header(b&#34;Accept&#34;         ,b&#34;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&#34;)
+                        req.set_header(b&#34;User-Agent&#34;     ,b&#34;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15&#34;)
+                        req.set_header(b&#34;Accept-Language&#34;,b&#34;fr-FR,fr;q=0.9&#34;)
+                        req.set_header(b&#34;Connection&#34;     ,b&#34;keep-alive&#34;)
+                        await req.send(streamio)
+                        response = server.httprequest.HttpResponse(streamio)
+                        await response.receive(streamio)
+                        if response.status == b&#34;200&#34;:
+                                result = response.get_content().strip()
 
-async def get_wan_ip_async():
-        &#34;&#34;&#34; Get the wan ip address with asynchronous method &#34;&#34;&#34;
-        hosts =[
-                (&#34;alma.ch&#34;              ,&#34;/myip.cgi&#34;),
-                (&#34;api.infoip.io&#34;        ,&#34;/ip&#34;),
-                (&#34;api.ipify.org&#34;        ,&#34;/&#34;),
-                (&#34;checkip.amazonaws.com&#34;,&#34;/&#34;),
-                (&#34;l2.io&#34;                ,&#34;/ip&#34;),
-                (&#34;whatismyip.akamai.com&#34;,&#34;/&#34;)
-        ]
-        host, path = hosts[random.randrange(0,len(hosts))]
-        resp = await request(host,80,path)
-        if resp:
-                return resp.decode(&#34;utf-8&#34;)
-        return None</code></pre>
+                except Exception as err:
+                        tools.logger.syslog(err)
+                finally:
+                        if streamio:
+                                await streamio.close()
+                return result
+
+        @staticmethod
+        def init():
+                &#34;&#34;&#34; Initialisation task &#34;&#34;&#34;
+                if WanIp.config is None:
+                        WanIp.config = server.server.ServerConfig()
+                        WanIp.config.load_create()
+                else:
+                        WanIp.config.refresh()
+
+        @staticmethod
+        async def synchronize():
+                &#34;&#34;&#34; Get the wan ip address with asynchronous method &#34;&#34;&#34;
+                hosts =[
+                        (&#34;alma.ch&#34;              ,&#34;/myip.cgi&#34;),
+                        (&#34;api.infoip.io&#34;        ,&#34;/ip&#34;),
+                        (&#34;api.ipify.org&#34;        ,&#34;/&#34;),
+                        (&#34;checkip.amazonaws.com&#34;,&#34;/&#34;),
+                        (&#34;l2.io&#34;                ,&#34;/ip&#34;),
+                        (&#34;whatismyip.akamai.com&#34;,&#34;/&#34;)
+                ]
+                host, path = hosts[random.randrange(0,len(hosts))]
+                resp = await WanIp.request(host,80,path)
+                if resp:
+                        return resp.decode(&#34;utf-8&#34;)
+                return None
+
+        @staticmethod
+        async def task():
+                &#34;&#34;&#34; Asynchronous task to refresh periodically the wan ip &#34;&#34;&#34;
+                WanIp.init()
+                polling = 13
+
+                # If wanip synchronization enabled
+                if WanIp.config.wanip:
+                        # If the wan is present
+                        if wifi.wifi.Wifi.is_wan_available():
+                                if WanIp.last_sync + 86413 &lt; time.time() or WanIp.last_sync == 0:
+                                        # Get wan ip
+                                        new_wan_ip = await WanIp.synchronize()
+
+                                        # If wan ip get
+                                        if new_wan_ip is not None:
+                                                # If wan ip must be notified
+                                                if WanIp.wan_ip != new_wan_ip:
+                                                        server.notifier.Notifier.daily_notify()
+                                                WanIp.wan_ip = new_wan_ip
+                                                wifi.wifi.Wifi.wan_connected()
+                                        else:
+                                                tools.logger.syslog(&#34;Cannot get wan ip&#34;)
+                                                wifi.wifi.Wifi.wan_disconnected()
+                else:
+                        polling = 59
+
+                await uasyncio.sleep(polling)
+
+        @staticmethod
+        def start():
+                &#34;&#34;&#34; Start wanip synchronisation task &#34;&#34;&#34;
+                tools.tasking.Tasks.create_monitor(WanIp.task)</code></pre>
 </details>
 </section>
 <section>
@@ -86,35 +144,156 @@ async def get_wan_ip_async():
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="lib.server.wanip.get_wan_ip_async"><code class="name flex">
-<span>async def <span class="ident">get_wan_ip_async</span></span>(<span>)</span>
+<dt id="lib.server.wanip.WanIp"><code class="flex name class">
+<span>class <span class="ident">WanIp</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get the wan ip address with asynchronous method</p></div>
+<div class="desc"><p>Class to get the wan ip address</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def get_wan_ip_async():
-        &#34;&#34;&#34; Get the wan ip address with asynchronous method &#34;&#34;&#34;
-        hosts =[
-                (&#34;alma.ch&#34;              ,&#34;/myip.cgi&#34;),
-                (&#34;api.infoip.io&#34;        ,&#34;/ip&#34;),
-                (&#34;api.ipify.org&#34;        ,&#34;/&#34;),
-                (&#34;checkip.amazonaws.com&#34;,&#34;/&#34;),
-                (&#34;l2.io&#34;                ,&#34;/ip&#34;),
-                (&#34;whatismyip.akamai.com&#34;,&#34;/&#34;)
-        ]
-        host, path = hosts[random.randrange(0,len(hosts))]
-        resp = await request(host,80,path)
-        if resp:
-                return resp.decode(&#34;utf-8&#34;)
-        return None</code></pre>
+<pre><code class="python">class WanIp:
+        &#34;&#34;&#34; Class to get the wan ip address &#34;&#34;&#34;
+        config = None
+        last_sync = 0
+        wan_ip = None
+        forced = [False]
+
+        @staticmethod
+        async def request(host, port, path):
+                &#34;&#34;&#34; Asynchronous request to ip server &#34;&#34;&#34;
+                result = None
+                try:
+                        streamio = None
+                        reader,writer = await uasyncio.open_connection(tools.strings.tostrings(host), port)
+                        streamio = server.stream.Stream(reader, writer)
+                        req = server.httprequest.HttpRequest(None)
+                        req.set_path(tools.strings.tobytes(path))
+                        req.set_header(b&#34;HOST&#34;,tools.strings.tobytes(host))
+                        req.set_method(b&#34;GET&#34;)
+                        req.set_header(b&#34;Accept&#34;         ,b&#34;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&#34;)
+                        req.set_header(b&#34;User-Agent&#34;     ,b&#34;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15&#34;)
+                        req.set_header(b&#34;Accept-Language&#34;,b&#34;fr-FR,fr;q=0.9&#34;)
+                        req.set_header(b&#34;Connection&#34;     ,b&#34;keep-alive&#34;)
+                        await req.send(streamio)
+                        response = server.httprequest.HttpResponse(streamio)
+                        await response.receive(streamio)
+                        if response.status == b&#34;200&#34;:
+                                result = response.get_content().strip()
+
+                except Exception as err:
+                        tools.logger.syslog(err)
+                finally:
+                        if streamio:
+                                await streamio.close()
+                return result
+
+        @staticmethod
+        def init():
+                &#34;&#34;&#34; Initialisation task &#34;&#34;&#34;
+                if WanIp.config is None:
+                        WanIp.config = server.server.ServerConfig()
+                        WanIp.config.load_create()
+                else:
+                        WanIp.config.refresh()
+
+        @staticmethod
+        async def synchronize():
+                &#34;&#34;&#34; Get the wan ip address with asynchronous method &#34;&#34;&#34;
+                hosts =[
+                        (&#34;alma.ch&#34;              ,&#34;/myip.cgi&#34;),
+                        (&#34;api.infoip.io&#34;        ,&#34;/ip&#34;),
+                        (&#34;api.ipify.org&#34;        ,&#34;/&#34;),
+                        (&#34;checkip.amazonaws.com&#34;,&#34;/&#34;),
+                        (&#34;l2.io&#34;                ,&#34;/ip&#34;),
+                        (&#34;whatismyip.akamai.com&#34;,&#34;/&#34;)
+                ]
+                host, path = hosts[random.randrange(0,len(hosts))]
+                resp = await WanIp.request(host,80,path)
+                if resp:
+                        return resp.decode(&#34;utf-8&#34;)
+                return None
+
+        @staticmethod
+        async def task():
+                &#34;&#34;&#34; Asynchronous task to refresh periodically the wan ip &#34;&#34;&#34;
+                WanIp.init()
+                polling = 13
+
+                # If wanip synchronization enabled
+                if WanIp.config.wanip:
+                        # If the wan is present
+                        if wifi.wifi.Wifi.is_wan_available():
+                                if WanIp.last_sync + 86413 &lt; time.time() or WanIp.last_sync == 0:
+                                        # Get wan ip
+                                        new_wan_ip = await WanIp.synchronize()
+
+                                        # If wan ip get
+                                        if new_wan_ip is not None:
+                                                # If wan ip must be notified
+                                                if WanIp.wan_ip != new_wan_ip:
+                                                        server.notifier.Notifier.daily_notify()
+                                                WanIp.wan_ip = new_wan_ip
+                                                wifi.wifi.Wifi.wan_connected()
+                                        else:
+                                                tools.logger.syslog(&#34;Cannot get wan ip&#34;)
+                                                wifi.wifi.Wifi.wan_disconnected()
+                else:
+                        polling = 59
+
+                await uasyncio.sleep(polling)
+
+        @staticmethod
+        def start():
+                &#34;&#34;&#34; Start wanip synchronisation task &#34;&#34;&#34;
+                tools.tasking.Tasks.create_monitor(WanIp.task)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.wanip.WanIp.config"><code class="name">var <span class="ident">config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.wanip.WanIp.forced"><code class="name">var <span class="ident">forced</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.wanip.WanIp.last_sync"><code class="name">var <span class="ident">last_sync</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.wanip.WanIp.wan_ip"><code class="name">var <span class="ident">wan_ip</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.server.wanip.WanIp.init"><code class="name flex">
+<span>def <span class="ident">init</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initialisation task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def init():
+        &#34;&#34;&#34; Initialisation task &#34;&#34;&#34;
+        if WanIp.config is None:
+                WanIp.config = server.server.ServerConfig()
+                WanIp.config.load_create()
+        else:
+                WanIp.config.refresh()</code></pre>
 </details>
 </dd>
-<dt id="lib.server.wanip.request"><code class="name flex">
+<dt id="lib.server.wanip.WanIp.request"><code class="name flex">
 <span>async def <span class="ident">request</span></span>(<span>host, port, path)</span>
 </code></dt>
 <dd>
@@ -123,38 +302,120 @@ async def get_wan_ip_async():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def request(host, port, path):
+<pre><code class="python">@staticmethod
+async def request(host, port, path):
         &#34;&#34;&#34; Asynchronous request to ip server &#34;&#34;&#34;
         result = None
         try:
                 streamio = None
-                reader,writer = await uasyncio.open_connection(strings.tostrings(host), port)
-                streamio = Stream(reader, writer)
-                req = HttpRequest(None)
-                req.set_path(strings.tobytes(path))
-                req.set_header(b&#34;HOST&#34;,strings.tobytes(host))
+                reader,writer = await uasyncio.open_connection(tools.strings.tostrings(host), port)
+                streamio = server.stream.Stream(reader, writer)
+                req = server.httprequest.HttpRequest(None)
+                req.set_path(tools.strings.tobytes(path))
+                req.set_header(b&#34;HOST&#34;,tools.strings.tobytes(host))
                 req.set_method(b&#34;GET&#34;)
                 req.set_header(b&#34;Accept&#34;         ,b&#34;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&#34;)
                 req.set_header(b&#34;User-Agent&#34;     ,b&#34;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15&#34;)
                 req.set_header(b&#34;Accept-Language&#34;,b&#34;fr-FR,fr;q=0.9&#34;)
                 req.set_header(b&#34;Connection&#34;     ,b&#34;keep-alive&#34;)
                 await req.send(streamio)
-                response = HttpResponse(streamio)
+                response = server.httprequest.HttpResponse(streamio)
                 await response.receive(streamio)
                 if response.status == b&#34;200&#34;:
                         result = response.get_content().strip()
 
         except Exception as err:
-                logger.syslog(err)
+                tools.logger.syslog(err)
         finally:
                 if streamio:
                         await streamio.close()
         return result</code></pre>
 </details>
 </dd>
+<dt id="lib.server.wanip.WanIp.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start wanip synchronisation task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def start():
+        &#34;&#34;&#34; Start wanip synchronisation task &#34;&#34;&#34;
+        tools.tasking.Tasks.create_monitor(WanIp.task)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.wanip.WanIp.synchronize"><code class="name flex">
+<span>async def <span class="ident">synchronize</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the wan ip address with asynchronous method</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def synchronize():
+        &#34;&#34;&#34; Get the wan ip address with asynchronous method &#34;&#34;&#34;
+        hosts =[
+                (&#34;alma.ch&#34;              ,&#34;/myip.cgi&#34;),
+                (&#34;api.infoip.io&#34;        ,&#34;/ip&#34;),
+                (&#34;api.ipify.org&#34;        ,&#34;/&#34;),
+                (&#34;checkip.amazonaws.com&#34;,&#34;/&#34;),
+                (&#34;l2.io&#34;                ,&#34;/ip&#34;),
+                (&#34;whatismyip.akamai.com&#34;,&#34;/&#34;)
+        ]
+        host, path = hosts[random.randrange(0,len(hosts))]
+        resp = await WanIp.request(host,80,path)
+        if resp:
+                return resp.decode(&#34;utf-8&#34;)
+        return None</code></pre>
+</details>
+</dd>
+<dt id="lib.server.wanip.WanIp.task"><code class="name flex">
+<span>async def <span class="ident">task</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Asynchronous task to refresh periodically the wan ip</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def task():
+        &#34;&#34;&#34; Asynchronous task to refresh periodically the wan ip &#34;&#34;&#34;
+        WanIp.init()
+        polling = 13
+
+        # If wanip synchronization enabled
+        if WanIp.config.wanip:
+                # If the wan is present
+                if wifi.wifi.Wifi.is_wan_available():
+                        if WanIp.last_sync + 86413 &lt; time.time() or WanIp.last_sync == 0:
+                                # Get wan ip
+                                new_wan_ip = await WanIp.synchronize()
+
+                                # If wan ip get
+                                if new_wan_ip is not None:
+                                        # If wan ip must be notified
+                                        if WanIp.wan_ip != new_wan_ip:
+                                                server.notifier.Notifier.daily_notify()
+                                        WanIp.wan_ip = new_wan_ip
+                                        wifi.wifi.Wifi.wan_connected()
+                                else:
+                                        tools.logger.syslog(&#34;Cannot get wan ip&#34;)
+                                        wifi.wifi.Wifi.wan_disconnected()
+        else:
+                polling = 59
+
+        await uasyncio.sleep(polling)</code></pre>
+</details>
+</dd>
 </dl>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -168,10 +429,22 @@ async def get_wan_ip_async():
 <li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="lib.server.wanip.get_wan_ip_async" href="#lib.server.wanip.get_wan_ip_async">get_wan_ip_async</a></code></li>
-<li><code><a title="lib.server.wanip.request" href="#lib.server.wanip.request">request</a></code></li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.server.wanip.WanIp" href="#lib.server.wanip.WanIp">WanIp</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.server.wanip.WanIp.config" href="#lib.server.wanip.WanIp.config">config</a></code></li>
+<li><code><a title="lib.server.wanip.WanIp.forced" href="#lib.server.wanip.WanIp.forced">forced</a></code></li>
+<li><code><a title="lib.server.wanip.WanIp.init" href="#lib.server.wanip.WanIp.init">init</a></code></li>
+<li><code><a title="lib.server.wanip.WanIp.last_sync" href="#lib.server.wanip.WanIp.last_sync">last_sync</a></code></li>
+<li><code><a title="lib.server.wanip.WanIp.request" href="#lib.server.wanip.WanIp.request">request</a></code></li>
+<li><code><a title="lib.server.wanip.WanIp.start" href="#lib.server.wanip.WanIp.start">start</a></code></li>
+<li><code><a title="lib.server.wanip.WanIp.synchronize" href="#lib.server.wanip.WanIp.synchronize">synchronize</a></code></li>
+<li><code><a title="lib.server.wanip.WanIp.task" href="#lib.server.wanip.WanIp.task">task</a></code></li>
+<li><code><a title="lib.server.wanip.WanIp.wan_ip" href="#lib.server.wanip.WanIp.wan_ip">wan_ip</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

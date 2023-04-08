@@ -31,11 +31,6 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Class to manage wifi and access point &#34;&#34;&#34;
 import sys
-from wifi.accesspoint import *
-from wifi.station import *
-from wifi.wifi import *
-from wifi.ip import *
-
 if sys.platform == &#34;rp2&#34;:
     AUTHMODE = {0: b&#34;open&#34;, 0x00200002: b&#34;WPA-PSK&#34;, 0x00400004: b&#34;WPA2-PSK&#34;, 0x00400006: b&#34;WPA/WPA2-PSK&#34;}
     AUTHMODE_DEFAULT = 0x00400004

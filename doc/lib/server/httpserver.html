@@ -45,90 +45,109 @@ The core of the server is in the other class HttpServerCore, which is loaded int
 It takes a little while the first time you connect, but limits memory consumption if not in use.
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True. &#34;&#34;&#34;
 import re
-from tools import logger,filesystem,strings
+import server.server
+import tools.logger
+import tools.filesystem
+import tools.strings
+import tools.tasking
+
+class HttpServerInstance(tools.tasking.ServerInstance):
+        &#34;&#34;&#34; Instance of server Http &#34;&#34;&#34;
+        def __init__(self, **kwargs):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                tools.tasking.ServerInstance.__init__(self, **kwargs)
+                self.server = None
+                self.kwargs = kwargs
+
+        def preload(self):
+                &#34;&#34;&#34; Method used to preload page template.
+                You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
+                started = False
+                if HttpServer.preload():
+                        started = True
+
+                if self.server is None:
+                        tools.logger.syslog(&#34;Http &#39;%s&#39; started&#34;%self.kwargs.get(&#34;name&#34;,&#34;&#34;))
+                        from server.httpservercore import HttpServerCore
+                        self.server = HttpServerCore(**self.kwargs)
+                        started = True
+
+                if started:
+                        tools.logger.syslog(&#34;Http &#39;%s&#39; ready on %d&#34;%(self.kwargs.get(&#34;name&#34;,&#34;&#34;), self.kwargs.get(&#34;port&#34;,0)))
+
+        async def on_connection(self, reader, writer):
+                &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
+                try:
+                        # Preload the server
+                        self.preload()
+
+                        # Call on connection method
+                        await self.server.on_connection(reader, writer)
+                except Exception as err:
+                        tools.logger.syslog(err)
 
 class HttpServer:
         &#34;&#34;&#34; Http main class &#34;&#34;&#34;
-        routes = {}
-        wildroutes = []
-        menus = []
-        www_dir = None
-        pages_loader = []
+        routes       = {}
+        wildroutes   = []
+        menus        = []
+        www_dir      = None
+        pages = []
+        loaded       = [False]
+        config = None
 
-        def __init__(self, port=80, loader=None, preload=False, name=&#34;&#34;):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.server = None
-                self.loader = loader
-                self.port = port
-                self.name = name
-                if preload:
-                        self.preload()
-                else:
-                        logger.syslog(&#34;Http waiting on %d&#34;%self.port)
-
-        def call_preload(self, loader):
+        @staticmethod
+        def call_preload(loader):
                 &#34;&#34;&#34; Call preload html page callback &#34;&#34;&#34;
                 if loader is not None:
-                        if filesystem.ismicropython():
+                        if tools.filesystem.ismicropython():
                                 ModuleNotFound = ImportError
                         else:
                                 ModuleNotFound = ModuleNotFoundError
                         try:
                                 loader()
                         except ModuleNotFound as err:
-                                logger.syslog(&#34;Preload html page : %s&#34;%str(err))
+                                tools.logger.syslog(&#34;Preload html page : %s&#34;%str(err))
                         except Exception as err:
-                                logger.syslog(err)
-
-        def preload(self):
-                &#34;&#34;&#34; Method used to preload page template.
-                You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
-                loaded = False
-
-                if self.loader:
-                        from htmltemplate import WWW_DIR
-                        logger.syslog(&#34;Html load pages&#34;)
-                        if type(self.loader) == type([]):
-                                for loader in self.loader:
-                                        self.call_preload(loader)
-                        else:
-                                self.call_preload(self.loader)
-                        self.loader = None
-
-                        if len(HttpServer.pages_loader) &gt; 0:
-                                for loader in HttpServer.pages_loader:
-                                        self.call_preload(loader)
-                        HttpServer.www_dir = WWW_DIR
-                        loaded = True
-
-                if self.server is None:
-                        logger.syslog(&#34;Http start server&#34;)
-                        from server.httpservercore import HttpServerCore
-                        self.server = HttpServerCore(self.port, self.name)
-                        loaded = True
-
-                if loaded:
-                        logger.syslog(&#34;Http ready on %d&#34;%self.port)
-
+                                tools.logger.syslog(err)
 
         @staticmethod
-        def add_page_loader(page_loader):
+        def preload():
+                &#34;&#34;&#34; Method used to preload page template.
+                You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
+                result = False
+                if HttpServer.loaded[0] is False:
+                        from htmltemplate import WWW_DIR
+                        tools.logger.syslog(&#34;Html load pages&#34;)
+                        if len(HttpServer.pages) &gt; 0:
+                                for loader in HttpServer.pages:
+                                        HttpServer.call_preload(loader)
+                        HttpServer.www_dir = WWW_DIR
+                        result = True
+                        HttpServer.loaded[0] = True
+                return result
+
+        @staticmethod
+        def add_pages():
                 &#34;&#34;&#34; Add an html page loader which will be called when connecting to the http server &#34;&#34;&#34;
-                HttpServer.pages_loader.append(page_loader)
+                def add_pages(function):
+                        HttpServer.pages.append(function)
+                        return function
+                return add_pages
 
         @staticmethod
         def add_route(url, **kwargs):
                 &#34;&#34;&#34; Add a route to select an html page.
                 For the server to know the pages, it must imperatively use this decorator &#34;&#34;&#34;
                 def add_route(function):
-                        if strings.tobytes(url[-1]) == ord(b&#34;*&#34;):
-                                HttpServer.wildroutes.append([strings.tobytes(url),(function, kwargs)])
+                        if tools.strings.tobytes(url[-1]) == ord(b&#34;*&#34;):
+                                HttpServer.wildroutes.append([tools.strings.tobytes(url),(function, kwargs)])
                         else:
                                 kwargs[&#34;index&#34;] = len(HttpServer.menus)
-                                HttpServer.routes[strings.tobytes(url)] = (function, kwargs)
+                                HttpServer.routes[tools.strings.tobytes(url)] = (function, kwargs)
                         if kwargs.get(&#34;available&#34;, True):
                                 if &#34;item&#34; in kwargs and &#34;menu&#34; in kwargs:
-                                        HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), strings.tobytes(url)])
+                                        HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), tools.strings.tobytes(url)])
                                         HttpServer.menus.sort()
                         return function
                 return add_route
@@ -164,8 +183,8 @@ class HttpServer:
                 function, args = None, None
 
                 if request.method == b&#34;PUT&#34;:
-                        directory, file = filesystem.split(strings.tostrings(request.path))
-                        found = HttpServer.routes.get(strings.tobytes(directory),None)
+                        directory, file = tools.filesystem.split(tools.strings.tostrings(request.path))
+                        found = HttpServer.routes.get(tools.strings.tobytes(directory),None)
                         if found:
                                 function, args = found
                         return function, args
@@ -173,12 +192,12 @@ class HttpServer:
                         found = HttpServer.routes.get(request.path,None)
                         if found is None:
                                 for route, func in HttpServer.wildroutes:
-                                        if re.match(strings.tostrings(route), strings.tostrings(request.path)):
+                                        if re.match(tools.strings.tostrings(route), tools.strings.tostrings(request.path)):
                                                 found = func
                                                 break
                                 if found is None:
-                                        staticRe = re.compile(&#34;^/(&#34;+strings.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
-                                        if staticRe.match(strings.tostrings(request.path)):
+                                        staticRe = re.compile(&#34;^/(&#34;+tools.strings.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
+                                        if staticRe.match(tools.strings.tostrings(request.path)):
                                                 function, args = HttpServer.static_pages, {}
                                 else:
                                         function, args = found
@@ -189,44 +208,34 @@ class HttpServer:
         @staticmethod
         async def static_pages(request, response, args):
                 &#34;&#34;&#34; Treat the case of static pages &#34;&#34;&#34;
-                path = strings.tobytes(HttpServer.www_dir) + request.path
+                path = tools.strings.tobytes(HttpServer.www_dir) + request.path
                 path = path.replace(b&#34;//&#34;,b&#34;/&#34;)
-
                 if b&#34;..&#34; in path:
                         await response.send_error(status=b&#34;403&#34;,content=b&#34;Forbidden&#34;)
                 else:
                         await response.send_file(path, headers=request.headers)
 
-        async def on_connection(self, reader, writer):
-                &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
-                try:
-                        # Preload the server
-                        self.preload()
+        @staticmethod
+        def init():
+                &#34;&#34;&#34; Initialize http server &#34;&#34;&#34;
+                if HttpServer.config is None:
+                        HttpServer.config = server.server.ServerConfig()
+                        HttpServer.config.load_create()
+                else:
+                        HttpServer.config.refresh()
 
-                        # Call on connection method
-                        await self.server.on_connection(reader, writer)
-                except Exception as err:
-                        logger.syslog(err)
-
-def start(loop=None, port=80, loader=None, preload=False, name=&#34;&#34;):
-        &#34;&#34;&#34; Start http server.
-        loop : asyncio loop object
-        port : tcp/ip port of the server
-        preload : True = preload the server at the start, False = load the server at the first connection &#34;&#34;&#34;
-        import uasyncio
-        server = HttpServer(port=port, loader=loader, preload=preload, name=name)
-
-        if loop is None:
-                loop = uasyncio.get_event_loop()
-                run_forever = True
-        else:
-                run_forever = False
-
-        asyncServer = uasyncio.start_server(server.on_connection, &#34;0.0.0.0&#34;,port,backlog=5)
-
-        loop.create_task(asyncServer)
-        if run_forever:
-                loop.run_forever()</code></pre>
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start http server instance on selected port &#34;&#34;&#34;
+                HttpServer.init()
+                # If http activated
+                if HttpServer.config.http:
+                        kwargs[&#34;port&#34;] = kwargs.get(&#34;http_port&#34;,80)
+                        kwargs[&#34;name&#34;] = kwargs.get(&#34;name&#34;,&#34;Http&#34;)
+                        kwargs[&#34;backlog&#34;] = kwargs.get(&#34;backlog&#34;,5)
+                        tools.tasking.Tasks.create_server(HttpServerInstance(**kwargs))
+                else:
+                        tools.logger.syslog(&#34;Http server disabled in config&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -234,139 +243,81 @@ def start(loop=None, port=80, loader=None, preload=False, name=&#34;&#34;):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="lib.server.httpserver.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>loop=None, port=80, loader=None, preload=False, name='')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Start http server.
-loop : asyncio loop object
-port : tcp/ip port of the server
-preload : True = preload the server at the start, False = load the server at the first connection</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def start(loop=None, port=80, loader=None, preload=False, name=&#34;&#34;):
-        &#34;&#34;&#34; Start http server.
-        loop : asyncio loop object
-        port : tcp/ip port of the server
-        preload : True = preload the server at the start, False = load the server at the first connection &#34;&#34;&#34;
-        import uasyncio
-        server = HttpServer(port=port, loader=loader, preload=preload, name=name)
-
-        if loop is None:
-                loop = uasyncio.get_event_loop()
-                run_forever = True
-        else:
-                run_forever = False
-
-        asyncServer = uasyncio.start_server(server.on_connection, &#34;0.0.0.0&#34;,port,backlog=5)
-
-        loop.create_task(asyncServer)
-        if run_forever:
-                loop.run_forever()</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
 <dt id="lib.server.httpserver.HttpServer"><code class="flex name class">
 <span>class <span class="ident">HttpServer</span></span>
-<span>(</span><span>port=80, loader=None, preload=False, name='')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Http main class </p>
-<p>Constructor</p></div>
+<div class="desc"><p>Http main class</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HttpServer:
         &#34;&#34;&#34; Http main class &#34;&#34;&#34;
-        routes = {}
-        wildroutes = []
-        menus = []
-        www_dir = None
-        pages_loader = []
+        routes       = {}
+        wildroutes   = []
+        menus        = []
+        www_dir      = None
+        pages = []
+        loaded       = [False]
+        config = None
 
-        def __init__(self, port=80, loader=None, preload=False, name=&#34;&#34;):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                self.server = None
-                self.loader = loader
-                self.port = port
-                self.name = name
-                if preload:
-                        self.preload()
-                else:
-                        logger.syslog(&#34;Http waiting on %d&#34;%self.port)
-
-        def call_preload(self, loader):
+        @staticmethod
+        def call_preload(loader):
                 &#34;&#34;&#34; Call preload html page callback &#34;&#34;&#34;
                 if loader is not None:
-                        if filesystem.ismicropython():
+                        if tools.filesystem.ismicropython():
                                 ModuleNotFound = ImportError
                         else:
                                 ModuleNotFound = ModuleNotFoundError
                         try:
                                 loader()
                         except ModuleNotFound as err:
-                                logger.syslog(&#34;Preload html page : %s&#34;%str(err))
+                                tools.logger.syslog(&#34;Preload html page : %s&#34;%str(err))
                         except Exception as err:
-                                logger.syslog(err)
-
-        def preload(self):
-                &#34;&#34;&#34; Method used to preload page template.
-                You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
-                loaded = False
-
-                if self.loader:
-                        from htmltemplate import WWW_DIR
-                        logger.syslog(&#34;Html load pages&#34;)
-                        if type(self.loader) == type([]):
-                                for loader in self.loader:
-                                        self.call_preload(loader)
-                        else:
-                                self.call_preload(self.loader)
-                        self.loader = None
-
-                        if len(HttpServer.pages_loader) &gt; 0:
-                                for loader in HttpServer.pages_loader:
-                                        self.call_preload(loader)
-                        HttpServer.www_dir = WWW_DIR
-                        loaded = True
-
-                if self.server is None:
-                        logger.syslog(&#34;Http start server&#34;)
-                        from server.httpservercore import HttpServerCore
-                        self.server = HttpServerCore(self.port, self.name)
-                        loaded = True
-
-                if loaded:
-                        logger.syslog(&#34;Http ready on %d&#34;%self.port)
-
+                                tools.logger.syslog(err)
 
         @staticmethod
-        def add_page_loader(page_loader):
+        def preload():
+                &#34;&#34;&#34; Method used to preload page template.
+                You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
+                result = False
+                if HttpServer.loaded[0] is False:
+                        from htmltemplate import WWW_DIR
+                        tools.logger.syslog(&#34;Html load pages&#34;)
+                        if len(HttpServer.pages) &gt; 0:
+                                for loader in HttpServer.pages:
+                                        HttpServer.call_preload(loader)
+                        HttpServer.www_dir = WWW_DIR
+                        result = True
+                        HttpServer.loaded[0] = True
+                return result
+
+        @staticmethod
+        def add_pages():
                 &#34;&#34;&#34; Add an html page loader which will be called when connecting to the http server &#34;&#34;&#34;
-                HttpServer.pages_loader.append(page_loader)
+                def add_pages(function):
+                        HttpServer.pages.append(function)
+                        return function
+                return add_pages
 
         @staticmethod
         def add_route(url, **kwargs):
                 &#34;&#34;&#34; Add a route to select an html page.
                 For the server to know the pages, it must imperatively use this decorator &#34;&#34;&#34;
                 def add_route(function):
-                        if strings.tobytes(url[-1]) == ord(b&#34;*&#34;):
-                                HttpServer.wildroutes.append([strings.tobytes(url),(function, kwargs)])
+                        if tools.strings.tobytes(url[-1]) == ord(b&#34;*&#34;):
+                                HttpServer.wildroutes.append([tools.strings.tobytes(url),(function, kwargs)])
                         else:
                                 kwargs[&#34;index&#34;] = len(HttpServer.menus)
-                                HttpServer.routes[strings.tobytes(url)] = (function, kwargs)
+                                HttpServer.routes[tools.strings.tobytes(url)] = (function, kwargs)
                         if kwargs.get(&#34;available&#34;, True):
                                 if &#34;item&#34; in kwargs and &#34;menu&#34; in kwargs:
-                                        HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), strings.tobytes(url)])
+                                        HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), tools.strings.tobytes(url)])
                                         HttpServer.menus.sort()
                         return function
                 return add_route
@@ -402,8 +353,8 @@ preload : True = preload the server at the start, False = load the server at the
                 function, args = None, None
 
                 if request.method == b&#34;PUT&#34;:
-                        directory, file = filesystem.split(strings.tostrings(request.path))
-                        found = HttpServer.routes.get(strings.tobytes(directory),None)
+                        directory, file = tools.filesystem.split(tools.strings.tostrings(request.path))
+                        found = HttpServer.routes.get(tools.strings.tobytes(directory),None)
                         if found:
                                 function, args = found
                         return function, args
@@ -411,12 +362,12 @@ preload : True = preload the server at the start, False = load the server at the
                         found = HttpServer.routes.get(request.path,None)
                         if found is None:
                                 for route, func in HttpServer.wildroutes:
-                                        if re.match(strings.tostrings(route), strings.tostrings(request.path)):
+                                        if re.match(tools.strings.tostrings(route), tools.strings.tostrings(request.path)):
                                                 found = func
                                                 break
                                 if found is None:
-                                        staticRe = re.compile(&#34;^/(&#34;+strings.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
-                                        if staticRe.match(strings.tostrings(request.path)):
+                                        staticRe = re.compile(&#34;^/(&#34;+tools.strings.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
+                                        if staticRe.match(tools.strings.tostrings(request.path)):
                                                 function, args = HttpServer.static_pages, {}
                                 else:
                                         function, args = found
@@ -427,32 +378,50 @@ preload : True = preload the server at the start, False = load the server at the
         @staticmethod
         async def static_pages(request, response, args):
                 &#34;&#34;&#34; Treat the case of static pages &#34;&#34;&#34;
-                path = strings.tobytes(HttpServer.www_dir) + request.path
+                path = tools.strings.tobytes(HttpServer.www_dir) + request.path
                 path = path.replace(b&#34;//&#34;,b&#34;/&#34;)
-
                 if b&#34;..&#34; in path:
                         await response.send_error(status=b&#34;403&#34;,content=b&#34;Forbidden&#34;)
                 else:
                         await response.send_file(path, headers=request.headers)
 
-        async def on_connection(self, reader, writer):
-                &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
-                try:
-                        # Preload the server
-                        self.preload()
+        @staticmethod
+        def init():
+                &#34;&#34;&#34; Initialize http server &#34;&#34;&#34;
+                if HttpServer.config is None:
+                        HttpServer.config = server.server.ServerConfig()
+                        HttpServer.config.load_create()
+                else:
+                        HttpServer.config.refresh()
 
-                        # Call on connection method
-                        await self.server.on_connection(reader, writer)
-                except Exception as err:
-                        logger.syslog(err)</code></pre>
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start http server instance on selected port &#34;&#34;&#34;
+                HttpServer.init()
+                # If http activated
+                if HttpServer.config.http:
+                        kwargs[&#34;port&#34;] = kwargs.get(&#34;http_port&#34;,80)
+                        kwargs[&#34;name&#34;] = kwargs.get(&#34;name&#34;,&#34;Http&#34;)
+                        kwargs[&#34;backlog&#34;] = kwargs.get(&#34;backlog&#34;,5)
+                        tools.tasking.Tasks.create_server(HttpServerInstance(**kwargs))
+                else:
+                        tools.logger.syslog(&#34;Http server disabled in config&#34;)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
+<dt id="lib.server.httpserver.HttpServer.config"><code class="name">var <span class="ident">config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.httpserver.HttpServer.loaded"><code class="name">var <span class="ident">loaded</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="lib.server.httpserver.HttpServer.menus"><code class="name">var <span class="ident">menus</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="lib.server.httpserver.HttpServer.pages_loader"><code class="name">var <span class="ident">pages_loader</span></code></dt>
+<dt id="lib.server.httpserver.HttpServer.pages"><code class="name">var <span class="ident">pages</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -471,8 +440,8 @@ preload : True = preload the server at the start, False = load the server at the
 </dl>
 <h3>Static methods</h3>
 <dl>
-<dt id="lib.server.httpserver.HttpServer.add_page_loader"><code class="name flex">
-<span>def <span class="ident">add_page_loader</span></span>(<span>page_loader)</span>
+<dt id="lib.server.httpserver.HttpServer.add_pages"><code class="name flex">
+<span>def <span class="ident">add_pages</span></span>(<span>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Add an html page loader which will be called when connecting to the http server</p></div>
@@ -481,9 +450,12 @@ preload : True = preload the server at the start, False = load the server at the
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def add_page_loader(page_loader):
+def add_pages():
         &#34;&#34;&#34; Add an html page loader which will be called when connecting to the http server &#34;&#34;&#34;
-        HttpServer.pages_loader.append(page_loader)</code></pre>
+        def add_pages(function):
+                HttpServer.pages.append(function)
+                return function
+        return add_pages</code></pre>
 </details>
 </dd>
 <dt id="lib.server.httpserver.HttpServer.add_route"><code class="name flex">
@@ -501,17 +473,42 @@ def add_route(url, **kwargs):
         &#34;&#34;&#34; Add a route to select an html page.
         For the server to know the pages, it must imperatively use this decorator &#34;&#34;&#34;
         def add_route(function):
-                if strings.tobytes(url[-1]) == ord(b&#34;*&#34;):
-                        HttpServer.wildroutes.append([strings.tobytes(url),(function, kwargs)])
+                if tools.strings.tobytes(url[-1]) == ord(b&#34;*&#34;):
+                        HttpServer.wildroutes.append([tools.strings.tobytes(url),(function, kwargs)])
                 else:
                         kwargs[&#34;index&#34;] = len(HttpServer.menus)
-                        HttpServer.routes[strings.tobytes(url)] = (function, kwargs)
+                        HttpServer.routes[tools.strings.tobytes(url)] = (function, kwargs)
                 if kwargs.get(&#34;available&#34;, True):
                         if &#34;item&#34; in kwargs and &#34;menu&#34; in kwargs:
-                                HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), strings.tobytes(url)])
+                                HttpServer.menus.append([kwargs[&#34;menu&#34;], kwargs[&#34;item&#34;],len(HttpServer.menus), tools.strings.tobytes(url)])
                                 HttpServer.menus.sort()
                 return function
         return add_route</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httpserver.HttpServer.call_preload"><code class="name flex">
+<span>def <span class="ident">call_preload</span></span>(<span>loader)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Call preload html page callback</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def call_preload(loader):
+        &#34;&#34;&#34; Call preload html page callback &#34;&#34;&#34;
+        if loader is not None:
+                if tools.filesystem.ismicropython():
+                        ModuleNotFound = ImportError
+                else:
+                        ModuleNotFound = ModuleNotFoundError
+                try:
+                        loader()
+                except ModuleNotFound as err:
+                        tools.logger.syslog(&#34;Preload html page : %s&#34;%str(err))
+                except Exception as err:
+                        tools.logger.syslog(err)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.httpserver.HttpServer.get_menus"><code class="name flex">
@@ -527,6 +524,52 @@ def add_route(url, **kwargs):
 def get_menus():
         &#34;&#34;&#34; Used to get the informations of menu &#34;&#34;&#34;
         return HttpServer.menus</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httpserver.HttpServer.init"><code class="name flex">
+<span>def <span class="ident">init</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initialize http server</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def init():
+        &#34;&#34;&#34; Initialize http server &#34;&#34;&#34;
+        if HttpServer.config is None:
+                HttpServer.config = server.server.ServerConfig()
+                HttpServer.config.load_create()
+        else:
+                HttpServer.config.refresh()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httpserver.HttpServer.preload"><code class="name flex">
+<span>def <span class="ident">preload</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Method used to preload page template.
+You must define the content of a callback, which only import the python module with your pages</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def preload():
+        &#34;&#34;&#34; Method used to preload page template.
+        You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
+        result = False
+        if HttpServer.loaded[0] is False:
+                from htmltemplate import WWW_DIR
+                tools.logger.syslog(&#34;Html load pages&#34;)
+                if len(HttpServer.pages) &gt; 0:
+                        for loader in HttpServer.pages:
+                                HttpServer.call_preload(loader)
+                HttpServer.www_dir = WWW_DIR
+                result = True
+                HttpServer.loaded[0] = True
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.server.httpserver.HttpServer.remove_route"><code class="name flex">
@@ -574,8 +617,8 @@ def search_route(request):
         function, args = None, None
 
         if request.method == b&#34;PUT&#34;:
-                directory, file = filesystem.split(strings.tostrings(request.path))
-                found = HttpServer.routes.get(strings.tobytes(directory),None)
+                directory, file = tools.filesystem.split(tools.strings.tostrings(request.path))
+                found = HttpServer.routes.get(tools.strings.tobytes(directory),None)
                 if found:
                         function, args = found
                 return function, args
@@ -583,18 +626,41 @@ def search_route(request):
                 found = HttpServer.routes.get(request.path,None)
                 if found is None:
                         for route, func in HttpServer.wildroutes:
-                                if re.match(strings.tostrings(route), strings.tostrings(request.path)):
+                                if re.match(tools.strings.tostrings(route), tools.strings.tostrings(request.path)):
                                         found = func
                                         break
                         if found is None:
-                                staticRe = re.compile(&#34;^/(&#34;+strings.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
-                                if staticRe.match(strings.tostrings(request.path)):
+                                staticRe = re.compile(&#34;^/(&#34;+tools.strings.tostrings(HttpServer.www_dir)+&#34;/.+|.+)&#34;)
+                                if staticRe.match(tools.strings.tostrings(request.path)):
                                         function, args = HttpServer.static_pages, {}
                         else:
                                 function, args = found
                 else:
                         function, args = found
         return function, args</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httpserver.HttpServer.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start http server instance on selected port</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def start(**kwargs):
+        &#34;&#34;&#34; Start http server instance on selected port &#34;&#34;&#34;
+        HttpServer.init()
+        # If http activated
+        if HttpServer.config.http:
+                kwargs[&#34;port&#34;] = kwargs.get(&#34;http_port&#34;,80)
+                kwargs[&#34;name&#34;] = kwargs.get(&#34;name&#34;,&#34;Http&#34;)
+                kwargs[&#34;backlog&#34;] = kwargs.get(&#34;backlog&#34;,5)
+                tools.tasking.Tasks.create_server(HttpServerInstance(**kwargs))
+        else:
+                tools.logger.syslog(&#34;Http server disabled in config&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.httpserver.HttpServer.static_pages"><code class="name flex">
@@ -609,9 +675,8 @@ def search_route(request):
 <pre><code class="python">@staticmethod
 async def static_pages(request, response, args):
         &#34;&#34;&#34; Treat the case of static pages &#34;&#34;&#34;
-        path = strings.tobytes(HttpServer.www_dir) + request.path
+        path = tools.strings.tobytes(HttpServer.www_dir) + request.path
         path = path.replace(b&#34;//&#34;,b&#34;/&#34;)
-
         if b&#34;..&#34; in path:
                 await response.send_error(status=b&#34;403&#34;,content=b&#34;Forbidden&#34;)
         else:
@@ -619,33 +684,60 @@ async def static_pages(request, response, args):
 </details>
 </dd>
 </dl>
-<h3>Methods</h3>
-<dl>
-<dt id="lib.server.httpserver.HttpServer.call_preload"><code class="name flex">
-<span>def <span class="ident">call_preload</span></span>(<span>self, loader)</span>
+</dd>
+<dt id="lib.server.httpserver.HttpServerInstance"><code class="flex name class">
+<span>class <span class="ident">HttpServerInstance</span></span>
+<span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Call preload html page callback</p></div>
+<div class="desc"><p>Instance of server Http </p>
+<p>Constructor</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def call_preload(self, loader):
-        &#34;&#34;&#34; Call preload html page callback &#34;&#34;&#34;
-        if loader is not None:
-                if filesystem.ismicropython():
-                        ModuleNotFound = ImportError
-                else:
-                        ModuleNotFound = ModuleNotFoundError
+<pre><code class="python">class HttpServerInstance(tools.tasking.ServerInstance):
+        &#34;&#34;&#34; Instance of server Http &#34;&#34;&#34;
+        def __init__(self, **kwargs):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                tools.tasking.ServerInstance.__init__(self, **kwargs)
+                self.server = None
+                self.kwargs = kwargs
+
+        def preload(self):
+                &#34;&#34;&#34; Method used to preload page template.
+                You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
+                started = False
+                if HttpServer.preload():
+                        started = True
+
+                if self.server is None:
+                        tools.logger.syslog(&#34;Http &#39;%s&#39; started&#34;%self.kwargs.get(&#34;name&#34;,&#34;&#34;))
+                        from server.httpservercore import HttpServerCore
+                        self.server = HttpServerCore(**self.kwargs)
+                        started = True
+
+                if started:
+                        tools.logger.syslog(&#34;Http &#39;%s&#39; ready on %d&#34;%(self.kwargs.get(&#34;name&#34;,&#34;&#34;), self.kwargs.get(&#34;port&#34;,0)))
+
+        async def on_connection(self, reader, writer):
+                &#34;&#34;&#34; Http server connection detected &#34;&#34;&#34;
                 try:
-                        loader()
-                except ModuleNotFound as err:
-                        logger.syslog(&#34;Preload html page : %s&#34;%str(err))
+                        # Preload the server
+                        self.preload()
+
+                        # Call on connection method
+                        await self.server.on_connection(reader, writer)
                 except Exception as err:
-                        logger.syslog(err)</code></pre>
+                        tools.logger.syslog(err)</code></pre>
 </details>
-</dd>
-<dt id="lib.server.httpserver.HttpServer.on_connection"><code class="name flex">
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>tools.tasking.ServerInstance</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.httpserver.HttpServerInstance.on_connection"><code class="name flex">
 <span>async def <span class="ident">on_connection</span></span>(<span>self, reader, writer)</span>
 </code></dt>
 <dd>
@@ -663,10 +755,10 @@ async def static_pages(request, response, args):
                 # Call on connection method
                 await self.server.on_connection(reader, writer)
         except Exception as err:
-                logger.syslog(err)</code></pre>
+                tools.logger.syslog(err)</code></pre>
 </details>
 </dd>
-<dt id="lib.server.httpserver.HttpServer.preload"><code class="name flex">
+<dt id="lib.server.httpserver.HttpServerInstance.preload"><code class="name flex">
 <span>def <span class="ident">preload</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -679,32 +771,18 @@ You must define the content of a callback, which only import the python module w
 <pre><code class="python">def preload(self):
         &#34;&#34;&#34; Method used to preload page template.
         You must define the content of a callback, which only import the python module with your pages &#34;&#34;&#34;
-        loaded = False
-
-        if self.loader:
-                from htmltemplate import WWW_DIR
-                logger.syslog(&#34;Html load pages&#34;)
-                if type(self.loader) == type([]):
-                        for loader in self.loader:
-                                self.call_preload(loader)
-                else:
-                        self.call_preload(self.loader)
-                self.loader = None
-
-                if len(HttpServer.pages_loader) &gt; 0:
-                        for loader in HttpServer.pages_loader:
-                                self.call_preload(loader)
-                HttpServer.www_dir = WWW_DIR
-                loaded = True
+        started = False
+        if HttpServer.preload():
+                started = True
 
         if self.server is None:
-                logger.syslog(&#34;Http start server&#34;)
+                tools.logger.syslog(&#34;Http &#39;%s&#39; started&#34;%self.kwargs.get(&#34;name&#34;,&#34;&#34;))
                 from server.httpservercore import HttpServerCore
-                self.server = HttpServerCore(self.port, self.name)
-                loaded = True
+                self.server = HttpServerCore(**self.kwargs)
+                started = True
 
-        if loaded:
-                logger.syslog(&#34;Http ready on %d&#34;%self.port)</code></pre>
+        if started:
+                tools.logger.syslog(&#34;Http &#39;%s&#39; ready on %d&#34;%(self.kwargs.get(&#34;name&#34;,&#34;&#34;), self.kwargs.get(&#34;port&#34;,0)))</code></pre>
 </details>
 </dd>
 </dl>
@@ -723,30 +801,35 @@ You must define the content of a callback, which only import the python module w
 <li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="lib.server.httpserver.start" href="#lib.server.httpserver.start">start</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
 <h4><code><a title="lib.server.httpserver.HttpServer" href="#lib.server.httpserver.HttpServer">HttpServer</a></code></h4>
 <ul class="two-column">
-<li><code><a title="lib.server.httpserver.HttpServer.add_page_loader" href="#lib.server.httpserver.HttpServer.add_page_loader">add_page_loader</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.add_pages" href="#lib.server.httpserver.HttpServer.add_pages">add_pages</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.add_route" href="#lib.server.httpserver.HttpServer.add_route">add_route</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.call_preload" href="#lib.server.httpserver.HttpServer.call_preload">call_preload</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.config" href="#lib.server.httpserver.HttpServer.config">config</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.get_menus" href="#lib.server.httpserver.HttpServer.get_menus">get_menus</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.init" href="#lib.server.httpserver.HttpServer.init">init</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.loaded" href="#lib.server.httpserver.HttpServer.loaded">loaded</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.menus" href="#lib.server.httpserver.HttpServer.menus">menus</a></code></li>
-<li><code><a title="lib.server.httpserver.HttpServer.on_connection" href="#lib.server.httpserver.HttpServer.on_connection">on_connection</a></code></li>
-<li><code><a title="lib.server.httpserver.HttpServer.pages_loader" href="#lib.server.httpserver.HttpServer.pages_loader">pages_loader</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.pages" href="#lib.server.httpserver.HttpServer.pages">pages</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.preload" href="#lib.server.httpserver.HttpServer.preload">preload</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.remove_route" href="#lib.server.httpserver.HttpServer.remove_route">remove_route</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.routes" href="#lib.server.httpserver.HttpServer.routes">routes</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.search_route" href="#lib.server.httpserver.HttpServer.search_route">search_route</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.start" href="#lib.server.httpserver.HttpServer.start">start</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.static_pages" href="#lib.server.httpserver.HttpServer.static_pages">static_pages</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.wildroutes" href="#lib.server.httpserver.HttpServer.wildroutes">wildroutes</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.www_dir" href="#lib.server.httpserver.HttpServer.www_dir">www_dir</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.httpserver.HttpServerInstance" href="#lib.server.httpserver.HttpServerInstance">HttpServerInstance</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.httpserver.HttpServerInstance.on_connection" href="#lib.server.httpserver.HttpServerInstance.on_connection">on_connection</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServerInstance.preload" href="#lib.server.httpserver.HttpServerInstance.preload">preload</a></code></li>
 </ul>
 </li>
 </ul>

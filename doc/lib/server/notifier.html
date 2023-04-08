@@ -33,34 +33,40 @@
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
 import uasyncio
-import wifi
-from server.httpclient import *
-from tools import logger,strings,tasking
-
+import wifi.wifi
+import wifi.station
+import server.wanip
+import server.httpclient
+import tools.logger
+import tools.strings
+import tools.tasking
+import tools.info
+import tools.lang
+import tools.date
+import tools.topic
 
 class Notification:
         &#34;&#34;&#34; Notification message &#34;&#34;&#34;
-        def __init__(self, message, image, forced, display):
+        def __init__(self, **kwargs):
                 &#34;&#34;&#34; Notification constructor &#34;&#34;&#34;
-                self.message = message
-                self.image   = image
-                self.forced  = forced
-                self.display = display
-
-
-class WebHook:
-        &#34;&#34;&#34; Notification via webhook &#34;&#34;&#34;
-        def __init__(self, name, url):
-                self.url = url
-                self.name = name
-
+                self.topic   = kwargs.get(&#34;topic&#34;,  None)
+                self.value   = kwargs.get(&#34;value&#34;,  None)
+                self.message = kwargs.get(&#34;message&#34;,None)
+                self.data    = kwargs.get(&#34;data&#34;,   None)
+                self.forced  = kwargs.get(&#34;forced&#34;, False)
+                self.display = kwargs.get(&#34;display&#34;,True)
+                self.url     = kwargs.get(&#34;url&#34;,    None)
+                self.sent    = []
+                self.retry   = 0
 
 class Notifier:
         &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
         notifiers = []
         postponed = []
-        webhooks  = {}
         wake_up_event = None
+        daily_callback = None
+        one_per_day = None
+        daily_notification = [False]
 
         @staticmethod
         def init():
@@ -68,10 +74,16 @@ class Notifier:
                 if Notifier.wake_up_event is None:
                         Notifier.wake_up_event = uasyncio.Event()
 
+                if Notifier.daily_callback is None:
+                        Notifier.daily_callback = Notifier.default_daily_notifier
+
         @staticmethod
-        def add(callback):
-                &#34;&#34;&#34; Add notifier callback &#34;&#34;&#34;
-                Notifier.notifiers.append(callback)
+        def add():
+                &#34;&#34;&#34; Add a callback on subscription &#34;&#34;&#34;
+                def add_function(function):
+                        Notifier.notifiers.append(function)
+                        return function
+                return add_function
 
         @staticmethod
         def remove(callback):
@@ -95,97 +107,144 @@ class Notifier:
                 Notifier.wake_up_event.set()
 
         @staticmethod
-        def notify(message, image=None, forced=False, display=True, enabled=True):
-                &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
-                logger.syslog(&#34;Notification &#39;%s&#39; %s&#34;%(strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
+        def to_string(**kwargs):
+                &#34;&#34;&#34; Convert notification into string &#34;&#34;&#34;
+                result = b&#34;&#34;
+                item = kwargs.get(&#34;message&#34;,None)
+                if item is not None:
+                        result += b&#34;msg=&#39;&#39;&#39;%s&#39;&#39;&#39; &#34;%tools.strings.tobytes(item)
+                item = kwargs.get(&#34;topic&#34;,None)
+                if item is not None:
+                        result += b&#34;topic=%s &#34;%tools.strings.tobytes(item)
+                item = kwargs.get(&#34;value&#34;,None)
+                if item is not None:
+                        result += b&#34;value=%s &#34;%tools.strings.tobytes(item)
+                item = kwargs.get(&#34;data&#34;,None)
+                if item is not None:
+                        result += b&#34;len=%d &#34;%len(item)
+                return result
+
+        @staticmethod
+        def notify(**kwargs):
+                &#34;&#34;&#34; Notify message for all notifier registered 
+                topic   : topic name of notification
+                message : message text 
+                data    : binary buffer
+                forced  : true to force the notification, false depend of configuration
+                display : true to display in syslog, false hide in syslog 
+                url     : url link for web hook
+                enabled : true to enable notification, false to disable&#34;&#34;&#34;
+                display = kwargs.get(&#34;display&#34;,True)
+                enabled = kwargs.get(&#34;enabled&#34;,True)
+                forced  = kwargs.get(&#34;forced&#34;,False)
+                message = Notifier.to_string(**kwargs)
+
+                tools.logger.syslog(&#34;Notification %s %s&#34;%(tools.strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
                 if enabled or forced:
+                        # If postponed message list too long
+                        if len(Notifier.postponed) &gt; 10:
+                                # Remove older
+                                notification = Notifier.postponed[0]
+                                tools.logger.syslog(&#34;Notification %s failed to send&#34;%tools.strings.tostrings(notification.message), display=notification.display)
+                                del Notifier.postponed[0]
                         # Add message into postponed list
-                        Notifier.postponed.append(Notification(message, image, forced, display))
+                        Notifier.postponed.append(Notification(**kwargs))
                         Notifier.wake_up()
                 else:
                         return True
 
         @staticmethod
-        def webhook(name, url):
-                &#34;&#34;&#34; Notify webhook &#34;&#34;&#34;
-                if len(url):
-                        logger.syslog(&#34;Webhook name=&#39;%s&#39; url=&#39;%s&#39;&#34;%(name,strings.tostrings(url)))
-
-                        # Add message into postponed list
-                        Notifier.webhooks[name] = WebHook(name, url)
-                        Notifier.wake_up()
-
-        @staticmethod
         async def flush():
                 &#34;&#34;&#34; Flush postponed message if wan connected &#34;&#34;&#34;
-                result = False
-                # If postponed message list too long
-                if len(Notifier.postponed) &gt; 10:
-                        # Remove older
-                        notification = Notifier.postponed[0]
-                        logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(notification.message), display=notification.display)
-                        del Notifier.postponed[0]
+                sleep_duration = 127
 
                 # If wan available
-                if wifi.Wifi.is_wan_available():
+                if wifi.wifi.Wifi.is_wan_available():
                         result = True
-                        wanOk = None
-
                         # Try to send message
-                        for notifier in Notifier.notifiers:
-                                for notification in Notifier.postponed:
-                                        res = await notifier(notification.message, notification.image, notification.forced, display=notification.display)
-                                        if res is False:
-                                                result = False
-                                                wanOk = False
-                                                break
-                                        elif res is True:
-                                                wanOk = True
+                        for notification in Notifier.postponed:
+                                for notifier in Notifier.notifiers:
+                                        if len(Notifier.notifiers) &gt; len(notification.sent):
+                                                res = await notifier(notification)
+                                                if res is False:
+                                                        result = False
+                                                        if notification.retry == 0:
+                                                                tools.logger.syslog(&#34;Cannot send notification&#34;)
+                                                        notification.retry += 1
 
-                        # If all message notified
-                        if result:
-                                Notifier.postponed.clear()
+                        not_sent = []
+                        for notification in Notifier.postponed:
+                                if len(Notifier.notifiers) &gt; len(notification.sent):
+                                        if notification.retry &lt; 32:
+                                                not_sent.append(notification)
 
-                        # Call webhook
-                        for webhook in Notifier.webhooks.values():
-                                if await HttpClient.request(method=b&#34;GET&#34;, url=webhook.url) is None:
-                                        result = False
-
-                        # Clear all webhook
-                        Notifier.webhooks.clear()
-
-                        # If wan connected
-                        if wanOk is True:
-                                wifi.Wifi.wan_connected()
-                        # If wan problem detected
-                        if wanOk is False:
-                                wifi.Wifi.wan_disconnected()
+                        Notifier.postponed = not_sent
 
                         # If all message notified
                         if result is False:
-                                logger.syslog(&#34;Cannot send notification&#34;)
+                                sleep_duration = 19
                 else:
-                        # Wait wifi available
-                        await uasyncio.sleep(3)
-                return result
+                        sleep_duration = 5
+                return sleep_duration
 
         @staticmethod
         async def task():
                 &#34;&#34;&#34; Run the task &#34;&#34;&#34;
+                Notifier.init()
+
+                if Notifier.is_one_per_day() or Notifier.daily_notification[0] is True:
+                        Notifier.daily_notification[0] = False
+                        if Notifier.daily_callback:
+                                # pylint:disable=not-callable
+                                message = Notifier.daily_callback()
+                                Notifier.notify(topic=tools.topic.information, message=message)
+
                 # If no notification should be sent
-                if len(Notifier.postponed) == 0 and len(Notifier.webhooks) == 0:
+                sleep_duration = await Notifier.flush()
+
+                try:
                         # Wait notification
-                        await Notifier.wake_up_event.wait()
+                        await uasyncio.wait_for(Notifier.wake_up_event.wait(), sleep_duration)
                         # Clear event notification event
                         Notifier.wake_up_event.clear()
-                # Flush all notifications postponed
-                await Notifier.flush()
+                except:
+                        pass
 
-async def notifier_task():
-        &#34;&#34;&#34; Notifier task &#34;&#34;&#34;
-        Notifier.init()
-        await tasking.task_monitoring(Notifier.task)</code></pre>
+        @staticmethod
+        def daily_notify():
+                &#34;&#34;&#34; Force the send of daily notification &#34;&#34;&#34; 
+                Notifier.daily_notification[0] = True
+
+        @staticmethod
+        def is_one_per_day():
+                &#34;&#34;&#34; Indicates if the action must be done on per day &#34;&#34;&#34;
+                current_date = tools.date.date_to_bytes()[:14]
+                if Notifier.one_per_day is None or (current_date[-2:] == b&#34;12&#34; and current_date != Notifier.one_per_day):
+                        Notifier.one_per_day = current_date
+                        if tools.strings.ticks() &gt; 30000:
+                                return True
+                return False
+
+        @staticmethod
+        def default_daily_notifier():
+                &#34;&#34;&#34; Return the default message notification &#34;&#34;&#34;
+                message = &#34;\n - Lan Ip : %s\n&#34;%wifi.station.Station.get_info()[0]
+                message += &#34; - Wan Ip : %s\n&#34;%server.wanip.WanIp.wan_ip
+                message += &#34; - Uptime : %s\n&#34;%tools.strings.tostrings(tools.info.uptime())
+                message += &#34; - %s : %s\n&#34;%(tools.strings.tostrings(tools.lang.memory_label), tools.strings.tostrings(tools.info.meminfo()))
+                message += &#34; - %s : %s\n&#34;%(tools.strings.tostrings(tools.lang.flash_label), tools.strings.tostrings(tools.info.flashinfo()))
+                return message
+
+        @staticmethod
+        def set_daily_notifier(callback):
+                &#34;&#34;&#34; Replace the daily notification (callback which return a string with message to notify) &#34;&#34;&#34;
+                Notifier.daily_notifier = callback
+
+        @staticmethod
+        def start():
+                &#34;&#34;&#34; Start notifier task &#34;&#34;&#34;
+                tools.tasking.Tasks.create_monitor(Notifier.task)</code></pre>
 </details>
 </section>
 <section>
@@ -193,31 +252,13 @@ async def notifier_task():
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="lib.server.notifier.notifier_task"><code class="name flex">
-<span>async def <span class="ident">notifier_task</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Notifier task</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def notifier_task():
-        &#34;&#34;&#34; Notifier task &#34;&#34;&#34;
-        Notifier.init()
-        await tasking.task_monitoring(Notifier.task)</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
 <dt id="lib.server.notifier.Notification"><code class="flex name class">
 <span>class <span class="ident">Notification</span></span>
-<span>(</span><span>message, image, forced, display)</span>
+<span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Notification message </p>
@@ -228,12 +269,17 @@ async def notifier_task():
 </summary>
 <pre><code class="python">class Notification:
         &#34;&#34;&#34; Notification message &#34;&#34;&#34;
-        def __init__(self, message, image, forced, display):
+        def __init__(self, **kwargs):
                 &#34;&#34;&#34; Notification constructor &#34;&#34;&#34;
-                self.message = message
-                self.image   = image
-                self.forced  = forced
-                self.display = display</code></pre>
+                self.topic   = kwargs.get(&#34;topic&#34;,  None)
+                self.value   = kwargs.get(&#34;value&#34;,  None)
+                self.message = kwargs.get(&#34;message&#34;,None)
+                self.data    = kwargs.get(&#34;data&#34;,   None)
+                self.forced  = kwargs.get(&#34;forced&#34;, False)
+                self.display = kwargs.get(&#34;display&#34;,True)
+                self.url     = kwargs.get(&#34;url&#34;,    None)
+                self.sent    = []
+                self.retry   = 0</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier"><code class="flex name class">
@@ -249,8 +295,10 @@ async def notifier_task():
         &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
         notifiers = []
         postponed = []
-        webhooks  = {}
         wake_up_event = None
+        daily_callback = None
+        one_per_day = None
+        daily_notification = [False]
 
         @staticmethod
         def init():
@@ -258,10 +306,16 @@ async def notifier_task():
                 if Notifier.wake_up_event is None:
                         Notifier.wake_up_event = uasyncio.Event()
 
+                if Notifier.daily_callback is None:
+                        Notifier.daily_callback = Notifier.default_daily_notifier
+
         @staticmethod
-        def add(callback):
-                &#34;&#34;&#34; Add notifier callback &#34;&#34;&#34;
-                Notifier.notifiers.append(callback)
+        def add():
+                &#34;&#34;&#34; Add a callback on subscription &#34;&#34;&#34;
+                def add_function(function):
+                        Notifier.notifiers.append(function)
+                        return function
+                return add_function
 
         @staticmethod
         def remove(callback):
@@ -285,96 +339,160 @@ async def notifier_task():
                 Notifier.wake_up_event.set()
 
         @staticmethod
-        def notify(message, image=None, forced=False, display=True, enabled=True):
-                &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
-                logger.syslog(&#34;Notification &#39;%s&#39; %s&#34;%(strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
+        def to_string(**kwargs):
+                &#34;&#34;&#34; Convert notification into string &#34;&#34;&#34;
+                result = b&#34;&#34;
+                item = kwargs.get(&#34;message&#34;,None)
+                if item is not None:
+                        result += b&#34;msg=&#39;&#39;&#39;%s&#39;&#39;&#39; &#34;%tools.strings.tobytes(item)
+                item = kwargs.get(&#34;topic&#34;,None)
+                if item is not None:
+                        result += b&#34;topic=%s &#34;%tools.strings.tobytes(item)
+                item = kwargs.get(&#34;value&#34;,None)
+                if item is not None:
+                        result += b&#34;value=%s &#34;%tools.strings.tobytes(item)
+                item = kwargs.get(&#34;data&#34;,None)
+                if item is not None:
+                        result += b&#34;len=%d &#34;%len(item)
+                return result
+
+        @staticmethod
+        def notify(**kwargs):
+                &#34;&#34;&#34; Notify message for all notifier registered 
+                topic   : topic name of notification
+                message : message text 
+                data    : binary buffer
+                forced  : true to force the notification, false depend of configuration
+                display : true to display in syslog, false hide in syslog 
+                url     : url link for web hook
+                enabled : true to enable notification, false to disable&#34;&#34;&#34;
+                display = kwargs.get(&#34;display&#34;,True)
+                enabled = kwargs.get(&#34;enabled&#34;,True)
+                forced  = kwargs.get(&#34;forced&#34;,False)
+                message = Notifier.to_string(**kwargs)
+
+                tools.logger.syslog(&#34;Notification %s %s&#34;%(tools.strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
                 if enabled or forced:
+                        # If postponed message list too long
+                        if len(Notifier.postponed) &gt; 10:
+                                # Remove older
+                                notification = Notifier.postponed[0]
+                                tools.logger.syslog(&#34;Notification %s failed to send&#34;%tools.strings.tostrings(notification.message), display=notification.display)
+                                del Notifier.postponed[0]
                         # Add message into postponed list
-                        Notifier.postponed.append(Notification(message, image, forced, display))
+                        Notifier.postponed.append(Notification(**kwargs))
                         Notifier.wake_up()
                 else:
                         return True
 
         @staticmethod
-        def webhook(name, url):
-                &#34;&#34;&#34; Notify webhook &#34;&#34;&#34;
-                if len(url):
-                        logger.syslog(&#34;Webhook name=&#39;%s&#39; url=&#39;%s&#39;&#34;%(name,strings.tostrings(url)))
-
-                        # Add message into postponed list
-                        Notifier.webhooks[name] = WebHook(name, url)
-                        Notifier.wake_up()
-
-        @staticmethod
         async def flush():
                 &#34;&#34;&#34; Flush postponed message if wan connected &#34;&#34;&#34;
-                result = False
-                # If postponed message list too long
-                if len(Notifier.postponed) &gt; 10:
-                        # Remove older
-                        notification = Notifier.postponed[0]
-                        logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(notification.message), display=notification.display)
-                        del Notifier.postponed[0]
+                sleep_duration = 127
 
                 # If wan available
-                if wifi.Wifi.is_wan_available():
+                if wifi.wifi.Wifi.is_wan_available():
                         result = True
-                        wanOk = None
-
                         # Try to send message
-                        for notifier in Notifier.notifiers:
-                                for notification in Notifier.postponed:
-                                        res = await notifier(notification.message, notification.image, notification.forced, display=notification.display)
-                                        if res is False:
-                                                result = False
-                                                wanOk = False
-                                                break
-                                        elif res is True:
-                                                wanOk = True
+                        for notification in Notifier.postponed:
+                                for notifier in Notifier.notifiers:
+                                        if len(Notifier.notifiers) &gt; len(notification.sent):
+                                                res = await notifier(notification)
+                                                if res is False:
+                                                        result = False
+                                                        if notification.retry == 0:
+                                                                tools.logger.syslog(&#34;Cannot send notification&#34;)
+                                                        notification.retry += 1
 
-                        # If all message notified
-                        if result:
-                                Notifier.postponed.clear()
+                        not_sent = []
+                        for notification in Notifier.postponed:
+                                if len(Notifier.notifiers) &gt; len(notification.sent):
+                                        if notification.retry &lt; 32:
+                                                not_sent.append(notification)
 
-                        # Call webhook
-                        for webhook in Notifier.webhooks.values():
-                                if await HttpClient.request(method=b&#34;GET&#34;, url=webhook.url) is None:
-                                        result = False
-
-                        # Clear all webhook
-                        Notifier.webhooks.clear()
-
-                        # If wan connected
-                        if wanOk is True:
-                                wifi.Wifi.wan_connected()
-                        # If wan problem detected
-                        if wanOk is False:
-                                wifi.Wifi.wan_disconnected()
+                        Notifier.postponed = not_sent
 
                         # If all message notified
                         if result is False:
-                                logger.syslog(&#34;Cannot send notification&#34;)
+                                sleep_duration = 19
                 else:
-                        # Wait wifi available
-                        await uasyncio.sleep(3)
-                return result
+                        sleep_duration = 5
+                return sleep_duration
 
         @staticmethod
         async def task():
                 &#34;&#34;&#34; Run the task &#34;&#34;&#34;
+                Notifier.init()
+
+                if Notifier.is_one_per_day() or Notifier.daily_notification[0] is True:
+                        Notifier.daily_notification[0] = False
+                        if Notifier.daily_callback:
+                                # pylint:disable=not-callable
+                                message = Notifier.daily_callback()
+                                Notifier.notify(topic=tools.topic.information, message=message)
+
                 # If no notification should be sent
-                if len(Notifier.postponed) == 0 and len(Notifier.webhooks) == 0:
+                sleep_duration = await Notifier.flush()
+
+                try:
                         # Wait notification
-                        await Notifier.wake_up_event.wait()
+                        await uasyncio.wait_for(Notifier.wake_up_event.wait(), sleep_duration)
                         # Clear event notification event
                         Notifier.wake_up_event.clear()
-                # Flush all notifications postponed
-                await Notifier.flush()</code></pre>
+                except:
+                        pass
+
+        @staticmethod
+        def daily_notify():
+                &#34;&#34;&#34; Force the send of daily notification &#34;&#34;&#34; 
+                Notifier.daily_notification[0] = True
+
+        @staticmethod
+        def is_one_per_day():
+                &#34;&#34;&#34; Indicates if the action must be done on per day &#34;&#34;&#34;
+                current_date = tools.date.date_to_bytes()[:14]
+                if Notifier.one_per_day is None or (current_date[-2:] == b&#34;12&#34; and current_date != Notifier.one_per_day):
+                        Notifier.one_per_day = current_date
+                        if tools.strings.ticks() &gt; 30000:
+                                return True
+                return False
+
+        @staticmethod
+        def default_daily_notifier():
+                &#34;&#34;&#34; Return the default message notification &#34;&#34;&#34;
+                message = &#34;\n - Lan Ip : %s\n&#34;%wifi.station.Station.get_info()[0]
+                message += &#34; - Wan Ip : %s\n&#34;%server.wanip.WanIp.wan_ip
+                message += &#34; - Uptime : %s\n&#34;%tools.strings.tostrings(tools.info.uptime())
+                message += &#34; - %s : %s\n&#34;%(tools.strings.tostrings(tools.lang.memory_label), tools.strings.tostrings(tools.info.meminfo()))
+                message += &#34; - %s : %s\n&#34;%(tools.strings.tostrings(tools.lang.flash_label), tools.strings.tostrings(tools.info.flashinfo()))
+                return message
+
+        @staticmethod
+        def set_daily_notifier(callback):
+                &#34;&#34;&#34; Replace the daily notification (callback which return a string with message to notify) &#34;&#34;&#34;
+                Notifier.daily_notifier = callback
+
+        @staticmethod
+        def start():
+                &#34;&#34;&#34; Start notifier task &#34;&#34;&#34;
+                tools.tasking.Tasks.create_monitor(Notifier.task)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
+<dt id="lib.server.notifier.Notifier.daily_callback"><code class="name">var <span class="ident">daily_callback</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.notifier.Notifier.daily_notification"><code class="name">var <span class="ident">daily_notification</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="lib.server.notifier.Notifier.notifiers"><code class="name">var <span class="ident">notifiers</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.notifier.Notifier.one_per_day"><code class="name">var <span class="ident">one_per_day</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -386,26 +504,60 @@ async def notifier_task():
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="lib.server.notifier.Notifier.webhooks"><code class="name">var <span class="ident">webhooks</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 </dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="lib.server.notifier.Notifier.add"><code class="name flex">
-<span>def <span class="ident">add</span></span>(<span>callback)</span>
+<span>def <span class="ident">add</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Add notifier callback</p></div>
+<div class="desc"><p>Add a callback on subscription</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def add(callback):
-        &#34;&#34;&#34; Add notifier callback &#34;&#34;&#34;
-        Notifier.notifiers.append(callback)</code></pre>
+def add():
+        &#34;&#34;&#34; Add a callback on subscription &#34;&#34;&#34;
+        def add_function(function):
+                Notifier.notifiers.append(function)
+                return function
+        return add_function</code></pre>
+</details>
+</dd>
+<dt id="lib.server.notifier.Notifier.daily_notify"><code class="name flex">
+<span>def <span class="ident">daily_notify</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Force the send of daily notification</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def daily_notify():
+        &#34;&#34;&#34; Force the send of daily notification &#34;&#34;&#34; 
+        Notifier.daily_notification[0] = True</code></pre>
+</details>
+</dd>
+<dt id="lib.server.notifier.Notifier.default_daily_notifier"><code class="name flex">
+<span>def <span class="ident">default_daily_notifier</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the default message notification</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def default_daily_notifier():
+        &#34;&#34;&#34; Return the default message notification &#34;&#34;&#34;
+        message = &#34;\n - Lan Ip : %s\n&#34;%wifi.station.Station.get_info()[0]
+        message += &#34; - Wan Ip : %s\n&#34;%server.wanip.WanIp.wan_ip
+        message += &#34; - Uptime : %s\n&#34;%tools.strings.tostrings(tools.info.uptime())
+        message += &#34; - %s : %s\n&#34;%(tools.strings.tostrings(tools.lang.memory_label), tools.strings.tostrings(tools.info.meminfo()))
+        message += &#34; - %s : %s\n&#34;%(tools.strings.tostrings(tools.lang.flash_label), tools.strings.tostrings(tools.info.flashinfo()))
+        return message</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.flush"><code class="name flex">
@@ -420,56 +572,36 @@ def add(callback):
 <pre><code class="python">@staticmethod
 async def flush():
         &#34;&#34;&#34; Flush postponed message if wan connected &#34;&#34;&#34;
-        result = False
-        # If postponed message list too long
-        if len(Notifier.postponed) &gt; 10:
-                # Remove older
-                notification = Notifier.postponed[0]
-                logger.syslog(&#34;Notification &#39;%s&#39; failed to send&#34;%strings.tostrings(notification.message), display=notification.display)
-                del Notifier.postponed[0]
+        sleep_duration = 127
 
         # If wan available
-        if wifi.Wifi.is_wan_available():
+        if wifi.wifi.Wifi.is_wan_available():
                 result = True
-                wanOk = None
-
                 # Try to send message
-                for notifier in Notifier.notifiers:
-                        for notification in Notifier.postponed:
-                                res = await notifier(notification.message, notification.image, notification.forced, display=notification.display)
-                                if res is False:
-                                        result = False
-                                        wanOk = False
-                                        break
-                                elif res is True:
-                                        wanOk = True
+                for notification in Notifier.postponed:
+                        for notifier in Notifier.notifiers:
+                                if len(Notifier.notifiers) &gt; len(notification.sent):
+                                        res = await notifier(notification)
+                                        if res is False:
+                                                result = False
+                                                if notification.retry == 0:
+                                                        tools.logger.syslog(&#34;Cannot send notification&#34;)
+                                                notification.retry += 1
 
-                # If all message notified
-                if result:
-                        Notifier.postponed.clear()
+                not_sent = []
+                for notification in Notifier.postponed:
+                        if len(Notifier.notifiers) &gt; len(notification.sent):
+                                if notification.retry &lt; 32:
+                                        not_sent.append(notification)
 
-                # Call webhook
-                for webhook in Notifier.webhooks.values():
-                        if await HttpClient.request(method=b&#34;GET&#34;, url=webhook.url) is None:
-                                result = False
-
-                # Clear all webhook
-                Notifier.webhooks.clear()
-
-                # If wan connected
-                if wanOk is True:
-                        wifi.Wifi.wan_connected()
-                # If wan problem detected
-                if wanOk is False:
-                        wifi.Wifi.wan_disconnected()
+                Notifier.postponed = not_sent
 
                 # If all message notified
                 if result is False:
-                        logger.syslog(&#34;Cannot send notification&#34;)
+                        sleep_duration = 19
         else:
-                # Wait wifi available
-                await uasyncio.sleep(3)
-        return result</code></pre>
+                sleep_duration = 5
+        return sleep_duration</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.init"><code class="name flex">
@@ -485,7 +617,10 @@ async def flush():
 def init():
         &#34;&#34;&#34; Initialize &#34;&#34;&#34;
         if Notifier.wake_up_event is None:
-                Notifier.wake_up_event = uasyncio.Event()</code></pre>
+                Notifier.wake_up_event = uasyncio.Event()
+
+        if Notifier.daily_callback is None:
+                Notifier.daily_callback = Notifier.default_daily_notifier</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.is_empty"><code class="name flex">
@@ -505,23 +640,72 @@ def is_empty():
         return False</code></pre>
 </details>
 </dd>
-<dt id="lib.server.notifier.Notifier.notify"><code class="name flex">
-<span>def <span class="ident">notify</span></span>(<span>message, image=None, forced=False, display=True, enabled=True)</span>
+<dt id="lib.server.notifier.Notifier.is_one_per_day"><code class="name flex">
+<span>def <span class="ident">is_one_per_day</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Notify message for all notifier registered</p></div>
+<div class="desc"><p>Indicates if the action must be done on per day</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def notify(message, image=None, forced=False, display=True, enabled=True):
-        &#34;&#34;&#34; Notify message for all notifier registered &#34;&#34;&#34;
-        logger.syslog(&#34;Notification &#39;%s&#39; %s&#34;%(strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
+def is_one_per_day():
+        &#34;&#34;&#34; Indicates if the action must be done on per day &#34;&#34;&#34;
+        current_date = tools.date.date_to_bytes()[:14]
+        if Notifier.one_per_day is None or (current_date[-2:] == b&#34;12&#34; and current_date != Notifier.one_per_day):
+                Notifier.one_per_day = current_date
+                if tools.strings.ticks() &gt; 30000:
+                        return True
+        return False</code></pre>
+</details>
+</dd>
+<dt id="lib.server.notifier.Notifier.notify"><code class="name flex">
+<span>def <span class="ident">notify</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Notify message for all notifier registered
+topic
+: topic name of notification
+message : message text
+data
+: binary buffer
+forced
+: true to force the notification, false depend of configuration
+display : true to display in syslog, false hide in syslog
+url
+: url link for web hook
+enabled : true to enable notification, false to disable</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def notify(**kwargs):
+        &#34;&#34;&#34; Notify message for all notifier registered 
+        topic   : topic name of notification
+        message : message text 
+        data    : binary buffer
+        forced  : true to force the notification, false depend of configuration
+        display : true to display in syslog, false hide in syslog 
+        url     : url link for web hook
+        enabled : true to enable notification, false to disable&#34;&#34;&#34;
+        display = kwargs.get(&#34;display&#34;,True)
+        enabled = kwargs.get(&#34;enabled&#34;,True)
+        forced  = kwargs.get(&#34;forced&#34;,False)
+        message = Notifier.to_string(**kwargs)
+
+        tools.logger.syslog(&#34;Notification %s %s&#34;%(tools.strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
         if enabled or forced:
+                # If postponed message list too long
+                if len(Notifier.postponed) &gt; 10:
+                        # Remove older
+                        notification = Notifier.postponed[0]
+                        tools.logger.syslog(&#34;Notification %s failed to send&#34;%tools.strings.tostrings(notification.message), display=notification.display)
+                        del Notifier.postponed[0]
                 # Add message into postponed list
-                Notifier.postponed.append(Notification(message, image, forced, display))
+                Notifier.postponed.append(Notification(**kwargs))
                 Notifier.wake_up()
         else:
                 return True</code></pre>
@@ -545,6 +729,36 @@ def remove(callback):
                         break</code></pre>
 </details>
 </dd>
+<dt id="lib.server.notifier.Notifier.set_daily_notifier"><code class="name flex">
+<span>def <span class="ident">set_daily_notifier</span></span>(<span>callback)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Replace the daily notification (callback which return a string with message to notify)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def set_daily_notifier(callback):
+        &#34;&#34;&#34; Replace the daily notification (callback which return a string with message to notify) &#34;&#34;&#34;
+        Notifier.daily_notifier = callback</code></pre>
+</details>
+</dd>
+<dt id="lib.server.notifier.Notifier.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start notifier task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def start():
+        &#34;&#34;&#34; Start notifier task &#34;&#34;&#34;
+        tools.tasking.Tasks.create_monitor(Notifier.task)</code></pre>
+</details>
+</dd>
 <dt id="lib.server.notifier.Notifier.task"><code class="name flex">
 <span>async def <span class="ident">task</span></span>(<span>)</span>
 </code></dt>
@@ -557,14 +771,53 @@ def remove(callback):
 <pre><code class="python">@staticmethod
 async def task():
         &#34;&#34;&#34; Run the task &#34;&#34;&#34;
+        Notifier.init()
+
+        if Notifier.is_one_per_day() or Notifier.daily_notification[0] is True:
+                Notifier.daily_notification[0] = False
+                if Notifier.daily_callback:
+                        # pylint:disable=not-callable
+                        message = Notifier.daily_callback()
+                        Notifier.notify(topic=tools.topic.information, message=message)
+
         # If no notification should be sent
-        if len(Notifier.postponed) == 0 and len(Notifier.webhooks) == 0:
+        sleep_duration = await Notifier.flush()
+
+        try:
                 # Wait notification
-                await Notifier.wake_up_event.wait()
+                await uasyncio.wait_for(Notifier.wake_up_event.wait(), sleep_duration)
                 # Clear event notification event
                 Notifier.wake_up_event.clear()
-        # Flush all notifications postponed
-        await Notifier.flush()</code></pre>
+        except:
+                pass</code></pre>
+</details>
+</dd>
+<dt id="lib.server.notifier.Notifier.to_string"><code class="name flex">
+<span>def <span class="ident">to_string</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert notification into string</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def to_string(**kwargs):
+        &#34;&#34;&#34; Convert notification into string &#34;&#34;&#34;
+        result = b&#34;&#34;
+        item = kwargs.get(&#34;message&#34;,None)
+        if item is not None:
+                result += b&#34;msg=&#39;&#39;&#39;%s&#39;&#39;&#39; &#34;%tools.strings.tobytes(item)
+        item = kwargs.get(&#34;topic&#34;,None)
+        if item is not None:
+                result += b&#34;topic=%s &#34;%tools.strings.tobytes(item)
+        item = kwargs.get(&#34;value&#34;,None)
+        if item is not None:
+                result += b&#34;value=%s &#34;%tools.strings.tobytes(item)
+        item = kwargs.get(&#34;data&#34;,None)
+        if item is not None:
+                result += b&#34;len=%d &#34;%len(item)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.wake_up"><code class="name flex">
@@ -583,44 +836,7 @@ def wake_up():
         Notifier.wake_up_event.set()</code></pre>
 </details>
 </dd>
-<dt id="lib.server.notifier.Notifier.webhook"><code class="name flex">
-<span>def <span class="ident">webhook</span></span>(<span>name, url)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Notify webhook</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def webhook(name, url):
-        &#34;&#34;&#34; Notify webhook &#34;&#34;&#34;
-        if len(url):
-                logger.syslog(&#34;Webhook name=&#39;%s&#39; url=&#39;%s&#39;&#34;%(name,strings.tostrings(url)))
-
-                # Add message into postponed list
-                Notifier.webhooks[name] = WebHook(name, url)
-                Notifier.wake_up()</code></pre>
-</details>
-</dd>
 </dl>
-</dd>
-<dt id="lib.server.notifier.WebHook"><code class="flex name class">
-<span>class <span class="ident">WebHook</span></span>
-<span>(</span><span>name, url)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Notification via webhook</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class WebHook:
-        &#34;&#34;&#34; Notification via webhook &#34;&#34;&#34;
-        def __init__(self, name, url):
-                self.url = url
-                self.name = name</code></pre>
-</details>
 </dd>
 </dl>
 </section>
@@ -636,11 +852,6 @@ def webhook(name, url):
 <li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="lib.server.notifier.notifier_task" href="#lib.server.notifier.notifier_task">notifier_task</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
@@ -648,24 +859,28 @@ def webhook(name, url):
 </li>
 <li>
 <h4><code><a title="lib.server.notifier.Notifier" href="#lib.server.notifier.Notifier">Notifier</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="lib.server.notifier.Notifier.add" href="#lib.server.notifier.Notifier.add">add</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.daily_callback" href="#lib.server.notifier.Notifier.daily_callback">daily_callback</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.daily_notification" href="#lib.server.notifier.Notifier.daily_notification">daily_notification</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.daily_notify" href="#lib.server.notifier.Notifier.daily_notify">daily_notify</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.default_daily_notifier" href="#lib.server.notifier.Notifier.default_daily_notifier">default_daily_notifier</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.flush" href="#lib.server.notifier.Notifier.flush">flush</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.init" href="#lib.server.notifier.Notifier.init">init</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.is_empty" href="#lib.server.notifier.Notifier.is_empty">is_empty</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.is_one_per_day" href="#lib.server.notifier.Notifier.is_one_per_day">is_one_per_day</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.notifiers" href="#lib.server.notifier.Notifier.notifiers">notifiers</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.notify" href="#lib.server.notifier.Notifier.notify">notify</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.one_per_day" href="#lib.server.notifier.Notifier.one_per_day">one_per_day</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.postponed" href="#lib.server.notifier.Notifier.postponed">postponed</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.remove" href="#lib.server.notifier.Notifier.remove">remove</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.set_daily_notifier" href="#lib.server.notifier.Notifier.set_daily_notifier">set_daily_notifier</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.start" href="#lib.server.notifier.Notifier.start">start</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.task" href="#lib.server.notifier.Notifier.task">task</a></code></li>
+<li><code><a title="lib.server.notifier.Notifier.to_string" href="#lib.server.notifier.Notifier.to_string">to_string</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.wake_up" href="#lib.server.notifier.Notifier.wake_up">wake_up</a></code></li>
 <li><code><a title="lib.server.notifier.Notifier.wake_up_event" href="#lib.server.notifier.Notifier.wake_up_event">wake_up_event</a></code></li>
-<li><code><a title="lib.server.notifier.Notifier.webhook" href="#lib.server.notifier.Notifier.webhook">webhook</a></code></li>
-<li><code><a title="lib.server.notifier.Notifier.webhooks" href="#lib.server.notifier.Notifier.webhooks">webhooks</a></code></li>
 </ul>
-</li>
-<li>
-<h4><code><a title="lib.server.notifier.WebHook" href="#lib.server.notifier.WebHook">WebHook</a></code></h4>
 </li>
 </ul>
 </li>

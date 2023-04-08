@@ -35,21 +35,24 @@ See <a href="https://www.pushover.net">https://www.pushover.net</a></p>
 See https://www.pushover.net &#34;&#34;&#34;
 # pylint:disable=wrong-import-position
 import uasyncio
-from server.stream import *
-from server.httprequest import *
-import wifi
-from tools import logger,jsonconfig,strings
+import server.stream
+import server.notifier
+import server.httprequest
+import wifi.wifi
+import tools.logger
+import tools.jsonconfig
+import tools.strings
 
-class PushOverConfig(jsonconfig.JsonConfig):
+class PushOverConfig(tools.jsonconfig.JsonConfig):
         &#34;&#34;&#34; Configuration of the pushover &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                jsonconfig.JsonConfig.__init__(self)
+                tools.jsonconfig.JsonConfig.__init__(self)
                 self.activated = False
                 self.token = b&#34;&#34;
                 self.user = b&#34;&#34;
 
-class PushOverNotifier:
+class PushOver:
         &#34;&#34;&#34; Class that manages a push over notification &#34;&#34;&#34;
         def __init__(self, host, port, token=None, user=None):
                 &#34;&#34;&#34; Constructor
@@ -67,15 +70,15 @@ class PushOverNotifier:
                 message : the message of notification (bytes field not a string)
                 image : the jpeg image or nothing (bytes field)&#34;&#34;&#34;
                 result = False
-                if wifi.Station.is_active():
+                if wifi.station.Station.is_active():
                         try:
                                 streamio = None
                                 # Open pushover connection
-                                reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
-                                streamio = Stream(reader, writer)
+                                reader,writer = await uasyncio.open_connection(tools.strings.tostrings(self.host), self.port)
+                                streamio = server.stream.Stream(reader, writer)
 
                                 # Create multipart request
-                                request = HttpRequest(None)
+                                request = server.httprequest.HttpRequest(None)
                                 request.set_method(b&#34;POST&#34;)
                                 request.set_path  (b&#34;/1/messages.json&#34;)
                                 request.set_header(b&#34;Host&#34;,self.host)
@@ -85,24 +88,24 @@ class PushOverNotifier:
 
                                 # Add token in multipart request
                                 if self.token is not None:
-                                        request.add_part(PartText(b&#34;token&#34;,self.token))
+                                        request.add_part(server.httprequest.PartText(b&#34;token&#34;,self.token))
 
                                 # Add user in multipart request
                                 if self.user is not None:
-                                        request.add_part(PartText(b&#34;user&#34;,self.user))
+                                        request.add_part(server.httprequest.PartText(b&#34;user&#34;,self.user))
 
                                 # Add message text in multipart request
-                                request.add_part(PartText(b&#34;message&#34;, message))
+                                request.add_part(server.httprequest.PartText(b&#34;message&#34;, message))
 
                                 # Add image in multipart request
                                 if image is not None:
-                                        request.add_part(PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
+                                        request.add_part(server.httprequest.PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
 
                                 # Send request to pushover
                                 await request.send(streamio)
 
                                 # Create response
-                                response = HttpResponse(streamio)
+                                response = server.httprequest.HttpResponse(streamio)
 
                                 # Receive response from pushover
                                 await response.receive(streamio)
@@ -110,40 +113,51 @@ class PushOverNotifier:
                                 # If response failed
                                 if response.status != b&#34;200&#34;:
                                         # Print error
-                                        logger.syslog(&#34;Notification failed to sent&#34;, display=display)
+                                        tools.logger.syslog(&#34;Notification failed to sent&#34;, display=display)
 
                                 # Close all connection with push over server
                                 result = True
+                                wifi.wifi.Wifi.wan_connected()
                         except Exception as err:
-                                logger.syslog(err)
+                                wifi.wifi.Wifi.wan_disconnected()
+                                tools.logger.syslog(err)
                         finally:
                                 if streamio:
                                         await streamio.close()
                 else:
-                        logger.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
+                        tools.logger.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
+                return result
+
+        @staticmethod
+        @server.notifier.Notifier.add()
+        async def notify_message(notification):
+                &#34;&#34;&#34; Notify message &#34;&#34;&#34;
+                config = PushOverConfig()
+                config.load_create()
+
+                if config.activated or notification.forced:
+                        if notification.message is not None or notification.data is not None:
+                                if PushOver.notify_message not in notification.sent:
+                                        result = await async_notify(config.user, config.token, notification.message, notification.data, display=notification.display)
+                                        if result is True:
+                                                notification.sent.append(PushOver.notify_message)
+                                else:
+                                        result = True
+                        else:
+                                result = True
+                else:
+                        result = None
                 return result
 
 async def async_notify(user, token, message, image=None, display=True):
         &#34;&#34;&#34; Asyncio notification function (only in asyncio) &#34;&#34;&#34;
-        notification = PushOverNotifier(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
-        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.get_hostname(), strings.tobytes(message)), image, display)
+        notification = PushOver(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
+        return await notification.notify(b&#34;%s : %s&#34;%(wifi.station.Station.get_hostname(), tools.strings.tobytes(message)), image, display)
 
 def notify(user, token, message, image=None):
         &#34;&#34;&#34; Notification function &#34;&#34;&#34;
         loop = uasyncio.get_event_loop()
-        loop.run_until_complete(async_notify(user=user, token=token, message=message, image=image))
-
-async def notify_message(message, image = None, forced=False, display=True):
-        &#34;&#34;&#34; Notify message &#34;&#34;&#34;
-        config = PushOverConfig()
-        if config.load() is False:
-                config.save()
-
-        if config.activated or forced:
-                result = await async_notify(config.user, config.token, message, image, display=display)
-        else:
-                result = None
-        return result</code></pre>
+        loop.run_until_complete(async_notify(user=user, token=token, message=message, image=image))</code></pre>
 </details>
 </section>
 <section>
@@ -164,8 +178,8 @@ async def notify_message(message, image = None, forced=False, display=True):
 </summary>
 <pre><code class="python">async def async_notify(user, token, message, image=None, display=True):
         &#34;&#34;&#34; Asyncio notification function (only in asyncio) &#34;&#34;&#34;
-        notification = PushOverNotifier(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
-        return await notification.notify(b&#34;%s : %s&#34;%(wifi.Station.get_hostname(), strings.tobytes(message)), image, display)</code></pre>
+        notification = PushOver(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
+        return await notification.notify(b&#34;%s : %s&#34;%(wifi.station.Station.get_hostname(), tools.strings.tobytes(message)), image, display)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.pushover.notify"><code class="name flex">
@@ -183,59 +197,13 @@ async def notify_message(message, image = None, forced=False, display=True):
         loop.run_until_complete(async_notify(user=user, token=token, message=message, image=image))</code></pre>
 </details>
 </dd>
-<dt id="lib.server.pushover.notify_message"><code class="name flex">
-<span>async def <span class="ident">notify_message</span></span>(<span>message, image=None, forced=False, display=True)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Notify message</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def notify_message(message, image = None, forced=False, display=True):
-        &#34;&#34;&#34; Notify message &#34;&#34;&#34;
-        config = PushOverConfig()
-        if config.load() is False:
-                config.save()
-
-        if config.activated or forced:
-                result = await async_notify(config.user, config.token, message, image, display=display)
-        else:
-                result = None
-        return result</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="lib.server.pushover.PushOverConfig"><code class="flex name class">
-<span>class <span class="ident">PushOverConfig</span></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Configuration of the pushover </p>
-<p>Constructor</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class PushOverConfig(jsonconfig.JsonConfig):
-        &#34;&#34;&#34; Configuration of the pushover &#34;&#34;&#34;
-        def __init__(self):
-                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                jsonconfig.JsonConfig.__init__(self)
-                self.activated = False
-                self.token = b&#34;&#34;
-                self.user = b&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>tools.jsonconfig.JsonConfig</li>
-</ul>
-</dd>
-<dt id="lib.server.pushover.PushOverNotifier"><code class="flex name class">
-<span>class <span class="ident">PushOverNotifier</span></span>
+<dt id="lib.server.pushover.PushOver"><code class="flex name class">
+<span>class <span class="ident">PushOver</span></span>
 <span>(</span><span>host, port, token=None, user=None)</span>
 </code></dt>
 <dd>
@@ -249,7 +217,7 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class PushOverNotifier:
+<pre><code class="python">class PushOver:
         &#34;&#34;&#34; Class that manages a push over notification &#34;&#34;&#34;
         def __init__(self, host, port, token=None, user=None):
                 &#34;&#34;&#34; Constructor
@@ -267,15 +235,15 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
                 message : the message of notification (bytes field not a string)
                 image : the jpeg image or nothing (bytes field)&#34;&#34;&#34;
                 result = False
-                if wifi.Station.is_active():
+                if wifi.station.Station.is_active():
                         try:
                                 streamio = None
                                 # Open pushover connection
-                                reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
-                                streamio = Stream(reader, writer)
+                                reader,writer = await uasyncio.open_connection(tools.strings.tostrings(self.host), self.port)
+                                streamio = server.stream.Stream(reader, writer)
 
                                 # Create multipart request
-                                request = HttpRequest(None)
+                                request = server.httprequest.HttpRequest(None)
                                 request.set_method(b&#34;POST&#34;)
                                 request.set_path  (b&#34;/1/messages.json&#34;)
                                 request.set_header(b&#34;Host&#34;,self.host)
@@ -285,24 +253,24 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
 
                                 # Add token in multipart request
                                 if self.token is not None:
-                                        request.add_part(PartText(b&#34;token&#34;,self.token))
+                                        request.add_part(server.httprequest.PartText(b&#34;token&#34;,self.token))
 
                                 # Add user in multipart request
                                 if self.user is not None:
-                                        request.add_part(PartText(b&#34;user&#34;,self.user))
+                                        request.add_part(server.httprequest.PartText(b&#34;user&#34;,self.user))
 
                                 # Add message text in multipart request
-                                request.add_part(PartText(b&#34;message&#34;, message))
+                                request.add_part(server.httprequest.PartText(b&#34;message&#34;, message))
 
                                 # Add image in multipart request
                                 if image is not None:
-                                        request.add_part(PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
+                                        request.add_part(server.httprequest.PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
 
                                 # Send request to pushover
                                 await request.send(streamio)
 
                                 # Create response
-                                response = HttpResponse(streamio)
+                                response = server.httprequest.HttpResponse(streamio)
 
                                 # Receive response from pushover
                                 await response.receive(streamio)
@@ -310,22 +278,79 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
                                 # If response failed
                                 if response.status != b&#34;200&#34;:
                                         # Print error
-                                        logger.syslog(&#34;Notification failed to sent&#34;, display=display)
+                                        tools.logger.syslog(&#34;Notification failed to sent&#34;, display=display)
 
                                 # Close all connection with push over server
                                 result = True
+                                wifi.wifi.Wifi.wan_connected()
                         except Exception as err:
-                                logger.syslog(err)
+                                wifi.wifi.Wifi.wan_disconnected()
+                                tools.logger.syslog(err)
                         finally:
                                 if streamio:
                                         await streamio.close()
                 else:
-                        logger.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
+                        tools.logger.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
+                return result
+
+        @staticmethod
+        @server.notifier.Notifier.add()
+        async def notify_message(notification):
+                &#34;&#34;&#34; Notify message &#34;&#34;&#34;
+                config = PushOverConfig()
+                config.load_create()
+
+                if config.activated or notification.forced:
+                        if notification.message is not None or notification.data is not None:
+                                if PushOver.notify_message not in notification.sent:
+                                        result = await async_notify(config.user, config.token, notification.message, notification.data, display=notification.display)
+                                        if result is True:
+                                                notification.sent.append(PushOver.notify_message)
+                                else:
+                                        result = True
+                        else:
+                                result = True
+                else:
+                        result = None
                 return result</code></pre>
 </details>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.server.pushover.PushOver.notify_message"><code class="name flex">
+<span>async def <span class="ident">notify_message</span></span>(<span>notification)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Notify message</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+@server.notifier.Notifier.add()
+async def notify_message(notification):
+        &#34;&#34;&#34; Notify message &#34;&#34;&#34;
+        config = PushOverConfig()
+        config.load_create()
+
+        if config.activated or notification.forced:
+                if notification.message is not None or notification.data is not None:
+                        if PushOver.notify_message not in notification.sent:
+                                result = await async_notify(config.user, config.token, notification.message, notification.data, display=notification.display)
+                                if result is True:
+                                        notification.sent.append(PushOver.notify_message)
+                        else:
+                                result = True
+                else:
+                        result = True
+        else:
+                result = None
+        return result</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.server.pushover.PushOverNotifier.notify"><code class="name flex">
+<dt id="lib.server.pushover.PushOver.notify"><code class="name flex">
 <span>async def <span class="ident">notify</span></span>(<span>self, message, image=None, display=True)</span>
 </code></dt>
 <dd>
@@ -341,15 +366,15 @@ image : the jpeg image or nothing (bytes field)</p></div>
         message : the message of notification (bytes field not a string)
         image : the jpeg image or nothing (bytes field)&#34;&#34;&#34;
         result = False
-        if wifi.Station.is_active():
+        if wifi.station.Station.is_active():
                 try:
                         streamio = None
                         # Open pushover connection
-                        reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
-                        streamio = Stream(reader, writer)
+                        reader,writer = await uasyncio.open_connection(tools.strings.tostrings(self.host), self.port)
+                        streamio = server.stream.Stream(reader, writer)
 
                         # Create multipart request
-                        request = HttpRequest(None)
+                        request = server.httprequest.HttpRequest(None)
                         request.set_method(b&#34;POST&#34;)
                         request.set_path  (b&#34;/1/messages.json&#34;)
                         request.set_header(b&#34;Host&#34;,self.host)
@@ -359,24 +384,24 @@ image : the jpeg image or nothing (bytes field)</p></div>
 
                         # Add token in multipart request
                         if self.token is not None:
-                                request.add_part(PartText(b&#34;token&#34;,self.token))
+                                request.add_part(server.httprequest.PartText(b&#34;token&#34;,self.token))
 
                         # Add user in multipart request
                         if self.user is not None:
-                                request.add_part(PartText(b&#34;user&#34;,self.user))
+                                request.add_part(server.httprequest.PartText(b&#34;user&#34;,self.user))
 
                         # Add message text in multipart request
-                        request.add_part(PartText(b&#34;message&#34;, message))
+                        request.add_part(server.httprequest.PartText(b&#34;message&#34;, message))
 
                         # Add image in multipart request
                         if image is not None:
-                                request.add_part(PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
+                                request.add_part(server.httprequest.PartBin(b&#34;attachment&#34;,b&#34;image.jpg&#34;,image, b&#34;image/jpeg&#34;))
 
                         # Send request to pushover
                         await request.send(streamio)
 
                         # Create response
-                        response = HttpResponse(streamio)
+                        response = server.httprequest.HttpResponse(streamio)
 
                         # Receive response from pushover
                         await response.receive(streamio)
@@ -384,21 +409,47 @@ image : the jpeg image or nothing (bytes field)</p></div>
                         # If response failed
                         if response.status != b&#34;200&#34;:
                                 # Print error
-                                logger.syslog(&#34;Notification failed to sent&#34;, display=display)
+                                tools.logger.syslog(&#34;Notification failed to sent&#34;, display=display)
 
                         # Close all connection with push over server
                         result = True
+                        wifi.wifi.Wifi.wan_connected()
                 except Exception as err:
-                        logger.syslog(err)
+                        wifi.wifi.Wifi.wan_disconnected()
+                        tools.logger.syslog(err)
                 finally:
                         if streamio:
                                 await streamio.close()
         else:
-                logger.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
+                tools.logger.syslog(&#34;Notification not sent : wifi not connected&#34;, display=display)
         return result</code></pre>
 </details>
 </dd>
 </dl>
+</dd>
+<dt id="lib.server.pushover.PushOverConfig"><code class="flex name class">
+<span>class <span class="ident">PushOverConfig</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Configuration of the pushover </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PushOverConfig(tools.jsonconfig.JsonConfig):
+        &#34;&#34;&#34; Configuration of the pushover &#34;&#34;&#34;
+        def __init__(self):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                tools.jsonconfig.JsonConfig.__init__(self)
+                self.activated = False
+                self.token = b&#34;&#34;
+                self.user = b&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>tools.jsonconfig.JsonConfig</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -418,19 +469,19 @@ image : the jpeg image or nothing (bytes field)</p></div>
 <ul class="">
 <li><code><a title="lib.server.pushover.async_notify" href="#lib.server.pushover.async_notify">async_notify</a></code></li>
 <li><code><a title="lib.server.pushover.notify" href="#lib.server.pushover.notify">notify</a></code></li>
-<li><code><a title="lib.server.pushover.notify_message" href="#lib.server.pushover.notify_message">notify_message</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="lib.server.pushover.PushOverConfig" href="#lib.server.pushover.PushOverConfig">PushOverConfig</a></code></h4>
+<h4><code><a title="lib.server.pushover.PushOver" href="#lib.server.pushover.PushOver">PushOver</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.pushover.PushOver.notify" href="#lib.server.pushover.PushOver.notify">notify</a></code></li>
+<li><code><a title="lib.server.pushover.PushOver.notify_message" href="#lib.server.pushover.PushOver.notify_message">notify_message</a></code></li>
+</ul>
 </li>
 <li>
-<h4><code><a title="lib.server.pushover.PushOverNotifier" href="#lib.server.pushover.PushOverNotifier">PushOverNotifier</a></code></h4>
-<ul class="">
-<li><code><a title="lib.server.pushover.PushOverNotifier.notify" href="#lib.server.pushover.PushOverNotifier.notify">notify</a></code></li>
-</ul>
+<h4><code><a title="lib.server.pushover.PushOverConfig" href="#lib.server.pushover.PushOverConfig">PushOverConfig</a></code></h4>
 </li>
 </ul>
 </li>

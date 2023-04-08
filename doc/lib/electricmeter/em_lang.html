@@ -31,13 +31,15 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Language selected and regional time &#34;&#34;&#34;
-from tools import region, strings, logger
+import tools.region
+import tools.strings
+import tools.logger
 
 try:
-        exec(b&#34;from electricmeter.em_lang_%s import *&#34;%region.RegionConfig.get().lang)
-        logger.syslog(&#34;Select electricmeter lang : %s&#34;%strings.tostrings(region.RegionConfig.get().lang))
+        exec(b&#34;from electricmeter.em_lang_%s import *&#34;%tools.region.RegionConfig.get().lang)
+        tools.logger.syslog(&#34;Select electricmeter lang : %s&#34;%tools.strings.tostrings(tools.region.RegionConfig.get().lang))
 except Exception as err:
-        logger.syslog(err)
+        tools.logger.syslog(err)
         from electricmeter.em_lang_english import *</code></pre>
 </details>
 </section>

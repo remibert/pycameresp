@@ -31,15 +31,19 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Class used to manage a username and a password &#34;&#34;&#34;
-from tools import logger,jsonconfig,encryption,strings,info
+import tools.logger
+import tools.jsonconfig
+import tools.encryption
+import tools.strings
+import tools.info
 
 EMPTY_PASSWORD = b&#34;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&#34; # empty password
 
-class UserConfig(jsonconfig.JsonConfig):
+class UserConfig(tools.jsonconfig.JsonConfig):
         &#34;&#34;&#34; User configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                jsonconfig.JsonConfig.__init__(self)
+                tools.jsonconfig.JsonConfig.__init__(self)
                 self.user = b&#34;&#34;
                 self.password = EMPTY_PASSWORD
                 if self.load() is False:
@@ -70,23 +74,23 @@ class User:
                 user = user.lower()
 
                 if User.instance.user == b&#34;&#34;:
-                        info.set_last_activity()
+                        tools.info.set_last_activity()
                         return True
                 elif user == User.instance.user:
-                        if encryption.gethash(password) == User.instance.password:
-                                info.set_last_activity()
+                        if tools.encryption.gethash(password) == User.instance.password:
+                                tools.info.set_last_activity()
                                 if log is True:
                                         User.login_state[0] = True
                                 return True
                         else:
                                 if log is True:
                                         User.login_state[0] = False
-                                        logger.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%strings.tostrings(user), display=display)
+                                        tools.logger.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%tools.strings.tostrings(user), display=display)
                 else:
                         if user != b&#34;&#34;:
                                 if log is True:
                                         User.login_state[0] = False
-                                        logger.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%strings.tostrings(user), display=display)
+                                        tools.logger.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%tools.strings.tostrings(user), display=display)
                 return False
 
         @staticmethod
@@ -117,7 +121,7 @@ class User:
                                         User.instance.password = EMPTY_PASSWORD
                                 else:
                                         User.instance.user     = user
-                                        User.instance.password = encryption.gethash(new_password)
+                                        User.instance.password = tools.encryption.gethash(new_password)
                                 User.instance.save()
                                 return True
                         else:
@@ -168,23 +172,23 @@ class User:
                 user = user.lower()
 
                 if User.instance.user == b&#34;&#34;:
-                        info.set_last_activity()
+                        tools.info.set_last_activity()
                         return True
                 elif user == User.instance.user:
-                        if encryption.gethash(password) == User.instance.password:
-                                info.set_last_activity()
+                        if tools.encryption.gethash(password) == User.instance.password:
+                                tools.info.set_last_activity()
                                 if log is True:
                                         User.login_state[0] = True
                                 return True
                         else:
                                 if log is True:
                                         User.login_state[0] = False
-                                        logger.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%strings.tostrings(user), display=display)
+                                        tools.logger.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%tools.strings.tostrings(user), display=display)
                 else:
                         if user != b&#34;&#34;:
                                 if log is True:
                                         User.login_state[0] = False
-                                        logger.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%strings.tostrings(user), display=display)
+                                        tools.logger.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%tools.strings.tostrings(user), display=display)
                 return False
 
         @staticmethod
@@ -215,7 +219,7 @@ class User:
                                         User.instance.password = EMPTY_PASSWORD
                                 else:
                                         User.instance.user     = user
-                                        User.instance.password = encryption.gethash(new_password)
+                                        User.instance.password = tools.encryption.gethash(new_password)
                                 User.instance.save()
                                 return True
                         else:
@@ -257,7 +261,7 @@ def change(user, current_password, new_password, renew_password):
                                 User.instance.password = EMPTY_PASSWORD
                         else:
                                 User.instance.user     = user
-                                User.instance.password = encryption.gethash(new_password)
+                                User.instance.password = tools.encryption.gethash(new_password)
                         User.instance.save()
                         return True
                 else:
@@ -281,23 +285,23 @@ def check(user, password, log=True, display=True):
         user = user.lower()
 
         if User.instance.user == b&#34;&#34;:
-                info.set_last_activity()
+                tools.info.set_last_activity()
                 return True
         elif user == User.instance.user:
-                if encryption.gethash(password) == User.instance.password:
-                        info.set_last_activity()
+                if tools.encryption.gethash(password) == User.instance.password:
+                        tools.info.set_last_activity()
                         if log is True:
                                 User.login_state[0] = True
                         return True
                 else:
                         if log is True:
                                 User.login_state[0] = False
-                                logger.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%strings.tostrings(user), display=display)
+                                tools.logger.syslog(&#34;Login failed, wrong password for user &#39;%s&#39;&#34;%tools.strings.tostrings(user), display=display)
         else:
                 if user != b&#34;&#34;:
                         if log is True:
                                 User.login_state[0] = False
-                                logger.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%strings.tostrings(user), display=display)
+                                tools.logger.syslog(&#34;Login failed, unkwnon user &#39;%s&#39;&#34;%tools.strings.tostrings(user), display=display)
         return False</code></pre>
 </details>
 </dd>
@@ -381,11 +385,11 @@ def is_empty():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class UserConfig(jsonconfig.JsonConfig):
+<pre><code class="python">class UserConfig(tools.jsonconfig.JsonConfig):
         &#34;&#34;&#34; User configuration &#34;&#34;&#34;
         def __init__(self):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
-                jsonconfig.JsonConfig.__init__(self)
+                tools.jsonconfig.JsonConfig.__init__(self)
                 self.user = b&#34;&#34;
                 self.password = EMPTY_PASSWORD
                 if self.load() is False:

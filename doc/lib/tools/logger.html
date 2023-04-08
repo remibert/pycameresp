@@ -33,17 +33,14 @@
 &#34;&#34;&#34; Logger and exception functions &#34;&#34;&#34;
 import sys
 import io
-try:
-        from tools import filesystem, strings, date
-except:
-        import filesystem
-        import strings
-
+import tools.filesystem
+import tools.strings
+import tools.date
 
 def exception(err, msg=&#34;&#34;):
         &#34;&#34;&#34; Return the content of exception into a string &#34;&#34;&#34;
         file = io.StringIO()
-        if filesystem.ismicropython():
+        if tools.filesystem.ismicropython():
                 # pylint: disable=no-member
                 sys.print_exception(err, file)
                 text = file.getvalue()
@@ -63,11 +60,11 @@ def syslog(err, msg=&#34;&#34;, display=True, write=True):
         if msg != &#34;&#34;:
                 msg += &#34;\n&#34;
                 if display:
-                        print(strings.tostrings(msg))
+                        print(tools.strings.tostrings(msg))
         if display:
-                print(strings.tostrings(err))
+                print(tools.strings.tostrings(err))
 
-        result = &#34;%s%s&#34;%(strings.tostrings(msg),strings.tostrings(err))
+        result = &#34;%s%s&#34;%(tools.strings.tostrings(msg),tools.strings.tostrings(err))
 
         if write:
                 log(result)
@@ -78,7 +75,7 @@ def log(msg):
         # pylint:disable=unspecified-encoding
         try:
                 filename = &#34;syslog.log&#34;
-                if filesystem.ismicropython():
+                if tools.filesystem.ismicropython():
                         filename = &#34;/&#34; + filename
 
                 log_file = open(filename,&#34;a&#34;)
@@ -86,18 +83,17 @@ def log(msg):
 
                 if log_file.tell() &gt;32*1024:
                         log_file.close()
-                        filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
-                        filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
-                        filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
-                        filesystem.rename(filename       ,filename + &#34;.1&#34;)
+                        tools.filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
+                        tools.filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
+                        tools.filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
+                        tools.filesystem.rename(filename       ,filename + &#34;.1&#34;)
                         log_file = open(filename,&#34;a&#34;)
 
-                log_file.write(date.date_ms_to_string() + &#34; %s\n&#34;%(msg))
+                log_file.write(tools.date.date_ms_to_string() + &#34; %s\n&#34;%(msg))
                 log_file.flush()
                 log_file.close()
         except:
-                print(&#34;No space&#34;)
-
+                print(&#34;No space, flash full&#34;)
 
 def html_exception(err):
         &#34;&#34;&#34; Return the content of exception into an html bytes &#34;&#34;&#34;
@@ -105,7 +101,7 @@ def html_exception(err):
         text = text.replace(&#34;\n    &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;)
         text = text.replace(&#34;\n  &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&#34;)
         text = text.replace(&#34;\n&#34;,&#34;&lt;br&gt;&#34;)
-        return strings.tobytes(text)</code></pre>
+        return tools.strings.tobytes(text)</code></pre>
 </details>
 </section>
 <section>
@@ -127,7 +123,7 @@ def html_exception(err):
 <pre><code class="python">def exception(err, msg=&#34;&#34;):
         &#34;&#34;&#34; Return the content of exception into a string &#34;&#34;&#34;
         file = io.StringIO()
-        if filesystem.ismicropython():
+        if tools.filesystem.ismicropython():
                 # pylint: disable=no-member
                 sys.print_exception(err, file)
                 text = file.getvalue()
@@ -156,7 +152,7 @@ def html_exception(err):
         text = text.replace(&#34;\n    &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;)
         text = text.replace(&#34;\n  &#34;,&#34;&lt;br&gt;&amp;nbsp;&amp;nbsp;&#34;)
         text = text.replace(&#34;\n&#34;,&#34;&lt;br&gt;&#34;)
-        return strings.tobytes(text)</code></pre>
+        return tools.strings.tobytes(text)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.logger.log"><code class="name flex">
@@ -173,7 +169,7 @@ def html_exception(err):
         # pylint:disable=unspecified-encoding
         try:
                 filename = &#34;syslog.log&#34;
-                if filesystem.ismicropython():
+                if tools.filesystem.ismicropython():
                         filename = &#34;/&#34; + filename
 
                 log_file = open(filename,&#34;a&#34;)
@@ -181,17 +177,17 @@ def html_exception(err):
 
                 if log_file.tell() &gt;32*1024:
                         log_file.close()
-                        filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
-                        filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
-                        filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
-                        filesystem.rename(filename       ,filename + &#34;.1&#34;)
+                        tools.filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
+                        tools.filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
+                        tools.filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
+                        tools.filesystem.rename(filename       ,filename + &#34;.1&#34;)
                         log_file = open(filename,&#34;a&#34;)
 
-                log_file.write(date.date_ms_to_string() + &#34; %s\n&#34;%(msg))
+                log_file.write(tools.date.date_ms_to_string() + &#34; %s\n&#34;%(msg))
                 log_file.flush()
                 log_file.close()
         except:
-                print(&#34;No space&#34;)</code></pre>
+                print(&#34;No space, flash full&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.logger.syslog"><code class="name flex">
@@ -210,11 +206,11 @@ def html_exception(err):
         if msg != &#34;&#34;:
                 msg += &#34;\n&#34;
                 if display:
-                        print(strings.tostrings(msg))
+                        print(tools.strings.tostrings(msg))
         if display:
-                print(strings.tostrings(err))
+                print(tools.strings.tostrings(err))
 
-        result = &#34;%s%s&#34;%(strings.tostrings(msg),strings.tostrings(err))
+        result = &#34;%s%s&#34;%(tools.strings.tostrings(msg),tools.strings.tostrings(err))
 
         if write:
                 log(result)

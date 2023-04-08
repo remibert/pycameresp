@@ -30,34 +30,34 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to configure the pushover notifications &#34;&#34;&#34;
-from server.httpserver import HttpServer
-from server.pushover   import *
+import server.httpserver
+import server.pushover
 from htmltemplate      import *
-from webpage.mainpage  import main_frame, manage_default_button
-from tools             import lang
+import webpage.mainpage
+import tools.lang
 
-@HttpServer.add_route(b&#39;/pushover&#39;, menu=lang.menu_server, item=lang.item_notification)
+@server.httpserver.HttpServer.add_route(b&#39;/pushover&#39;, menu=tools.lang.menu_server, item=tools.lang.item_notification)
 async def pushover(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the pushover notifications &#34;&#34;&#34;
-        config = PushOverConfig()
-        disabled, action, submit = manage_default_button(request, config)
+        config = server.pushover.PushOverConfig()
+        disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
         if action == b&#34;save&#34;:
                 if config.activated:
-                        msg = lang.pushover_on
+                        msg = tools.lang.pushover_on
                 else:
-                        msg = lang.pushover_off
-                await async_notify(token=config.token, user=config.user, message = msg)
+                        msg = tools.lang.pushover_off
+                await server.pushover.async_notify(token=config.token, user=config.user, message = msg)
         if disabled:
                 typ = b&#34;password&#34;
         else:
                 typ = b&#34;&#34;
-        page = main_frame(request, response, args,lang.notification_configuration,
+        page = webpage.mainpage.main_frame(request, response, args,tools.lang.notification_configuration,
                 Form([
-                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                        Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
-                        Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
+                        Switch(text=tools.lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Edit(text=tools.lang.pushover_user,  name=b&#34;user&#34;,  placeholder=tools.lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
+                        Edit(text=tools.lang.pushover_token, name=b&#34;token&#34;, placeholder=tools.lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
                         submit,
-                        Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website)
+                        Br(), Link(href=b&#34;https://pushover.net&#34;, text=tools.lang.see_pushover_website)
                 ]))
 
         await response.send_page(page)</code></pre>
@@ -79,28 +79,28 @@ async def pushover(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.add_route(b&#39;/pushover&#39;, menu=lang.menu_server, item=lang.item_notification)
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/pushover&#39;, menu=tools.lang.menu_server, item=tools.lang.item_notification)
 async def pushover(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the pushover notifications &#34;&#34;&#34;
-        config = PushOverConfig()
-        disabled, action, submit = manage_default_button(request, config)
+        config = server.pushover.PushOverConfig()
+        disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
         if action == b&#34;save&#34;:
                 if config.activated:
-                        msg = lang.pushover_on
+                        msg = tools.lang.pushover_on
                 else:
-                        msg = lang.pushover_off
-                await async_notify(token=config.token, user=config.user, message = msg)
+                        msg = tools.lang.pushover_off
+                await server.pushover.async_notify(token=config.token, user=config.user, message = msg)
         if disabled:
                 typ = b&#34;password&#34;
         else:
                 typ = b&#34;&#34;
-        page = main_frame(request, response, args,lang.notification_configuration,
+        page = webpage.mainpage.main_frame(request, response, args,tools.lang.notification_configuration,
                 Form([
-                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                        Edit(text=lang.pushover_user,  name=b&#34;user&#34;,  placeholder=lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
-                        Edit(text=lang.pushover_token, name=b&#34;token&#34;, placeholder=lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
+                        Switch(text=tools.lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Edit(text=tools.lang.pushover_user,  name=b&#34;user&#34;,  placeholder=tools.lang.enter_pushover_user,  type=typ, value=config.user,  disabled=disabled),
+                        Edit(text=tools.lang.pushover_token, name=b&#34;token&#34;, placeholder=tools.lang.enter_pushover_token, type=typ, value=config.token, disabled=disabled),
                         submit,
-                        Br(), Link(href=b&#34;https://pushover.net&#34;, text=lang.see_pushover_website)
+                        Br(), Link(href=b&#34;https://pushover.net&#34;, text=tools.lang.see_pushover_website)
                 ]))
 
         await response.send_page(page)</code></pre>

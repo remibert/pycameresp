@@ -31,7 +31,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 import collections
-from tools import strings
+import tools.strings
 # url = b&#34;http://user:passsword@192.168.1.28:8080/toto/json.htm?type=command&amp;param=switchlight&amp;idx=4&amp;switchcmd=On&amp;error=mon+error#my_anchor&#34;
 
 class UrlParser:
@@ -240,9 +240,9 @@ class UrlParser:
                 elif type(value) == type(b&#34;&#34;):
                         pass
                 elif type(value) == type(&#34;&#34;):
-                        value = strings.tobytes(value)
+                        value = tools.strings.tobytes(value)
                 else:
-                        value = strings.tobytes(value)
+                        value = tools.strings.tobytes(value)
                 return value
 
         def get_params(self):
@@ -263,9 +263,9 @@ class UrlParser:
                 result += b&#34;user     : &#39;%s&#39;\n&#34;%self.user
                 result += b&#34;password : &#39;%s&#39;\n&#34;%self.password
                 result += b&#34;path     : &#39;%s&#39;\n&#34;%self.path
-                result += b&#34;params   : %s\n&#34;%strings.tobytes(str(strings.tostrings(self.params)))
+                result += b&#34;params   : %s\n&#34;%tools.strings.tobytes(str(tools.strings.tostrings(self.params)))
                 result += b&#34;anchor   : &#39;%s&#39;\n&#34;%self.anchor
-                return strings.tostrings(result)</code></pre>
+                return tools.strings.tostrings(result)</code></pre>
 </details>
 </section>
 <section>
@@ -494,9 +494,9 @@ class UrlParser:
                 elif type(value) == type(b&#34;&#34;):
                         pass
                 elif type(value) == type(&#34;&#34;):
-                        value = strings.tobytes(value)
+                        value = tools.strings.tobytes(value)
                 else:
-                        value = strings.tobytes(value)
+                        value = tools.strings.tobytes(value)
                 return value
 
         def get_params(self):
@@ -517,9 +517,9 @@ class UrlParser:
                 result += b&#34;user     : &#39;%s&#39;\n&#34;%self.user
                 result += b&#34;password : &#39;%s&#39;\n&#34;%self.password
                 result += b&#34;path     : &#39;%s&#39;\n&#34;%self.path
-                result += b&#34;params   : %s\n&#34;%strings.tobytes(str(strings.tostrings(self.params)))
+                result += b&#34;params   : %s\n&#34;%tools.strings.tobytes(str(tools.strings.tostrings(self.params)))
                 result += b&#34;anchor   : &#39;%s&#39;\n&#34;%self.anchor
-                return strings.tostrings(result)</code></pre>
+                return tools.strings.tostrings(result)</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
@@ -547,9 +547,9 @@ def adapt_value(value):
         elif type(value) == type(b&#34;&#34;):
                 pass
         elif type(value) == type(&#34;&#34;):
-                value = strings.tobytes(value)
+                value = tools.strings.tobytes(value)
         else:
-                value = strings.tobytes(value)
+                value = tools.strings.tobytes(value)
         return value</code></pre>
 </details>
 </dd>

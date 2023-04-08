@@ -547,11 +547,14 @@ class ElectricMeter:
 	@staticmethod
 	def start(**kwargs):
 		""" Start electric meter task """
-		server.notifier.Notifier.set_daily_notifier(ElectricMeter.daily_notifier)
-		tools.tasking.Tasks.create_task(HourlyCounter.task(**kwargs))
-		tools.tasking.Tasks.create_task(MonthlyCounter.task())
-		if tools.filesystem.ismicropython() is False:
-			tools.tasking.Tasks.create_task(HourlyCounter.pulse_simulator())
+		if tools.support.counter():
+			server.notifier.Notifier.set_daily_notifier(ElectricMeter.daily_notifier)
+			tools.tasking.Tasks.create_task(HourlyCounter.task(**kwargs))
+			tools.tasking.Tasks.create_task(MonthlyCounter.task())
+			if tools.filesystem.ismicropython() is False:
+				tools.tasking.Tasks.create_task(HourlyCounter.pulse_simulator())
+		else:
+			tools.logger.syslog("Electric meter requires hardware counter")
 
 	@staticmethod
 	def daily_notifier():

@@ -7,7 +7,7 @@
 <title>lib.server.httprequest API documentation</title>
 <meta name="description" content="These classes manage http responses and requests.
 The set of request and response are in bytes format.
-I no longer use strings, because they are …" />
+I no longer use tools.strings., because they …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -26,7 +26,7 @@ I no longer use strings, because they are …" />
 <section id="section-intro">
 <p>These classes manage http responses and requests.
 The set of request and response are in bytes format.
-I no longer use strings, because they are between 20 and 30 times slower.
+I no longer use tools.strings., because they are between 20 and 30 times slower.
 It may sound a bit more complicated, but it's a lot quick.</p>
 <details class="source">
 <summary>
@@ -40,7 +40,7 @@ It may sound a bit more complicated, but it's a lot quick.</p>
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; These classes manage http responses and requests.
 The set of request and response are in bytes format.
-I no longer use strings, because they are between 20 and 30 times slower.
+I no longer use tools.strings., because they are between 20 and 30 times slower.
 It may sound a bit more complicated, but it&#39;s a lot quick.
 &#34;&#34;&#34;
 import hashlib
@@ -49,7 +49,9 @@ from binascii import hexlify, b2a_base64
 import collections
 import server.stream
 import server.urlparser
-from tools import logger,filesystem,strings
+import tools.logger
+import tools.filesystem
+import tools.strings
 
 MIMES = {\
         b&#34;.txt&#34;   : b&#34;text/plain&#34;,
@@ -100,7 +102,7 @@ class Http:
 
         def __del__(self):
                 if self.content_file is not None:
-                        filesystem.remove(self.content_file)
+                        tools.filesystem.remove(self.content_file)
 
         def get_expiration(self, expiration):
                 &#34;&#34;&#34; Get cookie expiration date &#34;&#34;&#34;
@@ -199,7 +201,7 @@ class Http:
                 &#34;&#34;&#34; Read the content of http request &#34;&#34;&#34;
                 if self.headers.get(b&#34;Transfer-Encoding&#34;,b&#34;&#34;) == b&#34;chunked&#34;:
                         length = await streamio.readline()
-                        length = eval(strings.tostrings(b&#34;0x%s&#34;%length.strip()))
+                        length = eval(tools.strings.tostrings(b&#34;0x%s&#34;%length.strip()))
                         self.chunk_size = length
                         chunk = True
                 else:
@@ -326,10 +328,10 @@ class Http:
                                         result += await self.content.serialize(streamio)
                                         no_end = True
                         except Exception as err:
-                                logger.syslog(err)
+                                tools.logger.syslog(err)
                                 # Serialize error detected
                                 result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
-                                result += await streamio.write(strings.tostrings(logger.exception(err)))
+                                result += await streamio.write(tools.strings.tostrings(tools.logger.exception(err)))
                 # If multipart detected
                 elif len(self.parts) &gt; 0:
                         # If the header is a multipart
@@ -387,8 +389,8 @@ class ContentFile:
                 self.base64 = base64
                 if content_type is None:
                         global MIMES
-                        ext = filesystem.splitext(strings.tostrings(self.filenames[0]))[1]
-                        self.content_type = MIMES.get(strings.tobytes(ext),b&#34;text/plain&#34;)
+                        ext = tools.filesystem.splitext(tools.strings.tostrings(self.filenames[0]))[1]
+                        self.content_type = MIMES.get(tools.strings.tobytes(ext),b&#34;text/plain&#34;)
                 else:
                         self.content_type = content_type
 
@@ -397,11 +399,11 @@ class ContentFile:
                 result = 0
                 found = False
 
-                filename = strings.tostrings(filename)
+                filename = tools.strings.tostrings(filename)
 
                 # If file existing
-                if filesystem.exists(filename):
-                        with open(strings.tostrings(filename), &#34;rb&#34;) as f:
+                if tools.filesystem.exists(filename):
+                        with open(tools.strings.tostrings(filename), &#34;rb&#34;) as f:
                                 found = True
                                 result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.content_type))
                                 if server.stream.Bufferedio.is_enough_memory():
@@ -429,7 +431,7 @@ class ContentFile:
                                                 length_written += await streamio.write(buf)
                                 result += length_written
                 else:
-                        logger.syslog(&#34;%s file not found&#34;%filename)
+                        tools.logger.syslog(&#34;%s file not found&#34;%filename)
                 return result, found
 
         async def serialize(self, streamio):
@@ -437,21 +439,21 @@ class ContentFile:
                 found = False
                 result = 0
                 try:
-                        # print(&#34;Begin send %s&#34;%strings.tostrings(self.filename))
+                        # print(&#34;Begin send %s&#34;%tools.strings.tostrings(self.filename))
                         for filename in self.filenames:
                                 r, f = await self.serialize_file(filename, streamio)
                                 result += r
                                 if f:
                                         found = True
-                        # print(&#34;End send %s&#34;%strings.tostrings(self.filename))
+                        # print(&#34;End send %s&#34;%tools.strings.tostrings(self.filename))
                 except Exception as err:
                         pass
                 if found is False:
                         result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
                         filenames = b&#34;&#34;
                         for filename in self.filenames:
-                                filenames += strings.tobytes(filename) + b&#34; &#34;
-                        result += await streamio.write(b&#34;File %s not found&#34;%strings.tobytes(filename))
+                                filenames += tools.strings.tobytes(filename) + b&#34; &#34;
+                        result += await streamio.write(b&#34;File %s not found&#34;%tools.strings.tobytes(filename))
                 return result
 
 class ContentBuffer:
@@ -463,8 +465,8 @@ class ContentBuffer:
                 self.buffer = buffer
                 if content_type is None:
                         global MIMES
-                        ext = filesystem.splitext(strings.tostrings(filename))[1]
-                        self.content_type = MIMES.get(strings.tobytes(ext),b&#34;text/plain&#34;)
+                        ext = tools.filesystem.splitext(tools.strings.tostrings(filename))[1]
+                        self.content_type = MIMES.get(tools.strings.tobytes(ext),b&#34;text/plain&#34;)
                 else:
                         self.content_type = content_type
 
@@ -473,7 +475,7 @@ class ContentBuffer:
                 try:
                         b = self.buffer[0]
                         result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.content_type))
-                        result += await streamio.write(strings.tobytes(self.buffer))
+                        result += await streamio.write(tools.strings.tobytes(self.buffer))
                 except Exception as err:
                         result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
                         result += await streamio.write(b&#34;Nothing&#34;)
@@ -516,7 +518,7 @@ class PartFile:
         async def serialize(self, identifier, streamio):
                 &#34;&#34;&#34; Serialize multi part file &#34;&#34;&#34;
                 result = await self.serialize_header(identifier, streamio)
-                with open(strings.tostrings(self.filename),&#34;rb&#34;) as file:
+                with open(tools.strings.tostrings(self.filename),&#34;rb&#34;) as file:
                         part = file.read()
                 result += await streamio.write(b&#34;\r\n%s\r\n&#34;%part)
                 result +=  await streamio.write(b&#34;--%s&#34;%identifier)
@@ -525,7 +527,7 @@ class PartFile:
         async def get_size(self, identifier):
                 &#34;&#34;&#34; Get the size of multi part file &#34;&#34;&#34;
                 header_size = await self.serialize_header(identifier, server.stream.Bytesio())
-                file_size = filesystem.filesize((strings.tostrings(self.filename)))
+                file_size = tools.filesystem.filesize((tools.strings.tostrings(self.filename)))
                 return header_size + file_size + 4 + len(identifier) + 2
 
 class PartBin(PartFile):
@@ -575,9 +577,9 @@ class HttpResponse(Http):
                 if err is None:
                         content = b&#34;&#34;
                 elif type(err) == type(b&#34;&#34;) or type(err) == type(&#34;&#34;):
-                        content = strings.tobytes(err)
+                        content = tools.strings.tobytes(err)
                 else:
-                        content = strings.tobytes(logger.exception(err))
+                        content = tools.strings.tobytes(tools.logger.exception(err))
                 return await self.send_error(status=b&#34;404&#34;, content=content)
 
         async def send_ok(self, content=None):
@@ -666,8 +668,8 @@ class HttpRequest(Http):
                 self.buffer = buffer
                 if content_type is None:
                         global MIMES
-                        ext = filesystem.splitext(strings.tostrings(filename))[1]
-                        self.content_type = MIMES.get(strings.tobytes(ext),b&#34;text/plain&#34;)
+                        ext = tools.filesystem.splitext(tools.strings.tostrings(filename))[1]
+                        self.content_type = MIMES.get(tools.strings.tobytes(ext),b&#34;text/plain&#34;)
                 else:
                         self.content_type = content_type
 
@@ -676,7 +678,7 @@ class HttpRequest(Http):
                 try:
                         b = self.buffer[0]
                         result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.content_type))
-                        result += await streamio.write(strings.tobytes(self.buffer))
+                        result += await streamio.write(tools.strings.tobytes(self.buffer))
                 except Exception as err:
                         result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
                         result += await streamio.write(b&#34;Nothing&#34;)
@@ -698,7 +700,7 @@ class HttpRequest(Http):
         try:
                 b = self.buffer[0]
                 result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.content_type))
-                result += await streamio.write(strings.tobytes(self.buffer))
+                result += await streamio.write(tools.strings.tobytes(self.buffer))
         except Exception as err:
                 result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
                 result += await streamio.write(b&#34;Nothing&#34;)
@@ -730,8 +732,8 @@ class HttpRequest(Http):
                 self.base64 = base64
                 if content_type is None:
                         global MIMES
-                        ext = filesystem.splitext(strings.tostrings(self.filenames[0]))[1]
-                        self.content_type = MIMES.get(strings.tobytes(ext),b&#34;text/plain&#34;)
+                        ext = tools.filesystem.splitext(tools.strings.tostrings(self.filenames[0]))[1]
+                        self.content_type = MIMES.get(tools.strings.tobytes(ext),b&#34;text/plain&#34;)
                 else:
                         self.content_type = content_type
 
@@ -740,11 +742,11 @@ class HttpRequest(Http):
                 result = 0
                 found = False
 
-                filename = strings.tostrings(filename)
+                filename = tools.strings.tostrings(filename)
 
                 # If file existing
-                if filesystem.exists(filename):
-                        with open(strings.tostrings(filename), &#34;rb&#34;) as f:
+                if tools.filesystem.exists(filename):
+                        with open(tools.strings.tostrings(filename), &#34;rb&#34;) as f:
                                 found = True
                                 result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.content_type))
                                 if server.stream.Bufferedio.is_enough_memory():
@@ -772,7 +774,7 @@ class HttpRequest(Http):
                                                 length_written += await streamio.write(buf)
                                 result += length_written
                 else:
-                        logger.syslog(&#34;%s file not found&#34;%filename)
+                        tools.logger.syslog(&#34;%s file not found&#34;%filename)
                 return result, found
 
         async def serialize(self, streamio):
@@ -780,21 +782,21 @@ class HttpRequest(Http):
                 found = False
                 result = 0
                 try:
-                        # print(&#34;Begin send %s&#34;%strings.tostrings(self.filename))
+                        # print(&#34;Begin send %s&#34;%tools.strings.tostrings(self.filename))
                         for filename in self.filenames:
                                 r, f = await self.serialize_file(filename, streamio)
                                 result += r
                                 if f:
                                         found = True
-                        # print(&#34;End send %s&#34;%strings.tostrings(self.filename))
+                        # print(&#34;End send %s&#34;%tools.strings.tostrings(self.filename))
                 except Exception as err:
                         pass
                 if found is False:
                         result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
                         filenames = b&#34;&#34;
                         for filename in self.filenames:
-                                filenames += strings.tobytes(filename) + b&#34; &#34;
-                        result += await streamio.write(b&#34;File %s not found&#34;%strings.tobytes(filename))
+                                filenames += tools.strings.tobytes(filename) + b&#34; &#34;
+                        result += await streamio.write(b&#34;File %s not found&#34;%tools.strings.tobytes(filename))
                 return result</code></pre>
 </details>
 <h3>Methods</h3>
@@ -813,21 +815,21 @@ class HttpRequest(Http):
         found = False
         result = 0
         try:
-                # print(&#34;Begin send %s&#34;%strings.tostrings(self.filename))
+                # print(&#34;Begin send %s&#34;%tools.strings.tostrings(self.filename))
                 for filename in self.filenames:
                         r, f = await self.serialize_file(filename, streamio)
                         result += r
                         if f:
                                 found = True
-                # print(&#34;End send %s&#34;%strings.tostrings(self.filename))
+                # print(&#34;End send %s&#34;%tools.strings.tostrings(self.filename))
         except Exception as err:
                 pass
         if found is False:
                 result = await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
                 filenames = b&#34;&#34;
                 for filename in self.filenames:
-                        filenames += strings.tobytes(filename) + b&#34; &#34;
-                result += await streamio.write(b&#34;File %s not found&#34;%strings.tobytes(filename))
+                        filenames += tools.strings.tobytes(filename) + b&#34; &#34;
+                result += await streamio.write(b&#34;File %s not found&#34;%tools.strings.tobytes(filename))
         return result</code></pre>
 </details>
 </dd>
@@ -845,11 +847,11 @@ class HttpRequest(Http):
         result = 0
         found = False
 
-        filename = strings.tostrings(filename)
+        filename = tools.strings.tostrings(filename)
 
         # If file existing
-        if filesystem.exists(filename):
-                with open(strings.tostrings(filename), &#34;rb&#34;) as f:
+        if tools.filesystem.exists(filename):
+                with open(tools.strings.tostrings(filename), &#34;rb&#34;) as f:
                         found = True
                         result = await streamio.write(b&#39;Content-Type: %s\r\n\r\n&#39;%(self.content_type))
                         if server.stream.Bufferedio.is_enough_memory():
@@ -877,7 +879,7 @@ class HttpRequest(Http):
                                         length_written += await streamio.write(buf)
                         result += length_written
         else:
-                logger.syslog(&#34;%s file not found&#34;%filename)
+                tools.logger.syslog(&#34;%s file not found&#34;%filename)
         return result, found</code></pre>
 </details>
 </dd>
@@ -962,7 +964,7 @@ class HttpRequest(Http):
 
         def __del__(self):
                 if self.content_file is not None:
-                        filesystem.remove(self.content_file)
+                        tools.filesystem.remove(self.content_file)
 
         def get_expiration(self, expiration):
                 &#34;&#34;&#34; Get cookie expiration date &#34;&#34;&#34;
@@ -1061,7 +1063,7 @@ class HttpRequest(Http):
                 &#34;&#34;&#34; Read the content of http request &#34;&#34;&#34;
                 if self.headers.get(b&#34;Transfer-Encoding&#34;,b&#34;&#34;) == b&#34;chunked&#34;:
                         length = await streamio.readline()
-                        length = eval(strings.tostrings(b&#34;0x%s&#34;%length.strip()))
+                        length = eval(tools.strings.tostrings(b&#34;0x%s&#34;%length.strip()))
                         self.chunk_size = length
                         chunk = True
                 else:
@@ -1188,10 +1190,10 @@ class HttpRequest(Http):
                                         result += await self.content.serialize(streamio)
                                         no_end = True
                         except Exception as err:
-                                logger.syslog(err)
+                                tools.logger.syslog(err)
                                 # Serialize error detected
                                 result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
-                                result += await streamio.write(strings.tostrings(logger.exception(err)))
+                                result += await streamio.write(tools.strings.tostrings(tools.logger.exception(err)))
                 # If multipart detected
                 elif len(self.parts) &gt; 0:
                         # If the header is a multipart
@@ -1383,7 +1385,7 @@ class HttpRequest(Http):
         &#34;&#34;&#34; Read the content of http request &#34;&#34;&#34;
         if self.headers.get(b&#34;Transfer-Encoding&#34;,b&#34;&#34;) == b&#34;chunked&#34;:
                 length = await streamio.readline()
-                length = eval(strings.tostrings(b&#34;0x%s&#34;%length.strip()))
+                length = eval(tools.strings.tostrings(b&#34;0x%s&#34;%length.strip()))
                 self.chunk_size = length
                 chunk = True
         else:
@@ -1474,10 +1476,10 @@ class HttpRequest(Http):
                                 result += await self.content.serialize(streamio)
                                 no_end = True
                 except Exception as err:
-                        logger.syslog(err)
+                        tools.logger.syslog(err)
                         # Serialize error detected
                         result += await streamio.write(b&#39;Content-Type: text/plain\r\n\r\n&#39;)
-                        result += await streamio.write(strings.tostrings(logger.exception(err)))
+                        result += await streamio.write(tools.strings.tostrings(tools.logger.exception(err)))
         # If multipart detected
         elif len(self.parts) &gt; 0:
                 # If the header is a multipart
@@ -1886,9 +1888,9 @@ def to_html(message):
                 if err is None:
                         content = b&#34;&#34;
                 elif type(err) == type(b&#34;&#34;) or type(err) == type(&#34;&#34;):
-                        content = strings.tobytes(err)
+                        content = tools.strings.tobytes(err)
                 else:
-                        content = strings.tobytes(logger.exception(err))
+                        content = tools.strings.tobytes(tools.logger.exception(err))
                 return await self.send_error(status=b&#34;404&#34;, content=content)
 
         async def send_ok(self, content=None):
@@ -2014,9 +2016,9 @@ def to_html(message):
         if err is None:
                 content = b&#34;&#34;
         elif type(err) == type(b&#34;&#34;) or type(err) == type(&#34;&#34;):
-                content = strings.tobytes(err)
+                content = tools.strings.tobytes(err)
         else:
-                content = strings.tobytes(logger.exception(err))
+                content = tools.strings.tobytes(tools.logger.exception(err))
         return await self.send_error(status=b&#34;404&#34;, content=content)</code></pre>
 </details>
 </dd>
@@ -2188,7 +2190,7 @@ def to_html(message):
         async def serialize(self, identifier, streamio):
                 &#34;&#34;&#34; Serialize multi part file &#34;&#34;&#34;
                 result = await self.serialize_header(identifier, streamio)
-                with open(strings.tostrings(self.filename),&#34;rb&#34;) as file:
+                with open(tools.strings.tostrings(self.filename),&#34;rb&#34;) as file:
                         part = file.read()
                 result += await streamio.write(b&#34;\r\n%s\r\n&#34;%part)
                 result +=  await streamio.write(b&#34;--%s&#34;%identifier)
@@ -2197,7 +2199,7 @@ def to_html(message):
         async def get_size(self, identifier):
                 &#34;&#34;&#34; Get the size of multi part file &#34;&#34;&#34;
                 header_size = await self.serialize_header(identifier, server.stream.Bytesio())
-                file_size = filesystem.filesize((strings.tostrings(self.filename)))
+                file_size = tools.filesystem.filesize((tools.strings.tostrings(self.filename)))
                 return header_size + file_size + 4 + len(identifier) + 2</code></pre>
 </details>
 <h3>Subclasses</h3>
@@ -2218,7 +2220,7 @@ def to_html(message):
 <pre><code class="python">async def get_size(self, identifier):
         &#34;&#34;&#34; Get the size of multi part file &#34;&#34;&#34;
         header_size = await self.serialize_header(identifier, server.stream.Bytesio())
-        file_size = filesystem.filesize((strings.tostrings(self.filename)))
+        file_size = tools.filesystem.filesize((tools.strings.tostrings(self.filename)))
         return header_size + file_size + 4 + len(identifier) + 2</code></pre>
 </details>
 </dd>
@@ -2234,7 +2236,7 @@ def to_html(message):
 <pre><code class="python">async def serialize(self, identifier, streamio):
         &#34;&#34;&#34; Serialize multi part file &#34;&#34;&#34;
         result = await self.serialize_header(identifier, streamio)
-        with open(strings.tostrings(self.filename),&#34;rb&#34;) as file:
+        with open(tools.strings.tostrings(self.filename),&#34;rb&#34;) as file:
                 part = file.read()
         result += await streamio.write(b&#34;\r\n%s\r\n&#34;%part)
         result +=  await streamio.write(b&#34;--%s&#34;%identifier)

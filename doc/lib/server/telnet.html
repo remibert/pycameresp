@@ -35,7 +35,33 @@
 import socket
 import sys
 import uos
-from tools import logger
+import server.server
+import tools.logger
+import tools.support
+import tools.tasking
+
+class TelnetServerInstance(tools.tasking.ServerInstance):
+        &#34;&#34;&#34; Telnet server instance &#34;&#34;&#34;
+        def __init__(self, **kwargs):
+                tools.tasking.ServerInstance.__init__(self, **kwargs)
+
+        def start_server(self):
+                &#34;&#34;&#34; Start server &#34;&#34;&#34;
+                port = self.kwargs.get(&#34;telnet_port&#34;,23)
+                if tools.support.telnet():
+                        # start listening for telnet connections on port 23
+                        try:
+                                Telnet.stop()
+                                Telnet.server[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                Telnet.server[0].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                                ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
+                                addr = ai[0][4]
+                                Telnet.server[0].bind(addr)
+                                Telnet.server[0].listen(1)
+                                Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
+                        except Exception as err:
+                                tools.logger.syslog(&#34;Telnet unavailable &#39;%s&#39;&#34;%str(err))
+                return &#34;Telnet&#34;, port
 
 class Telnet:
         &#34;&#34;&#34; Telnet class connection &#34;&#34;&#34;
@@ -49,14 +75,14 @@ class Telnet:
                 # send telnet control characters to disable line mode
                 # and stop local echoing
                 Telnet.close_client()
-                import server.telnetcore
+                from server import telnetcore
                 Telnet.client[0], remote_addr = socket_server.accept()
-                logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
+                tools.logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
                 Telnet.client[0].setblocking(False)
                 Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
                 Telnet.client[0].sendall(bytes([255, 252, 34])) # dont allow line mode
                 Telnet.client[0].sendall(bytes([255, 251, 1])) # turn off local echo
-                uos.dupterm(server.telnetcore.TelnetWrapper(Telnet.client[0]))
+                uos.dupterm(telnetcore.TelnetWrapper(Telnet.client[0]))
 
         @staticmethod
         def close_client():
@@ -82,21 +108,15 @@ class Telnet:
                 Telnet.close_client()
 
         @staticmethod
-        def start(port=23):
+        def start(**kwargs):
                 &#34;&#34;&#34; Start telnet server &#34;&#34;&#34;
-                # start listening for telnet connections on port 23
-                try:
-                        Telnet.stop()
-                        Telnet.server[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                        ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
-                        addr = ai[0][4]
-                        Telnet.server[0].bind(addr)
-                        Telnet.server[0].listen(1)
-                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
-                        logger.syslog(&#34;Telnet start %d&#34;%port)
-                except Exception as err:
-                        logger.syslog(&#34;Telnet unavailable &#39;%s&#39;&#34;%str(err))</code></pre>
+                config = server.server.ServerConfig()
+                config.load_create()
+                # If telnet activated
+                if config.telnet:
+                        tools.tasking.Tasks.create_server(TelnetServerInstance(**kwargs))
+                else:
+                        tools.logger.syslog(&#34;Telnet disabled in config&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -129,14 +149,14 @@ class Telnet:
                 # send telnet control characters to disable line mode
                 # and stop local echoing
                 Telnet.close_client()
-                import server.telnetcore
+                from server import telnetcore
                 Telnet.client[0], remote_addr = socket_server.accept()
-                logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
+                tools.logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
                 Telnet.client[0].setblocking(False)
                 Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
                 Telnet.client[0].sendall(bytes([255, 252, 34])) # dont allow line mode
                 Telnet.client[0].sendall(bytes([255, 251, 1])) # turn off local echo
-                uos.dupterm(server.telnetcore.TelnetWrapper(Telnet.client[0]))
+                uos.dupterm(telnetcore.TelnetWrapper(Telnet.client[0]))
 
         @staticmethod
         def close_client():
@@ -162,21 +182,15 @@ class Telnet:
                 Telnet.close_client()
 
         @staticmethod
-        def start(port=23):
+        def start(**kwargs):
                 &#34;&#34;&#34; Start telnet server &#34;&#34;&#34;
-                # start listening for telnet connections on port 23
-                try:
-                        Telnet.stop()
-                        Telnet.server[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                        ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
-                        addr = ai[0][4]
-                        Telnet.server[0].bind(addr)
-                        Telnet.server[0].listen(1)
-                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
-                        logger.syslog(&#34;Telnet start %d&#34;%port)
-                except Exception as err:
-                        logger.syslog(&#34;Telnet unavailable &#39;%s&#39;&#34;%str(err))</code></pre>
+                config = server.server.ServerConfig()
+                config.load_create()
+                # If telnet activated
+                if config.telnet:
+                        tools.tasking.Tasks.create_server(TelnetServerInstance(**kwargs))
+                else:
+                        tools.logger.syslog(&#34;Telnet disabled in config&#34;)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -207,14 +221,14 @@ def accept(socket_server):
         # send telnet control characters to disable line mode
         # and stop local echoing
         Telnet.close_client()
-        import server.telnetcore
+        from server import telnetcore
         Telnet.client[0], remote_addr = socket_server.accept()
-        logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
+        tools.logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
         Telnet.client[0].setblocking(False)
         Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
         Telnet.client[0].sendall(bytes([255, 252, 34])) # dont allow line mode
         Telnet.client[0].sendall(bytes([255, 251, 1])) # turn off local echo
-        uos.dupterm(server.telnetcore.TelnetWrapper(Telnet.client[0]))</code></pre>
+        uos.dupterm(telnetcore.TelnetWrapper(Telnet.client[0]))</code></pre>
 </details>
 </dd>
 <dt id="lib.server.telnet.Telnet.close_client"><code class="name flex">
@@ -241,7 +255,7 @@ def close_client():
 </details>
 </dd>
 <dt id="lib.server.telnet.Telnet.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>port=23)</span>
+<span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Start telnet server</p></div>
@@ -250,21 +264,15 @@ def close_client():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def start(port=23):
+def start(**kwargs):
         &#34;&#34;&#34; Start telnet server &#34;&#34;&#34;
-        # start listening for telnet connections on port 23
-        try:
-                Telnet.stop()
-                Telnet.server[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                Telnet.server[0].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
-                addr = ai[0][4]
-                Telnet.server[0].bind(addr)
-                Telnet.server[0].listen(1)
-                Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
-                logger.syslog(&#34;Telnet start %d&#34;%port)
-        except Exception as err:
-                logger.syslog(&#34;Telnet unavailable &#39;%s&#39;&#34;%str(err))</code></pre>
+        config = server.server.ServerConfig()
+        config.load_create()
+        # If telnet activated
+        if config.telnet:
+                tools.tasking.Tasks.create_server(TelnetServerInstance(**kwargs))
+        else:
+                tools.logger.syslog(&#34;Telnet disabled in config&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.telnet.Telnet.stop"><code class="name flex">
@@ -285,6 +293,76 @@ def stop():
                 Telnet.server[0].close()
                 Telnet.server[0] = None
         Telnet.close_client()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.telnet.TelnetServerInstance"><code class="flex name class">
+<span>class <span class="ident">TelnetServerInstance</span></span>
+<span>(</span><span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Telnet server instance </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TelnetServerInstance(tools.tasking.ServerInstance):
+        &#34;&#34;&#34; Telnet server instance &#34;&#34;&#34;
+        def __init__(self, **kwargs):
+                tools.tasking.ServerInstance.__init__(self, **kwargs)
+
+        def start_server(self):
+                &#34;&#34;&#34; Start server &#34;&#34;&#34;
+                port = self.kwargs.get(&#34;telnet_port&#34;,23)
+                if tools.support.telnet():
+                        # start listening for telnet connections on port 23
+                        try:
+                                Telnet.stop()
+                                Telnet.server[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                Telnet.server[0].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                                ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
+                                addr = ai[0][4]
+                                Telnet.server[0].bind(addr)
+                                Telnet.server[0].listen(1)
+                                Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
+                        except Exception as err:
+                                tools.logger.syslog(&#34;Telnet unavailable &#39;%s&#39;&#34;%str(err))
+                return &#34;Telnet&#34;, port</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>tools.tasking.ServerInstance</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.telnet.TelnetServerInstance.start_server"><code class="name flex">
+<span>def <span class="ident">start_server</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start server</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start_server(self):
+        &#34;&#34;&#34; Start server &#34;&#34;&#34;
+        port = self.kwargs.get(&#34;telnet_port&#34;,23)
+        if tools.support.telnet():
+                # start listening for telnet connections on port 23
+                try:
+                        Telnet.stop()
+                        Telnet.server[0] = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                        ai = socket.getaddrinfo(&#34;0.0.0.0&#34;, port)
+                        addr = ai[0][4]
+                        Telnet.server[0].bind(addr)
+                        Telnet.server[0].listen(1)
+                        Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
+                except Exception as err:
+                        tools.logger.syslog(&#34;Telnet unavailable &#39;%s&#39;&#34;%str(err))
+        return &#34;Telnet&#34;, port</code></pre>
 </details>
 </dd>
 </dl>
@@ -314,6 +392,12 @@ def stop():
 <li><code><a title="lib.server.telnet.Telnet.server" href="#lib.server.telnet.Telnet.server">server</a></code></li>
 <li><code><a title="lib.server.telnet.Telnet.start" href="#lib.server.telnet.Telnet.start">start</a></code></li>
 <li><code><a title="lib.server.telnet.Telnet.stop" href="#lib.server.telnet.Telnet.stop">stop</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.telnet.TelnetServerInstance" href="#lib.server.telnet.TelnetServerInstance">TelnetServerInstance</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.telnet.TelnetServerInstance.start_server" href="#lib.server.telnet.TelnetServerInstance.start_server">start_server</a></code></li>
 </ul>
 </li>
 </ul>

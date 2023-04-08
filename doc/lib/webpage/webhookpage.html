@@ -30,26 +30,26 @@
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to configure the webhook to interact with domoticz or other &#34;&#34;&#34;
-from server.httpserver  import HttpServer
-from server.httprequest import HttpRequest
-from server.webhook     import *
+import server.httpserver
+import server.httprequest
+import server.webhook
 from htmltemplate       import *
-from webpage.mainpage   import main_frame, manage_default_button
-from tools              import lang
-from tools.info         import iscamera
+import webpage.mainpage
+import tools.lang
+import tools.info
 
-@HttpServer.add_route(b&#39;/webhook&#39;, menu=lang.menu_server, item=lang.item_webhook)
+@server.httpserver.HttpServer.add_route(b&#39;/webhook&#39;, menu=tools.lang.menu_server, item=tools.lang.item_webhook)
 async def webhook(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the webhook  &#34;&#34;&#34;
-        config = WebhookConfig()
-        disabled, action, submit = manage_default_button(request, config)
-        page = main_frame(request, response, args,lang.webhook_configuration,
+        config = server.webhook.WebhookConfig()
+        disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
+        page = webpage.mainpage.main_frame(request, response, args,tools.lang.webhook_configuration,
                 Form([
-                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                        Edit(text=lang.webhook_inhabited_house,   name=b&#34;inhabited_house&#34;,   placeholder=lang.url_http_required, value=HttpRequest.to_html(config.inhabited_house),    disabled=disabled),
-                        Edit(text=lang.webhook_empty_house,       name=b&#34;empty_house&#34;,       placeholder=lang.url_http_required, value=config.empty_house,        disabled=disabled),
-                        Edit(text=lang.webhook_motion_detected,   name=b&#34;motion_detected&#34;,   placeholder=lang.url_http_required, value=config.motion_detected,    disabled=disabled) if iscamera() else None,
-                        Edit(text=lang.webhook_no_motion_detected,name=b&#34;no_motion_detected&#34;,placeholder=lang.url_http_required, value=config.no_motion_detected, disabled=disabled) if iscamera() else None,
+                        Switch(text=tools.lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Edit(text=tools.lang.webhook_inhabited_house,   name=b&#34;inhabited_house&#34;,   placeholder=tools.lang.url_http_required, value=server.httprequest.HttpRequest.to_html(config.inhabited_house),    disabled=disabled),
+                        Edit(text=tools.lang.webhook_empty_house,       name=b&#34;empty_house&#34;,       placeholder=tools.lang.url_http_required, value=config.empty_house,        disabled=disabled),
+                        Edit(text=tools.lang.webhook_motion_detected,   name=b&#34;motion_detected&#34;,   placeholder=tools.lang.url_http_required, value=config.motion_detected,    disabled=disabled) if tools.info.iscamera() else None,
+                        Edit(text=tools.lang.webhook_no_motion_detected,name=b&#34;no_motion_detected&#34;,placeholder=tools.lang.url_http_required, value=config.no_motion_detected, disabled=disabled) if tools.info.iscamera() else None,
                         submit,
                 ]))
         await response.send_page(page)</code></pre>
@@ -71,18 +71,18 @@ async def webhook(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@HttpServer.add_route(b&#39;/webhook&#39;, menu=lang.menu_server, item=lang.item_webhook)
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/webhook&#39;, menu=tools.lang.menu_server, item=tools.lang.item_webhook)
 async def webhook(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the webhook  &#34;&#34;&#34;
-        config = WebhookConfig()
-        disabled, action, submit = manage_default_button(request, config)
-        page = main_frame(request, response, args,lang.webhook_configuration,
+        config = server.webhook.WebhookConfig()
+        disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
+        page = webpage.mainpage.main_frame(request, response, args,tools.lang.webhook_configuration,
                 Form([
-                        Switch(text=lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
-                        Edit(text=lang.webhook_inhabited_house,   name=b&#34;inhabited_house&#34;,   placeholder=lang.url_http_required, value=HttpRequest.to_html(config.inhabited_house),    disabled=disabled),
-                        Edit(text=lang.webhook_empty_house,       name=b&#34;empty_house&#34;,       placeholder=lang.url_http_required, value=config.empty_house,        disabled=disabled),
-                        Edit(text=lang.webhook_motion_detected,   name=b&#34;motion_detected&#34;,   placeholder=lang.url_http_required, value=config.motion_detected,    disabled=disabled) if iscamera() else None,
-                        Edit(text=lang.webhook_no_motion_detected,name=b&#34;no_motion_detected&#34;,placeholder=lang.url_http_required, value=config.no_motion_detected, disabled=disabled) if iscamera() else None,
+                        Switch(text=tools.lang.activated, name=b&#34;activated&#34;, checked=config.activated, disabled=disabled),
+                        Edit(text=tools.lang.webhook_inhabited_house,   name=b&#34;inhabited_house&#34;,   placeholder=tools.lang.url_http_required, value=server.httprequest.HttpRequest.to_html(config.inhabited_house),    disabled=disabled),
+                        Edit(text=tools.lang.webhook_empty_house,       name=b&#34;empty_house&#34;,       placeholder=tools.lang.url_http_required, value=config.empty_house,        disabled=disabled),
+                        Edit(text=tools.lang.webhook_motion_detected,   name=b&#34;motion_detected&#34;,   placeholder=tools.lang.url_http_required, value=config.motion_detected,    disabled=disabled) if tools.info.iscamera() else None,
+                        Edit(text=tools.lang.webhook_no_motion_detected,name=b&#34;no_motion_detected&#34;,placeholder=tools.lang.url_http_required, value=config.no_motion_detected, disabled=disabled) if tools.info.iscamera() else None,
                         submit,
                 ]))
         await response.send_page(page)</code></pre>

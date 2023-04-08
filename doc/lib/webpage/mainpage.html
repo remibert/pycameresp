@@ -31,11 +31,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 &#34;&#34;&#34; Function define the main web page with menu, it check also the login password &#34;&#34;&#34;
 from htmltemplate import *
-from webpage.passwordpage import PasswordPage
-from server.httpserver import HttpServer
-from server.server   import Server
-from wifi.station import Station
-from tools import lang
+import webpage.passwordpage
+import server.httpserver
+import wifi.station
+import tools.lang
+import tools.tasking
 
 def main_page(request, response, args, title_frame, content=None, menu_visible=True):
         &#34;&#34;&#34; Function define the main web page with menu, it check also the login password &#34;&#34;&#34;
@@ -48,13 +48,13 @@ def main_page(request, response, args, title_frame, content=None, menu_visible=T
         except:
                 active = 0
         # On wifi station, the external style cheet is added
-        if Station.is_ip_on_interface(request.remoteaddr):
+        if wifi.station.Station.is_ip_on_interface(request.remoteaddr):
                 stylesheet = Stylesheet()
         else:
                 stylesheet = StylesheetDefault()
 
         # Create main page if logged
-        page = PasswordPage.login(request, response, 15*60)
+        page = webpage.passwordpage.PasswordPage.login(request, response, 15*60)
 
         if b&#34;logout&#34; in request.params and page is None:
                 content = None
@@ -64,7 +64,7 @@ def main_page(request, response, args, title_frame, content=None, menu_visible=T
                         menu_items = []
                         menu_bar = []
                         previous_menu = None
-                        for menu,  item , index, href in HttpServer.get_menus():
+                        for menu,  item , index, href in server.httpserver.HttpServer.get_menus():
                                 menu_item = MenuItem(text=item, href=href, active=(active==index))
 
                                 if previous_menu != menu:
@@ -80,8 +80,8 @@ def main_page(request, response, args, title_frame, content=None, menu_visible=T
                         page_content = [stylesheet, content]
                 page = Page(page_content, class_=b&#34;container&#34;, title=title, style=b&#34;padding-top: 4.5rem;&#34;)
         else:
-                page = Page([page] + [stylesheet], title=lang.login)
-        Server.slow_down()
+                page = Page([page] + [stylesheet], title=tools.lang.login)
+        tools.tasking.Tasks.slow_down()
         return page
 
 def main_frame(request, response, args, title_frame, *content):
@@ -106,9 +106,9 @@ def manage_default_button(request, config, callback=None, onclick=b&#34;&#34;):
                         callback(request, config)
                 config.save()
         if disabled:
-                submit = Submit(text=lang.modify, name=b&#34;action&#34;, value=b&#34;modify&#34;)
+                submit = Submit(text=tools.lang.modify, name=b&#34;action&#34;, value=b&#34;modify&#34;)
         else:
-                submit = Submit(text=lang.save, name=b&#34;action&#34;, value=b&#34;save&#34;, onclick=onclick)
+                submit = Submit(text=tools.lang.save, name=b&#34;action&#34;, value=b&#34;save&#34;, onclick=onclick)
         return disabled, action, submit</code></pre>
 </details>
 </section>
@@ -154,13 +154,13 @@ def manage_default_button(request, config, callback=None, onclick=b&#34;&#34;):
         except:
                 active = 0
         # On wifi station, the external style cheet is added
-        if Station.is_ip_on_interface(request.remoteaddr):
+        if wifi.station.Station.is_ip_on_interface(request.remoteaddr):
                 stylesheet = Stylesheet()
         else:
                 stylesheet = StylesheetDefault()
 
         # Create main page if logged
-        page = PasswordPage.login(request, response, 15*60)
+        page = webpage.passwordpage.PasswordPage.login(request, response, 15*60)
 
         if b&#34;logout&#34; in request.params and page is None:
                 content = None
@@ -170,7 +170,7 @@ def manage_default_button(request, config, callback=None, onclick=b&#34;&#34;):
                         menu_items = []
                         menu_bar = []
                         previous_menu = None
-                        for menu,  item , index, href in HttpServer.get_menus():
+                        for menu,  item , index, href in server.httpserver.HttpServer.get_menus():
                                 menu_item = MenuItem(text=item, href=href, active=(active==index))
 
                                 if previous_menu != menu:
@@ -186,8 +186,8 @@ def manage_default_button(request, config, callback=None, onclick=b&#34;&#34;):
                         page_content = [stylesheet, content]
                 page = Page(page_content, class_=b&#34;container&#34;, title=title, style=b&#34;padding-top: 4.5rem;&#34;)
         else:
-                page = Page([page] + [stylesheet], title=lang.login)
-        Server.slow_down()
+                page = Page([page] + [stylesheet], title=tools.lang.login)
+        tools.tasking.Tasks.slow_down()
         return page</code></pre>
 </details>
 </dd>
@@ -217,9 +217,9 @@ def manage_default_button(request, config, callback=None, onclick=b&#34;&#34;):
                         callback(request, config)
                 config.save()
         if disabled:
-                submit = Submit(text=lang.modify, name=b&#34;action&#34;, value=b&#34;modify&#34;)
+                submit = Submit(text=tools.lang.modify, name=b&#34;action&#34;, value=b&#34;modify&#34;)
         else:
-                submit = Submit(text=lang.save, name=b&#34;action&#34;, value=b&#34;save&#34;, onclick=onclick)
+                submit = Submit(text=tools.lang.save, name=b&#34;action&#34;, value=b&#34;save&#34;, onclick=onclick)
         return disabled, action, submit</code></pre>
 </details>
 </dd>

@@ -34,12 +34,12 @@ See <a href="https://open-meteo.com">https://open-meteo.com</a></p>
 &#34;&#34;&#34; These classes are used to get meteo informations.
 See https://open-meteo.com &#34;&#34;&#34;
 # pylint:disable=wrong-import-position
-from server.httpclient import *
-from tools import logger,strings
+import uasyncio
+import server.httpclient
 
 async def async_get_meteo(parameters, display=True):
         &#34;&#34;&#34; Asyncio get meteo (only in asyncio) &#34;&#34;&#34;
-        return await HttpClient.request(method=b&#34;GET&#34;, url=b&#34;http://api.open-meteo.com:80/v1/forecast?&#34;+parameters)
+        return await server.httpclient.HttpClient.request(method=b&#34;GET&#34;, url=b&#34;http://api.open-meteo.com:80/v1/forecast?&#34;+parameters)
 
 def get_meteo(parameters):
         &#34;&#34;&#34; Get meteo function &#34;&#34;&#34;
@@ -65,7 +65,7 @@ def get_meteo(parameters):
 </summary>
 <pre><code class="python">async def async_get_meteo(parameters, display=True):
         &#34;&#34;&#34; Asyncio get meteo (only in asyncio) &#34;&#34;&#34;
-        return await HttpClient.request(method=b&#34;GET&#34;, url=b&#34;http://api.open-meteo.com:80/v1/forecast?&#34;+parameters)</code></pre>
+        return await server.httpclient.HttpClient.request(method=b&#34;GET&#34;, url=b&#34;http://api.open-meteo.com:80/v1/forecast?&#34;+parameters)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.openmeteo.get_meteo"><code class="name flex">

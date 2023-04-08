@@ -29,17 +29,7 @@
 </summary>
 <pre><code class="python"># Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
-&#34;&#34;&#34; Class to manage motion detection with ESP32CAM &#34;&#34;&#34;
-from motion.motion import *
-from motion.historic import *
-from video.video import Camera
-from tools import info
-
-def start(loop=None, pir_detection=False):
-        &#34;&#34;&#34; Start the asynchronous motion detection and presence detection &#34;&#34;&#34;
-        if info.iscamera() and Camera.is_activated():
-                loop.create_task(detect_motion(pir_detection))
-                loop.create_task(Historic.periodic_task())</code></pre>
+&#34;&#34;&#34; Class to manage motion detection with ESP32CAM &#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -53,30 +43,15 @@ def start(loop=None, pir_detection=False):
 <dd>
 <div class="desc"><p>Motion detection only work with ESP32CAM (Requires specially modified ESP32CAM firmware to handle motion detection.)</p></div>
 </dd>
-</dl>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="lib.motion.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>loop=None, pir_detection=False)</span>
-</code></dt>
+<dt><code class="name"><a title="lib.motion.motioncore" href="motioncore.html">lib.motion.motioncore</a></code></dt>
 <dd>
-<div class="desc"><p>Start the asynchronous motion detection and presence detection</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def start(loop=None, pir_detection=False):
-        &#34;&#34;&#34; Start the asynchronous motion detection and presence detection &#34;&#34;&#34;
-        if info.iscamera() and Camera.is_activated():
-                loop.create_task(detect_motion(pir_detection))
-                loop.create_task(Historic.periodic_task())</code></pre>
-</details>
+<div class="desc"><p>Motion detection only work with ESP32CAM (Requires specially modified ESP32CAM firmware to handle motion detection.)</p></div>
 </dd>
 </dl>
+</section>
+<section>
+</section>
+<section>
 </section>
 <section>
 </section>
@@ -96,11 +71,7 @@ def start(loop=None, pir_detection=False):
 <ul>
 <li><code><a title="lib.motion.historic" href="historic.html">lib.motion.historic</a></code></li>
 <li><code><a title="lib.motion.motion" href="motion.html">lib.motion.motion</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="lib.motion.start" href="#lib.motion.start">start</a></code></li>
+<li><code><a title="lib.motion.motioncore" href="motioncore.html">lib.motion.motioncore</a></code></li>
 </ul>
 </li>
 </ul>
