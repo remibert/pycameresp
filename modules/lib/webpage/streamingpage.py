@@ -1,12 +1,15 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to see the camera streaming """
-from server.httpserver  import HttpServer
-from server.httprequest import *
-from htmltemplate       import *
-from video              import Camera
 import uasyncio
-from tools              import logger,tasking,info,watchdog
+import server.httpserver
+import server.httprequest
+from htmltemplate       import *
+import video.video
+import tools.logger
+import tools.tasking
+import tools.info
+import tools.watchdog
 
 class Streaming:
 	""" Management class of video streaming of the camera via an html page """
@@ -59,7 +62,7 @@ class Streaming:
 		if Streaming.inactivity[0]:
 			Streaming.inactivity[0].stop()
 			Streaming.inactivity[0] = None
-		Streaming.inactivity[0] = tasking.Inactivity(Streaming.stop, duration=watchdog.LONG_WATCH_DOG, timer_id=1)
+		Streaming.inactivity[0] = tools.tasking.Inactivity(Streaming.stop, duration=tools.watchdog.LONG_WATCH_DOG, timer_id=1)
 
 	@staticmethod
 	def get_streaming_id():
@@ -71,20 +74,20 @@ class Streaming:
 		""" Stop streaming """
 		Streaming.streaming_id[0] += 1
 
-@HttpServer.add_route(b'/camera/start', available=info.iscamera() and Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/camera/start', available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def camera_start_streaming(request, response, args):
 	""" Start video streaming """
-	tasking.Tasks.slow_down()
-	if request.name != "StreamingServer":
+	tools.tasking.Tasks.slow_down()
+	if request.name != "HttpStreaming":
 		return
 
 	try:
 		writer = None
 		currentstreaming_id = int(request.params[b"streaming_id"])
-		reserved = await Camera.reserve(request, timeout=20, suspension=15)
+		reserved = await video.video.Camera.reserve(request, timeout=20, suspension=15)
 		if reserved:
 			failed = False
-			Camera.open()
+			video.video.Camera.open()
 
 			response.set_status(b"200")
 			response.set_header(b"Content-Type"               ,b"multipart/x-mixed-replace")
@@ -96,16 +99,16 @@ async def camera_start_streaming(request, response, args):
 			identifier = b"\r\n%x\r\n\r\n--%s\r\n\r\n"%(len(response.identifier) + 6, response.identifier)
 			frame = b'%s36\r\nContent-Type: image/jpeg\r\nContent-Length: %8d\r\n\r\n\r\n%x\r\n'
 
-			if filesystem.ismicropython():
+			if tools.filesystem.ismicropython():
 				micropython = True
 			else:
 				micropython = False
 
 			if Streaming.is_durty():
-				Camera.configure(Streaming.get_config())
+				video.video.Camera.configure(Streaming.get_config())
 				Streaming.reset_durty()
 
-			image = Camera.capture()
+			image = video.video.Camera.capture()
 			length = len(image)
 			try:
 				await writer.write(frame%(b"", length, length))
@@ -116,9 +119,9 @@ async def camera_start_streaming(request, response, args):
 
 			while currentstreaming_id == Streaming.get_streaming_id():
 				if Streaming.is_durty():
-					Camera.configure(Streaming.get_config())
+					video.video.Camera.configure(Streaming.get_config())
 					Streaming.reset_durty()
-				image = Camera.capture()
+				image = video.video.Camera.capture()
 				length = len(image)
 				try:
 					await writer.write(frame%(identifier, length, length))
@@ -133,9 +136,9 @@ async def camera_start_streaming(request, response, args):
 		else:
 			pass
 	except Exception as err:
-		logger.syslog(err)
+		tools.logger.syslog(err)
 	finally:
 		if reserved:
-			await Camera.unreserve(request)
+			await video.video.Camera.unreserve(request)
 		if writer:
 			await writer.close()

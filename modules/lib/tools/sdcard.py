@@ -8,7 +8,9 @@ try:
 except:
 	pass
 import uos
-from tools import logger,filesystem,info
+import tools.logger
+import tools.filesystem
+import tools.info
 
 class SdCard:
 	""" Manage the sdcard """
@@ -19,15 +21,15 @@ class SdCard:
 	@staticmethod
 	def set_slot(**slot):
 		""" Set the default sdcard slot
-		- slot :  selects which of the available interfaces to use. Leaving this unset will select the default interface.
+		- slot  :  selects which of the available interfaces to use. Leaving this unset will select the default interface.
 		- width : selects the bus width for the SD/MMC interface.
-		- cd : can be used to specify a card-detect pin.
-		- wp : can be used to specify a write-protect pin.
-		- sck : can be used to specify an SPI clock pin.
-		- miso : can be used to specify an SPI miso pin.
-		- mosi : can be used to specify an SPI mosi pin.
-		- cs : can be used to specify an SPI chip select pin.
-		- freq : selects the SD/MMC interface frequency in Hz (only supported on the ESP32).
+		- cd    : can be used to specify a card-detect pin.
+		- wp    : can be used to specify a write-protect pin.
+		- sck   : can be used to specify an SPI clock pin.
+		- miso  : can be used to specify an SPI miso pin.
+		- mosi  : can be used to specify an SPI mosi pin.
+		- cs    : can be used to specify an SPI chip select pin.
+		- freq  : selects the SD/MMC interface frequency in Hz (only supported on the ESP32).
 		(look doc http://docs.micropython.org/en/latest/library/machine.SDCard.html?highlight=sdcard) """
 		SdCard.slot[0] = slot
 
@@ -36,7 +38,7 @@ class SdCard:
 		""" Return the maximal size of sdcard """
 		if SdCard.is_mounted():
 			status = uos.statvfs(SdCard.get_mountpoint())
-			if filesystem.ismicropython():
+			if tools.filesystem.ismicropython():
 				return status[1]*status[2]
 			else:
 				return status.f_frsize*status.f_blocks
@@ -48,7 +50,7 @@ class SdCard:
 		""" Return the free size of sdcard """
 		if SdCard.is_mounted():
 			status = uos.statvfs(SdCard.get_mountpoint())
-			if filesystem.ismicropython():
+			if tools.filesystem.ismicropython():
 				return status[0]*status[3]
 			else:
 				return status.f_bsize * status.f_bfree
@@ -95,7 +97,7 @@ class SdCard:
 					os.VfsLfs2(sd)
 				result = True
 			except Exception as err:
-				logger.syslog(err)
+				tools.logger.syslog(err)
 		return result
 
 	@staticmethod
@@ -104,20 +106,20 @@ class SdCard:
 		result = False
 		if SdCard.is_mounted() is True and mountpoint != "/" and mountpoint != "":
 			if SdCard.is_available():
-				if filesystem.ismicropython():
+				if tools.filesystem.ismicropython():
 					try:
 						uos.umount(mountpoint)
 						SdCard.mountpoint[0] = ""
 						SdCard.opened[0]= False
 						result = True
 					except Exception as err:
-						logger.syslog(err, "Cannot umount %s"%mountpoint)
+						tools.logger.syslog(err, "Cannot umount %s"%mountpoint)
 				else:
 					SdCard.mountpoint[0] = ""
 					SdCard.opened[0] = False
 					result = True
 			else:
-				logger.syslog("SdCard disabled")
+				tools.logger.syslog("SdCard disabled")
 				SdCard.mountpoint[0] = ""
 				SdCard.opened[0] = False
 				result = True
@@ -131,7 +133,7 @@ class SdCard:
 		result = False
 		if SdCard.is_mounted() is False and mountpoint != "/" and mountpoint != "":
 			if SdCard.is_available():
-				if filesystem.ismicropython():
+				if tools.filesystem.ismicropython():
 
 					try:
 						# If the sdcard not already mounted
@@ -141,24 +143,24 @@ class SdCard:
 							SdCard.opened[0]= True
 							result = True
 					except Exception as err:
-						info.increase_issues_counter()
-						logger.syslog("Cannot mount %s"%mountpoint)
+						tools.info.increase_issues_counter()
+						tools.logger.syslog("Cannot mount %s"%mountpoint)
 				else:
 					SdCard.mountpoint[0] = mountpoint[1:]
 					SdCard.opened[0] = True
 					result = True
 			else:
-				logger.syslog("SdCard disabled")
-				if filesystem.ismicropython():
+				tools.logger.syslog("SdCard disabled")
+				if tools.filesystem.ismicropython():
 					SdCard.mountpoint[0] = "/data"
 				else:
 					from os import getcwd
 					SdCard.mountpoint[0] = "%s/data"%getcwd()
 				SdCard.opened[0] = True
-				filesystem.makedir(SdCard.mountpoint[0], True)
+				tools.filesystem.makedir(SdCard.mountpoint[0], True)
 				result = True
 		elif SdCard.is_mounted():
-			if filesystem.ismicropython():
+			if tools.filesystem.ismicropython():
 				if SdCard.is_available():
 					if mountpoint == SdCard.get_mountpoint():
 						result = True
@@ -176,7 +178,7 @@ class SdCard:
 		directories = [directory]
 		direct = directory
 		while 1:
-			parts = filesystem.split(direct)
+			parts = tools.filesystem.split(direct)
 
 			if parts[1] == "" or parts[0] == "":
 				break
@@ -202,7 +204,7 @@ class SdCard:
 					uos.mkdir(direct)
 				except OSError as err:
 					if err.args[0] not in [2,17]:
-						logger.syslog(err)
+						tools.logger.syslog(err)
 						break
 			try:
 				# pylint:disable=unspecified-encoding
@@ -210,7 +212,7 @@ class SdCard:
 				break
 			except OSError as err:
 				if err.args[0] not in [2,17]:
-					logger.syslog(err)
+					tools.logger.syslog(err)
 					break
 		return result
 
@@ -251,12 +253,12 @@ class SdCard:
 					file.close()
 					result = True
 				except OSError as err:
-					logger.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
+					tools.logger.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
 					# If sd card not responding properly
 					if err.errno == 2:
-						info.increase_issues_counter()
+						tools.info.increase_issues_counter()
 				except Exception as err:
-					logger.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
+					tools.logger.syslog(err, "Cannot save %s/%s/%s"%(SdCard.get_mountpoint(), directory, filename))
 				finally:
 					if file is not None:
 						file.close()

@@ -1,7 +1,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Base class of html templates """
-from tools import logger
+import tools.logger
 
 class Template:
 	""" Base class of html templates """
@@ -48,4 +48,4 @@ class Template:
 								await item.write(file)
 			await file.write(self.get_end(self))
 		except Exception as err:
-			await file.write(logger.html_exception(err))
+			await file.write(tools.logger.html_exception(err))

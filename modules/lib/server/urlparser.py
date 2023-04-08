@@ -2,7 +2,7 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 import collections
-from tools import strings
+import tools.strings
 # url = b"http://user:passsword@192.168.1.28:8080/toto/json.htm?type=command&param=switchlight&idx=4&switchcmd=On&error=mon+error#my_anchor"
 
 class UrlParser:
@@ -211,9 +211,9 @@ class UrlParser:
 		elif type(value) == type(b""):
 			pass
 		elif type(value) == type(""):
-			value = strings.tobytes(value)
+			value = tools.strings.tobytes(value)
 		else:
-			value = strings.tobytes(value)
+			value = tools.strings.tobytes(value)
 		return value
 
 	def get_params(self):
@@ -234,6 +234,6 @@ class UrlParser:
 		result += b"user     : '%s'\n"%self.user
 		result += b"password : '%s'\n"%self.password
 		result += b"path     : '%s'\n"%self.path
-		result += b"params   : %s\n"%strings.tobytes(str(strings.tostrings(self.params)))
+		result += b"params   : %s\n"%tools.strings.tobytes(str(tools.strings.tostrings(self.params)))
 		result += b"anchor   : '%s'\n"%self.anchor
-		return strings.tostrings(result)
+		return tools.strings.tostrings(result)

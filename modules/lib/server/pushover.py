@@ -4,17 +4,19 @@
 See https://www.pushover.net """
 # pylint:disable=wrong-import-position
 import uasyncio
-from server.stream import *
-from server import notifier
-from server.httprequest import *
-import wifi
-from tools import logger,jsonconfig,strings
+import server.stream
+import server.notifier
+import server.httprequest
+import wifi.wifi
+import tools.logger
+import tools.jsonconfig
+import tools.strings
 
-class PushOverConfig(jsonconfig.JsonConfig):
+class PushOverConfig(tools.jsonconfig.JsonConfig):
 	""" Configuration of the pushover """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.activated = False
 		self.token = b""
 		self.user = b""
@@ -37,15 +39,15 @@ class PushOver:
 		message : the message of notification (bytes field not a string)
 		image : the jpeg image or nothing (bytes field)"""
 		result = False
-		if wifi.Station.is_active():
+		if wifi.station.Station.is_active():
 			try:
 				streamio = None
 				# Open pushover connection
-				reader,writer = await uasyncio.open_connection(strings.tostrings(self.host), self.port)
-				streamio = Stream(reader, writer)
+				reader,writer = await uasyncio.open_connection(tools.strings.tostrings(self.host), self.port)
+				streamio = server.stream.Stream(reader, writer)
 
 				# Create multipart request
-				request = HttpRequest(None)
+				request = server.httprequest.HttpRequest(None)
 				request.set_method(b"POST")
 				request.set_path  (b"/1/messages.json")
 				request.set_header(b"Host",self.host)
@@ -55,24 +57,24 @@ class PushOver:
 
 				# Add token in multipart request
 				if self.token is not None:
-					request.add_part(PartText(b"token",self.token))
+					request.add_part(server.httprequest.PartText(b"token",self.token))
 
 				# Add user in multipart request
 				if self.user is not None:
-					request.add_part(PartText(b"user",self.user))
+					request.add_part(server.httprequest.PartText(b"user",self.user))
 
 				# Add message text in multipart request
-				request.add_part(PartText(b"message", message))
+				request.add_part(server.httprequest.PartText(b"message", message))
 
 				# Add image in multipart request
 				if image is not None:
-					request.add_part(PartBin(b"attachment",b"image.jpg",image, b"image/jpeg"))
+					request.add_part(server.httprequest.PartBin(b"attachment",b"image.jpg",image, b"image/jpeg"))
 
 				# Send request to pushover
 				await request.send(streamio)
 
 				# Create response
-				response = HttpResponse(streamio)
+				response = server.httprequest.HttpResponse(streamio)
 
 				# Receive response from pushover
 				await response.receive(streamio)
@@ -80,23 +82,23 @@ class PushOver:
 				# If response failed
 				if response.status != b"200":
 					# Print error
-					logger.syslog("Notification failed to sent", display=display)
+					tools.logger.syslog("Notification failed to sent", display=display)
 
 				# Close all connection with push over server
 				result = True
-				wifi.Wifi.wan_connected()
+				wifi.wifi.Wifi.wan_connected()
 			except Exception as err:
-				wifi.Wifi.wan_disconnected()
-				logger.syslog(err)
+				wifi.wifi.Wifi.wan_disconnected()
+				tools.logger.syslog(err)
 			finally:
 				if streamio:
 					await streamio.close()
 		else:
-			logger.syslog("Notification not sent : wifi not connected", display=display)
+			tools.logger.syslog("Notification not sent : wifi not connected", display=display)
 		return result
 
 	@staticmethod
-	@notifier.Notifier.add()
+	@server.notifier.Notifier.add()
 	async def notify_message(notification):
 		""" Notify message """
 		config = PushOverConfig()
@@ -119,7 +121,7 @@ class PushOver:
 async def async_notify(user, token, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
 	notification = PushOver(host=b"api.pushover.net", port=80, token=token, user=user)
-	return await notification.notify(b"%s : %s"%(wifi.Station.get_hostname(), strings.tobytes(message)), image, display)
+	return await notification.notify(b"%s : %s"%(wifi.station.Station.get_hostname(), tools.strings.tobytes(message)), image, display)
 
 def notify(user, token, message, image=None):
 	""" Notification function """

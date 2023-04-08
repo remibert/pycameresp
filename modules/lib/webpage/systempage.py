@@ -1,85 +1,90 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to manage board """
-from server.httpserver import HttpServer
-from wifi.station      import Station
+import server.httpserver
+import wifi.station
 from htmltemplate      import *
-from webpage.mainpage  import main_frame
-from tools             import lang,archiver,filesystem,logger,system,tasking
+import webpage.mainpage
+import tools.lang
+import tools.archiver
+import tools.filesystem
+import tools.logger
+import tools.system
+import tools.tasking
 
-@HttpServer.add_route(b'/system', menu=lang.menu_system, item=lang.item_system)
+@server.httpserver.HttpServer.add_route(b'/system', menu=tools.lang.menu_system, item=tools.lang.item_system)
 async def system_page(request, response, args):
 	""" Function define the web page to manage system of the board """
-	page = main_frame(request, response, args, lang.system_management_s%Station.get_hostname(),
+	page = webpage.mainpage.main_frame(request, response, args, tools.lang.system_management_s%wifi.station.Station.get_hostname(),
 		Form([
 			FormGroup([
-				Label(text=lang.configuration ), Br(),
-				UploadFile  (text=lang.upload,   path=b"/system/upload_config",   alert=lang.configuration_uploaded, accept=b".cfs"), Space(),
-				DownloadFile(text=lang.download, path=b"/system/download_config", filename=b"%s.config.cfs"%Station.get_hostname()),
+				Label(text=tools.lang.configuration ), Br(),
+				UploadFile  (text=tools.lang.upload,   path=b"/system/upload_config",   alert=tools.lang.configuration_uploaded, accept=b".cfs"), Space(),
+				DownloadFile(text=tools.lang.download, path=b"/system/download_config", filename=b"%s.config.cfs"%wifi.station.Station.get_hostname()),
 			]),
 			FormGroup([
-				Label(text=lang.file_system), Br(),
-				UploadFile  (text=lang.upload,   path=b"/system/upload_file_system",   alert=lang.upload_in_progress, accept=b".cfs"), Space(),
-				DownloadFile(text=lang.download, path=b"/system/download_file_system", filename=b"%s.filesystem.cfs"%Station.get_hostname()),
+				Label(text=tools.lang.file_system), Br(),
+				UploadFile  (text=tools.lang.upload,   path=b"/system/upload_file_system",   alert=tools.lang.upload_in_progress, accept=b".cfs"), Space(),
+				DownloadFile(text=tools.lang.download, path=b"/system/download_file_system", filename=b"%s.filesystem.cfs"%wifi.station.Station.get_hostname()),
 			]),
 			FormGroup([
-				Label(text=lang.syslog), Br(),
-				DownloadFile(text=lang.download, path=b"/system/download_syslog", filename=b"%s.syslog.log"%Station.get_hostname()),
+				Label(text=tools.lang.syslog), Br(),
+				DownloadFile(text=tools.lang.download, path=b"/system/download_syslog", filename=b"%s.syslog.log"%wifi.station.Station.get_hostname()),
 			]),
 			FormGroup([
-				Label(text=lang.reboot_device), Br(),
-				ButtonCmd(text=lang.reboot,path=b"/system/reboot",confirm=lang.confirm_reboot, name=b"reboot")
+				Label(text=tools.lang.reboot_device), Br(),
+				ButtonCmd(text=tools.lang.reboot,path=b"/system/reboot",confirm=tools.lang.confirm_reboot, name=b"reboot")
 			])
 		])
 	)
 	await response.send_page(page)
 
 
-@HttpServer.add_route(b'/system/upload_config')
+@server.httpserver.HttpServer.add_route(b'/system/upload_config')
 async def upload_config(request, response, args):
 	""" Upload configuration """
-	tasking.Tasks.slow_down()
+	tools.tasking.Tasks.slow_down()
 	file = request.get_content_filename()
-	archiver.upload_files(file)
+	tools.archiver.upload_files(file)
 	await response.send_ok()
 
-@HttpServer.add_route(b'/system/download_config')
+@server.httpserver.HttpServer.add_route(b'/system/download_config')
 async def download_config(request, response, args):
 	""" Download configuration """
-	tasking.Tasks.slow_down()
-	archiver.download_files("config.cfg", path="./config", pattern="*.json", excludes=["*.tmp","sd/*",".DS_Store"], recursive=False)
+	tools.tasking.Tasks.slow_down()
+	tools.archiver.download_files("config.cfg", path="./config", pattern="*.json", excludes=["*.tmp","sd/*",".DS_Store"], recursive=False)
 	await response.send_file(b"config.cfg", headers=request.headers)
-	filesystem.remove("config.cfg")
+	tools.filesystem.remove("config.cfg")
 
-@HttpServer.add_route(b'/system/upload_file_system')
+@server.httpserver.HttpServer.add_route(b'/system/upload_file_system')
 async def upload_file_system(request, response, args):
 	""" Upload file system """
-	tasking.Tasks.slow_down()
-	archiver.upload_files(request.get_content_filename())
+	tools.tasking.Tasks.slow_down()
+	tools.archiver.upload_files(request.get_content_filename())
 	await reboot(request, response, args)
 
-@HttpServer.add_route(b'/system/download_file_system')
+@server.httpserver.HttpServer.add_route(b'/system/download_file_system')
 async def download_file_system(request, response, args):
 	""" Download file system """
-	tasking.Tasks.slow_down()
-	archiver.download_files("fileSystem.cfs", path="./",pattern="*.*", excludes=["*.tmp","config/*","sd/*","syslog.*","www/bootstrap.*",".DS_Store"], recursive=True)
+	tools.tasking.Tasks.slow_down()
+	tools.archiver.download_files("fileSystem.cfs", path="./",pattern="*.*", excludes=["*.tmp","config/*","sd/*","syslog.*","www/bootstrap.*",".DS_Store"], recursive=True)
 	await response.send_file(b"fileSystem.cfs", headers=request.headers)
-	filesystem.remove("fileSystem.cfs")
+	tools.filesystem.remove("fileSystem.cfs")
 
-@HttpServer.add_route(b'/system/download_syslog')
+@server.httpserver.HttpServer.add_route(b'/system/download_syslog')
 async def download_syslog(request, response, args):
 	""" Download syslog """
-	tasking.Tasks.slow_down()
+	tools.tasking.Tasks.slow_down()
 	await response.send_file([b"syslog.log.4",b"syslog.log.3",b"syslog.log.2",b"syslog.log.1",b"syslog.log"], headers=request.headers)
 
-@HttpServer.add_route(b'/system/reboot')
+@server.httpserver.HttpServer.add_route(b'/system/reboot')
 async def reboot(request, response, args):
 	""" Reboot device """
 	try:
 		await response.send_ok()
 	except Exception as err:
-		logger.syslog(err)
+		tools.logger.syslog(err)
 	try:
-		system.reboot("Reboot asked on system html page")
+		tools.system.reboot("Reboot asked on system html page")
 	except Exception as err:
-		logger.syslog(err)
+		tools.logger.syslog(err)

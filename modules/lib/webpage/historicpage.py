@@ -2,13 +2,16 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to view recent motion detection """
 # pylint:disable=anomalous-unicode-escape-in-string
-from server.httpserver     import HttpServer
+import server.httpserver
 from htmltemplate          import *
-from webpage.mainpage      import main_frame
-from webpage.streamingpage import Streaming
-from motion                import Historic
-from video                 import Camera
-from tools                 import lang,info, strings,tasking
+import webpage.mainpage
+import webpage.streamingpage
+import motion
+import video.video
+import tools.lang
+import tools.info
+import tools.strings
+import tools.tasking
 
 def get_days_pagination(last_days, request):
 	""" Get the pagination html part of days """
@@ -62,12 +65,12 @@ def get_days_pagination(last_days, request):
 	return result
 
 
-@HttpServer.add_route(b'/historic', menu=lang.menu_motion, item=lang.item_historic, available=info.iscamera() and Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/historic', menu=tools.lang.menu_motion, item=tools.lang.item_historic, available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def historic(request, response, args):
-	""" Historic motion detection page """
-	Streaming.stop()
-	Historic.get_root()
-	last_days = await Historic.get_last_days()
+	""" motion.historic.Historic motion detection page """
+	webpage.streamingpage.Streaming.stop()
+	motion.historic.Historic.get_root()
+	last_days = await motion.historic.Historic.get_last_days()
 	pagination_begin, pagination_end,current_day = get_days_pagination(last_days, request)
 
 	if pagination_end is not None and pagination_begin is not None:
@@ -384,47 +387,47 @@ async def historic(request, response, args):
 			pagination_end
 		]
 	else:
-		page_content = Tag(b"<span>%s</span>"%lang.historic_not_available)
-	page = main_frame(request, response, args,lang.last_motion_detections,Form(page_content))
+		page_content = Tag(b"<span>%s</span>"%tools.lang.historic_not_available)
+	page = webpage.mainpage.main_frame(request, response, args,tools.lang.last_motion_detections,Form(page_content))
 	await response.send_page(page)
 
-@HttpServer.add_route(b'/historic/historic.json', available=info.iscamera() and Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/historic/historic.json', available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def historic_json(request, response, args):
 	""" Send historic json file """
-	tasking.Tasks.slow_down()
+	tools.tasking.Tasks.slow_down()
 	try:
-		await response.send_buffer(b"historic.json", await Historic.get_json())
+		await response.send_buffer(b"historic.json", await motion.historic.Historic.get_json())
 	except Exception as err:
 		await response.send_not_found(err)
 
-@HttpServer.add_route(b'/historic/images/.*', available=info.iscamera() and Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/historic/images/.*', available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def historic_image(request, response, args):
 	""" Send historic image """
-	tasking.Tasks.slow_down()
-	reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
+	tools.tasking.Tasks.slow_down()
+	reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=15)
 	try:
 		if reserved:
-			await Historic.acquire()
-			await response.send_file(strings.tostrings(request.path[len("/historic/images/"):]), base64=True)
+			await motion.historic.Historic.acquire()
+			await response.send_file(tools.strings.tostrings(request.path[len("/historic/images/"):]), base64=True)
 		else:
 			await response.send_not_found()
 	finally:
 		if reserved:
-			await Historic.release()
-			await Camera.unreserve(Historic)
+			await motion.historic.Historic.release()
+			await video.video.Camera.unreserve(motion.historic.Historic)
 
-@HttpServer.add_route(b'/historic/download/.*', available=info.iscamera() and Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/historic/download/.*', available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def download_image(request, response, args):
 	""" Download historic image """
-	tasking.Tasks.slow_down()
-	reserved = await Camera.reserve(Historic, timeout=5, suspension=15)
+	tools.tasking.Tasks.slow_down()
+	reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=15)
 	try:
 		if reserved:
-			await Historic.acquire()
-			await response.send_file(strings.tostrings(request.path[len("/historic/download/"):]), base64=False)
+			await motion.historic.Historic.acquire()
+			await response.send_file(tools.strings.tostrings(request.path[len("/historic/download/"):]), base64=False)
 		else:
 			await response.send_not_found()
 	finally:
 		if reserved:
-			await Historic.release()
-			await Camera.unreserve(Historic)
+			await motion.historic.Historic.release()
+			await video.video.Camera.unreserve(motion.historic.Historic)

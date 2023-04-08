@@ -2,13 +2,14 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the configuration of the electric meter """
 # pylint:disable=anomalous-unicode-escape-in-string
-from tools                 import jsonconfig, strings
+import tools.jsonconfig
+import tools.strings
 
-class RateConfig(jsonconfig.JsonConfig):
+class RateConfig(tools.jsonconfig.JsonConfig):
 	""" Kwh rate configuration """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 
 		self.name = b""
 		self.price = 0.0
@@ -16,26 +17,26 @@ class RateConfig(jsonconfig.JsonConfig):
 		self.validity_date = 0
 
 
-class RatesConfig(jsonconfig.JsonConfig):
+class RatesConfig(tools.jsonconfig.JsonConfig):
 	""" Rates list per kwh """
 	config = None
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.rates = []
 
 	def append(self, rate):
 		""" Add new rate in the list """
 		found = False
-		rate = strings.tobytes(rate)
+		rate = tools.strings.tobytes(rate)
 		for current in self.rates:
-			if current[b"name"] == strings.tobytes(rate.name) and current[b"validity_date"] == strings.tobytes(rate.validity_date):
+			if current[b"name"] == tools.strings.tobytes(rate.name) and current[b"validity_date"] == tools.strings.tobytes(rate.validity_date):
 				found = True
-				current[b"currency"] = strings.tobytes(rate.currency)
+				current[b"currency"] = tools.strings.tobytes(rate.currency)
 				current[b"price"] = rate.price
 				break
 		if found is False:
-			self.rates.append(strings.tobytes(rate.__dict__))
+			self.rates.append(tools.strings.tobytes(rate.__dict__))
 
 	def get(self, index):
 		""" Return the rate at the index """
@@ -78,28 +79,28 @@ class RatesConfig(jsonconfig.JsonConfig):
 		return RatesConfig.config
 
 
-class TimeSlotConfig(jsonconfig.JsonConfig):
+class TimeSlotConfig(tools.jsonconfig.JsonConfig):
 	""" Time slot configuration """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.rate       = b""
 		self.start_time = 0
 		self.end_time   = 0
 		self.color      = b""
 
-class TimeSlotsConfig(jsonconfig.JsonConfig):
+class TimeSlotsConfig(tools.jsonconfig.JsonConfig):
 	""" Time slots list """
 	config = None
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.time_slots = []
 
 	def append(self, time_slot):
 		""" Add new time slot in the list """
 		found = False
-		time_slot = strings.tobytes(time_slot)
+		time_slot = tools.strings.tobytes(time_slot)
 		for current in self.time_slots:
 			if current[b"start_time"] == time_slot.start_time and current[b"end_time"]   == time_slot.end_time:
 				current[b"color"] = time_slot.color
@@ -107,7 +108,7 @@ class TimeSlotsConfig(jsonconfig.JsonConfig):
 				found = True
 				break
 		if found is False:
-			self.time_slots.append(strings.tobytes(time_slot.__dict__))
+			self.time_slots.append(tools.strings.tobytes(time_slot.__dict__))
 
 	def get(self, index):
 		""" Return the time slot at the index """
@@ -167,12 +168,12 @@ class TimeSlotsConfig(jsonconfig.JsonConfig):
 		return slot_pulses
 
 
-class GeolocationConfig(jsonconfig.JsonConfig):
+class GeolocationConfig(tools.jsonconfig.JsonConfig):
 	""" Geolocation configuration """
 	config = None
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.latitude  = 44.93
 		self.longitude = 4.87
 

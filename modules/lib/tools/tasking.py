@@ -5,11 +5,17 @@
 import time
 import uasyncio
 import machine
-from tools import lang,strings,logger,system,watchdog, info, topic
+import tools.lang
+import tools.strings
+import tools.logger
+import tools.system
+import tools.watchdog
+import tools.info
+import tools.topic
 
 class Inactivity:
 	""" Class to manage inactivity timer """
-	def __init__(self, callback, duration=watchdog.LONG_WATCH_DOG, timer_id=-1):
+	def __init__(self, callback, duration=tools.watchdog.LONG_WATCH_DOG, timer_id=-1):
 		""" Inactivity timer constructor """
 		self.timer = machine.Timer(timer_id)
 		self.duration = duration
@@ -103,7 +109,7 @@ class Tasks:
 			Tasks.servers_started = True
 			for server in Tasks.servers:
 				name, port = server.start_server()
-				logger.syslog("%s waiting on %d"%(name, port))
+				tools.logger.syslog("%s port:%d"%(name, port))
 
 	@staticmethod
 	def run():
@@ -112,12 +118,10 @@ class Tasks:
 			# Run asyncio for ever
 			Tasks.loop.run_forever()
 		except KeyboardInterrupt:
-			# from tools import logger
-			logger.syslog("Ctr-C in main")
+			tools.logger.syslog("Ctr-C in main")
 		except Exception as err:
-			# from tools import logger, system
-			logger.syslog(err)
-			system.reboot("Crash in main")
+			tools.logger.syslog(err)
+			tools.system.reboot("Crash in main")
 
 	@staticmethod
 	async def monitor(task, **kwargs):
@@ -134,33 +138,33 @@ class Tasks:
 						if await task(**kwargs):
 							retry = 0
 				except MemoryError as err:
-					lastError = logger.syslog(err, "Memory error, %s"%strings.tostrings(info.meminfo()))
+					lastError = tools.logger.syslog(err, "Memory error, %s"%tools.strings.tostrings(tools.info.meminfo()))
 					from gc import collect
 					collect()
 					memory_error_count += 1
 					if memory_error_count > 10:
-						logger.syslog("Too many memory error")
+						tools.logger.syslog("Too many memory error")
 						break
 					retry += 1
 					await uasyncio.sleep_ms(6000)
 				except Exception as err:
-					lastError = logger.syslog(err, "Task error")
+					lastError = tools.logger.syslog(err, "Task error")
 					retry += 1
 					await uasyncio.sleep_ms(6000)
-				logger.syslog("Task retry %d/%d"%(retry,max_retry))
-			logger.syslog("Too many task error reboot")
+				tools.logger.syslog("Task retry %d/%d"%(retry,max_retry))
+			tools.logger.syslog("Too many task error reboot")
 
 			from server.server import ServerConfig
 			from server.notifier import Notifier
 
 			config = ServerConfig()
 			config.load()
-			Notifier.notify(topic=topic.information, message=lang.reboot_after_many%strings.tobytes(lastError), enabled=config.notify)
+			Notifier.notify(topic=tools.topic.information, message=tools.lang.reboot_after_many%tools.strings.tobytes(lastError), enabled=config.notify)
 			await uasyncio.sleep_ms(10000)
 		except Exception as err:
-			logger.exception(err)
+			tools.logger.exception(err)
 		finally:
-			system.reboot()
+			tools.system.reboot()
 
 	@staticmethod
 	def suspend():
@@ -225,4 +229,4 @@ class Tasks:
 				if i % 4 == 0:
 					print("Wait all servers suspended...")
 				await uasyncio.sleep(0.5)
-				watchdog.WatchDog.feed()
+				tools.watchdog.WatchDog.feed()

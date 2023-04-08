@@ -44,6 +44,6 @@ z.write(os.path.normpath("%s/modules/www/bootstrap.bundle.min.js"%PYCAMERESP),"w
 z.write(os.path.normpath("%s/modules/www/bootstrap.min.css"%PYCAMERESP),"www/bootstrap.min.css")
 z.close()
 
-useful.zip_dir("%s/delivery/editor.zip"%PYCAMERESP,        PY_DIRECTORY,            includes=["*/editor*.py","*/filesystem.py","*/jsonconfig.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py","*/date.py"], excludes=[], display=False, renames=[["shell","editor"],["tools","editor"],["modules",""]])
+useful.zip_dir("%s/delivery/editor.zip"%PYCAMERESP,        PY_DIRECTORY,            includes=["*/editor*.py","*/filesystem.py","*/jsonconfig.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py","*/date.py"], excludes=[], display=False, renames=[["shell","editor"],["tools","editor/tools"],["modules",""]])
 useful.zip_dir("%s/delivery/electricmeter.zip"%PYCAMERESP, "%s/modules"%PYCAMERESP, includes=["*/lib/electricmeter/*.py","*/www/electricmeter.html"],                                                                                    excludes=[], display=False, renames=[["modules",""]])
 useful.zip_dir("%s/delivery/sample.zip"%PYCAMERESP,        "%s/modules"%PYCAMERESP, prefix="%s/modules"%PYCAMERESP, includes=["*/lib/sample/*.py"],                                                                                                                      excludes=[], display=False)#,  renames=[["modules","lib/sample"]])

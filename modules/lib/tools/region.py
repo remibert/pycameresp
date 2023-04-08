@@ -1,15 +1,15 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Language selected and regional time """
-from tools import jsonconfig
+import tools.jsonconfig
 
 region_config = None
 
-class RegionConfig(jsonconfig.JsonConfig):
+class RegionConfig(tools.jsonconfig.JsonConfig):
 	""" Language selected and regional time """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.lang        = b"english"
 		self.offset_time  = 1
 		self.dst         = True

@@ -1,3 +1,4 @@
+''' Web page of electric meter '''
 page = b"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <canvas id="line-chart"></canvas>

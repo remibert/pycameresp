@@ -4,17 +4,14 @@
 """ Miscellaneous utility functions """
 import sys
 import io
-try:
-	from tools import logger,filesystem
-except:
-	# pylint:disable=multiple-imports
-	import logger,filesystem
+import tools.logger
+import tools.filesystem
 
 def run(filename):
 	""" Import and execute python file """
 	result = None
-	path, file = filesystem.split(filename)
-	module_name, _ = filesystem.splitext(file)
+	path, file = tools.filesystem.split(filename)
+	module_name, _ = tools.filesystem.splitext(file)
 
 	if path not in sys.path:
 		sys.path.append(path)
@@ -32,7 +29,7 @@ def run(filename):
 				sys.modules[module_name].main()
 				break
 	except Exception as err:
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			out = io.StringIO()
 			# pylint: disable=no-member
 			sys.print_exception(err, out)
@@ -41,7 +38,7 @@ def run(filename):
 				result = int((line_err.split(',')[1]).split(" ")[-1])
 			except:
 				pass
-		logger.syslog(err)
+		tools.logger.syslog(err)
 	except KeyboardInterrupt as err:
-		logger.syslog(err)
+		tools.logger.syslog(err)
 	return result

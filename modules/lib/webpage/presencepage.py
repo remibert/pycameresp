@@ -2,18 +2,19 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to configure the presence detection """
 # pylint:disable=consider-using-enumerate
-from server.httpserver import HttpServer
-from server.dnsclient  import resolve_hostname, is_ip_address
-from server.presence   import PresenceConfig
+import server.httpserver
+import server.dnsclient
+import server.presence
 from htmltemplate      import *
-from webpage.mainpage  import main_frame, manage_default_button
-import wifi
-from tools import lang,strings
+import webpage.mainpage
+import wifi.wifi
+import tools.lang
+import tools.strings
 
-@HttpServer.add_route(b'/presence', menu=lang.menu_server, item=lang.item_presence)
+@server.httpserver.HttpServer.add_route(b'/presence', menu=tools.lang.menu_server, item=tools.lang.item_presence)
 async def presence(request, response, args):
 	""" Presence configuration page """
-	config = PresenceConfig()
+	config = server.presence.PresenceConfig()
 	def update_config(request, config):
 		resolve = False
 		if b"resolve" in request.params:
@@ -21,35 +22,35 @@ async def presence(request, response, args):
 				resolve = True
 
 		if resolve:
-			ip_address, netmask, gateway, dns = wifi.Station.get_info()
+			ip_address, netmask, gateway, dns = wifi.station.Station.get_info()
 			if dns != "":
 				for i in range(len(config.smartphones)):
 					smartphone = config.smartphones[i]
 					try:
-						if is_ip_address(strings.tostrings(smartphone)):
-							hostname = resolve_hostname(dns, strings.tostrings(smartphone))
+						if server.dnsclient.is_ip_address(tools.strings.tostrings(smartphone)):
+							hostname = server.dnsclient.resolve_hostname(dns, tools.strings.tostrings(smartphone))
 							if hostname is not None:
-								config.smartphones[i] = strings.tobytes(hostname)
+								config.smartphones[i] = tools.strings.tobytes(hostname)
 					except:
 							pass
 
-	disabled, action, submit = manage_default_button(request, config, update_config)
+	disabled, action, submit = webpage.mainpage.manage_default_button(request, config, update_config)
 	if action == b'modify':
-		submit = Switch(text=lang.convert_ip_address, name=b"resolve", checked=False, disabled=disabled),submit
+		submit = Switch(text=tools.lang.convert_ip_address, name=b"resolve", checked=False, disabled=disabled),submit
 
 	editSmartphones = []
 	i = 0
 	for smartphone in config.smartphones:
-		editSmartphones.append(Edit(text=lang.smartphone_d%(i+1),         name=b"smartphones[%d]"%i,
-								placeholder=lang.enter_ip_address_or_dns,
-								value=strings.tobytes(config.smartphones[i]),  disabled=disabled))
+		editSmartphones.append(Edit(text=tools.lang.smartphone_d%(i+1),         name=b"smartphones[%d]"%i,
+								placeholder=tools.lang.enter_ip_address_or_dns,
+								value=tools.strings.tobytes(config.smartphones[i]),  disabled=disabled))
 		i += 1
 
-	page = main_frame(request, response, args,lang.presence_detection_configuration,
+	page = webpage.mainpage.main_frame(request, response, args,tools.lang.presence_detection_configuration,
 		Form([
-			Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
+			Switch(text=tools.lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
 			editSmartphones,
-			Switch(text=lang.notification, name=b"notify", checked=config.notify, disabled=disabled),
+			Switch(text=tools.lang.notification, name=b"notify", checked=config.notify, disabled=disabled),
 			submit
 		]))
 

@@ -1,24 +1,25 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to change the user and password """
-from server.httpserver import HttpServer
-from server.user       import User
+import server.httpserver
+import server.user
 from htmltemplate      import *
-from webpage.mainpage  import *
-from tools             import lang
+import webpage.mainpage
+import webpage.passwordpage
+import tools.lang
 
-@HttpServer.add_route(b'/changepassword', menu=lang.menu_account, item=lang.item_password)
+@server.httpserver.HttpServer.add_route(b'/changepassword', menu=tools.lang.menu_account, item=tools.lang.item_password)
 async def change_password(request, response, args):
 	""" Function define the web page to change the user and password """
-	page = main_frame(request, response, args, lang.change_password, PasswordPage.change(request, response))
+	page = webpage.mainpage.main_frame(request, response, args, tools.lang.change_password, webpage.passwordpage.PasswordPage.change(request, response))
 	await response.send_page(page)
 
-@HttpServer.add_route(b'/logout', menu=lang.menu_account, item=lang.item_logout)
+@server.httpserver.HttpServer.add_route(b'/logout', menu=tools.lang.menu_account, item=tools.lang.item_logout)
 async def logout(request, response, args):
 	""" Function to close account """
-	if not User.is_empty():
+	if not server.user.User.is_empty():
 		request.params[b"logout"] = b"1"
-		page = main_frame(request, response, args, lang.logout, PasswordPage.logout(request,response))
+		page = webpage.mainpage.main_frame(request, response, args, tools.lang.logout, webpage.passwordpage.PasswordPage.logout(request,response))
 	else:
-		page = main_frame(request, response, args, lang.logout, None)
+		page = webpage.mainpage.main_frame(request, response, args, tools.lang.logout, None)
 	await response.send_page(page)

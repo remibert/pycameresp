@@ -5,10 +5,11 @@
 """ Telnet class """
 import sys
 import errno
-from io import IOBase
+import io
 import time
-from server.user import User
-from tools import strings
+import server.user
+import wifi.hostname
+import tools.strings
 
 class TelnetLogin:
 	""" Class to manage the username and password """
@@ -16,7 +17,7 @@ class TelnetLogin:
 	def __init__(self, output):
 		""" Constructor """
 		self.output = output
-		if User.is_empty():
+		if server.user.User.is_empty():
 			self.footer()
 			self.state = 2
 		else:
@@ -28,10 +29,9 @@ class TelnetLogin:
 	def header(self):
 		""" Show header """
 		try:
-			import wifi
-			hostname = strings.tobytes(wifi.Station.get_hostname())
+			hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
 		except:
-			hostname = strings.tobytes(sys.platform)
+			hostname = tools.strings.tobytes(sys.platform)
 		message = b"# Telnet on '%s' started #"%hostname
 		self.output.write(b"\r\n%s\r\n%s\r\n%s\r\n"%(b"#"*len(message), message, b"#"*len(message)))
 
@@ -53,7 +53,7 @@ class TelnetLogin:
 		self.input_char += b[0].to_bytes(1,"little")
 
 		# Check if the character is complete
-		if strings.is_key_ended(self.input_char):
+		if tools.strings.is_key_ended(self.input_char):
 			# If escape sequence detected
 			if self.input_char[0] == 0x1B:
 				# Ignore escape sequence
@@ -73,7 +73,7 @@ class TelnetLogin:
 			# If delete detected
 			elif self.input_char[0] == 0x7F or self.input_char[0] == 0x08:
 				if len(self.input_buffer) > 0:
-					self.input_buffer = strings.tobytes(strings.tostrings(self.input_buffer)[:-1])
+					self.input_buffer = tools.strings.tobytes(tools.strings.tostrings(self.input_buffer)[:-1])
 				self.input_char = b""
 			# Else other character
 			else:
@@ -84,9 +84,9 @@ class TelnetLogin:
 	def refresh(self):
 		""" Refresh the line displayed """
 		if self.state == 0:
-			self.output.write(strings.tostrings(b"\x1B[2K\rUsername : %s"%self.input_buffer))
+			self.output.write(tools.strings.tostrings(b"\x1B[2K\rUsername : %s"%self.input_buffer))
 		elif self.state == 1:
-			self.output.write(strings.tostrings(b"\x1B[2K\rPassword : %s"%(b"*"*len(strings.tostrings(self.input_buffer)))))
+			self.output.write(tools.strings.tostrings(b"\x1B[2K\rPassword : %s"%(b"*"*len(tools.strings.tostrings(self.input_buffer)))))
 
 	def valid(self, buffer):
 		""" Valid data entered """
@@ -101,7 +101,7 @@ class TelnetLogin:
 			self.state += 1
 			self.output.write("\r\n")
 			# If password is a success
-			if User.check(self.login, self.password, display=False):
+			if server.user.User.check(self.login, self.password, display=False):
 				if self.count_failed[0] >> 2:
 					time.sleep(15)
 				self.output.write(b"Login successful\r\n")
@@ -132,7 +132,7 @@ class TelnetLogin:
 		return self.state >= 2
 
 # Provide necessary functions for dupterm and replace telnet control characters that come in.
-class TelnetWrapper(IOBase):
+class TelnetWrapper(io.IOBase):
 	""" Telnet wrapper class """
 	def __init__(self, sock):
 		# pylint: disable=super-init-not-called

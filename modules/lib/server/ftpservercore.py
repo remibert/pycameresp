@@ -8,11 +8,16 @@
 """ Ftp server implementation core class """
 import socket
 import os
-from server import stream
-from server.user import User
-from wifi.accesspoint import AccessPoint
-from wifi.station import Station
-from tools import logger,fnmatch,filesystem,strings,date,tasking
+import server.stream
+import server.user
+import wifi.accesspoint
+import wifi.station
+import tools.logger
+import tools.fnmatch
+import tools.filesystem
+import tools.strings
+import tools.date
+import tools.tasking
 
 MONTHS  = [b"Jan", b"Feb", b"Mar", b"Apr", b"May", b"Jun", b"Jul", b"Aug", b"Sep", b"Oct", b"Nov", b"Dec"]
 
@@ -30,12 +35,11 @@ class FtpServerCore:
 		self.path = b""
 		self.cwd = b"/"
 		self.fromname = None
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			self.root = b""
 			self.path_length = 64
 		else:
-			self.root = strings.tobytes(os.getcwd() + "/")
-			self.root = b"/Users/remi/Downloads/ftp/"
+			self.root = tools.strings.tobytes(os.getcwd() + "/ftp")
 			self.path_length = 256
 		self.command = b""
 		self.payload = b""
@@ -55,14 +59,14 @@ class FtpServerCore:
 	def log(self, err, msg="", write=False):
 		""" Log message """
 		if write:
-			logger.syslog(err, msg=msg, write=write)
+			tools.logger.syslog(err, msg=msg, write=write)
 
 	def get_ip(self):
 		""" Get the ip address of the board """
-		if Station.is_ip_on_interface(self.remoteaddr):
-			result = strings.tobytes(Station.get_info()[0])
+		if wifi.station.Station.is_ip_on_interface(self.remoteaddr):
+			result = tools.strings.tobytes(wifi.station.Station.get_info()[0])
 		else:
-			result = strings.tobytes(AccessPoint.get_info()[0])
+			result = tools.strings.tobytes(wifi.accesspoint.AccessPoint.get_info()[0])
 		return result
 
 	def close(self):
@@ -81,16 +85,16 @@ class FtpServerCore:
 		if full:
 			file_permissions = b"drwxr-xr-x" if (typ & 0xF000 == 0x4000) else b"-rw-r--r--"
 
-			d = date.local_time(current_date)
+			d = tools.date.local_time(current_date)
 			year,month,day,hour,minute,_,_,_ = d[:8]
 
 			if year != now[0] and month != now[1]:
 				file_date = b"%s %2d  %4d"%(MONTHS[month-1], day, year)
 			else:
 				file_date = b"%s %2d %02d:%02d"%(MONTHS[month-1], day, hour, minute)
-			description = b"%s    1 owner group %10d %s %s\r\n"%(file_permissions, size, file_date, strings.tobytes(filename))
+			description = b"%s    1 owner group %10d %s %s\r\n"%(file_permissions, size, file_date, tools.strings.tobytes(filename))
 		else:
-			description = strings.tobytes(filename) + b"\r\n"
+			description = tools.strings.tobytes(filename) + b"\r\n"
 		return description
 
 	def send_file_list_with_pattern(self, path, stream_, full, now, pattern=None):
@@ -98,7 +102,7 @@ class FtpServerCore:
 		description = b""
 		quantity = 0
 		counter = 0
-		for fileinfo in filesystem.list_directory(strings.tostrings(path)):
+		for fileinfo in tools.filesystem.list_directory(tools.strings.tostrings(path)):
 			filename = fileinfo[0]
 			typ = fileinfo[1]
 			if len(fileinfo) > 3:
@@ -108,7 +112,7 @@ class FtpServerCore:
 			if pattern is None:
 				accepted = True
 			else:
-				accepted = fnmatch.fnmatch(strings.tostrings(filename), strings.tostrings(pattern))
+				accepted = tools.fnmatch.fnmatch(tools.strings.tostrings(filename), tools.strings.tostrings(pattern))
 			if accepted:
 				if quantity > 100:
 					current_date = 0
@@ -117,7 +121,7 @@ class FtpServerCore:
 					try:
 						# If it is a file
 						if not (typ & 0xF000 == 0x4000):
-							sta = filesystem.fileinfo(strings.tostrings(filesystem.abspathbytes(path,strings.tobytes(filename))))
+							sta = tools.filesystem.fileinfo(tools.strings.tostrings(tools.filesystem.abspathbytes(path,tools.strings.tobytes(filename))))
 					except Exception:
 						pass
 					current_date = sta[8]
@@ -134,7 +138,7 @@ class FtpServerCore:
 
 	def send_file_list(self, path, stream_, full):
 		""" Send the list of file """
-		now = date.local_time()
+		now = tools.date.local_time()
 		try:
 			self.send_file_list_with_pattern(path, stream_, full, now)
 		except Exception as err:
@@ -158,7 +162,7 @@ class FtpServerCore:
 		""" Send error to ftp client """
 		showError = False
 		if type(err) != type(b""):
-			if filesystem.ismicropython():
+			if tools.filesystem.ismicropython():
 				if type(err) != type(OSError):
 					showError = True
 			else:
@@ -172,7 +176,7 @@ class FtpServerCore:
 
 	async def USER(self):
 		""" Ftp command USER """
-		if User.get_user() == b"":
+		if server.user.User.get_user() == b"":
 			await self.send_response(230, b"User Logged In.")
 		else:
 			self.user = self.path[1:]
@@ -181,7 +185,7 @@ class FtpServerCore:
 	async def PASS(self):
 		""" Ftp command PASS """
 		self.password = self.path[1:]
-		if User.check(self.user, self.password, False):
+		if server.user.User.check(self.user, self.password, False):
 			await self.send_response(230, b"Logged in.")
 		else:
 			await self.send_response(430, b"Invalid username or password")
@@ -214,7 +218,7 @@ class FtpServerCore:
 		""" Ftp command CWD """
 		if len(self.path) <= self.path_length:
 			try:
-				dd = os.listdir(strings.tostrings(self.root + self.path))
+				dd = os.listdir(tools.strings.tostrings(self.root + self.path))
 				self.cwd = self.path
 				await self.send_response(250,b"CWD command successful.")
 			except Exception as err:
@@ -225,7 +229,7 @@ class FtpServerCore:
 
 	async def CDUP(self):
 		""" Ftp command CDUP """
-		self.cwd = filesystem.abspathbytes(self.cwd, b"..")
+		self.cwd = tools.filesystem.abspathbytes(self.cwd, b"..")
 		await self.send_ok()
 
 	async def TYPE(self):
@@ -234,7 +238,7 @@ class FtpServerCore:
 
 	async def SIZE(self):
 		""" Ftp command SIZE """
-		size = filesystem.filesize(strings.tostrings(self.root + self.path))
+		size = tools.filesystem.filesize(tools.strings.tostrings(self.root + self.path))
 		await self.send_response(213, b"%d"%(size))
 
 	async def PASV(self):
@@ -256,7 +260,7 @@ class FtpServerCore:
 			self.pasvsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.pasvsocket.settimeout(1000)
 			self.pasvsocket.connect((self.data_addr, self.dataport))
-			self.log("Data connection with: %s"%strings.tostrings(self.data_addr))
+			self.log("Data connection with: %s"%tools.strings.tostrings(self.data_addr))
 			await self.send_response(200, b"OK")
 		else:
 			await self.send_response(504, b"Fail")
@@ -272,8 +276,8 @@ class FtpServerCore:
 		else:
 			place = self.cwd
 		await self.send_response(150, b"Connection accepted.") # Start list files
-		listsocket = stream.Socket(self.pasvsocket)
-		self.log("List %s"%(strings.tostrings(self.root+place)))
+		listsocket = server.stream.Socket(self.pasvsocket)
+		self.log("List %s"%(tools.strings.tostrings(self.root+place)))
 		self.send_file_list(self.root + place, listsocket, self.command == b"LIST" or self.payload == b"-l")
 		listsocket.close()
 		await self.send_response(226, b"Transfert complete.") # End list files
@@ -287,27 +291,27 @@ class FtpServerCore:
 			await self.send_response(211, b"TYPE: Binary STRU: File MODE: Stream")
 		else:
 			await self.send_response(213,b"Directory listing:")
-			self.log("List %s"%strings.tostrings(self.root+self.path))
+			self.log("List %s"%tools.strings.tostrings(self.root+self.path))
 			self.send_file_list(self.root + self.path, self.client, True)
 			await self.send_response(213, b"Stat end")
 
 	async def RETR(self):
 		""" Ftp command RETR """
 		await self.send_response(150, b"Start send file")
-		self.log("Send %s"%strings.tostrings(self.root+self.path), write=True)
+		self.log("Send %s"%tools.strings.tostrings(self.root+self.path), write=True)
 		filename = self.root + self.path
 
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			buffer_size = 1440
 			chunk = bytearray(buffer_size)
-			with open(strings.tostrings(filename), "r") as file:
+			with open(tools.strings.tostrings(filename), "r") as file:
 				length = file.readinto(chunk)
 				while length > 0:
 					# pylint: disable=no-member
 					sent = self.pasvsocket.write(chunk[:length])
 					length = file.readinto(chunk)
 		else:
-			with open(strings.tostrings(filename), "rb") as file:
+			with open(tools.strings.tostrings(filename), "rb") as file:
 				self.pasvsocket.sendall(file.read())
 		await self.send_response(226, b"End send file")
 		self.close_pasv()
@@ -322,7 +326,7 @@ class FtpServerCore:
 	def write_file(self, path, dataclient):
 		""" Write ftp received """
 		chunk = bytearray(1440)
-		with open(strings.tostrings(path), "wb") as file:
+		with open(tools.strings.tostrings(path), "wb") as file:
 			length = dataclient.readinto(chunk)
 			while length > 0:
 				file.write(chunk, length)
@@ -331,16 +335,16 @@ class FtpServerCore:
 	async def STOR(self):
 		""" Ftp command STOR """
 		await self.send_response(150, b"Start receive file")
-		self.log("Receive %s"%strings.tostrings(self.root + self.path), write=True)
+		self.log("Receive %s"%tools.strings.tostrings(self.root + self.path), write=True)
 		filename = self.root + self.path
 
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			try:
 				self.write_file(filename, self.pasvsocket)
 			except Exception as err:
 				self.log(err, write=True)
-				directory, file = filesystem.split(strings.tostrings(filename))
-				filesystem.makedir(directory, True)
+				directory, file = tools.filesystem.split(tools.strings.tostrings(filename))
+				tools.filesystem.makedir(directory, True)
 				self.write_file(filename, self.pasvsocket)
 		else:
 			with open(filename, "wb") as file:
@@ -354,8 +358,8 @@ class FtpServerCore:
 
 	async def DELE(self):
 		""" Ftp command DELE """
-		self.log("Delete %s"%strings.tostrings(self.root + self.path), write=True)
-		os.remove(strings.tostrings(self.root + self.path))
+		self.log("Delete %s"%tools.strings.tostrings(self.root + self.path), write=True)
+		os.remove(tools.strings.tostrings(self.root + self.path))
 		await self.send_ok()
 
 	async def XRMD(self):
@@ -364,7 +368,7 @@ class FtpServerCore:
 
 	async def RMD(self):
 		""" Ftp command RMD """
-		os.rmdir(strings.tostrings(self.root + self.path))
+		os.rmdir(tools.strings.tostrings(self.root + self.path))
 		await self.send_ok()
 
 	async def XMKD(self):
@@ -373,7 +377,7 @@ class FtpServerCore:
 
 	async def MKD(self):
 		""" Ftp command MKD """
-		os.mkdir(strings.tostrings(self.root + self.path))
+		os.mkdir(tools.strings.tostrings(self.root + self.path))
 		await self.send_ok()
 
 	async def RNFR(self):
@@ -384,8 +388,8 @@ class FtpServerCore:
 	async def RNTO(self):
 		""" Ftp command RNTO """
 		if self.fromname is not None:
-			self.log("Rename %s to %s"%(strings.tostrings(self.root + self.fromname), strings.tostrings(self.root + self.path)), write=True)
-			os.rename(strings.tostrings(self.root + self.fromname), strings.tostrings(self.root + self.path))
+			self.log("Rename %s to %s"%(tools.strings.tostrings(self.root + self.fromname), tools.strings.tostrings(self.root + self.path)), write=True)
+			os.rename(tools.strings.tostrings(self.root + self.fromname), tools.strings.tostrings(self.root + self.path))
 			await self.send_ok()
 		else:
 			await self.send_error(self.fromname)
@@ -402,7 +406,7 @@ class FtpServerCore:
 
 	async def receive_command(self):
 		""" Ftp command reception """
-		tasking.Tasks.slow_down()
+		tools.tasking.Tasks.slow_down()
 		try:
 			self.received = await self.client.readline()
 		except Exception as err:
@@ -414,26 +418,26 @@ class FtpServerCore:
 			self.quit = True
 		else:
 			self.received = self.received.rstrip(b"\r\n")
-			if strings.tobytes(self.received[:4]) == b"PASS":
+			if tools.strings.tobytes(self.received[:4]) == b"PASS":
 				message = b"PASS ????"
 			else:
 				message = self.received
 			self.command = self.received.split(b" ")[0].upper()
 			self.payload = self.received[len(self.command):].lstrip()
-			self.path = filesystem.abspathbytes(self.cwd, self.payload)
+			self.path = tools.filesystem.abspathbytes(self.cwd, self.payload)
 			self.log(b"'%s' id=%08X cwd='%s' payload='%s' path='%s'"%(message, id(self), self.cwd, self.payload, self.path))
 
 	async def treat_command(self):
 		""" Treat ftp command """
-		tasking.Tasks.slow_down()
+		tools.tasking.Tasks.slow_down()
 		if self.quit is False:
 			try:
-				command = strings.tostrings(self.command)
+				command = tools.strings.tostrings(self.command)
 				if hasattr(self, command):
 					callback = getattr(self, command)
 
 					if self.command not in [b"USER",b"PASS"]:
-						if User.check(self.user, self.password):
+						if server.user.User.check(self.user, self.password):
 							await callback()
 						else:
 							await self.send_response(430, b"Invalid username or password")
@@ -447,13 +451,13 @@ class FtpServerCore:
 
 	async def on_connection(self, reader, writer):
 		""" Asyncio on ftp connection method """
-		tasking.Tasks.slow_down()
-		self.remoteaddr = strings.tobytes(writer.get_extra_info('peername')[0])
+		tools.tasking.Tasks.slow_down()
+		self.remoteaddr = tools.strings.tobytes(writer.get_extra_info('peername')[0])
 		self.addr = self.get_ip()
-		self.log("Connected from %s"%strings.tostrings(self.remoteaddr), write=True)
-		self.client = stream.Stream(reader, writer)
+		self.log("Connected from %s"%tools.strings.tostrings(self.remoteaddr), write=True)
+		self.client = server.stream.Stream(reader, writer)
 		try:
-			await self.send_response(220, b"Ftp " + strings.tobytes(os.uname()[4]) + b".")
+			await self.send_response(220, b"Ftp " + tools.strings.tobytes(os.uname()[4]) + b".")
 			self.quit = False
 			while self.quit is False:
 				await self.receive_command()

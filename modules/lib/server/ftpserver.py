@@ -10,26 +10,27 @@ The core of the server is in the other class FtpServerCore, which is loaded into
 It takes a little while the first time you connect, but limits memory consumption if not in use.
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True.
 """
-from server.server import ServerConfig
-from tools import logger, tasking
+import server.server
+import tools.logger
+import tools.tasking
 
-class Ftp(tasking.ServerInstance):
+class Ftp(tools.tasking.ServerInstance):
 	""" Ftp server instance """
 	config = None
 
 	""" Ftp main class """
 	def __init__(self, **kwargs):
-		tasking.ServerInstance.__init__(self, **kwargs)
+		tools.tasking.ServerInstance.__init__(self, **kwargs)
 		self.server_class = None
 		self.port = kwargs.get("port",21)
 
 	def preload(self):
 		""" Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) """
 		if self.server_class is None:
-			logger.syslog("Ftp load server")
+			tools.logger.syslog("Ftp load server")
 			from server.ftpservercore import FtpServerCore
 			self.server_class = FtpServerCore
-			logger.syslog("Ftp ready on %d"%self.port)
+			tools.logger.syslog("Ftp ready on %d"%self.port)
 
 	async def on_connection(self, reader, writer):
 		""" Asynchronous connection detected """
@@ -38,22 +39,22 @@ class Ftp(tasking.ServerInstance):
 			self.preload()
 
 			# Start ftp core
-			server = self.server_class()
+			srv = self.server_class()
 
 			# Call on connection method
-			await server.on_connection(reader, writer)
+			await srv.on_connection(reader, writer)
 
 			# Close ftp core
-			server.close()
-			del server
+			srv.close()
+			del srv
 		except Exception as err:
-			logger.syslog(err)
+			tools.logger.syslog(err)
 
 	@staticmethod
 	def init():
 		""" Initialize http server """
 		if Ftp.config is None:
-			Ftp.config = ServerConfig()
+			Ftp.config = server.server.ServerConfig()
 			Ftp.config.load_create()
 		else:
 			Ftp.config.refresh()
@@ -66,6 +67,6 @@ class Ftp(tasking.ServerInstance):
 		if Ftp.config.ftp:
 			kwargs["port"] = kwargs.get("ftp_port",21)
 			kwargs["name"] = "Ftp"
-			tasking.Tasks.create_server(Ftp(**kwargs))
+			tools.tasking.Tasks.create_server(Ftp(**kwargs))
 		else:
-			logger.syslog("Ftp server disabled in config")
+			tools.logger.syslog("Ftp server disabled in config")

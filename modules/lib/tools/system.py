@@ -3,7 +3,9 @@
 """ System utilities functions """
 # pylint:disable=global-variable-not-assigned
 import time
-from tools import filesystem, logger
+import tools.filesystem
+import tools.logger
+import tools.region
 
 actions = []
 
@@ -14,28 +16,27 @@ def add_action(action):
 def reboot(message="Reboot"):
 	""" Reboot command """
 	global actions
-	from tools import region
-	region_config = region.RegionConfig.get()
+	region_config = tools.region.RegionConfig.get()
 	if region_config.load():
 		region_config.current_time = time.time() + 8
 		region_config.save()
 	try:
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			import camera
 			camera.deinit()
 	except:
 		pass
 
 	if len(actions) > 0:
-		logger.syslog("Execute actions before reboot")
+		tools.logger.syslog("Execute actions before reboot")
 
 	for action in actions:
 		try:
 			action()
 		except Exception as err:
-			logger.syslog(err)
+			tools.logger.syslog(err)
 
-	logger.syslog(message)
+	tools.logger.syslog(message)
 	try:
 		import machine
 		machine.deepsleep(1000)

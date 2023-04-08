@@ -1,42 +1,42 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Web page sample """
-from server.httpserver import HttpServer
-from htmltemplate import Br,ButtonCmd,Option,SwitchCmd,Tag,SliderCmd,ComboCmd,Paragraph
-from webpage.mainpage     import *
-from tools       import strings
+import server.httpserver
+from htmltemplate import *
+import webpage.mainpage
+import tools.strings
 
-@HttpServer.add_route(b'/sample/button')
+@server.httpserver.HttpServer.add_route(b'/sample/button')
 async def button_pressed(request, response, args):
 	""" Called when the button pressed """
 	print("Button clicked")
 	await response.send_ok()
 
-@HttpServer.add_route(b'/sample/slider')
+@server.httpserver.HttpServer.add_route(b'/sample/slider')
 async def slider_changed(request, response, args):
 	""" Called when the slider state changed """
 	# pylint:disable=consider-using-f-string
 	print("Slider change to %d"%int(request.params[b"value"]))
 	await response.send_ok()
 
-@HttpServer.add_route(b'/sample/combo')
+@server.httpserver.HttpServer.add_route(b'/sample/combo')
 async def combo_changed(request, response, args):
 	""" Called when the combo state changed """
 	# pylint:disable=consider-using-f-string
-	print("Number %s selected"%strings.tostrings(request.params[b"value"]))
+	print("Number %s selected"%tools.strings.tostrings(request.params[b"value"]))
 	await response.send_ok()
 
-@HttpServer.add_route(b'/sample/switch')
+@server.httpserver.HttpServer.add_route(b'/sample/switch')
 async def switch_changed(request, response, args):
 	""" Called when the switch state changed """
 	# pylint:disable=consider-using-f-string
-	print("Switch change to %s"%strings.tostrings(request.params[b"value"]))
+	print("Switch change to %s"%tools.strings.tostrings(request.params[b"value"]))
 	await response.send_ok()
 
-@HttpServer.add_route(b'/sample', menu=b"Sample", item=b"Sample")
+@server.httpserver.HttpServer.add_route(b'/sample', menu=b"Sample", item=b"Sample")
 async def sample_page(request, response, args):
 	""" Test simple page with differents web widgets """
-	page = main_frame(request, response, args, b"Sample",
+	page = webpage.mainpage.main_frame(request, response, args, b"Sample",
 		Form([
 			Tag(b'''
 			<p>Example to interact with esp32 via an html page (see the content of file <b>sample.py</b>)</p>

@@ -18,24 +18,22 @@ All the keyboard shortcuts are at the start of the script.
 On the boards with low memory, it may work, but on very small files, otherwise it may produce an error due to insufficient memory.
 """
 import sys
-
-sys.path.append("lib")
-sys.path.append("lib/tools")
-try:
-	from tools import useful,logger,strings,terminal,filesystem,jsonconfig
-except:
-	# pylint:disable=multiple-imports
-	import useful,logger,strings,terminal,filesystem,jsonconfig
+import tools.useful
+import tools.logger
+import tools.strings
+import tools.terminal
+import tools.filesystem
+import tools.jsonconfig
 
 HORIZONTAL_MOVE = 8    # Scrolling minimal deplacement
 
 SELECTION_START = b"\x1B[7m"
 SELECTION_END   = b"\x1B[m"
 
-class EditorConfig(jsonconfig.JsonConfig):
+class EditorConfig(tools.jsonconfig.JsonConfig):
 	""" Editor configuration for shortcuts and tab size"""
 	def __init__(self):
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.tabsize              = 4    # Tabulation size
 
 		# For the same action several shortcuts can be used
@@ -152,7 +150,7 @@ class View:
 		self.sel_line_end           = None
 		self.screen_height          = 1
 		self.screen_width           = 1
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			self.write = self.write_byte
 		else:
 			self.write = self.write_string
@@ -163,7 +161,7 @@ class View:
 
 	def write_string(self, data):
 		""" Write data to stdout """
-		sys.stdout.write(strings.tostrings(data))
+		sys.stdout.write(tools.strings.tostrings(data))
 
 	def flush(self):
 		""" Flush text to stdout """
@@ -505,7 +503,7 @@ class View:
 
 	def get_screen_size(self):
 		""" Get the screen size """
-		height, width = terminal.get_screen_size(True)
+		height, width = tools.terminal.get_screen_size(True)
 		self.screen_height = height
 		self.screen_width = width
 		self.height = height-self.top-1
@@ -739,7 +737,7 @@ class Text:
 			self.lines = [""]
 			# File not existing
 		except Exception as err:
-			logger.syslog(err)
+			tools.logger.syslog(err)
 			self.lines = [""]
 
 	def save(self, filename=None):
@@ -757,7 +755,7 @@ class Text:
 					self.modified = False
 					result = True
 				except Exception as err:
-					logger.syslog(err)
+					tools.logger.syslog(err)
 		return result
 
 	def change_line(self, moveLine):
@@ -784,7 +782,7 @@ class Text:
 			self.set_cursor_column()
 			# If the new cursor position is outside the line of text
 			if self.cursor_column > len_line:
-				self.change_column(terminal.MAXINT)
+				self.change_column(tools.terminal.MAXINT)
 
 		if self.selection_start is not None:
 			self.selection_end = [self.cursor_column, self.cursor_line,self.get_tab_cursor(self.cursor_line)]
@@ -1018,24 +1016,24 @@ class Text:
 	def select_home(self, keys=None):
 		""" Manage home key """
 		self.open_selection()
-		self.change_column(-terminal.MAXINT)
+		self.change_column(-tools.terminal.MAXINT)
 
 	def select_end(self, keys=None):
 		""" Manage end key """
 		self.open_selection()
-		self.change_column(terminal.MAXINT)
+		self.change_column(tools.terminal.MAXINT)
 
 	def select_page_up(self, keys=None):
 		""" Manage select page up key """
 		self.open_selection()
 		self.change_line((-(self.view.height)) * len(keys))
-		self.change_column(-terminal.MAXINT)
+		self.change_column(-tools.terminal.MAXINT)
 
 	def select_page_down(self, keys=None):
 		""" Manage select page down key """
 		self.open_selection()
 		self.change_line((self.view.height) * len(keys))
-		self.change_column(terminal.MAXINT)
+		self.change_column(tools.terminal.MAXINT)
 
 	def select_next_word(self, keys=None):
 		""" Manage select next word key """
@@ -1050,12 +1048,12 @@ class Text:
 	def select_top(self, keys=None):
 		""" Manage select to the first line of text """
 		self.open_selection()
-		self.change_line(-terminal.MAXINT)
+		self.change_line(-tools.terminal.MAXINT)
 
 	def select_bottom(self, keys=None):
 		""" Manage select to the last line of text """
 		self.open_selection()
-		self.change_line(terminal.MAXINT)
+		self.change_line(tools.terminal.MAXINT)
 
 	def page_up(self, keys=None):
 		""" Manage page up key """
@@ -1070,28 +1068,28 @@ class Text:
 	def home(self, keys=None):
 		""" Manage home key """
 		self.hide_selection()
-		self.change_column(-terminal.MAXINT)
+		self.change_column(-tools.terminal.MAXINT)
 
 	def end(self, keys=None):
 		""" Manage end key """
 		self.hide_selection()
-		self.change_column(terminal.MAXINT)
+		self.change_column(tools.terminal.MAXINT)
 
 	def add_char(self, keys=None):
 		""" Manage other key, add character """
 		result = False
 
-		if strings.isascii(keys[0]):
+		if tools.strings.isascii(keys[0]):
 			self.remove_selection()
 			for char in keys:
-				if strings.isascii(char):
+				if tools.strings.isascii(char):
 					if self.replace_mode:
 						self.replace_char(char)
 					else:
 						self.insert_char(char)
 					result = True
 		# if result is False:
-			# print(strings.dump(keys[0]))
+			# print(tools.strings.dump(keys[0]))
 		return result
 
 	def find_next(self, text):
@@ -1207,7 +1205,7 @@ class Text:
 		else:
 			self.cursor_line = len(self.lines)-1
 			if column is not None:
-				column = terminal.MAXINT
+				column = tools.terminal.MAXINT
 		self.cursor_column = 0
 
 		if column is not None:
@@ -1358,10 +1356,10 @@ class Text:
 			isUpper = None
 			for line in selection:
 				for char in line:
-					if strings.isupper(char):
+					if tools.strings.isupper(char):
 						isUpper = True
 						break
-					elif strings.islower(char):
+					elif tools.strings.islower(char):
 						isUpper = False
 						break
 				if isUpper is not None:
@@ -1533,17 +1531,17 @@ class Text:
 			current_char = self.get_cursor_char()
 			if current_char is None:
 				break
-			elif strings.ispunctuation(current_char):
+			elif tools.strings.ispunctuation(current_char):
 				if state == 0:
 					state = 2
 				elif state == 1:
 					break
-			elif strings.isalpha(current_char):
+			elif tools.strings.isalpha(current_char):
 				if state == 0:
 					state = 1
 				elif state == 2:
 					break
-			elif strings.isspace(current_char):
+			elif tools.strings.isspace(current_char):
 				if state == 1:
 					break
 				if state == 2:
@@ -1567,7 +1565,7 @@ class Text:
 
 	def bottom(self, keys=None):
 		""" Move the cursor to the last line of text """
-		self.goto(terminal.MAXINT)
+		self.goto(tools.terminal.MAXINT)
 
 	def treat_char(self, keys=None):
 		""" Treat character entered """
@@ -1665,11 +1663,11 @@ class Editor:
 		if self.cfg.load(tobytes=False, errorlog=False) is False:
 			self.cfg.save()
 
-		self.displayed_filename = filesystem.split(filename)[1]
+		self.displayed_filename = tools.filesystem.split(filename)[1]
 		if no_color:
 			extension = ""
 		else:
-			extension = filesystem.splitext(filename)[1]
+			extension = tools.filesystem.splitext(filename)[1]
 		self.edit = Edit(self.cfg, read_only=read_only, extension=extension)
 		self.edit.text.load(filename)
 		self.is_refresh_header = True
@@ -1680,18 +1678,18 @@ class Editor:
 		self.key_callback = None
 		self.precedent_callback = None
 		self.trace = None
-		if filesystem.ismicropython() is False:
+		if tools.filesystem.ismicropython() is False:
 			if filename == "newfile.py":
 				self.trace = open(self.cfg.config_root() + "/key.txt","w")
 
-		if (not filesystem.exists(filename) and read_only is True) or filesystem.isdir(filename):
+		if (not tools.filesystem.exists(filename) and read_only is True) or tools.filesystem.isdir(filename):
 			print("Cannot open '%s'"%self.displayed_filename)
 		else:
 			try:
 				self.run()
 			except Exception as err:
 				self.edit.view.cls()
-				logger.syslog(err)
+				tools.logger.syslog(err)
 				print("Failed edit '%s'"%self.displayed_filename)
 
 	def refresh_header(self):
@@ -1736,7 +1734,7 @@ class Editor:
 			self.edit.view.write("\nSave file '%s' (\x1b[7mY\x1b[m:Yes, \x1b[7mN\x1b[m:No, \x1b[7mEsc\x1b[m:Cancel) : "%self.displayed_filename)
 			self.edit.view.flush()
 			while 1:
-				key = terminal.getch()
+				key = tools.terminal.getch()
 				if key == "Y" or key == "y":
 					if self.edit.text.save():
 						self.edit.view.write("Saved\n")
@@ -1846,23 +1844,23 @@ class Editor:
 			if self.keys[0] == result[0]:
 				result.append(self.keys.pop(0))
 			else:
-				if strings.isascii(result[0]) and strings.isascii(self.keys[0]):
+				if tools.strings.isascii(result[0]) and tools.strings.isascii(self.keys[0]):
 					result.append(self.keys.pop(0))
 				else:
 					break
 		return result
 
-	def get_key(self, duration=terminal.MAXINT):
+	def get_key(self, duration=tools.terminal.MAXINT):
 		""" Get a key pressed """
 		if len(self.keys) == 0:
 			while True:
 				try:
-					key = terminal.getch(duration=duration)
+					key = tools.terminal.getch(duration=duration)
 				except KeyboardInterrupt:
 					key = "\x03"
 
 				self.keys.append(key)
-				if terminal.kbhit() is False or len(self.keys) > 5:
+				if tools.terminal.kbhit() is False or len(self.keys) > 5:
 					break
 		return self.group_key()
 
@@ -1874,16 +1872,16 @@ class Editor:
 			self.edit.view.reset_scroll_region()
 			self.edit.view.cls()
 			self.edit.view.flush()
-			startTime = strings.ticks()
+			startTime = tools.strings.ticks()
 			try:
-				error_line = useful.run(self.displayed_filename)
+				error_line = tools.useful.run(self.displayed_filename)
 			except KeyboardInterrupt:
 				error_line = None
 
 			if error_line is not None:
 				self.edit.text.goto(error_line)
 
-			endTime = strings.ticks()
+			endTime = tools.strings.ticks()
 			print( "\x1B[7mTime: %d.%03d s Press enter to stop\x1B[m"%((endTime-startTime)/1000, (endTime-startTime)%1000))
 			while 1:
 				keys = self.get_key()
@@ -1893,7 +1891,7 @@ class Editor:
 				elif keys[0] in self.cfg.key_execute:
 					break
 				# else:
-					# print(strings.dump(keys[0]))
+					# print(tools.strings.dump(keys[0]))
 		self.edit.view.cls()
 		self.edit.view.set_refresh_all()
 		self.is_refresh_header = True
@@ -1921,7 +1919,7 @@ class Editor:
 
 					if self.trace is not None:
 						for key in keys:
-							self.trace.write(strings.dump(key, withColor=False) + "\n")
+							self.trace.write(tools.strings.dump(key, withColor=False) + "\n")
 							self.trace.flush()
 					modified = self.edit.text.modified
 					self.precedent_callback = self.key_callback
@@ -1967,7 +1965,7 @@ class Editor:
 			self.edit.view.reset_scroll_region()
 			self.edit.view.reset()
 		except Exception as err:
-			print(logger.exception(err))
+			print(tools.logger.exception(err))
 			filename = self.edit.text.getFilename() + "_backup"
 			self.save(filename=filename)
 			print("After the crash, a copy of the file was saved in '%s'"%filename)

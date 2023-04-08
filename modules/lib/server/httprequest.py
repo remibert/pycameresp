@@ -6,7 +6,7 @@
 # pylint:disable=consider-using-f-string
 """ These classes manage http responses and requests.
 The set of request and response are in bytes format.
-I no longer use strings, because they are between 20 and 30 times slower.
+I no longer use tools.strings., because they are between 20 and 30 times slower.
 It may sound a bit more complicated, but it's a lot quick.
 """
 import hashlib
@@ -15,7 +15,9 @@ from binascii import hexlify, b2a_base64
 import collections
 import server.stream
 import server.urlparser
-from tools import logger,filesystem,strings
+import tools.logger
+import tools.filesystem
+import tools.strings
 
 MIMES = {\
 	b".txt"   : b"text/plain",
@@ -66,7 +68,7 @@ class Http:
 
 	def __del__(self):
 		if self.content_file is not None:
-			filesystem.remove(self.content_file)
+			tools.filesystem.remove(self.content_file)
 
 	def get_expiration(self, expiration):
 		""" Get cookie expiration date """
@@ -165,7 +167,7 @@ class Http:
 		""" Read the content of http request """
 		if self.headers.get(b"Transfer-Encoding",b"") == b"chunked":
 			length = await streamio.readline()
-			length = eval(strings.tostrings(b"0x%s"%length.strip()))
+			length = eval(tools.strings.tostrings(b"0x%s"%length.strip()))
 			self.chunk_size = length
 			chunk = True
 		else:
@@ -292,10 +294,10 @@ class Http:
 					result += await self.content.serialize(streamio)
 					no_end = True
 			except Exception as err:
-				logger.syslog(err)
+				tools.logger.syslog(err)
 				# Serialize error detected
 				result += await streamio.write(b'Content-Type: text/plain\r\n\r\n')
-				result += await streamio.write(strings.tostrings(logger.exception(err)))
+				result += await streamio.write(tools.strings.tostrings(tools.logger.exception(err)))
 		# If multipart detected
 		elif len(self.parts) > 0:
 			# If the header is a multipart
@@ -353,8 +355,8 @@ class ContentFile:
 		self.base64 = base64
 		if content_type is None:
 			global MIMES
-			ext = filesystem.splitext(strings.tostrings(self.filenames[0]))[1]
-			self.content_type = MIMES.get(strings.tobytes(ext),b"text/plain")
+			ext = tools.filesystem.splitext(tools.strings.tostrings(self.filenames[0]))[1]
+			self.content_type = MIMES.get(tools.strings.tobytes(ext),b"text/plain")
 		else:
 			self.content_type = content_type
 
@@ -363,11 +365,11 @@ class ContentFile:
 		result = 0
 		found = False
 
-		filename = strings.tostrings(filename)
+		filename = tools.strings.tostrings(filename)
 
 		# If file existing
-		if filesystem.exists(filename):
-			with open(strings.tostrings(filename), "rb") as f:
+		if tools.filesystem.exists(filename):
+			with open(tools.strings.tostrings(filename), "rb") as f:
 				found = True
 				result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.content_type))
 				if server.stream.Bufferedio.is_enough_memory():
@@ -395,7 +397,7 @@ class ContentFile:
 						length_written += await streamio.write(buf)
 				result += length_written
 		else:
-			logger.syslog("%s file not found"%filename)
+			tools.logger.syslog("%s file not found"%filename)
 		return result, found
 
 	async def serialize(self, streamio):
@@ -403,21 +405,21 @@ class ContentFile:
 		found = False
 		result = 0
 		try:
-			# print("Begin send %s"%strings.tostrings(self.filename))
+			# print("Begin send %s"%tools.strings.tostrings(self.filename))
 			for filename in self.filenames:
 				r, f = await self.serialize_file(filename, streamio)
 				result += r
 				if f:
 					found = True
-			# print("End send %s"%strings.tostrings(self.filename))
+			# print("End send %s"%tools.strings.tostrings(self.filename))
 		except Exception as err:
 			pass
 		if found is False:
 			result = await streamio.write(b'Content-Type: text/plain\r\n\r\n')
 			filenames = b""
 			for filename in self.filenames:
-				filenames += strings.tobytes(filename) + b" "
-			result += await streamio.write(b"File %s not found"%strings.tobytes(filename))
+				filenames += tools.strings.tobytes(filename) + b" "
+			result += await streamio.write(b"File %s not found"%tools.strings.tobytes(filename))
 		return result
 
 class ContentBuffer:
@@ -429,8 +431,8 @@ class ContentBuffer:
 		self.buffer = buffer
 		if content_type is None:
 			global MIMES
-			ext = filesystem.splitext(strings.tostrings(filename))[1]
-			self.content_type = MIMES.get(strings.tobytes(ext),b"text/plain")
+			ext = tools.filesystem.splitext(tools.strings.tostrings(filename))[1]
+			self.content_type = MIMES.get(tools.strings.tobytes(ext),b"text/plain")
 		else:
 			self.content_type = content_type
 
@@ -439,7 +441,7 @@ class ContentBuffer:
 		try:
 			b = self.buffer[0]
 			result = await streamio.write(b'Content-Type: %s\r\n\r\n'%(self.content_type))
-			result += await streamio.write(strings.tobytes(self.buffer))
+			result += await streamio.write(tools.strings.tobytes(self.buffer))
 		except Exception as err:
 			result = await streamio.write(b'Content-Type: text/plain\r\n\r\n')
 			result += await streamio.write(b"Nothing")
@@ -482,7 +484,7 @@ class PartFile:
 	async def serialize(self, identifier, streamio):
 		""" Serialize multi part file """
 		result = await self.serialize_header(identifier, streamio)
-		with open(strings.tostrings(self.filename),"rb") as file:
+		with open(tools.strings.tostrings(self.filename),"rb") as file:
 			part = file.read()
 		result += await streamio.write(b"\r\n%s\r\n"%part)
 		result +=  await streamio.write(b"--%s"%identifier)
@@ -491,7 +493,7 @@ class PartFile:
 	async def get_size(self, identifier):
 		""" Get the size of multi part file """
 		header_size = await self.serialize_header(identifier, server.stream.Bytesio())
-		file_size = filesystem.filesize((strings.tostrings(self.filename)))
+		file_size = tools.filesystem.filesize((tools.strings.tostrings(self.filename)))
 		return header_size + file_size + 4 + len(identifier) + 2
 
 class PartBin(PartFile):
@@ -541,9 +543,9 @@ class HttpResponse(Http):
 		if err is None:
 			content = b""
 		elif type(err) == type(b"") or type(err) == type(""):
-			content = strings.tobytes(err)
+			content = tools.strings.tobytes(err)
 		else:
-			content = strings.tobytes(logger.exception(err))
+			content = tools.strings.tobytes(tools.logger.exception(err))
 		return await self.send_error(status=b"404", content=content)
 
 	async def send_ok(self, content=None):

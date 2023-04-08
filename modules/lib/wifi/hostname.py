@@ -2,13 +2,14 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Manage the host name """
-from tools import strings,jsonconfig
+import tools.strings
+import tools.jsonconfig
 
-class HostnameConfig(jsonconfig.JsonConfig):
+class HostnameConfig(tools.jsonconfig.JsonConfig):
 	""" Hostname configuration class """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.hostname      = b"esp%05d"%Hostname.get_number()
 
 class Hostname:
@@ -26,7 +27,7 @@ class Hostname:
 			mac = ""
 			for i in ident:
 				mac += "%02X"%i
-			Hostname.number[0] = strings.compute_hash(mac)
+			Hostname.number[0] = tools.strings.compute_hash(mac)
 			del wlan
 		return Hostname.number[0]
 

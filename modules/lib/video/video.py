@@ -9,15 +9,18 @@ as well as a lot of adjustment on the camera, not available on the other firmwar
 # pylint: disable=multiple-statements
 import time
 import uasyncio
-from tools import info,system,jsonconfig,logger
-if info.iscamera():
+import tools.info
+import tools.system
+import tools.jsonconfig
+import tools.logger
+if tools.info.iscamera():
 	import camera
 
-class CameraConfig(jsonconfig.JsonConfig):
+class CameraConfig(tools.jsonconfig.JsonConfig):
 	""" Class that collects the camera rendering configuration """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.activated  = True
 		self.framesize  = b"640x480"
 		self.pixformat  = b"JPEG"
@@ -222,7 +225,7 @@ class Camera:
 			retry = 10
 			while 1:
 				if retry <= 0:
-					system.reboot("Reboot forced after camera problem")
+					tools.system.reboot("Reboot forced after camera problem")
 				try:
 					result = callback()
 					Camera.success[0] += 1
@@ -231,7 +234,7 @@ class Camera:
 					Camera.failed[0] += 1
 					Camera.newFailed[0] += 1
 					if retry <= 3:
-						logger.syslog("Failed to get image %d retry before reset"%retry)
+						tools.logger.syslog("Failed to get image %d retry before reset"%retry)
 					retry -= 1
 					time.sleep(0.5)
 			total = Camera.success[0] + Camera.failed[0]
@@ -243,7 +246,7 @@ class Camera:
 				else:
 					newFailed = 0.
 					failed    = 0.
-				logger.syslog("Camera stat : last %-3.1f%%, total %-3.1f%% success on %d"%(newFailed, failed, total))
+				tools.logger.syslog("Camera stat : last %-3.1f%%, total %-3.1f%% success on %d"%(newFailed, failed, total))
 				Camera.newFailed[0] = 0
 		return result
 

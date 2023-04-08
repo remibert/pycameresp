@@ -2,13 +2,14 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ These classes are used to manage mqtt client """
 # pylint:disable=consider-using-f-string
-from tools import jsonconfig, logger
+import tools.jsonconfig
+import tools.logger
 
-class MqttConfig(jsonconfig.JsonConfig):
+class MqttConfig(tools.jsonconfig.JsonConfig):
 	""" Configuration of the mqtt client """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 
 		# Indicates if the presence detection is activated
 		self.activated = False
@@ -79,8 +80,20 @@ class MqttClient:
 	@staticmethod
 	def start(**kwargs):
 		""" Start the mqtt client """
-		MqttClient.init()
+		MqttClient.config = MqttConfig()
+		MqttClient.config.load_create()
 		if MqttClient.config.activated:
-			MqttClient.protocol.start(**kwargs)
+			tools.tasking.Tasks.create_server(MqttClientInstance(**kwargs))
 		else:
-			logger.syslog("Mqtt client disabled in config")
+			tools.logger.syslog("Mqtt client disabled in config")
+
+class MqttClientInstance(tools.tasking.ServerInstance):
+	""" Mqtt client instance """
+	def __init__(self, **kwargs):
+		tools.tasking.ServerInstance.__init__(self, **kwargs)
+
+	def start_server(self):
+		""" Start mqtt client """
+		MqttClient.init()
+		MqttClient.protocol.start(**self.kwargs)
+		return "Mqtt",self.kwargs.get("mqtt_port", MqttClient.config.port)

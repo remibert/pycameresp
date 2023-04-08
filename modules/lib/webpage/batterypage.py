@@ -1,25 +1,25 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to configure the battery level detection """
-from server.httpserver import HttpServer
+import server.httpserver
 from htmltemplate      import *
-from webpage.mainpage  import main_frame, manage_default_button
-from tools.battery     import BatteryConfig
-from tools import lang
+import webpage.mainpage
+import tools.battery
+import tools.lang
 
-@HttpServer.add_route(b'/battery', menu=lang.menu_system, item=lang.item_battery)
+@server.httpserver.HttpServer.add_route(b'/battery', menu=tools.lang.menu_system, item=tools.lang.item_battery)
 async def battery(request, response, args):
 	""" Battery configuration web page """
-	config = BatteryConfig()
-	disabled, action, submit = manage_default_button(request, config)
+	config = tools.battery.BatteryConfig()
+	disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
 
-	page = main_frame(request, response, args, lang.battery_management,
+	page = webpage.mainpage.main_frame(request, response, args, tools.lang.battery_management,
 		Form([
-			Switch(text=lang.activated,          name=b"activated", checked=config.activated, disabled=disabled),
-			Edit(text=lang.gpio_used_battery,    name=b"level_gpio",            placeholder=lang.gpio_connected_to_battery,    pattern=b"[0-9]*[0-9]", value=b"%d"%config.level_gpio,    disabled=disabled),
-			Edit(text=lang.gpio_value_for_full,  name=b"full_battery",          placeholder=lang.gpio_adc_value_full,          pattern=b"[0-9]*[0-9]", value=b"%d"%config.full_battery,  disabled=disabled),
-			Edit(text=lang.gpio_value_for_empty, name=b"empty_battery",         placeholder=lang.gpio_adc_value_empty,         pattern=b"[0-9]*[0-9]", value=b"%d"%config.empty_battery, disabled=disabled),
-			Switch(text=lang.force_a_deep,       name=b"brownout_detection", checked=config.brownout_detection, disabled=disabled),
+			Switch(text=tools.lang.activated,          name=b"activated", checked=config.activated, disabled=disabled),
+			Edit(text=tools.lang.gpio_used_battery,    name=b"level_gpio",            placeholder=tools.lang.gpio_connected_to_battery,    pattern=b"[0-9]*[0-9]", value=b"%d"%config.level_gpio,    disabled=disabled),
+			Edit(text=tools.lang.gpio_value_for_full,  name=b"full_battery",          placeholder=tools.lang.gpio_adc_value_full,          pattern=b"[0-9]*[0-9]", value=b"%d"%config.full_battery,  disabled=disabled),
+			Edit(text=tools.lang.gpio_value_for_empty, name=b"empty_battery",         placeholder=tools.lang.gpio_adc_value_empty,         pattern=b"[0-9]*[0-9]", value=b"%d"%config.empty_battery, disabled=disabled),
+			Switch(text=tools.lang.force_a_deep,       name=b"brownout_detection", checked=config.brownout_detection, disabled=disabled),
 			submit
 		]))
 	await response.send_page(page)

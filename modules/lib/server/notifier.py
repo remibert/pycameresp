@@ -4,10 +4,17 @@
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
 import uasyncio
-import wifi
-from server import wanip
-from server.httpclient import *
-from tools import logger,strings,tasking,info,lang,date,topic
+import wifi.wifi
+import wifi.station
+import server.wanip
+import server.httpclient
+import tools.logger
+import tools.strings
+import tools.tasking
+import tools.info
+import tools.lang
+import tools.date
+import tools.topic
 
 class Notification:
 	""" Notification message """
@@ -76,13 +83,13 @@ class Notifier:
 		result = b""
 		item = kwargs.get("message",None)
 		if item is not None:
-			result += b"msg='''%s''' "%item
+			result += b"msg='''%s''' "%tools.strings.tobytes(item)
 		item = kwargs.get("topic",None)
 		if item is not None:
-			result += b"topic=%s "%item
+			result += b"topic=%s "%tools.strings.tobytes(item)
 		item = kwargs.get("value",None)
 		if item is not None:
-			result += b"value=%s "%item
+			result += b"value=%s "%tools.strings.tobytes(item)
 		item = kwargs.get("data",None)
 		if item is not None:
 			result += b"len=%d "%len(item)
@@ -103,14 +110,14 @@ class Notifier:
 		forced  = kwargs.get("forced",False)
 		message = Notifier.to_string(**kwargs)
 
-		logger.syslog("Notification %s %s"%(strings.tostrings(message), "" if enabled else "not sent"), display=display)
+		tools.logger.syslog("Notification %s %s"%(tools.strings.tostrings(message), "" if enabled else "not sent"), display=display)
 
 		if enabled or forced:
 			# If postponed message list too long
 			if len(Notifier.postponed) > 10:
 				# Remove older
 				notification = Notifier.postponed[0]
-				logger.syslog("Notification %s failed to send"%strings.tostrings(notification.message), display=notification.display)
+				tools.logger.syslog("Notification %s failed to send"%tools.strings.tostrings(notification.message), display=notification.display)
 				del Notifier.postponed[0]
 			# Add message into postponed list
 			Notifier.postponed.append(Notification(**kwargs))
@@ -124,7 +131,7 @@ class Notifier:
 		sleep_duration = 127
 
 		# If wan available
-		if wifi.Wifi.is_wan_available():
+		if wifi.wifi.Wifi.is_wan_available():
 			result = True
 			# Try to send message
 			for notification in Notifier.postponed:
@@ -134,7 +141,7 @@ class Notifier:
 						if res is False:
 							result = False
 							if notification.retry == 0:
-								logger.syslog("Cannot send notification")
+								tools.logger.syslog("Cannot send notification")
 							notification.retry += 1
 
 			not_sent = []
@@ -162,7 +169,7 @@ class Notifier:
 			if Notifier.daily_callback:
 				# pylint:disable=not-callable
 				message = Notifier.daily_callback()
-				Notifier.notify(topic=topic.information, message=message)
+				Notifier.notify(topic=tools.topic.information, message=message)
 
 		# If no notification should be sent
 		sleep_duration = await Notifier.flush()
@@ -175,7 +182,6 @@ class Notifier:
 		except:
 			pass
 
-
 	@staticmethod
 	def daily_notify():
 		""" Force the send of daily notification """ 
@@ -184,21 +190,21 @@ class Notifier:
 	@staticmethod
 	def is_one_per_day():
 		""" Indicates if the action must be done on per day """
-		current_date = date.date_to_bytes()[:14]
+		current_date = tools.date.date_to_bytes()[:14]
 		if Notifier.one_per_day is None or (current_date[-2:] == b"12" and current_date != Notifier.one_per_day):
 			Notifier.one_per_day = current_date
-			if strings.ticks() > 30000:
+			if tools.strings.ticks() > 30000:
 				return True
 		return False
 
 	@staticmethod
 	def default_daily_notifier():
 		""" Return the default message notification """
-		message = "\n - Lan Ip : %s\n"%wifi.Station.get_info()[0]
-		message += " - Wan Ip : %s\n"%wanip.WanIp.wan_ip
-		message += " - Uptime : %s\n"%strings.tostrings(info.uptime())
-		message += " - %s : %s\n"%(strings.tostrings(lang.memory_label), strings.tostrings(info.meminfo()))
-		message += " - %s : %s\n"%(strings.tostrings(lang.flash_label), strings.tostrings(info.flashinfo()))
+		message = "\n - Lan Ip : %s\n"%wifi.station.Station.get_info()[0]
+		message += " - Wan Ip : %s\n"%server.wanip.WanIp.wan_ip
+		message += " - Uptime : %s\n"%tools.strings.tostrings(tools.info.uptime())
+		message += " - %s : %s\n"%(tools.strings.tostrings(tools.lang.memory_label), tools.strings.tostrings(tools.info.meminfo()))
+		message += " - %s : %s\n"%(tools.strings.tostrings(tools.lang.flash_label), tools.strings.tostrings(tools.info.flashinfo()))
 		return message
 
 	@staticmethod
@@ -209,4 +215,4 @@ class Notifier:
 	@staticmethod
 	def start():
 		""" Start notifier task """
-		tasking.Tasks.create_monitor(Notifier.task)
+		tools.tasking.Tasks.create_monitor(Notifier.task)

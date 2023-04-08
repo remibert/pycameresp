@@ -6,12 +6,9 @@ import time
 import os
 import io
 import binascii
-try:
-	import filesystem
-	import date
-except:
-	from tools import filesystem, date
-if filesystem.ismicropython():
+import tools.filesystem
+import tools.date
+if tools.filesystem.ismicropython():
 	# pylint:disable=import-error
 	import micropython
 
@@ -297,7 +294,7 @@ class FileReader:
 		send_ack(out_file,ACK)
 		try:
 			# Disable the Ctr-C
-			if filesystem.ismicropython() and out_file is not None:
+			if tools.filesystem.ismicropython() and out_file is not None:
 				micropython.kbd_intr(-1)
 
 			result = None
@@ -310,9 +307,9 @@ class FileReader:
 					send_ack(out_file,ACK)
 
 					# Create directory
-					filename = filesystem.normpath(directory + "/" + self.filename.get())
+					filename = tools.filesystem.normpath(directory + "/" + self.filename.get())
 
-					filesystem.makedir(filesystem.split(filename)[0], True)
+					tools.filesystem.makedir(tools.filesystem.split(filename)[0], True)
 
 					# Write file
 					self.write_file(filename, self.size.get(), in_file, out_file, printer)
@@ -339,7 +336,7 @@ class FileReader:
 				result = False
 		finally:
 			# Enable the Ctr-C
-			if filesystem.ismicropython() and out_file is not None:
+			if tools.filesystem.ismicropython() and out_file is not None:
 				micropython.kbd_intr(3)
 
 			if printer is not None:
@@ -377,7 +374,7 @@ class FileReader:
 					while len(part) < part_size:
 						size_to_read = get_b64_size(min(size, CHUNK_SIZE)) - len(part)
 						# Receive content part
-						if filesystem.ismicropython():
+						if tools.filesystem.ismicropython():
 							length = in_file.readinto(chunk, size_to_read)
 						else:
 							chunk = bytearray(size_to_read)
@@ -418,8 +415,8 @@ class FileWriter:
 		wait_ack(in_file)
 
 		# If file existing
-		if filesystem.exists(filename) and filesystem.isfile(filename):
-			size = filesystem.filesize(filename)
+		if tools.filesystem.exists(filename) and tools.filesystem.isfile(filename):
+			size = tools.filesystem.filesize(filename)
 
 			# Send blank line
 			out_file.write(b"\x0D\x0A")
@@ -438,7 +435,7 @@ class FileWriter:
 			out_file.write(b"# %s\x0D\x0A"%filename_.encode("utf8"))
 
 			# Send the file date
-			year,month,day,hour,minute,second,_,_ = date.local_time(filesystem.filetime(filename))[:8]
+			year,month,day,hour,minute,second,_,_ = tools.date.local_time(tools.filesystem.filetime(filename))[:8]
 			out_file.write(b"# %04d/%02d/%02d %02d:%02d:%02d\x0D\x0A"%(year,month,day,hour,minute,second))
 
 			# Send the file size

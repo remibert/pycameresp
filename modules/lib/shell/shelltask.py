@@ -10,22 +10,27 @@ We modify directories, list, delete, move files, edit files ...
 import sys
 sys.path.append("lib")
 sys.path.append("simul")
-from tools import logger,filesystem,terminal,watchdog,console,tasking
+import tools.logger
+import tools.filesystem
+import tools.terminal
+import tools.watchdog
+import tools.console
+import tools.tasking
 
 class Shell:
 	""" Shell """
 	@staticmethod
 	def start():
 		""" Start shell task """
-		tasking.Tasks.loop.create_task(Shell.task())
+		tools.tasking.Tasks.loop.create_task(Shell.task())
 
 	@staticmethod
 	async def task():
 		""" Asynchronous shell task """
 		import uasyncio
 
-		console.Console.print("\nPress key to start shell")
-		if filesystem.ismicropython():
+		tools.console.Console.print("\nPress key to start shell")
+		if tools.filesystem.ismicropython():
 			polling1 = 2
 			polling2 = 0.01
 		else:
@@ -33,37 +38,37 @@ class Shell:
 			polling2 = 0.5
 		while 1:
 			# If key pressed
-			if terminal.kbhit(polling2):
-				character = terminal.getch()[0]
+			if tools.terminal.kbhit(polling2):
+				character = tools.terminal.getch()[0]
 
 				# Check if character is correct to start shell
 				if not ord(character) in [0,0xA]:
-					tasking.Tasks.suspend()
+					tools.tasking.Tasks.suspend()
 
 					# Wait all server suspended
-					await tasking.Tasks.wait_all_suspended()
+					await tools.tasking.Tasks.wait_all_suspended()
 
 					# Extend watch dog duration
-					watchdog.WatchDog.start(watchdog.LONG_WATCH_DOG*2)
+					tools.watchdog.WatchDog.start(tools.watchdog.LONG_WATCH_DOG*2)
 
 					# Get the size of screen
-					terminal.refresh_screen_size()
+					tools.terminal.refresh_screen_size()
 
 					# Start shell
 					print("")
-					logger.syslog("<"*10+" Enter shell " +">"*10)
+					tools.logger.syslog("<"*10+" Enter shell " +">"*10)
 					print("Use 'exit' to restart server or 'quit' to get python prompt")
 					from shell.commands import commands
 					commands(throw=True)
 					print("")
-					logger.syslog("<"*10+" Exit  shell " +">"*10)
+					tools.logger.syslog("<"*10+" Exit  shell " +">"*10)
 
 					del sys.modules["shell.commands"]
 
 					# Resume watch dog duration
-					watchdog.WatchDog.start(watchdog.SHORT_WATCH_DOG)
+					tools.watchdog.WatchDog.start(tools.watchdog.SHORT_WATCH_DOG)
 
 					# Resume server
-					tasking.Tasks.resume()
+					tools.tasking.Tasks.resume()
 			else:
 				await uasyncio.sleep(polling1)

@@ -6,18 +6,20 @@
 import socket
 import sys
 import uos
-from server import server
-from tools import logger, support, tasking
+import server.server
+import tools.logger
+import tools.support
+import tools.tasking
 
-class TelnetServerInstance(tasking.ServerInstance):
+class TelnetServerInstance(tools.tasking.ServerInstance):
 	""" Telnet server instance """
 	def __init__(self, **kwargs):
-		tasking.ServerInstance.__init__(self, **kwargs)
+		tools.tasking.ServerInstance.__init__(self, **kwargs)
 
 	def start_server(self):
 		""" Start server """
 		port = self.kwargs.get("telnet_port",23)
-		if support.telnet():
+		if tools.support.telnet():
 			# start listening for telnet connections on port 23
 			try:
 				Telnet.stop()
@@ -29,7 +31,7 @@ class TelnetServerInstance(tasking.ServerInstance):
 				Telnet.server[0].listen(1)
 				Telnet.server[0].setsockopt(socket.SOL_SOCKET, 20, Telnet.accept)
 			except Exception as err:
-				logger.syslog("Telnet unavailable '%s'"%str(err))
+				tools.logger.syslog("Telnet unavailable '%s'"%str(err))
 		return "Telnet", port
 
 class Telnet:
@@ -46,7 +48,7 @@ class Telnet:
 		Telnet.close_client()
 		from server import telnetcore
 		Telnet.client[0], remote_addr = socket_server.accept()
-		logger.syslog("Telnet connected from : %s" % remote_addr[0])
+		tools.logger.syslog("Telnet connected from : %s" % remote_addr[0])
 		Telnet.client[0].setblocking(False)
 		Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
 		Telnet.client[0].sendall(bytes([255, 252, 34])) # dont allow line mode
@@ -79,8 +81,10 @@ class Telnet:
 	@staticmethod
 	def start(**kwargs):
 		""" Start telnet server """
-		config = server.ServerConfig()
+		config = server.server.ServerConfig()
 		config.load_create()
 		# If telnet activated
 		if config.telnet:
-			tasking.Tasks.create_server(TelnetServerInstance(**kwargs))
+			tools.tasking.Tasks.create_server(TelnetServerInstance(**kwargs))
+		else:
+			tools.logger.syslog("Telnet disabled in config")

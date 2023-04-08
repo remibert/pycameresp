@@ -2,11 +2,13 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Language selected and regional time """
-from tools import region, strings, logger
+import tools.region
+import tools.strings
+import tools.logger
 
 try:
-	exec(b"from electricmeter.em_lang_%s import *"%region.RegionConfig.get().lang)
-	logger.syslog("Select electricmeter lang : %s"%strings.tostrings(region.RegionConfig.get().lang))
+	exec(b"from electricmeter.em_lang_%s import *"%tools.region.RegionConfig.get().lang)
+	tools.logger.syslog("Select electricmeter lang : %s"%tools.strings.tostrings(tools.region.RegionConfig.get().lang))
 except Exception as err:
-	logger.syslog(err)
+	tools.logger.syslog(err)
 	from electricmeter.em_lang_english import *

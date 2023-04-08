@@ -4,16 +4,14 @@
 """ Logger and exception functions """
 import sys
 import io
-try:
-	from tools import filesystem, strings, date
-except:
-	import filesystem
-	import strings
+import tools.filesystem
+import tools.strings
+import tools.date
 
 def exception(err, msg=""):
 	""" Return the content of exception into a string """
 	file = io.StringIO()
-	if filesystem.ismicropython():
+	if tools.filesystem.ismicropython():
 		# pylint: disable=no-member
 		sys.print_exception(err, file)
 		text = file.getvalue()
@@ -33,11 +31,11 @@ def syslog(err, msg="", display=True, write=True):
 	if msg != "":
 		msg += "\n"
 		if display:
-			print(strings.tostrings(msg))
+			print(tools.strings.tostrings(msg))
 	if display:
-		print(strings.tostrings(err))
+		print(tools.strings.tostrings(err))
 
-	result = "%s%s"%(strings.tostrings(msg),strings.tostrings(err))
+	result = "%s%s"%(tools.strings.tostrings(msg),tools.strings.tostrings(err))
 
 	if write:
 		log(result)
@@ -48,7 +46,7 @@ def log(msg):
 	# pylint:disable=unspecified-encoding
 	try:
 		filename = "syslog.log"
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			filename = "/" + filename
 
 		log_file = open(filename,"a")
@@ -56,13 +54,13 @@ def log(msg):
 
 		if log_file.tell() >32*1024:
 			log_file.close()
-			filesystem.rename(filename + ".3",filename + ".4")
-			filesystem.rename(filename + ".2",filename + ".3")
-			filesystem.rename(filename + ".1",filename + ".2")
-			filesystem.rename(filename       ,filename + ".1")
+			tools.filesystem.rename(filename + ".3",filename + ".4")
+			tools.filesystem.rename(filename + ".2",filename + ".3")
+			tools.filesystem.rename(filename + ".1",filename + ".2")
+			tools.filesystem.rename(filename       ,filename + ".1")
 			log_file = open(filename,"a")
 
-		log_file.write(date.date_ms_to_string() + " %s\n"%(msg))
+		log_file.write(tools.date.date_ms_to_string() + " %s\n"%(msg))
 		log_file.flush()
 		log_file.close()
 	except:
@@ -74,4 +72,4 @@ def html_exception(err):
 	text = text.replace("\n    ","<br>&nbsp;&nbsp;&nbsp;&nbsp;")
 	text = text.replace("\n  ","<br>&nbsp;&nbsp;")
 	text = text.replace("\n","<br>")
-	return strings.tobytes(text)
+	return tools.strings.tobytes(text)

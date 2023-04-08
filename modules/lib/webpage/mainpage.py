@@ -2,10 +2,11 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the main web page with menu, it check also the login password """
 from htmltemplate import *
-from webpage.passwordpage import PasswordPage
-from server.httpserver import HttpServer
-from wifi.station import Station
-from tools import lang,tasking
+import webpage.passwordpage
+import server.httpserver
+import wifi.station
+import tools.lang
+import tools.tasking
 
 def main_page(request, response, args, title_frame, content=None, menu_visible=True):
 	""" Function define the main web page with menu, it check also the login password """
@@ -18,13 +19,13 @@ def main_page(request, response, args, title_frame, content=None, menu_visible=T
 	except:
 		active = 0
 	# On wifi station, the external style cheet is added
-	if Station.is_ip_on_interface(request.remoteaddr):
+	if wifi.station.Station.is_ip_on_interface(request.remoteaddr):
 		stylesheet = Stylesheet()
 	else:
 		stylesheet = StylesheetDefault()
 
 	# Create main page if logged
-	page = PasswordPage.login(request, response, 15*60)
+	page = webpage.passwordpage.PasswordPage.login(request, response, 15*60)
 
 	if b"logout" in request.params and page is None:
 		content = None
@@ -34,7 +35,7 @@ def main_page(request, response, args, title_frame, content=None, menu_visible=T
 			menu_items = []
 			menu_bar = []
 			previous_menu = None
-			for menu,  item , index, href in HttpServer.get_menus():
+			for menu,  item , index, href in server.httpserver.HttpServer.get_menus():
 				menu_item = MenuItem(text=item, href=href, active=(active==index))
 
 				if previous_menu != menu:
@@ -50,8 +51,8 @@ def main_page(request, response, args, title_frame, content=None, menu_visible=T
 			page_content = [stylesheet, content]
 		page = Page(page_content, class_=b"container", title=title, style=b"padding-top: 4.5rem;")
 	else:
-		page = Page([page] + [stylesheet], title=lang.login)
-	tasking.Tasks.slow_down()
+		page = Page([page] + [stylesheet], title=tools.lang.login)
+	tools.tasking.Tasks.slow_down()
 	return page
 
 def main_frame(request, response, args, title_frame, *content):
@@ -76,7 +77,7 @@ def manage_default_button(request, config, callback=None, onclick=b""):
 			callback(request, config)
 		config.save()
 	if disabled:
-		submit = Submit(text=lang.modify, name=b"action", value=b"modify")
+		submit = Submit(text=tools.lang.modify, name=b"action", value=b"modify")
 	else:
-		submit = Submit(text=lang.save, name=b"action", value=b"save", onclick=onclick)
+		submit = Submit(text=tools.lang.save, name=b"action", value=b"save", onclick=onclick)
 	return disabled, action, submit

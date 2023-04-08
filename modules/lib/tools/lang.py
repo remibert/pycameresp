@@ -4,13 +4,15 @@
 """ Language selected and regional time """
 import time
 import sys
-from tools import region, strings, logger
+import tools.region
+import tools.strings
+import tools.logger
 
 try:
-	exec(b"from tools.lang_%s import *"%region.RegionConfig.get().lang)
-	logger.syslog("Select lang : %s"%strings.tostrings(region.RegionConfig.get().lang))
+	exec(b"from tools.lang_%s import *"%tools.region.RegionConfig.get().lang)
+	tools.logger.syslog("Select lang : %s"%tools.strings.tostrings(tools.region.RegionConfig.get().lang))
 except Exception as err:
-	logger.syslog(err)
+	tools.logger.syslog(err)
 	from tools.lang_english import *
 
 def translate_date(current_date, with_day=True):
@@ -27,6 +29,6 @@ def translate_date(current_date, with_day=True):
 	if sys.implementation.name == "micropython":
 		return date_format % info
 	if with_day:
-		return date_format % strings.tobytes(info)
+		return date_format % tools.strings.tobytes(info)
 	else:
-		return month_format % strings.tobytes(info)
+		return month_format % tools.strings.tobytes(info)

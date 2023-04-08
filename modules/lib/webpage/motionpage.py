@@ -1,24 +1,24 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to see the camera streaming """
-from server.httpserver     import HttpServer
+import server.httpserver
 from htmltemplate          import *
-from webpage.mainpage      import main_frame, manage_default_button
-from webpage.streamingpage import *
-from video                 import CameraConfig, Camera
-from motion.motioncore     import SnapConfig, MotionConfig
-import uasyncio
-from tools                 import lang, info
+import webpage.mainpage
+import webpage.streamingpage
+import video.video
+import motion.motioncore
+import tools.lang
+import tools.info
 
-zone_config = CameraConfig()
+zone_config = video.video.CameraConfig()
 
 def zone_masking(config, disabled):
 	""" displays an html page to hide certain area of the camera, in order to ignore movements """
-	_ = SnapConfig.get()
+	_ = motion.motioncore.SnapConfig.get()
 
-	width   = SnapConfig.get().diff_x
-	height  = SnapConfig.get().diff_y
-	maxi    = SnapConfig.get().max
+	width   = motion.motioncore.SnapConfig.get().diff_x
+	height  = motion.motioncore.SnapConfig.get().diff_y
+	maxi    = motion.motioncore.SnapConfig.get().max
 	if disabled:
 		buttons = b""
 	else:
@@ -162,39 +162,39 @@ def zone_masking(config, disabled):
 """%(buttons,maxi,config.mask,disabled,height,width,maxi,maxi,maxi))
 	return result
 
-@HttpServer.add_route(b'/motion/config', menu=lang.menu_motion, item=lang.item_motion, available=info.iscamera() and Camera.is_activated())
-async def motion(request, response, args):
+@server.httpserver.HttpServer.add_route(b'/motion/config', menu=tools.lang.menu_motion, item=tools.lang.item_motion, available=tools.info.iscamera() and video.video.Camera.is_activated())
+async def motion_page(request, response, args):
 	""" Motion configuration page """
-	zone_config.framesize  = b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height)
+	zone_config.framesize  = b"%dx%d"%(motion.motioncore.SnapConfig.get().width, motion.motioncore.SnapConfig.get().height)
 	zone_config.quality = 30
-	Streaming.set_config(zone_config)
+	webpage.streamingpage.Streaming.set_config(zone_config)
 
 	# Read motion config
-	config = MotionConfig()
+	config = motion.motioncore.MotionConfig()
 
 	# Keep activated status
-	disabled, action, submit = manage_default_button(request, config, onclick=b"onValidZoneMasking()")
+	disabled, action, submit = webpage.mainpage.manage_default_button(request, config, onclick=b"onValidZoneMasking()")
 
-	page = main_frame(request, response, args, lang.motion_detection_configuration,
+	page = webpage.mainpage.main_frame(request, response, args, tools.lang.motion_detection_configuration,
 		Form([
-			Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
-			Streaming.get_html(request),
+			Switch(text=tools.lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
+			webpage.streamingpage.Streaming.get_html(request),
 			zone_masking(config, disabled),
-			Slider(text=lang.detects_a_movement,          name=b"differences_detection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differences_detection,         disabled=disabled),
-			Slider(text=lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),
-			Switch(text=lang.notification_motion, name=b"notify",       checked=config.notify,       disabled=disabled),
-			Switch(text=lang.notification_state,  name=b"notify_state", checked=config.notify_state, disabled=disabled),
-			Switch(text=lang.suspends_motion_detection,                name=b"suspend_on_presence",     checked=config.suspend_on_presence, disabled=disabled),
-			Switch(text=lang.permanent_detection,                      name=b"permanent_detection",     checked=config.permanent_detection, disabled=disabled),
-			Switch(text=lang.turn_on_flash,                            name=b"light_compensation",      checked=config.light_compensation,  disabled=disabled),
+			Slider(text=tools.lang.detects_a_movement,          name=b"differences_detection",        min=b"1",  max=b"64", step=b"1",  value=b"%d"%config.differences_detection,         disabled=disabled),
+			Slider(text=tools.lang.motion_detection_sensitivity,          name=b"sensitivity",        min=b"0",  max=b"100", step=b"5",  value=b"%d"%config.sensitivity,         disabled=disabled),
+			Switch(text=tools.lang.notification_motion, name=b"notify",       checked=config.notify,       disabled=disabled),
+			Switch(text=tools.lang.notification_state,  name=b"notify_state", checked=config.notify_state, disabled=disabled),
+			Switch(text=tools.lang.suspends_motion_detection,                name=b"suspend_on_presence",     checked=config.suspend_on_presence, disabled=disabled),
+			Switch(text=tools.lang.permanent_detection,                      name=b"permanent_detection",     checked=config.permanent_detection, disabled=disabled),
+			Switch(text=tools.lang.turn_on_flash,                            name=b"light_compensation",      checked=config.light_compensation,  disabled=disabled),
 			submit
 		]))
 	await response.send_page(page)
 
-@HttpServer.add_route(b'/motion/onoff', menu=lang.menu_motion, item=lang.item_motion_onoff, available=info.iscamera() and Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/motion/onoff', menu=tools.lang.menu_motion, item=tools.lang.item_motion_onoff, available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def motion_on_off(request, response, args):
 	""" Motion command page """
-	config = MotionConfig()
+	config = motion.motioncore.MotionConfig()
 	config.load()
 	command = request.params.get(b"action",b"none")
 	if command == b"on":
@@ -204,8 +204,8 @@ async def motion_on_off(request, response, args):
 		config.activated = False
 		config.save()
 
-	page = main_frame(request, response, args, lang.motion_onoff,
+	page = webpage.mainpage.main_frame(request, response, args, tools.lang.motion_onoff,
 		Form([
-			Submit(text=lang.motion_off if config.activated else lang.motion_on,  name=b"action", value=b"off" if config.activated else b"on" )
+			Submit(text=tools.lang.motion_off if config.activated else tools.lang.motion_on,  name=b"action", value=b"off" if config.activated else b"on" )
 		]))
 	await response.send_page(page)

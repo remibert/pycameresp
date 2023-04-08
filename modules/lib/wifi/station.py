@@ -3,15 +3,19 @@
 # pylint:disable=consider-using-f-string
 """ Classes used to manage the wifi station """
 import time
-from wifi import ip, hostname
 import uasyncio
-from tools import jsonconfig,strings,logger,lang
+import wifi.hostname
+import wifi.ip
+import tools.jsonconfig
+import tools.strings
+import tools.logger
+import tools.lang
 
-class NetworkConfig(jsonconfig.JsonConfig):
+class NetworkConfig(tools.jsonconfig.JsonConfig):
 	""" Wifi station configuration class """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.wifi_password = b""
 		self.ssid          = b""
 		self.ip_address    = b""
@@ -30,29 +34,29 @@ class NetworkConfig(jsonconfig.JsonConfig):
 		result +="   Netmask    :%s\n"%netmask
 		result +="   Gateway    :%s\n"%gateway
 		result +="   Dns        :%s\n"%dns
-		result +="   Ssid       :%s\n"%strings.tostrings(self.ssid)
-		# result +="   Password   :%s\n"%strings.tostrings(self.wifi_password)
+		result +="   Ssid       :%s\n"%tools.strings.tostrings(self.ssid)
+		# result +="   Password   :%s\n"%tools.strings.tostrings(self.wifi_password)
 		return result
 
 	def save(self, file = None, part_filename=None):
 		""" Save wifi configuration """
-		result = jsonconfig.JsonConfig.save(self, file=file, part_filename=self.ssid)
+		result = tools.jsonconfig.JsonConfig.save(self, file=file, part_filename=self.ssid)
 		return result
 
 	def list_known(self):
 		""" List all configuration files """
-		return jsonconfig.JsonConfig.list_all(self)
+		return tools.jsonconfig.JsonConfig.list_all(self)
 
 	def forget(self, part_filename=None):
 		""" Forget configuration """
-		return jsonconfig.JsonConfig.forget(self, part_filename=self.ssid)
+		return tools.jsonconfig.JsonConfig.forget(self, part_filename=self.ssid)
 
-class StationConfig(jsonconfig.JsonConfig):
+class StationConfig(tools.jsonconfig.JsonConfig):
 	""" Wifi station configuration class """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
-		self.hostname      = b"esp%05d"%hostname.Hostname.get_number()
+		tools.jsonconfig.JsonConfig.__init__(self)
+		self.hostname      = b"esp%05d"%wifi.hostname.Hostname.get_number()
 		self.activated     = True
 		self.fallback      = True
 		self.default       = b""
@@ -61,8 +65,8 @@ class StationConfig(jsonconfig.JsonConfig):
 		""" Display the content of wifi station """
 		# Get network address
 		result = "%s:\n"%self.__class__.__name__
-		result +="   Activated  :%s\n"%strings.tostrings(self.activated)
-		result  ="   Hostname   :%s\n"%strings.tostrings(self.hostname)
+		result +="   Activated  :%s\n"%tools.strings.tostrings(self.activated)
+		result  ="   Hostname   :%s\n"%tools.strings.tostrings(self.hostname)
 		return result
 
 class Station:
@@ -89,11 +93,11 @@ class Station:
 		if not Station.wlan.isconnected():
 			Station.wlan.active(True)
 			Station.configure(network)
-			Station.wlan.connect(strings.tobytes(network.ssid), strings.tobytes(network.wifi_password))
+			Station.wlan.connect(tools.strings.tobytes(network.ssid), tools.strings.tobytes(network.wifi_password))
 			retry = 0
 			while not Station.wlan.isconnected() and retry < max_retry:
 				await uasyncio.sleep(1)
-				logger.syslog ("   %-2d/%d wait connection to %s (wifi=%s)"%(retry+1, max_retry, strings.tostrings(network.ssid), strings.tostrings(Station.get_signal_strength_bytes())))
+				tools.logger.syslog ("   %-2d/%d wait connection to %s (wifi=%s)"%(retry+1, max_retry, tools.strings.tostrings(network.ssid), tools.strings.tostrings(Station.get_signal_strength_bytes())))
 				retry += 1
 
 			if Station.wlan.isconnected() is False:
@@ -134,21 +138,21 @@ class Station:
 		if  network.dynamic   is True:
 			if len(Station.get_hostname()) > 0:
 				try:
-					Station.wlan.config(hostname= strings.tostrings(Station.get_hostname()))
+					Station.wlan.config(hostname= tools.strings.tostrings(Station.get_hostname()))
 				except:
 					pass
 		else:
 			try:
-				Station.wlan.ifconfig((strings.tostrings(network.ip_address),strings.tostrings(network.netmask),strings.tostrings(network.gateway),strings.tostrings(network.dns)))
+				Station.wlan.ifconfig((tools.strings.tostrings(network.ip_address),tools.strings.tostrings(network.netmask),tools.strings.tostrings(network.gateway),tools.strings.tostrings(network.dns)))
 			except Exception as err:
-				logger.syslog(err, msg="Cannot configure wifi station")
+				tools.logger.syslog(err, msg="Cannot configure wifi station")
 		try:
-			network.ip_address = strings.tobytes(Station.wlan.ifconfig()[0])
-			network.netmask    = strings.tobytes(Station.wlan.ifconfig()[1])
-			network.gateway    = strings.tobytes(Station.wlan.ifconfig()[2])
-			network.dns        = strings.tobytes(Station.wlan.ifconfig()[3])
+			network.ip_address = tools.strings.tobytes(Station.wlan.ifconfig()[0])
+			network.netmask    = tools.strings.tobytes(Station.wlan.ifconfig()[1])
+			network.gateway    = tools.strings.tobytes(Station.wlan.ifconfig()[2])
+			network.dns        = tools.strings.tobytes(Station.wlan.ifconfig()[3])
 		except Exception as err:
-			logger.syslog(err, msg="Cannot get ip station")
+			tools.logger.syslog(err, msg="Cannot get ip station")
 
 	@staticmethod
 	def reload_config():
@@ -158,10 +162,10 @@ class Station:
 			Station.network = NetworkConfig()
 			if Station.config.load() is False:
 				Station.config.save()
-				logger.syslog("Wifi not initialized")
+				tools.logger.syslog("Wifi not initialized")
 		else:
 			Station.config.refresh()
-		hostname.Hostname.set_hostname(Station.config.hostname)
+		wifi.hostname.Hostname.set_hostname(Station.config.hostname)
 		return Station.config
 
 	@staticmethod
@@ -189,11 +193,11 @@ class Station:
 			try:
 				other_networks = Station.wlan.scan()
 				for ssid, bssid, channel, rssi, authmode, hidden in sorted(other_networks, key=lambda x: x[3], reverse=True):
-					logger.syslog("Network detected %s"%strings.tostrings(ssid))
+					tools.logger.syslog("Network detected %s"%tools.strings.tostrings(ssid))
 					Station.other_networks.append((ssid, channel, authmode))
 				Station.last_scan[0] = time.time()
 			except Exception as err:
-				logger.syslog("No network found")
+				tools.logger.syslog("No network found")
 		return Station.other_networks
 
 	@staticmethod
@@ -223,13 +227,13 @@ class Station:
 	def get_signal_strength_bytes():
 		""" Get the signal strength into string """
 		signal_strength = {
-				5    : lang.signal_excellent,
-				4    : lang.signal_very_good,
-				3    : lang.signal_good     ,
-				2    : lang.signal_low      ,
-				1    : lang.signal_very_low ,
-				0    : lang.signal_no       ,
-				None : lang.no_information
+				5    : tools.lang.signal_excellent,
+				4    : tools.lang.signal_very_good,
+				3    : tools.lang.signal_good     ,
+				2    : tools.lang.signal_low      ,
+				1    : tools.lang.signal_very_low ,
+				0    : tools.lang.signal_no       ,
+				None : tools.lang.no_information
 			}[Station.get_signal_strength()]
 		return signal_strength
 
@@ -249,11 +253,11 @@ class Station:
 		if network_name != b"":
 			# Load default network
 			if Station.network.load(part_filename=network_name):
-				logger.syslog("Try to connect to %s"%strings.tostrings(Station.network.ssid))
+				tools.logger.syslog("Try to connect to %s"%tools.strings.tostrings(Station.network.ssid))
 
 				# If the connection failed
 				if await Station.connect(Station.network, max_retry) is True:
-					logger.syslog("Connected to %s"%strings.tostrings(Station.network.ssid))
+					tools.logger.syslog("Connected to %s"%tools.strings.tostrings(Station.network.ssid))
 					print(repr(Station.config) + repr(Station.network))
 					Station.config.default = network_name
 					Station.config.save()
@@ -306,10 +310,10 @@ class Station:
 				if result is False:
 					result = await Station.scan_networks(max_retry)
 			else:
-				logger.syslog("Wifi disabled")
+				tools.logger.syslog("Wifi disabled")
 		else:
 			Station.config.save()
-			logger.syslog("Wifi not initialized")
+			tools.logger.syslog("Wifi not initialized")
 		return result
 
 	@staticmethod
@@ -318,22 +322,22 @@ class Station:
 		result = False
 		Station.init()
 		if Station.is_active() is False:
-			logger.syslog("Start wifi")
+			tools.logger.syslog("Start wifi")
 			if await Station.choose_network(force, max_retry) is True:
 				result = True
 		else:
 			if Station.wlan.isconnected():
-				logger.syslog("Wifi already started")
+				tools.logger.syslog("Wifi already started")
 				result = True
 			else:
-				logger.syslog("Wifi started but not connected")
+				tools.logger.syslog("Wifi started but not connected")
 		return result
 
 	@staticmethod
 	def stop():
 		""" Stop the wifi station """
 		if Station.wlan is not None:
-			logger.syslog("Stop wifi")
+			tools.logger.syslog("Stop wifi")
 			try:
 				if Station.wlan.isconnected():
 					Station.wlan.disconnect()
@@ -348,7 +352,7 @@ class Station:
 		""" Indicates if the address ip is connected to wifi station """
 		ipInterface = Station.get_info()
 		if ipInterface != ("","","",""):
-			return ip.issameinterface(strings.tostrings(ipAddr), ipInterface[0], ipInterface[1])
+			return wifi.ip.issameinterface(tools.strings.tostrings(ipAddr), ipInterface[0], ipInterface[1])
 		return False
 
 	@staticmethod

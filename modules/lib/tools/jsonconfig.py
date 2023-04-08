@@ -9,16 +9,16 @@ For each of these classes, a json file with the same name is stored in the confi
 import time
 import json
 import re
+
 try:
 	import uos
 except:
 	import os as uos
 
-try:
-	from tools import logger,strings,filesystem,date
-except Exception as err:
-	# pylint:disable=multiple-imports
-	import logger,strings,filesystem,date
+import tools.logger
+import tools.strings
+import tools.filesystem
+import tools.date
 
 
 self_config = None
@@ -31,7 +31,7 @@ class JsonConfig:
 
 	def config_root(self):
 		""" Configuration root path """
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			return "/config"
 		else:
 			return uos.path.expanduser('~') + "/.pycameresp"
@@ -39,25 +39,25 @@ class JsonConfig:
 	def save(self, file=None, part_filename=""):
 		""" Save object in json file """
 		try:
-			filename = self.get_pathname(strings.tofilename(part_filename))
+			filename = self.get_pathname(tools.strings.tofilename(part_filename))
 			file, filename = self.open(file=file, read_write="w", part_filename=part_filename)
 			data = self.__dict__.copy()
 			del data["modification_date"]
 			del data["last_refresh"]
-			json.dump(strings.tostrings(data),file,separators=(',', ':'))
+			json.dump(tools.strings.tostrings(data),file,separators=(',', ':'))
 			file.close()
 			self.modification_date = uos.stat(filename)[8]
 			self.last_refresh = time.time()
 			return True
 		except Exception as _err:
-			logger.syslog(_err, "Cannot save %s "%(filename))
+			tools.logger.syslog(_err, "Cannot save %s "%(filename))
 			return False
 
 	def to_string(self):
 		""" Convert the configuration to string """
 		data = self.__dict__.copy()
 		del data["modification_date"]
-		return json.dumps(strings.tostrings(data),separators=(',', ':'))
+		return json.dumps(tools.strings.tostrings(data),separators=(',', ':'))
 
 	def get_pathname(self, part_filename=""):
 		""" Get the configuration filename according to the class name """
@@ -67,12 +67,12 @@ class JsonConfig:
 		""" List all configuration files """
 		result = []
 		pattern = self.get_filename() + ".*"
-		for fileinfo in filesystem.list_directory(self.config_root()):
+		for fileinfo in tools.filesystem.list_directory(self.config_root()):
 			name = fileinfo[0]
 			typ  = fileinfo[1]
 			if typ & 0xF000 != 0x4000:
 				if re.match(pattern, name):
-					result.append(strings.tobytes(name[len(self.get_filename()):-len(".json")]))
+					result.append(tools.strings.tobytes(name[len(self.get_filename()):-len(".json")]))
 		return result
 
 	def get_filename(self, part_filename=""):
@@ -81,16 +81,16 @@ class JsonConfig:
 			name = self.__class__.__name__[:-len("Config")]
 		else:
 			name = self.__class__.__name__
-		return name + strings.tostrings(part_filename)
+		return name + tools.strings.tostrings(part_filename)
 
 	def open(self, file=None, read_write="r", part_filename=""):
 		""" Create or open configuration file """
 		# pylint:disable=unspecified-encoding
 		filename = file
-		if filesystem.exists(self.config_root()) is False:
-			filesystem.makedir(self.config_root())
+		if tools.filesystem.exists(self.config_root()) is False:
+			tools.filesystem.makedir(self.config_root())
 		if file is None:
-			filename = self.get_pathname(strings.tofilename(part_filename))
+			filename = self.get_pathname(tools.strings.tofilename(part_filename))
 			file = open(filename, read_write)
 		elif type(file) == type(""):
 			file = open(filename, read_write)
@@ -109,7 +109,7 @@ class JsonConfig:
 		for name in self.__dict__.keys():
 			# Case of web input is missing when bool is false
 			if type(self.__dict__[name]) == type(True):
-				name = strings.tobytes(name)
+				name = tools.strings.tobytes(name)
 				if name in params:
 					if type(params[name]) == type(""):
 						if params[name] == "":
@@ -130,25 +130,25 @@ class JsonConfig:
 						params[name] = False
 			# Case of web input is integer but string with number received
 			elif type(self.__dict__[name]) == type(0):
-				name = strings.tobytes(name)
+				name = tools.strings.tobytes(name)
 				if name in params:
 					try:
 						params[name] = int(params[name])
 					except:
 						if b"date" in name:
 							try:
-								params[name] = date.html_to_date(params[name])
+								params[name] = tools.date.html_to_date(params[name])
 							except:
 								params[name] = 0
 						elif b"time" in name:
 							try:
-								params[name] = date.html_to_time(params[name])
+								params[name] = tools.date.html_to_time(params[name])
 							except:
 								params[name] = 0
 						else:
 							params[name] = 0
 			elif type(self.__dict__[name]) == type(0.):
-				name = strings.tobytes(name)
+				name = tools.strings.tobytes(name)
 				if name in params:
 					try:
 						params[name] = float(params[name])
@@ -157,7 +157,7 @@ class JsonConfig:
 
 		result = True
 		for name, value in params.items():
-			execval = strings.tostrings(name)
+			execval = tools.strings.tostrings(name)
 			try:
 				try:
 					# pylint: disable=exec-used
@@ -174,9 +174,9 @@ class JsonConfig:
 					exec(execval)
 				else:
 					if name != b"action" and show_error and result is not None:
-						print("%s.%s not existing"%(self.__class__.__name__, strings.tostrings(name)))
+						print("%s.%s not existing"%(self.__class__.__name__, tools.strings.tostrings(name)))
 			except Exception as _err:
-				logger.syslog(_err, "Error on %s"%(execval))
+				tools.logger.syslog(_err, "Error on %s"%(execval))
 				result = False
 		self_config = None
 		return result
@@ -185,12 +185,12 @@ class JsonConfig:
 		""" Load object with the file specified """
 		filename = ""
 		try:
-			filename = self.get_pathname(strings.tofilename(part_filename))
+			filename = self.get_pathname(tools.strings.tofilename(part_filename))
 			file, filename = self.open(file=file, read_write="r", part_filename=part_filename)
 
 			data = json.load(file)
 			if tobytes:
-				data = strings.tobytes(data)
+				data = tools.strings.tobytes(data)
 			self.update(data)
 			file.close()
 			self.last_refresh = time.time()
@@ -198,23 +198,23 @@ class JsonConfig:
 		except OSError as _err:
 			if _err.args[0] == 2:
 				if errorlog:
-					logger.syslog("Not existing %s "%(filename))
+					tools.logger.syslog("Not existing %s "%(filename))
 			else:
-				logger.syslog(_err, "Cannot load %s "%(filename))
+				tools.logger.syslog(_err, "Cannot load %s "%(filename))
 			return False
 		except Exception as _err:
-			logger.syslog(_err, "Cannot load %s "%(filename))
+			tools.logger.syslog(_err, "Cannot load %s "%(filename))
 			return False
 
 	def forget(self, part_filename=""):
 		""" Forget configuration """
-		filesystem.remove(self.get_pathname(part_filename=part_filename))
+		tools.filesystem.remove(self.get_pathname(part_filename=part_filename))
 
 	def is_changed(self, part_filename=""):
 		""" Indicates if the configuration changed """
 		if self.last_refresh + 10 < time.time():
 			try:
-				modification_date = uos.stat(self.get_pathname(strings.tofilename(part_filename)))[8]
+				modification_date = uos.stat(self.get_pathname(tools.strings.tofilename(part_filename)))[8]
 				if self.modification_date != modification_date:
 					self.modification_date = modification_date
 					return True
@@ -236,4 +236,4 @@ class JsonConfig:
 
 	def exists(self, part_filename=""):
 		""" Indicates if the configuration file existing """
-		return filesystem.exists(self.get_pathname(strings.tofilename(part_filename)))
+		return tools.filesystem.exists(self.get_pathname(tools.strings.tofilename(part_filename)))

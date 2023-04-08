@@ -10,15 +10,17 @@ The core of the server is in the other class HttpServerCore, which is loaded int
 It takes a little while the first time you connect, but limits memory consumption if not in use.
 If you have enough memory (SPIRAM or other), just start the server with the preload option at True. """
 import re
-from server.server import ServerConfig
-from tools import logger,filesystem,strings,tasking
-# import server.httpserver
+import server.server
+import tools.logger
+import tools.filesystem
+import tools.strings
+import tools.tasking
 
-class HttpServerInstance(tasking.ServerInstance):
+class HttpServerInstance(tools.tasking.ServerInstance):
 	""" Instance of server Http """
 	def __init__(self, **kwargs):
 		""" Constructor """
-		tasking.ServerInstance.__init__(self, **kwargs)
+		tools.tasking.ServerInstance.__init__(self, **kwargs)
 		self.server = None
 		self.kwargs = kwargs
 
@@ -30,13 +32,13 @@ class HttpServerInstance(tasking.ServerInstance):
 			started = True
 
 		if self.server is None:
-			logger.syslog("Http '%s' started"%self.kwargs.get("name",""))
+			tools.logger.syslog("Http '%s' started"%self.kwargs.get("name",""))
 			from server.httpservercore import HttpServerCore
 			self.server = HttpServerCore(**self.kwargs)
 			started = True
 
 		if started:
-			logger.syslog("Http '%s' ready on %d"%(self.kwargs.get("name",""), self.kwargs.get("port",0)))
+			tools.logger.syslog("Http '%s' ready on %d"%(self.kwargs.get("name",""), self.kwargs.get("port",0)))
 
 	async def on_connection(self, reader, writer):
 		""" Http server connection detected """
@@ -47,7 +49,7 @@ class HttpServerInstance(tasking.ServerInstance):
 			# Call on connection method
 			await self.server.on_connection(reader, writer)
 		except Exception as err:
-			logger.syslog(err)
+			tools.logger.syslog(err)
 
 class HttpServer:
 	""" Http main class """
@@ -63,16 +65,16 @@ class HttpServer:
 	def call_preload(loader):
 		""" Call preload html page callback """
 		if loader is not None:
-			if filesystem.ismicropython():
+			if tools.filesystem.ismicropython():
 				ModuleNotFound = ImportError
 			else:
 				ModuleNotFound = ModuleNotFoundError
 			try:
 				loader()
 			except ModuleNotFound as err:
-				logger.syslog("Preload html page : %s"%str(err))
+				tools.logger.syslog("Preload html page : %s"%str(err))
 			except Exception as err:
-				logger.syslog(err)
+				tools.logger.syslog(err)
 
 	@staticmethod
 	def preload():
@@ -81,7 +83,7 @@ class HttpServer:
 		result = False
 		if HttpServer.loaded[0] is False:
 			from htmltemplate import WWW_DIR
-			logger.syslog("Html load pages")
+			tools.logger.syslog("Html load pages")
 			if len(HttpServer.pages) > 0:
 				for loader in HttpServer.pages:
 					HttpServer.call_preload(loader)
@@ -103,14 +105,14 @@ class HttpServer:
 		""" Add a route to select an html page.
 		For the server to know the pages, it must imperatively use this decorator """
 		def add_route(function):
-			if strings.tobytes(url[-1]) == ord(b"*"):
-				HttpServer.wildroutes.append([strings.tobytes(url),(function, kwargs)])
+			if tools.strings.tobytes(url[-1]) == ord(b"*"):
+				HttpServer.wildroutes.append([tools.strings.tobytes(url),(function, kwargs)])
 			else:
 				kwargs["index"] = len(HttpServer.menus)
-				HttpServer.routes[strings.tobytes(url)] = (function, kwargs)
+				HttpServer.routes[tools.strings.tobytes(url)] = (function, kwargs)
 			if kwargs.get("available", True):
 				if "item" in kwargs and "menu" in kwargs:
-					HttpServer.menus.append([kwargs["menu"], kwargs["item"],len(HttpServer.menus), strings.tobytes(url)])
+					HttpServer.menus.append([kwargs["menu"], kwargs["item"],len(HttpServer.menus), tools.strings.tobytes(url)])
 					HttpServer.menus.sort()
 			return function
 		return add_route
@@ -146,8 +148,8 @@ class HttpServer:
 		function, args = None, None
 
 		if request.method == b"PUT":
-			directory, file = filesystem.split(strings.tostrings(request.path))
-			found = HttpServer.routes.get(strings.tobytes(directory),None)
+			directory, file = tools.filesystem.split(tools.strings.tostrings(request.path))
+			found = HttpServer.routes.get(tools.strings.tobytes(directory),None)
 			if found:
 				function, args = found
 			return function, args
@@ -155,12 +157,12 @@ class HttpServer:
 			found = HttpServer.routes.get(request.path,None)
 			if found is None:
 				for route, func in HttpServer.wildroutes:
-					if re.match(strings.tostrings(route), strings.tostrings(request.path)):
+					if re.match(tools.strings.tostrings(route), tools.strings.tostrings(request.path)):
 						found = func
 						break
 				if found is None:
-					staticRe = re.compile("^/("+strings.tostrings(HttpServer.www_dir)+"/.+|.+)")
-					if staticRe.match(strings.tostrings(request.path)):
+					staticRe = re.compile("^/("+tools.strings.tostrings(HttpServer.www_dir)+"/.+|.+)")
+					if staticRe.match(tools.strings.tostrings(request.path)):
 						function, args = HttpServer.static_pages, {}
 				else:
 					function, args = found
@@ -171,7 +173,7 @@ class HttpServer:
 	@staticmethod
 	async def static_pages(request, response, args):
 		""" Treat the case of static pages """
-		path = strings.tobytes(HttpServer.www_dir) + request.path
+		path = tools.strings.tobytes(HttpServer.www_dir) + request.path
 		path = path.replace(b"//",b"/")
 		if b".." in path:
 			await response.send_error(status=b"403",content=b"Forbidden")
@@ -182,7 +184,7 @@ class HttpServer:
 	def init():
 		""" Initialize http server """
 		if HttpServer.config is None:
-			HttpServer.config = ServerConfig()
+			HttpServer.config = server.server.ServerConfig()
 			HttpServer.config.load_create()
 		else:
 			HttpServer.config.refresh()
@@ -196,6 +198,6 @@ class HttpServer:
 			kwargs["port"] = kwargs.get("http_port",80)
 			kwargs["name"] = kwargs.get("name","Http")
 			kwargs["backlog"] = kwargs.get("backlog",5)
-			tasking.Tasks.create_server(HttpServerInstance(**kwargs))
+			tools.tasking.Tasks.create_server(HttpServerInstance(**kwargs))
 		else:
-			logger.syslog("Http server disabled in config")
+			tools.logger.syslog("Http server disabled in config")

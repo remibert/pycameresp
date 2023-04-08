@@ -1,9 +1,9 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Encryption utility functions """
-from binascii import hexlify, b2a_base64, a2b_base64
+import binascii
 import hashlib
-from tools import strings
+import tools.strings
 
 aes_ = None
 def aes(key, mode):
@@ -14,24 +14,24 @@ def aes(key, mode):
 		aes_ = cryptolib.aes
 	if len(key) % 16 != 0:
 		key = (key*16)[:16]
-	return  aes_(strings.tobytes(key), mode)
+	return  aes_(tools.strings.tobytes(key), mode)
 
 def encrypt(buffer, key):
 	""" AES encryption of buffer """
-	data = b2a_base64(buffer)
+	data = binascii.b2a_base64(buffer)
 	data = data.rstrip()
 	if len(data) % 16 != 0:
 		data = data + b"="*(16-len(data)%16)
-	return aes(key,1).encrypt(strings.tobytes(data))
+	return aes(key,1).encrypt(tools.strings.tobytes(data))
 
 def decrypt(buffer, key):
 	""" AES decryption of buffer """
 	data = aes(key, 1).decrypt(buffer)
-	data = a2b_base64(strings.tobytes(data))
+	data = binascii.a2b_base64(tools.strings.tobytes(data))
 	return data
 
 def gethash(password):
 	""" Get the hash associated to the password """
 	hash_ = hashlib.sha256()
 	hash_.update(password)
-	return hexlify(hash_.digest())
+	return binascii.hexlify(hash_.digest())

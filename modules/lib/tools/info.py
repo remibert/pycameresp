@@ -5,7 +5,10 @@
 import sys
 import time
 import os
-from tools import strings,filesystem,lang,date
+import tools.strings
+import tools.filesystem
+import tools.lang
+import tools.date
 
 try:
 	import machine
@@ -28,7 +31,7 @@ def iscamera():
 		import camera
 		return camera.isavailable()
 	except:
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			return False
 		else:
 			return True
@@ -41,18 +44,19 @@ def meminfo():
 		alloc = gc.mem_alloc()
 		free  = gc.mem_free()
 		total = alloc+free
-		result = lang.memory_info%(
-			strings.size_to_bytes(alloc, 1),
-			strings.size_to_bytes(free,  1),
-			strings.size_to_bytes(total, 1),
+		result = tools.lang.memory_info%(
+			tools.strings.size_to_bytes(alloc, 1),
+			tools.strings.size_to_bytes(free,  1),
+			tools.strings.size_to_bytes(total, 1),
 			100-(free*100/total))
 	except:
-		result = lang.no_information
+		result = tools.lang.no_information
 	return result
 
 def memdump():
 	""" Dump memory allocated """
-	if filesystem.ismicropython():
+	if tools.filesystem.ismicropython():
+		# pylint:disable=import-error
 		import micropython
 		micropython.mem_info("level")
 
@@ -62,7 +66,7 @@ def flash_size(mountpoint=None):
 	if mountpoint is None:
 		mountpoint = os.getcwd()
 	status = uos.statvfs(mountpoint)
-	if filesystem.ismicropython():
+	if tools.filesystem.ismicropython():
 		free  = status[0]*status[3]
 		if free < 0:
 			free = 0
@@ -84,20 +88,20 @@ def flashinfo(mountpoint=None):
 		free = 1
 		total = alloc+free
 	percent = 100-(free*100/total)
-	total   = strings.size_to_bytes(total, 1)
-	free    = strings.size_to_bytes(free,  1)
-	alloc   = strings.size_to_bytes(alloc, 1)
+	total   = tools.strings.size_to_bytes(total, 1)
+	free    = tools.strings.size_to_bytes(free,  1)
+	alloc   = tools.strings.size_to_bytes(alloc, 1)
 	if mountpoint is None:
 		mountpoint = b"/"
 	else:
-		mountpoint = strings.tobytes(mountpoint)
-	result = lang.flash_info%(mountpoint, alloc, free, total, percent)
+		mountpoint = tools.strings.tobytes(mountpoint)
+	result = tools.lang.flash_info%(mountpoint, alloc, free, total, percent)
 	return result
 
 def deviceinfo():
 	""" Get device informations """
 	try:
-		return b"%s %dMhz"%(strings.tobytes(sys.platform), machine.freq()//1000000)
+		return b"%s %dMhz"%(tools.strings.tobytes(sys.platform), machine.freq()//1000000)
 	except:
 		return b"Device information unavailable"
 
@@ -105,9 +109,9 @@ def sysinfo():
 	""" Get system informations """
 	try:
 		result  = b"Device : %s\n"%(deviceinfo())
-		result += b"Time   : %s\n"%(date.date_to_bytes())
-		result += b"%s : %s\n"%(lang.memory_label, meminfo())
-		result += b"%s : %s"%(lang.flash_label, flashinfo("/"))
+		result += b"Time   : %s\n"%(tools.date.date_to_bytes())
+		result += b"%s : %s\n"%(tools.lang.memory_label, meminfo())
+		result += b"%s : %s"%(tools.lang.flash_label, flashinfo("/"))
 		return result
 	except Exception as err:
 		return b"Sysinfo not available"
@@ -144,7 +148,7 @@ def uptime(text=b"days"):
 		days    = (up/86400)
 		return b"%d %s, %d:%02d:%02d"%(days, text,hours,mins,seconds)
 	except:
-		return lang.no_information
+		return tools.lang.no_information
 
 _last_activity = 0
 def get_last_activity():

@@ -5,5 +5,5 @@
 
 def sh():
 	""" Start the shell """
-	from shell.commands import commands
-	commands()
+	import shell.commands
+	shell.commands.commands()

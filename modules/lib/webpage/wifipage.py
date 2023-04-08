@@ -1,20 +1,23 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to configure the wifi """
-from server.httpserver        import HttpServer
+import server.httpserver
 from htmltemplate.htmlclasses import *
-from webpage.mainpage         import main_frame, manage_default_button
-import wifi
-from tools                    import lang,strings,logger,support
+import webpage.mainpage
+import wifi.station
+import tools.lang
+import tools.strings
+import tools.logger
+import tools.support
 
 def static_ip_html(config, disabled):
 	""" Html to get static ip """
 	patternIp = br"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
 	return [
-			Edit(text=lang.ip_address,  name=b"ip_address", pattern=patternIp, placeholder=lang.enter_ip_address, value=config.ip_address, disabled=disabled),
-			Edit(text=lang.netmask,     name=b"netmask",   pattern=patternIp, placeholder=lang.enter_netmask,    value=config.netmask,   disabled=disabled),
-			Edit(text=lang.gateway,     name=b"gateway",   pattern=patternIp, placeholder=lang.enter_gateway,    value=config.gateway,   disabled=disabled),
-			Edit(text=lang.dns,         name=b"dns",       pattern=patternIp, placeholder=lang.enter_dns,        value=config.dns,       disabled=disabled)]
+			Edit(text=tools.lang.ip_address,  name=b"ip_address", pattern=patternIp, placeholder=tools.lang.enter_ip_address, value=config.ip_address, disabled=disabled),
+			Edit(text=tools.lang.netmask,     name=b"netmask",   pattern=patternIp, placeholder=tools.lang.enter_netmask,    value=config.netmask,   disabled=disabled),
+			Edit(text=tools.lang.gateway,     name=b"gateway",   pattern=patternIp, placeholder=tools.lang.enter_gateway,    value=config.gateway,   disabled=disabled),
+			Edit(text=tools.lang.dns,         name=b"dns",       pattern=patternIp, placeholder=tools.lang.enter_dns,        value=config.dns,       disabled=disabled)]
 
 current_networks = []
 current_config  = None
@@ -27,7 +30,7 @@ def select_network(increase=0, reparse=False):
 		current_networks = current_network.list_known()
 	current = 0
 	for network in current_networks:
-		searched = strings.tobytes(strings.tofilename(current_network.ssid))
+		searched = tools.strings.tobytes(tools.strings.tofilename(current_network.ssid))
 		if searched == network:
 			break
 		current += 1
@@ -38,7 +41,7 @@ def select_network(increase=0, reparse=False):
 		current = 0
 	else:
 		current += increase
-	current_network = wifi.NetworkConfig()
+	current_network = wifi.station.NetworkConfig()
 	try:
 		try:
 			part_filename = current_networks[current]
@@ -46,10 +49,10 @@ def select_network(increase=0, reparse=False):
 			part_filename = b""
 		current_network.load(part_filename = part_filename)
 	except Exception as err:
-		logger.syslog(err)
+		tools.logger.syslog(err)
 	return current_network
 
-@HttpServer.add_route(b'/wifi', menu=lang.menu_network, item=lang.item_wifi)
+@server.httpserver.HttpServer.add_route(b'/wifi', menu=tools.lang.menu_network, item=tools.lang.item_wifi)
 async def wifi_config(request, response, args):
 	""" Page to configure the wifi station """
 	global current_networks, current_config, current_network
@@ -57,8 +60,8 @@ async def wifi_config(request, response, args):
 	patternDns = rb"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*$"
 
 	if current_config is None:
-		current_config = wifi.Station.config
-		current_network = wifi.Station.network
+		current_config = wifi.station.Station.config
+		current_network = wifi.station.Station.network
 		current_networks = current_network.list_known()
 
 	config  = current_config
@@ -104,7 +107,7 @@ async def wifi_config(request, response, args):
 		network.forget()
 		network = select_network(-1,True)
 	elif action == b"default":
-		config.default = strings.tostrings(network.ssid)
+		config.default = tools.strings.tostrings(network.ssid)
 		config.save()
 	if forced == b"none":
 		dynamic = network.dynamic
@@ -117,38 +120,38 @@ async def wifi_config(request, response, args):
 
 	if action in [b"previous",b"next",b"change",b"forget",b"modify",b"default"]:
 		submit = \
-			Submit (text=lang.save  ,     name=b"action",  value=b"save"    ), Space(), \
-			Submit (text=lang.lt ,        name=b"action",  value=b"previous"), Space(), \
-			Submit (text=lang.gt ,        name=b"action",  value=b"next"    ), Space(), \
-			Submit (text=lang.forget,     name=b"action",  value=b"forget"  ), Space(), \
-			Submit (text=lang.set_default,name=b"action",  value=b"default" ), Space(), \
+			Submit (text=tools.lang.save  ,     name=b"action",  value=b"save"    ), Space(), \
+			Submit (text=tools.lang.lt ,        name=b"action",  value=b"previous"), Space(), \
+			Submit (text=tools.lang.gt ,        name=b"action",  value=b"next"    ), Space(), \
+			Submit (text=tools.lang.forget,     name=b"action",  value=b"forget"  ), Space(), \
+			Submit (text=tools.lang.set_default,name=b"action",  value=b"default" ), Space(), \
 			Input  (                      name=b"forced",  value=forced     , type=b"hidden"), \
 			Input  (                      name=b"current", value=current    , type=b"hidden")
 
-		if wifi.Station.is_active() or wifi.AccessPoint().is_active():
-			networks = wifi.Station.scan()
+		if wifi.station.Station.is_active() or wifi.accesspoint.AccessPoint().is_active():
+			networks = wifi.station.Station.scan()
 			for net in networks:
 				ssids.append(Option(value=net[0]))
 	else:
-		submit = Submit(text=lang.modify, name=b"action", value=b"modify")
+		submit = Submit(text=tools.lang.modify, name=b"action", value=b"modify")
 
-	page = main_frame(request, response, args, lang.wifi_configuration,
+	page = webpage.mainpage.main_frame(request, response, args, tools.lang.wifi_configuration,
 		Form([
-			Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
-			Edit(text=lang.hostname ,   name=b"hostname",  placeholder=lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled) if support.hostname() else None,
-			Switch(text=lang.fallback_to_the, name=b"fallback", checked=config.fallback, disabled=disabled),
+			Switch(text=tools.lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
+			Edit(text=tools.lang.hostname ,   name=b"hostname",  placeholder=tools.lang.hostname_not_available, pattern=patternDns, value=config.hostname, disabled=disabled) if tools.support.hostname() else None,
+			Switch(text=tools.lang.fallback_to_the, name=b"fallback", checked=config.fallback, disabled=disabled),
 			Card(
 				[
-					CardHeader(text= lang.wifi if strings.tostrings(network.ssid) != strings.tostrings(config.default) else lang.wifi_default),
+					CardHeader(text= tools.lang.wifi if tools.strings.tostrings(network.ssid) != tools.strings.tostrings(config.default) else tools.lang.wifi_default),
 					CardBody([
-						ComboBox(ssids, text=lang.ssid, placeholder=lang.enter_ssid,  name=b"ssid", value=network.ssid, disabled=disabled),
-						Edit(text=lang.password,    name=b"wifi_password", placeholder=lang.enter_password,      type=b"password",value=network.wifi_password, disabled=disabled),
+						ComboBox(ssids, text=tools.lang.ssid, placeholder=tools.lang.enter_ssid,  name=b"ssid", value=network.ssid, disabled=disabled),
+						Edit(text=tools.lang.password,    name=b"wifi_password", placeholder=tools.lang.enter_password,      type=b"password",value=network.wifi_password, disabled=disabled),
 					])
 				]),
 			Card(
 				[
 					CardHeader([\
-						Switch(text=lang.dynamic_ip, spacer=b"mb-0", checked=dynamic, name=b"dynamic", event=b'onchange="this.form.submit()"', disabled=disabled)]),
+						Switch(text=tools.lang.dynamic_ip, spacer=b"mb-0", checked=dynamic, name=b"dynamic", event=b'onchange="this.form.submit()"', disabled=disabled)]),
 					None if dynamic else CardBody([\
 						static_ip_html(network, disabled)])
 				]),
@@ -156,14 +159,14 @@ async def wifi_config(request, response, args):
 		]))
 	await response.send_page(page)
 
-@HttpServer.add_route(b'/accesspoint', menu=lang.menu_network, item=lang.item_access_point)
+@server.httpserver.HttpServer.add_route(b'/accesspoint', menu=tools.lang.menu_network, item=tools.lang.item_access_point)
 async def access_point(request, response, args):
 	""" Page to configure the access point """
-	config = wifi.AccessPointConfig()
-	disabled, action, submit = manage_default_button(request, config)
+	config = wifi.accesspoint.AccessPointConfig()
+	disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
 	if action == b"save":
-		if wifi.AccessPoint.is_active():
-			wifi.AccessPoint.config = config
+		if wifi.accesspoint.AccessPoint.is_active():
+			wifi.accesspoint.AccessPoint.config = config
 	authmodes = []
 	for key, value in wifi.AUTHMODE.items():
 		if value==config.authmode:
@@ -172,24 +175,24 @@ async def access_point(request, response, args):
 			authmodes.append(Option(text=value, value=value))
 	# pylint: disable=missing-parentheses-for-call-in-test
 	# pylint: disable=using-constant-test
-	page = main_frame(request, response, args, lang.access_point_configuration if access_point else b"Wifi configuration",
+	page = webpage.mainpage.main_frame(request, response, args, tools.lang.access_point_configuration if access_point else b"Wifi configuration",
 		Form([
-			Switch(text=lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
+			Switch(text=tools.lang.activated, name=b"activated", checked=config.activated, disabled=disabled),
 			Card(
 				[
-					CardHeader(text=lang.wifi),
+					CardHeader(text=tools.lang.wifi),
 					CardBody([
-						Edit(text=lang.ssid, placeholder=lang.enter_ssid, name=b"ssid", value=config.ssid, disabled=disabled),
-						Edit(text=lang.password,    name=b"wifi_password",type=b"password", placeholder=lang.enter_password,      value=config.wifi_password, disabled=disabled),
-						Label(text=lang.authentication_mode),
+						Edit(text=tools.lang.ssid, placeholder=tools.lang.enter_ssid, name=b"ssid", value=config.ssid, disabled=disabled),
+						Edit(text=tools.lang.password,    name=b"wifi_password",type=b"password", placeholder=tools.lang.enter_password,      value=config.wifi_password, disabled=disabled),
+						Label(text=tools.lang.authentication_mode),
 						Select(authmodes,name=b"authmode", disabled=disabled),
 					]),
 				]),
 			Card(
 				[
-					CardHeader(text=lang.static_ip),
+					CardHeader(text=tools.lang.static_ip),
 					CardBody(static_ip_html(config, disabled))
-				]) if support.static_ip_accesspoint() else None ,
+				]) if tools.support.static_ip_accesspoint() else None ,
 			submit
 		]))
 	await response.send_page(page)

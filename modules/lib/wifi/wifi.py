@@ -3,10 +3,13 @@
 # pylint:disable=consider-using-f-string
 
 """ Manages access to wifi, treats cases of network loss with retry, and manages a fallback on the access point if no network is available """
-from wifi.accesspoint import *
-from wifi.station import *
-from server.server import ServerConfig
-from tools import info, tasking
+import uasyncio
+import wifi.station
+import wifi.accesspoint
+import server.server
+import tools.info
+import tools.tasking
+import tools.logger
 
 WIFI_OFF             = 0
 WIFI_OTHER_NETWORK   = 1
@@ -39,7 +42,7 @@ class Wifi:
 	def init():
 		""" Initialize wifi task """
 		if Wifi.config is None:
-			Wifi.config = ServerConfig()
+			Wifi.config = server.server.ServerConfig()
 			Wifi.config.load_create()
 
 	@staticmethod
@@ -57,15 +60,15 @@ class Wifi:
 		""" Set the state of wifi """
 		# pylint:disable=multiple-statements
 		if Wifi.context.state != state:
-			if state == WIFI_OFF            : logger.syslog("Wifi off")
-			if state == WIFI_OTHER_NETWORK  : logger.syslog("Wifi select other network")
-			if state == WIFI_CONNECTED      : logger.syslog("Wifi connected")
-			if state == LAN_CONNECTED       : logger.syslog("Wifi LAN connected")
-			if state == WAN_CONNECTED       : logger.syslog("Wifi WAN connected")
-			if state == ACCESS_POINT_STARTED: logger.syslog("Wifi access point started")
-			if state == WIFI_LOST           : logger.syslog("Wifi lost connection")
-			if state == WIFI_CLOSE          : logger.syslog("Wifi closed")
-			if state == WIFI_DISABLED       : logger.syslog("Wifi disabled")
+			if state == WIFI_OFF            : tools.logger.syslog("Wifi off")
+			if state == WIFI_OTHER_NETWORK  : tools.logger.syslog("Wifi select other network")
+			if state == WIFI_CONNECTED      : tools.logger.syslog("Wifi connected")
+			if state == LAN_CONNECTED       : tools.logger.syslog("Wifi LAN connected")
+			if state == WAN_CONNECTED       : tools.logger.syslog("Wifi WAN connected")
+			if state == ACCESS_POINT_STARTED: tools.logger.syslog("Wifi access point started")
+			if state == WIFI_LOST           : tools.logger.syslog("Wifi lost connection")
+			if state == WIFI_CLOSE          : tools.logger.syslog("Wifi closed")
+			if state == WIFI_DISABLED       : tools.logger.syslog("Wifi disabled")
 		Wifi.context.state = state
 
 	@staticmethod
@@ -73,7 +76,7 @@ class Wifi:
 		""" Indicates if wifi network available for start server """
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED, ACCESS_POINT_STARTED]:
 			return True
-		elif AccessPoint.is_active() is True:
+		elif wifi.accesspoint.AccessPoint.is_active() is True:
 			return True
 		return False
 
@@ -82,7 +85,7 @@ class Wifi:
 		""" Set wan have establish dialog with external server """
 		Wifi.lan_connected(False)
 		if Wifi.context.wan_problem > 0:
-			logger.syslog("WAN connected")
+			tools.logger.syslog("WAN connected")
 			Wifi.context.wan_problem = 0
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED]:
 			Wifi.set_state(WAN_CONNECTED)
@@ -92,13 +95,13 @@ class Wifi:
 		""" Indicates that wan have probably a problem """
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.wan_problem += 1
-			logger.syslog("WAN problem %d detected (max=%d) (wifi=%s)"%(Wifi.context.wan_problem,MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))
+			tools.logger.syslog("WAN problem %d detected (max=%d) (wifi=%s)"%(Wifi.context.wan_problem,MAX_PROBLEM, tools.strings.tostrings(wifi.station.Station.get_signal_strength_bytes())))
 
 	@staticmethod
 	def lan_connected(changeState=True):
 		""" Indicates that lan connection detected """
 		if Wifi.context.lan_problem > 0:
-			logger.syslog("LAN connected")
+			tools.logger.syslog("LAN connected")
 			Wifi.context.lan_problem = 0
 		if changeState:
 			if Wifi.get_state() == WIFI_CONNECTED:
@@ -109,7 +112,7 @@ class Wifi:
 		""" Indicates that lan disconnection detected """
 		if Wifi.get_state() in [WIFI_CONNECTED, LAN_CONNECTED, WAN_CONNECTED ]:
 			Wifi.context.lan_problem += 1
-			logger.syslog("LAN problem %d detected (max=%d)(wifi=%s)"%(Wifi.context.lan_problem, MAX_PROBLEM, strings.tostrings(Station.get_signal_strength_bytes())))
+			tools.logger.syslog("LAN problem %d detected (max=%d)(wifi=%s)"%(Wifi.context.lan_problem, MAX_PROBLEM, tools.strings.tostrings(wifi.station.Station.get_signal_strength_bytes())))
 
 	@staticmethod
 	def is_wan_available():
@@ -148,17 +151,17 @@ class Wifi:
 			Wifi.context.dns = ""
 
 			# If wifi station available
-			if Station.is_activated():
-				AccessPoint.stop()
+			if wifi.station.Station.is_activated():
+				wifi.accesspoint.AccessPoint.stop()
 
 				# If wifi station connected
-				if await Station.start():
+				if await wifi.station.Station.start():
 					Wifi.set_state(WIFI_CONNECTED)
 				else:
 					Wifi.set_state(WIFI_OTHER_NETWORK)
-					info.increase_issues_counter()
+					tools.info.increase_issues_counter()
 			# If access point available
-			elif AccessPoint.is_activated():
+			elif wifi.accesspoint.AccessPoint.is_activated():
 				Wifi.set_state(ACCESS_POINT_STARTED)
 			else:
 				duration = 63000
@@ -166,18 +169,18 @@ class Wifi:
 		# If the wifi is disabled in configuration
 		elif state == WIFI_DISABLED:
 			duration = 63000
-			if Station.is_activated() or AccessPoint.is_active():
+			if wifi.station.Station.is_activated() or wifi.accesspoint.AccessPoint.is_active():
 				Wifi.set_state(WIFI_OFF)
 
 		# If the network not reached select other network
 		elif state == WIFI_OTHER_NETWORK:
 			# If station available
-			if Station.is_activated():
-				if await Station.choose_network(max_retry=15) is True:
+			if wifi.station.Station.is_activated():
+				if await wifi.station.Station.choose_network(max_retry=15) is True:
 					Wifi.set_state(WIFI_CONNECTED)
 				else:
 					# Wifi connection failed
-					if Station.is_fallback():
+					if wifi.station.Station.is_fallback():
 						Wifi.set_state(ACCESS_POINT_STARTED)
 					else:
 						Wifi.set_state(WIFI_CLOSE)
@@ -187,22 +190,22 @@ class Wifi:
 		# Start access point if no wifi station detected
 		elif state == ACCESS_POINT_STARTED:
 			# If access point inactive
-			if AccessPoint.is_active() is False:
+			if wifi.accesspoint.AccessPoint.is_active() is False:
 				# Stop wifi station to avoid some problems
-				Station.stop()
+				wifi.station.Station.stop()
 
 				# Start the access point
-				AccessPoint.start(Station.is_fallback())
+				wifi.accesspoint.AccessPoint.start(wifi.station.Station.is_fallback())
 			else:
 				# If no activity detected on access point
-				if (info.uptime_sec() - info.get_last_activity()) > 5*60:
-					if Station.is_configured():
+				if (tools.info.uptime_sec() - tools.info.get_last_activity()) > 5*60:
+					if wifi.station.Station.is_configured():
 						# Retry to search network
-						if Station.is_activated():
+						if wifi.station.Station.is_activated():
 							Wifi.set_state(WIFI_CLOSE)
 					else:
-						if Station.is_activated():
-							logger.syslog("Wifi SSID and password not yet configured")
+						if wifi.station.Station.is_activated():
+							tools.logger.syslog("Wifi SSID and password not yet configured")
 				else:
 					duration = 63000
 
@@ -211,12 +214,12 @@ class Wifi:
 			# If connection start
 			if state == WIFI_CONNECTED and Wifi.context.dns == "":
 				# Initialize context
-				Wifi.context.dns = Station.get_info()[3]
+				Wifi.context.dns = wifi.station.Station.get_info()[3]
 				Wifi.context.lan_problem = 0
 				Wifi.context.wan_problem = 0
 
 			# If station yet activated
-			if Station.is_activated():
+			if wifi.station.Station.is_activated():
 				# If too many problem detected
 				if Wifi.context.lan_problem >= MAX_PROBLEM or Wifi.context.wan_problem >= MAX_PROBLEM:
 					Wifi.set_state(WIFI_LOST)
@@ -227,7 +230,7 @@ class Wifi:
 
 		# If wifi lost
 		elif state in [WIFI_LOST, WIFI_CLOSE]:
-			Station.stop()
+			wifi.station.Station.stop()
 			Wifi.set_state(WIFI_OFF)
 			duration = 11000
 
@@ -239,4 +242,4 @@ class Wifi:
 	@staticmethod
 	def start():
 		""" Start the wifi connection task """
-		tasking.Tasks.create_monitor(Wifi.task)
+		tools.tasking.Tasks.create_monitor(Wifi.task)

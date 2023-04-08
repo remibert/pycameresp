@@ -1,8 +1,8 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ These classes are used to manage asynchronous stream. """
-from io import BytesIO
-from tools import filesystem
+import io
+import tools.filesystem
 
 class Stream:
 	""" Class stream """
@@ -12,7 +12,7 @@ class Stream:
 		self.reader = reader
 		self.writer = writer
 		self.buffer = b""
-		if filesystem.ismicropython():
+		if tools.filesystem.ismicropython():
 			self.close      = self.close_mic
 			self.awrite     = self.awrite_mic
 			self.is_closing = self.is_closing_mic
@@ -116,7 +116,7 @@ class Bytesio:
 	""" Class stream which wrap BytesIO """
 	def __init__(self):
 		""" Constructor """
-		self.streamio = BytesIO()
+		self.streamio = io.BytesIO()
 
 	async def read(self):
 		""" Read data from the stream """
@@ -137,7 +137,7 @@ class Bufferedio:
 	""" Class used to buffered stream write """
 	def __init__(self, streamio, part=1440*20):
 		""" Constructor """
-		self.buffered = BytesIO()
+		self.buffered = io.BytesIO()
 
 		if Bufferedio.is_enough_memory():
 			self.part = part
@@ -174,7 +174,7 @@ class Bufferedio:
 			result = self.buffered.write(data)
 			if self.buffered.tell() > self.part:
 				await self.streamio.write(self.buffered.getvalue())
-				self.buffered = BytesIO()
+				self.buffered = io.BytesIO()
 		return result
 
 	async def close(self):

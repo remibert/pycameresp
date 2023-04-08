@@ -6,10 +6,10 @@
 """
 Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then if the server not used, it not consum memory
 """
-from server.httpserver import HttpServer
-from server.httprequest import HttpRequest, HttpResponse
-from server.stream import Stream
-from tools import logger
+import server.httpserver
+import server.httprequest
+import server.stream
+import tools.logger
 
 class HttpServerCore:
 	""" Http server core, it instanciated only if a connection is done to the asynchronous class HttpServer then
@@ -22,13 +22,13 @@ class HttpServerCore:
 	async def on_connection(self, reader, writer):
 		""" Asynchronous connection call back """
 		remoteaddr = writer.get_extra_info('peername')[0]
-		stream    = Stream(reader, writer)
-		request   = HttpRequest (stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
-		response  = HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
+		stream    = server.stream.Stream(reader, writer)
+		request   = server.httprequest.HttpRequest (stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
+		response  = server.httprequest.HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
 		try:
 			await request.receive()
 			# print(request.path)
-			function, args = HttpServer.search_route(request)
+			function, args = server.httpserver.HttpServer.search_route(request)
 			if function is None:
 				await response.send_not_found()
 			else:
@@ -41,7 +41,7 @@ class HttpServerCore:
 			else:
 				await response.send_not_found(err)
 		except Exception as err:
-			logger.syslog(err)
+			tools.logger.syslog(err)
 			await response.send_not_found(err)
 		finally:
 			await stream.close()

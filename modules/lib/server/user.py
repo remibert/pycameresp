@@ -2,15 +2,19 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Class used to manage a username and a password """
-from tools import logger,jsonconfig,encryption,strings,info
+import tools.logger
+import tools.jsonconfig
+import tools.encryption
+import tools.strings
+import tools.info
 
 EMPTY_PASSWORD = b"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" # empty password
 
-class UserConfig(jsonconfig.JsonConfig):
+class UserConfig(tools.jsonconfig.JsonConfig):
 	""" User configuration """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		self.user = b""
 		self.password = EMPTY_PASSWORD
 		if self.load() is False:
@@ -41,23 +45,23 @@ class User:
 		user = user.lower()
 
 		if User.instance.user == b"":
-			info.set_last_activity()
+			tools.info.set_last_activity()
 			return True
 		elif user == User.instance.user:
-			if encryption.gethash(password) == User.instance.password:
-				info.set_last_activity()
+			if tools.encryption.gethash(password) == User.instance.password:
+				tools.info.set_last_activity()
 				if log is True:
 					User.login_state[0] = True
 				return True
 			else:
 				if log is True:
 					User.login_state[0] = False
-					logger.syslog("Login failed, wrong password for user '%s'"%strings.tostrings(user), display=display)
+					tools.logger.syslog("Login failed, wrong password for user '%s'"%tools.strings.tostrings(user), display=display)
 		else:
 			if user != b"":
 				if log is True:
 					User.login_state[0] = False
-					logger.syslog("Login failed, unkwnon user '%s'"%strings.tostrings(user), display=display)
+					tools.logger.syslog("Login failed, unkwnon user '%s'"%tools.strings.tostrings(user), display=display)
 		return False
 
 	@staticmethod
@@ -88,7 +92,7 @@ class User:
 					User.instance.password = EMPTY_PASSWORD
 				else:
 					User.instance.user     = user
-					User.instance.password = encryption.gethash(new_password)
+					User.instance.password = tools.encryption.gethash(new_password)
 				User.instance.save()
 				return True
 			else:

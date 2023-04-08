@@ -4,11 +4,7 @@
 import os
 import sys
 import time
-
-try:
-	import fnmatch
-except:
-	from tools import fnmatch
+import tools.fnmatch
 
 try:
 	import uasyncio
@@ -223,7 +219,7 @@ def scandir(path, pattern, recursive, displayer=None):
 					filenames += fils
 					directories += dirs
 			else:
-				if fnmatch.fnmatch(name, pattern):
+				if tools.fnmatch.fnmatch(name, pattern):
 					if displayer:
 						displayer.show(filename)
 						filenames = [""]
@@ -260,7 +256,7 @@ async def ascandir(path, pattern, recursive, displayer=None):
 					filenames += fils
 					directories += dirs
 			else:
-				if fnmatch.fnmatch(name, pattern):
+				if tools.fnmatch.fnmatch(name, pattern):
 					if displayer:
 						displayer.show(filename)
 						filenames = [""]

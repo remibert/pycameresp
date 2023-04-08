@@ -4,31 +4,26 @@
 import sys
 import os
 import select
-try:
-	from tools import filesystem, strings, watchdog
-except:
-	# pylint:disable=multiple-imports
-	import strings,filesystem
-	if filesystem.ismicropython():
-		import watchdog
-
+import tools.filesystem
+import tools.strings
 
 MAXINT = 100000000
 
-if filesystem.ismicropython():
+if tools.filesystem.ismicropython():
+	import tools.watchdog
 	# pylint:disable=ungrouped-imports
 	# pylint:disable=consider-using-enumerate
 	def getch(raw = True, duration=MAXINT, interchar=0.05):
 		""" Wait a key pressed on keyboard and return it """
 		key = b""
-		watchdog.WatchDog.feed()
+		tools.watchdog.WatchDog.feed()
 		while 1:
 			if len(key) == 0:
 				delay = duration
 			else:
 				delay = interchar
 			keyPressed = kbhit(delay)
-			if strings.is_key_ended(key):
+			if tools.strings.is_key_ended(key):
 				break
 			if keyPressed:
 				key += sys.stdin.buffer.read(1)
@@ -41,7 +36,7 @@ if filesystem.ismicropython():
 		try:
 			key = key.decode("utf8")
 		except:
-			key = strings.dump(key,withColor=False)
+			key = tools.strings.dump(key,withColor=False)
 		return key
 
 	def kbhit(duration=0.01):

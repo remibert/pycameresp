@@ -4,13 +4,15 @@
 """ Manage the battery """
 import machine
 import uasyncio
-from tools import jsonconfig,logger,tasking
+import tools.jsonconfig
+import tools.logger
+import tools.tasking
 
-class AwakeConfig(jsonconfig.JsonConfig):
+class AwakeConfig(tools.jsonconfig.JsonConfig):
 	""" Awake configuration """
 	def __init__(self):
 		""" Constructor """
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 
 		# GPIO wake up
 		self.activated = False  # Wake up on GPIO status
@@ -43,12 +45,12 @@ class Awake:
 				import esp32
 				wake1 = machine.Pin(Awake.config.wake_up_gpio, mode=machine.Pin.IN, pull=machine.Pin.PULL_DOWN)
 				esp32.wake_on_ext0(pin = wake1, level = esp32.WAKEUP_ANY_HIGH)
-				logger.syslog("Pin wake up on %d"%Awake.config.wake_up_gpio)
+				tools.logger.syslog("Pin wake up on %d"%Awake.config.wake_up_gpio)
 			else:
-				logger.syslog("Pin wake up disabled")
+				tools.logger.syslog("Pin wake up disabled")
 			return True
 		except Exception as err:
-			logger.syslog(err,"Cannot set wake up")
+			tools.logger.syslog(err,"Cannot set wake up")
 		return False
 
 	@staticmethod
@@ -78,7 +80,7 @@ class Awake:
 		if Awake.config.activated:
 			Awake.awake_counter[0] -= 1
 			if Awake.awake_counter[0] <= 0:
-				logger.syslog("Sleep %d s"%Awake.config.sleep_duration)
+				tools.logger.syslog("Sleep %d s"%Awake.config.sleep_duration)
 
 				# Set the wake up on PIR detection
 				Awake.set_pin_wake_up()
@@ -90,4 +92,4 @@ class Awake:
 	@staticmethod
 	def start(**kwargs):
 		""" Start awake task """
-		tasking.Tasks.create_monitor(Awake.task, **kwargs)
+		tools.tasking.Tasks.create_monitor(Awake.task, **kwargs)

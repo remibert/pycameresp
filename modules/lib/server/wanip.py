@@ -2,13 +2,16 @@
 # Copyright (c) 2021 Remi BERTHOLET
 """ Get the wan ip address """
 import random
+import time
 import uasyncio
-import wifi
-from server.stream import *
-from server.httprequest import *
-from server.server import ServerConfig
-from server import notifier
-from tools import logger,strings,tasking
+import wifi.wifi
+import server.stream
+import server.httprequest
+import server.server
+import server.notifier
+import tools.logger
+import tools.strings
+import tools.tasking
 
 class WanIp:
 	""" Class to get the wan ip address """
@@ -23,24 +26,24 @@ class WanIp:
 		result = None
 		try:
 			streamio = None
-			reader,writer = await uasyncio.open_connection(strings.tostrings(host), port)
-			streamio = Stream(reader, writer)
-			req = HttpRequest(None)
-			req.set_path(strings.tobytes(path))
-			req.set_header(b"HOST",strings.tobytes(host))
+			reader,writer = await uasyncio.open_connection(tools.strings.tostrings(host), port)
+			streamio = server.stream.Stream(reader, writer)
+			req = server.httprequest.HttpRequest(None)
+			req.set_path(tools.strings.tobytes(path))
+			req.set_header(b"HOST",tools.strings.tobytes(host))
 			req.set_method(b"GET")
 			req.set_header(b"Accept"         ,b"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 			req.set_header(b"User-Agent"     ,b"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15")
 			req.set_header(b"Accept-Language",b"fr-FR,fr;q=0.9")
 			req.set_header(b"Connection"     ,b"keep-alive")
 			await req.send(streamio)
-			response = HttpResponse(streamio)
+			response = server.httprequest.HttpResponse(streamio)
 			await response.receive(streamio)
 			if response.status == b"200":
 				result = response.get_content().strip()
 
 		except Exception as err:
-			logger.syslog(err)
+			tools.logger.syslog(err)
 		finally:
 			if streamio:
 				await streamio.close()
@@ -50,7 +53,7 @@ class WanIp:
 	def init():
 		""" Initialisation task """
 		if WanIp.config is None:
-			WanIp.config = ServerConfig()
+			WanIp.config = server.server.ServerConfig()
 			WanIp.config.load_create()
 		else:
 			WanIp.config.refresh()
@@ -81,7 +84,7 @@ class WanIp:
 		# If wanip synchronization enabled
 		if WanIp.config.wanip:
 			# If the wan is present
-			if wifi.Wifi.is_wan_available():
+			if wifi.wifi.Wifi.is_wan_available():
 				if WanIp.last_sync + 86413 < time.time() or WanIp.last_sync == 0:
 					# Get wan ip
 					new_wan_ip = await WanIp.synchronize()
@@ -90,12 +93,12 @@ class WanIp:
 					if new_wan_ip is not None:
 						# If wan ip must be notified
 						if WanIp.wan_ip != new_wan_ip:
-							notifier.Notifier.daily_notify()
+							server.notifier.Notifier.daily_notify()
 						WanIp.wan_ip = new_wan_ip
-						wifi.Wifi.wan_connected()
+						wifi.wifi.Wifi.wan_connected()
 					else:
-						logger.syslog("Cannot get wan ip")
-						wifi.Wifi.wan_disconnected()
+						tools.logger.syslog("Cannot get wan ip")
+						wifi.wifi.Wifi.wan_disconnected()
 		else:
 			polling = 59
 
@@ -104,4 +107,4 @@ class WanIp:
 	@staticmethod
 	def start():
 		""" Start wanip synchronisation task """
-		tasking.Tasks.create_monitor(WanIp.task)
+		tools.tasking.Tasks.create_monitor(WanIp.task)

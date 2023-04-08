@@ -2,11 +2,10 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Mqtt messages classes """
-import binascii
-from io import BytesIO
-from wifi import hostname
-from server import stream
-from tools import strings
+import io
+import wifi.hostname
+import server.stream
+import tools.strings
 
 MQTT_UNDEFINED   = 0
 MQTT_CONNECT     = 1  # Client to Server                     : Client request to connect to Server
@@ -71,8 +70,8 @@ class MqttMessage:
 			self.header = None
 		else:
 			self.decode_header(kwargs.get("header"))
-		self.payload = BytesIO()
-		self.buffer = BytesIO()
+		self.payload = io.BytesIO()
+		self.buffer = io.BytesIO()
 
 	@staticmethod
 	def init():
@@ -189,7 +188,7 @@ class MqttMessage:
 			self.decode_header(await streamio.read(1))
 		length = await self.read_length(streamio)
 		if length > 0:
-			self.payload = BytesIO(await streamio.read(length))
+			self.payload = io.BytesIO(await streamio.read(length))
 		self.decode()
 
 	def put_string(self, data):
@@ -198,7 +197,7 @@ class MqttMessage:
 			if type(data) == type(0):
 				data = "%d"%data
 			self.put_int(len(data))
-			self.payload.write(strings.tobytes(data))
+			self.payload.write(tools.strings.tobytes(data))
 
 	def put_int(self, value):
 		""" Put integer on 2 bytes """
@@ -210,11 +209,11 @@ class MqttMessage:
 
 	def put_buffer(self, value):
 		""" Put binary buffer """
-		self.payload.write(strings.tobytes(value))
+		self.payload.write(tools.strings.tobytes(value))
 
 	def get_string(self):
 		""" Get the string with its length """
-		return strings.tostrings(self.payload.read(self.get_int()))
+		return tools.strings.tostrings(self.payload.read(self.get_int()))
 
 	def get_int(self):
 		""" Get integer on 2 bytes """
@@ -254,7 +253,7 @@ class MqttConnect(MqttMessage):
 		self.will_flag      = kwargs.get("will_flag",    False)
 		self.clean_session  = kwargs.get("clean_session",False)
 		self.keep_alive     = kwargs.get("keep_alive",   60)
-		self.client_id      = kwargs.get("client_id",    hostname.Hostname().get_hostname())
+		self.client_id      = kwargs.get("client_id",    wifi.hostname.Hostname().get_hostname())
 
 	def encode(self):
 		""" Encode the full message """
@@ -502,16 +501,16 @@ class MqttDisconnect(MqttMessage):
 		""" Constructor """
 		MqttMessage.__init__(self, control=MQTT_DISCONNECT, **kwargs)
 
-class MqttStream(stream.Stream):
+class MqttStream(server.stream.Stream):
 	""" Read and write stream for mqtt """
 	def __init__(self, reader, writer, **kwargs):
 		""" Constructor """
-		stream.Stream.__init__(self, reader, writer)
+		server.stream.Stream.__init__(self, reader, writer)
 		self.dump_activated = kwargs.get("dump",False)
 
 	async def read(self, length):
 		""" Read data from the stream """
-		result = await stream.Stream.read(self, length)
+		result = await server.stream.Stream.read(self, length)
 		if self.dump_activated:
 			if len(result) > 0:
 				print("  Read :")
@@ -524,23 +523,18 @@ class MqttStream(stream.Stream):
 			if len(data) > 0:
 				print("  Write :")
 				self.dump(data)
-		return await stream.Stream.write(self, data)
+		return await server.stream.Stream.write(self, data)
 
 	def dump(self, data):
 		""" Dump data """
 		width = 16
 		offset = 0
-		file = BytesIO()
+		file = io.BytesIO()
 		while True:
-			line = BytesIO()
+			line = io.BytesIO()
 			line.write(b'    %08X  ' % offset)
-			strings.dump_line(data[offset:offset+width], line, width)
+			tools.strings.dump_line(data[offset:offset+width], line, width)
 			offset += width
-			print(strings.tostrings(line.getvalue()))
+			print(tools.strings.tostrings(line.getvalue()))
 			if offset >= len(data):
 				break
-
-	async def close(self):
-		""" Close the stream """
-		self.writer.close()
-		self.reader.close()

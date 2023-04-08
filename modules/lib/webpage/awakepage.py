@@ -1,23 +1,24 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ Function define the web page to configure the awake """
-from server.httpserver import HttpServer
+import server.httpserver
 from htmltemplate      import *
-from webpage.mainpage  import main_frame, manage_default_button
-from tools             import awake, lang
+import webpage.mainpage
+import tools.awake
+import tools.lang
 
-@HttpServer.add_route(b'/wakeup', menu=lang.menu_system, item=lang.item_wakeup)
+@server.httpserver.HttpServer.add_route(b'/wakeup', menu=tools.lang.menu_system, item=tools.lang.item_wakeup)
 async def wakeup(request, response, args):
 	""" Wake uo configuration web page """
-	config = awake.AwakeConfig()
-	disabled, action, submit = manage_default_button(request, config)
+	config = tools.awake.AwakeConfig()
+	disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
 
-	page = main_frame(request, response, args, lang.gpio_wake_up,
+	page = webpage.mainpage.main_frame(request, response, args, tools.lang.gpio_wake_up,
 		Form([
-			Switch(text=lang.activated,       name=b"activated",     checked=config.activated, disabled=disabled),
-			Edit(text=lang.gpio_used_wake_up, name=b"wake_up_gpio",     placeholder=lang.gpio_connected_to_pir, pattern=b"[0-9]*[0-9]", value=b"%d"%config.wake_up_gpio,    disabled=disabled),
-			Edit(text=lang.awake_duration_in, name=b"awake_duration",  placeholder=lang.duration_awake,        pattern=b"[0-9]*[0-9]", value=b"%d"%config.awake_duration, disabled=disabled),
-			Edit(text=lang.sleep_duration_in, name=b"sleep_duration",  placeholder=lang.duration_sleep,        pattern=b"[0-9]*[0-9]", value=b"%d"%config.sleep_duration, disabled=disabled),
+			Switch(text=tools.lang.activated,       name=b"activated",     checked=config.activated, disabled=disabled),
+			Edit(text=tools.lang.gpio_used_wake_up, name=b"wake_up_gpio",     placeholder=tools.lang.gpio_connected_to_pir, pattern=b"[0-9]*[0-9]", value=b"%d"%config.wake_up_gpio,    disabled=disabled),
+			Edit(text=tools.lang.awake_duration_in, name=b"awake_duration",  placeholder=tools.lang.duration_awake,        pattern=b"[0-9]*[0-9]", value=b"%d"%config.awake_duration, disabled=disabled),
+			Edit(text=tools.lang.sleep_duration_in, name=b"sleep_duration",  placeholder=tools.lang.duration_sleep,        pattern=b"[0-9]*[0-9]", value=b"%d"%config.sleep_duration, disabled=disabled),
 			submit
 		]))
 	await response.send_page(page)

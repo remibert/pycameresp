@@ -1,28 +1,29 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
 """ All web pages defined here """
-from webpage.passwordpage       import *
-from webpage.mainpage           import *
-from webpage.changepasswordpage import *
-from webpage.infopage           import *
-from webpage.pushoverpage       import *
-from webpage.serverpage         import *
-from webpage.wifipage           import *
-from webpage.regionpage         import *
-from webpage.presencepage       import *
-from webpage.awakepage          import *
-from webpage.systempage         import *
-from webpage.webhookpage        import *
-from webpage.mqttpage           import *
-from tools                      import info,support
+import webpage.passwordpage
+import webpage.mainpage
+import webpage.changepasswordpage
+import webpage.infopage
+import webpage.pushoverpage
+import webpage.serverpage
+import webpage.wifipage
+import webpage.regionpage
+import webpage.presencepage
+import webpage.awakepage
+import webpage.systempage
+import webpage.webhookpage
+import webpage.mqttpage
+import tools.info
+import tools.support
 
-if support.battery():
+if tools.support.battery():
 	# pylint:disable=ungrouped-imports
-	from webpage.batterypage        import *
+	import webpage.batterypage
 
-if info.iscamera():
+if tools.info.iscamera():
 	# pylint:disable=ungrouped-imports
-	from webpage.streamingpage  import *
-	from webpage.camerapage     import *
-	from webpage.historicpage   import *
-	from webpage.motionpage     import *
+	import webpage.streamingpage
+	import webpage.camerapage
+	import webpage.historicpage
+	import webpage.motionpage

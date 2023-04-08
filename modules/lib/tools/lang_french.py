@@ -225,4 +225,3 @@ mqtt_host                               = b"Host ou addresse ip"
 mqtt_port                               = b"Port"
 mqtt_password                           = b"Mot de passe"
 mqtt_username                           = b"Nom d'utilisateur"
-

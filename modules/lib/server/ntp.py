@@ -3,10 +3,13 @@
 # pylint:disable=consider-using-f-string
 """ Manage server class """
 import time
-import wifi
+import wifi.wifi
 import uasyncio
-from server import server, timesetting
-from tools import logger,region,tasking
+import server.server
+import server.timesetting
+import tools.logger
+import tools.region
+import tools.tasking
 
 class Ntp:
 	""" Internal clock synchronization """
@@ -18,14 +21,14 @@ class Ntp:
 	def init():
 		""" Initialise time synchronisation """
 		if Ntp.region_config is None:
-			Ntp.region_config = region.RegionConfig()
+			Ntp.region_config = tools.region.RegionConfig()
 			Ntp.region_config.load_create()
-			timesetting.set_time(Ntp.region_config.current_time)
+			server.timesetting.set_time(Ntp.region_config.current_time)
 		else:
 			Ntp.region_config.refresh()
 
 		if Ntp.server_config is None:
-			Ntp.server_config = server.ServerConfig()
+			Ntp.server_config = server.server.ServerConfig()
 			Ntp.server_config.load_create()
 		else:
 			Ntp.server_config.refresh()
@@ -34,15 +37,15 @@ class Ntp:
 	async def synchronize():
 		""" Synchronize time """
 		updated = False
-		logger.syslog("Synchronize time")
+		tools.logger.syslog("Synchronize time")
 
 		# Try many time
 		for i in range(3):
 			# Keep old date
-			oldTime = time.time()
+			old_time = time.time()
 
 			# Read date from ntp server
-			current_time = timesetting.set_date(Ntp.region_config.offset_time, dst=Ntp.region_config.dst, display=False)
+			current_time = server.timesetting.set_date(Ntp.region_config.offset_time, dst=Ntp.region_config.dst, display=False)
 
 			# If date get
 			if current_time > 0:
@@ -51,17 +54,17 @@ class Ntp:
 				Ntp.region_config.save()
 
 				# If clock changed
-				if abs(oldTime - current_time) > 1:
+				if abs(old_time - current_time) > 1:
 					# Log difference
-					logger.syslog("Time synchronized delta=%ds"%(current_time-oldTime))
+					tools.logger.syslog("Time synchronized delta=%ds"%(current_time-old_time))
 				updated = True
 				break
 			else:
 				await uasyncio.sleep(1)
 		if updated:
-			wifi.Wifi.wan_connected()
+			wifi.wifi.Wifi.wan_connected()
 		else:
-			wifi.Wifi.wan_disconnected()
+			wifi.wifi.Wifi.wan_disconnected()
 		return updated
 
 	@staticmethod
@@ -73,7 +76,7 @@ class Ntp:
 		# If ntp synchronization enabled
 		if Ntp.server_config.ntp:
 			# If the wan is present
-			if wifi.Wifi.is_wan_available():
+			if wifi.wifi.Wifi.is_wan_available():
 				if Ntp.last_sync + 21601 < time.time() or Ntp.last_sync == 0:
 					if await Ntp.synchronize():
 						Ntp.last_sync = time.time()
@@ -91,6 +94,6 @@ class Ntp:
 		""" Start time synchronisation task """
 		Ntp.init()
 		if Ntp.server_config.ntp:
-			tasking.Tasks.create_monitor(Ntp.task)
+			tools.tasking.Tasks.create_monitor(Ntp.task)
 		else:
-			logger.syslog("Ntp synchronization disabled in config")
+			tools.logger.syslog("Ntp synchronization disabled in config")

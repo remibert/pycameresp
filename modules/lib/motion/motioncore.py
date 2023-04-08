@@ -6,19 +6,26 @@ from gc import collect
 import sys
 import time
 import uasyncio
-import video
-from server.notifier import Notifier
-from server.presence import Presence
-from server.webhook  import WebhookConfig
-from motion.historic import Historic
-from video.video     import Camera
-from tools import logger,jsonconfig,lang,linearfunction,tasking,strings,filesystem,date,topic
+import video.video
+import server.notifier
+import server.presence
+import server.webhook
+import motion.historic
+import tools.logger
+import tools.jsonconfig
+import tools.lang
+import tools.linearfunction
+import tools.tasking
+import tools.strings
+import tools.filesystem
+import tools.date
+import tools.topic
 
 STATE_DURATION = 30
-class MotionConfig(jsonconfig.JsonConfig):
+class MotionConfig(tools.jsonconfig.JsonConfig):
 	""" Configuration class of motion detection """
 	def __init__(self):
-		jsonconfig.JsonConfig.__init__(self)
+		tools.jsonconfig.JsonConfig.__init__(self)
 		# Indicates if the motion is activated
 		self.activated = False
 
@@ -64,17 +71,17 @@ class ImageMotion:
 	baseIndex = [0]
 	motionBaseId = [0]
 	created = [0]
-	def __init__(self, motion, config):
+	def __init__(self, motion_, config):
 		""" Constructor """
-		self.motion = motion
+		self.motion = motion_
 		self.baseIndex[0] += 1
 		self.created[0] += 1
 		self.index    = self.baseIndex[0]
 		self.filename = None
 		self.motion_id = None
-		self.date     = date.date_to_string()
-		self.filename = date.date_to_filename()
-		path = date.date_to_path()
+		self.date     = tools.date.date_to_string()
+		self.filename = tools.date.date_to_filename()
+		path = tools.date.date_to_path()
 		if path[-1] in [0x30,0x31,0x32,0x33,0x34]:
 			path = path[:-1] + b"0"
 		else:
@@ -113,7 +120,7 @@ class ImageMotion:
 
 	def get_message(self):
 		""" Get the message of motion """
-		return "%s %s D=%d"%(strings.tostrings(lang.motion_detected), self.date[-8:], self.get_diff_count())
+		return "%s %s D=%d"%(tools.strings.tostrings(tools.lang.motion_detected), self.date[-8:], self.get_diff_count())
 
 	def get_informations(self):
 		""" Return the informations of motion """
@@ -130,7 +137,7 @@ class ImageMotion:
 
 	async def save(self):
 		""" Save the image on sd card """
-		return await Historic.add_motion(strings.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
+		return await motion.historic.Historic.add_motion(tools.strings.tostrings(self.path), self.get_filename(), self.motion.get_image(), self.get_informations())
 
 	def compare(self, previous):
 		""" Compare two motion images to get differences """
@@ -183,10 +190,10 @@ class ImageMotion:
 	def refresh_config(self):
 		""" Refresh the motion detection configuration """
 		if self.motion is not None:
-			mask = strings.tobytes(self.config.mask)
+			mask = tools.strings.tobytes(self.config.mask)
 			if not b"/" in mask:
 				mask = b""
-			errorLight = linearfunction.get_fx(self.config.sensitivity, linearfunction.get_linear(100,8,0,64))
+			errorLight = tools.linearfunction.get_fx(self.config.sensitivity, tools.linearfunction.get_linear(100,8,0,64))
 			self.motion.configure(\
 				{
 					"mask":mask,
@@ -253,50 +260,50 @@ class MotionCore:
 
 	def open(self):
 		""" Open camera """
-		if video.Camera.open():
+		if video.video.Camera.open():
 			return True
 		else:
 			return False
 
 	def resume(self):
 		""" Resume the camera, restore the camera configuration after an interruption """
-		video.Camera.framesize(b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height))
-		video.Camera.pixformat(b"JPEG")
-		video.Camera.quality(self.quality)
-		video.Camera.brightness(0)
-		video.Camera.contrast(0)
-		video.Camera.saturation(0)
-		video.Camera.hmirror(0)
-		video.Camera.vflip(0)
-		video.Camera.flash(self.flash_level)
+		video.video.Camera.framesize(b"%dx%d"%(SnapConfig.get().width, SnapConfig.get().height))
+		video.video.Camera.pixformat(b"JPEG")
+		video.video.Camera.quality(self.quality)
+		video.video.Camera.brightness(0)
+		video.video.Camera.contrast(0)
+		video.video.Camera.saturation(0)
+		video.video.Camera.hmirror(0)
+		video.video.Camera.vflip(0)
+		video.video.Camera.flash(self.flash_level)
 
 		detected, change_polling = self.detect(False)
 		if detected is False:
 			self.cleanup()
 
-	def manage_flash(self, motion):
+	def manage_flash(self, motion_):
 		""" Manage the flash level is low light """
 		# Light can be compensed with flash led
 		if self.config.light_compensation:
 			# If it has enough light
-			if motion.get_light() >= 50:
+			if motion_.get_light() >= 50:
 				# If flash led working
 				if self.flash_level > 8:
 					# Reduce light of flash led
 					self.flash_level -= 2
-					video.Camera.flash(self.flash_level)
+					video.video.Camera.flash(self.flash_level)
 			# If it has not enough light
-			elif motion.get_light() <= 40:
+			elif motion_.get_light() <= 40:
 				# If flash to low
 				if self.flash_level <= 192:
 					# Increase the light of flash led
 					self.flash_level += 2
-					video.Camera.flash(self.flash_level)
+					video.video.Camera.flash(self.flash_level)
 			# If low level for flash
 			if self.flash_level < 8:
 				# Show motion started indicator
 				self.flash_level = 8
-				video.Camera.flash(self.flash_level)
+				video.video.Camera.flash(self.flash_level)
 		else:
 			self.stop_light()
 
@@ -315,14 +322,14 @@ class MotionCore:
 
 				# Save image to sdcard
 				if await image.save() is False:
-					Notifier.notify(topic=topic.information, message=lang.failed_to_save, enabled=self.config.notify)
+					server.notifier.Notifier.notify(topic=tools.topic.information, message=tools.lang.failed_to_save, enabled=self.config.notify)
 			else:
 				# Destroy image
 				self.deinit_image(image)
 
-		motion = video.Camera.motion()
-		self.manage_flash(motion)
-		image = ImageMotion(motion, self.config)
+		motion_ = video.video.Camera.motion()
+		self.manage_flash(motion_)
+		image = ImageMotion(motion_, self.config)
 		if self.must_refresh_config:
 			image.refresh_config()
 			self.must_refresh_config = False
@@ -336,7 +343,7 @@ class MotionCore:
 		if self.flash_level > 0:
 			# Stop flash led
 			self.flash_level = 0
-			video.Camera.flash(self.flash_level)
+			video.video.Camera.flash(self.flash_level)
 
 	def refresh_config(self):
 		""" Force the refresh of motion configuration """
@@ -371,13 +378,13 @@ class MotionCore:
 				if self.quality < 63:
 					self.quality += 1
 					changed = True
-					video.Camera.quality(self.quality, False)
+					video.video.Camera.quality(self.quality, False)
 			else:
 				if self.quality >= 1:
 					if size < 50*1024:
 						self.quality -= 1
 						changed = True
-						video.Camera.quality(self.quality, False)
+						video.video.Camera.quality(self.quality, False)
 			if changed is False:
 				if self.previous_quality != self.quality:
 					self.previous_quality = self.quality
@@ -437,8 +444,8 @@ class MotionCore:
 						index = image.index
 					diffs += b"%d:%d%s%s"%(image.get_motion_id(), image.get_diff_count(), (0x41 + ((256-image.get_diff_histo())//10)).to_bytes(1, 'big'), trace)
 			if display:
-				line = b"\r%s %s L%d (%d) "%(date.time_to_html(seconds=True), bytes(diffs), mean_light, index)
-				if filesystem.ismicropython():
+				line = b"\r%s %s L%d (%d) "%(tools.date.time_to_html(seconds=True), bytes(diffs), mean_light, index)
+				if tools.filesystem.ismicropython():
 					sys.stdout.write(line)
 				else:
 					sys.stdout.write(line.decode("utf8"))
@@ -515,7 +522,7 @@ class Detection:
 		# Open motion configuration
 		self.motion_config      = MotionConfig()
 		self.motion_config.load_create()
-		self.webhook_config      = WebhookConfig()
+		self.webhook_config      = server.webhook.WebhookConfig()
 		self.webhook_config.load_create()
 
 	def refresh_config(self):
@@ -523,12 +530,12 @@ class Detection:
 		if self.refresh_config_counter % 11 == 0:
 			# If configuration changed
 			if self.motion_config.refresh():
-				logger.syslog("Change motion config %s"%self.motion_config.to_string(), display=False)
+				tools.logger.syslog("Change motion config %s"%self.motion_config.to_string(), display=False)
 				if self.motion:
 					self.motion.refresh_config()
 			# If configuration changed
 			if self.webhook_config.refresh():
-				logger.syslog("Change webhook config %s"%self.webhook_config.to_string(), display=False)
+				tools.logger.syslog("Change webhook config %s"%self.webhook_config.to_string(), display=False)
 				if self.motion:
 					self.motion.refresh_config()
 
@@ -536,13 +543,13 @@ class Detection:
 
 	async def run(self):
 		""" Main asynchronous task """
-		await tasking.Tasks.monitor(self.detect)
+		await tools.tasking.Tasks.monitor(self.detect)
 
 	async def detect(self):
 		""" Detect motion """
 		result = False
 		# Wait the server resume
-		await tasking.Tasks.wait_resume(name="motion")
+		await tools.tasking.Tasks.wait_resume(name="motion")
 
 		# Release previously alocated image
 		self.release_image()
@@ -577,7 +584,7 @@ class Detection:
 			# If motion must be suspended on presence
 			if self.motion_config.suspend_on_presence:
 				# If home is empty
-				if Presence.is_detected() is False:
+				if server.presence.Presence.is_detected() is False:
 					result = True
 			else:
 				result = True
@@ -588,13 +595,13 @@ class Detection:
 			collect()
 
 			if result:
-				Notifier.notify(topic=topic.motion_detection, value=topic.value_on, message=lang.motion_detection_on, enabled=self.motion_config.notify_state)
+				server.notifier.Notifier.notify(topic=tools.topic.motion_detection, value=tools.topic.value_on, message=tools.lang.motion_detection_on, enabled=self.motion_config.notify_state)
 			else:
-				Notifier.notify(topic=topic.motion_detection, value=topic.value_off, message=lang.motion_detection_off, enabled=self.motion_config.notify_state)
+				server.notifier.Notifier.notify(topic=tools.topic.motion_detection, value=tools.topic.value_off, message=tools.lang.motion_detection_off, enabled=self.motion_config.notify_state)
 			self.activated = result
 
 		# If camera activated and motion activated
-		if Camera.is_activated() and result:
+		if video.video.Camera.is_activated() and result:
 			result = True
 		else:
 			result = False
@@ -630,10 +637,10 @@ class Detection:
 				firstInit = True
 
 		# If the camera configuration changed
-		if video.Camera.is_modified() or firstInit:
+		if video.video.Camera.is_modified() or firstInit:
 			# Restore motion configuration
 			self.motion.resume()
-			video.Camera.clear_modified()
+			video.video.Camera.clear_modified()
 
 	def release_image(self):
 		""" Release motion image allocated """
@@ -649,18 +656,18 @@ class Detection:
 
 		# If camera not stabilized speed start
 		if self.motion and self.motion.is_stabilized() is True:
-			frequency = self.polling_frequency*500 if tasking.Tasks.is_slow() else self.polling_frequency
+			frequency = self.polling_frequency*500 if tools.tasking.Tasks.is_slow() else self.polling_frequency
 			if frequency > 1000:
 				while frequency > 0:
 					await uasyncio.sleep_ms(500)
 					frequency -= 500
-					await tasking.Tasks.wait_resume(name="motion")
+					await tools.tasking.Tasks.wait_resume(name="motion")
 			else:
 				await uasyncio.sleep_ms(frequency)
 
 		try:
 			# Waits for the camera's availability
-			reserved = await video.Camera.reserve(self, timeout=1)
+			reserved = await video.video.Camera.reserve(self, timeout=1)
 
 			# If reserved
 			if reserved:
@@ -679,22 +686,22 @@ class Detection:
 					# If no previous detection
 					if self.last_detection == 0:
 						# Send motion detected
-						Notifier.notify(topic=topic.motion_detected, value=topic.value_on, url=self.webhook_config.motion_detected)
+						server.notifier.Notifier.notify(topic=tools.topic.motion_detected, value=tools.topic.value_on, url=self.webhook_config.motion_detected)
 
 					self.last_detection = int(time.time())
 
 					# If the notifications are not too frequent
 					if self.cadencer.can_notify():
-						Notifier.notify(topic=topic.motion_image, message=message, data=image.get(), enabled=self.motion_config.notify)
+						server.notifier.Notifier.notify(topic=tools.topic.motion_image, message=message, data=image.get(), enabled=self.motion_config.notify)
 					else:
-						logger.syslog("Notification '%s' too frequent ignored" %message)
+						tools.logger.syslog("Notification '%s' too frequent ignored" %message)
 				else:
 					# If motion detected recently
 					if self.last_detection > 0:
 						# If no more motion detection
 						if self.last_detection + STATE_DURATION < int(time.time()):
 							# Send webhook no motion detected
-							Notifier.notify(topic=topic.motion_detected, value=topic.value_off, url=self.webhook_config.no_motion_detected)
+							server.notifier.Notifier.notify(topic=tools.topic.motion_detected, value=tools.topic.value_off, url=self.webhook_config.no_motion_detected)
 							self.last_detection = 0
 				# Detect motion
 				detected, change_polling = self.motion.detect()
@@ -703,21 +710,21 @@ class Detection:
 				if change_polling is True:
 					# Speed up the polling frequency
 					self.polling_frequency = 10
-					Historic.set_motion_state(True)
+					motion.historic.Historic.set_motion_state(True)
 				else:
 					# Slow down the polling frequency
 					self.polling_frequency = 50
-					Historic.set_motion_state(False)
+					motion.historic.Historic.set_motion_state(False)
 				result = True
 			else:
 				if self.last_notification_suspended + 120 < int(time.time()):
 					self.last_notification_suspended = int(time.time())
-					Notifier.notify(topic=topic.motion_detection, value=topic.value_suspended, message=lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
+					server.notifier.Notifier.notify(topic=tools.topic.motion_detection, value=tools.topic.value_suspended, message=tools.lang.motion_detection_suspended, enabled=self.motion_config.notify_state)
 				result = True
 
 		finally:
 			if reserved:
-				await video.Camera.unreserve(self)
+				await video.video.Camera.unreserve(self)
 		return result
 
 class MovingCounters:
