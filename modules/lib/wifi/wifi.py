@@ -37,6 +37,7 @@ class Wifi:
 	""" Class to manage the wifi station and access point """
 	context = WifiContext()
 	config = None
+	polling = 0
 
 	@staticmethod
 	def init():
@@ -205,7 +206,10 @@ class Wifi:
 							Wifi.set_state(WIFI_CLOSE)
 					else:
 						if wifi.station.Station.is_activated():
-							tools.logger.syslog("Wifi SSID and password not yet configured")
+							if Wifi.polling % 60 == 0:
+								tools.logger.syslog("Wifi SSID and password not yet configured")
+							Wifi.polling += 1
+
 				else:
 					duration = 63000
 

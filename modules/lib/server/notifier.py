@@ -15,6 +15,7 @@ import tools.info
 import tools.lang
 import tools.date
 import tools.topic
+import tools.filesystem
 
 class Notification:
 	""" Notification message """
@@ -128,7 +129,10 @@ class Notifier:
 	@staticmethod
 	async def flush():
 		""" Flush postponed message if wan connected """
-		sleep_duration = 127
+		if tools.filesystem.ismicropython():
+			sleep_duration = 127
+		else:
+			sleep_duration = 3
 
 		# If wan available
 		if wifi.wifi.Wifi.is_wan_available():

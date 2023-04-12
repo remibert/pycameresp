@@ -244,7 +244,8 @@ try:
 except:
 	def ticks():
 		""" Count tick elapsed from start """
-		return (int)(time.time() * 1000)
+		result = time.process_time_ns() // 1000_000
+		return result
 
 def ticks_to_string():
 	""" Create a string with tick in seconds """

@@ -10,11 +10,11 @@ import fileuploader
 import streamdevice
 import vt100
 import esptool
-sys.path.append("../../modules/lib/tools")
+sys.path.append("../../modules/lib")
 # pylint:disable=consider-using-f-string
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
-from strings import get_utf8_length
+from tools.strings import get_utf8_length
 
 class Flasher(threading.Thread):
 	""" Micropython firmware flasher for esp32 """
@@ -172,7 +172,7 @@ class Flasher(threading.Thread):
 				flash_command = base_command[:] + [ "write_flash", "-z", address, firmware]
 				print("esptool.py %s" % " ".join(flash_command))
 				esptool.main(flash_command)
-				print("\n"+vt100.COLOR_OK+"Flashed with success. Remove strap and press reset button"+vt100.COLOR_NONE)
+				print("\n"+vt100.COLOR_OK+"Flashed with success."+vt100.COLOR_NONE)
 		except Exception as err:
 			print("\n"+vt100.COLOR_FAILED+"Flash failed"+vt100.COLOR_NONE)
 

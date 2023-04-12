@@ -36,13 +36,10 @@ class WebHook:
 		if config.load() is False:
 			config.save()
 
+		result = True
 		if config.activated or notification.forced and notification.url is not None:
 			if WebHook.notify_message not in notification.sent:
 				result = await server.httpclient.HttpClient.request(method=b"GET", url=notification.url)
 				if result is True:
 					notification.sent.append(WebHook.notify_message)
-			else:
-				result = None
-		else:
-			result = None
 		return result

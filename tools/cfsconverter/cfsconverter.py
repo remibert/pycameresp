@@ -14,7 +14,7 @@ sys.path.append("../../modules/lib/tools")
 # pylint:disable=import-error
 # pylint:disable=consider-using-f-string
 # pylint:disable=unspecified-encoding
-from exchange import FileReader, FileWriter
+from tools.exchange import FileReader, FileWriter
 
 def printing(data, end=""):
 	""" Printing function """

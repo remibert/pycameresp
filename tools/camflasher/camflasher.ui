@@ -409,7 +409,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>24</height>
+     <height>37</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_flasher">
@@ -434,15 +434,7 @@
     </property>
     <addaction name="action_about"/>
    </widget>
-   <widget class="QMenu" name="menu_upload">
-    <property name="title">
-     <string>Upload</string>
-    </property>
-    <addaction name="action_upload_shell"/>
-    <addaction name="action_upload_server"/>
-   </widget>
    <addaction name="menu_flasher"/>
-   <addaction name="menu_upload"/>
    <addaction name="menu_console"/>
    <addaction name="menu_info"/>
   </widget>

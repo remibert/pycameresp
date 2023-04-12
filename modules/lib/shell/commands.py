@@ -65,6 +65,7 @@ import tools.lang
 import tools.date
 import tools.console
 import tools.system
+import tools.archiver
 
 shell_commands = None
 

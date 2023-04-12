@@ -35,10 +35,6 @@ def start(**kwargs):
 	import tools.info
 	import tools.support
 
-	# Manage the periodic task (periodic garbage collection and watchdog)
-	import server.periodic
-	server.periodic.Periodic.start(**kwargs)
-
 	if kwargs.get("awake",False):
 		# Manage the awake of device
 		import tools.awake
@@ -47,10 +43,9 @@ def start(**kwargs):
 	else:
 		pin_wake_up = False
 
-	# Manage the battery level
-	if kwargs.get("battery",False) and tools.support.battery():
-		import tools.battery
-		tools.battery.Battery.start()
+	# Manage the periodic task (periodic garbage collection and watchdog)
+	import server.periodic
+	server.periodic.Periodic.start(**kwargs)
 
 	# Manage the network task
 	if  kwargs.get("mqtt",False)     or kwargs.get("ntp",False) or kwargs.get("http",False) or \
@@ -60,6 +55,66 @@ def start(**kwargs):
 		# Manage the wifi task
 		import wifi.wifi
 		wifi.wifi.Wifi.start()
+
+	# If camera is available (required specific firmware)
+	if tools.info.iscamera() and (kwargs.get("motion",False) or kwargs.get("camera",False)) :
+		import video.video
+		if video.video.Camera.is_activated():
+			device = kwargs.get("device","ESP32CAM")
+			if device == "ESP32ONE":
+				import tools.sdcard
+
+				# ESP32ONE device
+				video.video.Camera.gpio_config(
+					pin_pwdn=32, pin_reset=-1, pin_xclk=4, pin_sscb_sda=18, pin_sscb_scl=23,
+					pin_d7=36, pin_d6=37, pin_d5=38, pin_d4=39,
+					pin_d3=35, pin_d2=14, pin_d1=13, pin_d0=34,
+					pin_vsync=5, pin_href=27, pin_pclk=25, xclk_freq_hz=20000000,
+					ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=12, fb_count=1, flash_led=0)
+				tools.sdcard.SdCard.set_slot(slot=None) # The slot is good but not working I don't know why
+			elif device == "M5CAMERA-B":
+				# ESP32ONE device
+				video.video.Camera.gpio_config(
+					pin_pwdn=-1, pin_reset=15, pin_xclk=27, pin_sscb_sda=22, pin_sscb_scl=23,
+					pin_d7=19, pin_d6=36, pin_d5=18, pin_d4=39,
+					pin_d3=5,  pin_d2=34, pin_d1=35, pin_d0=32,
+					pin_vsync=25, pin_href=26, pin_pclk=21, xclk_freq_hz=20000000, ledc_timer=0,
+					ledc_channel=0 , pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
+				tools.sdcard.SdCard.set_slot(slot=None) # No sdcard available
+			else:
+				# ESP32CAM default configuration
+				pass
+
+			# Start camera before wifi to avoid problems
+			video.video.Camera.open()
+
+			# If motion detection activated
+			if kwargs.get("motion",False):
+				# Manage motion detection history
+				import motion.historic
+				motion.historic.Historic.start()
+
+				# Manage motion detection
+				import motion.motion
+				motion.motion.Motion.start(pin_wake_up=pin_wake_up)
+
+				# Detects the presence of occupants in the house
+				import server.presence
+				server.presence.Presence.start()
+
+				# If http server started
+				if kwargs.get("http",False):
+					import server.httpserver
+					# Start streaming http server
+					args = kwargs.copy()
+					args["name"] = "HttpStreaming"
+					args["http_port"] = kwargs.get("http_port",80)+1
+					server.httpserver.HttpServer.start(**args)
+
+	# Manage the battery level
+	if kwargs.get("battery",False) and tools.support.battery():
+		import tools.battery
+		tools.battery.Battery.start()
 
 	if kwargs.get("pushover",False) or kwargs.get("mqtt",False) or kwargs.get("webhook", False):
 		# Manage the notifier task
@@ -90,14 +145,14 @@ def start(**kwargs):
 	# Manage the ftp server (ftp_port=21)
 	if kwargs.get("ftp",False):
 		import server.ftpserver
-		server.ftpserver.Ftp.start(**kwargs)
+		server.ftpserver.FtpServer.start(**kwargs)
 
 	# Manage the telnet server (telnet_port=23)
 	if kwargs.get("telnet",False) and tools.support.telnet():
 		import server.telnet
 		server.telnet.Telnet.start(**kwargs)
 
-	# Manage the mqtt client
+	# Manage the mqtt client and mqtt notification
 	if kwargs.get("mqtt",False):
 		import server.mqttclient
 		server.mqttclient.MqttClient.start(**kwargs)
@@ -116,60 +171,6 @@ def start(**kwargs):
 	if kwargs.get("shell",False):
 		import shell.shelltask
 		shell.shelltask.Shell.start()
-
-	# If camera is available (required specific firmware)
-	if tools.info.iscamera() and (kwargs.get("motion",False) or kwargs.get("camera",False)) :
-		import video.video
-		if video.video.Camera.is_activated():
-			device = kwargs.get("device","ESP32CAM")
-			if device == "ESP32ONE":
-				import tools.sdcard
-
-				# ESP32ONE device
-				video.video.Camera.gpio_config(
-					pin_pwdn=32, pin_reset=-1, pin_xclk=4, pin_sscb_sda=18, pin_sscb_scl=23,
-					pin_d7=36, pin_d6=37, pin_d5=38, pin_d4=39,
-					pin_d3=35, pin_d2=14, pin_d1=13, pin_d0=34,
-					pin_vsync=5, pin_href=27, pin_pclk=25, xclk_freq_hz=20000000,
-					ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=12, fb_count=1, flash_led=0)
-				tools.sdcard.SdCard.set_slot(slot=None) # The slot is good but not working I don't know why
-			elif device == "M5CAMERA-B":
-				# ESP32ONE device
-				video.video.Camera.gpio_config(
-					pin_pwdn=-1, pin_reset=15, pin_xclk=27, pin_sscb_sda=22, pin_sscb_scl=23,
-					pin_d7=19, pin_d6=36, pin_d5=18,  pin_d4=39,
-					pin_d3=5,  pin_d2=34, pin_d1= 35, pin_d0=32,
-					pin_vsync=25, pin_href=26, pin_pclk=21, xclk_freq_hz=20000000, ledc_timer=0,
-					ledc_channel=0 , pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
-				tools.sdcard.SdCard.set_slot(slot=None) # No sdcard available
-			else:
-				# ESP32CAM default configuration
-				pass
-
-			# Start camera before wifi to avoid problems
-			video.video.Camera.open()
-
-			# If motion detection activated
-			if kwargs.get("motion",False):
-				# Manage motion detection history
-				import motion.historic
-				motion.historic.Historic.start()
-
-				# Manage motion detection
-				import motion.motion
-				motion.motion.Motion.start(pin_wake_up=pin_wake_up)
-
-				# Detects the presence of occupants in the house
-				import server.presence
-				server.presence.Presence.start()
-
-				# If http server started
-				if kwargs.get("http",False):
-					# Start streaming http server
-					args = kwargs.copy()
-					args["name"] = "HttpStreaming"
-					args["http_port"] = kwargs.get("http_port",80)+1
-					server.httpserver.HttpServer.start(**args)
 
 	# Run all asynchronous tasks
 	import tools.tasking

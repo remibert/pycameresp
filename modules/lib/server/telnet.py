@@ -16,7 +16,7 @@ class TelnetServerInstance(tools.tasking.ServerInstance):
 	def __init__(self, **kwargs):
 		tools.tasking.ServerInstance.__init__(self, **kwargs)
 
-	def start_server(self):
+	def start(self):
 		""" Start server """
 		port = self.kwargs.get("telnet_port",23)
 		if tools.support.telnet():

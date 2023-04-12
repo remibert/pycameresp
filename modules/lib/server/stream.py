@@ -13,9 +13,9 @@ class Stream:
 		self.writer = writer
 		self.buffer = b""
 		if tools.filesystem.ismicropython():
-			self.close      = self.close_mic
-			self.awrite     = self.awrite_mic
-			self.is_closing = self.is_closing_mic
+			self.close      = self.close_mcp
+			self.awrite     = self.awrite_mcp
+			self.is_closing = self.is_closing_mcp
 		else:
 			self.close      = self.close_pc
 			self.awrite     = self.awrite_pc
@@ -65,7 +65,7 @@ class Stream:
 			result = -1
 		return result
 
-	async def awrite_mic(self, data):
+	async def awrite_mcp(self, data):
 		""" Awrite micropython """
 		return await self.writer.awrite(data)
 
@@ -73,7 +73,7 @@ class Stream:
 		""" Awrite micropython """
 		return self.writer.write(data)
 
-	async def close_mic(self):
+	async def close_mcp(self):
 		""" Close the stream """
 		await self.writer.aclose()
 
@@ -85,7 +85,7 @@ class Stream:
 		""" Check if it closed """
 		return self.writer.is_closing()
 
-	def is_closing_mic(self):
+	def is_closing_mcp(self):
 		""" Check if it closed """
 		return False
 
@@ -111,7 +111,6 @@ class Socket:
 		""" Close the stream """
 		self.socket.close()
 
-
 class Bytesio:
 	""" Class stream which wrap BytesIO """
 	def __init__(self):
@@ -129,7 +128,6 @@ class Bytesio:
 	async def close(self):
 		""" Close the stream """
 		self.streamio.close()
-
 
 class Bufferedio:
 	""" Bufferized bytes io stream """

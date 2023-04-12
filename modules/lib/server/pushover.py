@@ -115,7 +115,7 @@ class PushOver:
 			else:
 				result = True
 		else:
-			result = None
+			result = True
 		return result
 
 async def async_notify(user, token, message, image=None, display=True):

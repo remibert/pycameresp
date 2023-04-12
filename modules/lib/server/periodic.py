@@ -62,43 +62,43 @@ class Periodic:
 	async def task(**kwargs):
 		""" Periodic task method """
 		Periodic.init()
+		STEP = 5
 
 		polling_id = 0
 
 		tools.watchdog.WatchDog.start(tools.watchdog.SHORT_WATCH_DOG)
 		while True:
 			# Reload server config if changed
-			if polling_id % 5 == 0:
+			if polling_id % (2*STEP) == 0:
 				# Manage login user
 				await Periodic.check_login()
 				Periodic.server_config.refresh()
 
-			# Manage server
-			if wifi.wifi.Wifi.is_lan_connected():
-				tools.tasking.Tasks.start_server()
+				# Manage server
+				if wifi.wifi.Wifi.is_lan_connected():
+					tools.tasking.Tasks.start_all()
 
-			# Reset brownout counter if wifi connected
-			if wifi.wifi.Wifi.is_wan_connected():
-				if tools.support.battery():
-					tools.battery.Battery.reset_brownout()
+				# Reset brownout counter if wifi connected
+				if wifi.wifi.Wifi.is_wan_connected():
+					if tools.support.battery():
+						tools.battery.Battery.reset_brownout()
 
-			# Periodic garbage to avoid memory fragmentation
-			if polling_id % 7 == 0:
+				# Periodic garbage to avoid memory fragmentation
 				gc.collect()
 				if tools.filesystem.ismicropython():
 					# pylint:disable=no-member
 					gc.threshold(gc.mem_free() // 5 + gc.mem_alloc())
 
 			# Check if any problems have occurred and if a reboot is needed
-			if polling_id % 3607 == 0:
+			if polling_id % (3600/STEP) == 0:
 				if tools.info.get_issues_counter() > 15:
 					tools.system.reboot("Reboot required, %d problems detected"%tools.info.get_issues_counter())
 
 			# Reset watch dog
 			tools.watchdog.WatchDog.feed()
-			await uasyncio.sleep(1)
-			polling_id += 1
-			Periodic.current_time += 1
+			await uasyncio.sleep(STEP)
+			polling_id += STEP
+			Periodic.current_time += STEP
 
 	@staticmethod
 	def start(**kwargs):

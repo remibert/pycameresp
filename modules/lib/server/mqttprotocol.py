@@ -2,7 +2,6 @@
 # Copyright (c) 2021 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Support for mqtt client protocol using asynchronous sockets. Support MQTT 3.11 """
-# from io import BytesIO
 import uasyncio
 import wifi.hostname
 import server.mqttclient
@@ -14,16 +13,16 @@ import tools.tasking
 
 class MqttSubscription:
 	""" Subscription callback caller """
-	def __init__(self, topic, function, **kwargs):
+	def __init__(self, topic, callback, **kwargs):
 		""" Constructor """
 		self.topic = topic
 		self.kwargs  = kwargs
-		self.function = function
+		self.callback = callback
 		self.qos = kwargs.get("qos",server.mqttmessages.MQTT_QOS_ONCE)
 
 	async def call(self, message):
 		""" Call callback registered """
-		await self.function(message, **self.kwargs)
+		await self.callback(message, **self.kwargs)
 
 class MqttClientContext:
 	""" Context of the mqtt client """
@@ -34,8 +33,8 @@ class MqttClientContext:
 			config.save()
 
 		self.kwargs = kwargs
-		self.kwargs["host"]   = kwargs.get("host",config.host)
-		self.kwargs["port"]   = kwargs.get("port",config.port)
+		self.kwargs["mqtt_host"]   = kwargs.get("mqtt_host",config.host)
+		self.kwargs["mqtt_port"]   = kwargs.get("mqtt_port",config.port)
 		self.kwargs["keep_alive"] = kwargs.get("keep_alive",60)
 		if self.kwargs["keep_alive"] < 10:
 			self.kwargs["keep_alive"] = 10
@@ -64,6 +63,7 @@ class MqttProtocol:
 	subscriptions = {}
 	controls = {}
 	context = None
+	publications = []
 
 	@staticmethod
 	def start(**kwargs):
@@ -95,60 +95,98 @@ class MqttProtocol:
 			MqttProtocol.context.state = MqttState.STATE_CLOSE
 
 	@staticmethod
-	async def send_subscribe(topic, qos=server.mqttmessages.MQTT_QOS_ONCE):
-		""" Subscribe one topic """
-		command = server.mqttmessages.MqttSubscribe()
-		command.add_topic(topic, qos)
-		await MqttProtocol.send(command)
-
-	@staticmethod
-	async def subscribe_all():
-		""" Subscribe all topic registed """
-		if len(MqttProtocol.subscriptions) > 0:
-			command = server.mqttmessages.MqttSubscribe()
-			for subscription in MqttProtocol.subscriptions.values():
-				command.add_topic(subscription.topic, subscription.qos)
-			await MqttProtocol.send(command)
-
-	@staticmethod
 	async def ping_task(**kwargs):
 		""" Ping server periodicaly """
 		if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
 			await MqttProtocol.send(server.mqttmessages.MqttPingReq())
 			await uasyncio.sleep(MqttProtocol.context.keep_alive)
+
+			# Send another time publication if not acknowledged
+			if len(MqttProtocol.publications) > 0:
+				for publication in MqttProtocol.publications:
+					if (publication.sent_time + MqttProtocol.context.keep_alive*500) < tools.strings.ticks():
+						await MqttProtocol.send(publication)
+						publication.dup = 1
 		else:
-			await uasyncio.sleep(1)
+			await uasyncio.sleep(MqttProtocol.context.keep_alive//2)
 
 	@staticmethod
-	def subscribe(topic, function, **kwargs):
-		""" Add a callback on subscription """
-		MqttProtocol.subscriptions[tools.strings.tostrings(topic)] = MqttSubscription(topic, function, **kwargs)
+	def add_topic(**kwargs):
+		""" Add a subscription to the topic decorator """
+		callback = kwargs.get("callback",None)
+		topic    = kwargs.get("topic", None)
+		if callback and topic:
+			MqttProtocol.subscriptions[tools.strings.tostrings(topic)] = MqttSubscription(**kwargs)
+			return True
+		return False
 
 	@staticmethod
-	def unsubscribe(topic):
-		""" Remove callback on subscription """
-		subscription = MqttProtocol.subscriptions.get(topic, None)
-		if subscription:
-			del MqttProtocol.subscriptions[topic]
+	def remove_topic(**kwargs):
+		""" Remove a subscription to the topic """
+		topic    = kwargs.get("topic", None)
+		if topic:
+			subscription = MqttProtocol.subscriptions.get(topic, None)
+			if subscription:
+				del MqttProtocol.subscriptions[topic]
 
 	@staticmethod
-	async def publish(topic, value, **kwargs):
+	async def subscribe(**kwargs):
+		""" Subscribe topic """
+		result = True
+		if MqttProtocol.context is not None:
+			result = MqttProtocol.add_topic(**kwargs)
+			if result:
+				message = server.mqttmessages.MqttSubscribe(**kwargs)
+				if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
+					result = await MqttProtocol.send(message)
+		else:
+			result = False
+		return result
+
+	@staticmethod
+	async def unsubscribe(**kwargs):
+		""" Unsubscribe topic """
+		result = True
+		if MqttProtocol.context is not None:
+			message = server.mqttmessages.MqttUnsubscribe(**kwargs)
+			MqttProtocol.remove_topic(**kwargs)
+			if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
+				await MqttProtocol.send(message)
+		else:
+			result = False
+		return result
+
+	@staticmethod
+	async def publish(**kwargs):
 		""" Publish message on topic """
-		return await MqttProtocol.send(server.mqttmessages.MqttPublish(topic=topic, value=value))
+		result = True
+		if MqttProtocol.context is not None:
+			message = server.mqttmessages.MqttPublish(**kwargs)
+			if message.qos != server.mqttmessages.MQTT_QOS_ONCE:
+				MqttProtocol.publications.append(message)
+			if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
+				result = await MqttProtocol.send(message)
+				message.dup = 1
+		else:
+			result = False
+		return result
 
 	@staticmethod
 	async def call_subscription(message):
 		""" Remove callback on subscription """
 		subscription = MqttProtocol.subscriptions.get(tools.strings.tostrings(message.topic), (None,None,None))
 		if subscription is not None:
-			await subscription.call(message)
+			try:
+				await subscription.call(message)
+			except Exception as err:
+				tools.logger.syslog(err)
 
 	@staticmethod
 	def add_control(control, **kwargs):
 		""" Add a callback to control payload """
-		def add_control(function):
-			MqttProtocol.controls[control] = (function, kwargs)
-			return function
+		def add_control(callback):
+			MqttProtocol.controls[control] = (callback, kwargs)
+			return callback
 		return add_control
 
 	@staticmethod
@@ -166,8 +204,7 @@ class MqttProtocol:
 		if config.load() is False:
 			config.save()
 
-		result = None
-
+		result = True
 		if config.activated or notification.forced:
 			if notification.data:
 				value = notification.data
@@ -201,7 +238,7 @@ class MqttStateMachine:
 	async def state_open():
 		""" Open mqtt state open socket """
 		try:
-			reader,writer = await uasyncio.open_connection(tools.strings.tostrings(MqttProtocol.context.kwargs.get("host")), MqttProtocol.context.kwargs.get("port"))
+			reader,writer = await uasyncio.open_connection(tools.strings.tostrings(MqttProtocol.context.kwargs.get("mqtt_host")), MqttProtocol.context.kwargs.get("mqtt_port"))
 			MqttProtocol.context.streamio = server.mqttmessages.MqttStream(reader, writer, **MqttProtocol.context.kwargs)
 			MqttProtocol.context.state = MqttState.STATE_CONNECT
 		except Exception as error:
@@ -222,7 +259,7 @@ class MqttStateMachine:
 
 	@staticmethod
 	async def state_connack():
-		""" Wait connection acknoledge state """
+		""" Wait connection acknowledge state """
 		await MqttStateMachine.state_receive()
 
 	@staticmethod
@@ -234,6 +271,10 @@ class MqttStateMachine:
 				for subscription in MqttProtocol.subscriptions.values():
 					command.add_topic(subscription.topic, subscription.qos)
 				await MqttProtocol.send(command)
+			if len(MqttProtocol.publications) > 0:
+				for publication in MqttProtocol.publications:
+					await MqttProtocol.send(publication)
+					publication.dup = 1
 			MqttProtocol.context.state = MqttState.STATE_ESTABLISH
 		except Exception as error:
 			MqttProtocol.context.state = MqttState.STATE_CLOSE
@@ -283,9 +324,9 @@ class MqttStateMachine:
 	@staticmethod
 	async def state_wait():
 		""" Wait mqtt state before next reconnection """
-		await uasyncio.sleep(1)
+		await uasyncio.sleep(10)
 		display = False
-		if   MqttProtocol.context.retry_count <= 60   and MqttProtocol.context.retry_count % 15 == 0:
+		if   MqttProtocol.context.retry_count <= 60   and MqttProtocol.context.retry_count % 20 == 0:
 			display = True
 		elif MqttProtocol.context.retry_count <= 600  and MqttProtocol.context.retry_count % 60 == 0:
 			display = True
@@ -293,7 +334,7 @@ class MqttStateMachine:
 			display = True
 		if display:
 			tools.logger.syslog("Mqtt not connected since %d s"%(MqttProtocol.context.retry_count))
-		MqttProtocol.context.retry_count += 1
+		MqttProtocol.context.retry_count += 10
 		MqttProtocol.context.state = MqttState.STATE_OPEN
 
 	@staticmethod
@@ -332,32 +373,41 @@ class MqttStateMachine:
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_SUBACK)
 	async def on_sub_ack(message, **kwargs):
-		""" Subcribe acknoledge """
+		""" Subcribe acknowledge """
+		if message.return_code[0] == server.mqttmessages.MQTT_SUBACK_FAILURE:
+			tools.logger.syslog("Mqtt subscribe failed")
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_PUBACK)
 	async def on_pub_ack(message, **kwargs):
 		""" Publish ack received """
+		for publication in MqttProtocol.publications:
+			if publication.identifier == message.identifier:
+				MqttProtocol.publications.remove(publication)
+				break
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_PUBREC)
 	async def on_pub_rec(message, **kwargs):
 		""" Publish received """
+		await MqttProtocol.send(server.mqttmessages.MqttPubRel(identifier=message.identifier))
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_PUBREL)
 	async def on_pub_rel(message, **kwargs):
 		""" Publish release received """
+		await MqttProtocol.send(server.mqttmessages.MqttPubComp(identifier=message.identifier))
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_PUBCOMP)
 	async def on_pub_comp(message, **kwargs):
 		""" Publish complete received """
+		MqttStateMachine.on_pub_ack(message, **kwargs)
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_UNSUBACK)
 	async def on_unsub_ack(message, **kwargs):
-		""" Unsubcribe acknoledge """
+		""" Unsubcribe acknowledge """
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_DISCONNECT)
@@ -371,13 +421,13 @@ class MqttStateMachine:
 		""" Published message """
 		if MqttProtocol.context.debug:
 			print("Mqtt publish topic '%s', value='%s'"%(message.topic, message.value))
+		await MqttProtocol.call_subscription(message)
 		if message.qos == server.mqttmessages.MQTT_QOS_ONCE:
 			pass
 		elif message.qos == server.mqttmessages.MQTT_QOS_LEAST_ONCE:
 			await MqttProtocol.send(server.mqttmessages.MqttPubAck(identifier=message.identifier))
 		elif message.qos == server.mqttmessages.MQTT_QOS_EXACTLY_ONCE:
 			await MqttProtocol.send(server.mqttmessages.MqttPubRec(identifier=message.identifier))
-		await MqttProtocol.call_subscription(message)
 
 	@staticmethod
 	async def task(**kwargs):

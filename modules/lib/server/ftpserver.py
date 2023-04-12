@@ -14,15 +14,12 @@ import server.server
 import tools.logger
 import tools.tasking
 
-class Ftp(tools.tasking.ServerInstance):
+class FtpServerInstance(tools.tasking.ServerInstance):
 	""" Ftp server instance """
-	config = None
-
-	""" Ftp main class """
 	def __init__(self, **kwargs):
 		tools.tasking.ServerInstance.__init__(self, **kwargs)
 		self.server_class = None
-		self.port = kwargs.get("port",21)
+		self.port = kwargs.get("ftp_port",21)
 
 	def preload(self):
 		""" Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) """
@@ -50,23 +47,27 @@ class Ftp(tools.tasking.ServerInstance):
 		except Exception as err:
 			tools.logger.syslog(err)
 
+class FtpServer:
+	""" Ftp server instance """
+	config = None
+
 	@staticmethod
 	def init():
 		""" Initialize http server """
-		if Ftp.config is None:
-			Ftp.config = server.server.ServerConfig()
-			Ftp.config.load_create()
+		if FtpServer.config is None:
+			FtpServer.config = server.server.ServerConfig()
+			FtpServer.config.load_create()
 		else:
-			Ftp.config.refresh()
+			FtpServer.config.refresh()
 
 	@staticmethod
 	def start(**kwargs):
 		""" Start the ftp server with asyncio loop.
 		ftp_port : tcp/ip ftp port of the server default 21  """
-		Ftp.init()
-		if Ftp.config.ftp:
+		FtpServer.init()
+		if FtpServer.config.ftp:
 			kwargs["port"] = kwargs.get("ftp_port",21)
 			kwargs["name"] = "Ftp"
-			tools.tasking.Tasks.create_server(Ftp(**kwargs))
+			tools.tasking.Tasks.create_server(FtpServerInstance(**kwargs))
 		else:
 			tools.logger.syslog("Ftp server disabled in config")

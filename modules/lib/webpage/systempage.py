@@ -39,7 +39,6 @@ async def system_page(request, response, args):
 	)
 	await response.send_page(page)
 
-
 @server.httpserver.HttpServer.add_route(b'/system/upload_config')
 async def upload_config(request, response, args):
 	""" Upload configuration """

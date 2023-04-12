@@ -190,8 +190,6 @@ class CamFlasher(QMainWindow):
 		self.window.action_about.triggered.connect(self.on_about_clicked)
 		self.window.action_option.triggered.connect(self.on_option_clicked)
 		self.window.chk_rts_dtr.stateChanged.connect(self.on_rts_dtr_changed)
-		self.window.action_upload_shell.triggered.connect(self.on_upload_shell)
-		self.window.action_upload_server.triggered.connect(self.on_upload_server)
 		self.window.tabs_link.currentChanged.connect(self.on_tabs_link_changed)
 		self.window.button_telnet_connect.clicked.connect(self.on_telnet_connect)
 		self.window.button_serial_open.clicked.connect(self.on_serial_open)
@@ -360,23 +358,6 @@ class CamFlasher(QMainWindow):
 		else:
 			self.window.output.setFocus()
 
-	def on_upload_server(self):
-		""" On menu upload server clicked """
-		self.upload_from_server("server.zip")
-
-	def on_upload_shell(self):
-		""" On menu upload shell clicked """
-		self.upload_from_server("shell.zip")
-
-	def upload_from_server(self, filename):
-		""" Upload file from pycameresp github into device """
-		msg = QMessageBox(parent=self)
-		msg.setIcon(QMessageBox.Icon.Question)
-		msg.setStandardButtons(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes)
-		msg.setText("Do you want to upload the latest version of %s from pycameresp github into the device"%filename)
-		if msg.exec() == QMessageBox.StandardButton.Yes:
-			self.flasher.upload_from_server(filename)
-
 	def dragEnterEvent(self, e):
 		""" Drag enter event received """
 		self.dragMoveEvent(e)
@@ -478,13 +459,6 @@ class CamFlasher(QMainWindow):
 
 	def set_state_menu(self):
 		""" Set menu state """
-		# Upload menus
-		if self.current_state in [self.flasher.TELNET_CONNECTED, self.flasher.SERIAL_CONNECTED]:
-			self.window.action_upload_server.setEnabled(True)
-			self.window.action_upload_shell.setEnabled(True)
-		else:
-			self.window.action_upload_server.setEnabled(False)
-			self.window.action_upload_shell.setEnabled(False)
 
 	def set_state_telnet(self):
 		""" Set telnet state """

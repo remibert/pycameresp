@@ -5,36 +5,43 @@
 import server.mqttclient
 import tools.strings
 
-@server.mqttclient.MqttClient.subscribe('testtopic')
+@server.mqttclient.MqttClient.add_topic(topic='testtopic')
 async def on_topic(message, **kwargs):
 	""" Example of the mqtt subscription
+
 	to test publish : 
-		mosquitto_pub -h 192.168.1.28 -p 1883 -t testtopic -u username -P password -q 2 -m "my test topic" """
+		mosquitto_pub -h $BROKER -p 1883 -t testtopic -u username -P password -q 2 -m "my test topic" """
 	print("on_topic called  %s"%tools.strings.tostrings(message.value))
 
-@server.mqttclient.MqttClient.subscribe('forward_message')
+@server.mqttclient.MqttClient.add_topic(topic='forward_message')
 async def on_forward_message(message, **kwargs):
-	"""Example of the mqtt subscription with emission of a message
-	To test subscribe :
-		mosquitto_sub -h 192.168.1.28 -p 1883 -t receive_message -u username -P password
-	To test publish :
-		mosquitto_pub -h 192.168.1.28 -p 1883 -t forward_message -u username -P password -q 2 -m "Hello world" """
+	""" Example of the mqtt subscription with emission of a message
+
+	to test subscribe :
+		mosquitto_sub -h $BROKER -p 1883 -t receive_message -u username -P password
+
+	to test publish :
+		mosquitto_pub -h $BROKER -p 1883 -t forward_message -u username -P password -q 2 -m "Hello world" """
 	print("on_forward_message  %s"%tools.strings.tostrings(message.value))
 	await server.mqttclient.MqttClient.publish(topic="receive_message", value=message.value)
 
-def mqtt_test(loop, **kwargs):
-	""" Sample mqtt test code
-	Parameters :
-		loop       : asynchronous loop
-		host       : mqtt broker ip address (string)
-		port       : mqtt broker port (int)
-		keep_alive : the keep alive is a time interval measured in seconds (int)
-		username   : user name (string)
-		password   : password (string)
-		debug      : True for see debug information (bool)
+@server.mqttclient.MqttClient.add_topic(topic='command')
+async def on_command(message, **kwargs):
+	""" Example of to test dynamic subscribe, unsubscribe
+	to test dynamic subscribe :
+		mosquitto_pub -h $BROKER -p 1883 -t command -u username -P password -m "subscribe test"
 	
-	Example :
-		mqtt_test(host="192.168.1.28", port=1883, keep_alive=120, username="username", password="password", debug=True)
+	to test dynamic unsubscribe :
+		mosquitto_pub -h $BROKER -p 1883 -t command -u username -P password -m "unsubscribe test"
+
+	to test publish reception :
+		mosquitto_pub -h $BROKER -p 1883 -t test -u username -P password -m "hello world"
 	"""
-	# Example to open mqtt client
-	server.mqttclient.MqttClient.start(**kwargs)
+	async def on_test(message, **kwargs):
+		print("On test called with message=",message.value)
+
+	command, param = tools.strings.tostrings(message.value).split(" ")
+	if command =="subscribe":
+		await server.mqttclient.MqttClient.subscribe(topic=param, callback=on_test)
+	elif command == "unsubscribe":
+		await server.mqttclient.MqttClient.unsubscribe(topic=param)

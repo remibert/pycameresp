@@ -22,8 +22,12 @@ import time
 # Vmware share folder add next lines in /etc/fstab :
 # vmhgfs-fuse   /mnt/hgfs    fuse    defaults,allow_other    0    0
 
+# If you have error :
+# ModuleNotFoundError: No module named 'click' in Python
+# it's due to a bad version of python, usually 3.11, prefer the 3.10
+
 MICROPYTHON_VERSION ="cfd3b70934791abc07f9476a956781de92ddf715"
-ESP_IDF_VERSION_S3     ="6407ecb3f8d2cc07c4c230e7e64f2046af5c86f7" # v4.4.3  !! Difficulty connecting to access point with ESP32 CAMM
+ESP_IDF_VERSION_S3  ="6407ecb3f8d2cc07c4c230e7e64f2046af5c86f7" # v4.4.3  !! Difficulty connecting to access point with ESP32 CAMM
 
 ESP_IDF_VERSION     ="7ab8f793ca5b026f37ae812bcc103e3aa698d164" # v4.2.2 Work perfectly with wifi access point on ESP32CAM
 
@@ -195,6 +199,8 @@ PATCH_COMMANDS = '''
 ############################
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/c/micropython/"*       "%(OUTPUT_DIR)s/micropython"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/python/micropython/"*  "%(OUTPUT_DIR)s/micropython"
+cp             "%(PYCAMERESP_DIR)s/patch/gitignore/.gitignore"  "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/.gitignore"
+cp             "%(PYCAMERESP_DIR)s/patch/gitignore/.gitignore"  "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/.gitignore"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/esp32/modules"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/rp2/modules"
 cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/c/esp-idf/"*           "%(OUTPUT_DIR)s/esp-idf"

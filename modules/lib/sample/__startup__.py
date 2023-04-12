@@ -34,5 +34,5 @@ def startup(**kwargs):
 	""" This function is called automatically by the starter.
 	It must receive the asynchronous loop object as a parameter. """
 	# Register the user task, monitor all exceptions
-	from sample import mqttsample
+	import sample.mqttsample
 	tools.tasking.Tasks.create_monitor(task)

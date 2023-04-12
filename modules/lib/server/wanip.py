@@ -1,5 +1,6 @@
 # Distributed under MIT License
 # Copyright (c) 2021 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
 """ Get the wan ip address """
 import random
 import time
@@ -73,7 +74,9 @@ class WanIp:
 		resp = await WanIp.request(host,80,path)
 		if resp:
 			return resp.decode("utf-8")
-		return None
+		else:
+			tools.logger.syslog("Cannot get wan ip with '%s'"%host)
+			return None
 
 	@staticmethod
 	async def task():
@@ -97,7 +100,6 @@ class WanIp:
 						WanIp.wan_ip = new_wan_ip
 						wifi.wifi.Wifi.wan_connected()
 					else:
-						tools.logger.syslog("Cannot get wan ip")
 						wifi.wifi.Wifi.wan_disconnected()
 		else:
 			polling = 59

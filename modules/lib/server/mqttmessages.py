@@ -68,6 +68,7 @@ class MqttMessage:
 				self.identifier = MqttMessage.identifier_base[0]
 				MqttMessage.identifier_base[0] += 1
 			self.header = None
+			self.sent_time = 0
 		else:
 			self.decode_header(kwargs.get("header"))
 		self.payload = io.BytesIO()
@@ -129,7 +130,6 @@ class MqttMessage:
 		else:
 			raise MqttException("Mqtt control command not supported")
 
-
 	def encode_length(self, length):
 		""" Encode the length """
 		result = b""
@@ -144,10 +144,8 @@ class MqttMessage:
 				break
 		return result
 
-
 	async def write_length(self, streamio):
 		""" Write the length of message """
-
 		length = len(self.payload.getvalue())
 		x = length
 		while True:
@@ -176,6 +174,7 @@ class MqttMessage:
 
 	async def write(self, streamio):
 		""" Write message """
+		self.sent_time = tools.strings.ticks()
 		self.buffer.write(self.encode_header())
 		self.encode()
 		self.buffer.write(self.encode_length(len(self.payload.getvalue())))
@@ -337,7 +336,6 @@ class MqttPublish(MqttMessage):
 		MqttMessage.__init__(self, control=MQTT_PUBLISH, **kwargs)
 		self.topic = kwargs.get("topic","")
 		self.value = kwargs.get("value","")
-		self.identifier = 0
 
 	def decode(self):
 		""" Decode payload """
@@ -415,6 +413,10 @@ class MqttSubscribe(MqttMessage):
 		""" Constructor """
 		MqttMessage.__init__(self, control=MQTT_SUBSCRIBE, **kwargs)
 		self.topics = kwargs.get("topics",[])
+		topic = kwargs.get("topic", None)
+		qos   = kwargs.get("qos", MQTT_QOS_ONCE)
+		if topic:
+			self.topics.append((topic, qos))
 
 	def add_topic(self, topic, qos=MQTT_QOS_ONCE):
 		""" Add topics into subscribe """
@@ -462,6 +464,9 @@ class MqttUnsubscribe(MqttMessage):
 		""" Constructor """
 		MqttMessage.__init__(self, control=MQTT_UNSUBSCRIBE, **kwargs)
 		self.topics = kwargs.get("topics",[])
+		topic = kwargs.get("topic", None)
+		if topic:
+			self.topics.append(topic)
 
 	def add_topic(self, topic):
 		""" Add topics into subscribe """
@@ -478,7 +483,7 @@ class MqttUnsubscribe(MqttMessage):
 	def encode(self):
 		""" Encode payload """
 		self.put_int(self.identifier)
-		for topic,qos in self.topics:
+		for topic in self.topics:
 			self.put_string(topic)
 
 class MqttUnSubAck(MqttMessage):

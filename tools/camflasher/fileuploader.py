@@ -10,16 +10,17 @@ import binascii
 import io
 import zipfile
 import requests
+import streamdevice
+import vt100
 from serial.tools import list_ports
-sys.path.append("../../modules/lib/tools")
+sys.path.append("../../modules/lib")
 # pylint:disable=consider-using-f-string
 # pylint:disable=import-error
 # pylint:disable=wrong-import-position
-import filesystem
-import strings
-import date
-import streamdevice
-import vt100
+import tools.filesystem
+import tools.strings
+import tools.date
+
 
 GITHUB_API_HOST = 'https://api.github.com/repos'
 PYCAMERESP_PATH = 'remibert/pycameresp/releases'
@@ -42,11 +43,11 @@ class BinaryReader:
 
 	def get_size(self):
 		""" Return the size of file """
-		return filesystem.filesize(self.filename)
+		return tools.filesystem.filesize(self.filename)
 
 	def get_date_time(self):
 		""" Return the tuple with date and time of file """
-		return date.local_time(filesystem.filetime(self.filename))[:6]
+		return tools.date.local_time(tools.filesystem.filetime(self.filename))[:6]
 
 class ZipReader:
 	""" Zip binary file reader """
@@ -82,7 +83,7 @@ class PromptCommand:
 
 	def get_value(self):
 		""" Epurate python response """
-		lines = strings.tostrings(self.response).split("\n")[1:-1]
+		lines = tools.strings.tostrings(self.response).split("\n")[1:-1]
 		result = []
 		for line in lines:
 			try:
@@ -143,7 +144,7 @@ class CommandExecutor:
 			response = self.reception_buffer[:pos+6]
 
 			if self.printer is not None:
-				self.printer(strings.tostrings(response), end="")
+				self.printer(tools.strings.tostrings(response), end="")
 
 			# Remove reponse from reception buffer
 			self.reception_buffer = self.reception_buffer[pos + 6:]
@@ -210,7 +211,7 @@ class CommandExecutor:
 			self.wait_response(False, None)
 
 		# Write command
-		self.device.write(b"%s\x0D"%strings.tobytes(command))
+		self.device.write(b"%s\x0D"%tools.strings.tobytes(command))
 
 		# Calculate the written size approximately (6 is length of "\r\n>>> ")
 		self.written_length += len(command) + 6
@@ -296,7 +297,7 @@ class PythonPrompt:
 		""" Set date time in device """
 		result = True
 		self.executor.execute("import machine")
-		year,month,day,hour,minute,second = date.local_time(current_date)[:6]
+		year,month,day,hour,minute,second = tools.date.local_time(current_date)[:6]
 		if self.executor.execute("machine.RTC().datetime((%d,%d,%d,%d,%d,%d,%d,%d))"%(year, month, day, 0, hour, minute, second, 0), synchrone=True) is not None:
 			result = False
 		return result

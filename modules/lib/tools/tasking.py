@@ -49,13 +49,25 @@ class ServerInstance:
 	async def on_connection(self, reader, writer):
 		""" Method called when connecting to the server """
 
-	def start_server(self):
+	def start(self):
 		""" Start server """
 		name    = self.kwargs.get("name","Unknown")
 		host    = self.kwargs.get("host","0.0.0.0")
 		port    = self.kwargs.get("port",0)
 		backlog = self.kwargs.get("backlog",1)
 		Tasks.loop.create_task(uasyncio.start_server(self.on_connection, host=host, port=port, backlog=backlog))
+		return name, port
+
+class ClientInstance:
+	""" Abstract class for implementing an asynchronous client task """
+	def __init__(self, **kwargs):
+		""" Constructor """
+		self.kwargs = kwargs
+
+	def start(self):
+		""" Start client """
+		name    = self.kwargs.get("name","Unknown")
+		port    = self.kwargs.get("port",0)
 		return name, port
 
 class Task:
@@ -70,11 +82,12 @@ class Tasks:
 	""" Asynchronous task manager """
 	loop           = None
 	servers        = []
+	clients        = []
 	suspended      = [False]
 	slow_speed     = [None]
 	tasks          = {}
 	tasknames      = {}
-	servers_started = False
+	started = False
 
 	@staticmethod
 	def init():
@@ -103,12 +116,21 @@ class Tasks:
 		Tasks.servers.append(server)
 
 	@staticmethod
-	def start_server():
-		""" Start all servers """
-		if Tasks.servers_started is False:
-			Tasks.servers_started = True
+	def create_client(client):
+		""" Create client task """
+		Tasks.init()
+		Tasks.clients.append(client)
+
+	@staticmethod
+	def start_all():
+		""" Start all servers and clients """
+		if Tasks.started is False:
+			Tasks.started = True
 			for server in Tasks.servers:
-				name, port = server.start_server()
+				name, port = server.start()
+				tools.logger.syslog("%s port:%d"%(name, port))
+			for client in Tasks.clients:
+				name, port = client.start()
 				tools.logger.syslog("%s port:%d"%(name, port))
 
 	@staticmethod

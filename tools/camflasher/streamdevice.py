@@ -19,8 +19,8 @@ sys.path.append("../../modules/lib/tools")
 # pylint:disable=import-error
 # pylint:disable=consider-using-f-string
 # pylint:disable=unspecified-encoding
-from exchange import FileReader, FileWriter, UploadCommand
-from filesystem import scandir, isdir
+from tools.exchange import FileReader, FileWriter, UploadCommand
+from tools.filesystem import scandir, isdir
 
 class FileLogger:
 	""" Class to save and display all log """

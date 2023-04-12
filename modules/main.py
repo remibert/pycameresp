@@ -4,6 +4,7 @@
 import pycameresp
 
 # Start certain functionality of the Pycameresp platform
+# Comment unnecessary lines to decrease RAM footprint
 pycameresp.start(\
 	device   = "ESP32CAM", # "ESP32ONE" "M5CAMERA-B" : type of camera device
 
@@ -13,21 +14,21 @@ pycameresp.start(\
 	battery  = True, # Battery level manager task
 	shell    = True, # Shell with text editor task
 
-	# Notifiers
-	mqtt     = True, # Mqtt client task
-	webhook  = True, # Webhook notification task
-	pushover = True, # Pushover notification task
-
-	# Servers and network
+	# Network
+	wifi     = True, # Wifi manager task
 	ftp      = True, # Ftp server task
 	http     = True, # Http server task
 	telnet   = True, # Telnet server task
 	ntp      = True, # Ntp synchronisation task
 	wanip    = True, # Wanip periodically obtained task
-	wifi     = True, # Wifi manager task
+
+	# Notifiers
+	mqtt     = True, # Mqtt client task
+	webhook  = True, # Webhook notification task
+	pushover = True, # Pushover notification task
 
 	# Motion and camera
-	presence = True, # Presence of inoccupant task
+	presence = True, # Home occupant presence detection task
 	camera   = True, # Camera configuration
 	motion   = True, # Motion detection task
 	)

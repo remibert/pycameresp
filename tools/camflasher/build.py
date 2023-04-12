@@ -160,10 +160,12 @@ def main():
 		################
 		# Copy scripts #
 		################
-		copyfile ../../modules/lib/tools/date.py        date.py
-		copyfile ../../modules/lib/tools/strings.py     strings.py
-		copyfile ../../modules/lib/tools/filesystem.py  filesystem.py
-		copyfile ../../modules/lib/tools/exchange.py    exchange.py
+		mkdir tools
+		copyfile ../../modules/lib/tools/date.py        tools/date.py
+		copyfile ../../modules/lib/tools/strings.py     tools/strings.py
+		copyfile ../../modules/lib/tools/filesystem.py  tools/filesystem.py
+		copyfile ../../modules/lib/tools/exchange.py    tools/exchange.py
+		copyfile ../../modules/lib/tools/fnmatch.py     tools/fnmatch.py
 
 		#############
 		# Build exe #
@@ -187,10 +189,11 @@ def main():
 		# Clean up build #
 		##################
 		remove build-%(TARGET)s.spec
-		remove strings.py
-		remove date.py
-		remove filesystem.py
-		remove exchange.py
+		remove tools/strings.py
+		remove tools/fnmatch.py
+		remove tools/date.py
+		remove tools/filesystem.py
+		remove tools/exchange.py
 		remove camflasher.py
 		remove dialogflash.py
 		remove dialogabout.py

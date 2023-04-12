@@ -58,79 +58,87 @@ def parse(force=False):
 	py_class_file.write("''' File automatically generated with template.html content '''\n# pylint:disable=missing-function-docstring\n# pylint:disable=global-variable-not-assigned\n# pylint:disable=trailing-whitespace\n# pylint:disable=too-many-lines\nfrom htmltemplate.template import Template \n")
 
 	stack = []
+	ignored = False
 	for line in lines:
 		if "<!--" in line:
 			spl = line.split("<!--")
-			if ":begin-->" in line:
-				classname = spl[1].split(":begin-->")[0]
-				stack.append([classname,"",""])
-			elif ":end-->" in line:
-				classname = spl[1].split(":end-->")[0]
-				if classname != stack[-1][0]:
-					raise SyntaxError()
-				classname, text, comment = stack.pop()
-				attributes, begin_tag, end_tag, begin_format, end_format = findall(r'\%\([A-Za-z_0-9]*\)s',text)
+			if ":ignore_begin-->" in line:
+				ignored = True
+			elif ":ignore_end-->" in line:
+				ignored = False
+			elif ignored is False:
+				if ":begin-->" in line:
+					classname = spl[1].split(":begin-->")[0]
+					stack.append([classname,"",""])
+				elif ":end-->" in line:
+					classname = spl[1].split(":end-->")[0]
+					if classname != stack[-1][0]:
+						raise SyntaxError()
+					classname, text, comment = stack.pop()
+					attributes, begin_tag, end_tag, begin_format, end_format = findall(r'\%\([A-Za-z_0-9]*\)s',text)
 
-				print("Html template update %s"%classname)
-				classattributes = set()
-				for attribute in attributes:
-					classattributes.add(attribute)
+					print("Html template update %s"%classname)
+					classattributes = set()
+					for attribute in attributes:
+						classattributes.add(attribute)
+					classattributes = list(classattributes)
+					classattributes.sort()
+					comment = comment.rstrip()
 
-				comment = comment.rstrip()
+					py_class_file.write("""\n%s\n"""%comment)
 
-				py_class_file.write("""\n%s\n"""%comment)
-
-				if begin_tag != "":
-					py_class_file.write("""beg_tag%s = b'''%s'''\n"""%(classname,begin_tag))
-				if end_tag != "":
-					py_class_file.write("""end_tag%s = b'''%s'''\n"""%(classname,end_tag))
-				py_class_file.write("""def %s(*args, **params):\n"""%classname)
-
-				py_class_file.write("""\tself = Template(*(("%s",) + args), **params)\n\n"""%classname)
-
-				py_class_file.write("""\tdef get_begin(self):\n""")
-				if begin_format == "":
 					if begin_tag != "":
-						py_class_file.write("""\t\tglobal beg_tag%s\n"""%classname)
-						py_class_file.write("""\t\treturn beg_tag%s\n"""%(classname))
-					else:
-						py_class_file.write("""\t\treturn b''\n""")
-				else:
-					py_class_file.write("""\t\tglobal beg_tag%s\n"""%classname)
-					py_class_file.write("""\t\treturn beg_tag%s%s(%s)\n"""%(classname, "\x25",begin_format[:-1]))
-				py_class_file.write("""\tself.get_begin     = get_begin\n\n""")
-
-				py_class_file.write("""\tdef get_end(self):\n""")
-				if end_format == "":
+						py_class_file.write("""beg_tag%s = b'''%s'''\n"""%(classname,begin_tag))
 					if end_tag != "":
-						py_class_file.write("""\t\tglobal end_tag%s\n"""%classname)
-						py_class_file.write("""\t\treturn end_tag%s\n"""%(classname))
-					else:
-						py_class_file.write("""\t\treturn b''\n""")
-				else:
-					py_class_file.write("""\t\tglobal end_tag%s\n"""%classname)
-					py_class_file.write("""\t\treturn end_tag%s%s(%s)\n"""%(classname, "\x25", end_format[:-1]))
-				py_class_file.write("""\tself.get_end       = get_end\n\n""")
+						py_class_file.write("""end_tag%s = b'''%s'''\n"""%(classname,end_tag))
+					py_class_file.write("""def %s(*args, **params):\n"""%classname)
 
-				for attribute in classattributes:
-					if attribute in ["pattern"]:
-						py_class_file.write('\tself.{:<12} = params.get("{}", b"*")\n'.format(attribute,attribute))
-					elif attribute in ["id","name"]:
-						py_class_file.write('\tself.{:<12} = params.get("{}", b"%d"%id(self))\n'.format(attribute,attribute))
-					elif attribute in ["disabled","active","novalidate","required"]:
-						py_class_file.write('\tself.{:<12} = params.get("{}", False)\n'.format(attribute,attribute))
-					elif attribute in ["checked"]:
-						py_class_file.write('\tself.{:<12} = params.get("{}", True)\n'.format(attribute,attribute))
+					py_class_file.write("""\tself = Template(*(("%s",) + args), **params)\n\n"""%classname)
+
+					py_class_file.write("""\tdef get_begin(self):\n""")
+					if begin_format == "":
+						if begin_tag != "":
+							py_class_file.write("""\t\tglobal beg_tag%s\n"""%classname)
+							py_class_file.write("""\t\treturn beg_tag%s\n"""%(classname))
+						else:
+							py_class_file.write("""\t\treturn b''\n""")
 					else:
-						py_class_file.write('\tself.{:<12} = params.get("{}", b"")\n'.format(attribute,attribute))
-				py_class_file.write('\tself.end_init(**params)\n')
-				py_class_file.write('\treturn self\n')
-			else:
-				raise SyntaxError()
+						py_class_file.write("""\t\tglobal beg_tag%s\n"""%classname)
+						py_class_file.write("""\t\treturn beg_tag%s%s(%s)\n"""%(classname, "\x25",begin_format[:-1]))
+					py_class_file.write("""\tself.get_begin     = get_begin\n\n""")
+
+					py_class_file.write("""\tdef get_end(self):\n""")
+					if end_format == "":
+						if end_tag != "":
+							py_class_file.write("""\t\tglobal end_tag%s\n"""%classname)
+							py_class_file.write("""\t\treturn end_tag%s\n"""%(classname))
+						else:
+							py_class_file.write("""\t\treturn b''\n""")
+					else:
+						py_class_file.write("""\t\tglobal end_tag%s\n"""%classname)
+						py_class_file.write("""\t\treturn end_tag%s%s(%s)\n"""%(classname, "\x25", end_format[:-1]))
+					py_class_file.write("""\tself.get_end       = get_end\n\n""")
+
+					for attribute in classattributes:
+						if attribute in ["pattern"]:
+							py_class_file.write('\tself.{:<12} = params.get("{}", b"*")\n'.format(attribute,attribute))
+						elif attribute in ["id","name"]:
+							py_class_file.write('\tself.{:<12} = params.get("{}", b"%d"%id(self))\n'.format(attribute,attribute))
+						elif attribute in ["disabled","active","novalidate","required"]:
+							py_class_file.write('\tself.{:<12} = params.get("{}", False)\n'.format(attribute,attribute))
+						elif attribute in ["checked"]:
+							py_class_file.write('\tself.{:<12} = params.get("{}", True)\n'.format(attribute,attribute))
+						else:
+							py_class_file.write('\tself.{:<12} = params.get("{}", b"")\n'.format(attribute,attribute))
+					py_class_file.write('\tself.end_init(**params)\n')
+					py_class_file.write('\treturn self\n')
+				else:
+					raise SyntaxError()
 		else:
-			if line.strip() != "":
-				if len(stack) >= 1:
-					stack[-1][1] += line.strip()
-					stack[-1][2] += "# " +line.lstrip()
+			if ignored is False:
+				if line.strip() != "":
+					if len(stack) >= 1:
+						stack[-1][1] += line.strip()
+						stack[-1][2] += "# " +line.lstrip()
 
 	py_class_file.close()
