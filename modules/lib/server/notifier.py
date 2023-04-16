@@ -94,7 +94,7 @@ class Notifier:
 		item = kwargs.get("data",None)
 		if item is not None:
 			result += b"len=%d "%len(item)
-		return result
+		return tools.strings.tostrings(result)
 
 	@staticmethod
 	def notify(**kwargs):
@@ -111,14 +111,14 @@ class Notifier:
 		forced  = kwargs.get("forced",False)
 		message = Notifier.to_string(**kwargs)
 
-		tools.logger.syslog("Notification %s %s"%(tools.strings.tostrings(message), "" if enabled else "not sent"), display=display)
+		tools.logger.syslog("Notification %s %s"%(message, "" if enabled else "not sent"), display=display)
 
 		if enabled or forced:
 			# If postponed message list too long
 			if len(Notifier.postponed) > 10:
 				# Remove older
 				notification = Notifier.postponed[0]
-				tools.logger.syslog("Notification %s failed to send"%tools.strings.tostrings(notification.message), display=notification.display)
+				tools.logger.syslog("Notification %s failed to send"%message, display=display)
 				del Notifier.postponed[0]
 			# Add message into postponed list
 			Notifier.postponed.append(Notification(**kwargs))

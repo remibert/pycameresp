@@ -73,7 +73,9 @@ class MqttProtocol:
 				await message.write(MqttProtocol.context.streamio)
 				result = True
 			except Exception as err:
-				pass
+				if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
+					tools.logger.syslog("Mqtt cannot send message")
+				MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 		return result
 
 	@staticmethod
@@ -158,6 +160,10 @@ class MqttProtocol:
 			if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
 				result = await MqttProtocol.send(message)
 				message.dup = 1
+			else:
+				if len(MqttProtocol.publications) > 10:
+					# Remove older publications
+					MqttProtocol.publications = MqttProtocol.publications[-10:]
 		else:
 			result = False
 		return result
@@ -212,6 +218,12 @@ class MqttProtocol:
 					result = await MqttProtocol.publish(topic=topic, value=value)
 					if result is True:
 						notification.sent.append(MqttProtocol.notify_message)
+					else:
+						current_time = (tools.strings.ticks()//1000)
+						# If the broker has not been visible for several hours
+						if current_time > (MqttProtocol.context.last_establish + 7200):
+							# Ignore the error
+							result = True
 		return result
 
 class MqttStateMachine:
@@ -232,7 +244,7 @@ class MqttStateMachine:
 			reader,writer = await uasyncio.open_connection(tools.strings.tostrings(MqttProtocol.context.kwargs.get("mqtt_host")), MqttProtocol.context.kwargs.get("mqtt_port"))
 			MqttProtocol.context.streamio = server.mqttmessages.MqttStream(reader, writer, **MqttProtocol.context.kwargs)
 			MqttProtocol.context.state = MqttStateMachine.STATE_CONNECT
-		except Exception as error:
+		except Exception as err:
 			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
@@ -241,10 +253,10 @@ class MqttStateMachine:
 		try:
 			command = server.mqttmessages.MqttConnect(**MqttProtocol.context.kwargs)
 			command.clean_session = True
-			command.keep_alive = MqttProtocol.context.kwargs.get("keep_alive",120)
+			command.keep_alive = MqttProtocol.context.kwargs.get("keep_alive",60)
 			await MqttProtocol.send(command)
 			MqttProtocol.context.state = MqttStateMachine.STATE_CONNACK
-		except Exception as error:
+		except Exception as err:
 			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
@@ -268,7 +280,7 @@ class MqttStateMachine:
 			MqttProtocol.context.state = MqttStateMachine.STATE_ESTABLISH
 			tools.logger.syslog("Mqtt established (client_id='%s')"%MqttProtocol.context.kwargs.get("client_id",""))
 			MqttProtocol.context.last_establish  = tools.strings.ticks()//1000
-		except Exception as error:
+		except Exception as err:
 			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
@@ -280,12 +292,15 @@ class MqttStateMachine:
 	async def state_receive():
 		""" Wait and treat message """
 		try:
-			# Read and decode message
-			message = await server.mqttmessages.MqttMessage.receive(MqttProtocol.context.streamio)
+			try:
+				# Read and decode message
+				message = await uasyncio.wait_for(server.mqttmessages.MqttMessage.receive(MqttProtocol.context.streamio), MqttProtocol.context.keep_alive + MqttProtocol.context.keep_alive//2)
+			except Exception as err:
+				message = None
 
 			# If message decoded with success
 			if message is not None:
-				MqttProtocol.context.last_establish  = tools.strings.ticks()//1000
+				MqttProtocol.context.last_establish = tools.strings.ticks()//1000
 				if MqttProtocol.context.debug:
 					print("Mqtt receive : %s"%message.__class__.__name__)
 				# Search treatment callback
@@ -298,9 +313,10 @@ class MqttStateMachine:
 				else:
 					tools.logger.syslog("Mqtt callback not found for message=%d"%message.control)
 			else:
-				tools.logger.syslog("Mqtt lost connection")
+				if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
+					tools.logger.syslog("Mqtt lost connection")
 				MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
-		except Exception as error:
+		except Exception as err:
 			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
@@ -311,7 +327,7 @@ class MqttStateMachine:
 				await MqttProtocol.context.streamio.close()
 				MqttProtocol.context.streamio = None
 			MqttProtocol.context.state = MqttStateMachine.STATE_WAIT
-		except Exception as error:
+		except Exception as err:
 			MqttProtocol.context.state = MqttStateMachine.STATE_WAIT
 
 	@staticmethod
@@ -319,13 +335,13 @@ class MqttStateMachine:
 		""" Wait mqtt state before next reconnection """
 		current_time = (tools.strings.ticks()//1000)
 		# if the last connection dates back more than two hours
-		if (MqttProtocol.context.last_establish + 7200) < current_time:
+		if current_time > (MqttProtocol.context.last_establish + 7200):
 			polling = 3607
 		# if the last connection dates back more than an hour
-		elif (MqttProtocol.context.last_establish + 3600) < current_time:
+		elif current_time > (MqttProtocol.context.last_establish + 3600):
 			polling = 907
 		# if the last connection dates back more than a quarter of an hour
-		elif (MqttProtocol.context.last_establish + 900) < current_time:
+		elif current_time > (MqttProtocol.context.last_establish + 900):
 			polling = 179
 		else:
 			polling = 11
