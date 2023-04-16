@@ -5,7 +5,6 @@
 import binascii
 import time
 
-
 def size_to_string(size, largeur=6):
 	""" Convert a size in a string with k, m, g, t..."""
 	return size_to_bytes(size, largeur).decode("utf8")
@@ -236,15 +235,15 @@ def compute_hash(string):
 
 try:
 	# pylint: disable=no-name-in-module
-
 	from time import ticks_ms
 	def ticks():
 		""" Count tick elapsed from start """
 		return ticks_ms()
 except:
+	_ticks_init = time.monotonic()
 	def ticks():
 		""" Count tick elapsed from start """
-		result = time.process_time_ns() // 1000_000
+		result = (int)((time.monotonic() - _ticks_init)*1000)
 		return result
 
 def ticks_to_string():

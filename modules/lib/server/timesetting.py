@@ -10,27 +10,26 @@ def get_ntp_time():
 	try:
 		import socket
 		import struct
-		NTP_QUERY = bytearray(48)
-		NTP_QUERY[0] = 0x1B
+		ntp_query = bytearray(48)
+		ntp_query[0] = 0x1B
 		addr = socket.getaddrinfo("pool.ntp.org", 123)[0][-1]
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		try:
 			s.settimeout(2)
-			res = s.sendto(NTP_QUERY, addr)
+			res = s.sendto(ntp_query, addr)
 			msg = s.recv(48)
 		finally:
 			s.close()
 		val = struct.unpack("!I", msg[40:44])[0]
 		# (date(2000, 1, 1) - date(1900, 1, 1)).days * 24*60*60
-		NTP_DELTA = 3155673600
-		return val - NTP_DELTA
+		return val - 3155673600
 	except:
 		return 0
 
-def set_time(currenttime):
+def set_time(current_time):
 	""" Change the current time """
 	try:
-		newtime = tools.date.local_time(currenttime)
+		newtime = tools.date.local_time(current_time)
 		year,month,day,hour,minute,second,weekday,yearday = newtime[:8]
 
 		import machine
@@ -38,9 +37,9 @@ def set_time(currenttime):
 	except Exception as exc:
 		tools.logger.syslog("Cannot set time '%s'"%exc)
 
-def calc_local_time(currenttime, offsetTime=+1, dst=True):
+def calc_local_time(current_time, offset_time=+1, dst=True):
 	""" Calculate the local time """
-	year,month,day,hour,minute,second,weekday,yearday = tools.date.local_time(currenttime)[:8]
+	year,month,day,hour,minute,second,weekday,yearday = tools.date.local_time(current_time)[:8]
 
 	# Get the day of the last sunday of march
 	march_end_weekday = tools.date.local_time(tools.date.mktime((year, 3, 31, 0, 0, 0, 0, 0)))[6]
@@ -50,24 +49,24 @@ def calc_local_time(currenttime, offsetTime=+1, dst=True):
 	october_end_weekday = tools.date.local_time(tools.date.mktime((year,10, 30, 0, 0, 0, 0, 0)))[6]
 	end_day_dst = 30-((1+october_end_weekday)%7)
 
-	start_DST = tools.date.mktime((year,3 ,start_day_dst,1,0,0,0,0))
-	end_DST   = tools.date.mktime((year,10,end_day_dst  ,1,0,0,0,0))
+	start_dst = tools.date.mktime((year,3 ,start_day_dst,1,0,0,0,0))
+	end_dst   = tools.date.mktime((year,10,end_day_dst  ,1,0,0,0,0))
 
 	now = tools.date.mktime((year,month,day,hour,minute,second,weekday,yearday))
 
-	if dst and now > start_DST and now < end_DST : # we are before last sunday of october
-		return now+(offsetTime*3600)+3600 # DST: UTC+dst*H + 1
+	if dst and now > start_dst and now < end_dst : # we are before last sunday of october
+		return now+(offset_time*3600)+3600 # DST: UTC+dst*H + 1
 	else:
-		return now+(offsetTime*3600) # EST: UTC+dst*H
+		return now+(offset_time*3600) # EST: UTC+dst*H
 
-def set_date(offsetTime=+1, dst=True, display=False):
+def set_date(offset_time=+1, dst=True, display=False):
 	""" Set the date """
-	currenttime = get_ntp_time()
-	if currenttime > 0:
-		currenttime = calc_local_time(currenttime, offsetTime, dst)
-		if currenttime > 0:
-			set_time(currenttime)
+	current_time = get_ntp_time()
+	if current_time > 0:
+		current_time = calc_local_time(current_time, offset_time, dst)
+		if current_time > 0:
+			set_time(current_time)
 			if display:
 				tools.logger.syslog("Date updated : %s"%(tools.date.date_to_string()))
-			return currenttime
+			return current_time
 	return 0

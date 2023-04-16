@@ -61,33 +61,28 @@ class Ntp:
 				break
 			else:
 				await uasyncio.sleep(1)
-		if updated:
-			wifi.wifi.Wifi.wan_connected()
-		else:
-			wifi.wifi.Wifi.wan_disconnected()
 		return updated
 
 	@staticmethod
 	async def task(**kwargs):
 		""" Internal clock synchronization task """
-		polling = 13
 		Ntp.init()
 
 		# If ntp synchronization enabled
 		if Ntp.server_config.ntp:
 			# If the wan is present
 			if wifi.wifi.Wifi.is_wan_available():
-				if Ntp.last_sync + 21601 < time.time() or Ntp.last_sync == 0:
+				if Ntp.last_sync + 10799 < time.time() or Ntp.last_sync == 0:
 					if await Ntp.synchronize():
 						Ntp.last_sync = time.time()
-						polling = 607
-		else:
-			polling = 59
+						wifi.wifi.Wifi.wan_connected()
+					else:
+						wifi.wifi.Wifi.wan_disconnected()
 
 		if Ntp.region_config.current_time + 599 < time.time():
 			Ntp.region_config.current_time = time.time()
 			Ntp.region_config.save()
-		await uasyncio.sleep(polling)
+		await uasyncio.sleep(307)
 
 	@staticmethod
 	def start():

@@ -78,7 +78,6 @@ def flash_size(mountpoint=None):
 		alloc = (status.f_blocks - status.f_bfree) * status.f_frsize
 	return total, alloc, free
 
-
 def flashinfo(mountpoint=None):
 	""" Get flash informations """
 	try:
@@ -116,26 +115,26 @@ def sysinfo():
 	except Exception as err:
 		return b"Sysinfo not available"
 
-up_last=None
-up_total=0
+_up_last=None
+_up_total=0
 
 def uptime_sec():
 	""" Get the uptime in seconds """
-	global up_last, up_total
+	global _up_last, _up_total
 	try:
 		# pylint: disable=no-member
 		up = time.ticks_ms()//1000
 	except:
 		up = time.time()
 
-	if up_last is None:
-		up_last = up
+	if _up_last is None:
+		_up_last = up
 
-	if up_last > up:
-		up_total += (1<<30)//1000
+	if _up_last > up:
+		_up_total += (1<<30)//1000
 
-	up_last = up
-	up += up_total
+	_up_last = up
+	up += _up_total
 	return up
 
 def uptime(text=b"days"):

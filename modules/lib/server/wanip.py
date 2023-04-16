@@ -42,9 +42,8 @@ class WanIp:
 			await response.receive(streamio)
 			if response.status == b"200":
 				result = response.get_content().strip()
-
 		except Exception as err:
-			tools.logger.syslog(err)
+			tools.logger.syslog(err, msg="Failed to get wan ip '%s'"%tools.strings.tostrings(host))
 		finally:
 			if streamio:
 				await streamio.close()
@@ -75,25 +74,24 @@ class WanIp:
 		if resp:
 			return resp.decode("utf-8")
 		else:
-			tools.logger.syslog("Cannot get wan ip with '%s'"%host)
 			return None
 
 	@staticmethod
 	async def task():
 		""" Asynchronous task to refresh periodically the wan ip """
 		WanIp.init()
-		polling = 13
 
 		# If wanip synchronization enabled
 		if WanIp.config.wanip:
 			# If the wan is present
 			if wifi.wifi.Wifi.is_wan_available():
-				if WanIp.last_sync + 86413 < time.time() or WanIp.last_sync == 0:
+				if WanIp.last_sync + 86399 < time.time() or WanIp.last_sync == 0:
 					# Get wan ip
 					new_wan_ip = await WanIp.synchronize()
 
 					# If wan ip get
 					if new_wan_ip is not None:
+						WanIp.last_sync = time.time()
 						# If wan ip must be notified
 						if WanIp.wan_ip != new_wan_ip:
 							server.notifier.Notifier.daily_notify()
@@ -101,12 +99,13 @@ class WanIp:
 						wifi.wifi.Wifi.wan_connected()
 					else:
 						wifi.wifi.Wifi.wan_disconnected()
-		else:
-			polling = 59
-
-		await uasyncio.sleep(polling)
+		await uasyncio.sleep(311)
 
 	@staticmethod
 	def start():
 		""" Start wanip synchronisation task """
-		tools.tasking.Tasks.create_monitor(WanIp.task)
+		WanIp.init()
+		if WanIp.config.wanip:
+			tools.tasking.Tasks.create_monitor(WanIp.task)
+		else:
+			tools.logger.syslog("Wan Ip synchronization disabled in config")

@@ -33,30 +33,19 @@ class MqttClientContext:
 			config.save()
 
 		self.kwargs = kwargs
-		self.kwargs["mqtt_host"]   = kwargs.get("mqtt_host",config.host)
-		self.kwargs["mqtt_port"]   = kwargs.get("mqtt_port",config.port)
+		self.kwargs["mqtt_host"]  = kwargs.get("mqtt_host",config.host)
+		self.kwargs["mqtt_port"]  = kwargs.get("mqtt_port",config.port)
+		self.kwargs["username"]   = kwargs.get("username",config.username)
+		self.kwargs["password"]   = kwargs.get("password",config.password)
 		self.kwargs["keep_alive"] = kwargs.get("keep_alive",60)
 		if self.kwargs["keep_alive"] < 10:
 			self.kwargs["keep_alive"] = 10
 		self.keep_alive = self.kwargs["keep_alive"]
-		self.kwargs["username"] = kwargs.get("username",config.username)
-		self.kwargs["password"] = kwargs.get("password",config.password)
 		self.streamio   = None
-		self.state = MqttState.STATE_OPEN
+		self.state = MqttStateMachine.STATE_OPEN
 		self.debug = kwargs.get("debug",False)
 		self.kwargs["client_id"] = kwargs.get("client_id",wifi.hostname.Hostname().get_hostname())
-		self.retry_count= 0
-
-class MqttState:
-	""" Mqtt protocol management state machine """	
-	STATE_OPEN      = 1
-	STATE_CONNECT   = 2
-	STATE_CONNACK   = 3
-	STATE_ACCEPTED  = 4
-	STATE_REFUSED   = 5
-	STATE_ESTABLISH = 6
-	STATE_CLOSE     = 7
-	STATE_WAIT      = 8
+		self.last_establish =  tools.strings.ticks()//1000
 
 class MqttProtocol:
 	""" Manages an mqtt client """
@@ -90,14 +79,14 @@ class MqttProtocol:
 	@staticmethod
 	async def disconnect():
 		""" Send diconnect message """
-		if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
+		if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
 			await MqttProtocol.send(server.mqttmessages.MqttDisconnect())
-			MqttProtocol.context.state = MqttState.STATE_CLOSE
+			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
 	async def ping_task(**kwargs):
 		""" Ping server periodicaly """
-		if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
+		if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
 			await MqttProtocol.send(server.mqttmessages.MqttPingReq())
 			await uasyncio.sleep(MqttProtocol.context.keep_alive)
 
@@ -137,7 +126,7 @@ class MqttProtocol:
 			result = MqttProtocol.add_topic(**kwargs)
 			if result:
 				message = server.mqttmessages.MqttSubscribe(**kwargs)
-				if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
+				if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
 					result = await MqttProtocol.send(message)
 		else:
 			result = False
@@ -150,7 +139,7 @@ class MqttProtocol:
 		if MqttProtocol.context is not None:
 			message = server.mqttmessages.MqttUnsubscribe(**kwargs)
 			MqttProtocol.remove_topic(**kwargs)
-			if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
+			if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
 				await MqttProtocol.send(message)
 		else:
 			result = False
@@ -164,7 +153,7 @@ class MqttProtocol:
 			message = server.mqttmessages.MqttPublish(**kwargs)
 			if message.qos != server.mqttmessages.MQTT_QOS_ONCE:
 				MqttProtocol.publications.append(message)
-			if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
+			if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
 				result = await MqttProtocol.send(message)
 				message.dup = 1
 		else:
@@ -240,9 +229,9 @@ class MqttStateMachine:
 		try:
 			reader,writer = await uasyncio.open_connection(tools.strings.tostrings(MqttProtocol.context.kwargs.get("mqtt_host")), MqttProtocol.context.kwargs.get("mqtt_port"))
 			MqttProtocol.context.streamio = server.mqttmessages.MqttStream(reader, writer, **MqttProtocol.context.kwargs)
-			MqttProtocol.context.state = MqttState.STATE_CONNECT
+			MqttProtocol.context.state = MqttStateMachine.STATE_CONNECT
 		except Exception as error:
-			MqttProtocol.context.state = MqttState.STATE_CLOSE
+			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
 	async def state_connect():
@@ -252,10 +241,9 @@ class MqttStateMachine:
 			command.clean_session = True
 			command.keep_alive = MqttProtocol.context.kwargs.get("keep_alive",120)
 			await MqttProtocol.send(command)
-			MqttProtocol.context.retry_count = 0
-			MqttProtocol.context.state = MqttState.STATE_CONNACK
+			MqttProtocol.context.state = MqttStateMachine.STATE_CONNACK
 		except Exception as error:
-			MqttProtocol.context.state = MqttState.STATE_CLOSE
+			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
 	async def state_connack():
@@ -275,9 +263,10 @@ class MqttStateMachine:
 				for publication in MqttProtocol.publications:
 					await MqttProtocol.send(publication)
 					publication.dup = 1
-			MqttProtocol.context.state = MqttState.STATE_ESTABLISH
+			MqttProtocol.context.state = MqttStateMachine.STATE_ESTABLISH
+			MqttProtocol.context.last_establish  = tools.strings.ticks()//1000
 		except Exception as error:
-			MqttProtocol.context.state = MqttState.STATE_CLOSE
+			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
 	async def state_establish():
@@ -306,9 +295,9 @@ class MqttStateMachine:
 					tools.logger.syslog("Mqtt callback not found for message=%d"%message.control)
 			else:
 				tools.logger.syslog("Mqtt lost connection")
-				MqttProtocol.context.state = MqttState.STATE_CLOSE
+				MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 		except Exception as error:
-			MqttProtocol.context.state = MqttState.STATE_CLOSE
+			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
 	async def state_close():
@@ -317,58 +306,61 @@ class MqttStateMachine:
 			if MqttProtocol.context.streamio is not None:
 				await MqttProtocol.context.streamio.close()
 				MqttProtocol.context.streamio = None
-			MqttProtocol.context.state = MqttState.STATE_WAIT
+			MqttProtocol.context.state = MqttStateMachine.STATE_WAIT
 		except Exception as error:
-			MqttProtocol.context.state = MqttState.STATE_WAIT
+			MqttProtocol.context.state = MqttStateMachine.STATE_WAIT
 
 	@staticmethod
 	async def state_wait():
 		""" Wait mqtt state before next reconnection """
-		await uasyncio.sleep(10)
-		display = False
-		if   MqttProtocol.context.retry_count <= 60   and MqttProtocol.context.retry_count % 20 == 0:
-			display = True
-		elif MqttProtocol.context.retry_count <= 600  and MqttProtocol.context.retry_count % 60 == 0:
-			display = True
-		elif MqttProtocol.context.retry_count <= 3600 and MqttProtocol.context.retry_count % 3600 == 0:
-			display = True
-		if display:
-			tools.logger.syslog("Mqtt not connected since %d s"%(MqttProtocol.context.retry_count))
-		MqttProtocol.context.retry_count += 10
-		MqttProtocol.context.state = MqttState.STATE_OPEN
+		current_time = (tools.strings.ticks()//1000)
+		# if the last connection dates back more than two hours
+		if (MqttProtocol.context.last_establish + 7200) < current_time:
+			polling = 3607
+		# if the last connection dates back more than an hour
+		elif (MqttProtocol.context.last_establish + 3600) < current_time:
+			polling = 907
+		# if the last connection dates back more than a quarter of an hour
+		elif (MqttProtocol.context.last_establish + 900) < current_time:
+			polling = 179
+		else:
+			polling = 11
+		tools.logger.syslog("Mqtt not connected since %d s"%(current_time - MqttProtocol.context.last_establish))
+		await uasyncio.sleep(polling)
+		MqttProtocol.context.state = MqttStateMachine.STATE_OPEN
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_CONNACK)
 	async def on_conn_ack(message, **kwargs):
 		""" Conn ack treatment """
-		if MqttProtocol.context.state == MqttState.STATE_CONNACK:
+		if MqttProtocol.context.state == MqttStateMachine.STATE_CONNACK:
 			if message.return_code == 0:
 				tools.logger.syslog("Mqtt connected")
-				MqttProtocol.context.state = MqttState.STATE_ACCEPTED
+				MqttProtocol.context.state = MqttStateMachine.STATE_ACCEPTED
 			else:
 				tools.logger.syslog("Mqtt connection refused %d"%message.return_code)
-				MqttProtocol.context.state = MqttState.STATE_CLOSE
+				MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 		else:
 			tools.logger.syslog("Mqtt unexpected connack")
-			MqttProtocol.context.state = MqttState.STATE_CLOSE
+			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_PINGREQ)
 	async def on_ping_req(message, **kwargs):
 		""" Ping received """
-		if MqttProtocol.context.state == MqttState.STATE_ESTABLISH:
+		if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
 			await MqttProtocol.send(server.mqttmessages.MqttPingResp())
 		else:
 			tools.logger.syslog("Mqtt unexpected pingreq")
-			MqttProtocol.context.state = MqttState.STATE_CLOSE
+			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_PINGRESP)
 	async def on_ping_rsp(message, **kwargs):
 		""" Ping response received """
-		if MqttProtocol.context.state != MqttState.STATE_ESTABLISH:
+		if MqttProtocol.context.state != MqttStateMachine.STATE_ESTABLISH:
 			tools.logger.syslog("Mqtt unexpected pingres")
-			MqttProtocol.context.state = MqttState.STATE_CLOSE
+			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_SUBACK)
@@ -413,7 +405,7 @@ class MqttStateMachine:
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_DISCONNECT)
 	async def on_disconnect(message, **kwargs):
 		""" Disconnect received """
-		MqttProtocol.context.state = MqttState.STATE_CLOSE
+		MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
 	@staticmethod
 	@MqttProtocol.add_control(server.mqttmessages.MQTT_PUBLISH)
@@ -434,13 +426,13 @@ class MqttStateMachine:
 		""" Manages mqtt commands received and returns responses """
 		try:
 			states = {
-				MqttState.STATE_OPEN      : ("OPEN",      MqttStateMachine.state_open),
-				MqttState.STATE_CONNECT   : ("CONNECT",   MqttStateMachine.state_connect),
-				MqttState.STATE_CONNACK   : ("CONNACK",   MqttStateMachine.state_connack),
-				MqttState.STATE_ACCEPTED  : ("ACCEPTED",  MqttStateMachine.state_accepted),
-				MqttState.STATE_ESTABLISH : ("ESTABLISH", MqttStateMachine.state_establish),
-				MqttState.STATE_CLOSE     : ("CLOSE",     MqttStateMachine.state_close),
-				MqttState.STATE_WAIT      : ("WAIT",      MqttStateMachine.state_wait)
+				MqttStateMachine.STATE_OPEN      : ("OPEN",      MqttStateMachine.state_open),
+				MqttStateMachine.STATE_CONNECT   : ("CONNECT",   MqttStateMachine.state_connect),
+				MqttStateMachine.STATE_CONNACK   : ("CONNACK",   MqttStateMachine.state_connack),
+				MqttStateMachine.STATE_ACCEPTED  : ("ACCEPTED",  MqttStateMachine.state_accepted),
+				MqttStateMachine.STATE_ESTABLISH : ("ESTABLISH", MqttStateMachine.state_establish),
+				MqttStateMachine.STATE_CLOSE     : ("CLOSE",     MqttStateMachine.state_close),
+				MqttStateMachine.STATE_WAIT      : ("WAIT",      MqttStateMachine.state_wait)
 			}
 			previous_state_name = ""
 			while True:
