@@ -541,5 +541,7 @@ class MqttStream(server.stream.Stream):
 			tools.strings.dump_line(data[offset:offset+width], line, width)
 			offset += width
 			print(tools.strings.tostrings(line.getvalue()))
+			if offset >= 512:
+				break
 			if offset >= len(data):
 				break

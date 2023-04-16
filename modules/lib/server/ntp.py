@@ -67,6 +67,7 @@ class Ntp:
 	async def task(**kwargs):
 		""" Internal clock synchronization task """
 		Ntp.init()
+		duration = 307
 
 		# If ntp synchronization enabled
 		if Ntp.server_config.ntp:
@@ -78,11 +79,14 @@ class Ntp:
 						wifi.wifi.Wifi.wan_connected()
 					else:
 						wifi.wifi.Wifi.wan_disconnected()
+			if Ntp.last_sync == 0:
+				duration = 59
 
 		if Ntp.region_config.current_time + 599 < time.time():
 			Ntp.region_config.current_time = time.time()
 			Ntp.region_config.save()
-		await uasyncio.sleep(307)
+		
+		await uasyncio.sleep(duration)
 
 	@staticmethod
 	def start():

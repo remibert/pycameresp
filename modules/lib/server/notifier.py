@@ -129,11 +129,6 @@ class Notifier:
 	@staticmethod
 	async def flush():
 		""" Flush postponed message if wan connected """
-		if tools.filesystem.ismicropython():
-			sleep_duration = 127
-		else:
-			sleep_duration = 3
-
 		# If wan available
 		if wifi.wifi.Wifi.is_wan_available():
 			result = True
@@ -156,13 +151,6 @@ class Notifier:
 
 			Notifier.postponed = not_sent
 
-			# If all message notified
-			if result is False:
-				sleep_duration = 19
-		else:
-			sleep_duration = 5
-		return sleep_duration
-
 	@staticmethod
 	async def task():
 		""" Run the task """
@@ -176,11 +164,11 @@ class Notifier:
 				Notifier.notify(topic=tools.topic.information, message=message)
 
 		# If no notification should be sent
-		sleep_duration = await Notifier.flush()
+		await Notifier.flush()
 
 		try:
 			# Wait notification
-			await uasyncio.wait_for(Notifier.wake_up_event.wait(), sleep_duration)
+			await uasyncio.wait_for(Notifier.wake_up_event.wait(), 11)
 			# Clear event notification event
 			Notifier.wake_up_event.clear()
 		except:

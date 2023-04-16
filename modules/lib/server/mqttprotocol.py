@@ -44,7 +44,7 @@ class MqttClientContext:
 		self.streamio   = None
 		self.state = MqttStateMachine.STATE_OPEN
 		self.debug = kwargs.get("debug",False)
-		self.kwargs["client_id"] = kwargs.get("client_id",wifi.hostname.Hostname().get_hostname())
+		self.kwargs["client_id"] = tools.strings.tostrings(kwargs.get("client_id",wifi.hostname.Hostname().get_hostname()))
 		self.last_establish =  tools.strings.ticks()//1000
 
 class MqttProtocol:
@@ -151,6 +151,8 @@ class MqttProtocol:
 		result = True
 		if MqttProtocol.context is not None:
 			message = server.mqttmessages.MqttPublish(**kwargs)
+			if "%(client_id)s" in message.topic:
+				message.topic = message.topic%MqttProtocol.context.kwargs
 			if message.qos != server.mqttmessages.MQTT_QOS_ONCE:
 				MqttProtocol.publications.append(message)
 			if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
@@ -206,7 +208,7 @@ class MqttProtocol:
 
 			if notification.topic and value:
 				if MqttProtocol.notify_message not in notification.sent:
-					topic = "%s/%s"%(tools.strings.tostrings(wifi.hostname.Hostname().get_hostname()), tools.strings.tostrings(notification.topic))
+					topic = "%(client_id)s/" + tools.strings.tostrings(notification.topic)
 					result = await MqttProtocol.publish(topic=topic, value=value)
 					if result is True:
 						notification.sent.append(MqttProtocol.notify_message)
@@ -264,6 +266,7 @@ class MqttStateMachine:
 					await MqttProtocol.send(publication)
 					publication.dup = 1
 			MqttProtocol.context.state = MqttStateMachine.STATE_ESTABLISH
+			tools.logger.syslog("Mqtt established (client_id='%s')"%MqttProtocol.context.kwargs.get("client_id",""))
 			MqttProtocol.context.last_establish  = tools.strings.ticks()//1000
 		except Exception as error:
 			MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
@@ -282,6 +285,7 @@ class MqttStateMachine:
 
 			# If message decoded with success
 			if message is not None:
+				MqttProtocol.context.last_establish  = tools.strings.ticks()//1000
 				if MqttProtocol.context.debug:
 					print("Mqtt receive : %s"%message.__class__.__name__)
 				# Search treatment callback

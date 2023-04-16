@@ -80,6 +80,7 @@ class WanIp:
 	async def task():
 		""" Asynchronous task to refresh periodically the wan ip """
 		WanIp.init()
+		duration = 311
 
 		# If wanip synchronization enabled
 		if WanIp.config.wanip:
@@ -99,7 +100,9 @@ class WanIp:
 						wifi.wifi.Wifi.wan_connected()
 					else:
 						wifi.wifi.Wifi.wan_disconnected()
-		await uasyncio.sleep(311)
+			if WanIp.wan_ip is None:
+				duration = 61
+		await uasyncio.sleep(duration)
 
 	@staticmethod
 	def start():
