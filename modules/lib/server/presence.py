@@ -26,7 +26,7 @@ class PresenceConfig(tools.jsonconfig.JsonConfig):
 
 class Presence:
 	""" Presence detection of smartphones """
-	FAST_POLLING     = 7.
+	FAST_POLLING     = 7
 	SLOW_POLLING     = 53
 	core             = None
 	polling_duration = 0
@@ -91,7 +91,7 @@ class Presence:
 			Presence.activated = Presence.presence_config.activated
 
 		# Wait before new ping
-		await tools.tasking.Tasks.wait_resume(Presence.polling_duration, name="presence")
+		await tools.tasking.Tasks.wait_resume(duration=Presence.polling_duration*1000, name="presence")
 		return True
 
 	@staticmethod

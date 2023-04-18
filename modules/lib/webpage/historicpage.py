@@ -404,7 +404,7 @@ async def historic_json(request, response, args):
 async def historic_image(request, response, args):
 	""" Send historic image """
 	tools.tasking.Tasks.slow_down()
-	reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=15)
+	reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=10)
 	try:
 		if reserved:
 			await motion.historic.Historic.acquire()
@@ -420,7 +420,7 @@ async def historic_image(request, response, args):
 async def download_image(request, response, args):
 	""" Download historic image """
 	tools.tasking.Tasks.slow_down()
-	reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=15)
+	reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=10)
 	try:
 		if reserved:
 			await motion.historic.Historic.acquire()

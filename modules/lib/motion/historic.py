@@ -355,9 +355,9 @@ class Historic:
 	async def task():
 		""" Internal periodic task """
 		if tools.filesystem.ismicropython():
-			await tools.tasking.Tasks.wait_resume(31, "historic")
+			await tools.tasking.Tasks.wait_resume(duration=31000, name="historic")
 		else:
-			await tools.tasking.Tasks.wait_resume(1, "historic")
+			await tools.tasking.Tasks.wait_resume(duration=1000, name="historic")
 
 		if Historic.motion_in_progress[0] is False:
 			if tools.sdcard.SdCard.is_mounted() is False:

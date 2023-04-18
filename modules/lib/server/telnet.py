@@ -3,6 +3,7 @@
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
 """ Telnet class """
+import time
 import socket
 import sys
 import uos
@@ -48,6 +49,7 @@ class Telnet:
 		Telnet.close_client()
 		from server import telnetcore
 		Telnet.client[0], remote_addr = socket_server.accept()
+		tools.tasking.Tasks.slow_down()
 		tools.logger.syslog("Telnet connected from : %s" % remote_addr[0])
 		Telnet.client[0].setblocking(False)
 		Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)

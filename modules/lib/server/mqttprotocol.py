@@ -345,7 +345,12 @@ class MqttStateMachine:
 			polling = 179
 		else:
 			polling = 11
-		tools.logger.syslog("Mqtt not connected since %d s"%(current_time - MqttProtocol.context.last_establish))
+		down = current_time - MqttProtocol.context.last_establish
+		seconds = (down)%60
+		mins    = (down/60)%60
+		hours   = (down/3600)%24
+		days    = (down/86400)
+		tools.logger.syslog("Mqtt not connected since %d days, %d:%02d:%02d"%(days,hours,mins,seconds))
 		await uasyncio.sleep(polling)
 		MqttProtocol.context.state = MqttStateMachine.STATE_OPEN
 

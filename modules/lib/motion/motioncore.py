@@ -656,14 +656,7 @@ class Detection:
 
 		# If camera not stabilized speed start
 		if self.motion and self.motion.is_stabilized() is True:
-			frequency = self.polling_frequency*500 if tools.tasking.Tasks.is_slow() else self.polling_frequency
-			if frequency > 1000:
-				while frequency > 0:
-					await uasyncio.sleep_ms(500)
-					frequency -= 500
-					await tools.tasking.Tasks.wait_resume(name="motion")
-			else:
-				await uasyncio.sleep_ms(frequency)
+			await tools.tasking.Tasks.wait_resume(duration=tools.tasking.Tasks.get_slow_ratio() * self.polling_frequency, name="motion")
 
 		try:
 			# Waits for the camera's availability

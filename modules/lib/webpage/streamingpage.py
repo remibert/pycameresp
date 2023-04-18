@@ -84,7 +84,7 @@ async def camera_start_streaming(request, response, args):
 	try:
 		writer = None
 		currentstreaming_id = int(request.params[b"streaming_id"])
-		reserved = await video.video.Camera.reserve(request, timeout=20, suspension=15)
+		reserved = await video.video.Camera.reserve(request, timeout=5, suspension=10)
 		if reserved:
 			failed = False
 			video.video.Camera.open()

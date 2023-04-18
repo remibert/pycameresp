@@ -32,12 +32,15 @@ class TelnetLogin:
 			hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
 		except:
 			hostname = tools.strings.tobytes(sys.platform)
-		message = b"# Telnet on '%s' started #"%hostname
-		self.output.write(b"\r\n%s\r\n%s\r\n%s\r\n"%(b"#"*len(message), message, b"#"*len(message)))
+		self.output.write(b"<<<<<<<<<< Telnet started on '%s'   >>>>>>>>>>\r\n"%hostname)
 
 	def footer(self):
 		""" Show footer """
-		self.output.write(b"\r\n%s\r\n"%(b"-"*30))
+		try:
+			hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
+		except:
+			hostname = tools.strings.tobytes(sys.platform)
+		self.output.write(b"<<<<<<<<<< Telnet connected on '%s' >>>>>>>>>>\r\n"%hostname)
 
 	def clean(self):
 		""" Clean the login """

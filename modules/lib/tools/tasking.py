@@ -84,7 +84,8 @@ class Tasks:
 	servers        = []
 	clients        = []
 	suspended      = [False]
-	slow_speed     = [None]
+	slow_time      = [0]
+	slow_ratio     = [1]
 	tasks          = {}
 	tasknames      = {}
 	started = False
@@ -208,28 +209,34 @@ class Tasks:
 			Tasks.tasks[taskid] = current
 		if duration is not None:
 			current.status = True
-			await uasyncio.sleep(duration)
+			await uasyncio.sleep_ms(duration)
 		if Tasks.suspended[0]:
 			current.status = True
 			while Tasks.suspended[0]:
-				await uasyncio.sleep(1)
+				await uasyncio.sleep_ms(500)
 		current.status = False
 
 	@staticmethod
-	def is_slow():
+	def get_slow_ratio():
 		""" Indicates that task other than server must be slower """
-		if Tasks.slow_speed[0] is None:
-			return False
-		elif time.time() > Tasks.slow_speed[0]:
-			Tasks.slow_speed[0] = None
-			return False
-		else:
-			return True
+		if Tasks.slow_time[0] != 0:
+			if time.time() > Tasks.slow_time[0]:
+				Tasks.slow_time[0] = 0
+				Tasks.slow_ratio[0] = 1
+		return Tasks.slow_ratio[0]
 
 	@staticmethod
-	def slow_down(duration=20):
+	def slow_down(duration=20, ratio=25):
 		""" Set the state slow for a specified duration """
-		Tasks.slow_speed[0] = time.time() + duration
+		keep = True
+
+		if Tasks.slow_time[0] != 0:
+			if Tasks.slow_ratio[0] > ratio:
+				keep = False
+				Tasks.slow_time[0] = time.time() + duration
+		if keep:
+			Tasks.slow_time[0] = time.time() + duration
+			Tasks.slow_ratio[0] = ratio
 
 	@staticmethod
 	def is_all_waiting():
