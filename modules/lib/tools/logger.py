@@ -41,6 +41,18 @@ def syslog(err, msg="", display=True, write=True):
 		log(result)
 	return result
 
+_max_log_size = 32*1024
+_max_log_quantity = 4
+def set_size(size, quantity):
+	""" Change the size of logger
+	Parameters :
+	- size : max size of syslog file
+	- quantity : max quantity of syslog file """
+	global _max_log_size
+	global _max_log_quantity
+	_max_log_size = size
+	_max_log_quantity = quantity
+
 def log(msg):
 	""" Log message in syslog.log file without printing """
 	# pylint:disable=unspecified-encoding
@@ -52,12 +64,14 @@ def log(msg):
 		log_file = open(filename,"a")
 		log_file.seek(0,2)
 
-		if log_file.tell() >32*1024:
+		if log_file.tell() > _max_log_size:
 			log_file.close()
-			tools.filesystem.rename(filename + ".3",filename + ".4")
-			tools.filesystem.rename(filename + ".2",filename + ".3")
-			tools.filesystem.rename(filename + ".1",filename + ".2")
-			tools.filesystem.rename(filename       ,filename + ".1")
+			for i in range(_max_log_quantity,0,-1):
+				old = ".%d"%i
+				new = ".%d"%(i-1)
+				if i == 1:
+					new = ""
+				tools.filesystem.rename(filename + new,filename + old)
 			log_file = open(filename,"a")
 
 		log_file.write(tools.date.date_ms_to_string() + " %s\n"%(msg))

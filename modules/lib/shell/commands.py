@@ -719,7 +719,7 @@ def meminfo():
 
 def flashinfo(mountpoint=None):
 	""" Get flash informations """
-	tools.console.Console.print(tools.strings.tostrings(b"%s : %s"%(tools.lang.flash_info, tools.info.flashinfo(mountpoint=mountpoint))))
+	tools.console.Console.print(tools.strings.tostrings(b"%s : %s"%(tools.lang.flash_label, tools.info.flashinfo(mountpoint=mountpoint))))
 
 def sysinfo():
 	""" Get system informations """

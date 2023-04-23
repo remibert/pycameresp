@@ -121,7 +121,7 @@ class PushOver:
 async def async_notify(user, token, message, image=None, display=True):
 	""" Asyncio notification function (only in asyncio) """
 	notification = PushOver(host=b"api.pushover.net", port=80, token=token, user=user)
-	return await notification.notify(b"%s : %s"%(wifi.station.Station.get_hostname(), tools.strings.tobytes(message)), image, display)
+	return await notification.notify(tools.strings.tobytes(message), image, display)
 
 def notify(user, token, message, image=None):
 	""" Notification function """

@@ -40,3 +40,5 @@ item_geolocation    = b"G\xC3\xA9olocalisation"
 latitude            = b"Latitude"
 longitude           = b"Longitude"
 temperature         = b"Temp\xC3\xA9rature"
+
+missing_space       = b"Disk space almost full"

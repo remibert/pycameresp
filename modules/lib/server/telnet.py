@@ -3,7 +3,6 @@
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
 """ Telnet class """
-import time
 import socket
 import sys
 import uos

@@ -30,10 +30,15 @@ def start(**kwargs):
 		- shell    : activate shell (default False)
 		- webhook  : activate webhook notification (default False)
 		- wifi     : activate wifi manager (default False)
+		- log_size : maximal size of syslog file
+		- log_quantity : maximal quantity of syslog files
 	"""
 	# pylint:disable=consider-using-f-string
 	import tools.info
 	import tools.support
+	import tools.logger
+
+	tools.logger.set_size(size=kwargs.get("log_size",32*1024), quantity=kwargs.get("log_quantity",4))
 
 	if kwargs.get("awake",False):
 		# Manage the awake of device

@@ -84,7 +84,7 @@ class Notifier:
 		result = b""
 		item = kwargs.get("message",None)
 		if item is not None:
-			result += b"msg='''%s''' "%tools.strings.tobytes(item)
+			result += b"msg='''\n%s''' "%tools.strings.tobytes(item)
 		item = kwargs.get("topic",None)
 		if item is not None:
 			result += b"topic=%s "%tools.strings.tobytes(item)
@@ -192,7 +192,8 @@ class Notifier:
 	@staticmethod
 	def default_daily_notifier():
 		""" Return the default message notification """
-		message = "\n - Lan Ip : %s\n"%wifi.station.Station.get_info()[0]
+		message  = "%s\n"%tools.strings.tostrings(wifi.station.Station.get_hostname())
+		message += " - Lan Ip : %s\n"%wifi.station.Station.get_info()[0]
 		message += " - Wan Ip : %s\n"%server.wanip.WanIp.wan_ip
 		message += " - Uptime : %s\n"%tools.strings.tostrings(tools.info.uptime())
 		message += " - %s : %s\n"%(tools.strings.tostrings(tools.lang.memory_label), tools.strings.tostrings(tools.info.meminfo()))
@@ -202,7 +203,7 @@ class Notifier:
 	@staticmethod
 	def set_daily_notifier(callback):
 		""" Replace the daily notification (callback which return a string with message to notify) """
-		Notifier.daily_notifier = callback
+		Notifier.daily_callback = callback
 
 	@staticmethod
 	def start():
