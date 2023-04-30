@@ -40,7 +40,7 @@ Below is the list of features supported by the software
 - Tools executable directly on the board :
 	- Syntax highlight text editor, with possibility to execute script directly in device
 	- Shell (cd, pwd, cat, mkdir, mv, cp, rm, ls, find, grep, edit, man, ping, ...)
-	- Html template engine using <a href="https://jquery.com">jquery</a>, <a href="https://www.w3schools.com/bootstrap4">bootstrap 4</a>
+	- Html template engine using <a href="https://jquery.com">jquery</a>, <a href="https://www.w3schools.com/bootstrap5">bootstrap 5</a>
 	- Error logging in syslog file with rotation
 
 - Miscellaneous functionality :

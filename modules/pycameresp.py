@@ -78,7 +78,7 @@ def start(**kwargs):
 					ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=12, fb_count=1, flash_led=0)
 				tools.sdcard.SdCard.set_slot(slot=None) # The slot is good but not working I don't know why
 			elif device == "M5CAMERA-B":
-				# ESP32ONE device
+				# M5CAMERA-B device
 				video.video.Camera.gpio_config(
 					pin_pwdn=-1, pin_reset=15, pin_xclk=27, pin_sscb_sda=22, pin_sscb_scl=23,
 					pin_d7=19, pin_d6=36, pin_d5=18, pin_d4=39,

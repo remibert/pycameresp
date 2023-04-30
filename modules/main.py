@@ -31,4 +31,5 @@ pycameresp.start(\
 	presence = True, # Home occupant presence detection task
 	camera   = True, # Camera configuration
 	motion   = True, # Motion detection task
+	# debug=True, dump=True
 	)

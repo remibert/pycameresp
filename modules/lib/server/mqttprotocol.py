@@ -220,10 +220,11 @@ class MqttProtocol:
 						notification.sent.append(MqttProtocol.notify_message)
 					else:
 						current_time = (tools.strings.ticks()//1000)
-						# If the broker has not been visible for several hours
-						if current_time > (MqttProtocol.context.last_establish + 7200):
-							# Ignore the error
-							result = True
+						if MqttProtocol.context is not None:
+							# If the broker has not been visible for several hours
+							if current_time > (MqttProtocol.context.last_establish + 7200):
+								# Ignore the error
+								result = True
 		return result
 
 class MqttStateMachine:

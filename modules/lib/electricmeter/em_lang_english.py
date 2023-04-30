@@ -40,4 +40,4 @@ latitude            = b"Latitude"
 longitude           = b"Longitude"
 temperature         = b"Temperature"
 
-missing_space       = b"Espace disque presque plein"
+write_problem       = b"Data writing problem"

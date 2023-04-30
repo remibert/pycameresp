@@ -34,7 +34,7 @@ async def hourly_page_page(request, response, args):
 
 	step = int(request.params.get(b"step",b"30"))
 	steps = []
-	for s in [1,2,5,10,15,30,60,240,360]:
+	for s in [1,2,3,5,10,15,30,60]:
 		if s == step:
 			selected = True
 		else:

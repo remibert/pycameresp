@@ -1,5 +1,4 @@
 """ Task to count wh from the electric meter """
-import io
 import struct
 import time
 import collections
@@ -16,6 +15,7 @@ import tools.logger
 import tools.tasking
 import tools.info
 import tools.system
+import tools.sdcard
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-iterating-dictionary
 # pylint:disable=missing-function-docstring
@@ -34,10 +34,22 @@ import tools.system
 
 PULSE_DIRECTORY = "pulses"
 PULSE_HOURLY   = ".hourly"
-PULSE_HOURLIES = ".hourlies"
 PULSE_DAILY    = ".daily"
 PULSE_MONTHLY  = ".monthly"
-NUMBER_OF_DAYS=[31,29,31,30,31,30,31,31,30,31,30,31]
+
+def get_pulse_directory():
+	""" Return the root of pulse directory """
+	return tools.sdcard.SdCard.get_mountpoint() + "/" + PULSE_DIRECTORY
+
+_last_err_write = 0
+def write_problem(err):
+	""" Raise write problem """
+	global _last_err_write
+	if _last_err_write + 3600 < time.time():
+		_last_err_write = time.time()
+		server.notifier.Notifier.notify(message=electricmeter.em_lang.write_problem)
+	tools.info.increase_issues_counter()
+	tools.logger.exception(err)
 
 class PulseSensor:
 	""" Detect wh pulse from electric meter """
@@ -119,8 +131,10 @@ class HourlyCounter:
 
 	def __init__(self, gpio):
 		""" Constructor """
-		tools.filesystem.makedir(PULSE_DIRECTORY,True)
-		self.aggregates_all()
+		try:
+			tools.filesystem.makedir(get_pulse_directory(),True)
+		except Exception as err:
+			write_problem(err)
 		self.day    = time.time()
 		self.pulses = HourlyCounter.load(HourlyCounter.get_filename(self.day))
 		self.last_save = time.time()
@@ -158,7 +172,6 @@ class HourlyCounter:
 			if HourlyCounter.is_same_day(day, self.day) is False:
 				# Save day counter
 				HourlyCounter.save(HourlyCounter.get_filename(self.day))
-				self.aggregates_all()
 
 				# Clear day pulses counter
 				self.day_pulses_counter = 0
@@ -174,59 +187,6 @@ class HourlyCounter:
 
 		# print("%s %.1f wh pulses=%d"%(tools.date.date_to_string(), self.watt_hour, self.day_pulses_counter))
 		return True
-
-	def aggregates_all(self):
-		""" Aggregates all hourlies """
-		directories,_ = tools.filesystem.scandir(PULSE_DIRECTORY,"rien",True)
-		for month_path in directories:
-			self.aggregates_one(month_path)
-
-	def aggregates_one(self, month_path):
-		""" Aggregate one hourlies """
-		hourlies_filename = month_path + "/" + tools.filesystem.split(month_path)[1] + PULSE_HOURLIES
-
-		# Search for all files of all days
-		_, hourlies = tools.filesystem.scandir(month_path, "*" + PULSE_HOURLY, False)
-
-		# If files found
-		if len(hourlies) > 0:
-			# If existing hourlies file found
-			if tools.filesystem.exists(hourlies_filename):
-				with open(hourlies_filename, "rb") as file:
-					output = io.BytesIO(file.read())
-			else:
-				month = int(month_path[-2:])
-				length = NUMBER_OF_DAYS[month-1]
-				# Create a hourlies empty file
-				output = io.BytesIO(b"\x00"*1440*length)
-
-			# For all hourly files
-			for hourly in hourlies:
-				# Get the filename
-				filename = tools.filesystem.splitext(tools.filesystem.split(hourly)[1])[0]
-
-				# Get the file date
-				y,m,d = filename.split("-")
-
-				# Read the hourly file
-				with open(hourly, "rb") as file:
-					# Add the content file at the right position
-					output.seek((int(d) - 1)*1440, 0)
-					output.write(file.read())
-
-			# Write the completed file
-			with open(hourlies_filename,"wb") as file:
-				file.write(output.getvalue())
-
-			# For all hourly files
-			for hourly in hourlies:
-				if HourlyCounter.get_filename() != hourly:
-					tools.filesystem.remove(hourly)
-	
-	@staticmethod
-	def get_directory(year, month):
-		""" Get the directory of hourly file """
-		return "%s/%04d-%02d"%(PULSE_DIRECTORY, year, month)
 
 	@staticmethod
 	def is_same_day(day1, day2):
@@ -245,6 +205,11 @@ class HourlyCounter:
 		return "%s/%04d-%02d-%02d%s"%(HourlyCounter.get_directory(year, month), year, month, day, PULSE_HOURLY)
 
 	@staticmethod
+	def get_directory(year, month):
+		""" Get the directory of hourly file """
+		return "%s/%04d-%02d"%(get_pulse_directory(), year, month)
+
+	@staticmethod
 	def save(filename):
 		""" Save pulses file """
 		try:
@@ -253,14 +218,13 @@ class HourlyCounter:
 				file.write(struct.pack("B"*1440, *HourlyCounter.counter.pulses))
 			HourlyCounter.counter.last_save = time.time()
 		except Exception as err:
-			tools.logger.exception(err)
+			write_problem(err)
 
 	@staticmethod
 	def load(filename, pulses=None):
 		""" Load pulses file """
 		result = [0]*1440
 		try:
-			load_pulses = None
 			if tools.filesystem.exists(filename):
 				with open(filename, "rb") as file:
 					load_pulses = struct.unpack("B"*1440, file.read())
@@ -272,24 +236,6 @@ class HourlyCounter:
 						for pulse in load_pulses:
 							result[index] += pulse
 							index += 1
-			else:
-				hourlies_filename = tools.filesystem.split(filename)[0]
-				hourlies_filename += "/" + tools.filesystem.split(hourlies_filename)[1] + PULSE_HOURLIES
-				day = (tools.filesystem.splitext(tools.filesystem.split(filename)[1])[0])[-2:]
-				if tools.filesystem.exists(hourlies_filename):
-					with open(hourlies_filename, "rb") as file:
-						file.seek(1440*(int(day)-1))
-						load_pulses = struct.unpack("B"*1440, file.read(1440))
-			index = 0
-			if load_pulses:
-				if pulses is None:
-					result = list(load_pulses)
-				else:
-					result = pulses
-					for pulse in load_pulses:
-						result[index] += pulse
-						index += 1
-
 		except Exception as err:
 			tools.logger.exception(err)
 		return result
@@ -355,17 +301,16 @@ class DailyCounter:
 		""" Load daily file """
 		result = {}
 		try:
-			with open(filename, "rb") as file:
-				while True:
-					data = file.read(2)
-					if len(data) == 0:
-						break
-					start = struct.unpack("H", data)[0]*60
-					end   = struct.unpack("H", file.read(2))[0]*60
-					days = struct.unpack("H"*31, file.read(2*31))
-					result[(start,end)] = days
-		except OSError:
-			pass
+			if tools.filesystem.exists(filename):
+				with open(filename, "rb") as file:
+					while True:
+						data = file.read(2)
+						if len(data) == 0:
+							break
+						start = struct.unpack("H", data)[0]*60
+						end   = struct.unpack("H", file.read(2))[0]*60
+						days = struct.unpack("H"*31, file.read(2*31))
+						result[(start,end)] = days
 		except Exception as err:
 			tools.logger.exception(err)
 		return result
@@ -379,33 +324,29 @@ class DailyCounter:
 					start, end = time_slot
 					file.write(struct.pack("HH", start//60, end//60))
 					file.write(struct.pack("H"*len(days), *days))
-		except OSError:
-			pass
 		except Exception as err:
-			tools.logger.exception(err)
+			write_problem(err)
 
 	@staticmethod
 	async def update(filenames, daily_to_update):
 		""" Update daily files """
 		for key, daily_filename in daily_to_update.items():
 			year, month = key
-			print("Update daily %s "%daily_filename, end="")
-			hourlies_searched = "%s/%s-%s/%s-%s*%s"%(PULSE_DIRECTORY, year, month, year, month, PULSE_HOURLIES)
+			hourly_searched = "%s/%s-%s/%s-%s-[0-9][0-9]%s"%(get_pulse_directory(), year, month, year, month, PULSE_HOURLY)
 			slot_pulses = electricmeter.config.TimeSlotsConfig.create_empty_slot(31)
-			for hourlies_filename in filenames:
-				if tools.fnmatch.fnmatch(hourlies_filename, hourlies_searched):
-					hourly_directory = tools.filesystem.splitext(hourlies_filename)[0]
-					number_of_days = NUMBER_OF_DAYS[int(month)-1]
-					for day in range(number_of_days):
-						hourly_filename = hourly_directory + "-%02d"%(day+1) + PULSE_HOURLY
-						hourly_pulses = HourlyCounter.load(hourly_filename)
+			for hourly_filename in filenames:
+				if tools.fnmatch.fnmatch(hourly_filename, hourly_searched):
+					name = tools.filesystem.splitext(tools.filesystem.split(hourly_filename)[1])[0]
+					day = int(name.split("-")[-1])
+					print("\r  Daily %s %2d"%(daily_filename,day), end="")
+					hourly_pulses = HourlyCounter.load(hourly_filename)
+					second = 0
+					for start, end in slot_pulses.keys():
 						second = 0
-						for start, end in slot_pulses.keys():
-							second = 0
-							for pulses in hourly_pulses:
-								if start <= second <= end:
-									slot_pulses[(start,end)][day] += pulses
-								second += 60
+						for pulses in hourly_pulses:
+							if start <= second <= end:
+								slot_pulses[(start,end)][day-1] += pulses
+							second += 60
 				else:
 					pass
 				await uasyncio.sleep_ms(2)
@@ -423,14 +364,14 @@ class MonthlyCounter:
 	async def update(filenames, monthly_to_update):
 		""" Update monthly files """
 		for year, monthly_filename in monthly_to_update.items():
-			print("Update monthly %s "%monthly_filename, end="")
-			daily_searched = "%s/%s-*/%s-*%s"%(PULSE_DIRECTORY, year, year, PULSE_DAILY)
+			
+			daily_searched = "%s/%s-[0-9][0-9]/%s-[0-9][0-9]%s"%(get_pulse_directory(), year, year, PULSE_DAILY)
 			slot_pulses = electricmeter.config.TimeSlotsConfig.create_empty_slot(12)
 			for daily_filename in filenames:
 				if tools.fnmatch.fnmatch(daily_filename, daily_searched):
 					name = tools.filesystem.splitext(tools.filesystem.split(daily_filename)[1])[0]
 					month = int(name.split("-")[-1])
-					print("%d "%month, end="")
+					print("\r  Monthly %s %d"%(monthly_filename, month), end="")
 					daily_slot_pulses = DailyCounter.load(daily_filename)
 					for time_slot, days in daily_slot_pulses.items():
 						for day in days:
@@ -449,22 +390,23 @@ class MonthlyCounter:
 					file.write(struct.pack("HH", start//60, end//60))
 					file.write(struct.pack("I"*len(months), *months))
 		except Exception as err:
-			tools.logger.exception(err)
+			write_problem(err)
 
 	@staticmethod
 	def load(filename):
 		""" Load daily file content """
 		result = {}
 		try:
-			with open(filename, "rb") as file:
-				while True:
-					data = file.read(2)
-					if len(data) == 0:
-						break
-					start = struct.unpack("H", data)[0]*60
-					end   = struct.unpack("H", file.read(2))[0]*60
-					months = struct.unpack("I"*12, file.read(4*12))
-					result[(start,end)] = months
+			if tools.filesystem.exists(filename):
+				with open(filename, "rb") as file:
+					while True:
+						data = file.read(2)
+						if len(data) == 0:
+							break
+						start = struct.unpack("H", data)[0]*60
+						end   = struct.unpack("H", file.read(2))[0]*60
+						months = struct.unpack("I"*12, file.read(4*12))
+						result[(start,end)] = months
 		except Exception as err:
 			tools.logger.exception(err)
 		return result
@@ -473,16 +415,17 @@ class MonthlyCounter:
 	async def get_updates():
 		""" Build the list of daily and monthly file to update """
 		force = MonthlyCounter.force[0]
-		_, filenames = await tools.filesystem.ascandir(PULSE_DIRECTORY, "*", True)
+		_, filenames = await tools.filesystem.ascandir(get_pulse_directory(), "*", True)
 		filenames.sort()
 		daily_to_update = {}
 		monthly_to_update = {}
 		for filename in filenames:
-			if tools.fnmatch.fnmatch(filename, "*"+PULSE_HOURLY) or tools.fnmatch.fnmatch(filename, "*"+PULSE_HOURLIES):
+			_, name = tools.filesystem.split(filename)
+			if tools.fnmatch.fnmatch(name, "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]"+PULSE_HOURLY):
 				name = tools.filesystem.splitext(tools.filesystem.split(filename)[1])[0]
 				year, month = name[:7].split("-")
-				daily   = "%s/%s-%s/%s-%s%s"%(PULSE_DIRECTORY, year, month, year, month, PULSE_DAILY)
-				monthly = "%s/%s%s"%(PULSE_DIRECTORY, year, PULSE_MONTHLY)
+				daily   = "%s/%s-%s/%s-%s%s"%(get_pulse_directory(), year, month, year, month, PULSE_DAILY)
+				monthly = "%s/%s%s"%(get_pulse_directory(), year, PULSE_MONTHLY)
 				update = False
 				if daily not in daily_to_update:
 					if tools.filesystem.exists(daily):
@@ -495,7 +438,9 @@ class MonthlyCounter:
 				if update:
 					daily_to_update[(year, month)] = daily
 					monthly_to_update[year] = monthly
-
+			elif tools.fnmatch.fnmatch(name, "._*") or name == ".DS_Store":
+				print("delete '%s' "%filename)
+				tools.filesystem.remove(filename)
 			await uasyncio.sleep_ms(2)
 		MonthlyCounter.force[0] = False
 		return daily_to_update, monthly_to_update, filenames
@@ -506,7 +451,7 @@ class MonthlyCounter:
 		if selected_date is None:
 			selected_date = time.time()
 		year = tools.date.local_time(selected_date)[0]
-		return "%s/%04d%s"%(PULSE_DIRECTORY, year, PULSE_MONTHLY)
+		return "%s/%04d%s"%(get_pulse_directory(), year, PULSE_MONTHLY)
 
 	@staticmethod
 	def get_datas(selected_date):
@@ -532,13 +477,13 @@ class MonthlyCounter:
 			MonthlyCounter.next_update[0] -= 1
 			await uasyncio.sleep(1)
 
-		if tools.info.flash_size()[2] < 160*1024:
-			server.notifier.Notifier.notify(message=electricmeter.em_lang.missing_space)
+		print("Begin electricmeter update")
 		daily_to_update, monthly_to_update, filenames = await MonthlyCounter().get_updates()
 		await DailyCounter.update  (filenames, daily_to_update)
 		await MonthlyCounter.update(filenames, monthly_to_update)
 		MonthlyCounter.next_update[0] = 28793
 		MonthlyCounter.last_update[0] = time.time()
+		print("End electricmeter update")
 		return True
 
 	@staticmethod
@@ -640,11 +585,12 @@ class ElectricMeter:
 	def start(**kwargs):
 		""" Start electric meter task """
 		if tools.support.counter():
+			tools.sdcard.SdCard.mount()
 			server.notifier.Notifier.set_daily_notifier(ElectricMeter.daily_notifier)
-			tools.tasking.Tasks.create_task(HourlyCounter.task(**kwargs))
-			tools.tasking.Tasks.create_task(MonthlyCounter.task())
+			tools.tasking.Tasks.create_monitor(HourlyCounter.task, **kwargs)
+			tools.tasking.Tasks.create_monitor(MonthlyCounter.task)
 			if tools.filesystem.ismicropython() is False:
-				tools.tasking.Tasks.create_task(HourlyCounter.pulse_simulator())
+				tools.tasking.Tasks.create_monitor(HourlyCounter.pulse_simulator)
 		else:
 			tools.logger.syslog("Electric meter requires hardware counter")
 
@@ -659,6 +605,6 @@ class ElectricMeter:
 		message += cost.get_message(electricmeter.em_lang.item_month, selected_date).strip() + "\n"
 		cost = HourlyCost()
 		message += cost.get_message(electricmeter.em_lang.item_day, selected_date).strip() + "\n"
-		message += "-F:%s\n"%(tools.strings.size_to_string(tools.info.flash_size()[2]))
-		message += "-U:%s\n"%tools.strings.tostrings(tools.info.uptime())
+		message += "-F:%s\n"%(tools.strings.size_to_string(tools.info.flash_size(tools.sdcard.SdCard.get_mountpoint())[2]).strip())
+		message += "-U:%s\n"%tools.strings.tostrings(tools.info.uptime()).strip()
 		return message
