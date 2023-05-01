@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to see the camera streaming &#34;&#34;&#34;
 import uasyncio
 import server.httpserver
@@ -113,7 +113,7 @@ async def camera_start_streaming(request, response, args):
         try:
                 writer = None
                 currentstreaming_id = int(request.params[b&#34;streaming_id&#34;])
-                reserved = await video.video.Camera.reserve(request, timeout=20, suspension=15)
+                reserved = await video.video.Camera.reserve(request, timeout=5, suspension=10)
                 if reserved:
                         failed = False
                         video.video.Camera.open()
@@ -199,7 +199,7 @@ async def camera_start_streaming(request, response, args):
         try:
                 writer = None
                 currentstreaming_id = int(request.params[b&#34;streaming_id&#34;])
-                reserved = await video.video.Camera.reserve(request, timeout=20, suspension=15)
+                reserved = await video.video.Camera.reserve(request, timeout=5, suspension=10)
                 if reserved:
                         failed = False
                         video.video.Camera.open()

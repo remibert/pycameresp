@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Functions for managing the json configuration.
 All configuration classes end the name with the word Config.

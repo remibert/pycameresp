@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 
 &#34;&#34;&#34; Manages access to wifi, treats cases of network loss with retry, and manages a fallback on the access point if no network is available &#34;&#34;&#34;
@@ -66,6 +66,7 @@ class Wifi:
         &#34;&#34;&#34; Class to manage the wifi station and access point &#34;&#34;&#34;
         context = WifiContext()
         config = None
+        polling = 0
 
         @staticmethod
         def init():
@@ -234,7 +235,10 @@ class Wifi:
                                                         Wifi.set_state(WIFI_CLOSE)
                                         else:
                                                 if wifi.station.Station.is_activated():
-                                                        tools.logger.syslog(&#34;Wifi SSID and password not yet configured&#34;)
+                                                        if Wifi.polling % 60 == 0:
+                                                                tools.logger.syslog(&#34;Wifi SSID and password not yet configured&#34;)
+                                                        Wifi.polling += 1
+
                                 else:
                                         duration = 63000
 
@@ -296,6 +300,7 @@ class Wifi:
         &#34;&#34;&#34; Class to manage the wifi station and access point &#34;&#34;&#34;
         context = WifiContext()
         config = None
+        polling = 0
 
         @staticmethod
         def init():
@@ -464,7 +469,10 @@ class Wifi:
                                                         Wifi.set_state(WIFI_CLOSE)
                                         else:
                                                 if wifi.station.Station.is_activated():
-                                                        tools.logger.syslog(&#34;Wifi SSID and password not yet configured&#34;)
+                                                        if Wifi.polling % 60 == 0:
+                                                                tools.logger.syslog(&#34;Wifi SSID and password not yet configured&#34;)
+                                                        Wifi.polling += 1
+
                                 else:
                                         duration = 63000
 
@@ -510,6 +518,10 @@ class Wifi:
 <div class="desc"></div>
 </dd>
 <dt id="lib.wifi.wifi.Wifi.context"><code class="name">var <span class="ident">context</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.wifi.wifi.Wifi.polling"><code class="name">var <span class="ident">polling</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -790,7 +802,10 @@ async def task():
                                                 Wifi.set_state(WIFI_CLOSE)
                                 else:
                                         if wifi.station.Station.is_activated():
-                                                tools.logger.syslog(&#34;Wifi SSID and password not yet configured&#34;)
+                                                if Wifi.polling % 60 == 0:
+                                                        tools.logger.syslog(&#34;Wifi SSID and password not yet configured&#34;)
+                                                Wifi.polling += 1
+
                         else:
                                 duration = 63000
 
@@ -914,6 +929,7 @@ def wan_disconnected():
 <li><code><a title="lib.wifi.wifi.Wifi.is_wan_connected" href="#lib.wifi.wifi.Wifi.is_wan_connected">is_wan_connected</a></code></li>
 <li><code><a title="lib.wifi.wifi.Wifi.lan_connected" href="#lib.wifi.wifi.Wifi.lan_connected">lan_connected</a></code></li>
 <li><code><a title="lib.wifi.wifi.Wifi.lan_disconnected" href="#lib.wifi.wifi.Wifi.lan_disconnected">lan_disconnected</a></code></li>
+<li><code><a title="lib.wifi.wifi.Wifi.polling" href="#lib.wifi.wifi.Wifi.polling">polling</a></code></li>
 <li><code><a title="lib.wifi.wifi.Wifi.set_state" href="#lib.wifi.wifi.Wifi.set_state">set_state</a></code></li>
 <li><code><a title="lib.wifi.wifi.Wifi.start" href="#lib.wifi.wifi.Wifi.start">start</a></code></li>
 <li><code><a title="lib.wifi.wifi.Wifi.task" href="#lib.wifi.wifi.Wifi.task">task</a></code></li>

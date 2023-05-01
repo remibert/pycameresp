@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 &#34;&#34;&#34; These classes are used to interact with domoticz or other application &#34;&#34;&#34;
 import server.notifier
 import server.httpclient
@@ -65,15 +65,12 @@ class WebHook:
                 if config.load() is False:
                         config.save()
 
+                result = True
                 if config.activated or notification.forced and notification.url is not None:
                         if WebHook.notify_message not in notification.sent:
                                 result = await server.httpclient.HttpClient.request(method=b&#34;GET&#34;, url=notification.url)
                                 if result is True:
                                         notification.sent.append(WebHook.notify_message)
-                        else:
-                                result = None
-                else:
-                        result = None
                 return result</code></pre>
 </details>
 </section>
@@ -105,15 +102,12 @@ class WebHook:
                 if config.load() is False:
                         config.save()
 
+                result = True
                 if config.activated or notification.forced and notification.url is not None:
                         if WebHook.notify_message not in notification.sent:
                                 result = await server.httpclient.HttpClient.request(method=b&#34;GET&#34;, url=notification.url)
                                 if result is True:
                                         notification.sent.append(WebHook.notify_message)
-                        else:
-                                result = None
-                else:
-                        result = None
                 return result</code></pre>
 </details>
 <h3>Static methods</h3>
@@ -135,15 +129,12 @@ async def notify_message(notification):
         if config.load() is False:
                 config.save()
 
+        result = True
         if config.activated or notification.forced and notification.url is not None:
                 if WebHook.notify_message not in notification.sent:
                         result = await server.httpclient.HttpClient.request(method=b&#34;GET&#34;, url=notification.url)
                         if result is True:
                                 notification.sent.append(WebHook.notify_message)
-                else:
-                        result = None
-        else:
-                result = None
         return result</code></pre>
 </details>
 </dd>

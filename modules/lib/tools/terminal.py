@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Getch and vt100 utilities """
 import sys
 import tools.filesystem

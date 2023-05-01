@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 &#34;&#34;&#34; These classes are used to manage asynchronous stream. &#34;&#34;&#34;
 import io
 import tools.filesystem
@@ -42,9 +42,9 @@ class Stream:
                 self.writer = writer
                 self.buffer = b&#34;&#34;
                 if tools.filesystem.ismicropython():
-                        self.close      = self.close_mic
-                        self.awrite     = self.awrite_mic
-                        self.is_closing = self.is_closing_mic
+                        self.close      = self.close_mcp
+                        self.awrite     = self.awrite_mcp
+                        self.is_closing = self.is_closing_mcp
                 else:
                         self.close      = self.close_pc
                         self.awrite     = self.awrite_pc
@@ -94,7 +94,7 @@ class Stream:
                         result = -1
                 return result
 
-        async def awrite_mic(self, data):
+        async def awrite_mcp(self, data):
                 &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
                 return await self.writer.awrite(data)
 
@@ -102,7 +102,7 @@ class Stream:
                 &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
                 return self.writer.write(data)
 
-        async def close_mic(self):
+        async def close_mcp(self):
                 &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
                 await self.writer.aclose()
 
@@ -114,7 +114,7 @@ class Stream:
                 &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
                 return self.writer.is_closing()
 
-        def is_closing_mic(self):
+        def is_closing_mcp(self):
                 &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
                 return False
 
@@ -140,7 +140,6 @@ class Socket:
                 &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
                 self.socket.close()
 
-
 class Bytesio:
         &#34;&#34;&#34; Class stream which wrap BytesIO &#34;&#34;&#34;
         def __init__(self):
@@ -158,7 +157,6 @@ class Bytesio:
         async def close(self):
                 &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
                 self.streamio.close()
-
 
 class Bufferedio:
         &#34;&#34;&#34; Bufferized bytes io stream &#34;&#34;&#34;
@@ -559,9 +557,9 @@ def is_enough_memory():
                 self.writer = writer
                 self.buffer = b&#34;&#34;
                 if tools.filesystem.ismicropython():
-                        self.close      = self.close_mic
-                        self.awrite     = self.awrite_mic
-                        self.is_closing = self.is_closing_mic
+                        self.close      = self.close_mcp
+                        self.awrite     = self.awrite_mcp
+                        self.is_closing = self.is_closing_mcp
                 else:
                         self.close      = self.close_pc
                         self.awrite     = self.awrite_pc
@@ -611,7 +609,7 @@ def is_enough_memory():
                         result = -1
                 return result
 
-        async def awrite_mic(self, data):
+        async def awrite_mcp(self, data):
                 &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
                 return await self.writer.awrite(data)
 
@@ -619,7 +617,7 @@ def is_enough_memory():
                 &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
                 return self.writer.write(data)
 
-        async def close_mic(self):
+        async def close_mcp(self):
                 &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
                 await self.writer.aclose()
 
@@ -631,7 +629,7 @@ def is_enough_memory():
                 &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
                 return self.writer.is_closing()
 
-        def is_closing_mic(self):
+        def is_closing_mcp(self):
                 &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
                 return False</code></pre>
 </details>
@@ -644,8 +642,8 @@ def is_enough_memory():
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.server.stream.Stream.awrite_mic"><code class="name flex">
-<span>async def <span class="ident">awrite_mic</span></span>(<span>self, data)</span>
+<dt id="lib.server.stream.Stream.awrite_mcp"><code class="name flex">
+<span>async def <span class="ident">awrite_mcp</span></span>(<span>self, data)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Awrite micropython</p></div>
@@ -653,7 +651,7 @@ def is_enough_memory():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def awrite_mic(self, data):
+<pre><code class="python">async def awrite_mcp(self, data):
         &#34;&#34;&#34; Awrite micropython &#34;&#34;&#34;
         return await self.writer.awrite(data)</code></pre>
 </details>
@@ -672,8 +670,8 @@ def is_enough_memory():
         return self.writer.write(data)</code></pre>
 </details>
 </dd>
-<dt id="lib.server.stream.Stream.close_mic"><code class="name flex">
-<span>async def <span class="ident">close_mic</span></span>(<span>self)</span>
+<dt id="lib.server.stream.Stream.close_mcp"><code class="name flex">
+<span>async def <span class="ident">close_mcp</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Close the stream</p></div>
@@ -681,7 +679,7 @@ def is_enough_memory():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def close_mic(self):
+<pre><code class="python">async def close_mcp(self):
         &#34;&#34;&#34; Close the stream &#34;&#34;&#34;
         await self.writer.aclose()</code></pre>
 </details>
@@ -700,8 +698,8 @@ def is_enough_memory():
         self.writer.close()</code></pre>
 </details>
 </dd>
-<dt id="lib.server.stream.Stream.is_closing_mic"><code class="name flex">
-<span>def <span class="ident">is_closing_mic</span></span>(<span>self)</span>
+<dt id="lib.server.stream.Stream.is_closing_mcp"><code class="name flex">
+<span>def <span class="ident">is_closing_mcp</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check if it closed</p></div>
@@ -709,7 +707,7 @@ def is_enough_memory():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def is_closing_mic(self):
+<pre><code class="python">def is_closing_mcp(self):
         &#34;&#34;&#34; Check if it closed &#34;&#34;&#34;
         return False</code></pre>
 </details>
@@ -850,11 +848,11 @@ It then returns only the requested row. This significantly increases read perfor
 <li>
 <h4><code><a title="lib.server.stream.Stream" href="#lib.server.stream.Stream">Stream</a></code></h4>
 <ul class="two-column">
-<li><code><a title="lib.server.stream.Stream.awrite_mic" href="#lib.server.stream.Stream.awrite_mic">awrite_mic</a></code></li>
+<li><code><a title="lib.server.stream.Stream.awrite_mcp" href="#lib.server.stream.Stream.awrite_mcp">awrite_mcp</a></code></li>
 <li><code><a title="lib.server.stream.Stream.awrite_pc" href="#lib.server.stream.Stream.awrite_pc">awrite_pc</a></code></li>
-<li><code><a title="lib.server.stream.Stream.close_mic" href="#lib.server.stream.Stream.close_mic">close_mic</a></code></li>
+<li><code><a title="lib.server.stream.Stream.close_mcp" href="#lib.server.stream.Stream.close_mcp">close_mcp</a></code></li>
 <li><code><a title="lib.server.stream.Stream.close_pc" href="#lib.server.stream.Stream.close_pc">close_pc</a></code></li>
-<li><code><a title="lib.server.stream.Stream.is_closing_mic" href="#lib.server.stream.Stream.is_closing_mic">is_closing_mic</a></code></li>
+<li><code><a title="lib.server.stream.Stream.is_closing_mcp" href="#lib.server.stream.Stream.is_closing_mcp">is_closing_mcp</a></code></li>
 <li><code><a title="lib.server.stream.Stream.is_closing_pc" href="#lib.server.stream.Stream.is_closing_pc">is_closing_pc</a></code></li>
 <li><code><a title="lib.server.stream.Stream.read" href="#lib.server.stream.Stream.read">read</a></code></li>
 <li><code><a title="lib.server.stream.Stream.readline" href="#lib.server.stream.Stream.readline">readline</a></code></li>

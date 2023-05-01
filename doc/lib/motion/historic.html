@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Manage the motion detection history file &#34;&#34;&#34;
 import re
@@ -384,9 +384,9 @@ class Historic:
         async def task():
                 &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
                 if tools.filesystem.ismicropython():
-                        await tools.tasking.Tasks.wait_resume(31, &#34;historic&#34;)
+                        await tools.tasking.Tasks.wait_resume(duration=31000, name=&#34;historic&#34;)
                 else:
-                        await tools.tasking.Tasks.wait_resume(1, &#34;historic&#34;)
+                        await tools.tasking.Tasks.wait_resume(duration=1000, name=&#34;historic&#34;)
 
                 if Historic.motion_in_progress[0] is False:
                         if tools.sdcard.SdCard.is_mounted() is False:
@@ -765,9 +765,9 @@ class Historic:
         async def task():
                 &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
                 if tools.filesystem.ismicropython():
-                        await tools.tasking.Tasks.wait_resume(31, &#34;historic&#34;)
+                        await tools.tasking.Tasks.wait_resume(duration=31000, name=&#34;historic&#34;)
                 else:
-                        await tools.tasking.Tasks.wait_resume(1, &#34;historic&#34;)
+                        await tools.tasking.Tasks.wait_resume(duration=1000, name=&#34;historic&#34;)
 
                 if Historic.motion_in_progress[0] is False:
                         if tools.sdcard.SdCard.is_mounted() is False:
@@ -1335,9 +1335,9 @@ def start():
 async def task():
         &#34;&#34;&#34; Internal periodic task &#34;&#34;&#34;
         if tools.filesystem.ismicropython():
-                await tools.tasking.Tasks.wait_resume(31, &#34;historic&#34;)
+                await tools.tasking.Tasks.wait_resume(duration=31000, name=&#34;historic&#34;)
         else:
-                await tools.tasking.Tasks.wait_resume(1, &#34;historic&#34;)
+                await tools.tasking.Tasks.wait_resume(duration=1000, name=&#34;historic&#34;)
 
         if Historic.motion_in_progress[0] is False:
                 if tools.sdcard.SdCard.is_mounted() is False:

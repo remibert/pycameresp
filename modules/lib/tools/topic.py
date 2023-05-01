@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ List topic names used throughout the application.
 
 To listen to these topics with mqtt, you must prefix the topic with the client_id 

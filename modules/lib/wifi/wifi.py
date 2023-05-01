@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 
 """ Manages access to wifi, treats cases of network loss with retry, and manages a fallback on the access point if no network is available """

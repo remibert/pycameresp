@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Motion detection only work with ESP32CAM (Requires specially modified ESP32CAM firmware to handle motion detection.) &#34;&#34;&#34;
 from gc import collect
@@ -685,14 +685,7 @@ class Detection:
 
                 # If camera not stabilized speed start
                 if self.motion and self.motion.is_stabilized() is True:
-                        frequency = self.polling_frequency*500 if tools.tasking.Tasks.is_slow() else self.polling_frequency
-                        if frequency &gt; 1000:
-                                while frequency &gt; 0:
-                                        await uasyncio.sleep_ms(500)
-                                        frequency -= 500
-                                        await tools.tasking.Tasks.wait_resume(name=&#34;motion&#34;)
-                        else:
-                                await uasyncio.sleep_ms(frequency)
+                        await tools.tasking.Tasks.wait_resume(duration=tools.tasking.Tasks.get_slow_ratio() * self.polling_frequency, name=&#34;motion&#34;)
 
                 try:
                         # Waits for the camera&#39;s availability
@@ -997,14 +990,7 @@ class NotificationCadencer(MovingCounters):
 
                 # If camera not stabilized speed start
                 if self.motion and self.motion.is_stabilized() is True:
-                        frequency = self.polling_frequency*500 if tools.tasking.Tasks.is_slow() else self.polling_frequency
-                        if frequency &gt; 1000:
-                                while frequency &gt; 0:
-                                        await uasyncio.sleep_ms(500)
-                                        frequency -= 500
-                                        await tools.tasking.Tasks.wait_resume(name=&#34;motion&#34;)
-                        else:
-                                await uasyncio.sleep_ms(frequency)
+                        await tools.tasking.Tasks.wait_resume(duration=tools.tasking.Tasks.get_slow_ratio() * self.polling_frequency, name=&#34;motion&#34;)
 
                 try:
                         # Waits for the camera&#39;s availability
@@ -1085,14 +1071,7 @@ class NotificationCadencer(MovingCounters):
 
         # If camera not stabilized speed start
         if self.motion and self.motion.is_stabilized() is True:
-                frequency = self.polling_frequency*500 if tools.tasking.Tasks.is_slow() else self.polling_frequency
-                if frequency &gt; 1000:
-                        while frequency &gt; 0:
-                                await uasyncio.sleep_ms(500)
-                                frequency -= 500
-                                await tools.tasking.Tasks.wait_resume(name=&#34;motion&#34;)
-                else:
-                        await uasyncio.sleep_ms(frequency)
+                await tools.tasking.Tasks.wait_resume(duration=tools.tasking.Tasks.get_slow_ratio() * self.polling_frequency, name=&#34;motion&#34;)
 
         try:
                 # Waits for the camera&#39;s availability

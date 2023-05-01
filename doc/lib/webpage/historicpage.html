@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to view recent motion detection &#34;&#34;&#34;
 # pylint:disable=anomalous-unicode-escape-in-string
 import server.httpserver
@@ -433,7 +433,7 @@ async def historic_json(request, response, args):
 async def historic_image(request, response, args):
         &#34;&#34;&#34; Send historic image &#34;&#34;&#34;
         tools.tasking.Tasks.slow_down()
-        reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=15)
+        reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=10)
         try:
                 if reserved:
                         await motion.historic.Historic.acquire()
@@ -449,7 +449,7 @@ async def historic_image(request, response, args):
 async def download_image(request, response, args):
         &#34;&#34;&#34; Download historic image &#34;&#34;&#34;
         tools.tasking.Tasks.slow_down()
-        reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=15)
+        reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=10)
         try:
                 if reserved:
                         await motion.historic.Historic.acquire()
@@ -482,7 +482,7 @@ async def download_image(request, response, args):
 async def download_image(request, response, args):
         &#34;&#34;&#34; Download historic image &#34;&#34;&#34;
         tools.tasking.Tasks.slow_down()
-        reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=15)
+        reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=10)
         try:
                 if reserved:
                         await motion.historic.Historic.acquire()
@@ -905,7 +905,7 @@ async def historic(request, response, args):
 async def historic_image(request, response, args):
         &#34;&#34;&#34; Send historic image &#34;&#34;&#34;
         tools.tasking.Tasks.slow_down()
-        reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=15)
+        reserved = await video.video.Camera.reserve(motion.historic.Historic, timeout=5, suspension=10)
         try:
                 if reserved:
                         await motion.historic.Historic.acquire()

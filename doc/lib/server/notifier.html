@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 &#34;&#34;&#34; Class used to manage a list of notifier, and postpone notification if wifi station not yet connected &#34;&#34;&#34;
 # pylint:disable=consider-using-f-string
 # pylint:disable=consider-using-enumerate
@@ -44,6 +44,7 @@ import tools.info
 import tools.lang
 import tools.date
 import tools.topic
+import tools.filesystem
 
 class Notification:
         &#34;&#34;&#34; Notification message &#34;&#34;&#34;
@@ -112,7 +113,7 @@ class Notifier:
                 result = b&#34;&#34;
                 item = kwargs.get(&#34;message&#34;,None)
                 if item is not None:
-                        result += b&#34;msg=&#39;&#39;&#39;%s&#39;&#39;&#39; &#34;%tools.strings.tobytes(item)
+                        result += b&#34;msg=&#39;&#39;&#39;\n%s&#39;&#39;&#39; &#34;%tools.strings.tobytes(item)
                 item = kwargs.get(&#34;topic&#34;,None)
                 if item is not None:
                         result += b&#34;topic=%s &#34;%tools.strings.tobytes(item)
@@ -122,7 +123,7 @@ class Notifier:
                 item = kwargs.get(&#34;data&#34;,None)
                 if item is not None:
                         result += b&#34;len=%d &#34;%len(item)
-                return result
+                return tools.strings.tostrings(result)
 
         @staticmethod
         def notify(**kwargs):
@@ -139,14 +140,14 @@ class Notifier:
                 forced  = kwargs.get(&#34;forced&#34;,False)
                 message = Notifier.to_string(**kwargs)
 
-                tools.logger.syslog(&#34;Notification %s %s&#34;%(tools.strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
+                tools.logger.syslog(&#34;Notification %s %s&#34;%(message, &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
                 if enabled or forced:
                         # If postponed message list too long
                         if len(Notifier.postponed) &gt; 10:
                                 # Remove older
                                 notification = Notifier.postponed[0]
-                                tools.logger.syslog(&#34;Notification %s failed to send&#34;%tools.strings.tostrings(notification.message), display=notification.display)
+                                tools.logger.syslog(&#34;Notification %s failed to send&#34;%message, display=display)
                                 del Notifier.postponed[0]
                         # Add message into postponed list
                         Notifier.postponed.append(Notification(**kwargs))
@@ -157,8 +158,6 @@ class Notifier:
         @staticmethod
         async def flush():
                 &#34;&#34;&#34; Flush postponed message if wan connected &#34;&#34;&#34;
-                sleep_duration = 127
-
                 # If wan available
                 if wifi.wifi.Wifi.is_wan_available():
                         result = True
@@ -181,13 +180,6 @@ class Notifier:
 
                         Notifier.postponed = not_sent
 
-                        # If all message notified
-                        if result is False:
-                                sleep_duration = 19
-                else:
-                        sleep_duration = 5
-                return sleep_duration
-
         @staticmethod
         async def task():
                 &#34;&#34;&#34; Run the task &#34;&#34;&#34;
@@ -201,11 +193,11 @@ class Notifier:
                                 Notifier.notify(topic=tools.topic.information, message=message)
 
                 # If no notification should be sent
-                sleep_duration = await Notifier.flush()
+                await Notifier.flush()
 
                 try:
                         # Wait notification
-                        await uasyncio.wait_for(Notifier.wake_up_event.wait(), sleep_duration)
+                        await uasyncio.wait_for(Notifier.wake_up_event.wait(), 11)
                         # Clear event notification event
                         Notifier.wake_up_event.clear()
                 except:
@@ -229,7 +221,8 @@ class Notifier:
         @staticmethod
         def default_daily_notifier():
                 &#34;&#34;&#34; Return the default message notification &#34;&#34;&#34;
-                message = &#34;\n - Lan Ip : %s\n&#34;%wifi.station.Station.get_info()[0]
+                message  = &#34;%s\n&#34;%tools.strings.tostrings(wifi.station.Station.get_hostname())
+                message += &#34; - Lan Ip : %s\n&#34;%wifi.station.Station.get_info()[0]
                 message += &#34; - Wan Ip : %s\n&#34;%server.wanip.WanIp.wan_ip
                 message += &#34; - Uptime : %s\n&#34;%tools.strings.tostrings(tools.info.uptime())
                 message += &#34; - %s : %s\n&#34;%(tools.strings.tostrings(tools.lang.memory_label), tools.strings.tostrings(tools.info.meminfo()))
@@ -239,7 +232,7 @@ class Notifier:
         @staticmethod
         def set_daily_notifier(callback):
                 &#34;&#34;&#34; Replace the daily notification (callback which return a string with message to notify) &#34;&#34;&#34;
-                Notifier.daily_notifier = callback
+                Notifier.daily_callback = callback
 
         @staticmethod
         def start():
@@ -344,7 +337,7 @@ class Notifier:
                 result = b&#34;&#34;
                 item = kwargs.get(&#34;message&#34;,None)
                 if item is not None:
-                        result += b&#34;msg=&#39;&#39;&#39;%s&#39;&#39;&#39; &#34;%tools.strings.tobytes(item)
+                        result += b&#34;msg=&#39;&#39;&#39;\n%s&#39;&#39;&#39; &#34;%tools.strings.tobytes(item)
                 item = kwargs.get(&#34;topic&#34;,None)
                 if item is not None:
                         result += b&#34;topic=%s &#34;%tools.strings.tobytes(item)
@@ -354,7 +347,7 @@ class Notifier:
                 item = kwargs.get(&#34;data&#34;,None)
                 if item is not None:
                         result += b&#34;len=%d &#34;%len(item)
-                return result
+                return tools.strings.tostrings(result)
 
         @staticmethod
         def notify(**kwargs):
@@ -371,14 +364,14 @@ class Notifier:
                 forced  = kwargs.get(&#34;forced&#34;,False)
                 message = Notifier.to_string(**kwargs)
 
-                tools.logger.syslog(&#34;Notification %s %s&#34;%(tools.strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
+                tools.logger.syslog(&#34;Notification %s %s&#34;%(message, &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
                 if enabled or forced:
                         # If postponed message list too long
                         if len(Notifier.postponed) &gt; 10:
                                 # Remove older
                                 notification = Notifier.postponed[0]
-                                tools.logger.syslog(&#34;Notification %s failed to send&#34;%tools.strings.tostrings(notification.message), display=notification.display)
+                                tools.logger.syslog(&#34;Notification %s failed to send&#34;%message, display=display)
                                 del Notifier.postponed[0]
                         # Add message into postponed list
                         Notifier.postponed.append(Notification(**kwargs))
@@ -389,8 +382,6 @@ class Notifier:
         @staticmethod
         async def flush():
                 &#34;&#34;&#34; Flush postponed message if wan connected &#34;&#34;&#34;
-                sleep_duration = 127
-
                 # If wan available
                 if wifi.wifi.Wifi.is_wan_available():
                         result = True
@@ -413,13 +404,6 @@ class Notifier:
 
                         Notifier.postponed = not_sent
 
-                        # If all message notified
-                        if result is False:
-                                sleep_duration = 19
-                else:
-                        sleep_duration = 5
-                return sleep_duration
-
         @staticmethod
         async def task():
                 &#34;&#34;&#34; Run the task &#34;&#34;&#34;
@@ -433,11 +417,11 @@ class Notifier:
                                 Notifier.notify(topic=tools.topic.information, message=message)
 
                 # If no notification should be sent
-                sleep_duration = await Notifier.flush()
+                await Notifier.flush()
 
                 try:
                         # Wait notification
-                        await uasyncio.wait_for(Notifier.wake_up_event.wait(), sleep_duration)
+                        await uasyncio.wait_for(Notifier.wake_up_event.wait(), 11)
                         # Clear event notification event
                         Notifier.wake_up_event.clear()
                 except:
@@ -461,7 +445,8 @@ class Notifier:
         @staticmethod
         def default_daily_notifier():
                 &#34;&#34;&#34; Return the default message notification &#34;&#34;&#34;
-                message = &#34;\n - Lan Ip : %s\n&#34;%wifi.station.Station.get_info()[0]
+                message  = &#34;%s\n&#34;%tools.strings.tostrings(wifi.station.Station.get_hostname())
+                message += &#34; - Lan Ip : %s\n&#34;%wifi.station.Station.get_info()[0]
                 message += &#34; - Wan Ip : %s\n&#34;%server.wanip.WanIp.wan_ip
                 message += &#34; - Uptime : %s\n&#34;%tools.strings.tostrings(tools.info.uptime())
                 message += &#34; - %s : %s\n&#34;%(tools.strings.tostrings(tools.lang.memory_label), tools.strings.tostrings(tools.info.meminfo()))
@@ -471,7 +456,7 @@ class Notifier:
         @staticmethod
         def set_daily_notifier(callback):
                 &#34;&#34;&#34; Replace the daily notification (callback which return a string with message to notify) &#34;&#34;&#34;
-                Notifier.daily_notifier = callback
+                Notifier.daily_callback = callback
 
         @staticmethod
         def start():
@@ -552,7 +537,8 @@ def daily_notify():
 <pre><code class="python">@staticmethod
 def default_daily_notifier():
         &#34;&#34;&#34; Return the default message notification &#34;&#34;&#34;
-        message = &#34;\n - Lan Ip : %s\n&#34;%wifi.station.Station.get_info()[0]
+        message  = &#34;%s\n&#34;%tools.strings.tostrings(wifi.station.Station.get_hostname())
+        message += &#34; - Lan Ip : %s\n&#34;%wifi.station.Station.get_info()[0]
         message += &#34; - Wan Ip : %s\n&#34;%server.wanip.WanIp.wan_ip
         message += &#34; - Uptime : %s\n&#34;%tools.strings.tostrings(tools.info.uptime())
         message += &#34; - %s : %s\n&#34;%(tools.strings.tostrings(tools.lang.memory_label), tools.strings.tostrings(tools.info.meminfo()))
@@ -572,8 +558,6 @@ def default_daily_notifier():
 <pre><code class="python">@staticmethod
 async def flush():
         &#34;&#34;&#34; Flush postponed message if wan connected &#34;&#34;&#34;
-        sleep_duration = 127
-
         # If wan available
         if wifi.wifi.Wifi.is_wan_available():
                 result = True
@@ -594,14 +578,7 @@ async def flush():
                                 if notification.retry &lt; 32:
                                         not_sent.append(notification)
 
-                Notifier.postponed = not_sent
-
-                # If all message notified
-                if result is False:
-                        sleep_duration = 19
-        else:
-                sleep_duration = 5
-        return sleep_duration</code></pre>
+                Notifier.postponed = not_sent</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.init"><code class="name flex">
@@ -695,14 +672,14 @@ def notify(**kwargs):
         forced  = kwargs.get(&#34;forced&#34;,False)
         message = Notifier.to_string(**kwargs)
 
-        tools.logger.syslog(&#34;Notification %s %s&#34;%(tools.strings.tostrings(message), &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
+        tools.logger.syslog(&#34;Notification %s %s&#34;%(message, &#34;&#34; if enabled else &#34;not sent&#34;), display=display)
 
         if enabled or forced:
                 # If postponed message list too long
                 if len(Notifier.postponed) &gt; 10:
                         # Remove older
                         notification = Notifier.postponed[0]
-                        tools.logger.syslog(&#34;Notification %s failed to send&#34;%tools.strings.tostrings(notification.message), display=notification.display)
+                        tools.logger.syslog(&#34;Notification %s failed to send&#34;%message, display=display)
                         del Notifier.postponed[0]
                 # Add message into postponed list
                 Notifier.postponed.append(Notification(**kwargs))
@@ -741,7 +718,7 @@ def remove(callback):
 <pre><code class="python">@staticmethod
 def set_daily_notifier(callback):
         &#34;&#34;&#34; Replace the daily notification (callback which return a string with message to notify) &#34;&#34;&#34;
-        Notifier.daily_notifier = callback</code></pre>
+        Notifier.daily_callback = callback</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.start"><code class="name flex">
@@ -781,11 +758,11 @@ async def task():
                         Notifier.notify(topic=tools.topic.information, message=message)
 
         # If no notification should be sent
-        sleep_duration = await Notifier.flush()
+        await Notifier.flush()
 
         try:
                 # Wait notification
-                await uasyncio.wait_for(Notifier.wake_up_event.wait(), sleep_duration)
+                await uasyncio.wait_for(Notifier.wake_up_event.wait(), 11)
                 # Clear event notification event
                 Notifier.wake_up_event.clear()
         except:
@@ -807,7 +784,7 @@ def to_string(**kwargs):
         result = b&#34;&#34;
         item = kwargs.get(&#34;message&#34;,None)
         if item is not None:
-                result += b&#34;msg=&#39;&#39;&#39;%s&#39;&#39;&#39; &#34;%tools.strings.tobytes(item)
+                result += b&#34;msg=&#39;&#39;&#39;\n%s&#39;&#39;&#39; &#34;%tools.strings.tobytes(item)
         item = kwargs.get(&#34;topic&#34;,None)
         if item is not None:
                 result += b&#34;topic=%s &#34;%tools.strings.tobytes(item)
@@ -817,7 +794,7 @@ def to_string(**kwargs):
         item = kwargs.get(&#34;data&#34;,None)
         if item is not None:
                 result += b&#34;len=%d &#34;%len(item)
-        return result</code></pre>
+        return tools.strings.tostrings(result)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.notifier.Notifier.wake_up"><code class="name flex">

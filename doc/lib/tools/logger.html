@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Logger and exception functions &#34;&#34;&#34;
 import sys
@@ -70,6 +70,18 @@ def syslog(err, msg=&#34;&#34;, display=True, write=True):
                 log(result)
         return result
 
+_max_log_size = 32*1024
+_max_log_quantity = 4
+def set_size(size, quantity):
+        &#34;&#34;&#34; Change the size of logger
+        Parameters :
+        - size : max size of syslog file
+        - quantity : max quantity of syslog file &#34;&#34;&#34;
+        global _max_log_size
+        global _max_log_quantity
+        _max_log_size = size
+        _max_log_quantity = quantity
+
 def log(msg):
         &#34;&#34;&#34; Log message in syslog.log file without printing &#34;&#34;&#34;
         # pylint:disable=unspecified-encoding
@@ -81,12 +93,14 @@ def log(msg):
                 log_file = open(filename,&#34;a&#34;)
                 log_file.seek(0,2)
 
-                if log_file.tell() &gt;32*1024:
+                if log_file.tell() &gt; _max_log_size:
                         log_file.close()
-                        tools.filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
-                        tools.filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
-                        tools.filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
-                        tools.filesystem.rename(filename       ,filename + &#34;.1&#34;)
+                        for i in range(_max_log_quantity,0,-1):
+                                old = &#34;.%d&#34;%i
+                                new = &#34;.%d&#34;%(i-1)
+                                if i == 1:
+                                        new = &#34;&#34;
+                                tools.filesystem.rename(filename + new,filename + old)
                         log_file = open(filename,&#34;a&#34;)
 
                 log_file.write(tools.date.date_ms_to_string() + &#34; %s\n&#34;%(msg))
@@ -175,12 +189,14 @@ def html_exception(err):
                 log_file = open(filename,&#34;a&#34;)
                 log_file.seek(0,2)
 
-                if log_file.tell() &gt;32*1024:
+                if log_file.tell() &gt; _max_log_size:
                         log_file.close()
-                        tools.filesystem.rename(filename + &#34;.3&#34;,filename + &#34;.4&#34;)
-                        tools.filesystem.rename(filename + &#34;.2&#34;,filename + &#34;.3&#34;)
-                        tools.filesystem.rename(filename + &#34;.1&#34;,filename + &#34;.2&#34;)
-                        tools.filesystem.rename(filename       ,filename + &#34;.1&#34;)
+                        for i in range(_max_log_quantity,0,-1):
+                                old = &#34;.%d&#34;%i
+                                new = &#34;.%d&#34;%(i-1)
+                                if i == 1:
+                                        new = &#34;&#34;
+                                tools.filesystem.rename(filename + new,filename + old)
                         log_file = open(filename,&#34;a&#34;)
 
                 log_file.write(tools.date.date_ms_to_string() + &#34; %s\n&#34;%(msg))
@@ -188,6 +204,29 @@ def html_exception(err):
                 log_file.close()
         except:
                 print(&#34;No space, flash full&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.logger.set_size"><code class="name flex">
+<span>def <span class="ident">set_size</span></span>(<span>size, quantity)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Change the size of logger
+Parameters :
+- size : max size of syslog file
+- quantity : max quantity of syslog file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_size(size, quantity):
+        &#34;&#34;&#34; Change the size of logger
+        Parameters :
+        - size : max size of syslog file
+        - quantity : max quantity of syslog file &#34;&#34;&#34;
+        global _max_log_size
+        global _max_log_quantity
+        _max_log_size = size
+        _max_log_quantity = quantity</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.logger.syslog"><code class="name flex">
@@ -238,6 +277,7 @@ def html_exception(err):
 <li><code><a title="lib.tools.logger.exception" href="#lib.tools.logger.exception">exception</a></code></li>
 <li><code><a title="lib.tools.logger.html_exception" href="#lib.tools.logger.html_exception">html_exception</a></code></li>
 <li><code><a title="lib.tools.logger.log" href="#lib.tools.logger.log">log</a></code></li>
+<li><code><a title="lib.tools.logger.set_size" href="#lib.tools.logger.set_size">set_size</a></code></li>
 <li><code><a title="lib.tools.logger.syslog" href="#lib.tools.logger.syslog">syslog</a></code></li>
 </ul>
 </li>

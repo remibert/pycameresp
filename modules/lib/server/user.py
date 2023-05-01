@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Class used to manage a username and a password """
 import tools.logger

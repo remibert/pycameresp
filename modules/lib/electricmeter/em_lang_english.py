@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ English text for electricmeter """
 title_electricmeter = b"Power consumption per "
 menu_electricmeter  = b"Electric meter"

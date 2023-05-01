@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Simulation ESP32CAM camera class, used on desktop to debug with vscode """
 _current = 0
 _opened = False

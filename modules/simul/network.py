@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Class used to simulate the WLAN class on osx """
 AP_IF = 1
 STA_IF = 2

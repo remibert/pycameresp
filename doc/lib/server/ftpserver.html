@@ -33,8 +33,8 @@ If you have enough memory (SPIRAM or other), just start the server with the prel
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # historically based on :
 # https://github.com/robert-hh/FTP-Server-for-ESP8266-ESP32-and-PYBD/blob/master/ftp.py
 # but I have modified a lot, there must still be some original functions.
@@ -49,15 +49,12 @@ import server.server
 import tools.logger
 import tools.tasking
 
-class Ftp(tools.tasking.ServerInstance):
+class FtpServerInstance(tools.tasking.ServerInstance):
         &#34;&#34;&#34; Ftp server instance &#34;&#34;&#34;
-        config = None
-
-        &#34;&#34;&#34; Ftp main class &#34;&#34;&#34;
         def __init__(self, **kwargs):
                 tools.tasking.ServerInstance.__init__(self, **kwargs)
                 self.server_class = None
-                self.port = kwargs.get(&#34;port&#34;,21)
+                self.port = kwargs.get(&#34;ftp_port&#34;,21)
 
         def preload(self):
                 &#34;&#34;&#34; Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) &#34;&#34;&#34;
@@ -85,24 +82,28 @@ class Ftp(tools.tasking.ServerInstance):
                 except Exception as err:
                         tools.logger.syslog(err)
 
+class FtpServer:
+        &#34;&#34;&#34; Ftp server instance &#34;&#34;&#34;
+        config = None
+
         @staticmethod
         def init():
                 &#34;&#34;&#34; Initialize http server &#34;&#34;&#34;
-                if Ftp.config is None:
-                        Ftp.config = server.server.ServerConfig()
-                        Ftp.config.load_create()
+                if FtpServer.config is None:
+                        FtpServer.config = server.server.ServerConfig()
+                        FtpServer.config.load_create()
                 else:
-                        Ftp.config.refresh()
+                        FtpServer.config.refresh()
 
         @staticmethod
         def start(**kwargs):
                 &#34;&#34;&#34; Start the ftp server with asyncio loop.
                 ftp_port : tcp/ip ftp port of the server default 21  &#34;&#34;&#34;
-                Ftp.init()
-                if Ftp.config.ftp:
+                FtpServer.init()
+                if FtpServer.config.ftp:
                         kwargs[&#34;port&#34;] = kwargs.get(&#34;ftp_port&#34;,21)
                         kwargs[&#34;name&#34;] = &#34;Ftp&#34;
-                        tools.tasking.Tasks.create_server(Ftp(**kwargs))
+                        tools.tasking.Tasks.create_server(FtpServerInstance(**kwargs))
                 else:
                         tools.logger.syslog(&#34;Ftp server disabled in config&#34;)</code></pre>
 </details>
@@ -116,8 +117,95 @@ class Ftp(tools.tasking.ServerInstance):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="lib.server.ftpserver.Ftp"><code class="flex name class">
-<span>class <span class="ident">Ftp</span></span>
+<dt id="lib.server.ftpserver.FtpServer"><code class="flex name class">
+<span>class <span class="ident">FtpServer</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Ftp server instance</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FtpServer:
+        &#34;&#34;&#34; Ftp server instance &#34;&#34;&#34;
+        config = None
+
+        @staticmethod
+        def init():
+                &#34;&#34;&#34; Initialize http server &#34;&#34;&#34;
+                if FtpServer.config is None:
+                        FtpServer.config = server.server.ServerConfig()
+                        FtpServer.config.load_create()
+                else:
+                        FtpServer.config.refresh()
+
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start the ftp server with asyncio loop.
+                ftp_port : tcp/ip ftp port of the server default 21  &#34;&#34;&#34;
+                FtpServer.init()
+                if FtpServer.config.ftp:
+                        kwargs[&#34;port&#34;] = kwargs.get(&#34;ftp_port&#34;,21)
+                        kwargs[&#34;name&#34;] = &#34;Ftp&#34;
+                        tools.tasking.Tasks.create_server(FtpServerInstance(**kwargs))
+                else:
+                        tools.logger.syslog(&#34;Ftp server disabled in config&#34;)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.ftpserver.FtpServer.config"><code class="name">var <span class="ident">config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.server.ftpserver.FtpServer.init"><code class="name flex">
+<span>def <span class="ident">init</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initialize http server</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def init():
+        &#34;&#34;&#34; Initialize http server &#34;&#34;&#34;
+        if FtpServer.config is None:
+                FtpServer.config = server.server.ServerConfig()
+                FtpServer.config.load_create()
+        else:
+                FtpServer.config.refresh()</code></pre>
+</details>
+</dd>
+<dt id="lib.server.ftpserver.FtpServer.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start the ftp server with asyncio loop.
+ftp_port : tcp/ip ftp port of the server default 21</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def start(**kwargs):
+        &#34;&#34;&#34; Start the ftp server with asyncio loop.
+        ftp_port : tcp/ip ftp port of the server default 21  &#34;&#34;&#34;
+        FtpServer.init()
+        if FtpServer.config.ftp:
+                kwargs[&#34;port&#34;] = kwargs.get(&#34;ftp_port&#34;,21)
+                kwargs[&#34;name&#34;] = &#34;Ftp&#34;
+                tools.tasking.Tasks.create_server(FtpServerInstance(**kwargs))
+        else:
+                tools.logger.syslog(&#34;Ftp server disabled in config&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.ftpserver.FtpServerInstance"><code class="flex name class">
+<span>class <span class="ident">FtpServerInstance</span></span>
 <span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
@@ -127,15 +215,12 @@ class Ftp(tools.tasking.ServerInstance):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Ftp(tools.tasking.ServerInstance):
+<pre><code class="python">class FtpServerInstance(tools.tasking.ServerInstance):
         &#34;&#34;&#34; Ftp server instance &#34;&#34;&#34;
-        config = None
-
-        &#34;&#34;&#34; Ftp main class &#34;&#34;&#34;
         def __init__(self, **kwargs):
                 tools.tasking.ServerInstance.__init__(self, **kwargs)
                 self.server_class = None
-                self.port = kwargs.get(&#34;port&#34;,21)
+                self.port = kwargs.get(&#34;ftp_port&#34;,21)
 
         def preload(self):
                 &#34;&#34;&#34; Preload of ftp core class (the core is only loaded if the ftp connection started, save memory) &#34;&#34;&#34;
@@ -161,88 +246,15 @@ class Ftp(tools.tasking.ServerInstance):
                         srv.close()
                         del srv
                 except Exception as err:
-                        tools.logger.syslog(err)
-
-        @staticmethod
-        def init():
-                &#34;&#34;&#34; Initialize http server &#34;&#34;&#34;
-                if Ftp.config is None:
-                        Ftp.config = server.server.ServerConfig()
-                        Ftp.config.load_create()
-                else:
-                        Ftp.config.refresh()
-
-        @staticmethod
-        def start(**kwargs):
-                &#34;&#34;&#34; Start the ftp server with asyncio loop.
-                ftp_port : tcp/ip ftp port of the server default 21  &#34;&#34;&#34;
-                Ftp.init()
-                if Ftp.config.ftp:
-                        kwargs[&#34;port&#34;] = kwargs.get(&#34;ftp_port&#34;,21)
-                        kwargs[&#34;name&#34;] = &#34;Ftp&#34;
-                        tools.tasking.Tasks.create_server(Ftp(**kwargs))
-                else:
-                        tools.logger.syslog(&#34;Ftp server disabled in config&#34;)</code></pre>
+                        tools.logger.syslog(err)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>tools.tasking.ServerInstance</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="lib.server.ftpserver.Ftp.config"><code class="name">var <span class="ident">config</span></code></dt>
-<dd>
-<div class="desc"><p>Ftp main class</p></div>
-</dd>
-</dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="lib.server.ftpserver.Ftp.init"><code class="name flex">
-<span>def <span class="ident">init</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Initialize http server</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def init():
-        &#34;&#34;&#34; Initialize http server &#34;&#34;&#34;
-        if Ftp.config is None:
-                Ftp.config = server.server.ServerConfig()
-                Ftp.config.load_create()
-        else:
-                Ftp.config.refresh()</code></pre>
-</details>
-</dd>
-<dt id="lib.server.ftpserver.Ftp.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Start the ftp server with asyncio loop.
-ftp_port : tcp/ip ftp port of the server default 21</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def start(**kwargs):
-        &#34;&#34;&#34; Start the ftp server with asyncio loop.
-        ftp_port : tcp/ip ftp port of the server default 21  &#34;&#34;&#34;
-        Ftp.init()
-        if Ftp.config.ftp:
-                kwargs[&#34;port&#34;] = kwargs.get(&#34;ftp_port&#34;,21)
-                kwargs[&#34;name&#34;] = &#34;Ftp&#34;
-                tools.tasking.Tasks.create_server(Ftp(**kwargs))
-        else:
-                tools.logger.syslog(&#34;Ftp server disabled in config&#34;)</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.server.ftpserver.Ftp.on_connection"><code class="name flex">
+<dt id="lib.server.ftpserver.FtpServerInstance.on_connection"><code class="name flex">
 <span>async def <span class="ident">on_connection</span></span>(<span>self, reader, writer)</span>
 </code></dt>
 <dd>
@@ -270,7 +282,7 @@ def start(**kwargs):
                 tools.logger.syslog(err)</code></pre>
 </details>
 </dd>
-<dt id="lib.server.ftpserver.Ftp.preload"><code class="name flex">
+<dt id="lib.server.ftpserver.FtpServerInstance.preload"><code class="name flex">
 <span>def <span class="ident">preload</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -307,13 +319,18 @@ def start(**kwargs):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="lib.server.ftpserver.Ftp" href="#lib.server.ftpserver.Ftp">Ftp</a></code></h4>
+<h4><code><a title="lib.server.ftpserver.FtpServer" href="#lib.server.ftpserver.FtpServer">FtpServer</a></code></h4>
 <ul class="">
-<li><code><a title="lib.server.ftpserver.Ftp.config" href="#lib.server.ftpserver.Ftp.config">config</a></code></li>
-<li><code><a title="lib.server.ftpserver.Ftp.init" href="#lib.server.ftpserver.Ftp.init">init</a></code></li>
-<li><code><a title="lib.server.ftpserver.Ftp.on_connection" href="#lib.server.ftpserver.Ftp.on_connection">on_connection</a></code></li>
-<li><code><a title="lib.server.ftpserver.Ftp.preload" href="#lib.server.ftpserver.Ftp.preload">preload</a></code></li>
-<li><code><a title="lib.server.ftpserver.Ftp.start" href="#lib.server.ftpserver.Ftp.start">start</a></code></li>
+<li><code><a title="lib.server.ftpserver.FtpServer.config" href="#lib.server.ftpserver.FtpServer.config">config</a></code></li>
+<li><code><a title="lib.server.ftpserver.FtpServer.init" href="#lib.server.ftpserver.FtpServer.init">init</a></code></li>
+<li><code><a title="lib.server.ftpserver.FtpServer.start" href="#lib.server.ftpserver.FtpServer.start">start</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.ftpserver.FtpServerInstance" href="#lib.server.ftpserver.FtpServerInstance">FtpServerInstance</a></code></h4>
+<ul class="">
+<li><code><a title="lib.server.ftpserver.FtpServerInstance.on_connection" href="#lib.server.ftpserver.FtpServerInstance.on_connection">on_connection</a></code></li>
+<li><code><a title="lib.server.ftpserver.FtpServerInstance.preload" href="#lib.server.ftpserver.FtpServerInstance.preload">preload</a></code></li>
 </ul>
 </li>
 </ul>

@@ -27,13 +27,12 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Strings utilities &#34;&#34;&#34;
 import binascii
 import time
-
 
 def size_to_string(size, largeur=6):
         &#34;&#34;&#34; Convert a size in a string with k, m, g, t...&#34;&#34;&#34;
@@ -265,15 +264,16 @@ def compute_hash(string):
 
 try:
         # pylint: disable=no-name-in-module
-
         from time import ticks_ms
         def ticks():
                 &#34;&#34;&#34; Count tick elapsed from start &#34;&#34;&#34;
                 return ticks_ms()
 except:
+        _ticks_init = time.monotonic()
         def ticks():
                 &#34;&#34;&#34; Count tick elapsed from start &#34;&#34;&#34;
-                return (int)(time.time() * 1000)
+                result = (int)((time.monotonic() - _ticks_init)*1000)
+                return result
 
 def ticks_to_string():
         &#34;&#34;&#34; Create a string with tick in seconds &#34;&#34;&#34;
@@ -688,7 +688,8 @@ def get_utf8_length(data):
 </summary>
 <pre><code class="python">def ticks():
         &#34;&#34;&#34; Count tick elapsed from start &#34;&#34;&#34;
-        return (int)(time.time() * 1000)</code></pre>
+        result = (int)((time.monotonic() - _ticks_init)*1000)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.strings.ticks_to_string"><code class="name flex">

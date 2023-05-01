@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Tools to flash the firmware of pycameresp """
 # Requirements :
 #	- pip3 install pyinstaller
@@ -23,7 +23,7 @@ import copy
 import vt100
 import settings
 
-sys.path.append("../../modules/lib/tools")
+sys.path.append("../../modules/lib")
 # pylint:disable=import-error
 # pylint:disable=wrong-import-position
 

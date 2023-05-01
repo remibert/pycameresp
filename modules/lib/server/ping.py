@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # Freely inspired by :
 #    uping  (MicroPing) for MicroPython
 #    copyright (c) 2018 Shawwwn <shawwwn1@gmail.com>

@@ -1,3 +1,5 @@
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Task to count wh from the electric meter """
 import struct
 import time

@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Class to manage the html templates """
 # pylint:disable=wrong-import-position
 WWW_DIR = "www/"

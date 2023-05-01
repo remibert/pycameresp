@@ -1,6 +1,6 @@
 """ English texts """
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 
 # FOR WEB SERVER PERFORMANCE REASONS, ONLY BINARY STRINGS ARE SUPPORTED : b"..."
 menu_system                             =b"   System"

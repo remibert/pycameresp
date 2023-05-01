@@ -61,12 +61,15 @@ class TelnetLogin:
                         hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
                 except:
                         hostname = tools.strings.tobytes(sys.platform)
-                message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
-                self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))
+                self.output.write(b&#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; Telnet started on &#39;%s&#39;   &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;\r\n&#34;%hostname)
 
         def footer(self):
                 &#34;&#34;&#34; Show footer &#34;&#34;&#34;
-                self.output.write(b&#34;\r\n%s\r\n&#34;%(b&#34;-&#34;*30))
+                try:
+                        hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
+                except:
+                        hostname = tools.strings.tobytes(sys.platform)
+                self.output.write(b&#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; Telnet connected on &#39;%s&#39; &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;\r\n&#34;%hostname)
 
         def clean(self):
                 &#34;&#34;&#34; Clean the login &#34;&#34;&#34;
@@ -263,12 +266,15 @@ class TelnetWrapper(io.IOBase):
                         hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
                 except:
                         hostname = tools.strings.tobytes(sys.platform)
-                message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
-                self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))
+                self.output.write(b&#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; Telnet started on &#39;%s&#39;   &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;\r\n&#34;%hostname)
 
         def footer(self):
                 &#34;&#34;&#34; Show footer &#34;&#34;&#34;
-                self.output.write(b&#34;\r\n%s\r\n&#34;%(b&#34;-&#34;*30))
+                try:
+                        hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
+                except:
+                        hostname = tools.strings.tobytes(sys.platform)
+                self.output.write(b&#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; Telnet connected on &#39;%s&#39; &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;\r\n&#34;%hostname)
 
         def clean(self):
                 &#34;&#34;&#34; Clean the login &#34;&#34;&#34;
@@ -399,7 +405,11 @@ class TelnetWrapper(io.IOBase):
 </summary>
 <pre><code class="python">def footer(self):
         &#34;&#34;&#34; Show footer &#34;&#34;&#34;
-        self.output.write(b&#34;\r\n%s\r\n&#34;%(b&#34;-&#34;*30))</code></pre>
+        try:
+                hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
+        except:
+                hostname = tools.strings.tobytes(sys.platform)
+        self.output.write(b&#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; Telnet connected on &#39;%s&#39; &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;\r\n&#34;%hostname)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.telnetcore.TelnetLogin.header"><code class="name flex">
@@ -417,8 +427,7 @@ class TelnetWrapper(io.IOBase):
                 hostname = tools.strings.tobytes(wifi.hostname.Hostname.get_hostname())
         except:
                 hostname = tools.strings.tobytes(sys.platform)
-        message = b&#34;# Telnet on &#39;%s&#39; started #&#34;%hostname
-        self.output.write(b&#34;\r\n%s\r\n%s\r\n%s\r\n&#34;%(b&#34;#&#34;*len(message), message, b&#34;#&#34;*len(message)))</code></pre>
+        self.output.write(b&#34;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; Telnet started on &#39;%s&#39;   &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;\r\n&#34;%hostname)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.telnetcore.TelnetLogin.input"><code class="name flex">

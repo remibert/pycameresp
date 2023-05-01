@@ -1,6 +1,6 @@
 """ Tools to flash the firmware of pycameresp """
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=no-name-in-module
 import copy
 import sys
@@ -10,7 +10,7 @@ from pathlib import Path
 import vt100
 import settings
 
-sys.path.append("../../modules/lib/tools")
+sys.path.append("../../modules/lib")
 # pylint:disable=consider-using-f-string
 # pylint:disable=import-error
 # pylint:disable=wrong-import-position

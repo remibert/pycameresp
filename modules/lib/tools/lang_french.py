@@ -1,6 +1,6 @@
 """ Textes en francais """
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 
 # POUR DES RAISONS DE PERFORMANCE DU SERVEUR WEB, SEUL LES CHAINES BINAIRES SONT SUPPORTEES : b"..."
 # é \xC3\xA9

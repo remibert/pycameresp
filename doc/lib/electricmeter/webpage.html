@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 &#34;&#34;&#34; Function define the web page to view recent motion detection &#34;&#34;&#34;
 # pylint:disable=anomalous-unicode-escape-in-string
 # pylint:disable=wrong-import-order
@@ -63,7 +63,7 @@ async def hourly_page_page(request, response, args):
 
         step = int(request.params.get(b&#34;step&#34;,b&#34;30&#34;))
         steps = []
-        for s in [1,2,5,10,15,30,60,240,360]:
+        for s in [1,2,3,5,10,15,30,60]:
                 if s == step:
                         selected = True
                 else:
@@ -607,7 +607,7 @@ async def hourly_page_page(request, response, args):
 
         step = int(request.params.get(b&#34;step&#34;,b&#34;30&#34;))
         steps = []
-        for s in [1,2,5,10,15,30,60,240,360]:
+        for s in [1,2,3,5,10,15,30,60]:
                 if s == step:
                         selected = True
                 else:

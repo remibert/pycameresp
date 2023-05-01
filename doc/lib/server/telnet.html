@@ -45,7 +45,7 @@ class TelnetServerInstance(tools.tasking.ServerInstance):
         def __init__(self, **kwargs):
                 tools.tasking.ServerInstance.__init__(self, **kwargs)
 
-        def start_server(self):
+        def start(self):
                 &#34;&#34;&#34; Start server &#34;&#34;&#34;
                 port = self.kwargs.get(&#34;telnet_port&#34;,23)
                 if tools.support.telnet():
@@ -77,6 +77,7 @@ class Telnet:
                 Telnet.close_client()
                 from server import telnetcore
                 Telnet.client[0], remote_addr = socket_server.accept()
+                tools.tasking.Tasks.slow_down()
                 tools.logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
                 Telnet.client[0].setblocking(False)
                 Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
@@ -151,6 +152,7 @@ class Telnet:
                 Telnet.close_client()
                 from server import telnetcore
                 Telnet.client[0], remote_addr = socket_server.accept()
+                tools.tasking.Tasks.slow_down()
                 tools.logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
                 Telnet.client[0].setblocking(False)
                 Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
@@ -223,6 +225,7 @@ def accept(socket_server):
         Telnet.close_client()
         from server import telnetcore
         Telnet.client[0], remote_addr = socket_server.accept()
+        tools.tasking.Tasks.slow_down()
         tools.logger.syslog(&#34;Telnet connected from : %s&#34; % remote_addr[0])
         Telnet.client[0].setblocking(False)
         Telnet.client[0].setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
@@ -313,7 +316,7 @@ def stop():
         def __init__(self, **kwargs):
                 tools.tasking.ServerInstance.__init__(self, **kwargs)
 
-        def start_server(self):
+        def start(self):
                 &#34;&#34;&#34; Start server &#34;&#34;&#34;
                 port = self.kwargs.get(&#34;telnet_port&#34;,23)
                 if tools.support.telnet():
@@ -337,8 +340,8 @@ def stop():
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.server.telnet.TelnetServerInstance.start_server"><code class="name flex">
-<span>def <span class="ident">start_server</span></span>(<span>self)</span>
+<dt id="lib.server.telnet.TelnetServerInstance.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Start server</p></div>
@@ -346,7 +349,7 @@ def stop():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start_server(self):
+<pre><code class="python">def start(self):
         &#34;&#34;&#34; Start server &#34;&#34;&#34;
         port = self.kwargs.get(&#34;telnet_port&#34;,23)
         if tools.support.telnet():
@@ -397,7 +400,7 @@ def stop():
 <li>
 <h4><code><a title="lib.server.telnet.TelnetServerInstance" href="#lib.server.telnet.TelnetServerInstance">TelnetServerInstance</a></code></h4>
 <ul class="">
-<li><code><a title="lib.server.telnet.TelnetServerInstance.start_server" href="#lib.server.telnet.TelnetServerInstance.start_server">start_server</a></code></li>
+<li><code><a title="lib.server.telnet.TelnetServerInstance.start" href="#lib.server.telnet.TelnetServerInstance.start">start</a></code></li>
 </ul>
 </li>
 </ul>

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Allows you to convert a CFS file to a ZIP file and vice versa """
 import tempfile
 import sys
@@ -8,7 +8,7 @@ import os.path
 import os
 import time
 from zipfile import ZipFile, ZIP_DEFLATED
-sys.path.append("../../modules/lib/tools")
+sys.path.append("../../modules/lib")
 # pylint:disable=consider-using-enumerate
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error

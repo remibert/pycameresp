@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 &#34;&#34;&#34; These classes are used to manage mqtt client &#34;&#34;&#34;
 # pylint:disable=consider-using-f-string
 import tools.jsonconfig
@@ -55,6 +55,17 @@ class MqttConfig(tools.jsonconfig.JsonConfig):
                 # Password of mqtt broker
                 self.password = b&#34;&#34;
 
+class MqttClientInstance(tools.tasking.ClientInstance):
+        &#34;&#34;&#34; Mqtt client instance &#34;&#34;&#34;
+        def __init__(self, **kwargs):
+                tools.tasking.ClientInstance.__init__(self, **kwargs)
+
+        def start(self):
+                &#34;&#34;&#34; Start mqtt client &#34;&#34;&#34;
+                MqttClient.init()
+                MqttClient.protocol.start(**self.kwargs)
+                return &#34;MqttClient&#34;,self.kwargs.get(&#34;mqtt_port&#34;, MqttClient.config.port)
+
 class MqttClient:
         &#34;&#34;&#34; Mqtt client class &#34;&#34;&#34;
         protocol = None
@@ -77,55 +88,82 @@ class MqttClient:
 
         @staticmethod
         async def send(message):
-                &#34;&#34;&#34; Send message &#34;&#34;&#34;
+                &#34;&#34;&#34; Low level mqtt message sender &#34;&#34;&#34;
                 MqttClient.init()
                 if MqttClient.config.activated:
                         return await MqttClient.protocol.send(message)
 
         @staticmethod
-        def subscribe(topic, **kwargs):
-                &#34;&#34;&#34; Subscribe callback on topic decorator &#34;&#34;&#34;
-                def subscribe(function):
+        def add_topic(**kwargs):
+                &#34;&#34;&#34; Subscribe topic with decorator
+                Parameters :
+                 - topic : topic name
+                 - qos : quality of service
+                 - callback : callback called on publication &#34;&#34;&#34;
+                def add_topic(callback):
                         MqttClient.init()
-                        if MqttClient.config.activated:
-                                MqttClient.protocol.subscribe(topic, function, **kwargs)
-                        return function
-                return subscribe
+                        kwargs[&#34;callback&#34;] = callback
+                        MqttClient.protocol.add_topic(**kwargs)
+                        return callback
+                return add_topic
 
         @staticmethod
-        def unsubscribe(topic):
-                &#34;&#34;&#34; Unsubscribe topic name &#34;&#34;&#34;
+        async def unsubscribe(**kwargs):
+                &#34;&#34;&#34; Unsubscribe topic 
+                Parameters :
+                 - topic : topic name
+                &#34;&#34;&#34;
+                result = False
                 MqttClient.init()
                 if MqttClient.config.activated:
-                        MqttClient.protocol.unsubscribe(topic)
+                        result = await MqttClient.protocol.unsubscribe(**kwargs)
+                return result
 
         @staticmethod
-        async def publish(topic, value, **kwargs):
-                &#34;&#34;&#34; Publish topic with its value &#34;&#34;&#34;
+        async def subscribe(**kwargs):
+                &#34;&#34;&#34; Subscribe topic 
+                Parameters :
+                 - topic : topic name
+                  - qos : quality of service
+                 - callback : callback called on publication
+                &#34;&#34;&#34;
+                result = False
                 MqttClient.init()
                 if MqttClient.config.activated:
-                        await MqttClient.protocol.publish(topic, value, **kwargs)
+                        result = await MqttClient.protocol.subscribe(**kwargs)
+                return result
+
+        @staticmethod
+        async def publish(**kwargs):
+                &#34;&#34;&#34; Publish topic with its value 
+                Parameters :
+                 - topic : topic name
+                 - value : value to publish
+                 - qos : quality of service
+                &#34;&#34;&#34;
+                result = False
+                MqttClient.init()
+                if MqttClient.config.activated:
+                        result = await MqttClient.protocol.publish(**kwargs)
+                return result
 
         @staticmethod
         def start(**kwargs):
-                &#34;&#34;&#34; Start the mqtt client &#34;&#34;&#34;
+                &#34;&#34;&#34; Start the mqtt client 
+                mqtt_host  : mqtt broker ip address (string)
+                mqtt_port  : mqtt broker port (int)
+                keep_alive : the keep alive is a time interval measured in seconds (int)
+                username   : user name (string)
+                password   : password (string)
+                debug      : True for see debug information (bool)
+                dump       : show the content of exchange
+                &#34;&#34;&#34;
                 MqttClient.config = MqttConfig()
                 MqttClient.config.load_create()
                 if MqttClient.config.activated:
-                        tools.tasking.Tasks.create_server(MqttClientInstance(**kwargs))
+                        tools.tasking.Tasks.create_client(MqttClientInstance(**kwargs))
                 else:
-                        tools.logger.syslog(&#34;Mqtt client disabled in config&#34;)
-
-class MqttClientInstance(tools.tasking.ServerInstance):
-        &#34;&#34;&#34; Mqtt client instance &#34;&#34;&#34;
-        def __init__(self, **kwargs):
-                tools.tasking.ServerInstance.__init__(self, **kwargs)
-
-        def start_server(self):
-                &#34;&#34;&#34; Start mqtt client &#34;&#34;&#34;
-                MqttClient.init()
-                MqttClient.protocol.start(**self.kwargs)
-                return &#34;Mqtt&#34;,self.kwargs.get(&#34;mqtt_port&#34;, MqttClient.config.port)</code></pre>
+                        tools.logger.syslog(&#34;Mqtt client disabled in config&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -168,42 +206,80 @@ class MqttClientInstance(tools.tasking.ServerInstance):
 
         @staticmethod
         async def send(message):
-                &#34;&#34;&#34; Send message &#34;&#34;&#34;
+                &#34;&#34;&#34; Low level mqtt message sender &#34;&#34;&#34;
                 MqttClient.init()
                 if MqttClient.config.activated:
                         return await MqttClient.protocol.send(message)
 
         @staticmethod
-        def subscribe(topic, **kwargs):
-                &#34;&#34;&#34; Subscribe callback on topic decorator &#34;&#34;&#34;
-                def subscribe(function):
+        def add_topic(**kwargs):
+                &#34;&#34;&#34; Subscribe topic with decorator
+                Parameters :
+                 - topic : topic name
+                 - qos : quality of service
+                 - callback : callback called on publication &#34;&#34;&#34;
+                def add_topic(callback):
                         MqttClient.init()
-                        if MqttClient.config.activated:
-                                MqttClient.protocol.subscribe(topic, function, **kwargs)
-                        return function
-                return subscribe
+                        kwargs[&#34;callback&#34;] = callback
+                        MqttClient.protocol.add_topic(**kwargs)
+                        return callback
+                return add_topic
 
         @staticmethod
-        def unsubscribe(topic):
-                &#34;&#34;&#34; Unsubscribe topic name &#34;&#34;&#34;
+        async def unsubscribe(**kwargs):
+                &#34;&#34;&#34; Unsubscribe topic 
+                Parameters :
+                 - topic : topic name
+                &#34;&#34;&#34;
+                result = False
                 MqttClient.init()
                 if MqttClient.config.activated:
-                        MqttClient.protocol.unsubscribe(topic)
+                        result = await MqttClient.protocol.unsubscribe(**kwargs)
+                return result
 
         @staticmethod
-        async def publish(topic, value, **kwargs):
-                &#34;&#34;&#34; Publish topic with its value &#34;&#34;&#34;
+        async def subscribe(**kwargs):
+                &#34;&#34;&#34; Subscribe topic 
+                Parameters :
+                 - topic : topic name
+                  - qos : quality of service
+                 - callback : callback called on publication
+                &#34;&#34;&#34;
+                result = False
                 MqttClient.init()
                 if MqttClient.config.activated:
-                        await MqttClient.protocol.publish(topic, value, **kwargs)
+                        result = await MqttClient.protocol.subscribe(**kwargs)
+                return result
+
+        @staticmethod
+        async def publish(**kwargs):
+                &#34;&#34;&#34; Publish topic with its value 
+                Parameters :
+                 - topic : topic name
+                 - value : value to publish
+                 - qos : quality of service
+                &#34;&#34;&#34;
+                result = False
+                MqttClient.init()
+                if MqttClient.config.activated:
+                        result = await MqttClient.protocol.publish(**kwargs)
+                return result
 
         @staticmethod
         def start(**kwargs):
-                &#34;&#34;&#34; Start the mqtt client &#34;&#34;&#34;
+                &#34;&#34;&#34; Start the mqtt client 
+                mqtt_host  : mqtt broker ip address (string)
+                mqtt_port  : mqtt broker port (int)
+                keep_alive : the keep alive is a time interval measured in seconds (int)
+                username   : user name (string)
+                password   : password (string)
+                debug      : True for see debug information (bool)
+                dump       : show the content of exchange
+                &#34;&#34;&#34;
                 MqttClient.config = MqttConfig()
                 MqttClient.config.load_create()
                 if MqttClient.config.activated:
-                        tools.tasking.Tasks.create_server(MqttClientInstance(**kwargs))
+                        tools.tasking.Tasks.create_client(MqttClientInstance(**kwargs))
                 else:
                         tools.logger.syslog(&#34;Mqtt client disabled in config&#34;)</code></pre>
 </details>
@@ -220,6 +296,34 @@ class MqttClientInstance(tools.tasking.ServerInstance):
 </dl>
 <h3>Static methods</h3>
 <dl>
+<dt id="lib.server.mqttclient.MqttClient.add_topic"><code class="name flex">
+<span>def <span class="ident">add_topic</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Subscribe topic with decorator
+Parameters :
+- topic : topic name
+- qos : quality of service
+- callback : callback called on publication</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def add_topic(**kwargs):
+        &#34;&#34;&#34; Subscribe topic with decorator
+        Parameters :
+         - topic : topic name
+         - qos : quality of service
+         - callback : callback called on publication &#34;&#34;&#34;
+        def add_topic(callback):
+                MqttClient.init()
+                kwargs[&#34;callback&#34;] = callback
+                MqttClient.protocol.add_topic(**kwargs)
+                return callback
+        return add_topic</code></pre>
+</details>
+</dd>
 <dt id="lib.server.mqttclient.MqttClient.init"><code class="name flex">
 <span>def <span class="ident">init</span></span>(<span>)</span>
 </code></dt>
@@ -246,34 +350,45 @@ def init():
 </details>
 </dd>
 <dt id="lib.server.mqttclient.MqttClient.publish"><code class="name flex">
-<span>async def <span class="ident">publish</span></span>(<span>topic, value, **kwargs)</span>
+<span>async def <span class="ident">publish</span></span>(<span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Publish topic with its value</p></div>
+<div class="desc"><p>Publish topic with its value
+Parameters :
+- topic : topic name
+- value : value to publish
+- qos : quality of service</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-async def publish(topic, value, **kwargs):
-        &#34;&#34;&#34; Publish topic with its value &#34;&#34;&#34;
+async def publish(**kwargs):
+        &#34;&#34;&#34; Publish topic with its value 
+        Parameters :
+         - topic : topic name
+         - value : value to publish
+         - qos : quality of service
+        &#34;&#34;&#34;
+        result = False
         MqttClient.init()
         if MqttClient.config.activated:
-                await MqttClient.protocol.publish(topic, value, **kwargs)</code></pre>
+                result = await MqttClient.protocol.publish(**kwargs)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.server.mqttclient.MqttClient.send"><code class="name flex">
 <span>async def <span class="ident">send</span></span>(<span>message)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Send message</p></div>
+<div class="desc"><p>Low level mqtt message sender</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
 async def send(message):
-        &#34;&#34;&#34; Send message &#34;&#34;&#34;
+        &#34;&#34;&#34; Low level mqtt message sender &#34;&#34;&#34;
         MqttClient.init()
         if MqttClient.config.activated:
                 return await MqttClient.protocol.send(message)</code></pre>
@@ -283,57 +398,93 @@ async def send(message):
 <span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Start the mqtt client</p></div>
+<div class="desc"><p>Start the mqtt client
+mqtt_host
+: mqtt broker ip address (string)
+mqtt_port
+: mqtt broker port (int)
+keep_alive : the keep alive is a time interval measured in seconds (int)
+username
+: user name (string)
+password
+: password (string)
+debug
+: True for see debug information (bool)
+dump
+: show the content of exchange</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
 def start(**kwargs):
-        &#34;&#34;&#34; Start the mqtt client &#34;&#34;&#34;
+        &#34;&#34;&#34; Start the mqtt client 
+        mqtt_host  : mqtt broker ip address (string)
+        mqtt_port  : mqtt broker port (int)
+        keep_alive : the keep alive is a time interval measured in seconds (int)
+        username   : user name (string)
+        password   : password (string)
+        debug      : True for see debug information (bool)
+        dump       : show the content of exchange
+        &#34;&#34;&#34;
         MqttClient.config = MqttConfig()
         MqttClient.config.load_create()
         if MqttClient.config.activated:
-                tools.tasking.Tasks.create_server(MqttClientInstance(**kwargs))
+                tools.tasking.Tasks.create_client(MqttClientInstance(**kwargs))
         else:
                 tools.logger.syslog(&#34;Mqtt client disabled in config&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.mqttclient.MqttClient.subscribe"><code class="name flex">
-<span>def <span class="ident">subscribe</span></span>(<span>topic, **kwargs)</span>
+<span>async def <span class="ident">subscribe</span></span>(<span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Subscribe callback on topic decorator</p></div>
+<div class="desc"><p>Subscribe topic
+Parameters :
+- topic : topic name
+- qos : quality of service
+- callback : callback called on publication</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def subscribe(topic, **kwargs):
-        &#34;&#34;&#34; Subscribe callback on topic decorator &#34;&#34;&#34;
-        def subscribe(function):
-                MqttClient.init()
-                if MqttClient.config.activated:
-                        MqttClient.protocol.subscribe(topic, function, **kwargs)
-                return function
-        return subscribe</code></pre>
+async def subscribe(**kwargs):
+        &#34;&#34;&#34; Subscribe topic 
+        Parameters :
+         - topic : topic name
+          - qos : quality of service
+         - callback : callback called on publication
+        &#34;&#34;&#34;
+        result = False
+        MqttClient.init()
+        if MqttClient.config.activated:
+                result = await MqttClient.protocol.subscribe(**kwargs)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.server.mqttclient.MqttClient.unsubscribe"><code class="name flex">
-<span>def <span class="ident">unsubscribe</span></span>(<span>topic)</span>
+<span>async def <span class="ident">unsubscribe</span></span>(<span>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Unsubscribe topic name</p></div>
+<div class="desc"><p>Unsubscribe topic
+Parameters :
+- topic : topic name</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def unsubscribe(topic):
-        &#34;&#34;&#34; Unsubscribe topic name &#34;&#34;&#34;
+async def unsubscribe(**kwargs):
+        &#34;&#34;&#34; Unsubscribe topic 
+        Parameters :
+         - topic : topic name
+        &#34;&#34;&#34;
+        result = False
         MqttClient.init()
         if MqttClient.config.activated:
-                MqttClient.protocol.unsubscribe(topic)</code></pre>
+                result = await MqttClient.protocol.unsubscribe(**kwargs)
+        return result</code></pre>
 </details>
 </dd>
 </dl>
@@ -349,25 +500,25 @@ def unsubscribe(topic):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class MqttClientInstance(tools.tasking.ServerInstance):
+<pre><code class="python">class MqttClientInstance(tools.tasking.ClientInstance):
         &#34;&#34;&#34; Mqtt client instance &#34;&#34;&#34;
         def __init__(self, **kwargs):
-                tools.tasking.ServerInstance.__init__(self, **kwargs)
+                tools.tasking.ClientInstance.__init__(self, **kwargs)
 
-        def start_server(self):
+        def start(self):
                 &#34;&#34;&#34; Start mqtt client &#34;&#34;&#34;
                 MqttClient.init()
                 MqttClient.protocol.start(**self.kwargs)
-                return &#34;Mqtt&#34;,self.kwargs.get(&#34;mqtt_port&#34;, MqttClient.config.port)</code></pre>
+                return &#34;MqttClient&#34;,self.kwargs.get(&#34;mqtt_port&#34;, MqttClient.config.port)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>tools.tasking.ServerInstance</li>
+<li>tools.tasking.ClientInstance</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="lib.server.mqttclient.MqttClientInstance.start_server"><code class="name flex">
-<span>def <span class="ident">start_server</span></span>(<span>self)</span>
+<dt id="lib.server.mqttclient.MqttClientInstance.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Start mqtt client</p></div>
@@ -375,11 +526,11 @@ def unsubscribe(topic):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start_server(self):
+<pre><code class="python">def start(self):
         &#34;&#34;&#34; Start mqtt client &#34;&#34;&#34;
         MqttClient.init()
         MqttClient.protocol.start(**self.kwargs)
-        return &#34;Mqtt&#34;,self.kwargs.get(&#34;mqtt_port&#34;, MqttClient.config.port)</code></pre>
+        return &#34;MqttClient&#34;,self.kwargs.get(&#34;mqtt_port&#34;, MqttClient.config.port)</code></pre>
 </details>
 </dd>
 </dl>
@@ -439,6 +590,7 @@ def unsubscribe(topic):
 <li>
 <h4><code><a title="lib.server.mqttclient.MqttClient" href="#lib.server.mqttclient.MqttClient">MqttClient</a></code></h4>
 <ul class="two-column">
+<li><code><a title="lib.server.mqttclient.MqttClient.add_topic" href="#lib.server.mqttclient.MqttClient.add_topic">add_topic</a></code></li>
 <li><code><a title="lib.server.mqttclient.MqttClient.config" href="#lib.server.mqttclient.MqttClient.config">config</a></code></li>
 <li><code><a title="lib.server.mqttclient.MqttClient.init" href="#lib.server.mqttclient.MqttClient.init">init</a></code></li>
 <li><code><a title="lib.server.mqttclient.MqttClient.protocol" href="#lib.server.mqttclient.MqttClient.protocol">protocol</a></code></li>
@@ -452,7 +604,7 @@ def unsubscribe(topic):
 <li>
 <h4><code><a title="lib.server.mqttclient.MqttClientInstance" href="#lib.server.mqttclient.MqttClientInstance">MqttClientInstance</a></code></h4>
 <ul class="">
-<li><code><a title="lib.server.mqttclient.MqttClientInstance.start_server" href="#lib.server.mqttclient.MqttClientInstance.start_server">start_server</a></code></li>
+<li><code><a title="lib.server.mqttclient.MqttClientInstance.start" href="#lib.server.mqttclient.MqttClientInstance.start">start</a></code></li>
 </ul>
 </li>
 <li>

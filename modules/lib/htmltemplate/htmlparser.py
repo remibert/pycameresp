@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ This script parse the template.html file and creates the template classes
 that can be used to compose a web page.
 This automatically creates the content of file lib/htmltemplate/htmlclasses.py """

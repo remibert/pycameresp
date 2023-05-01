@@ -109,8 +109,8 @@ The commands are :
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=too-many-lines
 # pylint:disable=consider-using-f-string
 # pylint:disable=unspecified-encoding
@@ -176,6 +176,7 @@ import tools.lang
 import tools.date
 import tools.console
 import tools.system
+import tools.archiver
 
 shell_commands = None
 
@@ -829,7 +830,7 @@ def meminfo():
 
 def flashinfo(mountpoint=None):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
-        tools.console.Console.print(tools.strings.tostrings(b&#34;%s : %s&#34;%(tools.lang.flash_info, tools.info.flashinfo(mountpoint=mountpoint))))
+        tools.console.Console.print(tools.strings.tostrings(b&#34;%s : %s&#34;%(tools.lang.flash_label, tools.info.flashinfo(mountpoint=mountpoint))))
 
 def sysinfo():
         &#34;&#34;&#34; Get system informations &#34;&#34;&#34;
@@ -1623,7 +1624,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def flashinfo(mountpoint=None):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
-        tools.console.Console.print(tools.strings.tostrings(b&#34;%s : %s&#34;%(tools.lang.flash_info, tools.info.flashinfo(mountpoint=mountpoint))))</code></pre>
+        tools.console.Console.print(tools.strings.tostrings(b&#34;%s : %s&#34;%(tools.lang.flash_label, tools.info.flashinfo(mountpoint=mountpoint))))</code></pre>
 </details>
 </dd>
 <dt id="lib.shell.commands.formatsd"><code class="name flex">

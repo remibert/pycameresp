@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ These classes are used to manage mqtt client """
 # pylint:disable=consider-using-f-string
 import tools.jsonconfig

@@ -1,3 +1,5 @@
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 ''' Web page of electric meter '''
 page = b"""
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>

@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Allows automatic component start without editing python scripts.
 This searches for __startup__.py files in lib directory and runs the 'startup' function """
 import tools.logger

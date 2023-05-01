@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>lib.tools.topic API documentation</title>
-<meta name="description" content="List topic names used throughout the application" />
+<meta name="description" content="List topic names used throughout the application …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,14 +22,27 @@
 <h1 class="title">Module <code>lib.tools.topic</code></h1>
 </header>
 <section id="section-intro">
-<p>List topic names used throughout the application</p>
+<p>List topic names used throughout the application.</p>
+<p>To listen to these topics with mqtt, you must prefix the topic with the client_id
+(by default the client_id is the hostname).</p>
+<p>Example of mosquitto command : </p>
+<p>mosquitto_sub -h $BROKER -p 1883 -t $CLIENT_ID/information -u username -P password</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
-&#34;&#34;&#34; List topic names used throughout the application &#34;&#34;&#34;
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
+&#34;&#34;&#34; List topic names used throughout the application.
+
+To listen to these topics with mqtt, you must prefix the topic with the client_id 
+(by default the client_id is the hostname).
+
+Example of mosquitto command : 
+
+mosquitto_sub -h $BROKER -p 1883 -t $CLIENT_ID/information -u username -P password
+
+ &#34;&#34;&#34;
 
 # Value defined for topics
 value_on        = &#34;on&#34;

@@ -1,3 +1,5 @@
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ List the supported configuration according to the hardware """
 
 import sys
@@ -10,8 +12,6 @@ def telnet():
 
 def hostname():
 	""" Indicates if hostname can be used by this hardware """
-	if sys.platform == "rp2":
-		return False
 	return True
 
 def static_ip_accesspoint():

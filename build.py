@@ -1,4 +1,6 @@
 #!/usr/bin/python3
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 """ Build pycameresp firmware """
 import sys
@@ -26,7 +28,7 @@ import time
 # ModuleNotFoundError: No module named 'click' in Python
 # it's due to a bad version of python, usually 3.11, prefer the 3.10
 
-MICROPYTHON_VERSION ="cfd3b70934791abc07f9476a956781de92ddf715"
+MICROPYTHON_VERSION ="294baf52b346e400e2255c6c1e82af5b978b18f7" # 294baf52b346e400e2255c6c1e82af5b978b18f7=micropython 1.20
 ESP_IDF_VERSION_S3  ="6407ecb3f8d2cc07c4c230e7e64f2046af5c86f7" # v4.4.3  !! Difficulty connecting to access point with ESP32 CAMM
 
 ESP_IDF_VERSION     ="7ab8f793ca5b026f37ae812bcc103e3aa698d164" # v4.2.2 Work perfectly with wifi access point on ESP32CAM

@@ -29,8 +29,8 @@ See <a href="https://www.pushover.net">https://www.pushover.net</a></p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 &#34;&#34;&#34; These classes are used to send notifications to smartphones, via the pushover application.
 See https://www.pushover.net &#34;&#34;&#34;
 # pylint:disable=wrong-import-position
@@ -146,13 +146,13 @@ class PushOver:
                         else:
                                 result = True
                 else:
-                        result = None
+                        result = True
                 return result
 
 async def async_notify(user, token, message, image=None, display=True):
         &#34;&#34;&#34; Asyncio notification function (only in asyncio) &#34;&#34;&#34;
         notification = PushOver(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
-        return await notification.notify(b&#34;%s : %s&#34;%(wifi.station.Station.get_hostname(), tools.strings.tobytes(message)), image, display)
+        return await notification.notify(tools.strings.tobytes(message), image, display)
 
 def notify(user, token, message, image=None):
         &#34;&#34;&#34; Notification function &#34;&#34;&#34;
@@ -179,7 +179,7 @@ def notify(user, token, message, image=None):
 <pre><code class="python">async def async_notify(user, token, message, image=None, display=True):
         &#34;&#34;&#34; Asyncio notification function (only in asyncio) &#34;&#34;&#34;
         notification = PushOver(host=b&#34;api.pushover.net&#34;, port=80, token=token, user=user)
-        return await notification.notify(b&#34;%s : %s&#34;%(wifi.station.Station.get_hostname(), tools.strings.tobytes(message)), image, display)</code></pre>
+        return await notification.notify(tools.strings.tobytes(message), image, display)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.pushover.notify"><code class="name flex">
@@ -311,7 +311,7 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
                         else:
                                 result = True
                 else:
-                        result = None
+                        result = True
                 return result</code></pre>
 </details>
 <h3>Static methods</h3>
@@ -343,7 +343,7 @@ async def notify_message(notification):
                 else:
                         result = True
         else:
-                result = None
+                result = True
         return result</code></pre>
 </details>
 </dd>

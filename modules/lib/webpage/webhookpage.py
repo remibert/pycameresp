@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Function define the web page to configure the webhook to interact with domoticz or other """
 import server.httpserver
 import server.httprequest

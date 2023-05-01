@@ -1,6 +1,6 @@
 """ Parse url and get all content """
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 import collections
 import tools.strings
 # url = b"http://user:passsword@192.168.1.28:8080/toto/json.htm?type=command&param=switchlight&idx=4&switchcmd=On&error=mon+error#my_anchor"

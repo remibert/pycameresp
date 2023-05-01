@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Device informations &#34;&#34;&#34;
 import sys
@@ -107,7 +107,6 @@ def flash_size(mountpoint=None):
                 alloc = (status.f_blocks - status.f_bfree) * status.f_frsize
         return total, alloc, free
 
-
 def flashinfo(mountpoint=None):
         &#34;&#34;&#34; Get flash informations &#34;&#34;&#34;
         try:
@@ -145,26 +144,26 @@ def sysinfo():
         except Exception as err:
                 return b&#34;Sysinfo not available&#34;
 
-up_last=None
-up_total=0
+_up_last=None
+_up_total=0
 
 def uptime_sec():
         &#34;&#34;&#34; Get the uptime in seconds &#34;&#34;&#34;
-        global up_last, up_total
+        global _up_last, _up_total
         try:
                 # pylint: disable=no-member
                 up = time.ticks_ms()//1000
         except:
                 up = time.time()
 
-        if up_last is None:
-                up_last = up
+        if _up_last is None:
+                _up_last = up
 
-        if up_last &gt; up:
-                up_total += (1&lt;&lt;30)//1000
+        if _up_last &gt; up:
+                _up_total += (1&lt;&lt;30)//1000
 
-        up_last = up
-        up += up_total
+        _up_last = up
+        up += _up_total
         return up
 
 def uptime(text=b&#34;days&#34;):
@@ -490,21 +489,21 @@ def get_issues_counter():
 </summary>
 <pre><code class="python">def uptime_sec():
         &#34;&#34;&#34; Get the uptime in seconds &#34;&#34;&#34;
-        global up_last, up_total
+        global _up_last, _up_total
         try:
                 # pylint: disable=no-member
                 up = time.ticks_ms()//1000
         except:
                 up = time.time()
 
-        if up_last is None:
-                up_last = up
+        if _up_last is None:
+                _up_last = up
 
-        if up_last &gt; up:
-                up_total += (1&lt;&lt;30)//1000
+        if _up_last &gt; up:
+                _up_total += (1&lt;&lt;30)//1000
 
-        up_last = up
-        up += up_total
+        _up_last = up
+        up += _up_total
         return up</code></pre>
 </details>
 </dd>

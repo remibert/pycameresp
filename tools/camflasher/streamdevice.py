@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Stream class to communicate with the device """
 import os
 import os.path
@@ -13,7 +13,7 @@ import zipfile
 import serial
 import fileuploader
 import vt100
-sys.path.append("../../modules/lib/tools")
+sys.path.append("../../modules/lib")
 # pylint:disable=consider-using-enumerate
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error

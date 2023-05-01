@@ -1,4 +1,4 @@
-# Distributed under MIT License
+# Distributed under Pycameresp License
 # Copyright (c) 2021 Remi BERTHOLETS
 """ Class used to manage VT100 """
 # pylint:disable=too-many-lines

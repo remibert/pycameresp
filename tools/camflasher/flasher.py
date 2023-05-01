@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Micropython firmware flasher for esp32 """
 import threading
 import tempfile
@@ -174,6 +174,7 @@ class Flasher(threading.Thread):
 				esptool.main(flash_command)
 				print("\n"+vt100.COLOR_OK+"Flashed with success."+vt100.COLOR_NONE)
 		except Exception as err:
+			print(err)
 			print("\n"+vt100.COLOR_FAILED+"Flash failed"+vt100.COLOR_NONE)
 
 		# Connect serial link

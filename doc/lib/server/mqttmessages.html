@@ -27,8 +27,8 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=consider-using-f-string
 &#34;&#34;&#34; Mqtt messages classes &#34;&#34;&#34;
 import io
@@ -97,6 +97,7 @@ class MqttMessage:
                                 self.identifier = MqttMessage.identifier_base[0]
                                 MqttMessage.identifier_base[0] += 1
                         self.header = None
+                        self.sent_time = 0
                 else:
                         self.decode_header(kwargs.get(&#34;header&#34;))
                 self.payload = io.BytesIO()
@@ -158,7 +159,6 @@ class MqttMessage:
                 else:
                         raise MqttException(&#34;Mqtt control command not supported&#34;)
 
-
         def encode_length(self, length):
                 &#34;&#34;&#34; Encode the length &#34;&#34;&#34;
                 result = b&#34;&#34;
@@ -173,10 +173,8 @@ class MqttMessage:
                                 break
                 return result
 
-
         async def write_length(self, streamio):
                 &#34;&#34;&#34; Write the length of message &#34;&#34;&#34;
-
                 length = len(self.payload.getvalue())
                 x = length
                 while True:
@@ -205,6 +203,7 @@ class MqttMessage:
 
         async def write(self, streamio):
                 &#34;&#34;&#34; Write message &#34;&#34;&#34;
+                self.sent_time = tools.strings.ticks()
                 self.buffer.write(self.encode_header())
                 self.encode()
                 self.buffer.write(self.encode_length(len(self.payload.getvalue())))
@@ -366,7 +365,6 @@ class MqttPublish(MqttMessage):
                 MqttMessage.__init__(self, control=MQTT_PUBLISH, **kwargs)
                 self.topic = kwargs.get(&#34;topic&#34;,&#34;&#34;)
                 self.value = kwargs.get(&#34;value&#34;,&#34;&#34;)
-                self.identifier = 0
 
         def decode(self):
                 &#34;&#34;&#34; Decode payload &#34;&#34;&#34;
@@ -444,6 +442,10 @@ class MqttSubscribe(MqttMessage):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 MqttMessage.__init__(self, control=MQTT_SUBSCRIBE, **kwargs)
                 self.topics = kwargs.get(&#34;topics&#34;,[])
+                topic = kwargs.get(&#34;topic&#34;, None)
+                qos   = kwargs.get(&#34;qos&#34;, MQTT_QOS_ONCE)
+                if topic:
+                        self.topics.append((topic, qos))
 
         def add_topic(self, topic, qos=MQTT_QOS_ONCE):
                 &#34;&#34;&#34; Add topics into subscribe &#34;&#34;&#34;
@@ -491,6 +493,9 @@ class MqttUnsubscribe(MqttMessage):
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 MqttMessage.__init__(self, control=MQTT_UNSUBSCRIBE, **kwargs)
                 self.topics = kwargs.get(&#34;topics&#34;,[])
+                topic = kwargs.get(&#34;topic&#34;, None)
+                if topic:
+                        self.topics.append(topic)
 
         def add_topic(self, topic):
                 &#34;&#34;&#34; Add topics into subscribe &#34;&#34;&#34;
@@ -507,7 +512,7 @@ class MqttUnsubscribe(MqttMessage):
         def encode(self):
                 &#34;&#34;&#34; Encode payload &#34;&#34;&#34;
                 self.put_int(self.identifier)
-                for topic,qos in self.topics:
+                for topic in self.topics:
                         self.put_string(topic)
 
 class MqttUnSubAck(MqttMessage):
@@ -565,6 +570,8 @@ class MqttStream(server.stream.Stream):
                         tools.strings.dump_line(data[offset:offset+width], line, width)
                         offset += width
                         print(tools.strings.tostrings(line.getvalue()))
+                        if offset &gt;= 512:
+                                break
                         if offset &gt;= len(data):
                                 break</code></pre>
 </details>
@@ -980,6 +987,7 @@ identifier : packet identifier (1 to 65535)</p></div>
                                 self.identifier = MqttMessage.identifier_base[0]
                                 MqttMessage.identifier_base[0] += 1
                         self.header = None
+                        self.sent_time = 0
                 else:
                         self.decode_header(kwargs.get(&#34;header&#34;))
                 self.payload = io.BytesIO()
@@ -1041,7 +1049,6 @@ identifier : packet identifier (1 to 65535)</p></div>
                 else:
                         raise MqttException(&#34;Mqtt control command not supported&#34;)
 
-
         def encode_length(self, length):
                 &#34;&#34;&#34; Encode the length &#34;&#34;&#34;
                 result = b&#34;&#34;
@@ -1056,10 +1063,8 @@ identifier : packet identifier (1 to 65535)</p></div>
                                 break
                 return result
 
-
         async def write_length(self, streamio):
                 &#34;&#34;&#34; Write the length of message &#34;&#34;&#34;
-
                 length = len(self.payload.getvalue())
                 x = length
                 while True:
@@ -1088,6 +1093,7 @@ identifier : packet identifier (1 to 65535)</p></div>
 
         async def write(self, streamio):
                 &#34;&#34;&#34; Write message &#34;&#34;&#34;
+                self.sent_time = tools.strings.ticks()
                 self.buffer.write(self.encode_header())
                 self.encode()
                 self.buffer.write(self.encode_length(len(self.payload.getvalue())))
@@ -1476,6 +1482,7 @@ async def receive(streamio):
 </summary>
 <pre><code class="python">async def write(self, streamio):
         &#34;&#34;&#34; Write message &#34;&#34;&#34;
+        self.sent_time = tools.strings.ticks()
         self.buffer.write(self.encode_header())
         self.encode()
         self.buffer.write(self.encode_length(len(self.payload.getvalue())))
@@ -1494,7 +1501,6 @@ async def receive(streamio):
 </summary>
 <pre><code class="python">async def write_length(self, streamio):
         &#34;&#34;&#34; Write the length of message &#34;&#34;&#34;
-
         length = len(self.payload.getvalue())
         x = length
         while True:
@@ -1964,7 +1970,6 @@ value : topic value</p></div>
                 MqttMessage.__init__(self, control=MQTT_PUBLISH, **kwargs)
                 self.topic = kwargs.get(&#34;topic&#34;,&#34;&#34;)
                 self.value = kwargs.get(&#34;value&#34;,&#34;&#34;)
-                self.identifier = 0
 
         def decode(self):
                 &#34;&#34;&#34; Decode payload &#34;&#34;&#34;
@@ -2091,6 +2096,8 @@ value : topic value</p></div>
                         tools.strings.dump_line(data[offset:offset+width], line, width)
                         offset += width
                         print(tools.strings.tostrings(line.getvalue()))
+                        if offset &gt;= 512:
+                                break
                         if offset &gt;= len(data):
                                 break</code></pre>
 </details>
@@ -2120,6 +2127,8 @@ value : topic value</p></div>
                 tools.strings.dump_line(data[offset:offset+width], line, width)
                 offset += width
                 print(tools.strings.tostrings(line.getvalue()))
+                if offset &gt;= 512:
+                        break
                 if offset &gt;= len(data):
                         break</code></pre>
 </details>
@@ -2275,6 +2284,10 @@ value : topic value</p></div>
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 MqttMessage.__init__(self, control=MQTT_SUBSCRIBE, **kwargs)
                 self.topics = kwargs.get(&#34;topics&#34;,[])
+                topic = kwargs.get(&#34;topic&#34;, None)
+                qos   = kwargs.get(&#34;qos&#34;, MQTT_QOS_ONCE)
+                if topic:
+                        self.topics.append((topic, qos))
 
         def add_topic(self, topic, qos=MQTT_QOS_ONCE):
                 &#34;&#34;&#34; Add topics into subscribe &#34;&#34;&#34;
@@ -2478,6 +2491,9 @@ value : topic value</p></div>
                 &#34;&#34;&#34; Constructor &#34;&#34;&#34;
                 MqttMessage.__init__(self, control=MQTT_UNSUBSCRIBE, **kwargs)
                 self.topics = kwargs.get(&#34;topics&#34;,[])
+                topic = kwargs.get(&#34;topic&#34;, None)
+                if topic:
+                        self.topics.append(topic)
 
         def add_topic(self, topic):
                 &#34;&#34;&#34; Add topics into subscribe &#34;&#34;&#34;
@@ -2494,7 +2510,7 @@ value : topic value</p></div>
         def encode(self):
                 &#34;&#34;&#34; Encode payload &#34;&#34;&#34;
                 self.put_int(self.identifier)
-                for topic,qos in self.topics:
+                for topic in self.topics:
                         self.put_string(topic)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2547,7 +2563,7 @@ value : topic value</p></div>
 <pre><code class="python">def encode(self):
         &#34;&#34;&#34; Encode payload &#34;&#34;&#34;
         self.put_int(self.identifier)
-        for topic,qos in self.topics:
+        for topic in self.topics:
                 self.put_string(topic)</code></pre>
 </details>
 </dd>

@@ -1,5 +1,5 @@
-# Distributed under MIT License
-# Copyright (c) 2021 Remi BERTHOLET
+# Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
 """ Function to check if the template.html is changed and the generates the htmlclasses.py """
 from htmltemplate import WWW_DIR, TEMPLATE_FILE, TEMPLATE_PY
 
