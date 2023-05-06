@@ -17,3 +17,4 @@ images/Thumbs.db
 *.hourly
 *.daily
 *.monthly
+sandbox.py

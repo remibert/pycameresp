@@ -190,7 +190,7 @@ def dump(buff, withColor=True):
 		string += "\x1B[m"
 	return string
 
-def dump_line(data, line = None, width = 0):
+def dump_line(data, line = None, width = 0, spacer=b" "):
 	""" dump a data data in hexadecimal on one line """
 	size = len(data)
 	fill = 0
@@ -203,19 +203,19 @@ def dump_line(data, line = None, width = 0):
 	line.write(binascii.hexlify(data, " ").upper())
 
 	# Filling of vacuum according to the size of the dump
-	line.write(b'   '*fill)
+	line.write(spacer*fill*3)
 
 	# Display of ASCII codes
 	line.write(b' |')
 
 	for i in data:
-		if i >= 0x20 and  i < 0x7F:
+		if i >= 0x20 and  i < 0x7F and i != 0x3C and i != 0x3E:
 			line.write(i.to_bytes(1,"big"))
 		else:
 			line.write(b'.')
 
 	# Filling of vacuum according to the size of the dump
-	line.write(b' '*fill)
+	line.write(spacer*fill)
 
 	# End of data ascii
 	line.write(b'|')

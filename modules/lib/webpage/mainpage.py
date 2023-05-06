@@ -10,27 +10,19 @@ import tools.tasking
 
 def main_page(request, response, args, title_frame, content=None, menu_visible=True):
 	""" Function define the main web page with menu, it check also the login password """
-	try:
-		title  = args["title"]
-	except:
-		title = title_frame
-	try:
-		active = args["index"]
-	except:
-		active = 0
-	# On wifi station, the external style cheet is added
-	if wifi.station.Station.is_ip_on_interface(request.remoteaddr):
-		stylesheet = Stylesheet()
-	else:
-		stylesheet = StylesheetDefault()
-
 	# Create main page if logged
-	page = webpage.passwordpage.PasswordPage.login(request, response, 15*60)
-
-	if b"logout" in request.params and page is None:
-		content = None
-
+	page = get_login_page(request, response)
 	if page is None:
+		if b"logout" in request.params and page is None:
+			content = None
+		try:
+			title  = args["title"]
+		except:
+			title = title_frame
+		try:
+			active = args["index"]
+		except:
+			active = 0
 		if menu_visible:
 			menu_items = []
 			menu_bar = []
@@ -46,14 +38,37 @@ def main_page(request, response, args, title_frame, content=None, menu_visible=T
 				else:
 					menu_items.append(menu_item)
 			menu_bar.append(Menu(menu_items, text=previous_menu))
-			page_content = [stylesheet, MenuBar(menu_bar), Div(content)]
+			page_content = [get_stylesheet(request), MenuBar(menu_bar), Div(content)]
 		else:
-			page_content = [stylesheet, content]
+			page_content = [get_stylesheet(request), content]
 		page = Page(page_content, class_=b"container", title=title, style=b"padding-top: 4.5rem;")
-	else:
-		page = Page([page] + [stylesheet], title=tools.lang.login)
 	tools.tasking.Tasks.slow_down()
 	return page
+
+@server.httpserver.HttpServer.set_login_checker()
+async def is_logged(request, response, duration=15*60):
+	""" Check login session """
+	page = get_login_page(request, response, duration)
+	if page is not None:
+		await response.send_page(page)
+		return False
+	return True
+
+def get_login_page(request, response, duration=0):
+	""" Return the login page if session expired or return None """
+	page = webpage.passwordpage.PasswordPage.login(request, response, duration)
+	if page is not None:
+		page = Page([page] + [get_stylesheet(request)], title=tools.lang.login)
+	return page
+
+def get_stylesheet(request):
+	""" Get the default stylesheet """
+	# On wifi station, the external style cheet is added
+	if wifi.station.Station.is_ip_on_interface(request.remoteaddr):
+		stylesheet = Stylesheet()
+	else:
+		stylesheet = StylesheetDefault()
+	return stylesheet
 
 def main_frame(request, response, args, title_frame, *content):
 	""" Function define the main frame into the main page with menu, it check also the login password """

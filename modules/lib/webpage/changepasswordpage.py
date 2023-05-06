@@ -19,7 +19,6 @@ async def logout(request, response, args):
 	""" Function to close account """
 	if not server.user.User.is_empty():
 		request.params[b"logout"] = b"1"
-		page = webpage.mainpage.main_frame(request, response, args, tools.lang.logout, webpage.passwordpage.PasswordPage.logout(request,response))
-	else:
-		page = webpage.mainpage.main_frame(request, response, args, tools.lang.logout, None)
+		webpage.passwordpage.PasswordPage.logout(request,response)
+	page = webpage.mainpage.main_frame(request, response, args, tools.lang.logout)
 	await response.send_page(page)

@@ -62,7 +62,10 @@ class Periodic:
 	async def task(**kwargs):
 		""" Periodic task method """
 		Periodic.init()
-		STEP = 5
+		if tools.filesystem.ismicropython():
+			STEP = 5
+		else:
+			STEP = 1
 
 		polling_id = 0
 

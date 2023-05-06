@@ -65,10 +65,9 @@ def start(**kwargs):
 	if tools.info.iscamera() and (kwargs.get("motion",False) or kwargs.get("camera",False)) :
 		import video.video
 		if video.video.Camera.is_activated():
+			import tools.sdcard
 			device = kwargs.get("device","ESP32CAM")
 			if device == "ESP32ONE":
-				import tools.sdcard
-
 				# ESP32ONE device
 				video.video.Camera.gpio_config(
 					pin_pwdn=32, pin_reset=-1, pin_xclk=4, pin_sscb_sda=18, pin_sscb_scl=23,

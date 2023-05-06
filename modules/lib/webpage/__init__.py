@@ -14,6 +14,7 @@ import webpage.awakepage
 import webpage.systempage
 import webpage.webhookpage
 import webpage.mqttpage
+import webpage.fileexplorer
 import tools.info
 import tools.support
 

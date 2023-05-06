@@ -26,6 +26,7 @@ MIMES = {\
 	b".css"   : b"text/css",
 	b".htm"   : b"text/html",
 	b".csv"   : b"text/csv",
+	b".log"   : b"text/plain",
 	b".js"    : b"application/javascript",
 	b".xml"   : b"application/xml",
 	b".xhtml" : b"application/xhtml+xml",

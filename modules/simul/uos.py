@@ -7,12 +7,17 @@ from os import *
 def ilistdir(path_):
 	""" List directory """
 	result = []
-	for filename in listdir(path_):
-		fileinfo = stat(path_ + "/" + filename)
-		typ = fileinfo[0]
-		size = fileinfo[6]
-
-		result.append((filename, typ, 0, size))
+	try:
+		for filename in listdir(path_):
+			try:
+				fileinfo = stat(path_ + "/" + filename)
+				typ = fileinfo[0]
+				size = fileinfo[6]
+				result.append((filename, typ, 0, size))
+			except:
+				pass
+	except:
+		pass
 	return result
 
 def umount(point):
@@ -27,13 +32,14 @@ def dupterm(param):
 def dupterm_notify(param):
 	""" Dupterm notify """
 
-def statvfs(path):
+def statvfs(path_):
 	""" Simulate statvfs """
 	import os
 	try:
-		return os.statvfs(path)
+		return os.statvfs(path_)
 	except:
 		class StatVfsSimulated:
+			""" StatVfsSimulated """
 			def __init__(self):
 				self.f_bsize = 1024
 				self.f_frsize = 12

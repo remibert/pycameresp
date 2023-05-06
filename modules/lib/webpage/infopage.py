@@ -15,9 +15,9 @@ async def index(request, response, args):
 	""" Function define the web page to display all informations of the board """
 	page = webpage.mainpage.main_frame(request, response, args, tools.lang.device_informations,
 		Form([
-			Edit(text=tools.lang.date,             value=tools.date.date_to_bytes(),             disabled=True),
+			Edit(text=tools.lang.date,             value=tools.date.date_to_bytes(),                disabled=True),
 			Edit(text=tools.lang.build_date,       value=tools.builddate.date,                      disabled=True),
-			Edit(text=tools.lang.uptime,           value=tools.info.uptime(tools.lang.days),              disabled=True),
+			Edit(text=tools.lang.uptime,           value=tools.info.uptime(tools.lang.days),        disabled=True),
 			Edit(text=tools.lang.device_label,     value=tools.info.deviceinfo(),                   disabled=True),
 			Edit(text=tools.lang.memory_label,     value=tools.info.meminfo(),                      disabled=True),
 			Edit(text=tools.lang.flash_label,      value=tools.info.flashinfo(),                    disabled=True),

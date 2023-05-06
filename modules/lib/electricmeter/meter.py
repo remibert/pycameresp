@@ -35,6 +35,7 @@ import tools.sdcard
 #  - (start_time:uint16_t, end_time:uint16_t, pulses_per_month:uint32_t * 12 months) * max_time_slots
 
 PULSE_DIRECTORY = "pulses"
+BACKUP_DIRECTORY = PULSE_DIRECTORY + "/backup"
 PULSE_HOURLY   = ".hourly"
 PULSE_DAILY    = ".daily"
 PULSE_MONTHLY  = ".monthly"
@@ -150,7 +151,7 @@ class HourlyCounter:
 		""" Action to do before reboot """
 		tools.logger.syslog("Save pulses before reboot")
 		# Save pulses file
-		HourlyCounter.save(HourlyCounter.get_filename(self.day))
+		HourlyCounter.save(self.day)
 	
 	async def manage(self):
 		""" Manage the counter """
@@ -173,7 +174,7 @@ class HourlyCounter:
 			# If day change
 			if HourlyCounter.is_same_day(day, self.day) is False:
 				# Save day counter
-				HourlyCounter.save(HourlyCounter.get_filename(self.day))
+				HourlyCounter.save(self.day)
 
 				# Clear day pulses counter
 				self.day_pulses_counter = 0
@@ -183,9 +184,9 @@ class HourlyCounter:
 				self.day = day
 
 		# Each ten minutes
-		if time.time() > (self.last_save + 599):
+		if time.time() > (self.last_save + 1801):
 			# Save pulses file
-			HourlyCounter.save(HourlyCounter.get_filename(self.day))
+			HourlyCounter.save(self.day)
 
 		# print("%s %.1f wh pulses=%d"%(tools.date.date_to_string(), self.watt_hour, self.day_pulses_counter))
 		return True
@@ -214,6 +215,18 @@ class HourlyCounter:
 	@staticmethod
 	def save(filename):
 		""" Save pulses file """
+		if type(filename) == type(0) or type(filename) == type(0.):
+			try:
+				day = filename
+				filename = HourlyCounter.get_filename(day)
+				current_day = tools.date.local_time(day)[2]
+				tools.filesystem.makedir(BACKUP_DIRECTORY, True)
+				backup_filename = "%s/day_%02d"%(BACKUP_DIRECTORY, current_day)
+				with open(backup_filename, "wb") as file:
+					file.write(struct.pack("B"*1440, *HourlyCounter.counter.pulses))
+			except Exception as err:
+				write_problem(err)
+
 		try:
 			tools.filesystem.makedir(tools.filesystem.split(filename)[0], True)
 			with open(filename, "wb") as file:
@@ -465,12 +478,6 @@ class MonthlyCounter:
 		return result
 
 	@staticmethod
-	async def refresh():
-		""" Refresh the counters """
-		if MonthlyCounter.last_update[0] + 599 < time.time():
-			MonthlyCounter.next_update[0] = 0
-
-	@staticmethod
 	async def manage():
 		""" Rebuild all month files if necessary """
 		while True:
@@ -483,7 +490,7 @@ class MonthlyCounter:
 		daily_to_update, monthly_to_update, filenames = await MonthlyCounter().get_updates()
 		await DailyCounter.update  (filenames, daily_to_update)
 		await MonthlyCounter.update(filenames, monthly_to_update)
-		MonthlyCounter.next_update[0] = 28793
+		MonthlyCounter.next_update[0] = 28807
 		MonthlyCounter.last_update[0] = time.time()
 		print("End electricmeter update")
 		return True

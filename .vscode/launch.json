@@ -22,7 +22,7 @@
 			"name": "Shell",
 			"type": "python",
 			"request": "launch",
-			"program": "${workspaceFolder}/modules/lib/shell/shell.py",
+			"program": "${workspaceFolder}/modules/lib/shell/commands.py",
 			"cwd"    : "${workspaceFolder}/modules",
 			"args": ["${userHome}/Downloads"],
 			"console": "externalTerminal"
@@ -52,12 +52,11 @@
 			"cwd"    : "${workspaceFolder}/tools/cfsconverter",
 		},
 		{
-			"name": "TestMqtt",
+			"name": "Sandbox",
 			"type": "python",
 			"request": "launch",
-			"program": "${workspaceFolder}/modules/testmqtt.py",
+			"program": "${workspaceFolder}/modules/sandbox.py",
 			"cwd"    : "${workspaceFolder}/modules",
 		}
-
 	]
 }

@@ -56,12 +56,13 @@ class PasswordPage:
 		return Form([dialog],method=b"post")
 
 	@staticmethod
-	def login(request, response, duration):
+	def login(request, response, duration=0):
 		""" Login page """
 		server.user.User.init()
 		if server.sessions.Sessions.check(request.get_cookie(b"session")) is False:
 			if server.user.User.check(request.params.get(b"login_user",b""), request.params.get(b"login_password",b"")):
-				response.set_cookie(b"session",server.sessions.Sessions.create(duration),duration)
+				if duration > 0:
+					response.set_cookie(b"session",server.sessions.Sessions.create(duration),duration)
 			else:
 				return PasswordPage.login_page(None if request.params.get(b"login_password",None) is None else tools.lang.wrong_user_or, action=b"/")
 		return None
@@ -71,4 +72,3 @@ class PasswordPage:
 		""" Logout page """
 		server.user.User.init()
 		server.sessions.Sessions.remove(request.get_cookie(b"session"))
-		return PasswordPage.login_page()

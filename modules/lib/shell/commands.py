@@ -973,4 +973,4 @@ def create_shell_commands():
 	}
 
 if __name__ == "__main__":
-	tools.sh(sys.argv[1])
+	commands(sys.argv[1])

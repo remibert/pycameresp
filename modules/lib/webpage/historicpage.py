@@ -82,7 +82,6 @@ async def historic(request, response, args):
 				<div class="modal-dialog modal-fullscreen">
 					<div class="modal-content">
 						<div class="modal-header">
-							<button type="button" class="btn " data-bs-dismiss="modal">Close</button>
 							<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 						</div>
 						<div class="modal-body" >
@@ -222,7 +221,6 @@ async def historic(request, response, args):
 										var destCtx = view.getContext('2d');
 										view.width     = motion[MOTION_WIDTH ] * get_quality();
 										view.height    = motion[MOTION_HEIGHT] * get_quality();
-
 										destCtx.drawImage(canvas, 0, 0);
 									};
 

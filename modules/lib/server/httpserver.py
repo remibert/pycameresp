@@ -57,9 +57,10 @@ class HttpServer:
 	wildroutes   = []
 	menus        = []
 	www_dir      = None
-	pages = []
+	pages        = []
 	loaded       = [False]
-	config = None
+	config       = None
+	login_checker= None
 
 	@staticmethod
 	def call_preload(loader):
@@ -141,6 +142,20 @@ class HttpServer:
 	def get_menus():
 		""" Used to get the informations of menu """
 		return HttpServer.menus
+
+	@staticmethod
+	def set_login_checker():
+		""" Change the default login checker """
+		def setter(checker):
+			HttpServer.login_checker = checker
+		return setter
+
+	@staticmethod
+	async def is_logged(request, response):
+		""" Check the login """
+		if HttpServer.login_checker:
+			return await HttpServer.login_checker(request, response)
+		return True
 
 	@staticmethod
 	def search_route(request):
