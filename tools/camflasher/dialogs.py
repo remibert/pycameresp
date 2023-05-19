@@ -357,3 +357,57 @@ class OptionDialog(QDialog):
 		config.setValue(settings.WORKING_DIRECTORY, self.dialog.working_directory.text())
 		config.setValue(settings.FIELD_COLORS, self.colors)
 		super().accept()
+
+class ConfigureDialog(QDialog):
+	""" Dialog serial configuration """
+	def __init__(self, parent):
+		""" Dialog constructor """
+		QDialog.__init__(self, parent)
+		try:
+			self.dialog = uic.loadUi('dialogconfigure.ui', self)
+		except Exception as err:
+			from dialogconfigure import Ui_DialogConfigure
+			self.dialog = Ui_DialogConfigure()
+			self.dialog.setupUi(self)
+		self.dialog.combo_baud.setCurrentIndex(16)
+		self.setModal(True)
+		self.config = None
+
+	def get_config(self):
+		""" Return the configuration selected """
+		return self.config
+
+	def set_config(self, config):
+		""" Return the configuration selected """
+		self.config = config
+		baud, byte_size, parity, stop_bit = config.split(":")
+
+		for i in range(self.dialog.combo_baud.count()):
+			if self.dialog.combo_baud.itemText(i) == baud:
+				self.dialog.combo_baud.setCurrentIndex(i)
+				break
+
+		for i in range(self.dialog.combo_byte_size.count()):
+			if self.dialog.combo_byte_size.itemText(i) == byte_size:
+				self.dialog.combo_byte_size.setCurrentIndex(i)
+				break
+
+		for i in range(self.dialog.combo_parity.count()):
+			if self.dialog.combo_parity.itemText(i) == parity:
+				self.dialog.combo_parity.setCurrentIndex(i)
+				break
+
+		for i in range(self.dialog.combo_stop_bit.count()):
+			if self.dialog.combo_stop_bit.itemText(i) == stop_bit:
+				self.dialog.combo_stop_bit.setCurrentIndex(i)
+				break
+
+	def accept(self):
+		""" Accept about dialog """
+		self.config = "%s:%s:%s:%s"%(
+			self.dialog.combo_baud.currentText(),
+			self.dialog.combo_byte_size.currentText(),
+			self.dialog.combo_parity.currentText(),
+			self.dialog.combo_stop_bit.currentText())
+		super().accept()
+		self.close()

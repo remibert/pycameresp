@@ -229,12 +229,24 @@ class StreamThread(threading.Thread):
 	def on_connect_serial(self, command, data):
 		""" Treat serial connection """
 		if command == self.CMD_CONNECT_SERIAL:
-			port, rts_dtr = data
+			port, rts_dtr, config = data
 			self.close()
 			try:
 				if port != "":
+					try:
+						baudrate, bytesize, parity, stopbits = config.split(":")
+						baudrate = int(baudrate)
+						bytesize = int(bytesize)
+						stopbits = float(stopbits)
+						parity   = parity[0]
+					except:
+						baudrate  = 115200
+						bytesize  = serial.EIGHTBITS
+						partity   = serial.PARITY_NONE
+						stopbits  = serial.STOPBITS_ONE
+
 					# Open serial console
-					self.stream = StreamSerial(port=port, baudrate=115200, timeout=0.2, stdout=self.stdout)
+					self.stream = StreamSerial(port=port, baudrate=baudrate, bytesize=bytesize, parity=parity, stopbits=stopbits, timeout=0.2, stdout=self.stdout)
 
 					# Select RTS/DTR
 					if rts_dtr is True:

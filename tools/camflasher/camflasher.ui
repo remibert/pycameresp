@@ -58,7 +58,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="usesScrollButtons">
        <bool>false</bool>
@@ -130,27 +130,37 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="3">
-         <widget class="QCheckBox" name="chk_rts_dtr">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+        <item row="0" column="2">
+         <spacer name="spacer_configure">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Minimum</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>5</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="3">
+         <widget class="QPushButton" name="button_configure">
           <property name="focusPolicy">
            <enum>Qt::NoFocus</enum>
           </property>
           <property name="toolTip">
-           <string>Check this case if the dialog not working (depend of the hardware)</string>
+           <string>Configure serial port</string>
           </property>
           <property name="text">
-           <string>  RTS/DTR </string>
+           <string>Config</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="2">
-         <spacer name="horizontalSpacer">
+        <item row="0" column="4">
+         <spacer name="spacer_config">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -166,17 +176,28 @@
          </spacer>
         </item>
         <item row="0" column="5">
-         <widget class="QPushButton" name="button_serial_open">
-          <property name="toolTip">
-           <string>Open or close serial port</string>
+         <widget class="QLabel" name="label_config">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>12</pointsize>
+           </font>
           </property>
           <property name="text">
-           <string>Open</string>
+           <string/>
           </property>
          </widget>
         </item>
-        <item row="0" column="4">
-         <spacer name="horizontalSpacer_4">
+        <item row="0" column="6">
+         <spacer name="spacer_rts_dtr">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -190,6 +211,54 @@
            </size>
           </property>
          </spacer>
+        </item>
+        <item row="0" column="7">
+         <widget class="QCheckBox" name="chk_rts_dtr">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="toolTip">
+           <string>Check this case if the dialog not working (depend of the hardware)</string>
+          </property>
+          <property name="text">
+           <string>RTS/DTR  </string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="8">
+         <spacer name="spacer_open">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Minimum</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>5</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="0" column="9">
+         <widget class="QPushButton" name="button_serial_open">
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="toolTip">
+           <string>Open or close serial port</string>
+          </property>
+          <property name="text">
+           <string>Open</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -409,7 +478,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>37</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_flasher">

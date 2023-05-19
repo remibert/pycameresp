@@ -19,6 +19,7 @@ WIN_GEOMETRY       = "camflasher.window.geometry"
 FIRMWARE_FILENAMES = "camflasher.firmware.filenames"
 TELNET_HOSTS       = "camflasher.telnet.host"
 DEVICE_RTS_DTR     = "camflasher.device.rts_dtr"
+DEVICE_CONFIGURE   = "camflasher.device.configure"
 FIELD_COLORS       = "camflasher.colors"
 TYPE_LINK          = "camflasher.link.type"
 

@@ -50,6 +50,7 @@ class Ports:
 		self.rts_dtr = {}
 		self.status = {}
 		self.config = settings.get_settings()
+		self.port_config = self.config.value(settings.DEVICE_CONFIGURE,{})
 		self.rts_dtr = self.config.value(settings.DEVICE_RTS_DTR,{})
 		for key in self.rts_dtr.keys():
 			self.status[key] = False
@@ -71,11 +72,16 @@ class Ports:
 						result = True
 					else:
 						pass
+					if key not in self.port_config:
+						self.port_config[key] = "115200:8:None:1"
+						self.config.setValue(settings.DEVICE_CONFIGURE,self.port_config)
 				else:
 					# Create new port
 					self.status[key] = True
 					self.rts_dtr[key] = False
 					self.config.setValue(settings.DEVICE_RTS_DTR,self.rts_dtr)
+					self.port_config[key] = "115200:8:None:1"
+					self.config.setValue(settings.DEVICE_CONFIGURE,self.port_config)
 					connected.append(detected_port.device)
 					result = True
 			else:
@@ -116,6 +122,25 @@ class Ports:
 			if name == key[0]:
 				self.rts_dtr[key] = value
 				self.config.setValue(settings.DEVICE_RTS_DTR,self.rts_dtr)
+				break
+
+	def get_config(self, name):
+		""" Get the configuration of the port """
+		result = None
+		for key in self.port_config:
+			if name == key[0]:
+				result = self.port_config[key]
+				break
+		return result
+
+	def set_config(self, name, value):
+		""" Set the configuration of selected port """
+		found = False
+		for key in self.port_config:
+			if name == key[0]:
+				self.port_config[key] = value
+				self.config.setValue(settings.DEVICE_CONFIGURE,self.port_config)
+				found = True
 				break
 
 class CamFlasher(QMainWindow):
@@ -193,6 +218,7 @@ class CamFlasher(QMainWindow):
 		self.window.tabs_link.currentChanged.connect(self.on_tabs_link_changed)
 		self.window.button_telnet_connect.clicked.connect(self.on_telnet_connect)
 		self.window.button_serial_open.clicked.connect(self.on_serial_open)
+		self.window.button_configure.clicked.connect(self.on_configure)
 		self.window.combo_telnet_host.currentIndexChanged.connect(self.on_telnet_host_changed)
 
 		self.ports = Ports()
@@ -442,9 +468,11 @@ class CamFlasher(QMainWindow):
 		if self.current_state == self.flasher.DISCONNECTED:
 			self.window.combo_port.setEnabled(True)
 			self.window.chk_rts_dtr.setEnabled(True)
+			self.window.button_configure.setEnabled(True)
 		else:
 			self.window.combo_port.setEnabled(False)
 			self.window.chk_rts_dtr.setEnabled(False)
+			self.window.button_configure.setEnabled(False)
 
 		# Serial open button
 		if self.current_state == self.flasher.SERIAL_CONNECTED:
@@ -560,11 +588,28 @@ class CamFlasher(QMainWindow):
 		""" Click on open serial button"""
 		self.cancel_selection()
 		if self.flasher.get_state() == self.flasher.DISCONNECTED:
-			rts_dtr = self.ports.get_rts_dtr(self.get_port())
-			self.window.chk_rts_dtr.setChecked(rts_dtr)
-			self.flasher.connect_serial(port = self.get_port(), rts_dtr=rts_dtr)
+			self.configure_port()
 		else:
 			self.flasher.disconnect()
+
+	def configure_port(self):
+		""" Configure serial port """
+		rts_dtr = self.ports.get_rts_dtr(self.get_port())
+		config  = self.ports.get_config(self.get_port())
+		self.window.chk_rts_dtr.setChecked(rts_dtr)
+		self.flasher.connect_serial(port = self.get_port(), rts_dtr=rts_dtr, config=config)
+		self.window.label_config.setText("  %s  "%config)
+
+	def on_configure(self, event):
+		""" Click on configure button"""
+		configure_dialog = ConfigureDialog(self)
+		configure_dialog.set_config(self.ports.get_config(self.get_port()))
+		configure_dialog.show()
+		configure_dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
+		result = configure_dialog.exec()
+		if result == 1:
+			self.ports.set_config(self.get_port(), configure_dialog.get_config())
+			self.configure_port()
 
 	def refresh_combo_telnet(self):
 		""" Refresh the telnet combobox """
@@ -585,9 +630,10 @@ class CamFlasher(QMainWindow):
 	def on_port_changed(self, event):
 		""" On port changed event """
 		rts_dtr = self.ports.get_rts_dtr(self.get_port())
+		config  = self.ports.get_config(self.get_port())
 		self.window.chk_rts_dtr.setChecked(rts_dtr)
 		if self.window.tabs_link.currentIndex() == 0:
-			self.flasher.connect_serial(port=self.get_port(), rts_dtr=rts_dtr)
+			self.configure_port()
 
 	def on_flash_clicked(self, event):
 		""" Flash of firmware button clicked """

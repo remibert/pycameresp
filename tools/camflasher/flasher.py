@@ -178,7 +178,7 @@ class Flasher(threading.Thread):
 			print("\n"+vt100.COLOR_FAILED+"Flash failed"+vt100.COLOR_NONE)
 
 		# Connect serial link
-		self.stream_thread.connect_serial((port, rts_dtr))
+		self.stream_thread.connect_serial((port, rts_dtr, None))
 		self.flashing = False
 
 	def get_state(self):
@@ -197,9 +197,9 @@ class Flasher(threading.Thread):
 			result = self.CONNECTING_TELNET
 		return result
 
-	def connect_serial(self, port, rts_dtr):
+	def connect_serial(self, port, rts_dtr, config=None):
 		""" Connect serial link """
-		self.command.put((self.CMD_CONNECT_SERIAL, (port, rts_dtr)))
+		self.command.put((self.CMD_CONNECT_SERIAL, (port, rts_dtr, config)))
 
 	def connect_telnet(self, host, port):
 		""" Connect telnet link """
