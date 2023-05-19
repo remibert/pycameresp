@@ -26,6 +26,8 @@ The commands are :
 - upload      : transfer files from computer to device (only available with camflasher)
 - edit        : edit a text file
 - exit        : exit of shell
+- exec        : execute python string with exec
+- eval        : evaluate python expression
 - gc          : garbage collection
 - grep        : grep text in many files
 - mount       : mount sd card
@@ -725,6 +727,14 @@ def sysinfo():
 	""" Get system informations """
 	tools.console.Console.print(tools.strings.tostrings(tools.info.sysinfo()))
 
+def execute(python_string):
+	""" Execute python string """
+	exec(python_string)
+
+def evaluate(python_string):
+	""" Evaluate python string """
+	print(eval(python_string))
+
 def vtcolors():
 	""" Show all VT100 colors """
 	res = b'\x1B[4m4 bits colors\x1B[m\n'
@@ -947,6 +957,8 @@ def create_shell_commands():
 		"upload"     :[upload          ,"file",                  ("-r","recursive",True)],
 		"edit"       :[edit            ,"file",                  ("-n","no_color",True),("-r","read_only",True)],
 		"exit"       :[exit                                    ],
+		"exec"       :[execute         ,"python_string"        ],
+		"eval"       :[evaluate        ,"python_string"        ],
 		"gc"         :[gc                                      ],
 		"grep"       :[grep            ,"text","file",           ("-r","recursive",True),("-i","ignorecase",True),("-e","regexp",True)],
 		"mount"      :[mountsd         ,"mountpoint"           ],
@@ -961,7 +973,7 @@ def create_shell_commands():
 		"reboot"     :[reboot                                  ],
 		"help"       :[help                                    ],
 		"man"        :[man             ,"command"              ],
-		"memdump"    :[tools.info.memdump                            ],
+		"memdump"    :[tools.info.memdump                      ],
 		"df"         :[df              ,"mountpoint"           ],
 		"ip2host"    :[ip2host         ,"ip_address"           ],
 		"host2ip"    :[host2ip         ,"hostname"             ],

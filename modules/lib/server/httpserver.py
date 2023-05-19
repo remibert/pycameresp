@@ -153,7 +153,7 @@ class HttpServer:
 	@staticmethod
 	async def is_logged(request, response):
 		""" Check the login """
-		if HttpServer.login_checker:
+		if HttpServer.login_checker is not None:
 			return await HttpServer.login_checker(request, response)
 		return True
 

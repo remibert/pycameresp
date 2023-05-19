@@ -16,21 +16,22 @@ except:
 def start(**kwargs):
 	""" Start pycameresp tasks 
 	Parameters :
-		- awake    : activate awake mode (default False)
-		- battery  : activate battery level (default False)
-		- mqtt     : activate mqtt client (default False)
-		- ntp      : activate ntp time synchronisation (default False)
-		- http     : activate http server (default False)
-		- telnet   : activate telnet server (default False)
-		- pushover : activate pushover notification (default False)
-		- presence : activate presence detection of occupant in the house (default False)
-		- motion   : activate motion detection (default False)
-		- camera   : activate the camera (default False)
-		- starter  : activate autostart of extension modules (default False)
-		- shell    : activate shell (default False)
-		- webhook  : activate webhook notification (default False)
-		- wifi     : activate wifi manager (default False)
-		- log_size : maximal size of syslog file
+		- awake        : activate awake mode (default False)
+		- battery      : activate battery level (default False)
+		- mqtt_client  : activate mqtt client (default False)
+		- mqtt_broker  : activate mqtt broker (default False)
+		- ntp          : activate ntp time synchronisation (default False)
+		- http         : activate http server (default False)
+		- telnet       : activate telnet server (default False)
+		- pushover     : activate pushover notification (default False)
+		- presence     : activate presence detection of occupant in the house (default False)
+		- motion       : activate motion detection (default False)
+		- camera       : activate the camera (default False)
+		- starter      : activate autostart of extension modules (default False)
+		- shell        : activate shell (default False)
+		- webhook      : activate webhook notification (default False)
+		- wifi         : activate wifi manager (default False)
+		- log_size     : maximal size of syslog file
 		- log_quantity : maximal quantity of syslog files
 	"""
 	# pylint:disable=consider-using-f-string
@@ -53,9 +54,10 @@ def start(**kwargs):
 	server.periodic.Periodic.start(**kwargs)
 
 	# Manage the network task
-	if  kwargs.get("mqtt",False)     or kwargs.get("ntp",False) or kwargs.get("http",False) or \
-		kwargs.get("webhook",False)  or kwargs.get("ftp",False) or kwargs.get("telnet",False) or \
-		kwargs.get("presence",False) or kwargs.get("pushover",False) or kwargs.get("wifi",False):
+	if  kwargs.get("mqtt_client",False) or kwargs.get("ntp"     ,False) or kwargs.get("http"  ,False) or \
+		kwargs.get("webhook"    ,False) or kwargs.get("ftp"     ,False) or kwargs.get("telnet",False) or \
+		kwargs.get("presence"   ,False) or kwargs.get("pushover",False) or kwargs.get("wifi"  ,False) or \
+		kwargs.get("mqtt_broker",False) :
 
 		# Manage the wifi task
 		import wifi.wifi
@@ -120,7 +122,7 @@ def start(**kwargs):
 		import tools.battery
 		tools.battery.Battery.start()
 
-	if kwargs.get("pushover",False) or kwargs.get("mqtt",False) or kwargs.get("webhook", False):
+	if kwargs.get("pushover",False) or kwargs.get("mqtt_client",False) or kwargs.get("webhook", False):
 		# Manage the notifier task
 		import server.notifier
 		server.notifier.Notifier.start()
@@ -157,9 +159,14 @@ def start(**kwargs):
 		server.telnet.Telnet.start(**kwargs)
 
 	# Manage the mqtt client and mqtt notification
-	if kwargs.get("mqtt",False):
+	if kwargs.get("mqtt_client",False):
 		import server.mqttclient
 		server.mqttclient.MqttClient.start(**kwargs)
+
+	# Manage the mqtt broker
+	if kwargs.get("mqtt_broker",False):
+		import server.mqttbroker
+		server.mqttbroker.MqttBroker.start(**kwargs)
 
 	# Manage the time synchronisation
 	if kwargs.get("ntp",False):

@@ -58,6 +58,7 @@ class MqttMessage:
 			retain     : retain message (0 or 1)
 			dup        : duplicate delivery control payload (0 or 1)
 			identifier : packet identifier (1 to 65535)"""
+		self.received = False
 		if kwargs.get("header",None) is None:
 			self.control    = kwargs.get("control"   ,MQTT_UNDEFINED)
 			self.qos        = kwargs.get("qos"       ,MQTT_QOS_ONCE)
@@ -111,6 +112,7 @@ class MqttMessage:
 
 	def decode_header(self, data):
 		""" Decode header """
+		self.received = True
 		self.header = data
 		self.control = (data[0] >> 4)
 		self.qos     = (data[0] >> 1) & 3
@@ -174,6 +176,13 @@ class MqttMessage:
 
 	async def write(self, streamio):
 		""" Write message """
+		# If forward message detected
+		if self.received is True:
+			# Clear the content of data received
+			self.buffer.seek(0)
+			self.buffer.truncate()
+			self.payload.seek(0)
+			self.payload.truncate()
 		self.sent_time = tools.strings.ticks()
 		self.buffer.write(self.encode_header())
 		self.encode()
@@ -455,8 +464,11 @@ class MqttSubAck(MqttMessage):
 	def encode(self):
 		""" Encode payload """
 		self.put_int(self.identifier)
-		for return_code in self.return_code:
-			self.put_byte(return_code)
+		if type(self.return_code) == type([]):
+			for return_code in self.return_code:
+				self.put_byte(return_code)
+		else:
+			self.put_byte(self.return_code)
 
 class MqttUnsubscribe(MqttMessage):
 	""" Client to Server : Unsubscribe request """

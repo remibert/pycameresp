@@ -15,6 +15,7 @@ class ServerConfig(tools.jsonconfig.JsonConfig):
 		self.telnet = True
 		self.wanip = True
 		self.notify = True
+		self.mqtt_broker = True
 		if tools.filesystem.ismicropython():
 			self.server_postponed = 7
 		else:

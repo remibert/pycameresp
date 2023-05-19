@@ -39,17 +39,25 @@ class User:
 		return result
 
 	@staticmethod
-	def check(user, password, log=True, display=True):
+	def check(user, password, log=True, display=True, activity=True):
 		""" Check the user and password """
 		User.init()
-		user = user.lower()
+		if user is not None:
+			user = user.lower()
+		else:
+			user = b""
+
+		if password is None:
+			password = b""
 
 		if User.instance.user == b"":
-			tools.info.set_last_activity()
+			if activity:
+				tools.info.set_last_activity()
 			return True
 		elif user == User.instance.user:
 			if tools.encryption.gethash(password) == User.instance.password:
-				tools.info.set_last_activity()
+				if activity:
+					tools.info.set_last_activity()
 				if log is True:
 					User.login_state[0] = True
 				return True

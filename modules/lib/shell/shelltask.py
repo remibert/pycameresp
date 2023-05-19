@@ -29,7 +29,7 @@ class Shell:
 		""" Asynchronous shell task """
 		import uasyncio
 
-		tools.console.Console.print("\nPress key to start shell")
+		tools.console.Console.print("\n\x1B[1m\x1B[48;5;226m\x1B[38;5;70mPress Ctrl-Z to start shell\x1b[m")
 		if tools.filesystem.ismicropython():
 			polling1 = 2
 			polling2 = 0.01

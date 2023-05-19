@@ -268,7 +268,7 @@ class HourlyCounter:
 	async def task(**kwargs):
 		""" Task to count wh from the electric meter """
 		if HourlyCounter.counter is None:
-			HourlyCounter.counter = HourlyCounter(kwargs.get("gpio",21))
+			HourlyCounter.counter = HourlyCounter(kwargs.get("gpio",13))
 		await HourlyCounter.counter.manage()
 
 	@staticmethod
