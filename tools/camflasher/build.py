@@ -142,6 +142,7 @@ def main():
 		pyuic%(UIC)s dialogflash.ui -o dialogflash.py
 		pyuic%(UIC)s dialogabout.ui -o dialogabout.py
 		pyuic%(UIC)s dialogoption.ui -o dialogoption.py
+		pyuic%(UIC)s dialogconfigure.ui -o dialogconfigure.py
 
 		###############################
 		# Remove installed esptool.py #

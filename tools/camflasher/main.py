@@ -484,6 +484,11 @@ class CamFlasher(QMainWindow):
 				self.window.button_serial_open.setEnabled(True)
 			else:
 				self.window.button_serial_open.setEnabled(False)
+		if self.get_port() == "":
+			self.window.button_serial_open.setEnabled(False)
+			self.window.combo_port.setEnabled(False)
+			self.window.chk_rts_dtr.setEnabled(False)
+			self.window.button_configure.setEnabled(False)
 
 	def set_state_menu(self):
 		""" Set menu state """
@@ -629,6 +634,9 @@ class CamFlasher(QMainWindow):
 
 	def on_port_changed(self, event):
 		""" On port changed event """
+		self.set_state_menu()
+		self.set_state_serial()
+		self.set_state_telnet()
 		rts_dtr = self.ports.get_rts_dtr(self.get_port())
 		config  = self.ports.get_config(self.get_port())
 		self.window.chk_rts_dtr.setChecked(rts_dtr)
@@ -654,8 +662,9 @@ class CamFlasher(QMainWindow):
 				erase     = self.flash_dialog.dialog.erase.isChecked()
 				address   = self.flash_dialog.dialog.address.currentText()
 				chip      = self.flash_dialog.dialog.chip.currentText()
+				config    = self.ports.get_config(self.get_port())
 				self.cancel_selection()
-				self.flasher.flash((port, baud, rts_dtr, firmware, erase, address, chip))
+				self.flasher.flash((port, baud, rts_dtr, firmware, erase, address, chip, config))
 			except Exception as err:
 				print(err)
 

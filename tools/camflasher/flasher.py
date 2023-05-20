@@ -132,7 +132,7 @@ class Flasher(threading.Thread):
 
 	def flasher(self, data):
 		""" Flasher of firmware it use the esptool.py command """
-		port, baud, rts_dtr, firmware, erase, address, chip = data
+		port, baud, rts_dtr, firmware, erase, address, chip, config = data
 
 		# Disconnect serial link
 		self.flashing = True
@@ -178,7 +178,7 @@ class Flasher(threading.Thread):
 			print("\n"+vt100.COLOR_FAILED+"Flash failed"+vt100.COLOR_NONE)
 
 		# Connect serial link
-		self.stream_thread.connect_serial((port, rts_dtr, None))
+		self.stream_thread.connect_serial((port, rts_dtr, config))
 		self.flashing = False
 
 	def get_state(self):

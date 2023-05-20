@@ -260,8 +260,9 @@ class StreamThread(threading.Thread):
 					self.stream.reset_input_buffer()
 					self.port = port
 
-					self.print("\n"+vt100.COLOR_OK+"Connect serial link %s"%self.port+vt100.COLOR_NONE)
+					self.print("\n"+vt100.COLOR_OK+"Connect serial link %s"%port+vt100.COLOR_NONE)
 			except Exception as err:
+				self.print("\n" + vt100.COLOR_FAILED+"Connect serial link %s failed '%s'"%(port, config)+vt100.COLOR_NONE)
 				self.close()
 
 	def on_connect_telnet(self, command, data):

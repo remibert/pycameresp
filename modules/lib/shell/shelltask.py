@@ -16,6 +16,7 @@ import tools.terminal
 import tools.watchdog
 import tools.console
 import tools.tasking
+import tools.strings
 
 class Shell:
 	""" Shell """
@@ -31,7 +32,7 @@ class Shell:
 
 		tools.console.Console.print("\n\x1B[1m\x1B[48;5;226m\x1B[38;5;70mPress Ctrl-Z to start shell\x1b[m")
 		if tools.filesystem.ismicropython():
-			polling1 = 2
+			polling1 = 1
 			polling2 = 0.01
 		else:
 			polling1 = 0.1
@@ -42,7 +43,7 @@ class Shell:
 				character = tools.terminal.getch()[0]
 
 				# Check if character is correct to start shell
-				if not ord(character) in [0,0xA]:
+				if character == "\x1A":
 					tools.tasking.Tasks.suspend()
 
 					# Wait all server suspended
