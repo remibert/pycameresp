@@ -199,6 +199,7 @@ def main():
 		remove dialogflash.py
 		remove dialogabout.py
 		remove dialogoption.py
+		remove dialogconfigure.py
 		removedir esptool_
 		removedir esptool
 		removedir build"""%globals())
