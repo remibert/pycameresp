@@ -235,9 +235,9 @@ def indent(node, file = None, deep = 0):
 
 def str_to_dec(string):
 	""" Convert a string into decimal value 
-	>>> print (str_to_dec("123"))
+	>>> print(str_to_dec("123"))
 	123
-	>>> print (str_to_dec("0123"))
+	>>> print(str_to_dec("0123"))
 	123"""
 	string = string.lstrip("0")
 	if len(string) == 0:
@@ -256,7 +256,7 @@ def makedir (directory):
 				makedirs(directory)
 			except OSError as val:
 				if not exists(directory):
-					print ("Retry make dir %s"%directory)
+					print("Retry make dir %s"%directory)
 					if i <= 1:
 						if val.errno != 17:
 							raise val
@@ -293,7 +293,7 @@ class CommandLauncher:
 			if (output):
 				if type(output) == type(True):
 					if output == True:
-						print (message.rstrip())
+						print(message.rstrip())
 				else:
 					try:
 						output.write(message.rstrip() + "\n")
@@ -376,10 +376,10 @@ class CommandLauncher:
 						break
 					self.execute_one(command, output, encoding, inactivityDuration)
 			if self.aborted:
-				print ("=== ABORTED ===\n")
+				print("=== ABORTED ===\n")
 			self.running = False
 		else:
-			print ("!~ Previous command in progress")
+			print("!~ Previous command in progress")
 
 	def abort(self):
 		self.aborted = True
@@ -464,7 +464,7 @@ def copy_file(source, target):
 		copystat(source, target)
 		copymode(source, target)
 	#~ else:
-		#~ print ("%s not copied"%(target))
+		#~ print("%s not copied"%(target))
 
 def copy_files(sourceDir, destinationDir, patterns):
 	""" Copy files
@@ -481,7 +481,7 @@ def copy_files(sourceDir, destinationDir, patterns):
 	destinationDir = adapt_path(destinationDir)
 	
 	if exists(abspath(sourceDir)) == False:
-		print ('! "%s" directory not existing'%sourceDir)
+		print('! "%s" directory not existing'%sourceDir)
 	makedir(destinationDir)
 	for pattern in patterns:
 		srcPath = join(sourceDir,pattern)
@@ -490,7 +490,7 @@ def copy_files(sourceDir, destinationDir, patterns):
 				try:
 					shutil.copy2(filename, destinationDir)
 				except IOError:
-					print ("! Failed copy '%s' -> '%s'" %(filename, destinationDir))
+					print("! Failed copy '%s' -> '%s'" %(filename, destinationDir))
 
 def remove_dir(directory):
 	""" Remove directory and its content """
@@ -503,7 +503,7 @@ def remove_dir(directory):
 		try:
 			shutil.rmtree(directory,0,lambda function,directory,dummy: (os.chmod(directory, 0o777),os.remove(directory)))
 		except OSError:
-			print ("! Remove dir failed '%s'"%directory)
+			print("! Remove dir failed '%s'"%directory)
 		if exists(directory):
 			sleep(1)
 
@@ -548,7 +548,7 @@ def delete_files(directory, patterns):
 			try:
 				remove(filename)
 			except OSError:
-				print ("! Failed delete '%s'"%filename)
+				print("! Failed delete '%s'"%filename)
 
 def compare(file1, file2):
 	""" Compare two files content
@@ -878,7 +878,7 @@ def zip_dir(nameOrFile, directory, includes = ["*"], excludes = [], display = Fa
 	previousDir = ""
 	previousExt = []
 	if display and is_string(nameOrFile):
-		print (nameOrFile, directory, includes, excludes)
+		print(nameOrFile, directory, includes, excludes)
 
 	# Search all files according patterns
 	all_ = scan_all(directory, includes, excludes)[0]
@@ -903,13 +903,13 @@ def zip_dir(nameOrFile, directory, includes = ["*"], excludes = [], display = Fa
 			
 			# If the directory changed
 			if previousDir != directory:
-				print ("\n",directory)
+				print("\n",directory)
 				previousDir  = directory
 				previousExt = []
 			
 			# If the extension not yet displayed
 			if not extension in previousExt:
-				print (extension, end=" ")
+				print(extension, end=" ")
 				previousExt.append(extension)
 		
 		# Build the destination zip name without the prefix
@@ -923,9 +923,9 @@ def zip_dir(nameOrFile, directory, includes = ["*"], excludes = [], display = Fa
 		try:
 			archive.write(source, destination)
 		except IOError:
-			print ('! Cannot add file "%s" in the archive'%source)
+			print('! Cannot add file "%s" in the archive'%source)
 		except OSError:
-			print ('! Cannot add file "%s" in the archive'%source)
+			print('! Cannot add file "%s" in the archive'%source)
 	
 	if not is_string(nameOrFile):
 		return nameOrFile.getvalue()
@@ -1194,7 +1194,7 @@ def replace_in_file (remplacements, source, destination, replaceInReadOnly = 0, 
 		# Copies the destination file
 		makedir (splitPath(destination)[0])
 		try:   copy2(source, destination)
-		except IOError:print ("Cannot copy %s->%s"%(source, destination))
+		except IOError:print("Cannot copy %s->%s"%(source, destination))
 
 def multi_line_replace_in_file (replaces, source, destination):
 	""" Performs string replaces in a file
@@ -1501,10 +1501,10 @@ def tar_list(files, display = False):
 	for i in files:
 		try:
 			if display:
-				print ("Add %s"%relpath(i,prefix))
+				print("Add %s"%relpath(i,prefix))
 			tarArchive.add(i,relpath(i,prefix))
 		except IOError:
-			print ('! Failed to add "%s"'%i)
+			print('! Failed to add "%s"'%i)
 	tarArchive.close()
 	return tarFile.getvalue()
 
@@ -1691,7 +1691,7 @@ class KeyFile:
 
 		data = [encodestring(self.iv).decode('utf-8'), encodestring(self.key).decode('utf-8')]
 		dump(data, open(self.filename,"wb"), protocol=2)
-		print ("Created new key file '%s'"%self.filename)
+		print("Created new key file '%s'"%self.filename)
 
 	def get_password(self, password):
 		try:
@@ -2184,7 +2184,7 @@ class Tree:
 
 	>>> tree.build(files)
 
-	>>> print (tree, end="")
+	>>> print(tree, end="")
 	'0':None
 	  '01':'0/01'
 	    '001':None
@@ -2353,7 +2353,7 @@ remove ("%(moduleName)s.zip")
 				content = spl[1]
 			output.write(content)
 	
-	print ("Module %s.py created"%moduleName)
+	print("Module %s.py created"%moduleName)
 	return moduleFilename
 
 def thread(core):

@@ -81,7 +81,7 @@ class Periodic:
 				if wifi.wifi.Wifi.is_lan_connected():
 					tools.tasking.Tasks.start_all()
 
-				# Reset brownout counter if wifi connected
+				# # Reset brownout counter if wifi connected
 				if wifi.wifi.Wifi.is_wan_connected():
 					if tools.support.battery():
 						tools.battery.Battery.reset_brownout()

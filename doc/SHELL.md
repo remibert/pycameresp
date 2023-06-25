@@ -53,6 +53,7 @@ cat         | display the content of file
 cd          | change directory
 cls         | clear screen
 cp          | copy file
+cleanupsd   | erase on sdcard all unnecessary files left behind by mac os or windows
 date        | get the system date or synchronize with Ntp
 deepsleep   | deepsleep of board
 df          | display free disk space

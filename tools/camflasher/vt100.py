@@ -95,7 +95,7 @@ VGA_COLORS = [
 	# 			gg = (g * step)
 	# 			bb = (b * step)
 	# 			color = (rr << 16) | (gg << 8) | (bb)
-	# 			print ("0x%06X,"%(color ), end="")
+	# 			print("0x%06X,"%(color ), end="")
 	# 6 × 6 × 6 cube (216 colors): 16 + 36 × r + 6 × g + b (0 ≤ r, g, b ≤ 5)
 	0xFF000000,0xFF000033,0xFF000066,0xFF000099,0xFF0000CC,0xFF0000FF,
 	0xFF003300,0xFF003333,0xFF003366,0xFF003399,0xFF0033CC,0xFF0033FF,

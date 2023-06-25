@@ -10,6 +10,7 @@ The commands are :
 - pwd         : current directory
 - cat         : display the content of file
 - cls         : clear screen
+- cleanupsd   : erase on sdcard all unnecessary files left behind by mac os or windows
 - mkdir       : create directory
 - mv          : move file
 - rmdir       : remove directory
@@ -80,6 +81,81 @@ def get_screen_size():
 		height, width = tools.terminal.MAXINT, 80
 	return height, width
 
+def print_part(message, width, height, count):
+	""" Print a part of text """
+	# pylint:disable=global-variable-not-assigned
+	if isinstance(message , bytes):
+		message = message.decode("utf8")
+	if count is not None and count >= height:
+		tools.console.Console.print(message,end="")
+		if tools.console.Console.is_redirected() is False:
+			key = tools.terminal.getch()
+		else:
+			key = " "
+		count = 1
+		if key in ["x","X","q","Q","\x1B"]:
+			return None
+		tools.console.Console.print("\n", end="")
+	else:
+		if count is None:
+			count = 1
+		else:
+			count += 1
+		tools.console.Console.print(message)
+	return count
+
+class Displayer:
+	""" Displayer file """
+	def __init__(self, path, long, action=print_part):
+		""" Constructor """
+		self.height, self.width = get_screen_size()
+		self.path    = path
+		self.showdir = True
+		self.count   = 1
+		self.long    = long
+		self.action  = action
+
+	def purge_path(self, path):
+		""" Purge the path for the display """
+		path = path.encode("utf8")
+		path = tools.filesystem.normpath(path)
+		prefix = tools.filesystem.prefix([path, self.path.encode("utf8")])
+		return path[len(prefix):].lstrip(b"/")
+
+	def get_info(self, path):
+		""" Get info on file or directory """
+		result    = None, False
+		fileinfo  = tools.filesystem.fileinfo(path)
+		file_date = fileinfo[8]
+		size      = fileinfo[6]
+
+		# If directory
+		if fileinfo[0] & 0x4000 == 0x4000:
+			if self.showdir:
+				if self.long:
+					message = b"%s %s [%s]"%(tools.date.date_to_bytes(file_date),b" "*7,self.purge_path(path))
+				else:
+					message = b"[%s]"%self.purge_path(path)
+				result = message, True
+		# If file
+		else:
+			if self.long:
+				message = b"%s %s %s"%(tools.date.date_to_bytes(file_date),tools.strings.size_to_bytes(size),self.purge_path(path))
+			else:
+				message = self.purge_path(path)
+			result = message, False
+		return result
+
+	def show(self, path):
+		""" Show the information of a file or directory """
+		message, directory = self.get_info(path)
+		if message is not None:
+			self.count = self.action(message, self.width, self.height, self.count)
+
+	def show_dir(self, state):
+		""" Indicates if the directory must show """
+		self.showdir = state
+
 def cd(directory = "/"):
 	""" Change directory """
 	try:
@@ -114,7 +190,7 @@ def removedir(directory, force=False, quiet=False, simulate=False, ignore_error=
 		if ignore_error is False:
 			tools.console.Console.print("rmdir '%s' not removed"%(directory))
 
-def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False, ignore_error=False):
+def rmdir(directory, root=None, recursive=False, force=False, quiet=False, simulate=False, ignore_error=False):
 	""" Remove directory """
 	directory = tools.filesystem.normpath(directory)
 	if recursive is False:
@@ -126,6 +202,9 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False, 
 			parts = tools.filesystem.split(d)
 			if parts[1] == "" or parts[0] == "":
 				break
+			if root:
+				if len(parts[0]) <= len(root):
+					break
 			directories.append(parts[0])
 			d = parts[0]
 		if "/" in directories:
@@ -136,10 +215,48 @@ def rmdir(directory, recursive=False, force=False, quiet=False, simulate=False, 
 			if tools.filesystem.exists(d) and d != ".":
 				removedir(d, force=force, quiet=quiet, simulate=simulate, ignore_error=ignore_error)
 
-def mv(source, destination):
+def movefile(source, destination, quiet):
+	""" Move file """
+	source      = tools.filesystem.normpath(source)
+	destination = tools.filesystem.normpath(destination)
+	if quiet is False:
+		tools.console.Console.print("mv '%s' -> '%s'"%(source,destination))
+	uos.rename(source,destination)
+
+def mv(source, destination, quiet=False):
 	""" Move or rename file """
+	source      = tools.filesystem.normpath(source)
+	destination = tools.filesystem.normpath(destination)
+
 	try:
-		uos.rename(tools.filesystem.normpath(source),tools.filesystem.normpath(destination))
+		if tools.filesystem.isfile(source):
+			movefile(source,destination,quiet)
+		else:
+			if tools.filesystem.isdir(source):
+				# If destination existing
+				if tools.filesystem.exists(destination):
+					# If destination is file
+					if tools.filesystem.isfile(destination):
+						raise IOError()
+					else:
+						# Move source into destination directory
+						destination = destination + "/" + tools.filesystem.split(source)[1]
+						movefile(tools.filesystem.normpath(source),tools.filesystem.normpath(destination), quiet)
+				else:
+					# Rename
+					movefile(tools.filesystem.normpath(source),tools.filesystem.normpath(destination), quiet)
+			else:
+				# Move many files
+				path, pattern = tools.filesystem.split(source)
+
+				if path == "":
+					path = uos.getcwd()
+
+				_, filenames = tools.filesystem.scandir(path, pattern, False)
+
+				for src in filenames:
+					dst = destination + "/" + src[len(path):]
+					movefile(src,dst,quiet)
 	except:
 		tools.console.Console.print("Cannot mv '%s'->'%s'"%(source,destination))
 
@@ -196,95 +313,52 @@ def rmfile(filename, quiet=False, force=False, simulate=False):
 	except:
 		tools.console.Console.print("rm '%s' not removed"%(filename))
 
-def rm(file, recursive=False, quiet=False, force=False, simulate=False):
-	""" Remove file command """
-	file = tools.filesystem.normpath(file)
-	filenames   = []
-	directories = []
-
-	if tools.filesystem.isfile(file):
-		path = file
-		rmfile(file, force=force, quiet=quiet, simulate=simulate)
-	else:
-		if tools.filesystem.isdir(file):
-			if recursive:
-				directories.append(file)
-				path = file
-				pattern = "*"
-			else:
-				path = None
-				pattern = None
-		else:
-			path, pattern = tools.filesystem.split(file)
-
-		if path is None:
-			tools.console.Console.print("Cannot rm '%s'"%file)
-		else:
-			dirs, filenames = tools.filesystem.scandir(path, pattern, recursive)
-			directories += dirs
-
-			for filename in filenames:
-				rmfile(filename, force=force, quiet=quiet, simulate=simulate)
-
-			if recursive:
-				directories.sort()
-				directories.reverse()
-
-				for directory in directories:
-					rmdir(directory, recursive=recursive, force=force, quiet=quiet, simulate=simulate, ignore_error=True)
-
-class LsDisplayer:
-	""" Ls displayer class """
-	def __init__(self, path, showdir, long):
-		""" Constructor """
-		self.height, self.width = get_screen_size()
-		self.count = 1
-		self.long = long
-		self.path = path
-		self.showdir = showdir
-
-	def purge_path(self, path):
-		""" Purge the path for the display """
-		path = path.encode("utf8")
-		path = tools.filesystem.normpath(path)
-		prefix = tools.filesystem.prefix([path, self.path.encode("utf8")])
-		return path[len(prefix):].lstrip(b"/")
+class Remover(Displayer):
+	""" Class to remove files and directories """
+	def __init__(self, file, recursive=False, quiet=False, force=False, simulate=False):
+		Displayer.__init__(self, uos.getcwd(), False)
+		self.directories = set()
+		self.path = uos.getcwd()
+		self.file = file
+		self.quiet = quiet
+		self.force = force
+		self.simulate = simulate
+		self.recursive = recursive
+		if recursive:
+			if tools.filesystem.isdir(self.path + "/" + file):
+				self.directories.add(self.path + "/" + file)
 
 	def show(self, path):
 		""" Show the information of a file or directory """
-		fileinfo = tools.filesystem.fileinfo(path)
-		file_date = fileinfo[8]
-		size = fileinfo[6]
+		message, directory = self.get_info(path)
+		if message is not None:
+			if directory is False:
+				rmfile(path, force=self.force, quiet=self.quiet, simulate=self.simulate)
+		if directory:
+			self.directories.add(path)
 
-		# If directory
-		if fileinfo[0] & 0x4000 == 0x4000:
-			if self.showdir:
-				if self.long:
-					message = b"%s %s [%s]"%(tools.date.date_to_bytes(file_date),b" "*7,self.purge_path(path))
-				else:
-					message = b"[%s]"%self.purge_path(path)
-				self.count = print_part(message, self.width, self.height, self.count)
-		else:
-			if self.long:
-				fileinfo = tools.filesystem.fileinfo(path)
-				file_date = fileinfo[8]
-				size = fileinfo[6]
-				message = b"%s %s %s"%(tools.date.date_to_bytes(file_date),tools.strings.size_to_bytes(size),self.purge_path(path))
-			else:
-				message = self.purge_path(path)
-			self.count = print_part(message, self.width, self.height, self.count)
+	def remove_dir(self):
+		""" Remove directories """
+		if self.recursive:
+			directories = list(self.directories)
+			directories.sort()
+			directories.reverse()
+			for directory in directories:
+				rmdir(directory, root=self.path, recursive=self.recursive, force=self.force, quiet=self.quiet, simulate=self.simulate, ignore_error=True)
 
-	def show_dir(self, state):
-		""" Indicates if the directory must show """
-		self.showdir = state
+def rm(file, recursive=False, quiet=False, force=False, simulate=False):
+	""" Remove file command """
+	remover = Remover(file, recursive, quiet, force, simulate)
+	searchfile(file, recursive, remover)
+	remover.remove_dir()
 
 def ls(file="", recursive=False, long=False):
 	""" List files command """
-	searchfile(file, recursive, LsDisplayer(uos.getcwd(), True, long))
+	searchfile(file, recursive, Displayer(uos.getcwd(), long))
 
 def ll(file="", recursive=False):
 	""" List files long command """
-	searchfile(file, recursive, LsDisplayer(uos.getcwd(), True, True))
+	searchfile(file, recursive, Displayer(uos.getcwd(), True))
 
 def searchfile(file, recursive, obj = None):
 	""" Search file """
@@ -292,23 +366,28 @@ def searchfile(file, recursive, obj = None):
 	p = tools.filesystem.abspath(uos.getcwd(), file)
 	filenames = []
 	try:
+		# If file not defined then current directory used
 		if file == "":
 			_,filenames = tools.filesystem.scandir(uos.getcwd(), "*", recursive, obj)
+		# If one file detected
 		elif tools.filesystem.isfile(p):
 			if obj is not None:
 				obj.show_dir(False)
 				obj.show(p)
 			filenames = [p]
+		# If directory detected
 		elif tools.filesystem.isdir(p):
 			_, filenames = tools.filesystem.scandir(p, "*", recursive, obj)
+		# Else pattern detected
 		else:
 			path, pattern = tools.filesystem.split(p)
-			if obj is not None:
-				obj.show_dir(False)
+			if pattern != "*":
+				if obj is not None:
+					obj.show_dir(False)
 			_, filenames = tools.filesystem.scandir(path, pattern, recursive, obj)
 	except Exception as err:
 		tools.console.Console.print(err)
-	if len(filenames) == 0 and file != "" and file != ".":
+	if len(filenames) == 0 and file != "" and file != "." and tools.filesystem.isdir(file) is False:
 		tools.console.Console.print("%s : No such file or directory"%file)
 	return filenames
 
@@ -317,29 +396,6 @@ def find(file):
 	filenames = searchfile(file, True)
 	for filename in filenames:
 		tools.console.Console.print(filename)
-
-def print_part(message, width, height, count):
-	""" Print a part of text """
-	# pylint:disable=global-variable-not-assigned
-	if isinstance(message , bytes):
-		message = message.decode("utf8")
-	if count is not None and count >= height:
-		tools.console.Console.print(message,end="")
-		if tools.console.Console.is_redirected() is False:
-			key = tools.terminal.getch()
-		else:
-			key = " "
-		count = 1
-		if key in ["x","X","q","Q","\x1B"]:
-			return None
-		tools.console.Console.print("\n", end="")
-	else:
-		if count is None:
-			count = 1
-		else:
-			count += 1
-		tools.console.Console.print(message)
-	return count
 
 def grep(file, text, recursive=False, ignorecase=False, regexp=False):
 	""" Grep command """
@@ -498,6 +554,20 @@ def formatsd(fstype="FAT"):
 			tools.console.Console.print("Sd card is mounted, a reboot required")
 	else:
 		tools.console.Console.print("Filesystem supported : FAT or LFS")
+
+def cleanupsd():
+	""" Remove not useful directory and file from sd card """
+	if tools.sdcard.SdCard.is_mounted():
+		cd(tools.sdcard.SdCard.get_mountpoint())
+		rm   (".Spotlight-V100", recursive=True)
+		rm   (".fseventsd",      recursive=True)
+		rm   (".Trashes",       recursive=True)
+		rm   ("RECYCLER",        recursive=True)
+		rm   ("/._*",            recursive=True)
+		rm   ("/.DS_Store",      recursive=True)
+		rm   ("System Volume Information",        recursive=True)
+	else:
+		tools.console.Console.print("Sd card not mounted")
 
 def reboot():
 	""" Reboot command """
@@ -703,7 +773,7 @@ def download(file="", recursive=False):
 		tools.console.Console.print("Download from device start")
 		try:
 			searchfile(file, recursive, Exporter())
-			tools.console.Console.print ("Download end")
+			tools.console.Console.print("Download end")
 		except Exception as err:
 			tools.logger.syslog(err, display=False)
 			tools.console.Console.print("Download failed")
@@ -942,7 +1012,7 @@ def create_shell_commands():
 		"cat"        :[cat             ,"file"                 ],
 		"cls"        :[cls                                     ],
 		"mkdir"      :[mkdir           ,"directory",             ("-r","recursive",True)],
-		"mv"         :[mv              ,"source","destination" ],
+		"mv"         :[mv              ,"source","destination",  ("-q","quiet",True) ],
 		"rmdir"      :[rmdir           ,"directory",             ("-r","recursive",True),("-f","force",True),("-q","quiet",True),("-s","simulate",True)],
 		"cp"         :[cp              ,"source","destination",  ("-r","recursive",True),("-q","quiet",True)],
 		"rm"         :[rm              ,"file",                  ("-r","recursive",True),("-f","force",True),("-s","simulate",True)],
@@ -981,6 +1051,7 @@ def create_shell_commands():
 		"exec"       :[exec_           ,"string"               ],
 		"dump"       :[dump_           ,"filename"             ],
 		"formatsd"   :[formatsd        ,"fstype"               ],
+		"cleanupsd"  :[cleanupsd                               ],
 		"vtcolors"   :[vtcolors                                ],
 	}
 

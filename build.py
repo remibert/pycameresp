@@ -344,7 +344,7 @@ def execute(commands, s3=False):
 					try:
 						shutil.rmtree(directory,0,lambda function,directory,dummy: (os.chmod(directory, 0o777),os.remove(directory)))
 					except OSError:
-						print ("! Remove dir failed '%s'"%directory)
+						print("! Remove dir failed '%s'"%directory)
 					if os.path.exists(directory):
 						time.sleep(1)
 			elif cmd[0] == "copyfile":

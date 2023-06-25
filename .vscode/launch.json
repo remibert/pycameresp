@@ -24,7 +24,7 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/modules/lib/shell/commands.py",
 			"cwd"    : "${workspaceFolder}/modules",
-			"args": ["${userHome}/Downloads"],
+			"args": ["${userHome}/Downloads/test"],
 			//"console": "externalTerminal"
 		},
 		{

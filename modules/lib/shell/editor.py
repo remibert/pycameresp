@@ -1655,6 +1655,10 @@ class Edit:
 		self.text.set_view(self.view)
 		self.view.set_text(self.text)
 
+	def get_selected(self):
+		""" Return the selected text """
+		return self.text.copy_clipboard()
+
 class Editor:
 	""" Class which manage a complete editor """
 	def __init__(self, filename, no_color=False, read_only=False):
@@ -1756,7 +1760,7 @@ class Editor:
 		else:
 			self.loop = False
 
-	def input(self, text, help_=None):
+	def input(self, text, help_=None, selected=None):
 		""" Input value, used to get a line number, or text searched """
 		edit_ = Edit(cfg=self.cfg, view_top=4, view_height=1, read_only=False)
 		edit_.view.cls()
@@ -1768,6 +1772,10 @@ class Editor:
 				key, text = item
 				edit_.view.write("\x1B[7m%s\x1B[m:%s \t"%(key, text))
 		result = None
+
+		if selected is not None and len(selected) > 0:
+			for key in selected[0]:
+				edit_.text.treat_key(key)
 		while 1:
 			edit_.view.refresh()
 			key = self.get_key()
@@ -1782,7 +1790,7 @@ class Editor:
 
 	def find(self, keys=None):
 		""" Find a text """
-		self.find_text = self.input("Find :",[("Esc","Abort"),("Shift-F3 or Ctrl-P","Previous"),("F3 or Ctrl-N","Next")])
+		self.find_text = self.input("Find :",[("Esc","Abort"),("Shift-F3 or Ctrl-P","Previous"),("F3 or Ctrl-N","Next")], selected=self.edit.get_selected())
 		self.find_next()
 		self.edit.view.set_refresh_all()
 		self.is_refresh_header = True
@@ -1790,7 +1798,7 @@ class Editor:
 
 	def replace(self, keys=None):
 		""" Replace a text """
-		self.find_text    = self.input("Find to replace :",[("Esc","Abort")])
+		self.find_text    = self.input("Find to replace :",[("Esc","Abort")], selected=self.edit.get_selected())
 		if self.find_text:
 			self.replace_text = self.input("Replace with :",[("Esc","Abort"),("Shift-F3 or Ctrl-P","Previous"),("F3 or Ctrl-N","Next"),("Enter","Replace current")])
 			self.find_next()

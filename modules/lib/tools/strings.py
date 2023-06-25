@@ -4,12 +4,13 @@
 """ Strings utilities """
 import binascii
 import time
+import io
 
 def size_to_string(size, largeur=6):
 	""" Convert a size in a string with k, m, g, t..."""
 	return size_to_bytes(size, largeur).decode("utf8")
 
-def size_to_bytes(size, largeur=6):
+def size_to_bytes(size, largeur=7):
 	""" Convert a size in a bytes with k, m, g, t..."""
 	if size > 1073741824*1024:
 		return  b"%*.2fT"%(largeur, size / (1073741824.*1024.))
@@ -190,35 +191,43 @@ def dump(buff, withColor=True):
 		string += "\x1B[m"
 	return string
 
-def dump_line(data, line = None, width = 0, spacer=b" "):
+def dump_line(data, line=None, width=0, spacer=b" "):
 	""" dump a data data in hexadecimal on one line """
 	size = len(data)
 	fill = 0
+
+	if line is None:
+		output = io.BytesIO()
+	else:
+		output = line
 
 	# Calculation of the filling length
 	if width > size:
 		fill = width-size
 
 	# Displaying values in hex
-	line.write(binascii.hexlify(data, " ").upper())
+	output.write(binascii.hexlify(data, " ").upper())
 
 	# Filling of vacuum according to the size of the dump
-	line.write(spacer*fill*3)
+	output.write(spacer*fill*3)
 
 	# Display of ASCII codes
-	line.write(b' |')
+	output.write(b' |')
 
 	for i in data:
 		if i >= 0x20 and  i < 0x7F and i != 0x3C and i != 0x3E:
-			line.write(i.to_bytes(1,"big"))
+			output.write(i.to_bytes(1,"big"))
 		else:
-			line.write(b'.')
+			output.write(b'.')
 
 	# Filling of vacuum according to the size of the dump
-	line.write(spacer*fill)
+	output.write(spacer*fill)
 
 	# End of data ascii
-	line.write(b'|')
+	output.write(b'|')
+
+	if line is None:
+		return output.getvalue()
 
 def compute_hash(string):
 	""" Compute hash
