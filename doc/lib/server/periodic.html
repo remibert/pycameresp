@@ -91,7 +91,10 @@ class Periodic:
         async def task(**kwargs):
                 &#34;&#34;&#34; Periodic task method &#34;&#34;&#34;
                 Periodic.init()
-                STEP = 5
+                if tools.filesystem.ismicropython():
+                        STEP = 5
+                else:
+                        STEP = 1
 
                 polling_id = 0
 
@@ -107,7 +110,7 @@ class Periodic:
                                 if wifi.wifi.Wifi.is_lan_connected():
                                         tools.tasking.Tasks.start_all()
 
-                                # Reset brownout counter if wifi connected
+                                # # Reset brownout counter if wifi connected
                                 if wifi.wifi.Wifi.is_wan_connected():
                                         if tools.support.battery():
                                                 tools.battery.Battery.reset_brownout()
@@ -199,7 +202,10 @@ class Periodic:
         async def task(**kwargs):
                 &#34;&#34;&#34; Periodic task method &#34;&#34;&#34;
                 Periodic.init()
-                STEP = 5
+                if tools.filesystem.ismicropython():
+                        STEP = 5
+                else:
+                        STEP = 1
 
                 polling_id = 0
 
@@ -215,7 +221,7 @@ class Periodic:
                                 if wifi.wifi.Wifi.is_lan_connected():
                                         tools.tasking.Tasks.start_all()
 
-                                # Reset brownout counter if wifi connected
+                                # # Reset brownout counter if wifi connected
                                 if wifi.wifi.Wifi.is_wan_connected():
                                         if tools.support.battery():
                                                 tools.battery.Battery.reset_brownout()
@@ -340,7 +346,10 @@ def start(**kwargs):
 async def task(**kwargs):
         &#34;&#34;&#34; Periodic task method &#34;&#34;&#34;
         Periodic.init()
-        STEP = 5
+        if tools.filesystem.ismicropython():
+                STEP = 5
+        else:
+                STEP = 1
 
         polling_id = 0
 
@@ -356,7 +365,7 @@ async def task(**kwargs):
                         if wifi.wifi.Wifi.is_lan_connected():
                                 tools.tasking.Tasks.start_all()
 
-                        # Reset brownout counter if wifi connected
+                        # # Reset brownout counter if wifi connected
                         if wifi.wifi.Wifi.is_wan_connected():
                                 if tools.support.battery():
                                         tools.battery.Battery.reset_brownout()

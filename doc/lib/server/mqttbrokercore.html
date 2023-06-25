@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>lib.server.mqttbrokercore API documentation</title>
+<meta name="description" content="Mqtt server implementation core class" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.server.mqttbrokercore</code></h1>
+</header>
+<section id="section-intro">
+<p>Mqtt server implementation core class</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
+# pylint:disable=unspecified-encoding
+# pylint:disable=consider-using-f-string
+&#34;&#34;&#34; Mqtt server implementation core class &#34;&#34;&#34;
+# export BROKER=192.168.1.25;mosquitto_sub -h $BROKER -p 1883 -t receive_message -u username -P password -q 2
+# export BROKER=192.168.1.25;d=$( { date; } 2&gt;&amp;1); mosquitto_pub -h $BROKER -p 1883  -u username -P password -t forward_message -m $d -q 1  --repeat 10 -r
+import uasyncio
+import server.stream
+import server.user
+import server.mqttmessages
+import tools.logger
+import tools.fnmatch
+import tools.filesystem
+import tools.strings
+import tools.date
+import tools.tasking
+
+class MqttRetainPublication:
+        &#34;&#34;&#34; Class to store publication retained &#34;&#34;&#34;
+        def __init__(self, topic , value, qos, dup, retain, identifier):
+                self.topic = topic
+                self.value = value
+                self.qos   = qos
+                self.dup   = dup
+                self.retain = retain
+                self.identifier = identifier
+
+class MqttBrokerCore:
+        &#34;&#34;&#34; Mqtt implementation server core &#34;&#34;&#34;
+        clients = []
+        retains = {}
+        client_id = [0]
+
+        def __init__(self, reader, writer):
+                &#34;&#34;&#34; Mqtt constructor method &#34;&#34;&#34;
+                self.client = server.stream.Stream(reader, writer)
+                self.remoteaddr = tools.strings.tobytes(self.client.writer.get_extra_info(&#39;peername&#39;)[0])
+                self.keep_alive = 60
+                self.subscriptions = set()
+                self.publications = []
+                MqttBrokerCore.client_id[0] += 1
+                self.client_id = MqttBrokerCore.client_id[0]
+
+                tools.tasking.Tasks.create_task(self.main_task())
+                self.quit = False
+                self.on_commands = {
+                        server.mqttmessages.MqttDisconnect  : self.on_disconnect,
+                        server.mqttmessages.MqttPingReq     : self.on_ping_req,
+                        server.mqttmessages.MqttPublish     : self.on_publish,
+                        server.mqttmessages.MqttPubAck      : self.on_pub_ack,
+                        server.mqttmessages.MqttPubComp     : self.on_pub_comp,
+                        server.mqttmessages.MqttPubRel      : self.on_pub_rel,
+                        server.mqttmessages.MqttPubRec      : self.on_pub_rec,
+                        server.mqttmessages.MqttSubscribe   : self.on_subscribe,
+                        server.mqttmessages.MqttUnsubscribe : self.on_unsubscribe,
+                }
+
+        async def on_connect(self, command):
+                &#34;&#34;&#34; Connect command received &#34;&#34;&#34;
+                result = False
+                # Check protocol version
+                if command.protocol_level != 4 or command.protocol_name != &#34;MQTT&#34;:
+                        return_code = server.mqttmessages.MQTT_CONNACK_UNACCEPTABLE_PROTOCOL
+                # Check login password
+                if server.user.User.check(tools.strings.tobytes(command.username), tools.strings.tobytes(command.password), activity=False):
+                        result = True
+                        return_code = server.mqttmessages.MQTT_CONNACK_ACCEPTED
+                else:
+                        return_code = server.mqttmessages.MQTT_CONNACK_BAD_USER
+                self.keep_alive = command.keep_alive
+
+                response = server.mqttmessages.MqttConnAck(return_code=return_code)
+                await response.write(self.client)
+                return result
+
+        async def on_disconnect(self, command):
+                &#34;&#34;&#34; Disconnect command received &#34;&#34;&#34;
+                self.quit = True
+
+        async def on_ping_req(self, command):
+                &#34;&#34;&#34; Ping request received &#34;&#34;&#34;
+                response = server.mqttmessages.MqttPingResp()
+                await response.write(self.client)
+
+        async def on_pub_ack(self, command):
+                &#34;&#34;&#34; Publish acknoledge received &#34;&#34;&#34;
+                for client in MqttBrokerCore.clients:
+                        await client.pub_ack(self, command)
+
+        async def pub_ack(self, sender, command):
+                &#34;&#34;&#34; Send publish ack &#34;&#34;&#34;
+                for publication in self.publications:
+                        if command.identifier == publication.identifier:
+                                self.publications.remove(publication)
+
+        async def on_pub_comp(self, command):
+                &#34;&#34;&#34; Publish complete received &#34;&#34;&#34;
+                for client in MqttBrokerCore.clients:
+                        await client.pub_comp(self, command)
+
+        async def pub_comp(self, sender, command):
+                &#34;&#34;&#34; Send publish complete &#34;&#34;&#34;
+                for publication in self.publications:
+                        if command.identifier == publication.identifier:
+                                response = server.mqttmessages.MqttPubComp(identifier=command.identifier)
+                                await response.write(self.client)
+                                self.publications.remove(publication)
+
+        async def on_pub_rel(self, command):
+                &#34;&#34;&#34; Publish release received &#34;&#34;&#34;
+                for client in MqttBrokerCore.clients:
+                        await client.pub_rel(self, command)
+
+        async def pub_rel(self, sender, command):
+                &#34;&#34;&#34; Send publish rec &#34;&#34;&#34;
+                for publication in self.publications:
+                        if command.identifier == publication.identifier:
+                                response = server.mqttmessages.MqttPubRel(identifier=command.identifier)
+                                await response.write(self.client)
+
+        async def on_pub_rec(self, command):
+                &#34;&#34;&#34; Publish received &#34;&#34;&#34;
+                for client in MqttBrokerCore.clients:
+                        await client.pub_rec(self, command)
+
+        async def pub_rec(self, sender, command):
+                &#34;&#34;&#34; Send publish rec &#34;&#34;&#34;
+                for publication in self.publications:
+                        if command.identifier == publication.identifier:
+                                response = server.mqttmessages.MqttPubRec(identifier=command.identifier)
+                                await response.write(self.client)
+
+        def treat_retain(self, command):
+                &#34;&#34;&#34; Manage message retain &#34;&#34;&#34;
+                # If erase message retained required
+                if len(command.value) == 0:
+                        if command.topic in MqttBrokerCore.retains:
+                                del MqttBrokerCore.retains[command.topic]
+                # If message must be replaced
+                elif command.retain and len(command.value) &gt; 0:
+                        MqttBrokerCore.retains[command.topic] = MqttRetainPublication(
+                                command.topic,
+                                command.value,
+                                command.qos,
+                                command.dup,
+                                command.retain,
+                                command.identifier if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE else None)
+
+        async def on_publish(self, command):
+                &#34;&#34;&#34; Publish topic for all clients connected &#34;&#34;&#34;
+                if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE:
+                        self.publications.append(command)
+
+                self.treat_retain(command)
+
+                if command.qos == server.mqttmessages.MQTT_QOS_LEAST_ONCE:
+                        response = server.mqttmessages.MqttPubAck(identifier=command.identifier)
+                        await response.write(self.client)
+
+                for client in MqttBrokerCore.clients:
+                        await client.publish(self, command)
+
+        async def publish(self, sender, command):
+                &#34;&#34;&#34; Publish topic for client connected &#34;&#34;&#34;
+                for subscription in self.subscriptions:
+                        if subscription == command.topic:
+                                forward = server.mqttmessages.MqttPublish(
+                                        topic=command.topic,
+                                        value=command.value,
+                                        qos  =command.qos,
+                                        dup  =command.dup,
+                                        retain=command.retain,
+                                        identifier= command.identifier if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE else None)
+                                if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE:
+                                        self.publications.append(forward)
+                                await forward.write(self.client)
+
+        async def on_subscribe(self, command):
+                &#34;&#34;&#34; Subscribe command received &#34;&#34;&#34;
+                return_codes = []
+
+                # Check subscription
+                for topic, qos in command.topics:
+                        if qos &gt; server.mqttmessages.MQTT_QOS_EXACTLY_ONCE:
+                                tools.logger.syslog(&#34;MqttBroker bad protocol %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                                self.quit = True
+                        else:
+                                return_codes.append(qos)
+                        self.subscriptions.add(topic)
+                response = server.mqttmessages.MqttSubAck(return_code=return_codes)
+                await response.write(self.client)
+
+                # Treat retain topics
+                for topic, qos in command.topics:
+                        retain = MqttBrokerCore.retains.get(topic, None)
+                        if retain:
+                                publish = server.mqttmessages.MqttPublish(
+                                        topic =retain.topic,
+                                        value =retain.value,
+                                        qos   =retain.qos,
+                                        dup   =retain.dup,
+                                        retain=retain.retain)
+                                await publish.write(self.client)
+                                if retain.qos &gt; server.mqttmessages.MQTT_QOS_ONCE:
+                                        self.publications.append(publish)
+
+        async def on_unsubscribe(self, command):
+                &#34;&#34;&#34; Unsubscribe command received &#34;&#34;&#34;
+                for topic in command.topics:
+                        for subscription in self.subscriptions:
+                                if subscription == topic:
+                                        self.subscriptions.remove(subscription)
+                                        break
+                response = server.mqttmessages.MqttUnSubAck()
+                await response.write(self.client)
+
+        async def main_task(self):
+                &#34;&#34;&#34; Main mqtt broker task, treat all commands received &#34;&#34;&#34;
+                try:
+                        tools.logger.syslog(&#34;MqttBroker connected %s&#34;%tools.strings.tostrings(self.remoteaddr))
+
+                        # Wait connect message
+                        command = await uasyncio.wait_for(server.mqttmessages.MqttMessage.receive(self.client), timeout = self.keep_alive + self.keep_alive//2)
+                        if isinstance(command, server.mqttmessages.MqttConnect):
+
+                                # Treat connect message
+                                if await self.on_connect(command):
+                                        tools.logger.syslog(&#34;MqttBroker established %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                                        try:
+                                                # Enter in broker management loop
+                                                MqttBrokerCore.clients.append(self)
+                                                while self.quit is False:
+                                                        command = await uasyncio.wait_for(server.mqttmessages.MqttMessage.receive(self.client), timeout = self.keep_alive + self.keep_alive//2)
+                                                        # If command failed
+                                                        if command is None:
+                                                                self.quit = True
+                                                        else:
+                                                                found = False
+                                                                # Search the command treatment callback
+                                                                for classe, on_command in self.on_commands.items():
+                                                                        if isinstance(command, classe):
+                                                                                await on_command(command)
+                                                                                found = True
+                                                                                break
+
+                                                                if found is False:
+                                                                        tools.logger.syslog(&#34;MqttBroker unknown command %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                                        finally:
+                                                MqttBrokerCore.clients.remove(self)
+
+                except uasyncio.CancelledError as err:
+                        tools.logger.syslog(&#34;MqttBroker cancelled %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                except uasyncio.TimeoutError as err:
+                        tools.logger.syslog(&#34;MqttBroker ping timeout %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                except Exception as err:
+                        tools.logger.syslog(err)
+                finally:
+                        await self.client.close()
+                        tools.logger.syslog(&#34;MqttBroker disconnected %s&#34;%tools.strings.tostrings(self.remoteaddr))</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore"><code class="flex name class">
+<span>class <span class="ident">MqttBrokerCore</span></span>
+<span>(</span><span>reader, writer)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Mqtt implementation server core </p>
+<p>Mqtt constructor method</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MqttBrokerCore:
+        &#34;&#34;&#34; Mqtt implementation server core &#34;&#34;&#34;
+        clients = []
+        retains = {}
+        client_id = [0]
+
+        def __init__(self, reader, writer):
+                &#34;&#34;&#34; Mqtt constructor method &#34;&#34;&#34;
+                self.client = server.stream.Stream(reader, writer)
+                self.remoteaddr = tools.strings.tobytes(self.client.writer.get_extra_info(&#39;peername&#39;)[0])
+                self.keep_alive = 60
+                self.subscriptions = set()
+                self.publications = []
+                MqttBrokerCore.client_id[0] += 1
+                self.client_id = MqttBrokerCore.client_id[0]
+
+                tools.tasking.Tasks.create_task(self.main_task())
+                self.quit = False
+                self.on_commands = {
+                        server.mqttmessages.MqttDisconnect  : self.on_disconnect,
+                        server.mqttmessages.MqttPingReq     : self.on_ping_req,
+                        server.mqttmessages.MqttPublish     : self.on_publish,
+                        server.mqttmessages.MqttPubAck      : self.on_pub_ack,
+                        server.mqttmessages.MqttPubComp     : self.on_pub_comp,
+                        server.mqttmessages.MqttPubRel      : self.on_pub_rel,
+                        server.mqttmessages.MqttPubRec      : self.on_pub_rec,
+                        server.mqttmessages.MqttSubscribe   : self.on_subscribe,
+                        server.mqttmessages.MqttUnsubscribe : self.on_unsubscribe,
+                }
+
+        async def on_connect(self, command):
+                &#34;&#34;&#34; Connect command received &#34;&#34;&#34;
+                result = False
+                # Check protocol version
+                if command.protocol_level != 4 or command.protocol_name != &#34;MQTT&#34;:
+                        return_code = server.mqttmessages.MQTT_CONNACK_UNACCEPTABLE_PROTOCOL
+                # Check login password
+                if server.user.User.check(tools.strings.tobytes(command.username), tools.strings.tobytes(command.password), activity=False):
+                        result = True
+                        return_code = server.mqttmessages.MQTT_CONNACK_ACCEPTED
+                else:
+                        return_code = server.mqttmessages.MQTT_CONNACK_BAD_USER
+                self.keep_alive = command.keep_alive
+
+                response = server.mqttmessages.MqttConnAck(return_code=return_code)
+                await response.write(self.client)
+                return result
+
+        async def on_disconnect(self, command):
+                &#34;&#34;&#34; Disconnect command received &#34;&#34;&#34;
+                self.quit = True
+
+        async def on_ping_req(self, command):
+                &#34;&#34;&#34; Ping request received &#34;&#34;&#34;
+                response = server.mqttmessages.MqttPingResp()
+                await response.write(self.client)
+
+        async def on_pub_ack(self, command):
+                &#34;&#34;&#34; Publish acknoledge received &#34;&#34;&#34;
+                for client in MqttBrokerCore.clients:
+                        await client.pub_ack(self, command)
+
+        async def pub_ack(self, sender, command):
+                &#34;&#34;&#34; Send publish ack &#34;&#34;&#34;
+                for publication in self.publications:
+                        if command.identifier == publication.identifier:
+                                self.publications.remove(publication)
+
+        async def on_pub_comp(self, command):
+                &#34;&#34;&#34; Publish complete received &#34;&#34;&#34;
+                for client in MqttBrokerCore.clients:
+                        await client.pub_comp(self, command)
+
+        async def pub_comp(self, sender, command):
+                &#34;&#34;&#34; Send publish complete &#34;&#34;&#34;
+                for publication in self.publications:
+                        if command.identifier == publication.identifier:
+                                response = server.mqttmessages.MqttPubComp(identifier=command.identifier)
+                                await response.write(self.client)
+                                self.publications.remove(publication)
+
+        async def on_pub_rel(self, command):
+                &#34;&#34;&#34; Publish release received &#34;&#34;&#34;
+                for client in MqttBrokerCore.clients:
+                        await client.pub_rel(self, command)
+
+        async def pub_rel(self, sender, command):
+                &#34;&#34;&#34; Send publish rec &#34;&#34;&#34;
+                for publication in self.publications:
+                        if command.identifier == publication.identifier:
+                                response = server.mqttmessages.MqttPubRel(identifier=command.identifier)
+                                await response.write(self.client)
+
+        async def on_pub_rec(self, command):
+                &#34;&#34;&#34; Publish received &#34;&#34;&#34;
+                for client in MqttBrokerCore.clients:
+                        await client.pub_rec(self, command)
+
+        async def pub_rec(self, sender, command):
+                &#34;&#34;&#34; Send publish rec &#34;&#34;&#34;
+                for publication in self.publications:
+                        if command.identifier == publication.identifier:
+                                response = server.mqttmessages.MqttPubRec(identifier=command.identifier)
+                                await response.write(self.client)
+
+        def treat_retain(self, command):
+                &#34;&#34;&#34; Manage message retain &#34;&#34;&#34;
+                # If erase message retained required
+                if len(command.value) == 0:
+                        if command.topic in MqttBrokerCore.retains:
+                                del MqttBrokerCore.retains[command.topic]
+                # If message must be replaced
+                elif command.retain and len(command.value) &gt; 0:
+                        MqttBrokerCore.retains[command.topic] = MqttRetainPublication(
+                                command.topic,
+                                command.value,
+                                command.qos,
+                                command.dup,
+                                command.retain,
+                                command.identifier if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE else None)
+
+        async def on_publish(self, command):
+                &#34;&#34;&#34; Publish topic for all clients connected &#34;&#34;&#34;
+                if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE:
+                        self.publications.append(command)
+
+                self.treat_retain(command)
+
+                if command.qos == server.mqttmessages.MQTT_QOS_LEAST_ONCE:
+                        response = server.mqttmessages.MqttPubAck(identifier=command.identifier)
+                        await response.write(self.client)
+
+                for client in MqttBrokerCore.clients:
+                        await client.publish(self, command)
+
+        async def publish(self, sender, command):
+                &#34;&#34;&#34; Publish topic for client connected &#34;&#34;&#34;
+                for subscription in self.subscriptions:
+                        if subscription == command.topic:
+                                forward = server.mqttmessages.MqttPublish(
+                                        topic=command.topic,
+                                        value=command.value,
+                                        qos  =command.qos,
+                                        dup  =command.dup,
+                                        retain=command.retain,
+                                        identifier= command.identifier if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE else None)
+                                if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE:
+                                        self.publications.append(forward)
+                                await forward.write(self.client)
+
+        async def on_subscribe(self, command):
+                &#34;&#34;&#34; Subscribe command received &#34;&#34;&#34;
+                return_codes = []
+
+                # Check subscription
+                for topic, qos in command.topics:
+                        if qos &gt; server.mqttmessages.MQTT_QOS_EXACTLY_ONCE:
+                                tools.logger.syslog(&#34;MqttBroker bad protocol %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                                self.quit = True
+                        else:
+                                return_codes.append(qos)
+                        self.subscriptions.add(topic)
+                response = server.mqttmessages.MqttSubAck(return_code=return_codes)
+                await response.write(self.client)
+
+                # Treat retain topics
+                for topic, qos in command.topics:
+                        retain = MqttBrokerCore.retains.get(topic, None)
+                        if retain:
+                                publish = server.mqttmessages.MqttPublish(
+                                        topic =retain.topic,
+                                        value =retain.value,
+                                        qos   =retain.qos,
+                                        dup   =retain.dup,
+                                        retain=retain.retain)
+                                await publish.write(self.client)
+                                if retain.qos &gt; server.mqttmessages.MQTT_QOS_ONCE:
+                                        self.publications.append(publish)
+
+        async def on_unsubscribe(self, command):
+                &#34;&#34;&#34; Unsubscribe command received &#34;&#34;&#34;
+                for topic in command.topics:
+                        for subscription in self.subscriptions:
+                                if subscription == topic:
+                                        self.subscriptions.remove(subscription)
+                                        break
+                response = server.mqttmessages.MqttUnSubAck()
+                await response.write(self.client)
+
+        async def main_task(self):
+                &#34;&#34;&#34; Main mqtt broker task, treat all commands received &#34;&#34;&#34;
+                try:
+                        tools.logger.syslog(&#34;MqttBroker connected %s&#34;%tools.strings.tostrings(self.remoteaddr))
+
+                        # Wait connect message
+                        command = await uasyncio.wait_for(server.mqttmessages.MqttMessage.receive(self.client), timeout = self.keep_alive + self.keep_alive//2)
+                        if isinstance(command, server.mqttmessages.MqttConnect):
+
+                                # Treat connect message
+                                if await self.on_connect(command):
+                                        tools.logger.syslog(&#34;MqttBroker established %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                                        try:
+                                                # Enter in broker management loop
+                                                MqttBrokerCore.clients.append(self)
+                                                while self.quit is False:
+                                                        command = await uasyncio.wait_for(server.mqttmessages.MqttMessage.receive(self.client), timeout = self.keep_alive + self.keep_alive//2)
+                                                        # If command failed
+                                                        if command is None:
+                                                                self.quit = True
+                                                        else:
+                                                                found = False
+                                                                # Search the command treatment callback
+                                                                for classe, on_command in self.on_commands.items():
+                                                                        if isinstance(command, classe):
+                                                                                await on_command(command)
+                                                                                found = True
+                                                                                break
+
+                                                                if found is False:
+                                                                        tools.logger.syslog(&#34;MqttBroker unknown command %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                                        finally:
+                                                MqttBrokerCore.clients.remove(self)
+
+                except uasyncio.CancelledError as err:
+                        tools.logger.syslog(&#34;MqttBroker cancelled %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                except uasyncio.TimeoutError as err:
+                        tools.logger.syslog(&#34;MqttBroker ping timeout %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                except Exception as err:
+                        tools.logger.syslog(err)
+                finally:
+                        await self.client.close()
+                        tools.logger.syslog(&#34;MqttBroker disconnected %s&#34;%tools.strings.tostrings(self.remoteaddr))</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.client_id"><code class="name">var <span class="ident">client_id</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.clients"><code class="name">var <span class="ident">clients</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.retains"><code class="name">var <span class="ident">retains</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.main_task"><code class="name flex">
+<span>async def <span class="ident">main_task</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Main mqtt broker task, treat all commands received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def main_task(self):
+        &#34;&#34;&#34; Main mqtt broker task, treat all commands received &#34;&#34;&#34;
+        try:
+                tools.logger.syslog(&#34;MqttBroker connected %s&#34;%tools.strings.tostrings(self.remoteaddr))
+
+                # Wait connect message
+                command = await uasyncio.wait_for(server.mqttmessages.MqttMessage.receive(self.client), timeout = self.keep_alive + self.keep_alive//2)
+                if isinstance(command, server.mqttmessages.MqttConnect):
+
+                        # Treat connect message
+                        if await self.on_connect(command):
+                                tools.logger.syslog(&#34;MqttBroker established %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                                try:
+                                        # Enter in broker management loop
+                                        MqttBrokerCore.clients.append(self)
+                                        while self.quit is False:
+                                                command = await uasyncio.wait_for(server.mqttmessages.MqttMessage.receive(self.client), timeout = self.keep_alive + self.keep_alive//2)
+                                                # If command failed
+                                                if command is None:
+                                                        self.quit = True
+                                                else:
+                                                        found = False
+                                                        # Search the command treatment callback
+                                                        for classe, on_command in self.on_commands.items():
+                                                                if isinstance(command, classe):
+                                                                        await on_command(command)
+                                                                        found = True
+                                                                        break
+
+                                                        if found is False:
+                                                                tools.logger.syslog(&#34;MqttBroker unknown command %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                                finally:
+                                        MqttBrokerCore.clients.remove(self)
+
+        except uasyncio.CancelledError as err:
+                tools.logger.syslog(&#34;MqttBroker cancelled %s&#34;%tools.strings.tostrings(self.remoteaddr))
+        except uasyncio.TimeoutError as err:
+                tools.logger.syslog(&#34;MqttBroker ping timeout %s&#34;%tools.strings.tostrings(self.remoteaddr))
+        except Exception as err:
+                tools.logger.syslog(err)
+        finally:
+                await self.client.close()
+                tools.logger.syslog(&#34;MqttBroker disconnected %s&#34;%tools.strings.tostrings(self.remoteaddr))</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_connect"><code class="name flex">
+<span>async def <span class="ident">on_connect</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Connect command received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_connect(self, command):
+        &#34;&#34;&#34; Connect command received &#34;&#34;&#34;
+        result = False
+        # Check protocol version
+        if command.protocol_level != 4 or command.protocol_name != &#34;MQTT&#34;:
+                return_code = server.mqttmessages.MQTT_CONNACK_UNACCEPTABLE_PROTOCOL
+        # Check login password
+        if server.user.User.check(tools.strings.tobytes(command.username), tools.strings.tobytes(command.password), activity=False):
+                result = True
+                return_code = server.mqttmessages.MQTT_CONNACK_ACCEPTED
+        else:
+                return_code = server.mqttmessages.MQTT_CONNACK_BAD_USER
+        self.keep_alive = command.keep_alive
+
+        response = server.mqttmessages.MqttConnAck(return_code=return_code)
+        await response.write(self.client)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_disconnect"><code class="name flex">
+<span>async def <span class="ident">on_disconnect</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Disconnect command received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_disconnect(self, command):
+        &#34;&#34;&#34; Disconnect command received &#34;&#34;&#34;
+        self.quit = True</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_ping_req"><code class="name flex">
+<span>async def <span class="ident">on_ping_req</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Ping request received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_ping_req(self, command):
+        &#34;&#34;&#34; Ping request received &#34;&#34;&#34;
+        response = server.mqttmessages.MqttPingResp()
+        await response.write(self.client)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_pub_ack"><code class="name flex">
+<span>async def <span class="ident">on_pub_ack</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Publish acknoledge received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_pub_ack(self, command):
+        &#34;&#34;&#34; Publish acknoledge received &#34;&#34;&#34;
+        for client in MqttBrokerCore.clients:
+                await client.pub_ack(self, command)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_pub_comp"><code class="name flex">
+<span>async def <span class="ident">on_pub_comp</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Publish complete received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_pub_comp(self, command):
+        &#34;&#34;&#34; Publish complete received &#34;&#34;&#34;
+        for client in MqttBrokerCore.clients:
+                await client.pub_comp(self, command)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_pub_rec"><code class="name flex">
+<span>async def <span class="ident">on_pub_rec</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Publish received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_pub_rec(self, command):
+        &#34;&#34;&#34; Publish received &#34;&#34;&#34;
+        for client in MqttBrokerCore.clients:
+                await client.pub_rec(self, command)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_pub_rel"><code class="name flex">
+<span>async def <span class="ident">on_pub_rel</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Publish release received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_pub_rel(self, command):
+        &#34;&#34;&#34; Publish release received &#34;&#34;&#34;
+        for client in MqttBrokerCore.clients:
+                await client.pub_rel(self, command)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_publish"><code class="name flex">
+<span>async def <span class="ident">on_publish</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Publish topic for all clients connected</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_publish(self, command):
+        &#34;&#34;&#34; Publish topic for all clients connected &#34;&#34;&#34;
+        if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE:
+                self.publications.append(command)
+
+        self.treat_retain(command)
+
+        if command.qos == server.mqttmessages.MQTT_QOS_LEAST_ONCE:
+                response = server.mqttmessages.MqttPubAck(identifier=command.identifier)
+                await response.write(self.client)
+
+        for client in MqttBrokerCore.clients:
+                await client.publish(self, command)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_subscribe"><code class="name flex">
+<span>async def <span class="ident">on_subscribe</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Subscribe command received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_subscribe(self, command):
+        &#34;&#34;&#34; Subscribe command received &#34;&#34;&#34;
+        return_codes = []
+
+        # Check subscription
+        for topic, qos in command.topics:
+                if qos &gt; server.mqttmessages.MQTT_QOS_EXACTLY_ONCE:
+                        tools.logger.syslog(&#34;MqttBroker bad protocol %s&#34;%tools.strings.tostrings(self.remoteaddr))
+                        self.quit = True
+                else:
+                        return_codes.append(qos)
+                self.subscriptions.add(topic)
+        response = server.mqttmessages.MqttSubAck(return_code=return_codes)
+        await response.write(self.client)
+
+        # Treat retain topics
+        for topic, qos in command.topics:
+                retain = MqttBrokerCore.retains.get(topic, None)
+                if retain:
+                        publish = server.mqttmessages.MqttPublish(
+                                topic =retain.topic,
+                                value =retain.value,
+                                qos   =retain.qos,
+                                dup   =retain.dup,
+                                retain=retain.retain)
+                        await publish.write(self.client)
+                        if retain.qos &gt; server.mqttmessages.MQTT_QOS_ONCE:
+                                self.publications.append(publish)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.on_unsubscribe"><code class="name flex">
+<span>async def <span class="ident">on_unsubscribe</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Unsubscribe command received</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def on_unsubscribe(self, command):
+        &#34;&#34;&#34; Unsubscribe command received &#34;&#34;&#34;
+        for topic in command.topics:
+                for subscription in self.subscriptions:
+                        if subscription == topic:
+                                self.subscriptions.remove(subscription)
+                                break
+        response = server.mqttmessages.MqttUnSubAck()
+        await response.write(self.client)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.pub_ack"><code class="name flex">
+<span>async def <span class="ident">pub_ack</span></span>(<span>self, sender, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send publish ack</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def pub_ack(self, sender, command):
+        &#34;&#34;&#34; Send publish ack &#34;&#34;&#34;
+        for publication in self.publications:
+                if command.identifier == publication.identifier:
+                        self.publications.remove(publication)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.pub_comp"><code class="name flex">
+<span>async def <span class="ident">pub_comp</span></span>(<span>self, sender, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send publish complete</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def pub_comp(self, sender, command):
+        &#34;&#34;&#34; Send publish complete &#34;&#34;&#34;
+        for publication in self.publications:
+                if command.identifier == publication.identifier:
+                        response = server.mqttmessages.MqttPubComp(identifier=command.identifier)
+                        await response.write(self.client)
+                        self.publications.remove(publication)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.pub_rec"><code class="name flex">
+<span>async def <span class="ident">pub_rec</span></span>(<span>self, sender, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send publish rec</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def pub_rec(self, sender, command):
+        &#34;&#34;&#34; Send publish rec &#34;&#34;&#34;
+        for publication in self.publications:
+                if command.identifier == publication.identifier:
+                        response = server.mqttmessages.MqttPubRec(identifier=command.identifier)
+                        await response.write(self.client)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.pub_rel"><code class="name flex">
+<span>async def <span class="ident">pub_rel</span></span>(<span>self, sender, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Send publish rec</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def pub_rel(self, sender, command):
+        &#34;&#34;&#34; Send publish rec &#34;&#34;&#34;
+        for publication in self.publications:
+                if command.identifier == publication.identifier:
+                        response = server.mqttmessages.MqttPubRel(identifier=command.identifier)
+                        await response.write(self.client)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.publish"><code class="name flex">
+<span>async def <span class="ident">publish</span></span>(<span>self, sender, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Publish topic for client connected</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def publish(self, sender, command):
+        &#34;&#34;&#34; Publish topic for client connected &#34;&#34;&#34;
+        for subscription in self.subscriptions:
+                if subscription == command.topic:
+                        forward = server.mqttmessages.MqttPublish(
+                                topic=command.topic,
+                                value=command.value,
+                                qos  =command.qos,
+                                dup  =command.dup,
+                                retain=command.retain,
+                                identifier= command.identifier if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE else None)
+                        if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE:
+                                self.publications.append(forward)
+                        await forward.write(self.client)</code></pre>
+</details>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttBrokerCore.treat_retain"><code class="name flex">
+<span>def <span class="ident">treat_retain</span></span>(<span>self, command)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage message retain</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def treat_retain(self, command):
+        &#34;&#34;&#34; Manage message retain &#34;&#34;&#34;
+        # If erase message retained required
+        if len(command.value) == 0:
+                if command.topic in MqttBrokerCore.retains:
+                        del MqttBrokerCore.retains[command.topic]
+        # If message must be replaced
+        elif command.retain and len(command.value) &gt; 0:
+                MqttBrokerCore.retains[command.topic] = MqttRetainPublication(
+                        command.topic,
+                        command.value,
+                        command.qos,
+                        command.dup,
+                        command.retain,
+                        command.identifier if command.qos &gt; server.mqttmessages.MQTT_QOS_ONCE else None)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.server.mqttbrokercore.MqttRetainPublication"><code class="flex name class">
+<span>class <span class="ident">MqttRetainPublication</span></span>
+<span>(</span><span>topic, value, qos, dup, retain, identifier)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class to store publication retained</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MqttRetainPublication:
+        &#34;&#34;&#34; Class to store publication retained &#34;&#34;&#34;
+        def __init__(self, topic , value, qos, dup, retain, identifier):
+                self.topic = topic
+                self.value = value
+                self.qos   = qos
+                self.dup   = dup
+                self.retain = retain
+                self.identifier = identifier</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.server" href="index.html">lib.server</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.server.mqttbrokercore.MqttBrokerCore" href="#lib.server.mqttbrokercore.MqttBrokerCore">MqttBrokerCore</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.client_id" href="#lib.server.mqttbrokercore.MqttBrokerCore.client_id">client_id</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.clients" href="#lib.server.mqttbrokercore.MqttBrokerCore.clients">clients</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.main_task" href="#lib.server.mqttbrokercore.MqttBrokerCore.main_task">main_task</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_connect" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_connect">on_connect</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_disconnect" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_disconnect">on_disconnect</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_ping_req" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_ping_req">on_ping_req</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_pub_ack" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_pub_ack">on_pub_ack</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_pub_comp" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_pub_comp">on_pub_comp</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_pub_rec" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_pub_rec">on_pub_rec</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_pub_rel" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_pub_rel">on_pub_rel</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_publish" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_publish">on_publish</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_subscribe" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_subscribe">on_subscribe</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.on_unsubscribe" href="#lib.server.mqttbrokercore.MqttBrokerCore.on_unsubscribe">on_unsubscribe</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.pub_ack" href="#lib.server.mqttbrokercore.MqttBrokerCore.pub_ack">pub_ack</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.pub_comp" href="#lib.server.mqttbrokercore.MqttBrokerCore.pub_comp">pub_comp</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.pub_rec" href="#lib.server.mqttbrokercore.MqttBrokerCore.pub_rec">pub_rec</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.pub_rel" href="#lib.server.mqttbrokercore.MqttBrokerCore.pub_rel">pub_rel</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.publish" href="#lib.server.mqttbrokercore.MqttBrokerCore.publish">publish</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.retains" href="#lib.server.mqttbrokercore.MqttBrokerCore.retains">retains</a></code></li>
+<li><code><a title="lib.server.mqttbrokercore.MqttBrokerCore.treat_retain" href="#lib.server.mqttbrokercore.MqttBrokerCore.treat_retain">treat_retain</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.server.mqttbrokercore.MqttRetainPublication" href="#lib.server.mqttbrokercore.MqttRetainPublication">MqttRetainPublication</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

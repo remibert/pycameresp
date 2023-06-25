@@ -1692,6 +1692,10 @@ class Edit:
                 self.text.set_view(self.view)
                 self.view.set_text(self.text)
 
+        def get_selected(self):
+                &#34;&#34;&#34; Return the selected text &#34;&#34;&#34;
+                return self.text.copy_clipboard()
+
 class Editor:
         &#34;&#34;&#34; Class which manage a complete editor &#34;&#34;&#34;
         def __init__(self, filename, no_color=False, read_only=False):
@@ -1793,7 +1797,7 @@ class Editor:
                 else:
                         self.loop = False
 
-        def input(self, text, help_=None):
+        def input(self, text, help_=None, selected=None):
                 &#34;&#34;&#34; Input value, used to get a line number, or text searched &#34;&#34;&#34;
                 edit_ = Edit(cfg=self.cfg, view_top=4, view_height=1, read_only=False)
                 edit_.view.cls()
@@ -1805,6 +1809,10 @@ class Editor:
                                 key, text = item
                                 edit_.view.write(&#34;\x1B[7m%s\x1B[m:%s \t&#34;%(key, text))
                 result = None
+
+                if selected is not None and len(selected) &gt; 0:
+                        for key in selected[0]:
+                                edit_.text.treat_key(key)
                 while 1:
                         edit_.view.refresh()
                         key = self.get_key()
@@ -1819,7 +1827,7 @@ class Editor:
 
         def find(self, keys=None):
                 &#34;&#34;&#34; Find a text &#34;&#34;&#34;
-                self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;)])
+                self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;)], selected=self.edit.get_selected())
                 self.find_next()
                 self.edit.view.set_refresh_all()
                 self.is_refresh_header = True
@@ -1827,7 +1835,7 @@ class Editor:
 
         def replace(self, keys=None):
                 &#34;&#34;&#34; Replace a text &#34;&#34;&#34;
-                self.find_text    = self.input(&#34;Find to replace :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)])
+                self.find_text    = self.input(&#34;Find to replace :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)], selected=self.edit.get_selected())
                 if self.find_text:
                         self.replace_text = self.input(&#34;Replace with :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;),(&#34;Enter&#34;,&#34;Replace current&#34;)])
                         self.find_next()
@@ -2089,8 +2097,29 @@ if __name__ == &#34;__main__&#34;:
                 self.view = View(cfg, view_height, view_top, extension=extension)
                 self.text = Text(cfg, read_only)
                 self.text.set_view(self.view)
-                self.view.set_text(self.text)</code></pre>
+                self.view.set_text(self.text)
+
+        def get_selected(self):
+                &#34;&#34;&#34; Return the selected text &#34;&#34;&#34;
+                return self.text.copy_clipboard()</code></pre>
 </details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.shell.editor.Edit.get_selected"><code class="name flex">
+<span>def <span class="ident">get_selected</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the selected text</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_selected(self):
+        &#34;&#34;&#34; Return the selected text &#34;&#34;&#34;
+        return self.text.copy_clipboard()</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="lib.shell.editor.Editor"><code class="flex name class">
 <span>class <span class="ident">Editor</span></span>
@@ -2204,7 +2233,7 @@ if __name__ == &#34;__main__&#34;:
                 else:
                         self.loop = False
 
-        def input(self, text, help_=None):
+        def input(self, text, help_=None, selected=None):
                 &#34;&#34;&#34; Input value, used to get a line number, or text searched &#34;&#34;&#34;
                 edit_ = Edit(cfg=self.cfg, view_top=4, view_height=1, read_only=False)
                 edit_.view.cls()
@@ -2216,6 +2245,10 @@ if __name__ == &#34;__main__&#34;:
                                 key, text = item
                                 edit_.view.write(&#34;\x1B[7m%s\x1B[m:%s \t&#34;%(key, text))
                 result = None
+
+                if selected is not None and len(selected) &gt; 0:
+                        for key in selected[0]:
+                                edit_.text.treat_key(key)
                 while 1:
                         edit_.view.refresh()
                         key = self.get_key()
@@ -2230,7 +2263,7 @@ if __name__ == &#34;__main__&#34;:
 
         def find(self, keys=None):
                 &#34;&#34;&#34; Find a text &#34;&#34;&#34;
-                self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;)])
+                self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;)], selected=self.edit.get_selected())
                 self.find_next()
                 self.edit.view.set_refresh_all()
                 self.is_refresh_header = True
@@ -2238,7 +2271,7 @@ if __name__ == &#34;__main__&#34;:
 
         def replace(self, keys=None):
                 &#34;&#34;&#34; Replace a text &#34;&#34;&#34;
-                self.find_text    = self.input(&#34;Find to replace :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)])
+                self.find_text    = self.input(&#34;Find to replace :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)], selected=self.edit.get_selected())
                 if self.find_text:
                         self.replace_text = self.input(&#34;Replace with :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;),(&#34;Enter&#34;,&#34;Replace current&#34;)])
                         self.find_next()
@@ -2512,7 +2545,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def find(self, keys=None):
         &#34;&#34;&#34; Find a text &#34;&#34;&#34;
-        self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;)])
+        self.find_text = self.input(&#34;Find :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;)], selected=self.edit.get_selected())
         self.find_next()
         self.edit.view.set_refresh_all()
         self.is_refresh_header = True
@@ -2622,7 +2655,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="lib.shell.editor.Editor.input"><code class="name flex">
-<span>def <span class="ident">input</span></span>(<span>self, text, help_=None)</span>
+<span>def <span class="ident">input</span></span>(<span>self, text, help_=None, selected=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Input value, used to get a line number, or text searched</p></div>
@@ -2630,7 +2663,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def input(self, text, help_=None):
+<pre><code class="python">def input(self, text, help_=None, selected=None):
         &#34;&#34;&#34; Input value, used to get a line number, or text searched &#34;&#34;&#34;
         edit_ = Edit(cfg=self.cfg, view_top=4, view_height=1, read_only=False)
         edit_.view.cls()
@@ -2642,6 +2675,10 @@ if __name__ == &#34;__main__&#34;:
                         key, text = item
                         edit_.view.write(&#34;\x1B[7m%s\x1B[m:%s \t&#34;%(key, text))
         result = None
+
+        if selected is not None and len(selected) &gt; 0:
+                for key in selected[0]:
+                        edit_.text.treat_key(key)
         while 1:
                 edit_.view.refresh()
                 key = self.get_key()
@@ -2708,7 +2745,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def replace(self, keys=None):
         &#34;&#34;&#34; Replace a text &#34;&#34;&#34;
-        self.find_text    = self.input(&#34;Find to replace :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)])
+        self.find_text    = self.input(&#34;Find to replace :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;)], selected=self.edit.get_selected())
         if self.find_text:
                 self.replace_text = self.input(&#34;Replace with :&#34;,[(&#34;Esc&#34;,&#34;Abort&#34;),(&#34;Shift-F3 or Ctrl-P&#34;,&#34;Previous&#34;),(&#34;F3 or Ctrl-N&#34;,&#34;Next&#34;),(&#34;Enter&#34;,&#34;Replace current&#34;)])
                 self.find_next()
@@ -6989,6 +7026,9 @@ if __name__ == &#34;__main__&#34;:
 <ul>
 <li>
 <h4><code><a title="lib.shell.editor.Edit" href="#lib.shell.editor.Edit">Edit</a></code></h4>
+<ul class="">
+<li><code><a title="lib.shell.editor.Edit.get_selected" href="#lib.shell.editor.Edit.get_selected">get_selected</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="lib.shell.editor.Editor" href="#lib.shell.editor.Editor">Editor</a></code></h4>

@@ -507,7 +507,7 @@ def Button(*args, **params):
         return self
 
 # &lt;input type=&#34;file&#34; style=&#34;display:none&#34; id=&#34;%(id)s&#34; onchange=&#34;UploadFile_%(id)s()&#34; name=&#34;%(name)s&#34; accept=&#34;%(accept)s&#34; %(disabled)s /&gt;
-# &lt;input type=&#34;button&#34; id=&#34;label_%(id)s&#34; value=&#34;%(text)s&#34; onclick=&#34;document.getElementById(&#39;%(id)s&#39;).click()&#34; class=&#34;btn btn-outline-primary &#34; %(disabled)s /&gt;
+# &lt;input type=&#34;button&#34; id=&#34;label_%(id)s&#34; value=&#34;%(text)s&#34; onclick=&#34;document.getElementById(&#39;%(id)s&#39;).click()&#34; class=&#34;btn btn-outline-primary %(class_)s&#34; style=&#34;%(style)s&#34; %(disabled)s /&gt;
 # &lt;script&gt;
 # function UploadFile_%(id)s()
 # {
@@ -522,13 +522,13 @@ def Button(*args, **params):
 # location.reload();
 # }
 # &lt;/script&gt;
-beg_tagUploadFile = b&#39;&#39;&#39;&lt;input type=&#34;file&#34; style=&#34;display:none&#34; id=&#34;%s&#34; onchange=&#34;UploadFile_%s()&#34; name=&#34;%s&#34; accept=&#34;%s&#34; %s /&gt;&lt;input type=&#34;button&#34; id=&#34;label_%s&#34; value=&#34;%s&#34; onclick=&#34;document.getElementById(&#39;%s&#39;).click()&#34; class=&#34;btn btn-outline-primary &#34; %s /&gt;&lt;script&gt;function UploadFile_%s(){let data = document.getElementById(&#39;%s&#39;).files[0];let entry = document.getElementById(&#39;%s&#39;).files[0];fetch(&#39;%s/&#39; + encodeURIComponent(entry.name), {method:&#39;PUT&#39;,body:data});if (&#34;%s&#34; != &#34;&#34;){alert(&#39;%s&#39;);}document.getElementById(&#39;%s&#39;).value = &#34;&#34;;location.reload();}&lt;/script&gt;&#39;&#39;&#39;
+beg_tagUploadFile = b&#39;&#39;&#39;&lt;input type=&#34;file&#34; style=&#34;display:none&#34; id=&#34;%s&#34; onchange=&#34;UploadFile_%s()&#34; name=&#34;%s&#34; accept=&#34;%s&#34; %s /&gt;&lt;input type=&#34;button&#34; id=&#34;label_%s&#34; value=&#34;%s&#34; onclick=&#34;document.getElementById(&#39;%s&#39;).click()&#34; class=&#34;btn btn-outline-primary %s&#34; style=&#34;%s&#34; %s /&gt;&lt;script&gt;function UploadFile_%s(){let data = document.getElementById(&#39;%s&#39;).files[0];let entry = document.getElementById(&#39;%s&#39;).files[0];fetch(&#39;%s/&#39; + encodeURIComponent(entry.name), {method:&#39;PUT&#39;,body:data});if (&#34;%s&#34; != &#34;&#34;){alert(&#39;%s&#39;);}document.getElementById(&#39;%s&#39;).value = &#34;&#34;;location.reload();}&lt;/script&gt;&#39;&#39;&#39;
 def UploadFile(*args, **params):
         self = Template(*((&#34;UploadFile&#34;,) + args), **params)
 
         def get_begin(self):
                 global beg_tagUploadFile
-                return beg_tagUploadFile%(self.id,self.id,self.name,self.accept, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.text,self.id, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.id,self.id,self.path,self.alert,self.alert,self.id)
+                return beg_tagUploadFile%(self.id,self.id,self.name,self.accept, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.text,self.id,self.class_,self.style, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.id,self.id,self.path,self.alert,self.alert,self.id)
         self.get_begin     = get_begin
 
         def get_end(self):
@@ -537,32 +537,60 @@ def UploadFile(*args, **params):
 
         self.accept       = params.get(&#34;accept&#34;, b&#34;&#34;)
         self.alert        = params.get(&#34;alert&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
         self.disabled     = params.get(&#34;disabled&#34;, False)
         self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
         self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
         self.path         = params.get(&#34;path&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
         self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
         self.end_init(**params)
         return self
 
-# &lt;a href=&#34;%(path)s&#34; download=&#34;%(filename)s&#34; class=&#34;btn btn-outline-primary &#34; name=&#34;%(name)s&#34; %(disabled)s&gt;%(text)s&lt;/a&gt;
-beg_tagDownloadFile = b&#39;&#39;&#39;&lt;a href=&#34;%s&#34; download=&#34;%s&#34; class=&#34;btn btn-outline-primary &#34; name=&#34;%s&#34; %s&gt;%s&lt;/a&gt;&#39;&#39;&#39;
+# &lt;a href=&#34;%(path)s&#34; download=&#34;%(filename)s&#34; class=&#34;btn btn-outline-primary %(class_)s&#34; style=&#34;%(style)s&#34; name=&#34;%(name)s&#34; %(disabled)s&gt;%(text)s&lt;/a&gt;
+beg_tagDownloadFile = b&#39;&#39;&#39;&lt;a href=&#34;%s&#34; download=&#34;%s&#34; class=&#34;btn btn-outline-primary %s&#34; style=&#34;%s&#34; name=&#34;%s&#34; %s&gt;%s&lt;/a&gt;&#39;&#39;&#39;
 def DownloadFile(*args, **params):
         self = Template(*((&#34;DownloadFile&#34;,) + args), **params)
 
         def get_begin(self):
                 global beg_tagDownloadFile
-                return beg_tagDownloadFile%(self.path,self.filename,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+                return beg_tagDownloadFile%(self.path,self.filename,self.class_,self.style,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
         self.get_begin     = get_begin
 
         def get_end(self):
                 return b&#39;&#39;
         self.get_end       = get_end
 
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
         self.disabled     = params.get(&#34;disabled&#34;, False)
         self.filename     = params.get(&#34;filename&#34;, b&#34;&#34;)
         self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
         self.path         = params.get(&#34;path&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.end_init(**params)
+        return self
+
+# &lt;a href=&#34;%(path)s&#34; download=&#34;%(filename)s&#34; class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; name=&#34;%(name)s&#34; %(disabled)s&gt;%(text)s&lt;/a&gt;
+beg_tagDownload = b&#39;&#39;&#39;&lt;a href=&#34;%s&#34; download=&#34;%s&#34; class=&#34;%s&#34; style=&#34;%s&#34; name=&#34;%s&#34; %s&gt;%s&lt;/a&gt;&#39;&#39;&#39;
+def Download(*args, **params):
+        self = Template(*((&#34;Download&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagDownload
+                return beg_tagDownload%(self.path,self.filename,self.class_,self.style,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                return b&#39;&#39;
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.filename     = params.get(&#34;filename&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        self.path         = params.get(&#34;path&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
         self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
         self.end_init(**params)
         return self
@@ -1302,6 +1330,27 @@ def Space(*args, **params):
         self.end_init(**params)
         return self
 
+# &lt;span class=&#34;%(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34;&gt;%(text)s&lt;/span&gt;
+beg_tagSpan = b&#39;&#39;&#39;&lt;span class=&#34;%s&#34; style=&#34;%s&#34; id=&#34;%s&#34;&gt;%s&lt;/span&gt;&#39;&#39;&#39;
+def Span(*args, **params):
+        self = Template(*((&#34;Span&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagSpan
+                return beg_tagSpan%(self.class_,self.style,self.id,self.text)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                return b&#39;&#39;
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.end_init(**params)
+        return self
+
 # &lt;li class=&#34;page-item&#34;&gt;&lt;a class=&#34;page-link %(active)s %(class_)s&#34; style=&#34;%(style)s&#34; id=&#34;%(id)s&#34; href=&#34;%(href)s&#34; %(disabled)s&gt;%(text)s&lt;/a&gt;&lt;/li&gt;
 beg_tagPageItem = b&#39;&#39;&#39;&lt;li class=&#34;page-item&#34;&gt;&lt;a class=&#34;page-link %s %s&#34; style=&#34;%s&#34; id=&#34;%s&#34; href=&#34;%s&#34; %s&gt;%s&lt;/a&gt;&lt;/li&gt;&#39;&#39;&#39;
 def PageItem(*args, **params):
@@ -1346,6 +1395,189 @@ def Pagination(*args, **params):
 
         self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
         self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.end_init(**params)
+        return self
+
+# &lt;thead id=&#34;%(id)s&#34; class=&#34;%(class_)s&#34;&gt;
+# %(content)s
+# &lt;/thead&gt;
+beg_tagThead = b&#39;&#39;&#39;&lt;thead id=&#34;%s&#34; class=&#34;%s&#34;&gt;&#39;&#39;&#39;
+end_tagThead = b&#39;&#39;&#39;&lt;/thead&gt;&#39;&#39;&#39;
+def Thead(*args, **params):
+        self = Template(*((&#34;Thead&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagThead
+                return beg_tagThead%(self.id,self.class_)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagThead
+                return end_tagThead
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.end_init(**params)
+        return self
+
+# &lt;th width=&#34;%(width)s&#34; id=&#34;%(id)s&#34; class=&#34;%(class_)s&#34; onclick=&#34;%(onclick)s&#34; %(event)s style=&#34;%(style)s&#34;&gt;%(content)s%(text)s&lt;/th&gt;
+beg_tagTh = b&#39;&#39;&#39;&lt;th width=&#34;%s&#34; id=&#34;%s&#34; class=&#34;%s&#34; onclick=&#34;%s&#34; %s style=&#34;%s&#34;&gt;&#39;&#39;&#39;
+end_tagTh = b&#39;&#39;&#39;%s&lt;/th&gt;&#39;&#39;&#39;
+def Th(*args, **params):
+        self = Template(*((&#34;Th&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTh
+                return beg_tagTh%(self.width,self.id,self.class_,self.onclick,self.event,self.style)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTh
+                return end_tagTh%(self.text)
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.event        = params.get(&#34;event&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.onclick      = params.get(&#34;onclick&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.width        = params.get(&#34;width&#34;, b&#34;&#34;)
+        self.end_init(**params)
+        return self
+
+# &lt;td width=&#34;%(width)s&#34; id=&#34;%(id)s&#34; class=&#34;%(class_)s&#34; onclick=&#34;%(onclick)s&#34; %(event)s style=&#34;%(style)s&#34;&gt;%(content)s%(text)s&lt;/td&gt;
+beg_tagTd = b&#39;&#39;&#39;&lt;td width=&#34;%s&#34; id=&#34;%s&#34; class=&#34;%s&#34; onclick=&#34;%s&#34; %s style=&#34;%s&#34;&gt;&#39;&#39;&#39;
+end_tagTd = b&#39;&#39;&#39;%s&lt;/td&gt;&#39;&#39;&#39;
+def Td(*args, **params):
+        self = Template(*((&#34;Td&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTd
+                return beg_tagTd%(self.width,self.id,self.class_,self.onclick,self.event,self.style)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTd
+                return end_tagTd%(self.text)
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.event        = params.get(&#34;event&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.onclick      = params.get(&#34;onclick&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.width        = params.get(&#34;width&#34;, b&#34;&#34;)
+        self.end_init(**params)
+        return self
+
+# &lt;tr id=&#34;%(id)s&#34; class=&#34;%(class_)s&#34;&gt;
+# %(content)s
+# &lt;/tr&gt;
+beg_tagTr = b&#39;&#39;&#39;&lt;tr id=&#34;%s&#34; class=&#34;%s&#34;&gt;&#39;&#39;&#39;
+end_tagTr = b&#39;&#39;&#39;&lt;/tr&gt;&#39;&#39;&#39;
+def Tr(*args, **params):
+        self = Template(*((&#34;Tr&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTr
+                return beg_tagTr%(self.id,self.class_)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTr
+                return end_tagTr
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.end_init(**params)
+        return self
+
+# &lt;tbody id=&#34;%(id)s&#34; class=&#34;%(class_)s&#34;&gt;
+# %(content)s
+# &lt;/tbody&gt;
+beg_tagTbody = b&#39;&#39;&#39;&lt;tbody id=&#34;%s&#34; class=&#34;%s&#34;&gt;&#39;&#39;&#39;
+end_tagTbody = b&#39;&#39;&#39;&lt;/tbody&gt;&#39;&#39;&#39;
+def Tbody(*args, **params):
+        self = Template(*((&#34;Tbody&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTbody
+                return beg_tagTbody%(self.id,self.class_)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTbody
+                return end_tagTbody
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.end_init(**params)
+        return self
+
+# &lt;table id=&#34;%(id)s&#34; class=&#34;%(class_)s table table-striped table-hover&#34;&gt;
+# %(content)s
+# &lt;/table&gt;
+beg_tagTable = b&#39;&#39;&#39;&lt;table id=&#34;%s&#34; class=&#34;%s table table-striped table-hover&#34;&gt;&#39;&#39;&#39;
+end_tagTable = b&#39;&#39;&#39;&lt;/table&gt;&#39;&#39;&#39;
+def Table(*args, **params):
+        self = Template(*((&#34;Table&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTable
+                return beg_tagTable%(self.id,self.class_)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTable
+                return end_tagTable
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.end_init(**params)
+        return self
+
+# &lt;div class=&#34;modal&#34; id=&#34;%(id)s&#34; class=&#34;%(class_)s&#34;&gt;
+# &lt;div class=&#34;modal-dialog modal-fullscreen&#34;&gt;
+# &lt;div class=&#34;modal-content&#34;&gt;
+# &lt;div class=&#34;modal-header&#34;&gt;
+# %(header)s
+# &lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34;/&gt;
+# &lt;/div&gt;
+# &lt;div class=&#34;modal-body&#34; &gt;
+# %(body)s
+# &lt;/div&gt;
+# &lt;/div&gt;
+# &lt;/div&gt;
+# &lt;/div&gt;
+beg_tagDialogFullScreen = b&#39;&#39;&#39;&lt;div class=&#34;modal&#34; id=&#34;%s&#34; class=&#34;%s&#34;&gt;&lt;div class=&#34;modal-dialog modal-fullscreen&#34;&gt;&lt;div class=&#34;modal-content&#34;&gt;&lt;div class=&#34;modal-header&#34;&gt;%s&lt;button type=&#34;button&#34; class=&#34;btn-close&#34; data-bs-dismiss=&#34;modal&#34;/&gt;&lt;/div&gt;&lt;div class=&#34;modal-body&#34; &gt;%s&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&#39;&#39;&#39;
+def DialogFullScreen(*args, **params):
+        self = Template(*((&#34;DialogFullScreen&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagDialogFullScreen
+                return beg_tagDialogFullScreen%(self.id,self.class_,self.header,self.body)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                return b&#39;&#39;
+        self.get_end       = get_end
+
+        self.body         = params.get(&#34;body&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.header       = params.get(&#34;header&#34;, b&#34;&#34;)
         self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
         self.end_init(**params)
         return self
@@ -1821,6 +2053,35 @@ def Page(*args, **params):
         return self</code></pre>
 </details>
 </dd>
+<dt id="lib.htmltemplate.htmlclasses.DialogFullScreen"><code class="name flex">
+<span>def <span class="ident">DialogFullScreen</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def DialogFullScreen(*args, **params):
+        self = Template(*((&#34;DialogFullScreen&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagDialogFullScreen
+                return beg_tagDialogFullScreen%(self.id,self.class_,self.header,self.body)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                return b&#39;&#39;
+        self.get_end       = get_end
+
+        self.body         = params.get(&#34;body&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.header       = params.get(&#34;header&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.end_init(**params)
+        return self</code></pre>
+</details>
+</dd>
 <dt id="lib.htmltemplate.htmlclasses.Div"><code class="name flex">
 <span>def <span class="ident">Div</span></span>(<span>*args, **params)</span>
 </code></dt>
@@ -1851,6 +2112,38 @@ def Page(*args, **params):
         return self</code></pre>
 </details>
 </dd>
+<dt id="lib.htmltemplate.htmlclasses.Download"><code class="name flex">
+<span>def <span class="ident">Download</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Download(*args, **params):
+        self = Template(*((&#34;Download&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagDownload
+                return beg_tagDownload%(self.path,self.filename,self.class_,self.style,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                return b&#39;&#39;
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.disabled     = params.get(&#34;disabled&#34;, False)
+        self.filename     = params.get(&#34;filename&#34;, b&#34;&#34;)
+        self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
+        self.path         = params.get(&#34;path&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.end_init(**params)
+        return self</code></pre>
+</details>
+</dd>
 <dt id="lib.htmltemplate.htmlclasses.DownloadFile"><code class="name flex">
 <span>def <span class="ident">DownloadFile</span></span>(<span>*args, **params)</span>
 </code></dt>
@@ -1865,17 +2158,19 @@ def Page(*args, **params):
 
         def get_begin(self):
                 global beg_tagDownloadFile
-                return beg_tagDownloadFile%(self.path,self.filename,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
+                return beg_tagDownloadFile%(self.path,self.filename,self.class_,self.style,self.name, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.text)
         self.get_begin     = get_begin
 
         def get_end(self):
                 return b&#39;&#39;
         self.get_end       = get_end
 
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
         self.disabled     = params.get(&#34;disabled&#34;, False)
         self.filename     = params.get(&#34;filename&#34;, b&#34;&#34;)
         self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
         self.path         = params.get(&#34;path&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
         self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
         self.end_init(**params)
         return self</code></pre>
@@ -2615,6 +2910,35 @@ def Page(*args, **params):
         return self</code></pre>
 </details>
 </dd>
+<dt id="lib.htmltemplate.htmlclasses.Span"><code class="name flex">
+<span>def <span class="ident">Span</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Span(*args, **params):
+        self = Template(*((&#34;Span&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagSpan
+                return beg_tagSpan%(self.class_,self.style,self.id,self.text)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                return b&#39;&#39;
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.end_init(**params)
+        return self</code></pre>
+</details>
+</dd>
 <dt id="lib.htmltemplate.htmlclasses.Stylesheet"><code class="name flex">
 <span>def <span class="ident">Stylesheet</span></span>(<span>*args, **params)</span>
 </code></dt>
@@ -2769,6 +3093,35 @@ def Page(*args, **params):
         return self</code></pre>
 </details>
 </dd>
+<dt id="lib.htmltemplate.htmlclasses.Table"><code class="name flex">
+<span>def <span class="ident">Table</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Table(*args, **params):
+        self = Template(*((&#34;Table&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTable
+                return beg_tagTable%(self.id,self.class_)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTable
+                return end_tagTable
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.end_init(**params)
+        return self</code></pre>
+</details>
+</dd>
 <dt id="lib.htmltemplate.htmlclasses.Tag"><code class="name flex">
 <span>def <span class="ident">Tag</span></span>(<span>*args, **params)</span>
 </code></dt>
@@ -2790,6 +3143,132 @@ def Page(*args, **params):
         self.get_end       = get_end
 
         self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.end_init(**params)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Tbody"><code class="name flex">
+<span>def <span class="ident">Tbody</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Tbody(*args, **params):
+        self = Template(*((&#34;Tbody&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTbody
+                return beg_tagTbody%(self.id,self.class_)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTbody
+                return end_tagTbody
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.end_init(**params)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Td"><code class="name flex">
+<span>def <span class="ident">Td</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Td(*args, **params):
+        self = Template(*((&#34;Td&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTd
+                return beg_tagTd%(self.width,self.id,self.class_,self.onclick,self.event,self.style)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTd
+                return end_tagTd%(self.text)
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.event        = params.get(&#34;event&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.onclick      = params.get(&#34;onclick&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.width        = params.get(&#34;width&#34;, b&#34;&#34;)
+        self.end_init(**params)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Th"><code class="name flex">
+<span>def <span class="ident">Th</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Th(*args, **params):
+        self = Template(*((&#34;Th&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTh
+                return beg_tagTh%(self.width,self.id,self.class_,self.onclick,self.event,self.style)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTh
+                return end_tagTh%(self.text)
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.event        = params.get(&#34;event&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.onclick      = params.get(&#34;onclick&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
+        self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
+        self.width        = params.get(&#34;width&#34;, b&#34;&#34;)
+        self.end_init(**params)
+        return self</code></pre>
+</details>
+</dd>
+<dt id="lib.htmltemplate.htmlclasses.Thead"><code class="name flex">
+<span>def <span class="ident">Thead</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Thead(*args, **params):
+        self = Template(*((&#34;Thead&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagThead
+                return beg_tagThead%(self.id,self.class_)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagThead
+                return end_tagThead
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
         self.end_init(**params)
         return self</code></pre>
 </details>
@@ -2910,6 +3389,35 @@ def Page(*args, **params):
         return self</code></pre>
 </details>
 </dd>
+<dt id="lib.htmltemplate.htmlclasses.Tr"><code class="name flex">
+<span>def <span class="ident">Tr</span></span>(<span>*args, **params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def Tr(*args, **params):
+        self = Template(*((&#34;Tr&#34;,) + args), **params)
+
+        def get_begin(self):
+                global beg_tagTr
+                return beg_tagTr%(self.id,self.class_)
+        self.get_begin     = get_begin
+
+        def get_end(self):
+                global end_tagTr
+                return end_tagTr
+        self.get_end       = get_end
+
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
+        self.content      = params.get(&#34;content&#34;, b&#34;&#34;)
+        self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
+        self.end_init(**params)
+        return self</code></pre>
+</details>
+</dd>
 <dt id="lib.htmltemplate.htmlclasses.UploadFile"><code class="name flex">
 <span>def <span class="ident">UploadFile</span></span>(<span>*args, **params)</span>
 </code></dt>
@@ -2924,7 +3432,7 @@ def Page(*args, **params):
 
         def get_begin(self):
                 global beg_tagUploadFile
-                return beg_tagUploadFile%(self.id,self.id,self.name,self.accept, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.text,self.id, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.id,self.id,self.path,self.alert,self.alert,self.id)
+                return beg_tagUploadFile%(self.id,self.id,self.name,self.accept, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.text,self.id,self.class_,self.style, b&#39;disabled&#39; if self.disabled else b&#39;&#39;,self.id,self.id,self.id,self.path,self.alert,self.alert,self.id)
         self.get_begin     = get_begin
 
         def get_end(self):
@@ -2933,10 +3441,12 @@ def Page(*args, **params):
 
         self.accept       = params.get(&#34;accept&#34;, b&#34;&#34;)
         self.alert        = params.get(&#34;alert&#34;, b&#34;&#34;)
+        self.class_       = params.get(&#34;class_&#34;, b&#34;&#34;)
         self.disabled     = params.get(&#34;disabled&#34;, False)
         self.id           = params.get(&#34;id&#34;, b&#34;%d&#34;%id(self))
         self.name         = params.get(&#34;name&#34;, b&#34;%d&#34;%id(self))
         self.path         = params.get(&#34;path&#34;, b&#34;&#34;)
+        self.style        = params.get(&#34;style&#34;, b&#34;&#34;)
         self.text         = params.get(&#34;text&#34;, b&#34;&#34;)
         self.end_init(**params)
         return self</code></pre>
@@ -2974,7 +3484,9 @@ def Page(*args, **params):
 <li><code><a title="lib.htmltemplate.htmlclasses.ComboBox" href="#lib.htmltemplate.htmlclasses.ComboBox">ComboBox</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.ComboCmd" href="#lib.htmltemplate.htmlclasses.ComboCmd">ComboCmd</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Container" href="#lib.htmltemplate.htmlclasses.Container">Container</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.DialogFullScreen" href="#lib.htmltemplate.htmlclasses.DialogFullScreen">DialogFullScreen</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Div" href="#lib.htmltemplate.htmlclasses.Div">Div</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Download" href="#lib.htmltemplate.htmlclasses.Download">Download</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.DownloadFile" href="#lib.htmltemplate.htmlclasses.DownloadFile">DownloadFile</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Edit" href="#lib.htmltemplate.htmlclasses.Edit">Edit</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Form" href="#lib.htmltemplate.htmlclasses.Form">Form</a></code></li>
@@ -2999,16 +3511,23 @@ def Page(*args, **params):
 <li><code><a title="lib.htmltemplate.htmlclasses.Slider" href="#lib.htmltemplate.htmlclasses.Slider">Slider</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.SliderCmd" href="#lib.htmltemplate.htmlclasses.SliderCmd">SliderCmd</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Space" href="#lib.htmltemplate.htmlclasses.Space">Space</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Span" href="#lib.htmltemplate.htmlclasses.Span">Span</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Stylesheet" href="#lib.htmltemplate.htmlclasses.Stylesheet">Stylesheet</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.StylesheetDefault" href="#lib.htmltemplate.htmlclasses.StylesheetDefault">StylesheetDefault</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Submit" href="#lib.htmltemplate.htmlclasses.Submit">Submit</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Switch" href="#lib.htmltemplate.htmlclasses.Switch">Switch</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.SwitchCmd" href="#lib.htmltemplate.htmlclasses.SwitchCmd">SwitchCmd</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Table" href="#lib.htmltemplate.htmlclasses.Table">Table</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Tag" href="#lib.htmltemplate.htmlclasses.Tag">Tag</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Tbody" href="#lib.htmltemplate.htmlclasses.Tbody">Tbody</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Td" href="#lib.htmltemplate.htmlclasses.Td">Td</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Th" href="#lib.htmltemplate.htmlclasses.Th">Th</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Thead" href="#lib.htmltemplate.htmlclasses.Thead">Thead</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Title1" href="#lib.htmltemplate.htmlclasses.Title1">Title1</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Title2" href="#lib.htmltemplate.htmlclasses.Title2">Title2</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Title3" href="#lib.htmltemplate.htmlclasses.Title3">Title3</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.Title4" href="#lib.htmltemplate.htmlclasses.Title4">Title4</a></code></li>
+<li><code><a title="lib.htmltemplate.htmlclasses.Tr" href="#lib.htmltemplate.htmlclasses.Tr">Tr</a></code></li>
 <li><code><a title="lib.htmltemplate.htmlclasses.UploadFile" href="#lib.htmltemplate.htmlclasses.UploadFile">UploadFile</a></code></li>
 </ul>
 </li>

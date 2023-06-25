@@ -1,7 +1,7 @@
-Pycameresp is originally designed to be a completely standalone motion detector on ESP32-CAM, but all servers and other functionality also work on generic Esp32 and Pico PI, Pico PI W.
+Pycameresp is originally designed to be a completely standalone motion detector on ESP32-CAM, but all servers and other functionality also work on generic Esp32 and Pico PI W.
 
 ---
-The following features are available on all Esp32 and Pico Pi :
+The following features are available on all Esp32 and Pico Pi W :
 
  - WiFi network management with configuration via web interface. 
  - Automatic Wifi connection and reconnection in case of deconnection.

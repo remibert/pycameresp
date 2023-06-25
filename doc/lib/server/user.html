@@ -68,17 +68,25 @@ class User:
                 return result
 
         @staticmethod
-        def check(user, password, log=True, display=True):
+        def check(user, password, log=True, display=True, activity=True):
                 &#34;&#34;&#34; Check the user and password &#34;&#34;&#34;
                 User.init()
-                user = user.lower()
+                if user is not None:
+                        user = user.lower()
+                else:
+                        user = b&#34;&#34;
+
+                if password is None:
+                        password = b&#34;&#34;
 
                 if User.instance.user == b&#34;&#34;:
-                        tools.info.set_last_activity()
+                        if activity:
+                                tools.info.set_last_activity()
                         return True
                 elif user == User.instance.user:
                         if tools.encryption.gethash(password) == User.instance.password:
-                                tools.info.set_last_activity()
+                                if activity:
+                                        tools.info.set_last_activity()
                                 if log is True:
                                         User.login_state[0] = True
                                 return True
@@ -166,17 +174,25 @@ class User:
                 return result
 
         @staticmethod
-        def check(user, password, log=True, display=True):
+        def check(user, password, log=True, display=True, activity=True):
                 &#34;&#34;&#34; Check the user and password &#34;&#34;&#34;
                 User.init()
-                user = user.lower()
+                if user is not None:
+                        user = user.lower()
+                else:
+                        user = b&#34;&#34;
+
+                if password is None:
+                        password = b&#34;&#34;
 
                 if User.instance.user == b&#34;&#34;:
-                        tools.info.set_last_activity()
+                        if activity:
+                                tools.info.set_last_activity()
                         return True
                 elif user == User.instance.user:
                         if tools.encryption.gethash(password) == User.instance.password:
-                                tools.info.set_last_activity()
+                                if activity:
+                                        tools.info.set_last_activity()
                                 if log is True:
                                         User.login_state[0] = True
                                 return True
@@ -270,7 +286,7 @@ def change(user, current_password, new_password, renew_password):
 </details>
 </dd>
 <dt id="lib.server.user.User.check"><code class="name flex">
-<span>def <span class="ident">check</span></span>(<span>user, password, log=True, display=True)</span>
+<span>def <span class="ident">check</span></span>(<span>user, password, log=True, display=True, activity=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Check the user and password</p></div>
@@ -279,17 +295,25 @@ def change(user, current_password, new_password, renew_password):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def check(user, password, log=True, display=True):
+def check(user, password, log=True, display=True, activity=True):
         &#34;&#34;&#34; Check the user and password &#34;&#34;&#34;
         User.init()
-        user = user.lower()
+        if user is not None:
+                user = user.lower()
+        else:
+                user = b&#34;&#34;
+
+        if password is None:
+                password = b&#34;&#34;
 
         if User.instance.user == b&#34;&#34;:
-                tools.info.set_last_activity()
+                if activity:
+                        tools.info.set_last_activity()
                 return True
         elif user == User.instance.user:
                 if tools.encryption.gethash(password) == User.instance.password:
-                        tools.info.set_last_activity()
+                        if activity:
+                                tools.info.set_last_activity()
                         if log is True:
                                 User.login_state[0] = True
                         return True

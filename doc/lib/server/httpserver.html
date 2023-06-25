@@ -92,9 +92,10 @@ class HttpServer:
         wildroutes   = []
         menus        = []
         www_dir      = None
-        pages = []
+        pages        = []
         loaded       = [False]
-        config = None
+        config       = None
+        login_checker= None
 
         @staticmethod
         def call_preload(loader):
@@ -176,6 +177,20 @@ class HttpServer:
         def get_menus():
                 &#34;&#34;&#34; Used to get the informations of menu &#34;&#34;&#34;
                 return HttpServer.menus
+
+        @staticmethod
+        def set_login_checker():
+                &#34;&#34;&#34; Change the default login checker &#34;&#34;&#34;
+                def setter(checker):
+                        HttpServer.login_checker = checker
+                return setter
+
+        @staticmethod
+        async def is_logged(request, response):
+                &#34;&#34;&#34; Check the login &#34;&#34;&#34;
+                if HttpServer.login_checker is not None:
+                        return await HttpServer.login_checker(request, response)
+                return True
 
         @staticmethod
         def search_route(request):
@@ -262,9 +277,10 @@ class HttpServer:
         wildroutes   = []
         menus        = []
         www_dir      = None
-        pages = []
+        pages        = []
         loaded       = [False]
-        config = None
+        config       = None
+        login_checker= None
 
         @staticmethod
         def call_preload(loader):
@@ -348,6 +364,20 @@ class HttpServer:
                 return HttpServer.menus
 
         @staticmethod
+        def set_login_checker():
+                &#34;&#34;&#34; Change the default login checker &#34;&#34;&#34;
+                def setter(checker):
+                        HttpServer.login_checker = checker
+                return setter
+
+        @staticmethod
+        async def is_logged(request, response):
+                &#34;&#34;&#34; Check the login &#34;&#34;&#34;
+                if HttpServer.login_checker is not None:
+                        return await HttpServer.login_checker(request, response)
+                return True
+
+        @staticmethod
         def search_route(request):
                 &#34;&#34;&#34; Search route according to the request &#34;&#34;&#34;
                 function, args = None, None
@@ -414,6 +444,10 @@ class HttpServer:
 <div class="desc"></div>
 </dd>
 <dt id="lib.server.httpserver.HttpServer.loaded"><code class="name">var <span class="ident">loaded</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.httpserver.HttpServer.login_checker"><code class="name">var <span class="ident">login_checker</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -545,6 +579,23 @@ def init():
                 HttpServer.config.refresh()</code></pre>
 </details>
 </dd>
+<dt id="lib.server.httpserver.HttpServer.is_logged"><code class="name flex">
+<span>async def <span class="ident">is_logged</span></span>(<span>request, response)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check the login</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def is_logged(request, response):
+        &#34;&#34;&#34; Check the login &#34;&#34;&#34;
+        if HttpServer.login_checker is not None:
+                return await HttpServer.login_checker(request, response)
+        return True</code></pre>
+</details>
+</dd>
 <dt id="lib.server.httpserver.HttpServer.preload"><code class="name flex">
 <span>def <span class="ident">preload</span></span>(<span>)</span>
 </code></dt>
@@ -638,6 +689,23 @@ def search_route(request):
                 else:
                         function, args = found
         return function, args</code></pre>
+</details>
+</dd>
+<dt id="lib.server.httpserver.HttpServer.set_login_checker"><code class="name flex">
+<span>def <span class="ident">set_login_checker</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Change the default login checker</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def set_login_checker():
+        &#34;&#34;&#34; Change the default login checker &#34;&#34;&#34;
+        def setter(checker):
+                HttpServer.login_checker = checker
+        return setter</code></pre>
 </details>
 </dd>
 <dt id="lib.server.httpserver.HttpServer.start"><code class="name flex">
@@ -812,13 +880,16 @@ You must define the content of a callback, which only import the python module w
 <li><code><a title="lib.server.httpserver.HttpServer.config" href="#lib.server.httpserver.HttpServer.config">config</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.get_menus" href="#lib.server.httpserver.HttpServer.get_menus">get_menus</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.init" href="#lib.server.httpserver.HttpServer.init">init</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.is_logged" href="#lib.server.httpserver.HttpServer.is_logged">is_logged</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.loaded" href="#lib.server.httpserver.HttpServer.loaded">loaded</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.login_checker" href="#lib.server.httpserver.HttpServer.login_checker">login_checker</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.menus" href="#lib.server.httpserver.HttpServer.menus">menus</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.pages" href="#lib.server.httpserver.HttpServer.pages">pages</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.preload" href="#lib.server.httpserver.HttpServer.preload">preload</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.remove_route" href="#lib.server.httpserver.HttpServer.remove_route">remove_route</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.routes" href="#lib.server.httpserver.HttpServer.routes">routes</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.search_route" href="#lib.server.httpserver.HttpServer.search_route">search_route</a></code></li>
+<li><code><a title="lib.server.httpserver.HttpServer.set_login_checker" href="#lib.server.httpserver.HttpServer.set_login_checker">set_login_checker</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.start" href="#lib.server.httpserver.HttpServer.start">start</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.static_pages" href="#lib.server.httpserver.HttpServer.static_pages">static_pages</a></code></li>
 <li><code><a title="lib.server.httpserver.HttpServer.wildroutes" href="#lib.server.httpserver.HttpServer.wildroutes">wildroutes</a></code></li>

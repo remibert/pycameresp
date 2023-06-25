@@ -56,12 +56,12 @@ class HttpServerCore:
                 response  = server.httprequest.HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
                 try:
                         await request.receive()
-                        # print(request.path)
                         function, args = server.httpserver.HttpServer.search_route(request)
                         if function is None:
                                 await response.send_not_found()
                         else:
-                                await function(request, response, args)
+                                if await server.httpserver.HttpServer.is_logged(request, response):
+                                        await function(request, response, args)
                 except OSError as err:
                         # If ECONNRESET or ENOTCONN
                         if err.args[0] == 104 or err.args[0] == 128:
@@ -113,12 +113,12 @@ if the server not used, it not consum memory </p>
                 response  = server.httprequest.HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
                 try:
                         await request.receive()
-                        # print(request.path)
                         function, args = server.httpserver.HttpServer.search_route(request)
                         if function is None:
                                 await response.send_not_found()
                         else:
-                                await function(request, response, args)
+                                if await server.httpserver.HttpServer.is_logged(request, response):
+                                        await function(request, response, args)
                 except OSError as err:
                         # If ECONNRESET or ENOTCONN
                         if err.args[0] == 104 or err.args[0] == 128:
@@ -151,12 +151,12 @@ if the server not used, it not consum memory </p>
         response  = server.httprequest.HttpResponse(stream, remoteaddr=remoteaddr, port=self.port, name=self.name)
         try:
                 await request.receive()
-                # print(request.path)
                 function, args = server.httpserver.HttpServer.search_route(request)
                 if function is None:
                         await response.send_not_found()
                 else:
-                        await function(request, response, args)
+                        if await server.httpserver.HttpServer.is_logged(request, response):
+                                await function(request, response, args)
         except OSError as err:
                 # If ECONNRESET or ENOTCONN
                 if err.args[0] == 104 or err.args[0] == 128:

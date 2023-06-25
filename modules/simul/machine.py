@@ -138,3 +138,6 @@ class Counter:
 		""" Stops the Counter """
 	def filter_ns(self, value):
 		""" Filter nano seconds """
+		
+class I2S:
+	pass

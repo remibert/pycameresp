@@ -33,12 +33,13 @@
 &#34;&#34;&#34; Strings utilities &#34;&#34;&#34;
 import binascii
 import time
+import io
 
 def size_to_string(size, largeur=6):
         &#34;&#34;&#34; Convert a size in a string with k, m, g, t...&#34;&#34;&#34;
         return size_to_bytes(size, largeur).decode(&#34;utf8&#34;)
 
-def size_to_bytes(size, largeur=6):
+def size_to_bytes(size, largeur=7):
         &#34;&#34;&#34; Convert a size in a bytes with k, m, g, t...&#34;&#34;&#34;
         if size &gt; 1073741824*1024:
                 return  b&#34;%*.2fT&#34;%(largeur, size / (1073741824.*1024.))
@@ -219,35 +220,43 @@ def dump(buff, withColor=True):
                 string += &#34;\x1B[m&#34;
         return string
 
-def dump_line(data, line = None, width = 0):
+def dump_line(data, line=None, width=0, spacer=b&#34; &#34;):
         &#34;&#34;&#34; dump a data data in hexadecimal on one line &#34;&#34;&#34;
         size = len(data)
         fill = 0
+
+        if line is None:
+                output = io.BytesIO()
+        else:
+                output = line
 
         # Calculation of the filling length
         if width &gt; size:
                 fill = width-size
 
         # Displaying values in hex
-        line.write(binascii.hexlify(data, &#34; &#34;).upper())
+        output.write(binascii.hexlify(data, &#34; &#34;).upper())
 
         # Filling of vacuum according to the size of the dump
-        line.write(b&#39;   &#39;*fill)
+        output.write(spacer*fill*3)
 
         # Display of ASCII codes
-        line.write(b&#39; |&#39;)
+        output.write(b&#39; |&#39;)
 
         for i in data:
-                if i &gt;= 0x20 and  i &lt; 0x7F:
-                        line.write(i.to_bytes(1,&#34;big&#34;))
+                if i &gt;= 0x20 and  i &lt; 0x7F and i != 0x3C and i != 0x3E:
+                        output.write(i.to_bytes(1,&#34;big&#34;))
                 else:
-                        line.write(b&#39;.&#39;)
+                        output.write(b&#39;.&#39;)
 
         # Filling of vacuum according to the size of the dump
-        line.write(b&#39; &#39;*fill)
+        output.write(spacer*fill)
 
         # End of data ascii
-        line.write(b&#39;|&#39;)
+        output.write(b&#39;|&#39;)
+
+        if line is None:
+                return output.getvalue()
 
 def compute_hash(string):
         &#34;&#34;&#34; Compute hash
@@ -376,7 +385,7 @@ def get_utf8_length(data):
 </details>
 </dd>
 <dt id="lib.tools.strings.dump_line"><code class="name flex">
-<span>def <span class="ident">dump_line</span></span>(<span>data, line=None, width=0)</span>
+<span>def <span class="ident">dump_line</span></span>(<span>data, line=None, width=0, spacer=b' ')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>dump a data data in hexadecimal on one line</p></div>
@@ -384,35 +393,43 @@ def get_utf8_length(data):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dump_line(data, line = None, width = 0):
+<pre><code class="python">def dump_line(data, line=None, width=0, spacer=b&#34; &#34;):
         &#34;&#34;&#34; dump a data data in hexadecimal on one line &#34;&#34;&#34;
         size = len(data)
         fill = 0
+
+        if line is None:
+                output = io.BytesIO()
+        else:
+                output = line
 
         # Calculation of the filling length
         if width &gt; size:
                 fill = width-size
 
         # Displaying values in hex
-        line.write(binascii.hexlify(data, &#34; &#34;).upper())
+        output.write(binascii.hexlify(data, &#34; &#34;).upper())
 
         # Filling of vacuum according to the size of the dump
-        line.write(b&#39;   &#39;*fill)
+        output.write(spacer*fill*3)
 
         # Display of ASCII codes
-        line.write(b&#39; |&#39;)
+        output.write(b&#39; |&#39;)
 
         for i in data:
-                if i &gt;= 0x20 and  i &lt; 0x7F:
-                        line.write(i.to_bytes(1,&#34;big&#34;))
+                if i &gt;= 0x20 and  i &lt; 0x7F and i != 0x3C and i != 0x3E:
+                        output.write(i.to_bytes(1,&#34;big&#34;))
                 else:
-                        line.write(b&#39;.&#39;)
+                        output.write(b&#39;.&#39;)
 
         # Filling of vacuum according to the size of the dump
-        line.write(b&#39; &#39;*fill)
+        output.write(spacer*fill)
 
         # End of data ascii
-        line.write(b&#39;|&#39;)</code></pre>
+        output.write(b&#39;|&#39;)
+
+        if line is None:
+                return output.getvalue()</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.strings.get_length_utf8"><code class="name flex">
@@ -641,7 +658,7 @@ def get_utf8_length(data):
 </details>
 </dd>
 <dt id="lib.tools.strings.size_to_bytes"><code class="name flex">
-<span>def <span class="ident">size_to_bytes</span></span>(<span>size, largeur=6)</span>
+<span>def <span class="ident">size_to_bytes</span></span>(<span>size, largeur=7)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert a size in a bytes with k, m, g, t&hellip;</p></div>
@@ -649,7 +666,7 @@ def get_utf8_length(data):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def size_to_bytes(size, largeur=6):
+<pre><code class="python">def size_to_bytes(size, largeur=7):
         &#34;&#34;&#34; Convert a size in a bytes with k, m, g, t...&#34;&#34;&#34;
         if size &gt; 1073741824*1024:
                 return  b&#34;%*.2fT&#34;%(largeur, size / (1073741824.*1024.))

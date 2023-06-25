@@ -39,27 +39,19 @@ import tools.tasking
 
 def main_page(request, response, args, title_frame, content=None, menu_visible=True):
         &#34;&#34;&#34; Function define the main web page with menu, it check also the login password &#34;&#34;&#34;
-        try:
-                title  = args[&#34;title&#34;]
-        except:
-                title = title_frame
-        try:
-                active = args[&#34;index&#34;]
-        except:
-                active = 0
-        # On wifi station, the external style cheet is added
-        if wifi.station.Station.is_ip_on_interface(request.remoteaddr):
-                stylesheet = Stylesheet()
-        else:
-                stylesheet = StylesheetDefault()
-
         # Create main page if logged
-        page = webpage.passwordpage.PasswordPage.login(request, response, 15*60)
-
-        if b&#34;logout&#34; in request.params and page is None:
-                content = None
-
+        page = get_login_page(request, response)
         if page is None:
+                if b&#34;logout&#34; in request.params and page is None:
+                        content = None
+                try:
+                        title  = args[&#34;title&#34;]
+                except:
+                        title = title_frame
+                try:
+                        active = args[&#34;index&#34;]
+                except:
+                        active = 0
                 if menu_visible:
                         menu_items = []
                         menu_bar = []
@@ -75,14 +67,37 @@ def main_page(request, response, args, title_frame, content=None, menu_visible=T
                                 else:
                                         menu_items.append(menu_item)
                         menu_bar.append(Menu(menu_items, text=previous_menu))
-                        page_content = [stylesheet, MenuBar(menu_bar), Div(content)]
+                        page_content = [get_stylesheet(request), MenuBar(menu_bar), Div(content)]
                 else:
-                        page_content = [stylesheet, content]
+                        page_content = [get_stylesheet(request), content]
                 page = Page(page_content, class_=b&#34;container&#34;, title=title, style=b&#34;padding-top: 4.5rem;&#34;)
-        else:
-                page = Page([page] + [stylesheet], title=tools.lang.login)
         tools.tasking.Tasks.slow_down()
         return page
+
+@server.httpserver.HttpServer.set_login_checker()
+async def is_logged(request, response, duration=15*60):
+        &#34;&#34;&#34; Check login session &#34;&#34;&#34;
+        page = get_login_page(request, response, duration)
+        if page is not None:
+                await response.send_page(page)
+                return False
+        return True
+
+def get_login_page(request, response, duration=0):
+        &#34;&#34;&#34; Return the login page if session expired or return None &#34;&#34;&#34;
+        page = webpage.passwordpage.PasswordPage.login(request, response, duration)
+        if page is not None:
+                page = Page([page] + [get_stylesheet(request)], title=tools.lang.login)
+        return page
+
+def get_stylesheet(request):
+        &#34;&#34;&#34; Get the default stylesheet &#34;&#34;&#34;
+        # On wifi station, the external style cheet is added
+        if wifi.station.Station.is_ip_on_interface(request.remoteaddr):
+                stylesheet = Stylesheet()
+        else:
+                stylesheet = StylesheetDefault()
+        return stylesheet
 
 def main_frame(request, response, args, title_frame, *content):
         &#34;&#34;&#34; Function define the main frame into the main page with menu, it check also the login password &#34;&#34;&#34;
@@ -119,6 +134,42 @@ def manage_default_button(request, config, callback=None, onclick=b&#34;&#34;):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="lib.webpage.mainpage.get_login_page"><code class="name flex">
+<span>def <span class="ident">get_login_page</span></span>(<span>request, response, duration=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the login page if session expired or return None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_login_page(request, response, duration=0):
+        &#34;&#34;&#34; Return the login page if session expired or return None &#34;&#34;&#34;
+        page = webpage.passwordpage.PasswordPage.login(request, response, duration)
+        if page is not None:
+                page = Page([page] + [get_stylesheet(request)], title=tools.lang.login)
+        return page</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.mainpage.get_stylesheet"><code class="name flex">
+<span>def <span class="ident">get_stylesheet</span></span>(<span>request)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the default stylesheet</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_stylesheet(request):
+        &#34;&#34;&#34; Get the default stylesheet &#34;&#34;&#34;
+        # On wifi station, the external style cheet is added
+        if wifi.station.Station.is_ip_on_interface(request.remoteaddr):
+                stylesheet = Stylesheet()
+        else:
+                stylesheet = StylesheetDefault()
+        return stylesheet</code></pre>
+</details>
+</dd>
 <dt id="lib.webpage.mainpage.main_frame"><code class="name flex">
 <span>def <span class="ident">main_frame</span></span>(<span>request, response, args, title_frame, *content)</span>
 </code></dt>
@@ -145,27 +196,19 @@ def manage_default_button(request, config, callback=None, onclick=b&#34;&#34;):
 </summary>
 <pre><code class="python">def main_page(request, response, args, title_frame, content=None, menu_visible=True):
         &#34;&#34;&#34; Function define the main web page with menu, it check also the login password &#34;&#34;&#34;
-        try:
-                title  = args[&#34;title&#34;]
-        except:
-                title = title_frame
-        try:
-                active = args[&#34;index&#34;]
-        except:
-                active = 0
-        # On wifi station, the external style cheet is added
-        if wifi.station.Station.is_ip_on_interface(request.remoteaddr):
-                stylesheet = Stylesheet()
-        else:
-                stylesheet = StylesheetDefault()
-
         # Create main page if logged
-        page = webpage.passwordpage.PasswordPage.login(request, response, 15*60)
-
-        if b&#34;logout&#34; in request.params and page is None:
-                content = None
-
+        page = get_login_page(request, response)
         if page is None:
+                if b&#34;logout&#34; in request.params and page is None:
+                        content = None
+                try:
+                        title  = args[&#34;title&#34;]
+                except:
+                        title = title_frame
+                try:
+                        active = args[&#34;index&#34;]
+                except:
+                        active = 0
                 if menu_visible:
                         menu_items = []
                         menu_bar = []
@@ -181,12 +224,10 @@ def manage_default_button(request, config, callback=None, onclick=b&#34;&#34;):
                                 else:
                                         menu_items.append(menu_item)
                         menu_bar.append(Menu(menu_items, text=previous_menu))
-                        page_content = [stylesheet, MenuBar(menu_bar), Div(content)]
+                        page_content = [get_stylesheet(request), MenuBar(menu_bar), Div(content)]
                 else:
-                        page_content = [stylesheet, content]
+                        page_content = [get_stylesheet(request), content]
                 page = Page(page_content, class_=b&#34;container&#34;, title=title, style=b&#34;padding-top: 4.5rem;&#34;)
-        else:
-                page = Page([page] + [stylesheet], title=tools.lang.login)
         tools.tasking.Tasks.slow_down()
         return page</code></pre>
 </details>
@@ -241,6 +282,8 @@ def manage_default_button(request, config, callback=None, onclick=b&#34;&#34;):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="lib.webpage.mainpage.get_login_page" href="#lib.webpage.mainpage.get_login_page">get_login_page</a></code></li>
+<li><code><a title="lib.webpage.mainpage.get_stylesheet" href="#lib.webpage.mainpage.get_stylesheet">get_stylesheet</a></code></li>
 <li><code><a title="lib.webpage.mainpage.main_frame" href="#lib.webpage.mainpage.main_frame">main_frame</a></code></li>
 <li><code><a title="lib.webpage.mainpage.main_page" href="#lib.webpage.mainpage.main_page">main_page</a></code></li>
 <li><code><a title="lib.webpage.mainpage.manage_default_button" href="#lib.webpage.mainpage.manage_default_button">manage_default_button</a></code></li>

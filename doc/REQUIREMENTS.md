@@ -19,6 +19,6 @@ Below are the devices compatible with pycameresp :
 
 ![NODEMCU](/images/Device_NODEMCU.jpg "NODE MCU")
 ![LOLIN32](/images/Device_LOLIN32.jpg "LOLIN32")
-![PicoPi](/images/Device_PicoPi.png "Pico PI and Pico PI W")
+![PicoPi](/images/Device_PicoPi.png "Pico PI W")
 ![SONOFF R3](/images/Device_SonoffR3.png "SONOFF R3")
 

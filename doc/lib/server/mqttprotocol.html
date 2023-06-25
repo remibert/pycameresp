@@ -103,7 +103,7 @@ class MqttProtocol:
                                 result = True
                         except Exception as err:
                                 if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
-                                        tools.logger.syslog(&#34;Mqtt cannot send message&#34;)
+                                        tools.logger.syslog(&#34;Mqtt client cannot send message&#34;)
                                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
                 return result
 
@@ -308,7 +308,7 @@ class MqttStateMachine:
                                         await MqttProtocol.send(publication)
                                         publication.dup = 1
                         MqttProtocol.context.state = MqttStateMachine.STATE_ESTABLISH
-                        tools.logger.syslog(&#34;Mqtt established (client_id=&#39;%s&#39;)&#34;%MqttProtocol.context.kwargs.get(&#34;client_id&#34;,&#34;&#34;))
+                        tools.logger.syslog(&#34;Mqtt client established (client_id=&#39;%s&#39;)&#34;%MqttProtocol.context.kwargs.get(&#34;client_id&#34;,&#34;&#34;))
                         MqttProtocol.context.last_establish  = tools.strings.ticks()//1000
                 except Exception as err:
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
@@ -341,12 +341,13 @@ class MqttStateMachine:
                                         # Call callback
                                         await callback(message, **kwargs)
                                 else:
-                                        tools.logger.syslog(&#34;Mqtt callback not found for message=%d&#34;%message.control)
+                                        tools.logger.syslog(&#34;Mqtt client callback not found for message=%d&#34;%message.control)
                         else:
                                 if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
-                                        tools.logger.syslog(&#34;Mqtt lost connection&#34;)
+                                        tools.logger.syslog(&#34;Mqtt client lost connection&#34;)
                                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
                 except Exception as err:
+                        tools.logger.syslog(err)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
         @staticmethod
@@ -380,7 +381,7 @@ class MqttStateMachine:
                 mins    = (down/60)%60
                 hours   = (down/3600)%24
                 days    = (down/86400)
-                tools.logger.syslog(&#34;Mqtt not connected since %d days, %d:%02d:%02d&#34;%(days,hours,mins,seconds))
+                tools.logger.syslog(&#34;Mqtt client not connected since %d days, %d:%02d:%02d&#34;%(days,hours,mins,seconds))
                 await uasyncio.sleep(polling)
                 MqttProtocol.context.state = MqttStateMachine.STATE_OPEN
 
@@ -390,13 +391,13 @@ class MqttStateMachine:
                 &#34;&#34;&#34; Conn ack treatment &#34;&#34;&#34;
                 if MqttProtocol.context.state == MqttStateMachine.STATE_CONNACK:
                         if message.return_code == 0:
-                                tools.logger.syslog(&#34;Mqtt connected&#34;)
+                                tools.logger.syslog(&#34;Mqtt client connected&#34;)
                                 MqttProtocol.context.state = MqttStateMachine.STATE_ACCEPTED
                         else:
-                                tools.logger.syslog(&#34;Mqtt connection refused %d&#34;%message.return_code)
+                                tools.logger.syslog(&#34;Mqtt client connection refused %d&#34;%message.return_code)
                                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
                 else:
-                        tools.logger.syslog(&#34;Mqtt unexpected connack&#34;)
+                        tools.logger.syslog(&#34;Mqtt client unexpected connack&#34;)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
         @staticmethod
@@ -406,7 +407,7 @@ class MqttStateMachine:
                 if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
                         await MqttProtocol.send(server.mqttmessages.MqttPingResp())
                 else:
-                        tools.logger.syslog(&#34;Mqtt unexpected pingreq&#34;)
+                        tools.logger.syslog(&#34;Mqtt client unexpected pingreq&#34;)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
         @staticmethod
@@ -414,7 +415,7 @@ class MqttStateMachine:
         async def on_ping_rsp(message, **kwargs):
                 &#34;&#34;&#34; Ping response received &#34;&#34;&#34;
                 if MqttProtocol.context.state != MqttStateMachine.STATE_ESTABLISH:
-                        tools.logger.syslog(&#34;Mqtt unexpected pingres&#34;)
+                        tools.logger.syslog(&#34;Mqtt client unexpected pingres&#34;)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
         @staticmethod
@@ -422,7 +423,7 @@ class MqttStateMachine:
         async def on_sub_ack(message, **kwargs):
                 &#34;&#34;&#34; Subcribe acknowledge &#34;&#34;&#34;
                 if message.return_code[0] == server.mqttmessages.MQTT_SUBACK_FAILURE:
-                        tools.logger.syslog(&#34;Mqtt subscribe failed&#34;)
+                        tools.logger.syslog(&#34;Mqtt client subscribe failed&#34;)
 
         @staticmethod
         @MqttProtocol.add_control(server.mqttmessages.MQTT_PUBACK)
@@ -586,7 +587,7 @@ class MqttStateMachine:
                                 result = True
                         except Exception as err:
                                 if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
-                                        tools.logger.syslog(&#34;Mqtt cannot send message&#34;)
+                                        tools.logger.syslog(&#34;Mqtt client cannot send message&#34;)
                                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
                 return result
 
@@ -993,7 +994,7 @@ async def send(message):
                         result = True
                 except Exception as err:
                         if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
-                                tools.logger.syslog(&#34;Mqtt cannot send message&#34;)
+                                tools.logger.syslog(&#34;Mqtt client cannot send message&#34;)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
         return result</code></pre>
 </details>
@@ -1126,7 +1127,7 @@ async def unsubscribe(**kwargs):
                                         await MqttProtocol.send(publication)
                                         publication.dup = 1
                         MqttProtocol.context.state = MqttStateMachine.STATE_ESTABLISH
-                        tools.logger.syslog(&#34;Mqtt established (client_id=&#39;%s&#39;)&#34;%MqttProtocol.context.kwargs.get(&#34;client_id&#34;,&#34;&#34;))
+                        tools.logger.syslog(&#34;Mqtt client established (client_id=&#39;%s&#39;)&#34;%MqttProtocol.context.kwargs.get(&#34;client_id&#34;,&#34;&#34;))
                         MqttProtocol.context.last_establish  = tools.strings.ticks()//1000
                 except Exception as err:
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
@@ -1159,12 +1160,13 @@ async def unsubscribe(**kwargs):
                                         # Call callback
                                         await callback(message, **kwargs)
                                 else:
-                                        tools.logger.syslog(&#34;Mqtt callback not found for message=%d&#34;%message.control)
+                                        tools.logger.syslog(&#34;Mqtt client callback not found for message=%d&#34;%message.control)
                         else:
                                 if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
-                                        tools.logger.syslog(&#34;Mqtt lost connection&#34;)
+                                        tools.logger.syslog(&#34;Mqtt client lost connection&#34;)
                                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
                 except Exception as err:
+                        tools.logger.syslog(err)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
         @staticmethod
@@ -1198,7 +1200,7 @@ async def unsubscribe(**kwargs):
                 mins    = (down/60)%60
                 hours   = (down/3600)%24
                 days    = (down/86400)
-                tools.logger.syslog(&#34;Mqtt not connected since %d days, %d:%02d:%02d&#34;%(days,hours,mins,seconds))
+                tools.logger.syslog(&#34;Mqtt client not connected since %d days, %d:%02d:%02d&#34;%(days,hours,mins,seconds))
                 await uasyncio.sleep(polling)
                 MqttProtocol.context.state = MqttStateMachine.STATE_OPEN
 
@@ -1208,13 +1210,13 @@ async def unsubscribe(**kwargs):
                 &#34;&#34;&#34; Conn ack treatment &#34;&#34;&#34;
                 if MqttProtocol.context.state == MqttStateMachine.STATE_CONNACK:
                         if message.return_code == 0:
-                                tools.logger.syslog(&#34;Mqtt connected&#34;)
+                                tools.logger.syslog(&#34;Mqtt client connected&#34;)
                                 MqttProtocol.context.state = MqttStateMachine.STATE_ACCEPTED
                         else:
-                                tools.logger.syslog(&#34;Mqtt connection refused %d&#34;%message.return_code)
+                                tools.logger.syslog(&#34;Mqtt client connection refused %d&#34;%message.return_code)
                                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
                 else:
-                        tools.logger.syslog(&#34;Mqtt unexpected connack&#34;)
+                        tools.logger.syslog(&#34;Mqtt client unexpected connack&#34;)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
         @staticmethod
@@ -1224,7 +1226,7 @@ async def unsubscribe(**kwargs):
                 if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
                         await MqttProtocol.send(server.mqttmessages.MqttPingResp())
                 else:
-                        tools.logger.syslog(&#34;Mqtt unexpected pingreq&#34;)
+                        tools.logger.syslog(&#34;Mqtt client unexpected pingreq&#34;)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
         @staticmethod
@@ -1232,7 +1234,7 @@ async def unsubscribe(**kwargs):
         async def on_ping_rsp(message, **kwargs):
                 &#34;&#34;&#34; Ping response received &#34;&#34;&#34;
                 if MqttProtocol.context.state != MqttStateMachine.STATE_ESTABLISH:
-                        tools.logger.syslog(&#34;Mqtt unexpected pingres&#34;)
+                        tools.logger.syslog(&#34;Mqtt client unexpected pingres&#34;)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
 
         @staticmethod
@@ -1240,7 +1242,7 @@ async def unsubscribe(**kwargs):
         async def on_sub_ack(message, **kwargs):
                 &#34;&#34;&#34; Subcribe acknowledge &#34;&#34;&#34;
                 if message.return_code[0] == server.mqttmessages.MQTT_SUBACK_FAILURE:
-                        tools.logger.syslog(&#34;Mqtt subscribe failed&#34;)
+                        tools.logger.syslog(&#34;Mqtt client subscribe failed&#34;)
 
         @staticmethod
         @MqttProtocol.add_control(server.mqttmessages.MQTT_PUBACK)
@@ -1375,13 +1377,13 @@ async def on_conn_ack(message, **kwargs):
         &#34;&#34;&#34; Conn ack treatment &#34;&#34;&#34;
         if MqttProtocol.context.state == MqttStateMachine.STATE_CONNACK:
                 if message.return_code == 0:
-                        tools.logger.syslog(&#34;Mqtt connected&#34;)
+                        tools.logger.syslog(&#34;Mqtt client connected&#34;)
                         MqttProtocol.context.state = MqttStateMachine.STATE_ACCEPTED
                 else:
-                        tools.logger.syslog(&#34;Mqtt connection refused %d&#34;%message.return_code)
+                        tools.logger.syslog(&#34;Mqtt client connection refused %d&#34;%message.return_code)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
         else:
-                tools.logger.syslog(&#34;Mqtt unexpected connack&#34;)
+                tools.logger.syslog(&#34;Mqtt client unexpected connack&#34;)
                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE</code></pre>
 </details>
 </dd>
@@ -1417,7 +1419,7 @@ async def on_ping_req(message, **kwargs):
         if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
                 await MqttProtocol.send(server.mqttmessages.MqttPingResp())
         else:
-                tools.logger.syslog(&#34;Mqtt unexpected pingreq&#34;)
+                tools.logger.syslog(&#34;Mqtt client unexpected pingreq&#34;)
                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE</code></pre>
 </details>
 </dd>
@@ -1435,7 +1437,7 @@ async def on_ping_req(message, **kwargs):
 async def on_ping_rsp(message, **kwargs):
         &#34;&#34;&#34; Ping response received &#34;&#34;&#34;
         if MqttProtocol.context.state != MqttStateMachine.STATE_ESTABLISH:
-                tools.logger.syslog(&#34;Mqtt unexpected pingres&#34;)
+                tools.logger.syslog(&#34;Mqtt client unexpected pingres&#34;)
                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE</code></pre>
 </details>
 </dd>
@@ -1544,7 +1546,7 @@ async def on_publish(message, **kwargs):
 async def on_sub_ack(message, **kwargs):
         &#34;&#34;&#34; Subcribe acknowledge &#34;&#34;&#34;
         if message.return_code[0] == server.mqttmessages.MQTT_SUBACK_FAILURE:
-                tools.logger.syslog(&#34;Mqtt subscribe failed&#34;)</code></pre>
+                tools.logger.syslog(&#34;Mqtt client subscribe failed&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.mqttprotocol.MqttStateMachine.on_unsub_ack"><code class="name flex">
@@ -1585,7 +1587,7 @@ async def state_accepted():
                                 await MqttProtocol.send(publication)
                                 publication.dup = 1
                 MqttProtocol.context.state = MqttStateMachine.STATE_ESTABLISH
-                tools.logger.syslog(&#34;Mqtt established (client_id=&#39;%s&#39;)&#34;%MqttProtocol.context.kwargs.get(&#34;client_id&#34;,&#34;&#34;))
+                tools.logger.syslog(&#34;Mqtt client established (client_id=&#39;%s&#39;)&#34;%MqttProtocol.context.kwargs.get(&#34;client_id&#34;,&#34;&#34;))
                 MqttProtocol.context.last_establish  = tools.strings.ticks()//1000
         except Exception as err:
                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE</code></pre>
@@ -1716,12 +1718,13 @@ async def state_receive():
                                 # Call callback
                                 await callback(message, **kwargs)
                         else:
-                                tools.logger.syslog(&#34;Mqtt callback not found for message=%d&#34;%message.control)
+                                tools.logger.syslog(&#34;Mqtt client callback not found for message=%d&#34;%message.control)
                 else:
                         if MqttProtocol.context.state == MqttStateMachine.STATE_ESTABLISH:
-                                tools.logger.syslog(&#34;Mqtt lost connection&#34;)
+                                tools.logger.syslog(&#34;Mqtt client lost connection&#34;)
                         MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE
         except Exception as err:
+                tools.logger.syslog(err)
                 MqttProtocol.context.state = MqttStateMachine.STATE_CLOSE</code></pre>
 </details>
 </dd>
@@ -1754,7 +1757,7 @@ async def state_wait():
         mins    = (down/60)%60
         hours   = (down/3600)%24
         days    = (down/86400)
-        tools.logger.syslog(&#34;Mqtt not connected since %d days, %d:%02d:%02d&#34;%(days,hours,mins,seconds))
+        tools.logger.syslog(&#34;Mqtt client not connected since %d days, %d:%02d:%02d&#34;%(days,hours,mins,seconds))
         await uasyncio.sleep(polling)
         MqttProtocol.context.state = MqttStateMachine.STATE_OPEN</code></pre>
 </details>

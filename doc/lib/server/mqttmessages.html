@@ -87,6 +87,7 @@ class MqttMessage:
                         retain     : retain message (0 or 1)
                         dup        : duplicate delivery control payload (0 or 1)
                         identifier : packet identifier (1 to 65535)&#34;&#34;&#34;
+                self.received = False
                 if kwargs.get(&#34;header&#34;,None) is None:
                         self.control    = kwargs.get(&#34;control&#34;   ,MQTT_UNDEFINED)
                         self.qos        = kwargs.get(&#34;qos&#34;       ,MQTT_QOS_ONCE)
@@ -140,6 +141,7 @@ class MqttMessage:
 
         def decode_header(self, data):
                 &#34;&#34;&#34; Decode header &#34;&#34;&#34;
+                self.received = True
                 self.header = data
                 self.control = (data[0] &gt;&gt; 4)
                 self.qos     = (data[0] &gt;&gt; 1) &amp; 3
@@ -203,6 +205,13 @@ class MqttMessage:
 
         async def write(self, streamio):
                 &#34;&#34;&#34; Write message &#34;&#34;&#34;
+                # If forward message detected
+                if self.received is True:
+                        # Clear the content of data received
+                        self.buffer.seek(0)
+                        self.buffer.truncate()
+                        self.payload.seek(0)
+                        self.payload.truncate()
                 self.sent_time = tools.strings.ticks()
                 self.buffer.write(self.encode_header())
                 self.encode()
@@ -484,8 +493,11 @@ class MqttSubAck(MqttMessage):
         def encode(self):
                 &#34;&#34;&#34; Encode payload &#34;&#34;&#34;
                 self.put_int(self.identifier)
-                for return_code in self.return_code:
-                        self.put_byte(return_code)
+                if type(self.return_code) == type([]):
+                        for return_code in self.return_code:
+                                self.put_byte(return_code)
+                else:
+                        self.put_byte(self.return_code)
 
 class MqttUnsubscribe(MqttMessage):
         &#34;&#34;&#34; Client to Server : Unsubscribe request &#34;&#34;&#34;
@@ -977,6 +989,7 @@ identifier : packet identifier (1 to 65535)</p></div>
                         retain     : retain message (0 or 1)
                         dup        : duplicate delivery control payload (0 or 1)
                         identifier : packet identifier (1 to 65535)&#34;&#34;&#34;
+                self.received = False
                 if kwargs.get(&#34;header&#34;,None) is None:
                         self.control    = kwargs.get(&#34;control&#34;   ,MQTT_UNDEFINED)
                         self.qos        = kwargs.get(&#34;qos&#34;       ,MQTT_QOS_ONCE)
@@ -1030,6 +1043,7 @@ identifier : packet identifier (1 to 65535)</p></div>
 
         def decode_header(self, data):
                 &#34;&#34;&#34; Decode header &#34;&#34;&#34;
+                self.received = True
                 self.header = data
                 self.control = (data[0] &gt;&gt; 4)
                 self.qos     = (data[0] &gt;&gt; 1) &amp; 3
@@ -1093,6 +1107,13 @@ identifier : packet identifier (1 to 65535)</p></div>
 
         async def write(self, streamio):
                 &#34;&#34;&#34; Write message &#34;&#34;&#34;
+                # If forward message detected
+                if self.received is True:
+                        # Clear the content of data received
+                        self.buffer.seek(0)
+                        self.buffer.truncate()
+                        self.payload.seek(0)
+                        self.payload.truncate()
                 self.sent_time = tools.strings.ticks()
                 self.buffer.write(self.encode_header())
                 self.encode()
@@ -1259,6 +1280,7 @@ async def receive(streamio):
 </summary>
 <pre><code class="python">def decode_header(self, data):
         &#34;&#34;&#34; Decode header &#34;&#34;&#34;
+        self.received = True
         self.header = data
         self.control = (data[0] &gt;&gt; 4)
         self.qos     = (data[0] &gt;&gt; 1) &amp; 3
@@ -1482,6 +1504,13 @@ async def receive(streamio):
 </summary>
 <pre><code class="python">async def write(self, streamio):
         &#34;&#34;&#34; Write message &#34;&#34;&#34;
+        # If forward message detected
+        if self.received is True:
+                # Clear the content of data received
+                self.buffer.seek(0)
+                self.buffer.truncate()
+                self.payload.seek(0)
+                self.payload.truncate()
         self.sent_time = tools.strings.ticks()
         self.buffer.write(self.encode_header())
         self.encode()
@@ -2200,8 +2229,11 @@ value : topic value</p></div>
         def encode(self):
                 &#34;&#34;&#34; Encode payload &#34;&#34;&#34;
                 self.put_int(self.identifier)
-                for return_code in self.return_code:
-                        self.put_byte(return_code)</code></pre>
+                if type(self.return_code) == type([]):
+                        for return_code in self.return_code:
+                                self.put_byte(return_code)
+                else:
+                        self.put_byte(self.return_code)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -2238,8 +2270,11 @@ value : topic value</p></div>
 <pre><code class="python">def encode(self):
         &#34;&#34;&#34; Encode payload &#34;&#34;&#34;
         self.put_int(self.identifier)
-        for return_code in self.return_code:
-                self.put_byte(return_code)</code></pre>
+        if type(self.return_code) == type([]):
+                for return_code in self.return_code:
+                        self.put_byte(return_code)
+        else:
+                self.put_byte(self.return_code)</code></pre>
 </details>
 </dd>
 </dl>

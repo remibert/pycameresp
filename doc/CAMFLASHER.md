@@ -18,29 +18,29 @@ Camflasher with shell commands **upload** and **download**, allows to upload or 
 
 - Download the firmware associated with your device :
 
-	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V17/ESP32CAM-firmware.bin)
+	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V18/ESP32CAM-firmware.bin)
 
-	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V17/GENERIC_SPIRAM-firmware.bin)
+	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V18/GENERIC_SPIRAM-firmware.bin)
 
 
 - Or download the zip for standard micropython firmware :
 
-	- [Shell with editor](https://github.com/remibert/pycameresp/releases/download/V17/shell.zip)
+	- [Shell with editor](https://github.com/remibert/pycameresp/releases/download/V18/shell.zip)
 
-	- [Wifi manager, Http server](https://github.com/remibert/pycameresp/releases/download/V17/server.zip)
+	- [Wifi manager, Http server](https://github.com/remibert/pycameresp/releases/download/V18/server.zip)
 
 - Text editor source files running on python3 and micropython :
 
-	- [Text editor](https://github.com/remibert/pycameresp/releases/download/V17/editor.zip)
+	- [Text editor](https://github.com/remibert/pycameresp/releases/download/V18/editor.zip)
 
 It is possible to run the shell with editor, or the servers on a standard micropython platform. The servers, the wifi manager, requires having enough ram and wifi support (ESP32 with SPIRAM for example). Unzip archive and install it with rshell.
 
 - Download the camflasher application and unzip it :
-	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V17/CamFlasher_windows_10_64.zip)
+	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V18/CamFlasher_windows_10_64.zip)
 
-	- [CamFlasher for OSX Ventura Intel](https://github.com/remibert/pycameresp/releases/download/V17/CamFlasher_osx_i386.zip)
+	- [CamFlasher for OSX Ventura Intel](https://github.com/remibert/pycameresp/releases/download/V18/CamFlasher_osx_i386.zip)
 
-	- [CamFlasher for OSX Ventura M1](https://github.com/remibert/pycameresp/releases/download/V17/CamFlasher_osx_arm.zip)
+	- [CamFlasher for OSX Ventura M1](https://github.com/remibert/pycameresp/releases/download/V18/CamFlasher_osx_arm.zip)
 
 - Connect the device to the USB port of your computer.
 
@@ -366,7 +366,7 @@ You must go to the shell prompt or the python prompt.
 
 ![Upload shell server](/images/16_CamFlasher_UploadShell.png "Upload shell or server")
 
-If you select **Upload shell**, it will only download the shell and the text editor. This case works perfectly on a Pico PI RP02 as well as all esp32.
+If you select **Upload shell**, it will only download the shell and the text editor. This case works perfectly on a Pico PI W RP02 as well as all esp32.
 
 If you select **Upload server**, you will also have the web server, ftp, wifimanager. **This download overwrites the main.py, so if you have modified it, you will have to save it first.**
 

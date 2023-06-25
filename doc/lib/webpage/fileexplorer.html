@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>lib.webpage.fileexplorer API documentation</title>
+<meta name="description" content="Function define the web page to view recent motion detection" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.webpage.fileexplorer</code></h1>
+</header>
+<section id="section-intro">
+<p>Function define the web page to view recent motion detection</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
+&#34;&#34;&#34; Function define the web page to view recent motion detection &#34;&#34;&#34;
+# pylint:disable=anomalous-unicode-escape-in-string
+import io
+import os
+import server.httpserver
+import server.httprequest
+from htmltemplate          import *
+import webpage.mainpage
+import webpage.streamingpage
+
+FOLDER_ICON   = b&#34;\xF0\x9F\x93\x81&#34;
+TEXT_ICON     = b&#34;\xf0\x9f\x93\x84&#34;
+IMAGE_ICON    = b&#34;\xF0\x9F\x96\xBC&#34;
+TRASH_ICON    = b&#34;\xF0\x9F\x97\x91&#34;
+BIN_ICON      = b&#34;\xF0\x9F\x93\xA6&#34;
+DOWNLOAD_ICON = b&#34;\xF0\x9F\x93\xA4&#34;
+UPLOAD_ICON   = b&#34;\xF0\x9F\x93\xA5&#34;
+FILE_EXPLORER = b&#34;/file_explorer&#34;
+
+def create_file_item(path=&#34;&#34;, filepath=&#34;&#34;, directory=False):
+        &#34;&#34;&#34; Create file line with icon, name, size and date &#34;&#34;&#34;
+        if directory:
+                icon = FOLDER_ICON
+                url  = b&#34;%s?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(filepath))
+        else:
+                ext = tools.strings.tobytes(tools.filesystem.splitext(filepath)[1]).lower()
+                mime = server.httprequest.MIMES.get(ext, b&#34;binary&#34;)
+
+                if b&#34;image/&#34; in mime:
+                        icon = IMAGE_ICON
+                        url  = b&#34;%s/image_file?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(filepath))
+                elif b&#34;text/&#34; in mime or mime in [b&#34;application/javascript&#34;, b&#34;application/xml&#34;, b&#34;application/xhtml+xml&#34;, b&#34;application/json&#34;, b&#34;application/typescript&#34;,]:
+                        icon = TEXT_ICON
+                        url  = b&#34;%s/text_file?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(filepath))
+                else:
+                        icon = BIN_ICON
+                        url  = b&#34;%s/bin_file?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(filepath))
+
+        if filepath==&#34;..&#34;:
+                icon = FOLDER_ICON
+                url  = b&#34;%s?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(tools.filesystem.split(path)[0]))
+
+
+        url   = b&#34;location.href=&#39;%s&#39;&#34;%url
+        style = b&#34;font-family: monospace;cursor:pointer;white-space:nowrap;&#34;
+        name  = tools.strings.tobytes(tools.filesystem.split(filepath)[1])
+
+        if directory:
+                size = b&#34;&#34;
+                date = b&#34;&#34;
+                download = b&#34;&#34;
+        else:
+                size = tools.strings.size_to_bytes(tools.filesystem.filesize(filepath))
+                size = size.replace(b&#34; &#34;,b&#34;&amp;nbsp;&#34;)
+                date = tools.date.date_to_bytes(tools.filesystem.filetime(filepath))
+                download = Download(text=DOWNLOAD_ICON, path=FILE_EXPLORER+b&#34;/download?path=%s&#34;%tools.strings.tobytes(filepath), filename=tools.strings.tobytes(name))
+
+        return Tr([
+                        Td(text=icon, onclick=url, style=style, width=b&#34;1&#34;),
+                        Td(text=name, onclick=url, style=style,           ),
+                        Td(text=size, onclick=url, style=style, width=b&#34;1&#34;),
+                        Td(text=date, onclick=url, style=style, width=b&#34;1&#34;),
+                        Td(download, width=b&#34;1&#34;),
+                        ])
+
+def get_root_link(filepath):
+        &#34;&#34;&#34; Get &#34;&#34;&#34;
+        directories = []
+        p = filepath
+        not_link = False
+
+        while True:
+                p, directory = tools.filesystem.split(filepath)
+                if directory == &#34;&#34;:
+                        break
+                else:
+                        if not_link is False:
+                                directories.insert(0, Span(text=tools.strings.tobytes(directory)))
+                                not_link = True
+                        else:
+                                directories.insert(0, Link(text=tools.strings.tobytes(directory), href=FILE_EXPLORER+b&#34;?path=%s&#34;%(tools.strings.tobytes(filepath))
+                                , class_=b&#34;border&#34;, style=b&#34;padding: 0.25rem;&#34;))
+                        directories.insert(0,Span(text=b&#34;/&#34;))
+                filepath = p
+
+        directories = directories[1:]
+        directories.insert(0, Link(text=b&#34;/&#34;, href=FILE_EXPLORER+b&#34;?path=/&#34;, class_=b&#34;border&#34;, style=b&#34;padding: 0.25rem;&#34;))
+        return directories
+
+def list_files(path):
+        &#34;&#34;&#34; List files &#34;&#34;&#34;
+        directories, filenames = tools.filesystem.scandir(path, &#34;*&#34;, False)
+        content = []
+        directories.sort()
+
+        if path != &#34;/&#34;:
+                directories.insert(0, &#34;..&#34;)
+
+        for directory in directories:
+                content.append(create_file_item(path, directory, True))
+
+        filenames.sort()
+        for filename in filenames:
+                content.append(create_file_item(path, filename, False))
+        return Table(content)
+
+def get_text_file(filename):
+        &#34;&#34;&#34; Get text file &#34;&#34;&#34;
+        try:
+                result = b&#39;&lt;code class=&#34;text-secondary&#34;&gt;&#39;
+                # pylint:disable=unspecified-encoding
+                with open(filename, &#34;rb&#34;) as file:
+                        while True:
+                                line = file.readline()
+                                if len(line) == 0:
+                                        break
+                                line = line.replace(b&#34; &#34;,b&#34;&amp;nbsp;&#34;)
+                                line = line.replace(b&#34;\t&#34;,b&#34;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;)
+                                line = line.replace(b&#34;&gt;&#34;,b&#34;&amp;gt;&#34;)
+                                line = line.replace(b&#34;&lt;&#34;,b&#34;&amp;lt;&#34;)
+                                result += line.rstrip() + b&#34;&lt;br&gt;&#34;
+                return result + b&#34;&lt;/code&gt;&#34;
+        except:
+                return Span(text=tools.lang.failed_to_load)
+
+def get_bin_file(filename):
+        &#34;&#34;&#34; Dump binary file &#34;&#34;&#34;
+        try:
+                out = io.BytesIO()
+                out.write(b&#39;&lt;code class=&#34;text-secondary&#34;&gt;&#39;)
+                with open(filename, &#34;rb&#34;) as file:
+                        width = 16
+                        offset = 0
+                        while True:
+                                data = file.read(width)
+                                if len(data) == 0:
+                                        break
+                                out.write(b&#39;%08X&amp;nbsp;&amp;nbsp;&#39; % offset)
+                                tools.strings.dump_line(data, out, width, b&#34;&amp;nbsp;&#34;)
+                                offset += width
+                                out.write(b&#34;&lt;br&gt;&#34;)
+                out.write(b&#34;&lt;/code&gt;&#34;)
+                return out.getvalue()
+        except:
+                return Span(text=tools.lang.failed_to_load)
+
+@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;/download&#39;)
+async def download_file_browser(request, response, args):
+        &#34;&#34;&#34; Download file &#34;&#34;&#34;
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, b&#34;&#34;))
+        tools.tasking.Tasks.slow_down()
+        await response.send_file(path, headers=request.headers)
+
+@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;/text_file&#39;)
+async def text_file_page(request, response, args):
+        &#34;&#34;&#34; Display text file page &#34;&#34;&#34;
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, b&#34;&#34;))
+        filename = tools.filesystem.split(path)[1]
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.item_explorer,
+        [
+                get_root_link(path), Span(b&#34;&amp;nbsp;&#34;), Download(text=DOWNLOAD_ICON, path=FILE_EXPLORER+b&#34;/download?path=%s&#34;%tools.strings.tobytes(path), filename=tools.strings.tobytes(filename)),
+                Br(), Br(),
+                get_text_file(path)
+        ])
+        await response.send_page(page)
+
+@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;/bin_file&#39;)
+async def bin_file_page(request, response, args):
+        &#34;&#34;&#34; Display binary file page &#34;&#34;&#34;
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, b&#34;&#34;))
+        filename = tools.filesystem.split(path)[1]
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.item_explorer,
+        [
+                get_root_link(path), Span(b&#34;&amp;nbsp;&#34;), Download(text=DOWNLOAD_ICON, path=FILE_EXPLORER+b&#34;/download?path=%s&#34;%tools.strings.tobytes(path), filename=tools.strings.tobytes(filename)),
+                Br(), Br(),
+                get_bin_file(path)
+        ])
+        await response.send_page(page)
+
+@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;/image_file&#39;)
+async def image_file_page(request, response, args):
+        &#34;&#34;&#34; Display image file page &#34;&#34;&#34;
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, b&#34;&#34;))
+        filename = tools.filesystem.split(path)[1]
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.item_explorer,
+        [
+                get_root_link(path), Span(b&#34;&amp;nbsp;&#34;), Download(text=DOWNLOAD_ICON, path=FILE_EXPLORER+b&#34;/download?path=%s&#34;%tools.strings.tobytes(path), filename=tools.strings.tobytes(filename)),
+                Br(), Br(),
+                Image(src=FILE_EXPLORER+b&#39;/download?path=%s&#39;%tools.strings.tobytes(path), class_=b&#34;w-100&#34;)
+        ])
+        await response.send_page(page)
+
+@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;&#39;, menu=tools.lang.menu_system, item=tools.lang.item_explorer)
+async def file_explorer_page(request, response, args):
+        &#34;&#34;&#34; Display file explorer page &#34;&#34;&#34;
+        if tools.filesystem.ismicropython():
+                root = b&#34;/&#34;
+        else:
+                root = tools.strings.tobytes(os.getcwd())
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, root))
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.item_explorer,
+        [
+                get_root_link(path),Br(), Br(),
+                list_files(path)
+        ])
+        await response.send_page(page)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.webpage.fileexplorer.bin_file_page"><code class="name flex">
+<span>async def <span class="ident">bin_file_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Display binary file page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;/bin_file&#39;)
+async def bin_file_page(request, response, args):
+        &#34;&#34;&#34; Display binary file page &#34;&#34;&#34;
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, b&#34;&#34;))
+        filename = tools.filesystem.split(path)[1]
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.item_explorer,
+        [
+                get_root_link(path), Span(b&#34;&amp;nbsp;&#34;), Download(text=DOWNLOAD_ICON, path=FILE_EXPLORER+b&#34;/download?path=%s&#34;%tools.strings.tobytes(path), filename=tools.strings.tobytes(filename)),
+                Br(), Br(),
+                get_bin_file(path)
+        ])
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.fileexplorer.create_file_item"><code class="name flex">
+<span>def <span class="ident">create_file_item</span></span>(<span>path='', filepath='', directory=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create file line with icon, name, size and date</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_file_item(path=&#34;&#34;, filepath=&#34;&#34;, directory=False):
+        &#34;&#34;&#34; Create file line with icon, name, size and date &#34;&#34;&#34;
+        if directory:
+                icon = FOLDER_ICON
+                url  = b&#34;%s?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(filepath))
+        else:
+                ext = tools.strings.tobytes(tools.filesystem.splitext(filepath)[1]).lower()
+                mime = server.httprequest.MIMES.get(ext, b&#34;binary&#34;)
+
+                if b&#34;image/&#34; in mime:
+                        icon = IMAGE_ICON
+                        url  = b&#34;%s/image_file?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(filepath))
+                elif b&#34;text/&#34; in mime or mime in [b&#34;application/javascript&#34;, b&#34;application/xml&#34;, b&#34;application/xhtml+xml&#34;, b&#34;application/json&#34;, b&#34;application/typescript&#34;,]:
+                        icon = TEXT_ICON
+                        url  = b&#34;%s/text_file?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(filepath))
+                else:
+                        icon = BIN_ICON
+                        url  = b&#34;%s/bin_file?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(filepath))
+
+        if filepath==&#34;..&#34;:
+                icon = FOLDER_ICON
+                url  = b&#34;%s?path=%s&#34;%(FILE_EXPLORER,tools.strings.tobytes(tools.filesystem.split(path)[0]))
+
+
+        url   = b&#34;location.href=&#39;%s&#39;&#34;%url
+        style = b&#34;font-family: monospace;cursor:pointer;white-space:nowrap;&#34;
+        name  = tools.strings.tobytes(tools.filesystem.split(filepath)[1])
+
+        if directory:
+                size = b&#34;&#34;
+                date = b&#34;&#34;
+                download = b&#34;&#34;
+        else:
+                size = tools.strings.size_to_bytes(tools.filesystem.filesize(filepath))
+                size = size.replace(b&#34; &#34;,b&#34;&amp;nbsp;&#34;)
+                date = tools.date.date_to_bytes(tools.filesystem.filetime(filepath))
+                download = Download(text=DOWNLOAD_ICON, path=FILE_EXPLORER+b&#34;/download?path=%s&#34;%tools.strings.tobytes(filepath), filename=tools.strings.tobytes(name))
+
+        return Tr([
+                        Td(text=icon, onclick=url, style=style, width=b&#34;1&#34;),
+                        Td(text=name, onclick=url, style=style,           ),
+                        Td(text=size, onclick=url, style=style, width=b&#34;1&#34;),
+                        Td(text=date, onclick=url, style=style, width=b&#34;1&#34;),
+                        Td(download, width=b&#34;1&#34;),
+                        ])</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.fileexplorer.download_file_browser"><code class="name flex">
+<span>async def <span class="ident">download_file_browser</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Download file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;/download&#39;)
+async def download_file_browser(request, response, args):
+        &#34;&#34;&#34; Download file &#34;&#34;&#34;
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, b&#34;&#34;))
+        tools.tasking.Tasks.slow_down()
+        await response.send_file(path, headers=request.headers)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.fileexplorer.file_explorer_page"><code class="name flex">
+<span>async def <span class="ident">file_explorer_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Display file explorer page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;&#39;, menu=tools.lang.menu_system, item=tools.lang.item_explorer)
+async def file_explorer_page(request, response, args):
+        &#34;&#34;&#34; Display file explorer page &#34;&#34;&#34;
+        if tools.filesystem.ismicropython():
+                root = b&#34;/&#34;
+        else:
+                root = tools.strings.tobytes(os.getcwd())
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, root))
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.item_explorer,
+        [
+                get_root_link(path),Br(), Br(),
+                list_files(path)
+        ])
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.fileexplorer.get_bin_file"><code class="name flex">
+<span>def <span class="ident">get_bin_file</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Dump binary file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_bin_file(filename):
+        &#34;&#34;&#34; Dump binary file &#34;&#34;&#34;
+        try:
+                out = io.BytesIO()
+                out.write(b&#39;&lt;code class=&#34;text-secondary&#34;&gt;&#39;)
+                with open(filename, &#34;rb&#34;) as file:
+                        width = 16
+                        offset = 0
+                        while True:
+                                data = file.read(width)
+                                if len(data) == 0:
+                                        break
+                                out.write(b&#39;%08X&amp;nbsp;&amp;nbsp;&#39; % offset)
+                                tools.strings.dump_line(data, out, width, b&#34;&amp;nbsp;&#34;)
+                                offset += width
+                                out.write(b&#34;&lt;br&gt;&#34;)
+                out.write(b&#34;&lt;/code&gt;&#34;)
+                return out.getvalue()
+        except:
+                return Span(text=tools.lang.failed_to_load)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.fileexplorer.get_root_link"><code class="name flex">
+<span>def <span class="ident">get_root_link</span></span>(<span>filepath)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_root_link(filepath):
+        &#34;&#34;&#34; Get &#34;&#34;&#34;
+        directories = []
+        p = filepath
+        not_link = False
+
+        while True:
+                p, directory = tools.filesystem.split(filepath)
+                if directory == &#34;&#34;:
+                        break
+                else:
+                        if not_link is False:
+                                directories.insert(0, Span(text=tools.strings.tobytes(directory)))
+                                not_link = True
+                        else:
+                                directories.insert(0, Link(text=tools.strings.tobytes(directory), href=FILE_EXPLORER+b&#34;?path=%s&#34;%(tools.strings.tobytes(filepath))
+                                , class_=b&#34;border&#34;, style=b&#34;padding: 0.25rem;&#34;))
+                        directories.insert(0,Span(text=b&#34;/&#34;))
+                filepath = p
+
+        directories = directories[1:]
+        directories.insert(0, Link(text=b&#34;/&#34;, href=FILE_EXPLORER+b&#34;?path=/&#34;, class_=b&#34;border&#34;, style=b&#34;padding: 0.25rem;&#34;))
+        return directories</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.fileexplorer.get_text_file"><code class="name flex">
+<span>def <span class="ident">get_text_file</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get text file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_text_file(filename):
+        &#34;&#34;&#34; Get text file &#34;&#34;&#34;
+        try:
+                result = b&#39;&lt;code class=&#34;text-secondary&#34;&gt;&#39;
+                # pylint:disable=unspecified-encoding
+                with open(filename, &#34;rb&#34;) as file:
+                        while True:
+                                line = file.readline()
+                                if len(line) == 0:
+                                        break
+                                line = line.replace(b&#34; &#34;,b&#34;&amp;nbsp;&#34;)
+                                line = line.replace(b&#34;\t&#34;,b&#34;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&#34;)
+                                line = line.replace(b&#34;&gt;&#34;,b&#34;&amp;gt;&#34;)
+                                line = line.replace(b&#34;&lt;&#34;,b&#34;&amp;lt;&#34;)
+                                result += line.rstrip() + b&#34;&lt;br&gt;&#34;
+                return result + b&#34;&lt;/code&gt;&#34;
+        except:
+                return Span(text=tools.lang.failed_to_load)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.fileexplorer.image_file_page"><code class="name flex">
+<span>async def <span class="ident">image_file_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Display image file page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;/image_file&#39;)
+async def image_file_page(request, response, args):
+        &#34;&#34;&#34; Display image file page &#34;&#34;&#34;
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, b&#34;&#34;))
+        filename = tools.filesystem.split(path)[1]
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.item_explorer,
+        [
+                get_root_link(path), Span(b&#34;&amp;nbsp;&#34;), Download(text=DOWNLOAD_ICON, path=FILE_EXPLORER+b&#34;/download?path=%s&#34;%tools.strings.tobytes(path), filename=tools.strings.tobytes(filename)),
+                Br(), Br(),
+                Image(src=FILE_EXPLORER+b&#39;/download?path=%s&#39;%tools.strings.tobytes(path), class_=b&#34;w-100&#34;)
+        ])
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.fileexplorer.list_files"><code class="name flex">
+<span>def <span class="ident">list_files</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>List files</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_files(path):
+        &#34;&#34;&#34; List files &#34;&#34;&#34;
+        directories, filenames = tools.filesystem.scandir(path, &#34;*&#34;, False)
+        content = []
+        directories.sort()
+
+        if path != &#34;/&#34;:
+                directories.insert(0, &#34;..&#34;)
+
+        for directory in directories:
+                content.append(create_file_item(path, directory, True))
+
+        filenames.sort()
+        for filename in filenames:
+                content.append(create_file_item(path, filename, False))
+        return Table(content)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.fileexplorer.text_file_page"><code class="name flex">
+<span>async def <span class="ident">text_file_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Display text file page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@server.httpserver.HttpServer.add_route(FILE_EXPLORER+b&#39;/text_file&#39;)
+async def text_file_page(request, response, args):
+        &#34;&#34;&#34; Display text file page &#34;&#34;&#34;
+        path = tools.strings.tostrings(request.params.get(b&#34;path&#34;, b&#34;&#34;))
+        filename = tools.filesystem.split(path)[1]
+        page = webpage.mainpage.main_frame(request, response, args, tools.lang.item_explorer,
+        [
+                get_root_link(path), Span(b&#34;&amp;nbsp;&#34;), Download(text=DOWNLOAD_ICON, path=FILE_EXPLORER+b&#34;/download?path=%s&#34;%tools.strings.tobytes(path), filename=tools.strings.tobytes(filename)),
+                Br(), Br(),
+                get_text_file(path)
+        ])
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.webpage" href="index.html">lib.webpage</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.webpage.fileexplorer.bin_file_page" href="#lib.webpage.fileexplorer.bin_file_page">bin_file_page</a></code></li>
+<li><code><a title="lib.webpage.fileexplorer.create_file_item" href="#lib.webpage.fileexplorer.create_file_item">create_file_item</a></code></li>
+<li><code><a title="lib.webpage.fileexplorer.download_file_browser" href="#lib.webpage.fileexplorer.download_file_browser">download_file_browser</a></code></li>
+<li><code><a title="lib.webpage.fileexplorer.file_explorer_page" href="#lib.webpage.fileexplorer.file_explorer_page">file_explorer_page</a></code></li>
+<li><code><a title="lib.webpage.fileexplorer.get_bin_file" href="#lib.webpage.fileexplorer.get_bin_file">get_bin_file</a></code></li>
+<li><code><a title="lib.webpage.fileexplorer.get_root_link" href="#lib.webpage.fileexplorer.get_root_link">get_root_link</a></code></li>
+<li><code><a title="lib.webpage.fileexplorer.get_text_file" href="#lib.webpage.fileexplorer.get_text_file">get_text_file</a></code></li>
+<li><code><a title="lib.webpage.fileexplorer.image_file_page" href="#lib.webpage.fileexplorer.image_file_page">image_file_page</a></code></li>
+<li><code><a title="lib.webpage.fileexplorer.list_files" href="#lib.webpage.fileexplorer.list_files">list_files</a></code></li>
+<li><code><a title="lib.webpage.fileexplorer.text_file_page" href="#lib.webpage.fileexplorer.text_file_page">text_file_page</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
