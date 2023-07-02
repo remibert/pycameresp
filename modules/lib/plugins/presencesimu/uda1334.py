@@ -1,9 +1,8 @@
 """ Class to drive DAC module uda1334a I2S, stereo audio decoder module board """
+# pylint:disable=consider-using-f-string
 import struct
 import math
 import io
-import time
-import machine
 import gc
 from machine import I2S, Pin
 
@@ -62,7 +61,7 @@ class Uda1334:
 		""" Creates a sine wave """
 		inc = 100000//step
 		for angle in range(0, 100000, inc):
-			sample = math.cos(angle*(2*math.pi)/100000) * 32767	
+			sample = math.cos(angle*(2*math.pi)/100000) * 32767
 			buf.write(struct.pack("<h",int(sample)))
 			buf.write(struct.pack("<h",-int(sample)))
 

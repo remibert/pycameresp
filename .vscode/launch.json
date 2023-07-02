@@ -52,6 +52,22 @@
 			"cwd"    : "${workspaceFolder}/tools/cfsconverter",
 		},
 		{
+			"name": "Build.py",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/build.py",
+			"cwd"    : "${workspaceFolder}",
+			"args"   : ["-z", "ESP32CAM"]
+		},
+		{
+			"name": "zip_mpy.py",
+			"type": "python",
+			"request": "launch",
+			"program": "${workspaceFolder}/scripts/zip_mpy.py",
+			"cwd"    : "${workspaceFolder}",
+			"args"   : ["/Users/remi/Downloads/esp32/firmware","-z", "${workspaceFolder}"]
+		},
+		{
 			"name": "Sandbox",
 			"type": "python",
 			"request": "launch",

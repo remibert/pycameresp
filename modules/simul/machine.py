@@ -118,7 +118,6 @@ class SDCard:
 	def __init__(self, slot=1, width=1, cd=None, wp=None, sck=None, miso=None, mosi=None, cs=None, freq=1):
 		pass
 
-
 class Counter:
 	""" See https://github.com/micropython/micropython/pull/6639 for the PCNT Counter. """
 	UP = 1
@@ -138,6 +137,38 @@ class Counter:
 		""" Stops the Counter """
 	def filter_ns(self, value):
 		""" Filter nano seconds """
-		
+
 class I2S:
-	pass
+	""" I2S simulation """
+	TX = 0
+	STEREO = 0
+
+	def write(self, buffer):
+		""" Write buffer """
+
+	def deinit(self):
+		""" Deinit """
+
+class UART:
+	""" Uart simulation """
+	def __init__(self, uart=1, baudrate=9600, rx=0, tx=0):
+		""" Create uart simulation """
+		self.uart = uart
+		self.rx = rx
+		self.tx = tx
+		self.reception = b""
+		self.sent = b""
+
+	def write(self, buffer):
+		""" Write buffer on uart """
+		self.sent = buffer
+
+	def close(self):
+		""" Close uart """
+
+	def readinto(self, buffer):
+		""" Read buffer from uart """
+
+	def any(self):
+		""" Return the length received """
+		return len(self.reception)
