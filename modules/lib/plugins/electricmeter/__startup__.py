@@ -7,9 +7,9 @@ import server.httpserver
 def page_loader():
 	""" Load html pages when connecting to http server """
 	# pylint:disable=unused-import
-	import electricmeter.webpage
+	import plugins.electricmeter.webpage
 
 def startup(**kwargs):
 	""" Startup """
-	import electricmeter.meter
-	electricmeter.meter.ElectricMeter.start(**kwargs)
+	import plugins.electricmeter.meter
+	plugins.electricmeter.meter.ElectricMeter.start(**kwargs)

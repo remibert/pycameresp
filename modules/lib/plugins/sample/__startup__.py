@@ -15,7 +15,7 @@ import tools.filesystem
 @server.httpserver.HttpServer.add_pages()
 def html_pages():
 	""" Load html pages when connecting to http server """
-	import sample.websample
+	import plugins.sample.websample
 
 async def task(**kwargs):
 	""" Example of asynchronous task """
@@ -34,5 +34,5 @@ def startup(**kwargs):
 	""" This function is called automatically by the starter.
 	It must receive the asynchronous loop object as a parameter. """
 	# Register the user task, monitor all exceptions
-	import sample.mqttsample
+	import plugins.sample.mqttsample
 	tools.tasking.Tasks.create_monitor(task)

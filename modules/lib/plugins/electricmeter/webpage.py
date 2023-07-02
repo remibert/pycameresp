@@ -10,9 +10,7 @@ import webpage.mainpage
 import tools.date
 import tools.strings
 import tools.lang
-import electricmeter.config
-import electricmeter.meter
-import electricmeter.em_lang
+from plugins import electricmeter
 
 @server.httpserver.HttpServer.add_route(b'/hourly', menu=electricmeter.em_lang.menu_electricmeter, item=electricmeter.em_lang.item_hour)
 async def hourly_page_page(request, response, args):

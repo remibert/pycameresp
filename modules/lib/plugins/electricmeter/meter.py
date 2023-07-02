@@ -7,8 +7,8 @@ import collections
 import uasyncio
 import machine
 import server.notifier
-import electricmeter.config
-import electricmeter.em_lang
+import plugins.electricmeter.config
+import plugins.electricmeter.em_lang
 import tools.filesystem
 import tools.date
 import tools.strings
@@ -50,7 +50,7 @@ def write_problem(err):
 	global _last_err_write
 	if _last_err_write + 3600 < time.time():
 		_last_err_write = time.time()
-		server.notifier.Notifier.notify(message=electricmeter.em_lang.write_problem)
+		server.notifier.Notifier.notify(message=plugins.electricmeter.em_lang.write_problem)
 	tools.info.increase_issues_counter()
 	tools.logger.exception(err)
 
@@ -348,7 +348,7 @@ class DailyCounter:
 		for key, daily_filename in daily_to_update.items():
 			year, month = key
 			hourly_searched = "%s/%s-%s/%s-%s-[0-9][0-9]%s"%(get_pulse_directory(), year, month, year, month, PULSE_HOURLY)
-			slot_pulses = electricmeter.config.TimeSlotsConfig.create_empty_slot(31)
+			slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(31)
 			for hourly_filename in filenames:
 				if tools.fnmatch.fnmatch(hourly_filename, hourly_searched):
 					name = tools.filesystem.splitext(tools.filesystem.split(hourly_filename)[1])[0]
@@ -381,7 +381,7 @@ class MonthlyCounter:
 		for year, monthly_filename in monthly_to_update.items():
 			
 			daily_searched = "%s/%s-[0-9][0-9]/%s-[0-9][0-9]%s"%(get_pulse_directory(), year, year, PULSE_DAILY)
-			slot_pulses = electricmeter.config.TimeSlotsConfig.create_empty_slot(12)
+			slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(12)
 			for daily_filename in filenames:
 				if tools.fnmatch.fnmatch(daily_filename, daily_searched):
 					name = tools.filesystem.splitext(tools.filesystem.split(daily_filename)[1])[0]
@@ -527,7 +527,7 @@ class Cost:
 	""" Abstract class to compute the cost """
 	def get_rates(self, selected_date):
 		""" Get the rate according to the selected date """
-		prices = electricmeter.config.TimeSlotsConfig.get_cost(selected_date)
+		prices = plugins.electricmeter.config.TimeSlotsConfig.get_cost(selected_date)
 		consumptions = {}
 		for price in prices:
 			consumptions[price[b"rate"]] = Consumption(price[b"rate"], price[b"currency"])
@@ -609,11 +609,11 @@ class ElectricMeter:
 		selected_date = time.time() - 86400
 		message = ""
 		cost = MonthlyCost()
-		message += cost.get_message(electricmeter.em_lang.item_year, selected_date).strip() + "\n"
+		message += cost.get_message(plugins.electricmeter.em_lang.item_year, selected_date).strip() + "\n"
 		cost = DailyCost()
-		message += cost.get_message(electricmeter.em_lang.item_month, selected_date).strip() + "\n"
+		message += cost.get_message(plugins.electricmeter.em_lang.item_month, selected_date).strip() + "\n"
 		cost = HourlyCost()
-		message += cost.get_message(electricmeter.em_lang.item_day, selected_date).strip() + "\n"
+		message += cost.get_message(plugins.electricmeter.em_lang.item_day, selected_date).strip() + "\n"
 		message += "-F:%s\n"%(tools.strings.size_to_string(tools.info.flash_size(tools.sdcard.SdCard.get_mountpoint())[2]).strip())
 		message += "-U:%s\n"%tools.strings.tostrings(tools.info.uptime()).strip()
 		return message
