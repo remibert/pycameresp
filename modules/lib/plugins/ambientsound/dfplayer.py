@@ -17,6 +17,11 @@ STOP                          = 0x16
 # Query commands
 GET_STATUS    = 0x42
 
+# Status
+FILE_NOT_FOUND = 0x40
+PLAY_ENDED     = 0x3D
+PLAYER_STATUS  = 0x42
+
 class DFPlayer:
 	""" Dfplayer """
 	def __init__(self, rx=13, tx=4, display=False):

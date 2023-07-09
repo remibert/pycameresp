@@ -11,8 +11,8 @@ import tools.topic
 
 class PresenceCore:
 	""" Presence detection of smartphones """
-	ABSENCE_TIMEOUT   = 1201
-	NO_ANSWER_TIMEOUT = 607
+	ABSENCE_TIMEOUT   = 907
+	NO_ANSWER_TIMEOUT = 421
 	DNS_POLLING       = 67
 
 	PING_TIMEOUT      = 0.5

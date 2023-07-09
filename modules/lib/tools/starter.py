@@ -25,7 +25,8 @@ class Starter:
 				starter_kwargs = kwargs
 				exec("%s.startup(**starter_kwargs)"%startup)
 				starter_kwargs = None
-				tools.logger.syslog("Start %s"%startup[:-12])
+				name = startup.split(".")
+				tools.logger.syslog("Start '%s' plugins"%name[1])
 			except Exception as err:
 				tools.logger.syslog(err)
 

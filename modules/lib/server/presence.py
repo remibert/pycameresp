@@ -33,6 +33,7 @@ class Presence:
 	presence_config  = None
 	webhook_config   = None
 	activated        = None
+	usage_time       = [0]
 
 	@staticmethod
 	def is_detected():
@@ -81,6 +82,10 @@ class Presence:
 		else:
 			Presence.polling_duration = Presence.SLOW_POLLING
 			Presence.core = None
+
+		Presence.usage_time[0] += 1
+		if Presence.usage_time[0] < 20 and Presence.core is None:
+			Presence.polling_duration = Presence.FAST_POLLING // 2
 
 		# If the presence detection change
 		if Presence.activated != Presence.presence_config.activated:

@@ -57,21 +57,27 @@ def date_to_html(current_date = None, separator=b"-"):
 	year,month,day = local_time(current_date)[:3]
 	return b"%04d%s%02d%s%02d"%(year,separator,month,separator,day)
 
+def byte_to_int(data):
+	""" Convert bytes buffer to integer """
+	data = data.lstrip(b"0")
+	if len(data) == 0:
+		data = b"0"
+	return int(data)
 
 def html_to_time(time_, separator=b":"):
 	""" Convert html time string into time integer """
 	result = 0
 	try:
 		hour, minute, second = time_.split(separator)
-		hour   = int(  hour.lstrip(b"0"))
-		minute = int(minute.lstrip(b"0"))
-		second = int(second.lstrip(b"0"))
+		hour   = byte_to_int(hour)
+		minute = byte_to_int(minute)
+		second = byte_to_int(second)
 		result = hour * 3600 + minute * 60 * second
 	except:
 		try:
 			hour, minute = time_.split(separator)
-			hour   = int(  hour.lstrip(b"0"))
-			minute = int(minute.lstrip(b"0"))
+			hour   = byte_to_int(hour)
+			minute = byte_to_int(minute)
 			result = hour * 3600 + minute * 60
 		except:
 			pass

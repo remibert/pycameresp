@@ -212,7 +212,7 @@ class JsonConfig:
 
 	def is_changed(self, part_filename=""):
 		""" Indicates if the configuration changed """
-		if self.last_refresh + 10 < time.time():
+		if self.last_refresh + 31 < time.time():
 			try:
 				modification_date = uos.stat(self.get_pathname(tools.strings.tofilename(part_filename)))[8]
 				if self.modification_date != modification_date:

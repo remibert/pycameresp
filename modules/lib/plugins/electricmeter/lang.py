@@ -7,8 +7,8 @@ import tools.strings
 import tools.logger
 
 try:
-	exec(b"from plugins.electricmeter.em_lang_%s import *"%tools.region.RegionConfig.get().lang)
+	exec(b"from plugins.electricmeter.lang_%s import *"%tools.region.RegionConfig.get().lang)
 	tools.logger.syslog("Select electricmeter lang : %s"%tools.strings.tostrings(tools.region.RegionConfig.get().lang))
 except Exception as err:
 	tools.logger.syslog(err)
-	from plugins.electricmeter.em_lang_english import *
+	from plugins.electricmeter.lang_english import *
