@@ -8,7 +8,7 @@ import uasyncio
 import machine
 import server.notifier
 import plugins.electricmeter.config
-import plugins.electricmeter.em_lang
+import plugins.electricmeter.lang
 import tools.filesystem
 import tools.date
 import tools.strings
@@ -50,7 +50,7 @@ def write_problem(err):
 	global _last_err_write
 	if _last_err_write + 3600 < time.time():
 		_last_err_write = time.time()
-		server.notifier.Notifier.notify(message=plugins.electricmeter.em_lang.write_problem)
+		server.notifier.Notifier.notify(message=plugins.electricmeter.lang.write_problem)
 	tools.info.increase_issues_counter()
 	tools.logger.exception(err)
 
@@ -609,11 +609,11 @@ class ElectricMeter:
 		selected_date = time.time() - 86400
 		message = ""
 		cost = MonthlyCost()
-		message += cost.get_message(plugins.electricmeter.em_lang.item_year, selected_date).strip() + "\n"
+		message += cost.get_message(plugins.electricmeter.lang.item_year, selected_date).strip() + "\n"
 		cost = DailyCost()
-		message += cost.get_message(plugins.electricmeter.em_lang.item_month, selected_date).strip() + "\n"
+		message += cost.get_message(plugins.electricmeter.lang.item_month, selected_date).strip() + "\n"
 		cost = HourlyCost()
-		message += cost.get_message(plugins.electricmeter.em_lang.item_day, selected_date).strip() + "\n"
+		message += cost.get_message(plugins.electricmeter.lang.item_day, selected_date).strip() + "\n"
 		message += "-F:%s\n"%(tools.strings.size_to_string(tools.info.flash_size(tools.sdcard.SdCard.get_mountpoint())[2]).strip())
 		message += "-U:%s\n"%tools.strings.tostrings(tools.info.uptime()).strip()
 		return message
