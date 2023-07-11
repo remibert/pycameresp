@@ -22,18 +22,19 @@ class AmbientSoundConfig(tools.jsonconfig.JsonConfig):
 	def __init__(self):
 		""" Constructor """
 		tools.jsonconfig.JsonConfig.__init__(self)
+		_ = AmbientTimeConfig() # <- This line is REQUIRED for deserialization to work
 		self.time_slots = []
+		self.activated = False
 
 	def append(self, time_slot):
 		""" Add new time slot in the list """
 		found = False
-		time_slot = tools.strings.tobytes(time_slot)
 		for current in self.time_slots:
-			if current[b"start_time"] == time_slot.start_time and current[b"end_time"]   == time_slot.end_time:
+			if current.start_time == time_slot.start_time and current.end_time == time_slot.end_time:
 				found = True
 				break
 		if found is False:
-			self.time_slots.append(tools.strings.tobytes(time_slot.__dict__))
+			self.time_slots.append(time_slot)
 
 	def get(self, index):
 		""" Return the time slot at the index """
@@ -55,7 +56,7 @@ class AmbientSoundConfig(tools.jsonconfig.JsonConfig):
 		hour,minute,second = tools.date.local_time(time.time())[3:6]
 		current_time = (hour * 3600) + (minute * 60) + second
 		for time_slot in self.time_slots:
-			if current_time >= time_slot[b"start_time"] and current_time <= time_slot[b"end_time"]:
+			if current_time >= time_slot.start_time and current_time <= time_slot.end_time:
 				result = True
 				break
 		return result

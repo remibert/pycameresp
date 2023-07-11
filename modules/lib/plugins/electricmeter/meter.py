@@ -530,7 +530,7 @@ class Cost:
 		prices = plugins.electricmeter.config.TimeSlotsConfig.get_cost(selected_date)
 		consumptions = {}
 		for price in prices:
-			consumptions[price[b"rate"]] = Consumption(price[b"rate"], price[b"currency"])
+			consumptions[price.rate] = Consumption(price.rate, price.currency)
 		return prices, consumptions
 
 	def compute(self, selected_date):
@@ -554,8 +554,8 @@ class HourlyCost(Cost):
 		second = 0
 		for pulse in pulses:
 			for price in prices:
-				if price[b"start_time"] <= second <= price[b"end_time"]:
-					consumptions[price[b"rate"]].add([pulse], price[b"price"])
+				if price.start_time <= second <= price.end_time:
+					consumptions[price.rate].add([pulse], price.price)
 					break
 			second += 60
 		return consumptions
@@ -569,8 +569,8 @@ class DailyCost(Cost):
 		for slot_time, pulses in slot_pulses.items():
 			for price in prices:
 				start, end = slot_time
-				if price[b"start_time"] == start and price[b"end_time"] == end:
-					consumptions[price[b"rate"]].add(pulses, price[b"price"])
+				if price.start_time == start and price.end_time == end:
+					consumptions[price.rate].add(pulses, price.price)
 					break
 		return consumptions
 
@@ -583,8 +583,8 @@ class MonthlyCost(Cost):
 		for slot_time, pulses in slot_pulses.items():
 			for price in prices:
 				start, end = slot_time
-				if price[b"start_time"] == start and price[b"end_time"] == end:
-					consumptions[price[b"rate"]].add(pulses, price[b"price"])
+				if price.start_time == start and price.end_time == end:
+					consumptions[price.rate].add(pulses, price.price)
 					break
 		return consumptions
 

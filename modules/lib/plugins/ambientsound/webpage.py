@@ -13,13 +13,13 @@ import plugins.ambientsound.lang
 async def ambient_sound_page(request, response, args):
 	""" Ambient sound configuration page """
 	config  = plugins.ambientsound.config.AmbientSoundConfig().get_config()
-	current = plugins.ambientsound.config.AmbientTimeConfig()
+	time_slot = plugins.ambientsound.config.AmbientTimeConfig()
 
 	# If a new time_slot must be added
 	if request.params.get(b"add",None) is not None:
-		current.update(request.params, show_error=False)
-		if request.params[b"start_time"] < request.params[b"end_time"]:
-			config.append(current)
+		time_slot.update(request.params, show_error=False)
+		if time_slot.start_time < time_slot.end_time:
+			config.append(time_slot)
 			config.save()
 	# If a time_slot must be deleted
 	elif request.params.get(b"remove",None) is not None:
@@ -30,14 +30,14 @@ async def ambient_sound_page(request, response, args):
 	time_slots = []
 	identifier = 0
 	while True:
-		time_slot = config.get(identifier)
-		if time_slot is not None:
+		time_slot_line = config.get(identifier)
+		if time_slot_line is not None:
 			time_slots.append(
 				ListItem(
 				[
 					Link(text=b"%s - %s "%(
-						tools.date.time_to_html(time_slot[b"start_time"]),
-						tools.date.time_to_html(time_slot[b"end_time"])),
+						tools.date.time_to_html(time_slot_line.start_time),
+						tools.date.time_to_html(time_slot_line.end_time)),
 						href=b"ambient_sound?edit=%d"%identifier),
 					Link(text=plugins.ambientsound.lang.remove_button ,
 						class_=b"btn position-absolute top-50 end-0 translate-middle-y",
@@ -53,8 +53,8 @@ async def ambient_sound_page(request, response, args):
 	[
 		Form(
 		[
-			Edit (text=plugins.ambientsound.lang.field_start, name=b"start_time", type=b"time", required=True, value=tools.date.time_to_html(current.start_time)),
-			Edit (text=plugins.ambientsound.lang.field_end,   name=b"end_time",   type=b"time", required=True, value=tools.date.time_to_html(current.end_time)),
+			Edit (text=plugins.ambientsound.lang.field_start, name=b"start_time", type=b"time", required=True, value=tools.date.time_to_html(time_slot.start_time)),
+			Edit (text=plugins.ambientsound.lang.field_end,   name=b"end_time",   type=b"time", required=True, value=tools.date.time_to_html(time_slot.end_time)),
 			Submit(text=plugins.ambientsound.lang.add_button, name=b"add")
 		]),
 		List(time_slots)

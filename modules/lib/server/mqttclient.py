@@ -134,4 +134,4 @@ class MqttClient:
 		if MqttClient.config.activated:
 			tools.tasking.Tasks.create_client(MqttClientInstance(**kwargs))
 		else:
-			tools.logger.syslog("Mqtt client disabled in config")
+			tools.logger.syslog("MqttClient disabled in config")

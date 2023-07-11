@@ -92,7 +92,9 @@ async def hourly_page_datas(request, response, args):
 	""" Send pulses of hours and rates """
 	day    = tools.date.html_to_date(request.params.get(b"day",b""))
 	result = {"pulses":None}
-	result["rates"] = tools.strings.tostrings(electricmeter.config.TimeSlotsConfig.get_cost(day))
+	result["rates"] = []
+	for cost in electricmeter.config.TimeSlotsConfig.get_cost(day):
+		result["rates"].append(cost.to_dict())
 	try:
 		result["pulses"] = electricmeter.meter.HourlyCounter.get_datas(day)
 		await response.send_buffer(b"pulses", buffer=tools.strings.tobytes(json.dumps(result)), mime_type=b"application/json")
@@ -188,7 +190,9 @@ async def daily_datas(request, response, args):
 	""" Send pulses of month and rates """
 	month    = tools.date.html_to_date(request.params.get(b"month",b""))
 	result = {"time_slots":None}
-	result["rates"] = tools.strings.tostrings(electricmeter.config.TimeSlotsConfig.get_cost(month))
+	result["rates"] = []
+	for cost in electricmeter.config.TimeSlotsConfig.get_cost(month):
+		result["rates"].append(cost.to_dict())
 	try:
 		result["time_slots"] = electricmeter.meter.DailyCounter.get_datas(month)
 		await response.send_buffer(b"pulses", buffer=tools.strings.tobytes(json.dumps(result)), mime_type=b"application/json")
@@ -246,7 +250,9 @@ async def monthly_datas(request, response, args):
 	""" Send pulses of month and rates """
 	year   = tools.date.html_to_date(request.params.get(b"year",b""))
 	result = {"time_slots":None}
-	result["rates"] = tools.strings.tostrings(electricmeter.config.TimeSlotsConfig.get_cost(year))
+	result["rates"] = []
+	for cost in electricmeter.config.TimeSlotsConfig.get_cost(year):
+		result["rates"].append(cost.to_dict())
 	try:
 		result["time_slots"] = electricmeter.meter.MonthlyCounter.get_datas(year)
 		await response.send_buffer(b"pulses", buffer=tools.strings.tobytes(json.dumps(result)), mime_type=b"application/json")
@@ -258,6 +264,7 @@ async def rate_page(request, response, args):
 	""" Electric rate configuration page """
 	rates   = electricmeter.config.RatesConfig.get_config()
 	current = electricmeter.config.RateConfig()
+
 	# If new rate added
 	if request.params.get(b"add",None) is not None:
 		current.update(request.params, show_error=False)
@@ -269,7 +276,7 @@ async def rate_page(request, response, args):
 		rates.save()
 	# If a rate must be edited
 	elif request.params.get(b"edit",None) is not None:
-		current.update(rates.get(request.params.get(b"edit",b"none")))
+		current = rates.get(request.params.get(b"edit",b"none"))
 
 	# List all rates
 	rate_items = []
@@ -280,7 +287,7 @@ async def rate_page(request, response, args):
 			rate_items.append(
 					ListItem(
 					[
-						Link(text=b" %s : %f %s %s %s "%(rate[b"name"], rate[b"price"], rate[b"currency"], electricmeter.lang.from_the, tools.lang.translate_date(rate[b"validity_date"])), href=b"rate?edit=%d"%identifier ),
+						Link(text=b" %s : %f %s %s %s "%(rate.name, rate.price, rate.currency, electricmeter.lang.from_the, tools.lang.translate_date(rate.validity_date)), href=b"rate?edit=%d"%identifier ),
 						Link(text=electricmeter.lang.remove_button , class_=b"btn position-absolute top-50 end-0 translate-middle-y", href=b"rate?remove=%d"%identifier, onclick=b"return window.confirm('%s')"%electricmeter.lang.remove_dialog)
 					]))
 		else:
@@ -318,9 +325,9 @@ async def time_slots_page(request, response, args):
 	elif request.params.get(b"remove",None) is not None:
 		time_slots.remove(request.params.get(b"remove",b"none"))
 		time_slots.save()
-	# If a rate must be edited
+	# If a time_slot must be edited
 	elif request.params.get(b"edit",None) is not None:
-		current.update(time_slots.get(request.params.get(b"edit",b"none")))
+		current = time_slots.get(request.params.get(b"edit",b"none"))
 
 	# List all rates names
 	rates_combo = []
@@ -329,11 +336,11 @@ async def time_slots_page(request, response, args):
 	while True:
 		rate = rates.get(identifier)
 		if rate is not None:
-			if rate[b"name"] not in names:
-				rates_combo.append(Option(text=rate[b"name"], value=rate[b"name"], selected=b"selected" if current.rate == rate[b"name"] else b""))
+			if rate.name not in names:
+				rates_combo.append(Option(text=rate.name, value=rate.name, selected=b"selected" if current.rate == rate.name else b""))
 		else:
 			break
-		names[rate[b"name"]] = b""
+		names[rate.name] = b""
 		identifier += 1
 
 	# List all rates
@@ -345,9 +352,9 @@ async def time_slots_page(request, response, args):
 			time_slots_items.append(
 					ListItem(
 					[
-						Label(text=b"&nbsp;&nbsp;&nbsp;&nbsp;", style=b"background-color: %s"%time_slot[b"color"]),
+						Label(text=b"&nbsp;&nbsp;&nbsp;&nbsp;", style=b"background-color: %s"%time_slot.color),
 						Space(),Space(),
-						Link(text=b"%s - %s : %s "%(tools.date.time_to_html(time_slot[b"start_time"]), tools.date.time_to_html(time_slot[b"end_time"]), time_slot[b"rate"]),href=b"time_slots?edit=%d"%identifier),
+						Link(text=b"%s - %s : %s "%(tools.date.time_to_html(time_slot.start_time), tools.date.time_to_html(time_slot.end_time), time_slot.rate),href=b"time_slots?edit=%d"%identifier),
 						Link(text=electricmeter.lang.remove_button , class_=b"btn position-absolute top-50 end-0 translate-middle-y", href=b"time_slots?remove=%d"%identifier, onclick=b"return window.confirm('%s')"%electricmeter.lang.remove_dialog)
 					]))
 		else:

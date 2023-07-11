@@ -16,27 +16,24 @@ class RateConfig(tools.jsonconfig.JsonConfig):
 		self.currency = b""
 		self.validity_date = 0
 
-
 class RatesConfig(tools.jsonconfig.JsonConfig):
 	""" Rates list per kwh """
 	config = None
 	def __init__(self):
 		""" Constructor """
 		tools.jsonconfig.JsonConfig.__init__(self)
+		_ = RateConfig() # <- This line is REQUIRED for deserialization to work
 		self.rates = []
 
 	def append(self, rate):
 		""" Add new rate in the list """
 		found = False
-		rate = tools.strings.tobytes(rate)
 		for current in self.rates:
-			if current[b"name"] == tools.strings.tobytes(rate.name) and current[b"validity_date"] == tools.strings.tobytes(rate.validity_date):
+			if current.name == rate.name and current.validity_date == rate.validity_date:
 				found = True
-				current[b"currency"] = tools.strings.tobytes(rate.currency)
-				current[b"price"] = rate.price
 				break
 		if found is False:
-			self.rates.append(tools.strings.tobytes(rate.__dict__))
+			self.rates.append(rate)
 
 	def get(self, index):
 		""" Return the rate at the index """
@@ -58,16 +55,16 @@ class RatesConfig(tools.jsonconfig.JsonConfig):
 		day = int(day)
 		for rate in self.rates:
 			# If the rate is valid for the current date
-			if day >= rate[b"validity_date"]:
+			if day >= rate.validity_date:
 				# If the same rate already found
-				if rate[b"name"] in result:
+				if rate.name in result:
 					# If the rate already found is older than the current rate
-					if result[rate[b"name"]][b"validity_date"] < rate[b"validity_date"]:
+					if result[rate.name].validity_date < rate.validity_date:
 						# Replace by the current rate
-						result[rate[b"name"]] = rate
+						result[rate.name] = rate
 				else:
 					# Keep the current rate
-					result[rate[b"name"]] = rate
+					result[rate.name] = rate
 		return result
 
 	@staticmethod
@@ -78,7 +75,6 @@ class RatesConfig(tools.jsonconfig.JsonConfig):
 			RatesConfig.config.load()
 		return RatesConfig.config
 
-
 class TimeSlotConfig(tools.jsonconfig.JsonConfig):
 	""" Time slot configuration """
 	def __init__(self):
@@ -86,8 +82,10 @@ class TimeSlotConfig(tools.jsonconfig.JsonConfig):
 		tools.jsonconfig.JsonConfig.__init__(self)
 		self.rate       = b""
 		self.start_time = 0
-		self.end_time   = 0
-		self.color      = b""
+		self.end_time   = 86340
+		self.color      = b"5498e0"
+		self.currency   = b"not initialized"
+		self.price      = 0.0
 
 class TimeSlotsConfig(tools.jsonconfig.JsonConfig):
 	""" Time slots list """
@@ -95,20 +93,22 @@ class TimeSlotsConfig(tools.jsonconfig.JsonConfig):
 	def __init__(self):
 		""" Constructor """
 		tools.jsonconfig.JsonConfig.__init__(self)
+		_ = TimeSlotConfig() # <- This line is REQUIRED for deserialization to work
 		self.time_slots = []
 
 	def append(self, time_slot):
 		""" Add new time slot in the list """
 		found = False
-		time_slot = tools.strings.tobytes(time_slot)
 		for current in self.time_slots:
-			if current[b"start_time"] == time_slot.start_time and current[b"end_time"]   == time_slot.end_time:
-				current[b"color"] = time_slot.color
-				current[b"rate"]  = time_slot.rate
+			if current.start_time == time_slot.start_time and current.end_time == time_slot.end_time:
+				current.currency = time_slot.currency
+				current.color    = time_slot.color
+				current.price    = time_slot.price
+				current.rate     = time_slot.rate
 				found = True
 				break
 		if found is False:
-			self.time_slots.append(tools.strings.tobytes(time_slot.__dict__))
+			self.time_slots.append(time_slot)
 
 	def get(self, index):
 		""" Return the time slot at the index """
@@ -127,12 +127,12 @@ class TimeSlotsConfig(tools.jsonconfig.JsonConfig):
 	def get_prices(self, rates):
 		""" Return the list of prices according to the day """
 		if rates == {}:
-			result = [{b'rate': b'', b'start_time': 0, b'end_time': 86340, b'color': b'#5498e0', b'price': 0, b'currency': b'not initialized'}]
+			result = [TimeSlotConfig()]
 		else:
 			result = self.time_slots[:]
 			for time_slot in result:
-				time_slot[b"price"]    = rates[time_slot[b"rate"]][b"price"]
-				time_slot[b"currency"] = rates[time_slot[b"rate"]][b"currency"]
+				time_slot.price    = rates[time_slot.rate].price
+				time_slot.currency = rates[time_slot.rate].currency
 		return result
 
 	@staticmethod
@@ -161,12 +161,11 @@ class TimeSlotsConfig(tools.jsonconfig.JsonConfig):
 			time_slot = time_slots.get(index)
 			if time_slot is None:
 				break
-			slot_pulses[(time_slot[b"start_time"], time_slot[b"end_time"])] = [0]*size
+			slot_pulses[(time_slot.start_time, time_slot.end_time)] = [0]*size
 			index += 1
 		if len(slot_pulses) == 0:
 			slot_pulses[(0,1439*60)] = [0]*size
 		return slot_pulses
-
 
 class GeolocationConfig(tools.jsonconfig.JsonConfig):
 	""" Geolocation configuration """

@@ -23,6 +23,7 @@ class PushOverConfig(tools.jsonconfig.JsonConfig):
 
 class PushOver:
 	""" Class that manages a push over notification """
+	config = None
 	def __init__(self, host, port, token=None, user=None):
 		""" Constructor
 		host : hostname of pushover (b"api.pushover.net")
@@ -101,13 +102,16 @@ class PushOver:
 	@server.notifier.Notifier.add()
 	async def notify_message(notification):
 		""" Notify message """
-		config = PushOverConfig()
-		config.load_create()
+		if PushOver.config is None:
+			PushOver.config = PushOverConfig()
+			PushOver.config.load_create()
+		else:
+			PushOver.config.refresh()
 
-		if config.activated or notification.forced:
+		if PushOver.config.activated or notification.forced:
 			if notification.message is not None or notification.data is not None:
 				if PushOver.notify_message not in notification.sent:
-					result = await async_notify(config.user, config.token, notification.message, notification.data, display=notification.display)
+					result = await async_notify(PushOver.config.user, PushOver.config.token, notification.message, notification.data, display=notification.display)
 					if result is True:
 						notification.sent.append(PushOver.notify_message)
 				else:

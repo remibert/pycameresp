@@ -28,16 +28,20 @@ class WebhookConfig(tools.jsonconfig.JsonConfig):
 
 class WebHook:
 	""" Webhook """
+	config = None
 	@staticmethod
 	@server.notifier.Notifier.add()
 	async def notify_message(notification):
 		""" Notify message """
-		config = WebhookConfig()
-		if config.load() is False:
-			config.save()
+		if WebHook.config is None:
+			WebHook.config = WebhookConfig()
+			if WebHook.config.load() is False:
+				WebHook.config.save()
+		else:
+			WebHook.config.refresh()
 
 		result = True
-		if config.activated or notification.forced and notification.url is not None:
+		if WebHook.config.activated or notification.forced and notification.url is not None:
 			if WebHook.notify_message not in notification.sent:
 				result = await server.httpclient.HttpClient.request(method=b"GET", url=notification.url)
 				if result is True:

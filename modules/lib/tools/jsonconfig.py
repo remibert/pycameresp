@@ -9,25 +9,28 @@ For each of these classes, a json file with the same name is stored in the confi
 import time
 import json
 import re
-
 try:
 	import uos
 except:
 	import os as uos
-
 import tools.logger
 import tools.strings
 import tools.filesystem
 import tools.date
 
 
-self_config = None
+jsonconfig_self  = None
+jsonconfig_value = None
+
 class JsonConfig:
 	""" Manage json configuration """
+	classes = set()
 	def __init__(self):
 		""" Constructor """
 		self.modification_date = 0
 		self.last_refresh = 0
+		JsonConfig.classes.add(self.__class__)
+
 
 	def config_root(self):
 		""" Configuration root path """
@@ -36,28 +39,55 @@ class JsonConfig:
 		else:
 			return uos.path.expanduser('~') + "/.pycameresp"
 
+	def purify(self, datas):
+		""" Remove unwanted items """
+		result = datas
+		if type(datas) == type(b""):
+			result = datas
+		elif type(datas) == type([]):
+			result = []
+			for item in datas:
+				result.append(self.purify(item))
+		elif type(datas) == type((0,0)):
+			result = []
+			for item in datas:
+				result.append(self.purify(item))
+			result = tuple(result)
+		elif type(datas) == type({}):
+			result = {}
+			for key, value in datas.items():
+				if key not in ["last_refresh","modification_date"]:
+					result[key] = self.purify(value)
+		elif isinstance(datas, JsonConfig):
+			result = self.purify(datas.__dict__.copy())
+			result["__class__"] = datas.__class__.__name__
+		return result
+
 	def save(self, file=None, part_filename=""):
 		""" Save object in json file """
 		try:
 			filename = self.get_pathname(tools.strings.tofilename(part_filename))
+			str_data = self.to_string()
+
 			file, filename = self.open(file=file, read_write="w", part_filename=part_filename)
-			data = self.__dict__.copy()
-			del data["modification_date"]
-			del data["last_refresh"]
-			json.dump(tools.strings.tostrings(data),file,separators=(',', ':'))
+			file.write(str_data)
 			file.close()
+
 			self.modification_date = uos.stat(filename)[8]
 			self.last_refresh = time.time()
 			return True
 		except Exception as _err:
+			str_data = self.to_string()
 			tools.logger.syslog(_err, "Cannot save %s "%(filename))
 			return False
 
 	def to_string(self):
 		""" Convert the configuration to string """
-		data = self.__dict__.copy()
-		del data["modification_date"]
-		return json.dumps(tools.strings.tostrings(data),separators=(',', ':'))
+		return json.dumps(self.to_dict(),separators=(',', ':'))
+
+	def to_dict(self):
+		""" Convert the configuration to dictionnary """
+		return tools.strings.tostrings(self.purify(self.__dict__.copy()))
 
 	def get_pathname(self, part_filename=""):
 		""" Get the configuration filename according to the class name """
@@ -98,13 +128,11 @@ class JsonConfig:
 
 	def update(self, params, show_error=True):
 		""" Update object with html request params """
-		global self_config
 		if b"name" in params and b"value" in params and len(params) == 2:
 			setmany = False
 			params = {params[b"name"]:params[b"value"]}
 		else:
 			setmany = True
-		self_config = self
 
 		for name in self.__dict__.keys():
 			# Case of web input is missing when bool is false
@@ -157,28 +185,69 @@ class JsonConfig:
 
 		result = True
 		for name, value in params.items():
-			execval = tools.strings.tostrings(name)
-			try:
-				try:
-					# pylint: disable=exec-used
-					exec("a = self_config.%s"%execval)
-					existing = True
-				except Exception as _err:
-					if "'NoneType' object" in str(_err):
-						result = None
-					existing = False
+			res = self.exec(name, value, show_error)
+			if res is not True:
+				result = res
+		return result
 
-				if existing:
-					execval = "self_config.%s = %s"%(execval, repr(value))
-					# pylint: disable=exec-used
-					exec(execval)
-				else:
-					if name != b"action" and show_error and result is not None:
-						print("%s.%s not existing"%(self.__class__.__name__, tools.strings.tostrings(name)))
+	def exec(self, name, value, show_error=True):
+		""" Add attribute to current object """
+		result = True
+		global jsonconfig_self, jsonconfig_value
+		name = tools.strings.tostrings(name)
+		try:
+			try:
+				# pylint: disable=exec-used
+				jsonconfig_self = self
+				exec("a = jsonconfig_self.%s"%name)
+				jsonconfig_self  = None
+				existing = True
 			except Exception as _err:
-				tools.logger.syslog(_err, "Error on %s"%(execval))
-				result = False
-		self_config = None
+				if "'NoneType' object" in str(_err):
+					result = None
+				existing = False
+
+			if existing:
+				execval = "jsonconfig_self.%s = jsonconfig_value"%(name)
+				# pylint: disable=exec-used
+				jsonconfig_value = self.instantiate(value)
+				jsonconfig_self  = self
+				exec(execval)
+				jsonconfig_self  = None
+				jsonconfig_value = None
+			else:
+				if name != "action" and show_error and result is not None:
+					print("%s.%s not existing"%(self.__class__.__name__, tools.strings.tostrings(name)))
+		except Exception as _err:
+			tools.logger.syslog(_err, "Error on %s"%(name))
+			result = False
+		return result
+
+	def search_class(self, class_name):
+		""" Search class with class name """
+		for class_ in JsonConfig.classes:
+			if class_.__name__ == class_name:
+				return class_
+		return None
+
+	def instantiate(self, values):
+		""" Instantiate all objects with its classes """
+		result = values
+		if type(values) == type({}):
+			class_name = values.setdefault(b"__class__",None)
+			instance = None
+			if class_name is not None:
+				class_ = self.search_class(tools.strings.tostrings(class_name))
+				del values[b"__class__"]
+				if class_ is not None:
+					instance = class_()
+					for key, value in values.items():
+						instance.exec(key,value)
+					result = instance
+		elif type(values) == type([]):
+			result = []
+			for value in values:
+				result.append(self.instantiate(value))
 		return result
 
 	def load(self, file=None, part_filename="", tobytes=True, errorlog=True):

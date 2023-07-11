@@ -159,6 +159,10 @@ class UART:
 		self.reception = b""
 		self.sent = b""
 
+	def simul_receive(self, buffer):
+		""" Simulate receive """
+		self.reception = buffer
+
 	def write(self, buffer):
 		""" Write buffer on uart """
 		self.sent = buffer
@@ -166,8 +170,24 @@ class UART:
 	def close(self):
 		""" Close uart """
 
+	def read(self, length):
+		""" Read buffer """
+		if len(self.reception) >= length:
+			result = self.reception[0:length]
+			self.reception = self.reception[length:]
+		else:
+			result = self.reception
+			self.reception = b""
+		return result
+
 	def readinto(self, buffer):
 		""" Read buffer from uart """
+		if len(self.reception) > 0:
+			i = 0
+			for char in self.reception:
+				buffer[i] = char
+				i += 1
+			self.reception = b""
 
 	def any(self):
 		""" Return the length received """
