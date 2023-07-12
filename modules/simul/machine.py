@@ -159,6 +159,12 @@ class UART:
 		self.reception = b""
 		self.sent = b""
 
+	def init(self):
+		""" Init uart """
+
+	def deinit(self):
+		""" Deinit uart """
+
 	def simul_receive(self, buffer):
 		""" Simulate receive """
 		self.reception = buffer

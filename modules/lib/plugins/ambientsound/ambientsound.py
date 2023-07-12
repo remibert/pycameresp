@@ -14,30 +14,33 @@ import tools.system
 class AmbientSound:
 	""" Ambient sound that plays sounds in the absence of the occupants of a dwelling """
 	ambientsound = None
-	SLOW_POLLING = 17 * 1000
+	SLOW_POLLING = 11 * 1000
 	FAST_POLLING =  2 * 1000
 	DURATION_SOUND = 200
-	MAX_TOO_LONG_SOUND = 10
+	REBOOT_FAULT = 32
+	REOPEN_FAULT = 3
 
 	STATE_STOPPED   = 0
 	STATE_PLAYING   = 1
 
 	def __init__(self):
 		""" Create ambient sound """
-		self.dfplayer = plugins.ambientsound.dfplayer.DFPlayer()#display=True)
+		self.dfplayer = None
+		self.open_player()
 		self.config = plugins.ambientsound.config.AmbientSoundConfig()
 		self.loop = 0
-		self.loop_start_play = 0
+		self.last_play = 0
+		self.fault = 0
 		self.state = AmbientSound.STATE_STOPPED
 		self.too_long = 0
+		self.last_open = 0
 
-	async def dfplayer_simulator(self, **kwargs):
-		""" Simulate response from dfplayer """
-		while True:
-			await uasyncio.sleep(15)
-			self.dfplayer.uart.simul_receive(b"\x7E\xFF\x06\x40\x00\x00\x06\xB5\xFE\xEF")
-			await uasyncio.sleep(15)
-			self.dfplayer.uart.simul_receive(b"\x7E\xFF\x06\x3D\x00\x00\x04\xFE\xBA\xEF")
+	def open_player(self):
+		""" Open sound player """
+		if self.dfplayer is not None:
+			del self.dfplayer
+		self.dfplayer = None
+		self.dfplayer = plugins.ambientsound.dfplayer.DFPlayer()#display=True)
 
 	def is_active(self):
 		""" Indicates if the ambient sound is active """
@@ -59,19 +62,38 @@ class AmbientSound:
 		# If the ambient sound is active
 		if self.is_active():
 			tools.logger.syslog("Ambient sound start")
-			self.dfplayer.play_next()
-			self.loop_start_play = self.loop
-			self.too_long = 0
-			self.state = AmbientSound.STATE_PLAYING
+			self.play_next()
 		else:
+			# Clean up data received
+			self.dfplayer.receive()
 			await tools.tasking.Tasks.wait_resume(duration=AmbientSound.SLOW_POLLING, name="ambientsound")
 
-	async def state_playing(self):
-		""" State ambient sound playing """
-		await tools.tasking.Tasks.wait_resume(duration=AmbientSound.FAST_POLLING, name="ambientsound")
+	def play_next(self):
+		""" Play next sound """
+		self.dfplayer.play_next()
+		self.last_play = self.loop
+		self.too_long = 0
+		self.state = AmbientSound.STATE_PLAYING
 
-		# If the ambient sound is active
-		if self.is_active() is True:
+	def increase_fault(self):
+		""" Increase the fault counter """
+		self.fault += 1
+		# print("Fault %d    "%self.fault, end="")
+
+	def clear_fault(self):
+		""" Clear the fault counter """
+		self.fault = 0
+		# print("Clear fault", end="")
+
+	async def ask_status(self, ask=True):
+		""" Ask status and wait response 
+		return True if sound ended, False if sound playing, None if error """
+		result = 123
+
+		if ask:
+			self.dfplayer.get_status()
+
+		for i in range(6):
 			# Get the player result
 			response = self.dfplayer.receive()
 
@@ -81,23 +103,65 @@ class AmbientSound:
 				# If sound ended
 				if (command == plugins.ambientsound.dfplayer.PLAY_ENDED) or \
 				   (command == plugins.ambientsound.dfplayer.QUERY_STATUS and value == 0):
-					self.dfplayer.play_next()
-					self.loop_start_play = self.loop
-					self.too_long = 0
-			elif (self.loop % 5) == 4:
-				self.dfplayer.get_status()
+					self.clear_fault()
+					result = True
+					break
+				elif (command == plugins.ambientsound.dfplayer.QUERY_STATUS and value != 0):
+					self.clear_fault()
+					result = False
+					break
+				elif (command == plugins.ambientsound.dfplayer.ERR_FILE):
+					self.increase_fault()
+					result = True
+					break
+			else:
+				await uasyncio.sleep_ms(500)
 
-			# If the sound too long
-			if ((self.loop - self.loop_start_play) * AmbientSound.FAST_POLLING // 1000) > AmbientSound.DURATION_SOUND:
-				if self.too_long == 0:
-					tools.logger.syslog("Ambient sound too long")
-				self.too_long += 1
+		# No response received
+		if result == 123 and ask is True:
+			self.increase_fault()
+			result = None
+		return result
 
-				if self.too_long > AmbientSound.MAX_TOO_LONG_SOUND:
-					tools.logger.syslog("Too much ambient sound too long")
-					# Duration to let the event go
+	async def state_playing(self):
+		""" State ambient sound playing """
+		await tools.tasking.Tasks.wait_resume(duration=AmbientSound.FAST_POLLING, name="ambientsound")
+
+		# If the ambient sound is active
+		if self.is_active() is True:
+			if self.loop % 5 == 4:
+				status_required = True
+			else:
+				status_required = False
+			ended = await self.ask_status(status_required)
+
+			if ended is True:
+				self.play_next()
+
+			too_long_duration = ((self.loop - self.last_play) * AmbientSound.FAST_POLLING // 1000) > AmbientSound.DURATION_SOUND
+
+			# If fault quantity is not too important
+			if self.fault % AmbientSound.REOPEN_FAULT == (AmbientSound.REOPEN_FAULT -1):
+				# Close and reopen uart to test if fault can be resolved
+				self.open_player()
+				await uasyncio.sleep_ms(500)
+
+				# Ask status
+				ended = await self.ask_status(True)
+
+				# If sound ended
+				if ended is True:
+					# Play next sound
+					await uasyncio.sleep_ms(500)
+					self.play_next()
+			# If the sound failure detected
+			elif too_long_duration or self.fault >= AmbientSound.REBOOT_FAULT:
+				# If there is no user activity
+				if tools.tasking.Tasks.is_slow_down() is False:
+					# Reboot required
+					server.notifier.Notifier.notify(message="Ambient sound fault")
 					await uasyncio.sleep(15)
-					tools.system.reboot("Too much ambient sound too long")
+					tools.system.reboot("Ambient sound fault")
 		else:
 			# Stop ambient sound
 			tools.logger.syslog("Ambient sound stop")
@@ -106,11 +170,11 @@ class AmbientSound:
 	async def task(self, **kwargs):
 		""" Task ambient sound """
 		while True:
+			self.loop += 1
 			if self.state == AmbientSound.STATE_STOPPED:
 				await self.state_stopped()
 			else:
 				await self.state_playing()
-			self.loop += 1
 
 	@staticmethod
 	def start(**kwargs):
@@ -120,3 +184,11 @@ class AmbientSound:
 		tools.tasking.Tasks.create_monitor(AmbientSound.ambientsound.task, **kwargs)
 		if tools.filesystem.ismicropython() is False:
 			tools.tasking.Tasks.create_monitor(AmbientSound.ambientsound.dfplayer_simulator)
+
+	async def dfplayer_simulator(self, **kwargs):
+		""" Simulate response from dfplayer """
+		while True:
+			await uasyncio.sleep(15)
+			self.dfplayer.uart.simul_receive(b"\x7E\xFF\x06\x40\x00\x00\x06\xB5\xFE\xEF")
+			await uasyncio.sleep(15)
+			self.dfplayer.uart.simul_receive(b"\x7E\xFF\x06\x3D\x00\x00\x04\xFE\xBA\xEF")

@@ -62,7 +62,7 @@ class DFPlayer:
 	def __del__(self):
 		""" Close dfplayer """
 		if self.uart is not None:
-			self.uart.close()
+			self.uart.deinit()
 
 	def checksum(self, frame):
 		""" Compute the frame checksum """

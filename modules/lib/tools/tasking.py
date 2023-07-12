@@ -226,6 +226,13 @@ class Tasks:
 		return Tasks.slow_ratio[0]
 
 	@staticmethod
+	def is_slow_down():
+		""" Indicates if in slow down mode """
+		if time.time() < Tasks.slow_time[0]:
+			return True
+		return False
+
+	@staticmethod
 	def slow_down(duration=20, ratio=25):
 		""" Set the state slow for a specified duration """
 		keep = True
