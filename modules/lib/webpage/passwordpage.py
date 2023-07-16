@@ -27,7 +27,12 @@ class PasswordPage:
 	@staticmethod
 	def login_page(alert=None, action=b""):
 		""" Login password page """
-		return PasswordPage.get_dialog([Edit(text=tools.lang.user, name=b"login_user"),Edit(text=tools.lang.password, type=b"password", name=b"login_password")], tools.lang.login, alert=alert, modal=True, action=action)
+		return PasswordPage.get_dialog([
+			Edit(text=tools.lang.user, name=b"login_user"),
+			Edit(text=tools.lang.password, type=b"password", name=b"login_password"),
+			Switch(text=tools.lang.remember_me, name=b"remember_me", checked=False)
+			],
+			tools.lang.login, alert=alert, modal=True, action=action)
 
 	@staticmethod
 	def change_page(alert=None):
@@ -62,7 +67,7 @@ class PasswordPage:
 		if server.sessions.Sessions.check(request.get_cookie(b"session")) is False:
 			if server.user.User.check(request.params.get(b"login_user",b""), request.params.get(b"login_password",b"")):
 				if duration > 0:
-					response.set_cookie(b"session",server.sessions.Sessions.create(duration),duration)
+					response.set_cookie(b"session",server.sessions.Sessions.create(duration, request.params.get(b"remember_me",b"")),duration, http_only=True)
 			else:
 				return PasswordPage.login_page(None if request.params.get(b"login_password",None) is None else tools.lang.wrong_user_or, action=b"/")
 		return None

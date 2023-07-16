@@ -83,13 +83,13 @@ class Http:
 		except:
 			return None
 
-	def set_cookie(self, name, value=None, expiration=None):
+	def set_cookie(self, name, value=None, expiration=None, http_only=False):
 		""" Set cookie """
 		if value is None:
 			if name in self.cookies:
 				del self.cookies[name]
 		else:
-			self.cookies[name] = (value, expiration)
+			self.cookies[name] = (value, expiration, http_only)
 
 	def get_header(self, name):
 		""" Get the http request header """
@@ -276,7 +276,12 @@ class Http:
 				setget = b""
 			else:
 				setget = b"Set-"
-			result += await streamio.write(b"%sCookie: %s=%s%s\r\n"%(setget, cookie, value[0], self.get_expiration(value[1])))
+
+			http_only = b""
+			if len(value) >= 3:
+				if value[2] is True:
+					http_only = b"; HttpOnly"
+			result += await streamio.write(b"%sCookie: %s=%s%s%s\r\n"%(setget, cookie, value[0], self.get_expiration(value[1]), http_only))
 		return result
 
 	async def serialize_body(self, streamio):

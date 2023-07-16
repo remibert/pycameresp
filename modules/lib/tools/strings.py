@@ -6,6 +6,17 @@ import binascii
 import time
 import io
 
+def key_to_string(value):
+	""" Convert key to string """
+	if value <= 0x1A:
+		return "CTRL-%s"%chr(64+value)
+	elif value == 0x1B:
+		return "ESC"
+	elif value == 0x20:
+		return "SPACE"
+	else:
+		return "%s"%chr(value)
+
 def size_to_string(size, largeur=6):
 	""" Convert a size in a string with k, m, g, t..."""
 	return size_to_bytes(size, largeur).decode("utf8")

@@ -31,7 +31,6 @@ class JsonConfig:
 		self.last_refresh = 0
 		JsonConfig.classes.add(self.__class__)
 
-
 	def config_root(self):
 		""" Configuration root path """
 		if tools.filesystem.ismicropython():

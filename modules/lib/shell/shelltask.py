@@ -18,6 +18,11 @@ import tools.console
 import tools.tasking
 import tools.strings
 
+if tools.filesystem.ismicropython():
+	SHELL_KEY = 0x1A
+else:
+	SHELL_KEY = 0x20
+
 class Shell:
 	""" Shell """
 	@staticmethod
@@ -30,7 +35,7 @@ class Shell:
 		""" Asynchronous shell task """
 		import uasyncio
 
-		tools.console.Console.print("\n\x1B[1m\x1B[48;5;226m\x1B[38;5;70mPress Ctrl-Z to start shell\x1b[m")
+		tools.console.Console.print("\n\x1B[1m\x1B[48;5;226m\x1B[38;5;70mPress %s to start shell\x1b[m"%tools.strings.key_to_string(SHELL_KEY))
 		if tools.filesystem.ismicropython():
 			polling1 = 1
 			polling2 = 0.01
@@ -43,7 +48,7 @@ class Shell:
 				character = tools.terminal.getch()[0]
 
 				# Check if character is correct to start shell
-				if character == "\x1A":
+				if character == chr(SHELL_KEY):
 					tools.tasking.Tasks.suspend()
 
 					# Wait all server suspended

@@ -45,12 +45,10 @@ class Streaming:
 		Streaming.activity()
 		Streaming.streaming_id[0] += id(request)
 		return Tag(b"""
-		<p>
-			<div style="position: relative;">
-				<img id="video-stream" src="" width="100%%"/>
-				<table id="zone_masking" style="position: absolute;top:0px" />
-			</div>
-		</p>
+		<div style="position: relative;">
+			<img id="video-stream" src="" width="100%%"/>
+			<table id="zone_masking" style="position: absolute;top:0px" />
+		</div>	
 		<script>
 			var streamUrl = document.location.protocol + "//" + document.location.hostname + ':%d';
 			document.getElementById('video-stream').src = `${streamUrl}/camera/start?streaming_id=%d`;

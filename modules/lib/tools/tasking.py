@@ -248,21 +248,22 @@ class Tasks:
 	@staticmethod
 	def is_all_waiting():
 		""" Check if all task resumed """
-		result = True
-		for task in Tasks.tasks.values():
+		result = []
+		for name, task in Tasks.tasks.items():
 			if task.status is False:
-				# print("Buzy %s"%Tasks.tasknames[key])
-				result = False
+				result.append(task.name)
 		return result
 
 	@staticmethod
 	async def wait_all_suspended():
 		""" Wait all servers suspended """
 		for i in range(20):
-			if Tasks.is_all_waiting() is True:
+			waiting = Tasks.is_all_waiting()
+			if len(waiting) == 0:
+				print("All servers suspended")
 				break
 			else:
 				if i % 4 == 0:
-					print("Wait all servers suspended...")
+					print("Wait for servers to suspend : %s"%str(waiting))
 				await uasyncio.sleep(0.5)
 				tools.watchdog.WatchDog.feed()

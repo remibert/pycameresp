@@ -17,29 +17,26 @@ class AmbientSound:
 	SLOW_POLLING = 11 * 1000
 	FAST_POLLING =  2 * 1000
 	DURATION_SOUND = 200
-	REBOOT_FAULT = 32
-	REOPEN_FAULT = 3
+	REBOOT_FAULT = 64
+	REOPEN_FAULT = 4
 
 	STATE_STOPPED   = 0
 	STATE_PLAYING   = 1
 
 	def __init__(self):
 		""" Create ambient sound """
-		self.dfplayer = None
 		self.open_player()
 		self.config = plugins.ambientsound.config.AmbientSoundConfig()
 		self.loop = 0
 		self.last_play = 0
 		self.fault = 0
 		self.state = AmbientSound.STATE_STOPPED
-		self.too_long = 0
 		self.last_open = 0
 
 	def open_player(self):
 		""" Open sound player """
-		if self.dfplayer is not None:
+		if hasattr(AmbientSound,"dfplayer") is True:
 			del self.dfplayer
-		self.dfplayer = None
 		self.dfplayer = plugins.ambientsound.dfplayer.DFPlayer()#display=True)
 
 	def is_active(self):
@@ -72,7 +69,6 @@ class AmbientSound:
 		""" Play next sound """
 		self.dfplayer.play_next()
 		self.last_play = self.loop
-		self.too_long = 0
 		self.state = AmbientSound.STATE_PLAYING
 
 	def increase_fault(self):
@@ -85,12 +81,13 @@ class AmbientSound:
 		self.fault = 0
 		# print("Clear fault", end="")
 
-	async def ask_status(self, ask=True):
+	async def get_status(self, ask_status=True):
 		""" Ask status and wait response 
 		return True if sound ended, False if sound playing, None if error """
-		result = 123
+		result = None
+		no_response = True
 
-		if ask:
+		if ask_status:
 			self.dfplayer.get_status()
 
 		for i in range(6):
@@ -99,6 +96,7 @@ class AmbientSound:
 
 			# If response received
 			if response is not None:
+				no_response = False
 				command, value = response
 				# If sound ended
 				if (command == plugins.ambientsound.dfplayer.PLAY_ENDED) or \
@@ -118,7 +116,7 @@ class AmbientSound:
 				await uasyncio.sleep_ms(500)
 
 		# No response received
-		if result == 123 and ask is True:
+		if no_response and ask_status:
 			self.increase_fault()
 			result = None
 		return result
@@ -130,10 +128,10 @@ class AmbientSound:
 		# If the ambient sound is active
 		if self.is_active() is True:
 			if self.loop % 5 == 4:
-				status_required = True
+				ask_status = True
 			else:
-				status_required = False
-			ended = await self.ask_status(status_required)
+				ask_status = False
+			ended = await self.get_status(ask_status=ask_status)
 
 			if ended is True:
 				self.play_next()
@@ -147,7 +145,7 @@ class AmbientSound:
 				await uasyncio.sleep_ms(500)
 
 				# Ask status
-				ended = await self.ask_status(True)
+				ended = await self.get_status(ask_status=True)
 
 				# If sound ended
 				if ended is True:
