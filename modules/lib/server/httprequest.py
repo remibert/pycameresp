@@ -271,7 +271,7 @@ class Http:
 			result += await streamio.write(b"%s: %s\r\n"%(header, value))
 
 		# Serialize cookies
-		for cookie, value in self.cookies.items():
+		for name, value in self.cookies.items():
 			if self.request:
 				setget = b""
 			else:
@@ -281,7 +281,9 @@ class Http:
 			if len(value) >= 3:
 				if value[2] is True:
 					http_only = b"; HttpOnly"
-			result += await streamio.write(b"%sCookie: %s=%s%s%s\r\n"%(setget, cookie, value[0], self.get_expiration(value[1]), http_only))
+				if name == b"session":
+					http_only += b"; Path=/"
+			result += await streamio.write(b"%sCookie: %s=%s%s%s\r\n"%(setget, name, value[0], self.get_expiration(value[1]), http_only))
 		return result
 
 	async def serialize_body(self, streamio):

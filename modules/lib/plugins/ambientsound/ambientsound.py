@@ -74,12 +74,10 @@ class AmbientSound:
 	def increase_fault(self):
 		""" Increase the fault counter """
 		self.fault += 1
-		# print("Fault %d    "%self.fault, end="")
 
 	def clear_fault(self):
 		""" Clear the fault counter """
 		self.fault = 0
-		# print("Clear fault", end="")
 
 	async def get_status(self, ask_status=True):
 		""" Ask status and wait response 
@@ -163,6 +161,7 @@ class AmbientSound:
 		else:
 			# Stop ambient sound
 			tools.logger.syslog("Ambient sound stop")
+			self.dfplayer.stop()
 			self.state = AmbientSound.STATE_STOPPED
 
 	async def task(self, **kwargs):

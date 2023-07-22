@@ -67,7 +67,9 @@ class PasswordPage:
 		if server.sessions.Sessions.check(request.get_cookie(b"session")) is False:
 			if server.user.User.check(request.params.get(b"login_user",b""), request.params.get(b"login_password",b"")):
 				if duration > 0:
-					response.set_cookie(b"session",server.sessions.Sessions.create(duration, request.params.get(b"remember_me",b"")),duration, http_only=True)
+					if request.params.get(b"remember_me",b"") == b"1":
+						duration = 86400*365
+					response.set_cookie(b"session",server.sessions.Sessions.create(duration),duration, http_only=True)
 			else:
 				return PasswordPage.login_page(None if request.params.get(b"login_password",None) is None else tools.lang.wrong_user_or, action=b"/")
 		return None

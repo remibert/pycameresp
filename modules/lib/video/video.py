@@ -117,8 +117,9 @@ class Camera:
 	modified = [False]
 	success = [0]
 	failed  = [0]
-	newFailed = [0]
+	new_failed = [0]
 	config = None
+	flash_enabled = [True]
 
 	@staticmethod
 	def gpio_config(**kwargs):
@@ -187,7 +188,7 @@ class Camera:
 		""" Reset statistic """
 		Camera.success[0] = 0
 		Camera.failed [0] = 0
-		Camera.newFailed[0] = 0
+		Camera.new_failed[0] = 0
 
 	@staticmethod
 	def close():
@@ -215,7 +216,14 @@ class Camera:
 	@staticmethod
 	def flash(level=0):
 		""" Start or stop the flash """
-		camera.flash(level)
+		if Camera.flash_enabled[0]:
+			camera.flash(level)
+
+	@staticmethod
+	def set_flash(state):
+		""" On the esp32cam, we use the output of the led flash to communicate with the dfplayer, 
+		and this disrupts the operation, then we can turn it off """
+		Camera.flash_enabled[0] = state
 
 	@staticmethod
 	def retry(callback):
@@ -232,7 +240,7 @@ class Camera:
 					break
 				except ValueError:
 					Camera.failed[0] += 1
-					Camera.newFailed[0] += 1
+					Camera.new_failed[0] += 1
 					if retry <= 3:
 						tools.logger.syslog("Failed to get image %d retry before reset"%retry)
 					retry -= 1
@@ -241,13 +249,13 @@ class Camera:
 			STAT_CAMERA=20000
 			if (total % STAT_CAMERA) == 0:
 				if Camera.success[0] != 0:
-					newFailed = 100.-((Camera.newFailed[0]*100)/STAT_CAMERA)
+					new_failed = 100.-((Camera.new_failed[0]*100)/STAT_CAMERA)
 					failed    = 100.-((Camera.failed[0]*100)/total)
 				else:
-					newFailed = 0.
+					new_failed = 0.
 					failed    = 0.
-				tools.logger.syslog("Camera stat : last %-3.1f%%, total %-3.1f%% success on %d"%(newFailed, failed, total))
-				Camera.newFailed[0] = 0
+				tools.logger.syslog("Camera stat : last %-3.1f%%, total %-3.1f%% success on %d"%(new_failed, failed, total))
+				Camera.new_failed[0] = 0
 		return result
 
 	@staticmethod

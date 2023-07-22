@@ -30,11 +30,11 @@ async def camera_page(request, response, args):
 			SliderCmd(           text=tools.lang.flash_level, path=b"camera/configure", name=b"flash_level", min=b"0" , max=b"256", step=b"1", value=b"%d"%config.flash_level),
 			SwitchCmd(           text=tools.lang.hmirror   ,  path=b"camera/configure", name=b"hmirror"   , checked=config.hmirror),
 			SwitchCmd(           text=tools.lang.vflip     ,  path=b"camera/configure", name=b"vflip"     , checked=config.vflip),
-			Link(text=tools.lang.item_full_screen , class_=b"btn btn-outline-primary ", href=b"/camera/fullscreen")
+			Link(text=tools.lang.item_full_screen , class_=b"btn btn-outline-primary ", href=b"/fullscreen")
 		]))
 	await response.send_page(page)
 
-@server.httpserver.HttpServer.add_route(b'/camera/fullscreen', available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/fullscreen', available=tools.info.iscamera() and video.video.Camera.is_activated())
 async def full_screen_camera_page(request, response, args):
 	""" Full screen camera page """
 	framesizes = []

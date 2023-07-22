@@ -12,11 +12,9 @@ class Sessions:
 	sessions = []
 
 	@staticmethod
-	def create(duration, remember_me=False):
+	def create(duration):
 		""" Create new session """
 		session = tools.encryption.gethash(tools.date.date_to_bytes())
-		if remember_me == b"1":
-			duration = 86400*365
 		Sessions.sessions.append((session, time.time() + duration))
 		return session
 
