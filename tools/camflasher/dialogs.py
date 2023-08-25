@@ -15,18 +15,10 @@ sys.path.append("../../modules/lib")
 # pylint:disable=import-error
 # pylint:disable=wrong-import-position
 
-try:
-	from PyQt6 import uic
-	from PyQt6.QtCore import QUrl
-	from PyQt6.QtWidgets import QFileDialog, QColorDialog, QDialog, QMessageBox
-	from PyQt6.QtGui import QFont, QColor, QDesktopServices
-
-except:
-	from PyQt5 import uic
-	from PyQt5.QtCore import QUrl
-	from PyQt5.QtWidgets import QFileDialog, QColorDialog, QDialog, QMessageBox
-	from PyQt5.QtGui import QFont, QColor, QDesktopServices
-
+from PyQt6 import uic
+from PyQt6.QtCore import QUrl
+from PyQt6.QtWidgets import QFileDialog, QColorDialog, QDialog, QMessageBox
+from PyQt6.QtGui import QFont, QColor, QDesktopServices
 
 DOWNLOAD_VERSION = "Download the lastest version of :"
 
@@ -101,63 +93,147 @@ class FlashDialog(QDialog):
 		self.initialized = False
 		self.setModal(True)
 
+	def load_firmware_config(self, added_firmwares, field, config_name, main=False):
+		""" Load firmware config for selected firmware field """
+		firmwares = []
+		config = settings.get_settings( )
+		for firmware in config.value(config_name, []):
+			if os.path.exists(firmware):
+				firmwares.append(firmware)
+			elif main is False:
+				if len(firmware.strip()) == 0:
+					firmwares.append("")
+
+		for added in added_firmwares:
+			firmwares.append(added)
+		while field.count() >= 1:
+			field.removeItem(0)
+		field.addItems(firmwares)
+		field.setCurrentIndex(0)
+
+	def load_address_config(self, field, config_name):
+		""" Load address config for selected firmware field """
+		addresses = []
+		config = settings.get_settings()
+		for firmware in config.value(config_name, []):
+			addresses.append(firmware)
+		while field.count() >= 1:
+			field.removeItem(0)
+		field.addItems(addresses)
+		field.setCurrentIndex(0)
+
+	def load_options(self):
+		""" Load other options """
+		config = settings.get_settings()
+		self.dialog.options.setText(config.value(settings.FLASH_OPTIONS, ""))
+
+	def save_options(self):
+		""" Save other options """
+		config = settings.get_settings()
+		config.setValue(settings.FLASH_OPTIONS, self.dialog.options.text())
+
 	def showEvent(self, event):
 		""" On window shown """
 		if self.initialized is False:
 			self.initialized = True
 			config = settings.get_settings( )
-			firmwares = []
-			for firmware in config.value(settings.FIRMWARE_FILENAMES, []):
-				if os.path.exists(firmware):
-					firmwares.append(firmware)
 
+			firmwares = []
 			firmwares.append(DOWNLOAD_VERSION + "ESP32CAM-firmware.bin")
 			firmwares.append(DOWNLOAD_VERSION + "GENERIC_SPIRAM-firmware.bin")
 			firmwares.append(DOWNLOAD_VERSION + "GENERIC_S3_SPIRAM-firmware.bin")
-			self.dialog.firmware.addItems(firmwares)
-			self.dialog.firmware.setCurrentIndex(0)
-			self.dialog.select_firmware.clicked.connect(self.on_firmware_clicked)
+			self.load_firmware_config(firmwares, self.dialog.firmware_1, settings.FIRMWARE_1_FILENAME, True)
+			self.load_address_config(            self.dialog.address_1,  settings.FIRMWARE_1_ADDRESS)
+			self.dialog.select_firmware_1.clicked.connect(self.on_firmware_1_clicked)
+
+			self.load_firmware_config([], self.dialog.firmware_2, settings.FIRMWARE_2_FILENAME)
+			self.load_address_config(     self.dialog.address_2,  settings.FIRMWARE_2_ADDRESS)
+			self.dialog.select_firmware_2.clicked.connect(self.on_firmware_2_clicked)
+
+			self.load_firmware_config([], self.dialog.firmware_3, settings.FIRMWARE_3_FILENAME)
+			self.load_address_config(     self.dialog.address_3,  settings.FIRMWARE_3_ADDRESS)
+			self.dialog.select_firmware_3.clicked.connect(self.on_firmware_3_clicked)
+
 			self.dialog.baud.addItems(["9600","57600","74880","115200","230400","460800"])
 			self.dialog.baud.setCurrentIndex(5)
+			self.load_options()
 
-	def save_firmwares_list(self, firmware):
-		""" Save list in registry """
+	def save_address_field(self, field, config_name, main=False):
+		""" Save address """
+		address = field.currentText()
 		config = settings.get_settings()
-		firmwares = [firmware]
-		for i in range(self.dialog.firmware.count()):
-			if self.dialog.firmware.itemText(i) != self.dialog.firmware.currentText():
-				firmwares.append(self.dialog.firmware.itemText(i))
-		config.setValue(settings.FIRMWARE_FILENAMES, firmwares)
+		addresses = [address]
+		for i in range(field.count()):
+			if field.itemText(i) != field.currentText():
+				if field.itemText(i) not in addresses:
+					addresses.append(field.itemText(i))
+		config.setValue(config_name, addresses)
 
-	def accept(self):
-		""" Called when ok pressed """
-		firmware = self.dialog.firmware.currentText()
-		if  os.path.exists(firmware) or firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
-			self.save_firmwares_list(firmware)
-			super().accept()
+	def check_firmware_field(self, field, config_name, main=False):
+		""" Check firmware field """
+		config = settings.get_settings()
+		firmware = field.currentText()
+		download = False
+		if main:
+			if firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
+				download = True
+		if  os.path.exists(firmware) or download or (len(firmware.strip()) == 0 and main is False):
+			firmware = field.currentText()
+			firmwares = [firmware]
+			for i in range(field.count()):
+				if field.itemText(i) != field.currentText():
+					if field.itemText(i) not in firmwares:
+						firmwares.append(field.itemText(i))
+			config.setValue(config_name, firmwares)
+			return True
 		elif os.path.exists(firmware) is False:
 			msg = QMessageBox(parent=self)
 			msg.setIcon(QMessageBox.Icon.Critical)
 			msg.setText("Firmware file does not exist")
 			msg.exec()
+			return False
 
-	def on_firmware_clicked(self, event):
+	def accept(self):
+		""" Called when ok pressed """
+		if         self.check_firmware_field(self.dialog.firmware_1, settings.FIRMWARE_1_FILENAME, True):
+			if     self.check_firmware_field(self.dialog.firmware_2, settings.FIRMWARE_2_FILENAME, False):
+				if self.check_firmware_field(self.dialog.firmware_3, settings.FIRMWARE_3_FILENAME, False):
+					self.save_address_field(self.dialog.address_1, settings.FIRMWARE_1_ADDRESS)
+					self.save_address_field(self.dialog.address_2, settings.FIRMWARE_2_ADDRESS)
+					self.save_address_field(self.dialog.address_3, settings.FIRMWARE_3_ADDRESS)
+					self.save_options()
+					super().accept()
+
+	def on_firmware_clicked_field(self, event, field):
 		""" Selection of firmware button clicked """
 		path = str(Path.home())
-		if self.dialog.firmware.maxCount() > 0:
-			firmware = self.dialog.firmware.currentText()
+		if field.maxCount() > 0:
+			firmware = field.currentText()
 			if os.path.exists(firmware):
 				path = os.path.split(firmware)[0]
 
 		firmware = QFileDialog.getOpenFileName(self, caption='Select firmware file', directory=path, filter="Firmware files (*.bin)")
 		if firmware != ('', ''):
-			for i in range(self.dialog.firmware.count()):
-				if self.dialog.firmware.itemText(i) == firmware[0]:
-					self.dialog.firmware.setCurrentIndex(i)
+			for i in range(field.count()):
+				if field.itemText(i) == firmware[0]:
+					field.setCurrentIndex(i)
 					break
 			else:
-				self.dialog.firmware.addItem(firmware[0])
-				self.dialog.firmware.setCurrentIndex(self.dialog.firmware.count()-1)
+				field.addItem(firmware[0])
+				field.setCurrentIndex(field.count()-1)
+
+	def on_firmware_1_clicked(self, event):
+		""" Selection of firmware button clicked """
+		self.on_firmware_clicked_field(event, self.dialog.firmware_1)
+
+	def on_firmware_2_clicked(self, event):
+		""" Selection of firmware button clicked """
+		self.on_firmware_clicked_field(event, self.dialog.firmware_2)
+
+	def on_firmware_3_clicked(self, event):
+		""" Selection of firmware button clicked """
+		self.on_firmware_clicked_field(event, self.dialog.firmware_3)
+
 
 class OptionDialog(QDialog):
 	""" Dialog for options """

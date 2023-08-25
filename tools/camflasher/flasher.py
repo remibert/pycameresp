@@ -1,11 +1,13 @@
 # Distributed under Pycameresp License
 # Copyright (c) 2023 Remi BERTHOLET
 """ Micropython firmware flasher for esp32 """
+import os.path
 import threading
 import tempfile
 import queue
 import time
 import sys
+import traceback
 import fileuploader
 import streamdevice
 import vt100
@@ -14,6 +16,7 @@ sys.path.append("../../modules/lib")
 # pylint:disable=consider-using-f-string
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
+# pylint:disable=consider-using-enumerate
 from tools.strings import get_utf8_length
 
 class Flasher(threading.Thread):
@@ -130,9 +133,29 @@ class Flasher(threading.Thread):
 		""" Print message """
 		print(message, end)
 
+	def get_firmware(self, firmware):
+		""" Get firmware or download it """
+		if type(firmware) == type((0,)):
+			firmware = firmware[0]
+			uploader = fileuploader.PythonUploader(self.print)
+			content = uploader.download_last_release(fileuploader.GITHUB_API_HOST, fileuploader.PYCAMERESP_PATH, firmware)
+			if content is not None:
+				directory = tempfile.TemporaryDirectory()
+				firmware = "%s/%s"%(directory.name, firmware)
+				file = open(firmware, "wb")
+				file.write(content)
+				file.close()
+			else:
+				print("\n\x1B[93;101mFirmware download failed\n\x1B[m")
+				firmware = None
+		else:
+			if not os.path.exists(firmware):
+				firmware = None
+		return firmware
+
 	def flasher(self, data):
 		""" Flasher of firmware it use the esptool.py command """
-		port, baud, rts_dtr, firmware, erase, address, chip, config = data
+		port, baud, rts_dtr, firmwares, erase, addresses, chip, config, options = data
 
 		# Disconnect serial link
 		self.flashing = True
@@ -146,22 +169,15 @@ class Flasher(threading.Thread):
 				time.sleep(0.1)
 
 			print("\x1B[1;1f\x1B[2J")
-			if type(firmware) == type((0,)):
-				firmware = firmware[0]
-				uploader = fileuploader.PythonUploader(self.print)
-				content = uploader.download_last_release(fileuploader.GITHUB_API_HOST, fileuploader.PYCAMERESP_PATH, firmware)
-				if content is not None:
-					directory = tempfile.TemporaryDirectory()
-					firmware = "%s/%s"%(directory.name, firmware)
-					file = open(firmware, "wb")
-					file.write(content)
-					file.close()
-				else:
-					print("\n\x1B[93;101mFirmware download failed\n\x1B[m")
-					firmware = None
+
+			firmwares_command = []
+			for index in range(len(firmwares)):
+				firmware = self.get_firmware(firmwares[index])
+				if firmware is not None:
+					firmwares_command += [addresses[index], firmware]
 
 			print("\x1B[48;5;229m\x1B[38;5;243m")
-			if firmware is not None:
+			if len(firmwares_command) > 0:
 				# Start flasher
 				base_command = ["--port", port, "--baud", baud, "--chip", chip]
 				if erase:
@@ -169,13 +185,23 @@ class Flasher(threading.Thread):
 					print("esptool.py %s" % " ".join(flash_command))
 					esptool.main(flash_command)
 					print("")
-				flash_command = base_command[:] + [ "write_flash", "-z", address, firmware]
+
+				if len(options) > 0:
+					options = options.strip()
+					options = options.replace("  "," ")
+					opt = options.split(" ")
+				else:
+					opt = []
+				flash_command = base_command[:] + opt + [ "write_flash", "--compress"] + firmwares_command
 				print("esptool.py %s" % " ".join(flash_command))
 				esptool.main(flash_command)
 				print("\n"+vt100.COLOR_OK+"Flashed with success."+vt100.COLOR_NONE)
 		except Exception as err:
 			print(err)
 			print("\n"+vt100.COLOR_FAILED+"Flash failed"+vt100.COLOR_NONE)
+		except:
+			exception_traceback = traceback.format_exc()
+			print("\n"+vt100.COLOR_FAILED+"Flash failed, bad files or bad parameters\n%s"%(exception_traceback)+vt100.COLOR_NONE)
 
 		# Connect serial link
 		self.stream_thread.connect_serial((port, rts_dtr, config))

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!python3.11
 # Distributed under Pycameresp License
 # Copyright (c) 2023 Remi BERTHOLET
 # pylint:disable=global-variable-not-assigned

@@ -34,6 +34,10 @@
 			"program": "${workspaceFolder}/modules/main.py",
 			"cwd"    : "${workspaceFolder}/modules",
 			"justMyCode": false,
+			"env":{
+				"PYTHONPATH":"lib;simul;sample"
+
+			},
 			// "console": "externalTerminal",
 
 		},

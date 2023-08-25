@@ -32,6 +32,7 @@ class AmbientSound:
 		self.fault = 0
 		self.state = AmbientSound.STATE_STOPPED
 		self.last_open = 0
+		self.counter_play = 1
 
 	def open_player(self):
 		""" Open sound player """
@@ -59,15 +60,22 @@ class AmbientSound:
 		# If the ambient sound is active
 		if self.is_active():
 			tools.logger.syslog("Ambient sound start")
-			self.play_next()
+			await self.play_next()
 		else:
 			# Clean up data received
 			self.dfplayer.receive()
 			await tools.tasking.Tasks.wait_resume(duration=AmbientSound.SLOW_POLLING, name="ambientsound")
 
-	def play_next(self):
+	async def play_next(self):
 		""" Play next sound """
+		if self.counter_play % 100 == 0:
+			# Periodic reset to prevent mute issue
+			self.dfplayer.reset()
+			await uasyncio.sleep(1)
+			self.dfplayer.receive()
+
 		self.dfplayer.play_next()
+		self.counter_play += 1
 		self.last_play = self.loop
 		self.state = AmbientSound.STATE_PLAYING
 
@@ -132,7 +140,7 @@ class AmbientSound:
 			ended = await self.get_status(ask_status=ask_status)
 
 			if ended is True:
-				self.play_next()
+				await self.play_next()
 
 			too_long_duration = ((self.loop - self.last_play) * AmbientSound.FAST_POLLING // 1000) > AmbientSound.DURATION_SOUND
 
@@ -149,7 +157,7 @@ class AmbientSound:
 				if ended is True:
 					# Play next sound
 					await uasyncio.sleep_ms(500)
-					self.play_next()
+					await self.play_next()
 			# If the sound failure detected
 			elif too_long_duration or self.fault >= AmbientSound.REBOOT_FAULT:
 				# If there is no user activity

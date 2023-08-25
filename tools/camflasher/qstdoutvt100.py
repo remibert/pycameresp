@@ -5,12 +5,8 @@
 import sys
 from threading import Lock
 from vt100 import VT100
-try:
-	from PyQt6.QtCore import Qt,QTimer
-	from PyQt6.QtWidgets import QTextBrowser
-except:
-	from PyQt5.QtCore import Qt,QTimer
-	from PyQt5.QtWidgets import QTextBrowser
+from PyQt6.QtCore import Qt,QTimer
+from PyQt6.QtWidgets import QTextBrowser
 
 # Main keys
 main_keys = {
@@ -238,12 +234,7 @@ class QStdoutVT100:
 		""" Convert the key event qt into vt100 key """
 		result = None
 		key = key_event.key()
-		try:
-			# PyQt6
-			modifier = key_event.keyCombination().keyboardModifiers() & ~Qt.KeyboardModifier.KeypadModifier
-		except:
-			# PyQt5
-			modifier = key_event.modifiers()& ~Qt.KeyboardModifier.KeypadModifier
+		modifier = key_event.keyCombination().keyboardModifiers()
 
 		if key >= 0x1000000:
 			# Manage main keys

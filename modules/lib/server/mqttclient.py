@@ -34,7 +34,10 @@ class MqttClientInstance(tools.tasking.ClientInstance):
 	def start(self):
 		""" Start mqtt client """
 		MqttClient.init()
-		MqttClient.protocol.start(**self.kwargs)
+		if MqttClient.protocol is not None:
+			MqttClient.protocol.start(**self.kwargs)
+		else:
+			tools.logger.syslog("MqttClient protocol not available")
 		return "MqttClient",self.kwargs.get("mqtt_port", MqttClient.config.port)
 
 class MqttClient:
@@ -74,7 +77,8 @@ class MqttClient:
 		def add_topic(callback):
 			MqttClient.init()
 			kwargs["callback"] = callback
-			MqttClient.protocol.add_topic(**kwargs)
+			if MqttClient.config.activated:
+				MqttClient.protocol.add_topic(**kwargs)
 			return callback
 		return add_topic
 

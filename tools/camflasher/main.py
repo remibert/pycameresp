@@ -7,8 +7,6 @@
 #	- pip3 install esptool
 #	- pip3 install pyserial
 #	- pip3 install requests
-# For windows seven
-#	- pip3 install pyqt5
 # For windows 10, 11, linux, osx
 #	- pip3 install pyqt6
 #
@@ -27,17 +25,10 @@ sys.path.append("../../modules/lib")
 # pylint:disable=import-error
 # pylint:disable=wrong-import-position
 
-try:
-	from PyQt6 import uic
-	from PyQt6.QtCore import QTimer, QEvent, Qt, QCoreApplication
-	from PyQt6.QtWidgets import QMainWindow, QMenu, QApplication, QMessageBox, QErrorMessage
-	from PyQt6.QtGui import QCursor,QAction,QFont
-except:
-	from PyQt5 import uic
-	from PyQt5.QtCore import QTimer, QEvent, Qt, QCoreApplication
-	from PyQt5.QtWidgets import QMainWindow, QMenu, QApplication, QMessageBox, QErrorMessage, QAction
-	from PyQt5.QtGui import QCursor, QFont
-
+from PyQt6 import uic
+from PyQt6.QtCore import QTimer, QEvent, Qt, QCoreApplication
+from PyQt6.QtWidgets import QMainWindow, QMenu, QApplication, QMessageBox, QErrorMessage
+from PyQt6.QtGui import QCursor,QAction,QFont
 from dialogs import *
 from serial.tools import list_ports
 from flasher import Flasher
@@ -653,18 +644,23 @@ class CamFlasher(QMainWindow):
 			try:
 				if self.paused:
 					self.pause()
-				firmware = self.flash_dialog.dialog.firmware.currentText()
-				if firmware[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
-					firmware = (firmware[len(DOWNLOAD_VERSION):],)
-				port      = self.window.combo_port.currentText()
-				baud      = self.flash_dialog.dialog.baud.currentText()
-				rts_dtr   = self.window.chk_rts_dtr.isChecked()
-				erase     = self.flash_dialog.dialog.erase.isChecked()
-				address   = self.flash_dialog.dialog.address.currentText()
-				chip      = self.flash_dialog.dialog.chip.currentText()
-				config    = self.ports.get_config(self.get_port())
+				firmware_1  = self.flash_dialog.dialog.firmware_1.currentText()
+				if firmware_1[:len(DOWNLOAD_VERSION)] == DOWNLOAD_VERSION:
+					firmware_1 = (firmware_1[len(DOWNLOAD_VERSION):],)
+				firmware_2  = self.flash_dialog.dialog.firmware_2.currentText()
+				firmware_3  = self.flash_dialog.dialog.firmware_3.currentText()
+				port        = self.window.combo_port.currentText()
+				baud        = self.flash_dialog.dialog.baud.currentText()
+				rts_dtr     = self.window.chk_rts_dtr.isChecked()
+				erase       = self.flash_dialog.dialog.erase.isChecked()
+				address_1   = self.flash_dialog.dialog.address_1.currentText()
+				address_2   = self.flash_dialog.dialog.address_2.currentText()
+				address_3   = self.flash_dialog.dialog.address_3.currentText()
+				chip        = self.flash_dialog.dialog.chip.currentText()
+				config      = self.ports.get_config(self.get_port())
+				options     = self.flash_dialog.dialog.options.text()
 				self.cancel_selection()
-				self.flasher.flash((port, baud, rts_dtr, firmware, erase, address, chip, config))
+				self.flasher.flash((port, baud, rts_dtr, [firmware_1, firmware_2, firmware_3], erase, [address_1, address_2, address_3], chip, config, options))
 			except Exception as err:
 				print(err)
 
