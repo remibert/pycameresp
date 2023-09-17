@@ -29,6 +29,8 @@ Help of this command :
 		-a, --all             install tools, get source, patch, and build selected firmwares
 		-c, --clean           clean micropython sources to remove all patch
 		-s, --s3              build Esp32 S3 without problem
+		-v BOARDVARIANT, --boardvariant BOARDVARIANT
+                        build with board variant option
 		-r, --rp2             build raspberry pico RP2 W
 		-z, --zippy           zip python modules
 		-o OUTPUTDIR, --outputdir OUTPUTDIR                    output directory
@@ -45,9 +47,12 @@ Replace **ESP32CAM** by your prefered firmware, add double quote if you want to 
 Or for all ESP32 S2
 - **python3 build.py --patch --build "ESP32CAM" "GENERIC_SPIRAM"** 
 
-To build ESP32 S3 you must clean all and add option --s3  :
-- **python3 build.py --clean --s3 --patch --build "GENERIC_S3_SPIRAM"**
+To build ESP32 S3 :
+- **python3 build.py --s3 --patch --boardvariant SPIRAM --build "ESP32_GENERIC_S3"**
+
+To build Freenove CAM S3 :
+- **build.py --build --patch --s3  FREENOVE_CAM_S3   --boardvariant SPIRAM_OCT**
 
 To build Pico PI W you must clean all and enter command :
-- **python3 build.py --clean --rp2 --patch --build "PICO_W"**
+- **python3 build.py --rp2 --patch --build "PICO_W"**
 
