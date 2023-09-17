@@ -36,9 +36,12 @@ def setup():
     uos.VfsLfs2.mkfs(bdev)
     vfs = uos.VfsLfs2(bdev)
     uos.mount(vfs, "/")
+# REMI BERTHOLET START
     install_files()
+# REMI BERTHOLET END
     return vfs
 
+# REMI BERTHOLET START
 def install_files():
     from zlib import decompress
     from binascii import a2b_base64
@@ -53,3 +56,5 @@ def install_files():
 """
         )
 %s
+
+# REMI BERTHOLET END

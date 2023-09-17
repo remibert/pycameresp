@@ -1,17 +1,23 @@
 // Code adapted from https://github.com/espressif/esp32-camera
+#include "mpconfigboard.h"
 #include "string.h"
 #include "esp_log.h"
 #include "esp_jpg_decode.h"
 #include "esp_system.h"
-#include "esp_spi_flash.h"
-
+#if defined(ESP32CAM)
+	#include "esp_spi_flash.h"
+#endif
+#if defined(CONFIG_FREENOVE_CAM_S3)
+	#include "spi_flash_mmap.h"
+	#include "esp_private/periph_ctrl.h"
+#endif
 #include "py/nlr.h"
 #include "py/obj.h"
 #include "py/runtime.h"
 #include "py/binary.h"
 #include "py/objstr.h"
 
-#ifdef CONFIG_ESP32CAM
+#ifdef CONFIG_CAMERA
 	#include "esp_camera.h"
 #endif
 #define TAG "camera"
@@ -22,7 +28,7 @@
 #define max(a,b) ((a)>(b) ?(a):(b))
 
 
-#ifdef CONFIG_ESP32CAM
+#ifdef CONFIG_CAMERA
 
 #define CAMERA_SETTING(type, field, method, min, max) \
 	STATIC mp_obj_t camera_##method(size_t n_args, const mp_obj_t *args)\
@@ -65,54 +71,106 @@
 
 //WROVER-KIT PIN Map
 
-// Defaults value for esp32cam
-#define CAM_PIN_PWDN    32 //power down is not used
-#define CAM_PIN_RESET   -1 //software reset will be performed
-#define CAM_PIN_XCLK     0
-#define CAM_PIN_SIOD    26 // SDA
-#define CAM_PIN_SIOC    27 // SCL
-#define CAM_PIN_D7      35 // Y9 CSI_D7
-#define CAM_PIN_D6      34 // Y8 CSI_D6
-#define CAM_PIN_D5      39 // Y7 CSI_D5 SENSOR_VN
-#define CAM_PIN_D4      36 // Y6 CSI_D4 SENSOR_VP
-#define CAM_PIN_D3      21 // Y5 CSI_D3
-#define CAM_PIN_D2      19 // Y4 CSI_D2
-#define CAM_PIN_D1      18 // Y3 CSI_D1
-#define CAM_PIN_D0       5 // Y2 CSI_D0
-#define CAM_PIN_VSYNC   25 
-#define CAM_PIN_HREF    23
-#define CAM_PIN_PCLK    22
+	#if defined(CONFIG_ESP32CAM) && defined(CONFIG_CAMERA)
+		// Defaults value for esp32cam
+		#define CAM_PIN_PWDN    32 //power down is not used
+		#define CAM_PIN_RESET   -1 //software reset will be performed
+		#define CAM_PIN_XCLK     0
+		#define CAM_PIN_SIOD    26 // SDA
+		#define CAM_PIN_SIOC    27 // SCL
+		#define CAM_PIN_D7      35 // Y9 CSI_D7
+		#define CAM_PIN_D6      34 // Y8 CSI_D6
+		#define CAM_PIN_D5      39 // Y7 CSI_D5 SENSOR_VN
+		#define CAM_PIN_D4      36 // Y6 CSI_D4 SENSOR_VP
+		#define CAM_PIN_D3      21 // Y5 CSI_D3
+		#define CAM_PIN_D2      19 // Y4 CSI_D2
+		#define CAM_PIN_D1      18 // Y3 CSI_D1
+		#define CAM_PIN_D0       5 // Y2 CSI_D0
+		#define CAM_PIN_VSYNC   25 
+		#define CAM_PIN_HREF    23
+		#define CAM_PIN_PCLK    22
+		static camera_config_t camera_config = 
+		{
+			.pin_pwdn     = CAM_PIN_PWDN,
+			.pin_reset    = CAM_PIN_RESET,
+			.pin_xclk     = CAM_PIN_XCLK,
+			.pin_sscb_sda = CAM_PIN_SIOD,
+			.pin_sscb_scl = CAM_PIN_SIOC,
+			.pin_d7       = CAM_PIN_D7,
+			.pin_d6       = CAM_PIN_D6,
+			.pin_d5       = CAM_PIN_D5,
+			.pin_d4       = CAM_PIN_D4,
+			.pin_d3       = CAM_PIN_D3,
+			.pin_d2       = CAM_PIN_D2,
+			.pin_d1       = CAM_PIN_D1,
+			.pin_d0       = CAM_PIN_D0,
+			.pin_vsync    = CAM_PIN_VSYNC,
+			.pin_href     = CAM_PIN_HREF,
+			.pin_pclk     = CAM_PIN_PCLK,
+			.xclk_freq_hz = 20000000,        //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
+			.ledc_timer   = LEDC_TIMER_0,
+			.ledc_channel = LEDC_CHANNEL_0,
+			.pixel_format = PIXFORMAT_JPEG,  //YUV422,GRAYSCALE,RGB565,JPEG
+			.frame_size   = FRAMESIZE_UXGA,  //QQVGA-UXGA Do not use sizes above QVGA when not JPEG
+			.jpeg_quality = 12,              //0-63 lower number means higher quality
+			.fb_count     = 1                //if more than one, i2s runs in continuous mode. Use only with JPEG
+		};
+	#endif
 
-static camera_config_t camera_config = 
-{
-	.pin_pwdn     = CAM_PIN_PWDN,
-	.pin_reset    = CAM_PIN_RESET,
-	.pin_xclk     = CAM_PIN_XCLK,
-	.pin_sscb_sda = CAM_PIN_SIOD,
-	.pin_sscb_scl = CAM_PIN_SIOC,
-	.pin_d7       = CAM_PIN_D7,
-	.pin_d6       = CAM_PIN_D6,
-	.pin_d5       = CAM_PIN_D5,
-	.pin_d4       = CAM_PIN_D4,
-	.pin_d3       = CAM_PIN_D3,
-	.pin_d2       = CAM_PIN_D2,
-	.pin_d1       = CAM_PIN_D1,
-	.pin_d0       = CAM_PIN_D0,
-	.pin_vsync    = CAM_PIN_VSYNC,
-	.pin_href     = CAM_PIN_HREF,
-	.pin_pclk     = CAM_PIN_PCLK,
-	.xclk_freq_hz = 20000000,        //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
-	.ledc_timer   = LEDC_TIMER_0,
-	.ledc_channel = LEDC_CHANNEL_0,
-	.pixel_format = PIXFORMAT_JPEG,  //YUV422,GRAYSCALE,RGB565,JPEG
-	.frame_size   = FRAMESIZE_UXGA,  //QQVGA-UXGA Do not use sizes above QVGA when not JPEG
-	.jpeg_quality = 12,              //0-63 lower number means higher quality
-	.fb_count     = 1                //if more than one, i2s runs in continuous mode. Use only with JPEG
-};
 
-uint8_t gpio_flash_led = 4;
+
+
+
+	#if defined(CONFIG_FREENOVE_CAM_S3) && defined(CONFIG_CAMERA)
+		// Defaults value for freenove CAM S3
+		#define CAM_PIN_PWDN    -1 //power down is not used
+		#define CAM_PIN_RESET   -1 //software reset will be performed
+		#define CAM_PIN_XCLK    15
+		#define CAM_PIN_SIOD     4 // SDA
+		#define CAM_PIN_SIOC     5 // SCL
+		#define CAM_PIN_D7      16 // Y9 CSI_D7
+		#define CAM_PIN_D6      17 // Y8 CSI_D6
+		#define CAM_PIN_D5      18 // Y7 CSI_D5 SENSOR_VN
+		#define CAM_PIN_D4      12 // Y6 CSI_D4 SENSOR_VP
+		#define CAM_PIN_D3      10 // Y5 CSI_D3
+		#define CAM_PIN_D2       8 // Y4 CSI_D2
+		#define CAM_PIN_D1       9 // Y3 CSI_D1
+		#define CAM_PIN_D0      11 // Y2 CSI_D0
+		#define CAM_PIN_VSYNC    6 
+		#define CAM_PIN_HREF     7
+		#define CAM_PIN_PCLK    13
+
+		static camera_config_t camera_config = 
+		{
+			.ledc_channel = LEDC_CHANNEL_0,
+			.ledc_timer = LEDC_TIMER_0,
+			.pin_d0 = CAM_PIN_D0,
+			.pin_d1 = CAM_PIN_D1,
+			.pin_d2 = CAM_PIN_D2,
+			.pin_d3 = CAM_PIN_D3,
+			.pin_d4 = CAM_PIN_D4,
+			.pin_d5 = CAM_PIN_D5,
+			.pin_d6 = CAM_PIN_D6,
+			.pin_d7 = CAM_PIN_D7,
+			.pin_xclk = CAM_PIN_XCLK,
+			.pin_pclk = CAM_PIN_PCLK,
+			.pin_vsync = CAM_PIN_VSYNC,
+			.pin_href = CAM_PIN_HREF,
+			.pin_sscb_sda = CAM_PIN_SIOD,
+			.pin_sscb_scl = CAM_PIN_SIOC,
+			.pin_pwdn = CAM_PIN_PWDN,
+			.pin_reset = CAM_PIN_RESET,
+			.xclk_freq_hz = 20000000,
+			.frame_size = FRAMESIZE_SVGA,
+			.pixel_format = PIXFORMAT_JPEG,
+			.grab_mode = CAMERA_GRAB_WHEN_EMPTY,
+			.fb_location = CAMERA_FB_IN_DRAM,
+			.jpeg_quality = 10,
+			.fb_count = 1,
+		};
+	#endif
+	uint8_t gpio_flash_led = 4;
 #endif
-
 #define MAX_LINES 4
 // Straight line portion
 typedef struct 
@@ -167,7 +225,7 @@ static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength);
 
 
 #pragma GCC diagnostic ignored "-Wtype-limits"
-#ifdef CONFIG_ESP32CAM
+#ifdef CONFIG_CAMERA
 //             type,        get             set           , min, max // https://heyrick.eu/blog/index.php?diary=20210418
 CAMERA_SETTING(uint16_t   , aec_value     , aec_value     ,  0, 1200)
 CAMERA_SETTING(framesize_t, framesize     , framesize     ,  FRAMESIZE_96X96, FRAMESIZE_QSXGA)
@@ -243,7 +301,7 @@ size_t list_get_size(mp_obj_t list)
 	return result;
 }
 
-#ifdef CONFIG_ESP32CAM
+#ifdef CONFIG_CAMERA
 STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
 {
 	if (n_args == 0) 
@@ -285,7 +343,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_pixformat_obj, 0, 1, camera_pi
 
 STATIC mp_obj_t camera_isavailable()
 {
-#ifdef CONFIG_ESP32CAM
+#ifdef CONFIG_CAMERA
 	return mp_const_true;
 #else
 	return mp_const_false;
@@ -293,7 +351,7 @@ STATIC mp_obj_t camera_isavailable()
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_isavailable_obj, camera_isavailable);
 
-#ifdef CONFIG_ESP32CAM
+#ifdef CONFIG_CAMERA
 
 // Constructor method
 STATIC mp_obj_t configure_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args)
@@ -407,6 +465,26 @@ STATIC mp_obj_t camera_init()
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_init_obj, camera_init);
 
+
+STATIC mp_obj_t camera_reset()
+{
+	if (camera_initialized)
+	{
+		sensor_t *s = esp_camera_sensor_get();
+		if (s)
+		{
+			s->reset(s);
+		}
+		else
+		{
+			mp_raise_ValueError(MP_ERROR_TEXT("Camera reset not possible"));
+		}
+	}
+	return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_reset_obj, camera_reset);
+
+
 STATIC mp_obj_t camera_deinit()
 {
 	if (camera_initialized == true)
@@ -432,7 +510,7 @@ typedef struct
 } Decoder_t;
 
 
-static uint32_t camera_decodeRead(void * arg, size_t index, uint8_t *buf, size_t len)
+static size_t camera_decodeRead(void * arg, size_t index, uint8_t *buf, size_t len)
 {
 	Decoder_t * decoder = (Decoder_t *)arg;
 	if(buf) 
@@ -605,7 +683,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(camera_flash_obj, camera_flash);
 #endif
 
 // input buffer
-static uint32_t Motion_jpgRead(void * arg, size_t index, uint8_t *buf, size_t len)
+static size_t Motion_jpgRead(void * arg, size_t index, uint8_t *buf, size_t len)
 {
 	Motion_t * motion = (Motion_t *)arg;
 	if(buf) 
@@ -1306,7 +1384,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
 	locals_dict, &Motion_locals_dict
 	);
 
-#ifdef CONFIG_ESP32CAM
+#ifdef CONFIG_CAMERA
 
 
 // Methods
@@ -1330,9 +1408,10 @@ MP_DEFINE_CONST_OBJ_TYPE(
 STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR___name__           ), MP_ROM_QSTR(MP_QSTR_camera) },
 	{ MP_ROM_QSTR(MP_QSTR_isavailable        ), MP_ROM_PTR(&camera_isavailable_obj) },
-#ifdef CONFIG_ESP32CAM
+#ifdef CONFIG_CAMERA
 	{ MP_ROM_QSTR(MP_QSTR_init               ), MP_ROM_PTR(&camera_init_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deinit             ), MP_ROM_PTR(&camera_deinit_obj) },
+	{ MP_ROM_QSTR(MP_QSTR_reset              ), MP_ROM_PTR(&camera_reset_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_capture            ), MP_ROM_PTR(&camera_capture_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_motion             ), MP_ROM_PTR(&camera_motion_detect_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_flash              ), MP_ROM_PTR(&camera_flash_obj) },

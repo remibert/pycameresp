@@ -149,7 +149,7 @@ void mp_task(void *pvParameter) {
         #endif
         mp_task_heap_size = MIN(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT), heap_total / 2);
 //# REMI BERTHOLET START
-        #ifdef CONFIG_ESP32CAM
+        #ifdef CONFIG_CAMERA
         switch (esp_spiram_get_chip_size()) 
         {
         case ESP_SPIRAM_SIZE_16MBITS:
