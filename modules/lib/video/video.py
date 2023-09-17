@@ -198,6 +198,12 @@ class Camera:
 			Camera.opened = False
 
 	@staticmethod
+	def reset():
+		""" Reset the camera """
+		if Camera.opened is True:
+			camera.reset()
+
+	@staticmethod
 	def is_opened():
 		""" Indicates if the camera opened """
 		return Camera.opened

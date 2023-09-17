@@ -28,16 +28,23 @@ import time
 # ModuleNotFoundError: No module named 'click' in Python
 # it's due to a bad version of python, usually 3.11, prefer the 3.10
 
-MICROPYTHON_VERSION ="294baf52b346e400e2255c6c1e82af5b978b18f7" # 294baf52b346e400e2255c6c1e82af5b978b18f7=micropython 1.20
-# MICROPYTHON_VERSION ="70c564324c9a2af323866b0235dba75f534a9926" # version more recent than micropython 1.20, it seems to work well
-ESP_IDF_VERSION_S3  ="6407ecb3f8d2cc07c4c230e7e64f2046af5c86f7" # v4.4.3  !! Difficulty connecting to access point with ESP32CAM
-ESP_IDF_VERSION     ="7ab8f793ca5b026f37ae812bcc103e3aa698d164" # v4.2.2 Work perfectly with wifi access point on ESP32CAM
-# ESP_IDF_VERSION     ="ac5d805d0eda75442dd17cfea5baaca9748f8215" # v4.4.5  section `.iram0.text' will not fit in region `iram0_0_seg
-# ESP_IDF_VERSION     ="35c484324fb992408785567777f9e85948391ca7" # v5.0.0 Compilation problem
-# ESP_IDF_VERSION     ="53ff7d43dbff642d831a937b066ea0735a6aca24" # Last version error: Failed to resolve component 'esp_adc_cal'.
-ESP32_CAMERA_VERSION="722497cb19383cd4ee6b5d57bb73148b5af41b24"    # Very stable version but cannot be rebuild with chip esp32s3
-ESP32_CAMERA_VERSION_S3="5c8349f4cf169c8a61283e0da9b8cff10994d3f3" # Reliability problem but Esp32 S3 firmware can build with it
+# ESP32 S1
+ESP32_CAMERA_S1="esp32-camera-s1"
+ESP_IDF_S1     ="esp-idf-s1"
+MICROPYTHON_S1 ="micropython-s1"
 
+ESP32_CAMERA_VERSION_S1="722497cb19383cd4ee6b5d57bb73148b5af41b24" # Very stable version but cannot be rebuild with chip esp32s3
+ESP_IDF_VERSION_S1     ="7ab8f793ca5b026f37ae812bcc103e3aa698d164" # v4.2.2 Work perfectly with wifi access point on ESP32CAM
+MICROPYTHON_VERSION_S1 ="294baf52b346e400e2255c6c1e82af5b978b18f7" # micropython 1.20
+
+# ESP32 S3
+ESP32_CAMERA_S3="esp32-camera-s3"
+ESP_IDF_S3     ="esp-idf-s3"
+MICROPYTHON_S3 ="micropython-s3"
+
+ESP32_CAMERA_VERSION_S3="d1c9c2cdb3fab523e81e8d953305c00ed54c834c" # After 2.0.5
+ESP_IDF_VERSION_S3     ="5181de8ac5ec5e18f04f634da8ce173b7ef5ab73" # 5.0.2
+MICROPYTHON_VERSION_S3 ="3637252b7bc3e85ea92038161e008a550991d1f4"
 
 if sys.platform == "win32":
 	PIP      = "3"
@@ -65,61 +72,50 @@ if len(sys.argv) > 1:
 else:
 	BOARD = "ESP32CAM"
 PYCAMERESP_DIR=os.path.abspath(os.path.normpath(os.path.dirname(__file__)))
+BOARD_VARIANT = ""
+BOARD_VARIANT_FIRMWARE=""
+
+
 
 GET_COMMANDS = """
-
-###################
-# Get micropython #
-###################
+######################
+# Get micropython $(MICRO) #
+######################
 mkdir "%(OUTPUT_DIR)s"
+
 cd "%(OUTPUT_DIR)s"
-git clone https://github.com/micropython/micropython.git
-cd "%(OUTPUT_DIR)s/micropython"
-git checkout %(MICROPYTHON_VERSION)s
-cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
+git clone https://github.com/micropython/micropython.git %(MICROPYTHON_$(MICRO))s
+
+cd "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s"
+git checkout %(MICROPYTHON_VERSION_$(MICRO))s
+
+cd "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32"
+git submodule update --init --recursive
+
+####################
+# Get espressif $(MICRO) #
+####################
+cd "%(OUTPUT_DIR)s"
+git clone --recursive https://github.com/espressif/esp-idf.git %(ESP_IDF_$(MICRO))s
+
+cd "%(OUTPUT_DIR)s/%(ESP_IDF_$(MICRO))s"
+git checkout %(ESP_IDF_VERSION_$(MICRO))s
 git submodule update --init --recursive
 
 #################
-# Get espressif #
+# Get camera $(MICRO) #
 #################
 cd "%(OUTPUT_DIR)s"
-git clone --recursive https://github.com/espressif/esp-idf.git
-cd "%(OUTPUT_DIR)s/esp-idf"
-git checkout %(ESP_IDF_VERSION)s
-git submodule update --init --recursive
+git clone https://github.com/espressif/esp32-camera.git %(ESP32_CAMERA_$(MICRO))s
 
-##############
-# Get camera #
-##############
-cd "%(OUTPUT_DIR)s"
-git clone https://github.com/espressif/esp32-camera.git esp32-camera
-cd "%(OUTPUT_DIR)s/esp32-camera"
-git checkout %(ESP32_CAMERA_VERSION)s
+cd %(ESP32_CAMERA_$(MICRO))s
+git checkout %(ESP32_CAMERA_VERSION_$(MICRO))s
 
-cd "%(OUTPUT_DIR)s/esp-idf/components"
-ln -s "%(OUTPUT_DIR)s/esp32-camera" esp32-camera
-
-####################
-# Get espressif S3 #
-####################
-cd "%(OUTPUT_DIR)s"
-git clone --recursive https://github.com/espressif/esp-idf.git esp-idf-s3
-cd "%(OUTPUT_DIR)s/esp-idf-s3"
-git checkout %(ESP_IDF_VERSION_S3)s
-git submodule update --init --recursive
-
-##############
-# Get camera #
-##############
-cd "%(OUTPUT_DIR)s"
-git clone https://github.com/espressif/esp32-camera.git esp32-camera-s3
-cd "%(OUTPUT_DIR)s/esp32-camera-s3"
-git checkout %(ESP32_CAMERA_VERSION_S3)s
-
-cd "%(OUTPUT_DIR)s/esp-idf-s3/components"
-ln -s "%(OUTPUT_DIR)s/esp32-camera-s3" esp32-camera
+cd "%(OUTPUT_DIR)s/%(ESP_IDF_$(MICRO))s/components"
+ln -s "%(OUTPUT_DIR)s/%(ESP32_CAMERA_$(MICRO))s" esp32-camera
 
 """
+
 
 BUILD_DOC_COMMANDS= '''
 
@@ -128,23 +124,15 @@ BUILD_DOC_COMMANDS= '''
 #############
 cd %(PYCAMERESP_DIR)s/modules/lib
 export PYTHONPATH=../simul;pdoc3 --html -o ../../doc --force .
+
 '''
 
 SET_ESP_COMMANDS='''
-#####################
-# Set env espressif #
-#####################
-cd "%(OUTPUT_DIR)s/esp-idf"
-bash install.sh
-source ./export.sh
 
-'''
-
-SET_ESP_S3_COMMANDS='''
 ########################
-# Set env espressif S3 #
+# Set env espressif $(MICRO) #
 ########################
-cd "%(OUTPUT_DIR)s/esp-idf-s3"
+cd "%(OUTPUT_DIR)s/%(ESP_IDF_$(MICRO))s"
 bash install.sh
 source ./export.sh
 
@@ -152,19 +140,19 @@ source ./export.sh
 
 BUILD_ESP_COMMANDS = '''
 
-###################
-# Build mpy-cross #
-###################
-cd "%(OUTPUT_DIR)s/micropython"
+######################
+# Build mpy-cross $(MICRO) #
+######################
+cd "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s"
 make -C mpy-cross -j 8
 
-#####################
-# Build micropython #
-#####################
-cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
+########################
+# Build micropython $(MICRO) #
+########################
+cd "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32"
 make submodules -j 8
-make BOARD=%(BOARD)s -j 8
-cp "%(OUTPUT_DIR)s/micropython/ports/esp32/build-%(BOARD)s/firmware.bin" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.bin"
+make BOARD=%(BOARD)s %(BOARD_VARIANT)s -j 8
+cp "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32/build-%(BOARD)s%(BOARD_VARIANT_FIRMWARE)s/firmware.bin" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.bin"
 
 '''
 
@@ -173,16 +161,16 @@ BUILD_RP2_COMMANDS = '''
 ###################
 # Build mpy-cross #
 ###################
-cd "%(OUTPUT_DIR)s/micropython"
+cd "%(OUTPUT_DIR)s/%(MICROPYTHON_S1)s""
 make -C mpy-cross
 
 #####################
-# Build micropython #
+# Build %(MICROPYTHON_S1)s" #
 #####################
-cd "%(OUTPUT_DIR)s/micropython/ports/rp2"
+cd "%(OUTPUT_DIR)s/%(MICROPYTHON_S1)s"/ports/rp2"
 make submodules
 make BOARD=%(BOARD)s
-cp "%(OUTPUT_DIR)s/micropython/ports/rp2/build-%(BOARD)s/firmware.uf2" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.uf2"
+cp "%(OUTPUT_DIR)s/%(MICROPYTHON_S1)s"/ports/rp2/build-%(BOARD)s/firmware.uf2" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.uf2"
 
 '''
 
@@ -198,26 +186,22 @@ python3 "%(PYCAMERESP_DIR)s/scripts/zip_mpy.py" "%(OUTPUT_DIR)s" "%(BOARD)s" "%(
 
 PATCH_COMMANDS = '''
 
-############################
-# Patch source Micropython #
-############################
-cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/c/micropython/"*       "%(OUTPUT_DIR)s/micropython"
-cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/python/micropython/"*  "%(OUTPUT_DIR)s/micropython"
-cp             "%(PYCAMERESP_DIR)s/patch/gitignore/.gitignore"  "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/.gitignore"
-cp             "%(PYCAMERESP_DIR)s/patch/gitignore/.gitignore"  "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/.gitignore"
-cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/esp32/modules"
-cp -f -r -v -p "%(PYCAMERESP_DIR)s/modules/lib/"*               "%(OUTPUT_DIR)s/micropython/ports/rp2/modules"
-cp -f -r -v -p "%(PYCAMERESP_DIR)s/patch/c/esp-idf/"*           "%(OUTPUT_DIR)s/esp-idf"
-rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/plugins"
-rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/sample"
-rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/config"
-rm -r "%(OUTPUT_DIR)s/micropython/ports/esp32/modules/*.log"
-rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/plugins"
-rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/sample"
-rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/config"
-rm -r "%(OUTPUT_DIR)s/micropython/ports/rp2/modules/*.log"
+###############################
+# Patch source %(MICROPYTHON_$(MICRO))s #
+###############################
+cp -f -r -p "%(PYCAMERESP_DIR)s/patch/$(MICRO)/c/micropython/"*       "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s"
+cp -f -r -p "%(PYCAMERESP_DIR)s/patch/$(MICRO)/python/micropython/"*  "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s"
+
+cp -f -r -p "%(PYCAMERESP_DIR)s/modules/lib/"*                       "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32/modules"
+cp          "%(PYCAMERESP_DIR)s/patch/gitignore/.gitignore"          "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32/modules/.gitignore"
+rm -r       "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32/modules/plugins"
+
+cp -f -r -p "%(PYCAMERESP_DIR)s/modules/lib/"*                       "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/rp2/modules"
+cp          "%(PYCAMERESP_DIR)s/patch/gitignore/.gitignore"          "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/rp2/modules/.gitignore"
+rm -r       "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/rp2/modules/plugins"
+
 cd %(PYCAMERESP_DIR)s
-python3        "%(PYCAMERESP_DIR)s/scripts/patchInisetup.py"    "%(OUTPUT_DIR)s"
+python3        "%(PYCAMERESP_DIR)s/scripts/patchInisetup.py"    "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s" "$(MICRO)"
 
 '''
 
@@ -254,57 +238,43 @@ pip%(PIP)s install pdoc3
 
 CLEAN_COMMANDS='''
 
-#######################
-# Cleanup micropython #
-#######################
-cd "%(OUTPUT_DIR)s/micropython"
+##########################
+# Cleanup %(MICROPYTHON_$(MICRO))s #
+##########################
+
+cd "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s"
+git clean -fdx
 git fetch --all
 git reset --hard 
-git clean -fdx
-git checkout %(MICROPYTHON_VERSION)s
-cd "%(OUTPUT_DIR)s/micropython/ports/esp32"
+
+git checkout %(MICROPYTHON_VERSION_$(MICRO))s
+
+cd "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32"
 git submodule update --init --recursive
-
-###################
-# Cleanup ESP-IDF #
-###################
-
-cd "%(OUTPUT_DIR)s/esp32-camera"
-git fetch --all
-git reset --hard %(ESP32_CAMERA_VERSION)s
-git clean -fdx
-git checkout %(ESP32_CAMERA_VERSION)s
-
-cd "%(OUTPUT_DIR)s/esp-idf"
-git fetch --all
-git reset --hard %(ESP_IDF_VERSION)s
-git clean -fdx
-git checkout %(ESP_IDF_VERSION)s
-git submodule update --init --recursive
-
-cd "%(OUTPUT_DIR)s/esp-idf/components"
-ln -s "%(OUTPUT_DIR)s/esp32-camera" esp32-camera
 
 ######################
-# Cleanup ESP-IDF-S3 #
+# Cleanup %(ESP_IDF_$(MICRO))s #
 ######################
 
-cd "%(OUTPUT_DIR)s/esp32-camera-s3"
-git fetch --all
-git reset --hard %(ESP32_CAMERA_VERSION_S3)s
+cd "%(OUTPUT_DIR)s/%(ESP_IDF_$(MICRO))s"
 git clean -fdx
-git checkout %(ESP32_CAMERA_VERSION_S3)s
-
-cd "%(OUTPUT_DIR)s/esp-idf-s3"
 git fetch --all
-git reset --hard %(ESP_IDF_VERSION_S3)s
-git clean -fdx
-git checkout %(ESP_IDF_VERSION_S3)s
+git reset --hard %(ESP_IDF_VERSION_$(MICRO))s
+git checkout %(ESP_IDF_VERSION_$(MICRO))s
 git submodule update --init --recursive
 
-cd "%(OUTPUT_DIR)s/esp-idf-s3/components"
-ln -s "%(OUTPUT_DIR)s/esp32-camera-s3" esp32-camera
+###########################
+# Cleanup %(ESP32_CAMERA_$(MICRO))s #
+###########################
 
+cd "%(OUTPUT_DIR)s/%(ESP32_CAMERA_$(MICRO))s"
+git clean -fdx
+git fetch --all
+git reset --hard %(ESP32_CAMERA_VERSION_$(MICRO))s
+git checkout %(ESP32_CAMERA_VERSION_$(MICRO))s
+
+cd "%(OUTPUT_DIR)s/%(ESP_IDF_$(MICRO))s/components"
+ln -s "%(OUTPUT_DIR)s/%(ESP32_CAMERA_$(MICRO))s" esp32-camera
 
 '''
 
@@ -321,6 +291,7 @@ purgecss --css modules/www/bootstrap.min.css.ref --content modules/www/*.html mo
 
 def execute(commands, s3=False):
 	""" Execute shell commands """
+	commands = commands.replace("$(MICRO)","S3" if s3 else "S1")
 	commands = commands%globals()
 	for command in commands.split("\n"):
 		command = command.strip()
@@ -357,9 +328,9 @@ def execute(commands, s3=False):
 				os.remove(cmd[1])
 			elif cmd[0] == "source":
 				if s3:
-					os.environ["IDF_PATH"] = OUTPUT_DIR + os.sep + "esp-idf-s3"
+					os.environ["IDF_PATH"] = OUTPUT_DIR + os.sep + ESP_IDF_S3
 				else:
-					os.environ["IDF_PATH"] = OUTPUT_DIR + os.sep + "esp-idf"
+					os.environ["IDF_PATH"] = OUTPUT_DIR + os.sep + ESP_IDF_S1
 				pipe = subprocess.Popen(""". ./export.sh; env""", stdout=subprocess.PIPE, shell=True)
 				lines = pipe.communicate()[0]
 				for line in lines.split(b"\n"):
@@ -379,18 +350,19 @@ def main():
 	global OUTPUT_DIR
 	global BOARD
 	parser = argparse.ArgumentParser()
-	parser.add_argument("-i", "--install",    help="install the tools required to build the firmware (linux only)", action="store_true")
-	parser.add_argument("-g", "--get",        help="get micropython source from git",                               action="store_true")
-	parser.add_argument("-d", "--doc",        help="build pycameresp html documentation",                           action="store_true")
-	parser.add_argument("-p", "--patch",      help="patch micropython sources with pycameresp patch",               action="store_true")
-	parser.add_argument("-b", "--build",      help="build selected firmwares",                                      action="store_true")
-	parser.add_argument("-a", "--all",        help="install tools, get source, patch, and build selected firmwares",action="store_true")
-	parser.add_argument("-c", "--clean",      help="clean micropython sources to remove all patch",                 action="store_true")
-	parser.add_argument("-s", "--s3",         help="build Esp32 S3 without problem",                                action="store_true")
-	parser.add_argument("-r", "--rp2",        help="build raspberry pico RP2 and RP2 W",                            action="store_true")
-	parser.add_argument("-z", "--zippy",      help="zip python modules",                                            action="store_true")
-	parser.add_argument("-u", "--purgecss",   help="purge css content",                                             action="store_true")
-	parser.add_argument("-o", "--outputdir",  help="output directory")
+	parser.add_argument("-i", "--install",      help="install the tools required to build the firmware (linux only)", action="store_true")
+	parser.add_argument("-g", "--get",          help="get micropython source from git",                               action="store_true")
+	parser.add_argument("-d", "--doc",          help="build pycameresp html documentation",                           action="store_true")
+	parser.add_argument("-p", "--patch",        help="patch micropython sources with pycameresp patch",               action="store_true")
+	parser.add_argument("-b", "--build",        help="build selected firmwares",                                      action="store_true")
+	parser.add_argument("-a", "--all",          help="install tools, get source, patch, and build selected firmwares",action="store_true")
+	parser.add_argument("-c", "--clean",        help="clean micropython sources to remove all patch",                 action="store_true")
+	parser.add_argument("-s", "--s3",           help="build Esp32 S3 without problem",                                action="store_true")
+	parser.add_argument("-v", "--boardvariant", help="build with board variant option",                               type=str)
+	parser.add_argument("-r", "--rp2",          help="build raspberry pico RP2 and RP2 W",                            action="store_true")
+	parser.add_argument("-z", "--zippy",        help="zip python modules",                                            action="store_true")
+	parser.add_argument("-u", "--purgecss",     help="purge css content",                                             action="store_true")
+	parser.add_argument("-o", "--outputdir",    help="output directory")
 	parser.add_argument('boards',  metavar='boards', type=str, help='Select boards to build micropython firmwares, for all firmwares use "*"', nargs="*")
 	args = parser.parse_args()
 	if len(args.boards) == 0:
@@ -403,17 +375,27 @@ def main():
 			execute(INSTALL_TOOLS_COMMANDS)
 
 		if (args.get or args.all):
-			if  not os.path.exists(OUTPUT_DIR + os.sep + "esp32-camera") or \
-				not os.path.exists(OUTPUT_DIR + os.sep + "esp32-camera-s3") or \
-				not os.path.exists(OUTPUT_DIR + os.sep + "esp-idf") or \
-				not os.path.exists(OUTPUT_DIR + os.sep + "esp-idf-s3") or \
-				not os.path.exists(OUTPUT_DIR + os.sep + "micropython"):
-				execute(GET_COMMANDS)
+			if not args.s3 and \
+				(not os.path.exists(OUTPUT_DIR + os.sep + ESP32_CAMERA_S1) or \
+				 not os.path.exists(OUTPUT_DIR + os.sep + ESP_IDF_S1) or \
+				 not os.path.exists(OUTPUT_DIR + os.sep + MICROPYTHON_S1)):
+				execute(GET_COMMANDS, args.s3)
+			elif args.s3 and \
+				(not os.path.exists(OUTPUT_DIR + os.sep + ESP32_CAMERA_S3) or \
+				 not os.path.exists(OUTPUT_DIR + os.sep + ESP_IDF_S3) or \
+				 not os.path.exists(OUTPUT_DIR + os.sep + MICROPYTHON_S3)):
+				execute(GET_COMMANDS, args.s3)
 			else:
 				print("Get sources already done")
 
 		if args.clean or args.all:
-			execute(CLEAN_COMMANDS)
+			execute(CLEAN_COMMANDS, args.s3)
+		
+		if args.boardvariant:
+			global BOARD_VARIANT
+			global BOARD_VARIANT_FIRMWARE
+			BOARD_VARIANT = "BOARD_VARIANT=%s"%args.boardvariant
+			BOARD_VARIANT_FIRMWARE = "-%s"%args.boardvariant
 
 		if args.doc:
 			execute(BUILD_DOC_COMMANDS)
@@ -422,16 +404,17 @@ def main():
 			execute(PURGE_CSS)
 
 		if args.patch or args.all:
-			execute(PATCH_COMMANDS)
+			execute(PATCH_COMMANDS, args.s3)
 
 		if args.zippy:
 			execute(ZIP_MODULES)
 
 		if args.build or args.all:
 			if args.rp2:
-				board_dir = OUTPUT_DIR + os.path.sep + "micropython/ports/rp2/boards" + os.sep + "*"
+				board_dir = OUTPUT_DIR + os.path.sep + "micropython-$(MICRO)/ports/rp2/boards" + os.sep + "*"
 			else:
-				board_dir = OUTPUT_DIR + os.path.sep + "micropython/ports/esp32/boards" + os.sep + "*"
+				board_dir = OUTPUT_DIR + os.path.sep + "micropython-$(MICRO)/ports/esp32/boards" + os.sep + "*"
+			board_dir = board_dir.replace("$(MICRO)","s3" if args.s3 else "s1")
 			for board in glob.glob(board_dir):
 				if os.path.isdir(board):
 					board = os.path.split(board)[1]
@@ -446,12 +429,9 @@ def main():
 							if args.rp2:
 								execute(BUILD_RP2_COMMANDS)
 							else:
-								if args.s3:
-									execute(SET_ESP_S3_COMMANDS, args.s3)
-								else:
-									execute(SET_ESP_COMMANDS, args.s3)
+								execute(SET_ESP_COMMANDS, args.s3)
 								print("IDF_PATH='%s'"%os.environ["IDF_PATH"])
-								execute(BUILD_ESP_COMMANDS)
+								execute(BUILD_ESP_COMMANDS, args.s3)
 							execute(ZIP_MODULES)
 
 if __name__ == "__main__":

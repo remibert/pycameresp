@@ -7,7 +7,7 @@
 """ Main pycameresp module """
 try:
 	import machine
-
+	import os
 	# Force high frequency of esp32
 	machine.freq(240000000)
 except:
@@ -87,6 +87,8 @@ def start(**kwargs):
 					pin_vsync=25, pin_href=26, pin_pclk=21, xclk_freq_hz=20000000, ledc_timer=0,
 					ledc_channel=0 , pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
 				tools.sdcard.SdCard.set_slot(slot=None) # No sdcard available
+			elif "FREENOVE CAM S3" in os.uname().machine:
+				tools.sdcard.SdCard.set_slot(slot=0, clk=39, d0=40, cmd=38, width=1)
 			else:
 				# ESP32CAM default configuration
 				pass

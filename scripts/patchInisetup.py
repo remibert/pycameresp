@@ -13,6 +13,7 @@ if __name__ == "__main__":
 	from sys import argv
 	if len(argv) > 1:
 		root = argv[1]
+		micro = argv[2]
 	else:
 		root = "firmware"
 
@@ -49,10 +50,10 @@ if __name__ == "__main__":
 	patch_ini += "    print('Forced reboot after installation')\n"
 	patch_ini += "    machine.deepsleep(1000)\n"
 
-	inisetup = open("patch/python/micropython/ports/esp32/modules/inisetup.py","r").read()
-	open(root + "/micropython/ports/esp32/modules/inisetup.py","w").write(inisetup%patch_ini)
-	inisetup = open("patch/python/micropython/ports/rp2/modules/_boot.py","r").read()
-	open(root + "/micropython/ports/rp2/modules/_boot.py","w").write(inisetup%patch_ini)
+	inisetup = open("patch/%s/python/micropython/ports/esp32/modules/inisetup.py"%micro,"r").read()
+	open(root + "/ports/esp32/modules/inisetup.py","w").write(inisetup%patch_ini)
+	inisetup = open("patch/%s/python/micropython/ports/rp2/modules/_boot.py"%micro,"r").read()
+	open(root + "/ports/rp2/modules/_boot.py","w").write(inisetup%patch_ini)
 	import time
 	year,month,day,hour,minute,second,weekday,yearday = time.localtime()[:8]
 	open("modules/lib/tools/builddate.py","w").write("''' Build date '''\ndate=b'%04d/%02d/%02d  %02d:%02d:%02d'\n"%(year,month,day,hour,minute,second))

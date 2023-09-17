@@ -78,6 +78,10 @@ def deinit():
 		return True
 	return False
 
+def reset():
+	""" Reset camera """
+	pass
+
 def capture():
 	""" Capture image """
 	global _opened
