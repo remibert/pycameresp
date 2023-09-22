@@ -55,6 +55,7 @@ list(APPEND MICROPY_SOURCE_DRIVERS
 list(APPEND MICROPY_SOURCE_PORT
 # REMI BERTHOLET START
     modcamera.c
+    machine_encoder.c
 # REMI BERTHOLET END
     main.c
     ppp_set_auth.c

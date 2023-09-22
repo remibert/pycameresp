@@ -6,8 +6,9 @@ from htmltemplate      import *
 import webpage.mainpage
 import tools.battery
 import tools.lang
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b'/battery', menu=tools.lang.menu_system, item=tools.lang.item_battery)
+@server.httpserver.HttpServer.add_route(b'/battery', menu=tools.lang.menu_system, item=tools.lang.item_battery, available=tools.features.features.battery)
 async def battery(request, response, args):
 	""" Battery configuration web page """
 	config = tools.battery.BatteryConfig()

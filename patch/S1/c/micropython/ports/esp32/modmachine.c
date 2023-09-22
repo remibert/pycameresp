@@ -59,10 +59,11 @@
 #include "extmod/machine_spi.h"
 #include "modmachine.h"
 #include "machine_rtc.h"
+// REMI BERTHOLET START
 #if MICROPY_PY_MACHINE_PCNT
 #include "machine_encoder.h"
 #endif
-//# REMI BERTHOLET END
+// REMI BERTHOLET END
 
 #if MICROPY_PY_MACHINE
 
@@ -72,9 +73,9 @@ typedef enum {
     MP_WDT_RESET,
     MP_DEEPSLEEP_RESET,
     MP_SOFT_RESET
-//# REMI BERTHOLET START	
+// REMI BERTHOLET START	
 	,MP_BROWNOUT_RESET
-//# REMI BERTHOLET END
+// REMI BERTHOLET END
 } reset_reason_t;
 
 STATIC bool is_soft_reset = 0;
@@ -198,11 +199,11 @@ STATIC mp_obj_t machine_reset_cause(size_t n_args, const mp_obj_t *pos_args, mp_
 //        case ESP_RST_BROWNOUT: REMI BERTHOLET	
             return MP_OBJ_NEW_SMALL_INT(MP_PWRON_RESET);
             break;
-//# REMI BERTHOLET START
+// REMI BERTHOLET START
         case ESP_RST_BROWNOUT:
             return MP_OBJ_NEW_SMALL_INT(MP_BROWNOUT_RESET);
             break;
-//# REMI BERTHOLET END
+// REMI BERTHOLET END
         case ESP_RST_INT_WDT:
         case ESP_RST_TASK_WDT:
         case ESP_RST_WDT:
@@ -338,12 +339,12 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_SPI), MP_ROM_PTR(&machine_spi_type) },
     { MP_ROM_QSTR(MP_QSTR_SoftSPI), MP_ROM_PTR(&mp_machine_soft_spi_type) },
     { MP_ROM_QSTR(MP_QSTR_UART), MP_ROM_PTR(&machine_uart_type) },
-//# REMI BERTHOLET START
+// REMI BERTHOLET START
     #if MICROPY_PY_MACHINE_PCNT
     { MP_ROM_QSTR(MP_QSTR_Counter), MP_ROM_PTR(&machine_Counter_type) },
     { MP_ROM_QSTR(MP_QSTR_Encoder), MP_ROM_PTR(&machine_Encoder_type) },
     #endif
-//# REMI BERTHOLET END
+// REMI BERTHOLET END
     // Reset reasons
     { MP_ROM_QSTR(MP_QSTR_reset_cause), MP_ROM_PTR(&machine_reset_cause_obj) },
     { MP_ROM_QSTR(MP_QSTR_HARD_RESET), MP_ROM_INT(MP_HARD_RESET) },
@@ -351,9 +352,9 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_WDT_RESET), MP_ROM_INT(MP_WDT_RESET) },
     { MP_ROM_QSTR(MP_QSTR_DEEPSLEEP_RESET), MP_ROM_INT(MP_DEEPSLEEP_RESET) },
     { MP_ROM_QSTR(MP_QSTR_SOFT_RESET), MP_ROM_INT(MP_SOFT_RESET) },
-//# REMI BERTHOLET START	
+// REMI BERTHOLET START	
     { MP_ROM_QSTR(MP_QSTR_BROWNOUT_RESET), MP_ROM_INT(MP_BROWNOUT_RESET) },
-//# REMI BERTHOLET END
+// REMI BERTHOLET END
 
     // Wake reasons
     { MP_ROM_QSTR(MP_QSTR_wake_reason), MP_ROM_PTR(&machine_wake_reason_obj) },

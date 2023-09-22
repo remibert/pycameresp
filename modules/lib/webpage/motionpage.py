@@ -9,6 +9,7 @@ import video.video
 import motion.motioncore
 import tools.lang
 import tools.info
+import tools.features
 
 zone_config = video.video.CameraConfig()
 
@@ -162,7 +163,7 @@ def zone_masking(config, disabled):
 """%(buttons,maxi,config.mask,disabled,height,width,maxi,maxi,maxi))
 	return result
 
-@server.httpserver.HttpServer.add_route(b'/motion/config', menu=tools.lang.menu_motion, item=tools.lang.item_motion, available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/motion/config', menu=tools.lang.menu_motion, item=tools.lang.item_motion, available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.motion)
 async def motion_page(request, response, args):
 	""" Motion configuration page """
 	zone_config.framesize  = b"%dx%d"%(motion.motioncore.SnapConfig.get().width, motion.motioncore.SnapConfig.get().height)
@@ -191,7 +192,7 @@ async def motion_page(request, response, args):
 		]))
 	await response.send_page(page)
 
-@server.httpserver.HttpServer.add_route(b'/motion/onoff', menu=tools.lang.menu_motion, item=tools.lang.item_motion_onoff, available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/motion/onoff', menu=tools.lang.menu_motion, item=tools.lang.item_motion_onoff, available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.motion)
 async def motion_on_off(request, response, args):
 	""" Motion command page """
 	config = motion.motioncore.MotionConfig()

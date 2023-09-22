@@ -8,8 +8,9 @@ from htmltemplate       import *
 import webpage.mainpage
 import tools.lang
 import tools.info
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b'/webhook', menu=tools.lang.menu_server, item=tools.lang.item_webhook)
+@server.httpserver.HttpServer.add_route(b'/webhook', menu=tools.lang.menu_server, item=tools.lang.item_webhook, available=tools.features.features.webhook)
 async def webhook(request, response, args):
 	""" Function define the web page to configure the webhook  """
 	config = server.webhook.WebhookConfig()

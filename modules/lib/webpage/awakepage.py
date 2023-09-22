@@ -6,8 +6,9 @@ from htmltemplate      import *
 import webpage.mainpage
 import tools.awake
 import tools.lang
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b'/wakeup', menu=tools.lang.menu_system, item=tools.lang.item_wakeup)
+@server.httpserver.HttpServer.add_route(b'/wakeup', menu=tools.lang.menu_system, item=tools.lang.item_wakeup, available=tools.features.features.awake)
 async def wakeup(request, response, args):
 	""" Wake uo configuration web page """
 	config = tools.awake.AwakeConfig()

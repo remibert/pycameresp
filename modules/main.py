@@ -3,13 +3,13 @@
 """ Main module """
 import pycameresp
 
-# Start certain functionality of the Pycameresp platform
+# Start certain features of the Pycameresp platform
 # Comment unnecessary lines to decrease RAM footprint
 pycameresp.start(\
 	device      = "ESP32CAM", # "ESP32ONE" "M5CAMERA-B" : type of camera device
 
 	# Features
-	starter     = True, # Automatic start all __startup__.py if it is present
+	plugin      = True, # Start all plugins (must be contains lib/plugins/*/__startup__.py)
 	awake       = True, # Awake and deepsleep periodically task
 	battery     = True, # Battery level manager task
 	shell       = True, # Shell with text editor task
@@ -28,7 +28,7 @@ pycameresp.start(\
 	webhook     = True, # Webhook notification task
 	pushover    = True, # Pushover notification task
 
-	# Motion and camera
+	# # Motion and camera
 	presence    = True, # Home occupant presence detection task
 	camera      = True, # Camera configuration
 	motion      = True, # Motion detection task

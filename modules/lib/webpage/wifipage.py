@@ -9,6 +9,7 @@ import tools.lang
 import tools.strings
 import tools.logger
 import tools.support
+import tools.features
 
 def static_ip_html(config, disabled):
 	""" Html to get static ip """
@@ -52,7 +53,7 @@ def select_network(increase=0, reparse=False):
 		tools.logger.syslog(err)
 	return current_network
 
-@server.httpserver.HttpServer.add_route(b'/wifi', menu=tools.lang.menu_network, item=tools.lang.item_wifi)
+@server.httpserver.HttpServer.add_route(b'/wifi', menu=tools.lang.menu_network, item=tools.lang.item_wifi, available=tools.features.features.wifi)
 async def wifi_config(request, response, args):
 	""" Page to configure the wifi station """
 	global current_networks, current_config, current_network
@@ -159,7 +160,7 @@ async def wifi_config(request, response, args):
 		]))
 	await response.send_page(page)
 
-@server.httpserver.HttpServer.add_route(b'/accesspoint', menu=tools.lang.menu_network, item=tools.lang.item_access_point)
+@server.httpserver.HttpServer.add_route(b'/accesspoint', menu=tools.lang.menu_network, item=tools.lang.item_access_point, available=tools.features.features.wifi)
 async def access_point(request, response, args):
 	""" Page to configure the access point """
 	config = wifi.accesspoint.AccessPointConfig()

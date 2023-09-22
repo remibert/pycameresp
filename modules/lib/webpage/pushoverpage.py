@@ -6,8 +6,9 @@ import server.pushover
 from htmltemplate      import *
 import webpage.mainpage
 import tools.lang
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b'/pushover', menu=tools.lang.menu_server, item=tools.lang.item_notification)
+@server.httpserver.HttpServer.add_route(b'/pushover', menu=tools.lang.menu_server, item=tools.lang.item_notification, available=tools.features.features.pushover)
 async def pushover(request, response, args):
 	""" Function define the web page to configure the pushover notifications """
 	config = server.pushover.PushOverConfig()

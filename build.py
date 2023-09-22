@@ -152,7 +152,7 @@ make -C mpy-cross -j 8
 cd "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32"
 make submodules -j 8
 make BOARD=%(BOARD)s %(BOARD_VARIANT)s -j 8
-cp "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32/build-%(BOARD)s%(BOARD_VARIANT_FIRMWARE)s/firmware.bin" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.bin"
+cp "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32/build-%(BOARD)s%(BOARD_VARIANT_FIRMWARE)s/firmware.bin" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s%(BOARD_VARIANT_FIRMWARE)s-firmware.bin"
 
 '''
 
@@ -190,6 +190,7 @@ PATCH_COMMANDS = '''
 # Patch source %(MICROPYTHON_$(MICRO))s #
 ###############################
 cp -f -r -p "%(PYCAMERESP_DIR)s/patch/$(MICRO)/c/micropython/"*       "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s"
+cp -f -r -p "%(PYCAMERESP_DIR)s/patch/$(MICRO)/c/esp32-camera/"*      "%(OUTPUT_DIR)s/%(ESP32_CAMERA_$(MICRO))s"
 cp -f -r -p "%(PYCAMERESP_DIR)s/patch/$(MICRO)/python/micropython/"*  "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s"
 
 cp -f -r -p "%(PYCAMERESP_DIR)s/modules/lib/"*                       "%(OUTPUT_DIR)s/%(MICROPYTHON_$(MICRO))s/ports/esp32/modules"

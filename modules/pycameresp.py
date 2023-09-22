@@ -27,7 +27,7 @@ def start(**kwargs):
 		- presence     : activate presence detection of occupant in the house (default False)
 		- motion       : activate motion detection (default False)
 		- camera       : activate the camera (default False)
-		- starter      : activate autostart of extension modules (default False)
+		- plugin       : activate autostart of extension plugin (default False)
 		- shell        : activate shell (default False)
 		- webhook      : activate webhook notification (default False)
 		- wifi         : activate wifi manager (default False)
@@ -38,10 +38,14 @@ def start(**kwargs):
 	import tools.info
 	import tools.support
 	import tools.logger
+	import tools.features
 
-	tools.logger.set_size(size=kwargs.get("log_size",32*1024), quantity=kwargs.get("log_quantity",4))
+	tools.features.FeaturesConfig(**kwargs)
+	features = tools.features.features
 
-	if kwargs.get("awake",False):
+	tools.logger.set_size(size=features.log_size, quantity=features.log_quantity)
+
+	if features.awake:
 		# Manage the awake of device
 		import tools.awake
 		pin_wake_up = tools.awake.Awake.is_pin_wake_up()
@@ -54,22 +58,21 @@ def start(**kwargs):
 	server.periodic.Periodic.start(**kwargs)
 
 	# Manage the network task
-	if  kwargs.get("mqtt_client",False) or kwargs.get("ntp"     ,False) or kwargs.get("http"  ,False) or \
-		kwargs.get("webhook"    ,False) or kwargs.get("ftp"     ,False) or kwargs.get("telnet",False) or \
-		kwargs.get("presence"   ,False) or kwargs.get("pushover",False) or kwargs.get("wifi"  ,False) or \
-		kwargs.get("mqtt_broker",False) :
+	if  features.mqtt_client or features.ntp      or features.http   or \
+		features.webhook     or features.ftp      or features.telnet or \
+		features.presence    or features.pushover or features.wifi   or \
+		features.mqtt_broker :
 
 		# Manage the wifi task
 		import wifi.wifi
 		wifi.wifi.Wifi.start()
 
 	# If camera is available (required specific firmware)
-	if tools.info.iscamera() and (kwargs.get("motion",False) or kwargs.get("camera",False)) :
+	if tools.info.iscamera() and (features.motion or features.camera) :
 		import video.video
 		if video.video.Camera.is_activated():
 			import tools.sdcard
-			device = kwargs.get("device","ESP32CAM")
-			if device == "ESP32ONE":
+			if features.device == "ESP32ONE":
 				# ESP32ONE device
 				video.video.Camera.gpio_config(
 					pin_pwdn=32, pin_reset=-1, pin_xclk=4, pin_sscb_sda=18, pin_sscb_scl=23,
@@ -78,7 +81,7 @@ def start(**kwargs):
 					pin_vsync=5, pin_href=27, pin_pclk=25, xclk_freq_hz=20000000,
 					ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=12, fb_count=1, flash_led=0)
 				tools.sdcard.SdCard.set_slot(slot=None) # The slot is good but not working I don't know why
-			elif device == "M5CAMERA-B":
+			elif features.device == "M5CAMERA-B":
 				# M5CAMERA-B device
 				video.video.Camera.gpio_config(
 					pin_pwdn=-1, pin_reset=15, pin_xclk=27, pin_sscb_sda=22, pin_sscb_scl=23,
@@ -88,6 +91,7 @@ def start(**kwargs):
 					ledc_channel=0 , pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
 				tools.sdcard.SdCard.set_slot(slot=None) # No sdcard available
 			elif "FREENOVE CAM S3" in os.uname().machine:
+				features.device = "FREENOVE CAM S3"
 				tools.sdcard.SdCard.set_slot(slot=0, clk=39, d0=40, cmd=38, width=1)
 			else:
 				# ESP32CAM default configuration
@@ -97,7 +101,7 @@ def start(**kwargs):
 			video.video.Camera.open()
 
 			# If motion detection activated
-			if kwargs.get("motion",False):
+			if features.motion:
 				# Manage motion detection history
 				import motion.historic
 				motion.historic.Historic.start()
@@ -106,31 +110,32 @@ def start(**kwargs):
 				import motion.motion
 				motion.motion.Motion.start(pin_wake_up=pin_wake_up)
 
-				# Detects the presence of occupants in the house
-				import server.presence
-				server.presence.Presence.start()
+			# If http server started
+			if features.http:
+				import server.httpserver
+				# Start streaming http server
+				args = kwargs.copy()
+				args["name"] = "HttpStreaming"
+				args["http_port"] = features.http_port+1
+				server.httpserver.HttpServer.start(**args)
 
-				# If http server started
-				if kwargs.get("http",False):
-					import server.httpserver
-					# Start streaming http server
-					args = kwargs.copy()
-					args["name"] = "HttpStreaming"
-					args["http_port"] = kwargs.get("http_port",80)+1
-					server.httpserver.HttpServer.start(**args)
+	if features.presence:
+		# Detects the presence of occupants in the house
+		import server.presence
+		server.presence.Presence.start()
 
 	# Manage the battery level
-	if kwargs.get("battery",False) and tools.support.battery():
+	if features.battery and tools.support.battery():
 		import tools.battery
 		tools.battery.Battery.start()
 
-	if kwargs.get("pushover",False) or kwargs.get("mqtt_client",False) or kwargs.get("webhook", False):
+	if features.pushover or features.mqtt_client or features.webhook:
 		# Manage the notifier task
 		import server.notifier
 		server.notifier.Notifier.start()
 
 	# Manage the http server (http_port=80)
-	if kwargs.get("http",False):
+	if features.http:
 		import server.httpserver
 		server.httpserver.HttpServer.start(**kwargs)
 		@server.httpserver.HttpServer.add_pages()
@@ -138,50 +143,50 @@ def start(**kwargs):
 			import webpage
 
 	# Manage the get of wan ip address
-	if kwargs.get("wanip",False):
+	if features.wanip:
 		import server.wanip
 		server.wanip.WanIp.start()
 
 	# Manage the pushover notificiation
-	if kwargs.get("pushover",False):
+	if features.pushover:
 		import server.pushover
 
 	# Manage the webhook notification
-	if kwargs.get("webhook",False):
+	if features.webhook:
 		import server.webhook
 
 	# Manage the ftp server (ftp_port=21)
-	if kwargs.get("ftp",False):
+	if features.ftp:
 		import server.ftpserver
 		server.ftpserver.FtpServer.start(**kwargs)
 
 	# Manage the telnet server (telnet_port=23)
-	if kwargs.get("telnet",False) and tools.support.telnet():
+	if features.telnet and tools.support.telnet():
 		import server.telnet
 		server.telnet.Telnet.start(**kwargs)
 
 	# Manage the mqtt client and mqtt notification
-	if kwargs.get("mqtt_client",False):
+	if features.mqtt_client:
 		import server.mqttclient
 		server.mqttclient.MqttClient.start(**kwargs)
 
 	# Manage the mqtt broker
-	if kwargs.get("mqtt_broker",False):
+	if features.mqtt_broker:
 		import server.mqttbroker
 		server.mqttbroker.MqttBroker.start(**kwargs)
 
 	# Manage the time synchronisation
-	if kwargs.get("ntp",False):
+	if features.ntp:
 		import server.ntp
 		server.ntp.Ntp.start()
 
 	# Manage the autostart add on component
-	if kwargs.get("starter",False):
-		import tools.starter
-		tools.starter.Starter.start(**kwargs)
+	if features.plugin:
+		import tools.plugin
+		tools.plugin.PluginStarter.start(**kwargs)
 
 	# Manage the shell and commands line
-	if kwargs.get("shell",False):
+	if features.shell:
 		import shell.shelltask
 		shell.shelltask.Shell.start()
 

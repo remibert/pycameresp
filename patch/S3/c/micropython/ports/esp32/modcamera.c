@@ -33,6 +33,7 @@
 #define CAMERA_SETTING(type, field, method, min, max) \
 	STATIC mp_obj_t camera_##method(size_t n_args, const mp_obj_t *args)\
 	{\
+		mp_obj_t result = mp_const_none;\
 		if (n_args == 0) \
 		{\
 			sensor_t *s = esp_camera_sensor_get();\
@@ -53,7 +54,14 @@
 				sensor_t *s = esp_camera_sensor_get();\
 				if (s)\
 				{\
-					s->set_ ## method(s,(type)value);\
+					if (s->set_ ## method(s,(type)value) == 0)\
+					{\
+						result = mp_const_true;\
+					}\
+					else\
+					{\
+						result = mp_const_false;\
+					}\
 				}\
 				else\
 				{\
@@ -65,7 +73,7 @@
 				mp_raise_ValueError(MP_ERROR_TEXT("Camera sensor set " #method " : value out of limits [" #min "-" #max "]"));\
 			}\
 		}\
-		return mp_const_none;\
+		return result;\
 	}\
 	STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_##method##_obj, 0, 1, camera_##method);
 
@@ -116,10 +124,6 @@
 			.fb_count     = 1                //if more than one, i2s runs in continuous mode. Use only with JPEG
 		};
 	#endif
-
-
-
-
 
 	#if defined(CONFIG_FREENOVE_CAM_S3) && defined(CONFIG_CAMERA)
 		// Defaults value for freenove CAM S3
@@ -304,6 +308,7 @@ size_t list_get_size(mp_obj_t list)
 #ifdef CONFIG_CAMERA
 STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
 {
+	mp_obj_t result = mp_const_none;
 	if (n_args == 0) 
 	{
 		sensor_t *s = esp_camera_sensor_get();
@@ -324,7 +329,14 @@ STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
 			sensor_t *s = esp_camera_sensor_get();
 			if (s)
 			{
-				s->set_pixformat(s,(pixformat_t)value);
+				if (s->set_pixformat(s,(pixformat_t)value) == 0)
+				{
+					result = mp_const_true;
+				}
+				else
+				{
+					result = mp_const_false;
+				}
 			}
 			else
 			{
@@ -336,7 +348,7 @@ STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
 			mp_raise_ValueError(MP_ERROR_TEXT("Camera set pixformat : value out of limits [PIXFORMAT_RGB565-PIXFORMAT_RGB555]"));
 		}
 	}
-	return mp_const_none;
+	return result;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_pixformat_obj, 0, 1, camera_pixformat);
 #endif
@@ -466,25 +478,6 @@ STATIC mp_obj_t camera_init()
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_init_obj, camera_init);
 
 
-STATIC mp_obj_t camera_reset()
-{
-	if (camera_initialized)
-	{
-		sensor_t *s = esp_camera_sensor_get();
-		if (s)
-		{
-			s->reset(s);
-		}
-		else
-		{
-			mp_raise_ValueError(MP_ERROR_TEXT("Camera reset not possible"));
-		}
-	}
-	return mp_const_none;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_reset_obj, camera_reset);
-
-
 STATIC mp_obj_t camera_deinit()
 {
 	if (camera_initialized == true)
@@ -500,6 +493,33 @@ STATIC mp_obj_t camera_deinit()
 	return mp_const_true;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_deinit_obj, camera_deinit);
+
+
+STATIC mp_obj_t camera_reset()
+{
+	mp_obj_t result = mp_const_none;
+	if (camera_initialized)
+	{
+		sensor_t *s = esp_camera_sensor_get();
+		if (s)
+		{
+			if (s->reset(s) == 0)
+			{
+				result = mp_const_true;
+			}
+			else
+			{
+				result = mp_const_false;
+			}
+		}
+		else
+		{
+			mp_raise_ValueError(MP_ERROR_TEXT("Camera reset not possible"));
+		}
+	}
+	return result;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_reset_obj, camera_reset);
 
 typedef struct 
 {

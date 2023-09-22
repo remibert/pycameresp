@@ -2,9 +2,9 @@
 
 # Requirements
 
-Micropython on ESP32 does not leave much space in RAM, a SPIRAM is recommended, but the platform can however work, it is then necessary to limit the number of servers used.
+Micropython on ESP32 does not leave much space in RAM, a SPIRAM is recommended, but the platform can however work, it is then necessary to limit the number of servers used. In the version without spiram, micropython leaves 103 kb, which is extremely little to run a platform like this. In this case to limit RAM consumption, you must edit the main.py, and replace the "=True", with "=False", on all the unwanted functionalities.
 
-For motion capture you absolutely need an ESP32CAM.
+For motion capture you absolutely need an ESP32CAM or FREENOVE CAM S3.
 
 # Devices supported
 
@@ -22,3 +22,4 @@ Below are the devices compatible with pycameresp :
 ![PicoPi](/images/Device_PicoPi.png "Pico PI W")
 ![SONOFF R3](/images/Device_SonoffR3.png "SONOFF R3")
 
+Note on the freenove cam S3, I had problems with wifi disruption, which limited the video streaming speed, to correct this I unsoldered the two connectors from the edges of the card, it's tedious, but the speed has become maximum.

@@ -10,8 +10,9 @@ import webpage.mainpage
 import wifi.wifi
 import tools.lang
 import tools.strings
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b'/presence', menu=tools.lang.menu_server, item=tools.lang.item_presence)
+@server.httpserver.HttpServer.add_route(b'/presence', menu=tools.lang.menu_server, item=tools.lang.item_presence, available=tools.features.features.presence)
 async def presence(request, response, args):
 	""" Presence configuration page """
 	config = server.presence.PresenceConfig()

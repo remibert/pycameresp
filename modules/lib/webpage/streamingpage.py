@@ -10,6 +10,7 @@ import tools.logger
 import tools.tasking
 import tools.info
 import tools.watchdog
+import tools.features
 
 class Streaming:
 	""" Management class of video streaming of the camera via an html page """
@@ -72,7 +73,7 @@ class Streaming:
 		""" Stop streaming """
 		Streaming.streaming_id[0] += 1
 
-@server.httpserver.HttpServer.add_route(b'/camera/start', available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/camera/start', available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.camera)
 async def camera_start_streaming(request, response, args):
 	""" Start video streaming """
 	tools.tasking.Tasks.slow_down()

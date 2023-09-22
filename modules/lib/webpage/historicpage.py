@@ -65,7 +65,7 @@ def get_days_pagination(last_days, request):
 	return result
 
 
-@server.httpserver.HttpServer.add_route(b'/historic', menu=tools.lang.menu_motion, item=tools.lang.item_historic, available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/historic', menu=tools.lang.menu_motion, item=tools.lang.item_historic, available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.motion)
 async def historic(request, response, args):
 	""" motion.historic.Historic motion detection page """
 	webpage.streamingpage.Streaming.stop()
@@ -389,7 +389,7 @@ async def historic(request, response, args):
 	page = webpage.mainpage.main_frame(request, response, args,tools.lang.last_motion_detections,Form(page_content))
 	await response.send_page(page)
 
-@server.httpserver.HttpServer.add_route(b'/historic/historic.json', available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/historic/historic.json', available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.motion)
 async def historic_json(request, response, args):
 	""" Send historic json file """
 	tools.tasking.Tasks.slow_down()
@@ -398,7 +398,7 @@ async def historic_json(request, response, args):
 	except Exception as err:
 		await response.send_not_found(err)
 
-@server.httpserver.HttpServer.add_route(b'/historic/images/.*', available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/historic/images/.*', available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.motion)
 async def historic_image(request, response, args):
 	""" Send historic image """
 	tools.tasking.Tasks.slow_down()
@@ -414,7 +414,7 @@ async def historic_image(request, response, args):
 			await motion.historic.Historic.release()
 			await video.video.Camera.unreserve(motion.historic.Historic)
 
-@server.httpserver.HttpServer.add_route(b'/historic/download/.*', available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b'/historic/download/.*', available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.motion)
 async def download_image(request, response, args):
 	""" Download historic image """
 	tools.tasking.Tasks.slow_down()

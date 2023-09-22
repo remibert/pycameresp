@@ -56,3 +56,4 @@ To build Freenove CAM S3 :
 To build Pico PI W you must clean all and enter command :
 - **python3 build.py --rp2 --patch --build "PICO_W"**
 
+I no longer use the same version of micropython between the esp32 and the esp32-S3, the reason is simple, I can no longer link the firmware, so I stayed on a version 1.20 of micropython, which has the merit of working perfectly.

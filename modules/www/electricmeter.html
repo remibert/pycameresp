@@ -15,6 +15,58 @@ var WITH_TEMPERATURE = "%s";
 var chartjs = null;
 var chart = null;
 
+function onClickBar(event)
+{
+	const element = event.chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false)[0];
+	const index = element.index;
+
+	if (TYPE == "hourly")
+	{
+		if (STEP > 1)
+		{
+			var location = window.location.pathname + "?" + 
+				"day=" + DAY + "&" + 
+				"unit=" + UNIT + "&" + 
+				"step=" + 1;
+
+			if (WITH_TEMPERATURE != "false")
+			{
+				location += "&temperature=1";
+			}
+			window.location.href = location;
+		}
+	}
+	else if (TYPE == "daily")
+	{
+		if (index <= 30)
+		{
+			var location = "hourly" + "?" + 
+					"day=" + DAY.slice(0,-2)  + pad(index+1,2) + "&" + 
+					"unit=" + UNIT + "&" + 
+					"step=" + 1;
+
+			if (WITH_TEMPERATURE != "false")
+			{
+				location += "&temperature=1";
+			}
+			window.location.href = location;
+		}
+	}
+	else if (TYPE == "monthly")
+	{
+		if (index <= 11)
+		{
+			var location = "daily" + "?" + 
+					"year=" + DAY.slice(0,4) + "&" +
+					"month=" + pad(index+1,2) + "&" + 
+					"unit=" + UNIT + "&" + 
+					"step=" + 30;
+
+			window.location.href = location;
+		}
+	}
+}
+
 function pad(num, size) 
 {
 	num = parseInt(num);
@@ -175,7 +227,8 @@ class MainChart
 						text: this.get_legend()
 					}
 				},
-				scales: this.get_scales()
+				scales: this.get_scales(),
+				onClick: onClickBar,
 			}
 		});
 	}
@@ -418,7 +471,6 @@ class HourlyChart extends MainChart
 
 			for (hour = 0; hour < 24; hour ++)
 			{
-			
 				for (i = 0; i < delta; i++)
 				{
 					datas.push(meteo.hourly.temperature_2m[hour]);

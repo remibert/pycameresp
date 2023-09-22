@@ -378,23 +378,26 @@ class MonthlyCounter:
 	@staticmethod
 	async def update(filenames, monthly_to_update):
 		""" Update monthly files """
-		for year, monthly_filename in monthly_to_update.items():
-			
-			daily_searched = "%s/%s-[0-9][0-9]/%s-[0-9][0-9]%s"%(get_pulse_directory(), year, year, PULSE_DAILY)
-			slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(12)
-			for daily_filename in filenames:
-				if tools.fnmatch.fnmatch(daily_filename, daily_searched):
-					name = tools.filesystem.splitext(tools.filesystem.split(daily_filename)[1])[0]
-					month = int(name.split("-")[-1])
-					print("\r  Monthly %s %d"%(monthly_filename, month), end="")
-					daily_slot_pulses = DailyCounter.load(daily_filename)
-					for time_slot, days in daily_slot_pulses.items():
-						for day in days:
-							slot_pulses[time_slot][month-1] = slot_pulses[time_slot][month-1]+day
+		try:
+			for year, monthly_filename in monthly_to_update.items():
+				
+				daily_searched = "%s/%s-[0-9][0-9]/%s-[0-9][0-9]%s"%(get_pulse_directory(), year, year, PULSE_DAILY)
+				slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(12)
+				for daily_filename in filenames:
+					if tools.fnmatch.fnmatch(daily_filename, daily_searched):
+						name = tools.filesystem.splitext(tools.filesystem.split(daily_filename)[1])[0]
+						month = int(name.split("-")[-1])
+						print("\r  Monthly %s %d"%(monthly_filename, month), end="")
+						daily_slot_pulses = DailyCounter.load(daily_filename)
+						for time_slot, days in daily_slot_pulses.items():
+							for day in days:
+								slot_pulses[time_slot][month-1] = slot_pulses[time_slot][month-1]+day
+					await uasyncio.sleep_ms(2)
+				print("")
+				MonthlyCounter.save(monthly_filename, slot_pulses)
 				await uasyncio.sleep_ms(2)
-			print("")
-			MonthlyCounter.save(monthly_filename, slot_pulses)
-			await uasyncio.sleep_ms(2)
+		except Exception as err:
+			tools.logger.exception(err)
 
 	@staticmethod
 	def save(filename, slot_pulses):

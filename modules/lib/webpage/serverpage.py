@@ -15,12 +15,12 @@ async def server_page(request, response, args):
 	disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
 	page = webpage.mainpage.main_frame(request, response, args,tools.lang.servers_configuration,
 		Form([
-			Switch(text=tools.lang.telnet, name=b"telnet", checked=config.telnet, disabled=disabled) if tools.support.telnet() else None,
-			Switch(text=tools.lang.ftp   , name=b"ftp"   , checked=config.ftp,    disabled=disabled),
-			Switch(text=tools.lang.http  , name=b"http"  , checked=config.http,   disabled=disabled),
-			Switch(text=tools.lang.time_synchronization   , name=b"ntp"   , checked=config.ntp,    disabled=disabled),
-			Switch(text=tools.lang.wan_ip   , name=b"wanip"   , checked=config.wanip,    disabled=disabled),
-			Switch(text=tools.lang.notification_reboot_user, name=b"notify", checked=config.notify, disabled=disabled),
+			Switch(text=tools.lang.telnet, name=b"telnet", checked=config.telnet, disabled=disabled) if tools.support.telnet() and tools.features.features.telnet else None,
+			Switch(text=tools.lang.ftp   , name=b"ftp"   , checked=config.ftp,    disabled=disabled) if tools.features.features.ftp else None,
+			Switch(text=tools.lang.http  , name=b"http"  , checked=config.http,   disabled=disabled) if tools.features.features.http else None,
+			Switch(text=tools.lang.time_synchronization   , name=b"ntp"   , checked=config.ntp,    disabled=disabled) if tools.features.features.ntp else None,
+			Switch(text=tools.lang.wan_ip   , name=b"wanip"   , checked=config.wanip,    disabled=disabled) if tools.features.features.wanip else None,
+			Switch(text=tools.lang.notification_reboot_user, name=b"notify", checked=config.notify, disabled=disabled) if tools.features.features.pushover or tools.features.features.webhook or tools.features.features.mqtt_client else None,
 			submit
 		]))
 	await response.send_page(page)

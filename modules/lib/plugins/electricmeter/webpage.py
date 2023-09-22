@@ -23,16 +23,9 @@ async def hourly_page_page(request, response, args):
 	elif request.params.get(b"direction",b"") == b"previous":
 		day -= 86400
 
-	temperature = request.params.get(b"temperature")
-	if temperature is None or temperature == b"0":
-		with_temperature = b"false"
-		temperature = None
-	else:
-		with_temperature = b"true"
-
-	step = int(request.params.get(b"step",b"30"))
+	step = int(request.params.get(b"step",b"1"))
 	steps = []
-	for s in [1,2,3,5,10,15,30,60]:
+	for s in [1,5,10,15,30]:
 		if s == step:
 			selected = True
 		else:
@@ -44,6 +37,16 @@ async def hourly_page_page(request, response, args):
 	with  open(WWW_DIR + "electricmeter.html", "rb") as file:
 		content = file.read()
 
+	link_up = b"daily?year="+tools.date.date_to_html(day)[0:4] + b"&month="+tools.date.date_to_html(day)[5:7] + b"&unit=" + unit
+
+	temperature = request.params.get(b"temperature")
+	if temperature is None or temperature == b"0":
+		with_temperature = b"false"
+		temperature = None
+	else:
+		with_temperature = b"true"
+		link_up += b"&temperature=1"
+
 	page_content = \
 	[
 		Div(
@@ -51,6 +54,7 @@ async def hourly_page_page(request, response, args):
 			Div(
 			[
 				Button(type=b"submit", text=b"&lt;-", name=b"direction",  value=b"previous"),Space(),
+				Link(type=b"button", class_=b"btn btn-outline-primary", text=b"\xE2\xA4\xB4", href=link_up),Space(),
 				Button(type=b"submit", text=b"-&gt;", name=b"direction",  value=b"next")
 			], class_=b'col-md-2 mb-1'),
 			Div(
@@ -157,6 +161,7 @@ async def daily_page(request, response, args):
 			Div(
 			[
 				Button(type=b"submit", text=b"&lt;-", name=b"direction",  value=b"previous"),Space(),
+				Link(type=b"button", class_=b"btn btn-outline-primary", text=b"\xE2\xA4\xB4", href=b"monthly?year="+tools.date.date_to_html(day)[0:4]),Space(),
 				Button(type=b"submit", text=b"-&gt;", name=b"direction",  value=b"next")
 			], class_=b'col-md-2 mb-2'),
 			Div(

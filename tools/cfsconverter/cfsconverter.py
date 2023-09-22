@@ -8,7 +8,8 @@ import os.path
 import os
 import time
 from zipfile import ZipFile, ZIP_DEFLATED
-sys.path.append("../../modules/lib")
+#~ print(lib_path)
+sys.path.append(os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/../../modules/lib"))
 # pylint:disable=consider-using-enumerate
 # pylint:disable=wrong-import-position
 # pylint:disable=import-error
