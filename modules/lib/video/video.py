@@ -120,6 +120,7 @@ class Camera:
 	new_failed = [0]
 	config = None
 	flash_enabled = [True]
+	aquisition = [False]
 
 	@staticmethod
 	def gpio_config(**kwargs):
@@ -174,6 +175,7 @@ class Camera:
 				if result:
 					# Photo on 800x600, motion detection / 8 (100x75), each square detection 8x8 (12.5 x 9.375)
 					Camera.opened = True
+					Camera.aquisition[0] = False
 		else:
 			result = False
 		return result
@@ -211,12 +213,14 @@ class Camera:
 	@staticmethod
 	def capture():
 		""" Capture an image on the camera """
+		Camera.aquisition[0] = True
 		return Camera.retry(camera.capture)
 
 	@staticmethod
 	def motion():
 		""" Get the motion informations.
 		This contains a jpeg image, with matrices of the different color RGB """
+		Camera.aquisition[0] = True
 		return Camera.retry(camera.motion)
 
 	@staticmethod
@@ -286,106 +290,148 @@ class Camera:
 		Camera.modified[0] = False
 
 	@staticmethod
-	def framesize(resolution):
-		""" Configure the frame size """
-		val = None
-		Camera.modified[0] = True
-		if resolution == b"UXGA"  or resolution == b"1600x1200" :val = camera.FRAMESIZE_UXGA
-		if resolution == b"SXGA"  or resolution == b"1280x1024" :val = camera.FRAMESIZE_SXGA
-		if resolution == b"XGA"   or resolution == b"1024x768"  :val = camera.FRAMESIZE_XGA
-		if resolution == b"SVGA"  or resolution == b"800x600"   :val = camera.FRAMESIZE_SVGA
-		if resolution == b"VGA"   or resolution == b"640x480"   :val = camera.FRAMESIZE_VGA
-		if resolution == b"CIF"   or resolution == b"400x296"   :val = camera.FRAMESIZE_CIF
-		if resolution == b"QVGA"  or resolution == b"320x240"   :val = camera.FRAMESIZE_QVGA
-		if resolution == b"HQVGA" or resolution == b"240x176"   :val = camera.FRAMESIZE_HQVGA
-		if resolution == b"QQVGA" or resolution == b"160x120"   :val = camera.FRAMESIZE_QQVGA
-		if Camera.opened and val is not None:
-			# print("Framesize %s"%strings.tostrings(resolution))
-			camera.framesize(val)
-		# else:
-			# print("Framesize not set")
+	def reinit():
+		""" Close and open camera if get image previously asked, it avoid a DMA problem """
+		if Camera.opened:
+			if Camera.aquisition[0] is True:
+				Camera.close()
+				Camera.open()
 
 	@staticmethod
-	def pixformat(format_):
+	def framesize(resolution=None):
+		""" Configure the frame size """
+		result = None
+		val = None
+		Camera.modified[0] = True
+		if   resolution == b"UXGA"  or resolution == b"1600x1200" :val = camera.FRAMESIZE_UXGA
+		elif resolution == b"SXGA"  or resolution == b"1280x1024" :val = camera.FRAMESIZE_SXGA
+		elif resolution == b"XGA"   or resolution == b"1024x768"  :val = camera.FRAMESIZE_XGA
+		elif resolution == b"SVGA"  or resolution == b"800x600"   :val = camera.FRAMESIZE_SVGA
+		elif resolution == b"VGA"   or resolution == b"640x480"   :val = camera.FRAMESIZE_VGA
+		elif resolution == b"CIF"   or resolution == b"400x296"   :val = camera.FRAMESIZE_CIF
+		elif resolution == b"QVGA"  or resolution == b"320x240"   :val = camera.FRAMESIZE_QVGA
+		elif resolution == b"HQVGA" or resolution == b"240x176"   :val = camera.FRAMESIZE_HQVGA
+		elif resolution == b"QQVGA" or resolution == b"160x120"   :val = camera.FRAMESIZE_QQVGA
+		if Camera.opened:
+			# print("Framesize %s"%strings.tostrings(resolution))
+			result = camera.framesize(val)
+			if result is False and val is not None:
+				Camera.reinit()
+				result = camera.framesize(val)
+		return result
+
+	@staticmethod
+	def pixformat(format_=None):
 		""" Change the format of image """
+		result = None
 		Camera.modified[0] = True
 		val = None
-		if format_ == b"RGB565"    : val=camera.PIXFORMAT_RGB565
-		if format_ == b"YUV422"    : val=camera.PIXFORMAT_YUV422
-		if format_ == b"GRAYSCALE" : val=camera.PIXFORMAT_GRAYSCALE
-		if format_ == b"JPEG"      : val=camera.PIXFORMAT_JPEG
-		if format_ == b"RGB888"    : val=camera.PIXFORMAT_RGB888
-		if format_ == b"RAW"       : val=camera.PIXFORMAT_RAW
-		if format_ == b"RGB444"    : val=camera.PIXFORMAT_RGB444
-		if format_ == b"RGB555"    : val=camera.PIXFORMAT_RGB555
-		if Camera.opened and val is not None:
+		if   format_ == b"RGB565"    : val=camera.PIXFORMAT_RGB565
+		elif format_ == b"YUV422"    : val=camera.PIXFORMAT_YUV422
+		elif format_ == b"GRAYSCALE" : val=camera.PIXFORMAT_GRAYSCALE
+		elif format_ == b"JPEG"      : val=camera.PIXFORMAT_JPEG
+		elif format_ == b"RGB888"    : val=camera.PIXFORMAT_RGB888
+		elif format_ == b"RAW"       : val=camera.PIXFORMAT_RAW
+		elif format_ == b"RGB444"    : val=camera.PIXFORMAT_RGB444
+		elif format_ == b"RGB555"    : val=camera.PIXFORMAT_RGB555
+		if Camera.opened:
 			# print("Pixformat %s"%strings.tostrings(format_))
-			camera.pixformat(val)
-		# else:
-			# print("Pixformat not set")
+			result = camera.pixformat(val)
+			if result is False and val is not None:
+				Camera.reinit()
+				result = camera.pixformat(val)
+		return result
 
 	@staticmethod
 	def quality(val=None, modified=True):
 		""" Configure the compression """
+		result = None
 		Camera.modified[0] = modified
 		if Camera.opened:
 			# print("Quality %d"%val)
-			return camera.quality(val)
-		return None
+			result = camera.quality(val)
+			if result is False and val is not None:
+				Camera.reinit()
+				result = camera.quality(val)
+		return result
 
 	@staticmethod
 	def brightness(val=None):
 		""" Change the brightness """
+		result = None
 		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Brightness %d"%val)
-			return camera.brightness(val)
-		return None
+			result = camera.brightness(val)
+			if result is False and val is not None:
+				Camera.reinit()
+				result = camera.brightness(val)
+		return result
 
 	@staticmethod
 	def contrast(val=None):
 		""" Change the contrast """
+		result = None
 		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Contrast %d"%val)
-			return camera.contrast(val)
-		return None
+			result = camera.contrast(val)
+			if result is False and val is not None:
+				Camera.reinit()
+				result = camera.contrast(val)
+		return result
 
 	@staticmethod
 	def saturation(val=None):
 		""" Change the saturation """
+		result = None
 		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Saturation %d"%val)
-			return camera.saturation(val)
-		return None
+			result = camera.saturation(val)
+			if result is False and val is not None:
+				Camera.reinit()
+				result = camera.saturation(val)
+		return result
 
 	@staticmethod
 	def sharpness(val=None):
 		""" Change the sharpness """
+		result = None
 		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Sharpness %d"%val)
-			return camera.sharpness(val)
-		return None
+			result = camera.sharpness(val)
+			if result is False and val is not None:
+				Camera.reinit()
+				result = camera.sharpness(val)
+		return result
 
 	@staticmethod
 	def hmirror(val=None):
 		""" Set horizontal mirroring """
+		result = None
 		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Hmirror %d"%val)
-			return camera.hmirror(val)
-		return None
+			result = camera.hmirror(val)
+			if result is False and val is not None:
+				Camera.reinit()
+				result = camera.hmirror(val)
+		return result
 
 	@staticmethod
 	def vflip(val=None):
 		""" Set the vertical flip """
+		result = None
 		Camera.modified[0] = True
 		if Camera.opened:
 			# print("Vflip %d"%val)
-			return camera.vflip(val)
-		return None
+			result = camera.vflip(val)
+			if result is False and val is not None:
+				Camera.reinit()
+				result = camera.vflip(val)
+		return result
 
 	@staticmethod
 	def configure(config):
