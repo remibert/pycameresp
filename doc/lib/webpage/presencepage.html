@@ -39,8 +39,9 @@ import webpage.mainpage
 import wifi.wifi
 import tools.lang
 import tools.strings
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b&#39;/presence&#39;, menu=tools.lang.menu_server, item=tools.lang.item_presence)
+@server.httpserver.HttpServer.add_route(b&#39;/presence&#39;, menu=tools.lang.menu_server, item=tools.lang.item_presence, available=tools.features.features.presence)
 async def presence(request, response, args):
         &#34;&#34;&#34; Presence configuration page &#34;&#34;&#34;
         config = server.presence.PresenceConfig()
@@ -102,7 +103,7 @@ async def presence(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/presence&#39;, menu=tools.lang.menu_server, item=tools.lang.item_presence)
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/presence&#39;, menu=tools.lang.menu_server, item=tools.lang.item_presence, available=tools.features.features.presence)
 async def presence(request, response, args):
         &#34;&#34;&#34; Presence configuration page &#34;&#34;&#34;
         config = server.presence.PresenceConfig()

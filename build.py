@@ -164,13 +164,13 @@ BUILD_RP2_COMMANDS = '''
 cd "%(OUTPUT_DIR)s/%(MICROPYTHON_S1)s""
 make -C mpy-cross
 
-#####################
+########################
 # Build %(MICROPYTHON_S1)s" #
-#####################
-cd "%(OUTPUT_DIR)s/%(MICROPYTHON_S1)s"/ports/rp2"
+########################
+cd "%(OUTPUT_DIR)s/%(MICROPYTHON_S1)s/ports/rp2"
 make submodules
 make BOARD=%(BOARD)s
-cp "%(OUTPUT_DIR)s/%(MICROPYTHON_S1)s"/ports/rp2/build-%(BOARD)s/firmware.uf2" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.uf2"
+cp "%(OUTPUT_DIR)s/%(MICROPYTHON_S1)s/ports/rp2/build-%(BOARD)s/firmware.uf2" "%(PYCAMERESP_DIR)s/delivery/%(BOARD)s-firmware.uf2"
 
 '''
 
@@ -180,7 +180,7 @@ ZIP_MODULES = '''
 # Build distri zip #
 ####################
 cd %(PYCAMERESP_DIR)s
-python3 "%(PYCAMERESP_DIR)s/scripts/zip_mpy.py" "%(OUTPUT_DIR)s" "%(BOARD)s" "%(PYCAMERESP_DIR)s"
+python3 "%(PYCAMERESP_DIR)s/scripts/zip_mpy.py" "%(OUTPUT_DIR)s" "%(BOARD)s" "$(MICRO)" "%(BOARD_VARIANT_FIRMWARE)s" "%(PYCAMERESP_DIR)s"
 
 '''
 
@@ -408,7 +408,7 @@ def main():
 			execute(PATCH_COMMANDS, args.s3)
 
 		if args.zippy:
-			execute(ZIP_MODULES)
+			execute(ZIP_MODULES, args.s3)
 
 		if args.build or args.all:
 			if args.rp2:
@@ -433,7 +433,7 @@ def main():
 								execute(SET_ESP_COMMANDS, args.s3)
 								print("IDF_PATH='%s'"%os.environ["IDF_PATH"])
 								execute(BUILD_ESP_COMMANDS, args.s3)
-							execute(ZIP_MODULES)
+							execute(ZIP_MODULES, args.s3)
 
 if __name__ == "__main__":
 	import sys

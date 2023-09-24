@@ -1,0 +1,2389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>lib.plugins.electricmeter.meter API documentation</title>
+<meta name="description" content="Task to count wh from the electric meter" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.plugins.electricmeter.meter</code></h1>
+</header>
+<section id="section-intro">
+<p>Task to count wh from the electric meter</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
+&#34;&#34;&#34; Task to count wh from the electric meter &#34;&#34;&#34;
+import struct
+import time
+import collections
+import uasyncio
+import machine
+import server.notifier
+import plugins.electricmeter.config
+import plugins.electricmeter.lang
+import tools.filesystem
+import tools.date
+import tools.strings
+import tools.fnmatch
+import tools.logger
+import tools.tasking
+import tools.info
+import tools.system
+import tools.sdcard
+# pylint:disable=consider-using-f-string
+# pylint:disable=consider-iterating-dictionary
+# pylint:disable=missing-function-docstring
+# pylint:disable=global-variable-not-assigned
+# pylint:disable=trailing-whitespace
+# pylint:disable=too-many-lines
+
+# Hourly file format :
+#  - pulses_per_minute:uint8_t * 24*60
+
+# Daily file format :
+#  - (start_time:uint16_t, end_time:uint16_t, pulses_per_day:uint16_t * 31 days) * max_time_slots
+
+# Monthly file format :
+#  - (start_time:uint16_t, end_time:uint16_t, pulses_per_month:uint32_t * 12 months) * max_time_slots
+
+PULSE_DIRECTORY = &#34;pulses&#34;
+BACKUP_DIRECTORY = PULSE_DIRECTORY + &#34;/backup&#34;
+PULSE_HOURLY   = &#34;.hourly&#34;
+PULSE_DAILY    = &#34;.daily&#34;
+PULSE_MONTHLY  = &#34;.monthly&#34;
+
+def get_pulse_directory():
+        &#34;&#34;&#34; Return the root of pulse directory &#34;&#34;&#34;
+        return tools.sdcard.SdCard.get_mountpoint() + &#34;/&#34; + PULSE_DIRECTORY
+
+_last_err_write = 0
+def write_problem(err):
+        &#34;&#34;&#34; Raise write problem &#34;&#34;&#34;
+        global _last_err_write
+        if _last_err_write + 3600 &lt; time.time():
+                _last_err_write = time.time()
+                server.notifier.Notifier.notify(message=plugins.electricmeter.lang.write_problem)
+        tools.info.increase_issues_counter()
+        tools.logger.exception(err)
+
+class PulseSensor:
+        &#34;&#34;&#34; Detect wh pulse from electric meter &#34;&#34;&#34;
+        def __init__(self, gpio, min_duration_ns=20_000_000, queue_length=1_500):
+                self.pulses = collections.deque((), queue_length)
+                self.notifier = uasyncio.Event()
+                self.previous_counter = 0
+                self.previous_time = time.time_ns()
+                self.min_duration_ns = min_duration_ns
+
+                # The use of pcnt counter allows to obtain a better reliability of counting
+                self.counter = machine.Counter(0, src=machine.Pin(gpio, mode=machine.Pin.IN), direction=machine.Counter.UP)
+                self.counter.filter_ns(self.min_duration_ns)
+                self.counter.pause()
+                self.counter.value(0)
+
+                self.sensor = machine.Pin(gpio, machine.Pin.IN, machine.Pin.PULL_DOWN)
+                self.sensor.irq(handler=self.detected, trigger=machine.Pin.IRQ_RISING)
+                self.counter.resume()
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor &#34;&#34;&#34;
+                self.sensor.irq(handler=None)
+                self.counter.deinit()
+
+        def detected(self, pin):
+                &#34;&#34;&#34; Callback called when pulse detected &#34;&#34;&#34;
+                pulse_time     = time.time_ns()
+                pulse_counter  = self.counter.value()
+                if pin.value() == 1:
+                        # If new pulses detected
+                        if pulse_counter != self.previous_counter:
+                                # if the pulse is not too close to the previous one
+                                if self.previous_time + self.min_duration_ns &lt; pulse_time:
+                                        # If the new value is not a counter overflow
+                                        if pulse_counter &gt; self.previous_counter:
+                                                pulse_quantity = pulse_counter - self.previous_counter
+                                        else:
+                                                pulse_quantity = 1
+
+                                        # Save the new counter value
+                                        self.previous_counter = pulse_counter
+
+                                        # Add the current pulse to list
+                                        self.pulses.append((pulse_quantity, pulse_time))
+
+                                        # Wake up pulse counter
+                                        self.notifier.set()
+                                else:
+                                        # Ignore previous pulse
+                                        self.previous_counter = pulse_counter
+
+        async def wait(self):
+                &#34;&#34;&#34; Wait the wh pulses and the returns the list of pulses &#34;&#34;&#34;
+                # Wait pulses
+                await self.notifier.wait()
+
+                # Clear notification flag
+                self.notifier.clear()
+                result = []
+
+                # Empty list of pulses
+                while True:
+                        try:
+                                result.append(self.pulses.popleft())
+                        except IndexError:
+                                break
+                return result
+
+        def simulate(self, pulses):
+                &#34;&#34;&#34; Simulates the flashing led on the electric meter &#34;&#34;&#34;
+                self.sensor.value(1)
+                self.counter.value(pulses)
+                self.detected(self.sensor)
+
+class HourlyCounter:
+        &#34;&#34;&#34; Hourly counter of wh consumed &#34;&#34;&#34;
+        counter = None
+
+        def __init__(self, gpio):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                try:
+                        tools.filesystem.makedir(get_pulse_directory(),True)
+                except Exception as err:
+                        write_problem(err)
+                self.day    = time.time()
+                self.pulses = HourlyCounter.load(HourlyCounter.get_filename(self.day))
+                self.last_save = time.time()
+                self.watt_hour = 0
+                self.previous_pulse_time = None
+                self.day_pulses_counter = 0
+                self.pulse_sensor = PulseSensor(gpio)
+                tools.system.add_action(self.action_before_reboot)
+
+        def action_before_reboot(self):
+                &#34;&#34;&#34; Action to do before reboot &#34;&#34;&#34;
+                tools.logger.syslog(&#34;Save pulses before reboot&#34;)
+                # Save pulses file
+                HourlyCounter.save(self.day)
+        
+        async def manage(self):
+                &#34;&#34;&#34; Manage the counter &#34;&#34;&#34;
+                # Wait the list of pulses
+                pulses = await self.pulse_sensor.wait()
+                for pulse_quantity, pulse_time in pulses:
+                        # If previous pulse registered
+                        if self.previous_pulse_time is not None:
+                                # Compute the instant power
+                                self.watt_hour = 3600 * 1_000_000_000/((pulse_time - self.previous_pulse_time)/pulse_quantity)
+
+                        # Increase
+                        self.day_pulses_counter += pulse_quantity
+                        self.previous_pulse_time = pulse_time
+                        hour,minute=tools.date.local_time(pulse_time//1_000_000_000)[3:5]
+                        day   = pulse_time//1_000_000_000
+                        minut = hour*60+minute
+                        self.pulses[minut] += pulse_quantity
+
+                        # If day change
+                        if HourlyCounter.is_same_day(day, self.day) is False:
+                                # Save day counter
+                                HourlyCounter.save(self.day)
+
+                                # Clear day pulses counter
+                                self.day_pulses_counter = 0
+
+                                # Load new day if existing or clear counter (manage day light saving)
+                                self.pulses = self.load(day)
+                                self.day = day
+
+                # Each ten minutes
+                if time.time() &gt; (self.last_save + 1801):
+                        # Save pulses file
+                        HourlyCounter.save(self.day)
+
+                # print(&#34;%s %.1f wh pulses=%d&#34;%(tools.date.date_to_string(), self.watt_hour, self.day_pulses_counter))
+                return True
+
+        @staticmethod
+        def is_same_day(day1, day2):
+                &#34;&#34;&#34; Indicates if the day 1 is equal to day 2&#34;&#34;&#34;
+                if day1//86400 == day2//86400 or day1 is None or day2 is None:
+                        return True
+                else:
+                        return False
+
+        @staticmethod
+        def get_filename(day=None):
+                &#34;&#34;&#34; Return the filename according to day &#34;&#34;&#34;
+                if day is None:
+                        day = time.time()
+                year,month,day = tools.date.local_time(day)[:3]
+                return &#34;%s/%04d-%02d-%02d%s&#34;%(HourlyCounter.get_directory(year, month), year, month, day, PULSE_HOURLY)
+
+        @staticmethod
+        def get_directory(year, month):
+                &#34;&#34;&#34; Get the directory of hourly file &#34;&#34;&#34;
+                return &#34;%s/%04d-%02d&#34;%(get_pulse_directory(), year, month)
+
+        @staticmethod
+        def save(filename):
+                &#34;&#34;&#34; Save pulses file &#34;&#34;&#34;
+                if type(filename) == type(0) or type(filename) == type(0.):
+                        try:
+                                day = filename
+                                filename = HourlyCounter.get_filename(day)
+                                current_day = tools.date.local_time(day)[2]
+                                tools.filesystem.makedir(BACKUP_DIRECTORY, True)
+                                backup_filename = &#34;%s/day_%02d&#34;%(BACKUP_DIRECTORY, current_day)
+                                with open(backup_filename, &#34;wb&#34;) as file:
+                                        file.write(struct.pack(&#34;B&#34;*1440, *HourlyCounter.counter.pulses))
+                        except Exception as err:
+                                write_problem(err)
+
+                try:
+                        tools.filesystem.makedir(tools.filesystem.split(filename)[0], True)
+                        with open(filename, &#34;wb&#34;) as file:
+                                file.write(struct.pack(&#34;B&#34;*1440, *HourlyCounter.counter.pulses))
+                        HourlyCounter.counter.last_save = time.time()
+                except Exception as err:
+                        write_problem(err)
+
+        @staticmethod
+        def load(filename, pulses=None):
+                &#34;&#34;&#34; Load pulses file &#34;&#34;&#34;
+                result = [0]*1440
+                try:
+                        if tools.filesystem.exists(filename):
+                                with open(filename, &#34;rb&#34;) as file:
+                                        load_pulses = struct.unpack(&#34;B&#34;*1440, file.read())
+                                        index = 0
+                                        if pulses is None:
+                                                result = list(load_pulses)
+                                        else:
+                                                result = pulses
+                                                for pulse in load_pulses:
+                                                        result[index] += pulse
+                                                        index += 1
+                except Exception as err:
+                        tools.logger.exception(err)
+                return result
+
+        @staticmethod
+        def get_power():
+                &#34;&#34;&#34; Return power instantaneous &#34;&#34;&#34;
+                return HourlyCounter.counter.watt_hour
+
+        def simulate(self, pulses):
+                &#34;&#34;&#34; Simulates the flashing led on the electric meter &#34;&#34;&#34;
+                self.pulse_sensor.simulate(pulses)
+
+        @staticmethod
+        async def task(**kwargs):
+                &#34;&#34;&#34; Task to count wh from the electric meter &#34;&#34;&#34;
+                if HourlyCounter.counter is None:
+                        HourlyCounter.counter = HourlyCounter(kwargs.get(&#34;gpio&#34;,13))
+                await HourlyCounter.counter.manage()
+
+        @staticmethod
+        def get_datas(selected_date):
+                &#34;&#34;&#34; Return the pulse filename according to the selected date &#34;&#34;&#34;
+                if type(selected_date) == type(b&#34;&#34;):
+                        selected_date = tools.date.html_to_date(selected_date)
+
+                if selected_date is None or HourlyCounter.is_same_day(selected_date, time.time()):
+                        result = HourlyCounter.counter.pulses
+                else:
+                        result = HourlyCounter.load(HourlyCounter.get_filename(selected_date))
+                return result
+
+        @staticmethod
+        async def pulse_simulator():
+                &#34;&#34;&#34; Simulates the flashing led on the electric meter &#34;&#34;&#34;
+                import random
+                while True:
+                        HourlyCounter.counter.simulate(random.randint(1, 4))
+                        await uasyncio.sleep(random.randint(1, 5))
+
+class DailyCounter:
+        &#34;&#34;&#34; Daily counter of wh consumed &#34;&#34;&#34;
+        @staticmethod
+        def get_filename(selected_date=None):
+                &#34;&#34;&#34; Return the filename according to selected date &#34;&#34;&#34;
+                if selected_date is None:
+                        selected_date = time.time()
+                year,month = tools.date.local_time(selected_date)[:2]
+                return &#34;%s/%04d-%02d%s&#34;%(HourlyCounter.get_directory(year, month), year, month, PULSE_DAILY)
+
+        @staticmethod
+        def get_datas(selected_date):
+                &#34;&#34;&#34; Return the pulse filename according to the month selected &#34;&#34;&#34;
+                result = []
+                filename = DailyCounter.get_filename(selected_date)
+                slot_pulses = DailyCounter.load(filename)
+                for time_slot, days in slot_pulses.items():
+                        result.append({&#34;time_slot&#34;:time_slot,&#34;days&#34;:days})
+                return result
+
+        @staticmethod
+        def load(filename):
+                &#34;&#34;&#34; Load daily file &#34;&#34;&#34;
+                result = {}
+                try:
+                        if tools.filesystem.exists(filename):
+                                with open(filename, &#34;rb&#34;) as file:
+                                        while True:
+                                                data = file.read(2)
+                                                if len(data) == 0:
+                                                        break
+                                                start = struct.unpack(&#34;H&#34;, data)[0]*60
+                                                end   = struct.unpack(&#34;H&#34;, file.read(2))[0]*60
+                                                days = struct.unpack(&#34;H&#34;*31, file.read(2*31))
+                                                result[(start,end)] = days
+                except Exception as err:
+                        tools.logger.exception(err)
+                return result
+
+        @staticmethod
+        def save(filename, slot_pulses):
+                &#34;&#34;&#34; Save daily file &#34;&#34;&#34;
+                try:
+                        with open(filename, &#34;wb&#34;) as file:
+                                for time_slot, days in slot_pulses.items():
+                                        start, end = time_slot
+                                        file.write(struct.pack(&#34;HH&#34;, start//60, end//60))
+                                        file.write(struct.pack(&#34;H&#34;*len(days), *days))
+                except Exception as err:
+                        write_problem(err)
+
+        @staticmethod
+        async def update(filenames, daily_to_update):
+                &#34;&#34;&#34; Update daily files &#34;&#34;&#34;
+                for key, daily_filename in daily_to_update.items():
+                        year, month = key
+                        hourly_searched = &#34;%s/%s-%s/%s-%s-[0-9][0-9]%s&#34;%(get_pulse_directory(), year, month, year, month, PULSE_HOURLY)
+                        slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(31)
+                        for hourly_filename in filenames:
+                                if tools.fnmatch.fnmatch(hourly_filename, hourly_searched):
+                                        name = tools.filesystem.splitext(tools.filesystem.split(hourly_filename)[1])[0]
+                                        day = int(name.split(&#34;-&#34;)[-1])
+                                        print(&#34;\r  Daily %s %2d&#34;%(daily_filename,day), end=&#34;&#34;)
+                                        hourly_pulses = HourlyCounter.load(hourly_filename)
+                                        second = 0
+                                        for start, end in slot_pulses.keys():
+                                                second = 0
+                                                for pulses in hourly_pulses:
+                                                        if start &lt;= second &lt;= end:
+                                                                slot_pulses[(start,end)][day-1] += pulses
+                                                        second += 60
+                                else:
+                                        pass
+                                await uasyncio.sleep_ms(2)
+                        print(&#34;&#34;)
+                        await uasyncio.sleep_ms(2)
+                        DailyCounter.save(daily_filename, slot_pulses)
+
+class MonthlyCounter:
+        &#34;&#34;&#34; Monthly counter of wh consumed &#34;&#34;&#34;
+        last_update = [0]
+        next_update = [0]
+        force = [True]
+
+        @staticmethod
+        async def update(filenames, monthly_to_update):
+                &#34;&#34;&#34; Update monthly files &#34;&#34;&#34;
+                try:
+                        for year, monthly_filename in monthly_to_update.items():
+                                
+                                daily_searched = &#34;%s/%s-[0-9][0-9]/%s-[0-9][0-9]%s&#34;%(get_pulse_directory(), year, year, PULSE_DAILY)
+                                slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(12)
+                                for daily_filename in filenames:
+                                        if tools.fnmatch.fnmatch(daily_filename, daily_searched):
+                                                name = tools.filesystem.splitext(tools.filesystem.split(daily_filename)[1])[0]
+                                                month = int(name.split(&#34;-&#34;)[-1])
+                                                print(&#34;\r  Monthly %s %d&#34;%(monthly_filename, month), end=&#34;&#34;)
+                                                daily_slot_pulses = DailyCounter.load(daily_filename)
+                                                for time_slot, days in daily_slot_pulses.items():
+                                                        for day in days:
+                                                                slot_pulses[time_slot][month-1] = slot_pulses[time_slot][month-1]+day
+                                        await uasyncio.sleep_ms(2)
+                                print(&#34;&#34;)
+                                MonthlyCounter.save(monthly_filename, slot_pulses)
+                                await uasyncio.sleep_ms(2)
+                except Exception as err:
+                        tools.logger.exception(err)
+
+        @staticmethod
+        def save(filename, slot_pulses):
+                try:
+                        with open(filename, &#34;wb&#34;) as file:
+                                for time_slot, months in slot_pulses.items():
+                                        start, end = time_slot
+                                        file.write(struct.pack(&#34;HH&#34;, start//60, end//60))
+                                        file.write(struct.pack(&#34;I&#34;*len(months), *months))
+                except Exception as err:
+                        write_problem(err)
+
+        @staticmethod
+        def load(filename):
+                &#34;&#34;&#34; Load daily file content &#34;&#34;&#34;
+                result = {}
+                try:
+                        if tools.filesystem.exists(filename):
+                                with open(filename, &#34;rb&#34;) as file:
+                                        while True:
+                                                data = file.read(2)
+                                                if len(data) == 0:
+                                                        break
+                                                start = struct.unpack(&#34;H&#34;, data)[0]*60
+                                                end   = struct.unpack(&#34;H&#34;, file.read(2))[0]*60
+                                                months = struct.unpack(&#34;I&#34;*12, file.read(4*12))
+                                                result[(start,end)] = months
+                except Exception as err:
+                        tools.logger.exception(err)
+                return result
+
+        @staticmethod
+        async def get_updates():
+                &#34;&#34;&#34; Build the list of daily and monthly file to update &#34;&#34;&#34;
+                force = MonthlyCounter.force[0]
+                _, filenames = await tools.filesystem.ascandir(get_pulse_directory(), &#34;*&#34;, True)
+                filenames.sort()
+                daily_to_update = {}
+                monthly_to_update = {}
+                for filename in filenames:
+                        _, name = tools.filesystem.split(filename)
+                        if tools.fnmatch.fnmatch(name, &#34;[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]&#34;+PULSE_HOURLY):
+                                name = tools.filesystem.splitext(tools.filesystem.split(filename)[1])[0]
+                                year, month = name[:7].split(&#34;-&#34;)
+                                daily   = &#34;%s/%s-%s/%s-%s%s&#34;%(get_pulse_directory(), year, month, year, month, PULSE_DAILY)
+                                monthly = &#34;%s/%s%s&#34;%(get_pulse_directory(), year, PULSE_MONTHLY)
+                                update = False
+                                if daily not in daily_to_update:
+                                        if tools.filesystem.exists(daily):
+                                                daily_date  = tools.filesystem.fileinfo(daily)[8]
+                                                hourly_date = tools.filesystem.fileinfo(filename)[8]
+                                                if hourly_date &gt; daily_date or force:
+                                                        update = True
+                                        else:
+                                                update = True
+                                if update:
+                                        daily_to_update[(year, month)] = daily
+                                        monthly_to_update[year] = monthly
+                        elif tools.fnmatch.fnmatch(name, &#34;._*&#34;) or name == &#34;.DS_Store&#34;:
+                                print(&#34;delete &#39;%s&#39; &#34;%filename)
+                                tools.filesystem.remove(filename)
+                        await uasyncio.sleep_ms(2)
+                MonthlyCounter.force[0] = False
+                return daily_to_update, monthly_to_update, filenames
+
+        @staticmethod
+        def get_filename(selected_date=None):
+                &#34;&#34;&#34; Return the filename according to day &#34;&#34;&#34;
+                if selected_date is None:
+                        selected_date = time.time()
+                year = tools.date.local_time(selected_date)[0]
+                return &#34;%s/%04d%s&#34;%(get_pulse_directory(), year, PULSE_MONTHLY)
+
+        @staticmethod
+        def get_datas(selected_date):
+                &#34;&#34;&#34; Return the pulse filename according to the month selected &#34;&#34;&#34;
+                result = []
+                slot_pulses = MonthlyCounter.load(MonthlyCounter.get_filename(selected_date))
+                for time_slot, months in slot_pulses.items():
+                        result.append({&#34;time_slot&#34;:time_slot,&#34;months&#34;:months})
+                return result
+
+        @staticmethod
+        async def manage():
+                &#34;&#34;&#34; Rebuild all month files if necessary &#34;&#34;&#34;
+                while True:
+                        if MonthlyCounter.next_update[0] &lt;= 0:
+                                break
+                        MonthlyCounter.next_update[0] -= 1
+                        await uasyncio.sleep(1)
+
+                print(&#34;Begin electricmeter update&#34;)
+                daily_to_update, monthly_to_update, filenames = await MonthlyCounter().get_updates()
+                await DailyCounter.update  (filenames, daily_to_update)
+                await MonthlyCounter.update(filenames, monthly_to_update)
+                MonthlyCounter.next_update[0] = 28807
+                MonthlyCounter.last_update[0] = time.time()
+                print(&#34;End electricmeter update&#34;)
+                return True
+
+        @staticmethod
+        async def task():
+                &#34;&#34;&#34; Task to count wh from the electric meter &#34;&#34;&#34;
+                await tools.tasking.Tasks.monitor(MonthlyCounter.manage)
+
+class Consumption:
+        &#34;&#34;&#34; Stores the consumption of a time slot &#34;&#34;&#34;
+        def __init__(self, name, currency):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.name = tools.strings.tostrings(name)
+                self.cost = 0.
+                self.pulses = 0
+                self.currency = tools.strings.tostrings(currency)
+
+        def add(self, pulses, price):
+                &#34;&#34;&#34; Add wh pulses with its price &#34;&#34;&#34;
+                cumul_pulses = 0
+                for pulse in pulses:
+                        cumul_pulses += pulse
+
+                self.cost += cumul_pulses*price/1000
+                self.pulses += cumul_pulses
+
+        def to_string(self):
+                &#34;&#34;&#34; Convert to string &#34;&#34;&#34;
+                # return &#34;%s=%.2f%s(%dkwh) &#34;%(self.name, self.cost, tools.strings.tostrings(self.currency), self.pulses/1000)
+                return &#34;%s=%.2f%s &#34;%(self.name, self.cost, tools.strings.tostrings(self.currency))
+
+class Cost:
+        &#34;&#34;&#34; Abstract class to compute the cost &#34;&#34;&#34;
+        def get_rates(self, selected_date):
+                &#34;&#34;&#34; Get the rate according to the selected date &#34;&#34;&#34;
+                prices = plugins.electricmeter.config.TimeSlotsConfig.get_cost(selected_date)
+                consumptions = {}
+                for price in prices:
+                        consumptions[price.rate] = Consumption(price.rate, price.currency)
+                return prices, consumptions
+
+        def compute(self, selected_date):
+                &#34;&#34;&#34; Compute cost &#34;&#34;&#34;
+                return {}
+
+        def get_message(self, title, selected_date):
+                &#34;&#34;&#34; Get result message &#34;&#34;&#34;
+                consumptions = self.compute(selected_date)
+                result = &#34;-&#34; + tools.strings.tostrings(title).strip()[0] + &#34;:&#34;
+                for consumption in consumptions.values():
+                        result += &#34;%s&#34;%consumption.to_string()
+                return result
+
+class HourlyCost(Cost):
+        &#34;&#34;&#34; Hourly cost calculation &#34;&#34;&#34;
+        def compute(self, selected_date):
+                &#34;&#34;&#34; Compute cost &#34;&#34;&#34;
+                prices, consumptions = self.get_rates(selected_date)
+                pulses = HourlyCounter.load(HourlyCounter.get_filename(selected_date))
+                second = 0
+                for pulse in pulses:
+                        for price in prices:
+                                if price.start_time &lt;= second &lt;= price.end_time:
+                                        consumptions[price.rate].add([pulse], price.price)
+                                        break
+                        second += 60
+                return consumptions
+
+class DailyCost(Cost):
+        &#34;&#34;&#34; Daily cost calculation &#34;&#34;&#34;
+        def compute(self, selected_date):
+                &#34;&#34;&#34; Compute cost &#34;&#34;&#34;
+                slot_pulses = DailyCounter.load(DailyCounter.get_filename(selected_date))
+                prices, consumptions = self.get_rates(selected_date)
+                for slot_time, pulses in slot_pulses.items():
+                        for price in prices:
+                                start, end = slot_time
+                                if price.start_time == start and price.end_time == end:
+                                        consumptions[price.rate].add(pulses, price.price)
+                                        break
+                return consumptions
+
+class MonthlyCost(Cost):
+        &#34;&#34;&#34; Monthly cost calculation &#34;&#34;&#34;
+        def compute(self, selected_date):
+                &#34;&#34;&#34; Compute cost &#34;&#34;&#34;
+                slot_pulses = MonthlyCounter.load(MonthlyCounter.get_filename(selected_date))
+                prices, consumptions = self.get_rates(selected_date)
+                for slot_time, pulses in slot_pulses.items():
+                        for price in prices:
+                                start, end = slot_time
+                                if price.start_time == start and price.end_time == end:
+                                        consumptions[price.rate].add(pulses, price.price)
+                                        break
+                return consumptions
+
+class ElectricMeter:
+        &#34;&#34;&#34; Task to count wh from the electric meter &#34;&#34;&#34;
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start electric meter task &#34;&#34;&#34;
+                if tools.support.counter():
+                        tools.sdcard.SdCard.mount()
+                        server.notifier.Notifier.set_daily_notifier(ElectricMeter.daily_notifier)
+                        tools.tasking.Tasks.create_monitor(HourlyCounter.task, **kwargs)
+                        tools.tasking.Tasks.create_monitor(MonthlyCounter.task)
+                        if tools.filesystem.ismicropython() is False:
+                                tools.tasking.Tasks.create_monitor(HourlyCounter.pulse_simulator)
+                else:
+                        tools.logger.syslog(&#34;Electric meter requires hardware counter&#34;)
+
+        @staticmethod
+        def daily_notifier():
+                &#34;&#34;&#34; Get electricmeter daily notification &#34;&#34;&#34;
+                selected_date = time.time() - 86400
+                message = &#34;&#34;
+                cost = MonthlyCost()
+                message += cost.get_message(plugins.electricmeter.lang.item_year, selected_date).strip() + &#34;\n&#34;
+                cost = DailyCost()
+                message += cost.get_message(plugins.electricmeter.lang.item_month, selected_date).strip() + &#34;\n&#34;
+                cost = HourlyCost()
+                message += cost.get_message(plugins.electricmeter.lang.item_day, selected_date).strip() + &#34;\n&#34;
+                message += &#34;-F:%s\n&#34;%(tools.strings.size_to_string(tools.info.flash_size(tools.sdcard.SdCard.get_mountpoint())[2]).strip())
+                message += &#34;-U:%s\n&#34;%tools.strings.tostrings(tools.info.uptime()).strip()
+                return message</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.get_pulse_directory"><code class="name flex">
+<span>def <span class="ident">get_pulse_directory</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the root of pulse directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_pulse_directory():
+        &#34;&#34;&#34; Return the root of pulse directory &#34;&#34;&#34;
+        return tools.sdcard.SdCard.get_mountpoint() + &#34;/&#34; + PULSE_DIRECTORY</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.write_problem"><code class="name flex">
+<span>def <span class="ident">write_problem</span></span>(<span>err)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Raise write problem</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_problem(err):
+        &#34;&#34;&#34; Raise write problem &#34;&#34;&#34;
+        global _last_err_write
+        if _last_err_write + 3600 &lt; time.time():
+                _last_err_write = time.time()
+                server.notifier.Notifier.notify(message=plugins.electricmeter.lang.write_problem)
+        tools.info.increase_issues_counter()
+        tools.logger.exception(err)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.Consumption"><code class="flex name class">
+<span>class <span class="ident">Consumption</span></span>
+<span>(</span><span>name, currency)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stores the consumption of a time slot </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Consumption:
+        &#34;&#34;&#34; Stores the consumption of a time slot &#34;&#34;&#34;
+        def __init__(self, name, currency):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                self.name = tools.strings.tostrings(name)
+                self.cost = 0.
+                self.pulses = 0
+                self.currency = tools.strings.tostrings(currency)
+
+        def add(self, pulses, price):
+                &#34;&#34;&#34; Add wh pulses with its price &#34;&#34;&#34;
+                cumul_pulses = 0
+                for pulse in pulses:
+                        cumul_pulses += pulse
+
+                self.cost += cumul_pulses*price/1000
+                self.pulses += cumul_pulses
+
+        def to_string(self):
+                &#34;&#34;&#34; Convert to string &#34;&#34;&#34;
+                # return &#34;%s=%.2f%s(%dkwh) &#34;%(self.name, self.cost, tools.strings.tostrings(self.currency), self.pulses/1000)
+                return &#34;%s=%.2f%s &#34;%(self.name, self.cost, tools.strings.tostrings(self.currency))</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.Consumption.add"><code class="name flex">
+<span>def <span class="ident">add</span></span>(<span>self, pulses, price)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add wh pulses with its price</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add(self, pulses, price):
+        &#34;&#34;&#34; Add wh pulses with its price &#34;&#34;&#34;
+        cumul_pulses = 0
+        for pulse in pulses:
+                cumul_pulses += pulse
+
+        self.cost += cumul_pulses*price/1000
+        self.pulses += cumul_pulses</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.Consumption.to_string"><code class="name flex">
+<span>def <span class="ident">to_string</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert to string</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_string(self):
+        &#34;&#34;&#34; Convert to string &#34;&#34;&#34;
+        # return &#34;%s=%.2f%s(%dkwh) &#34;%(self.name, self.cost, tools.strings.tostrings(self.currency), self.pulses/1000)
+        return &#34;%s=%.2f%s &#34;%(self.name, self.cost, tools.strings.tostrings(self.currency))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.Cost"><code class="flex name class">
+<span>class <span class="ident">Cost</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Abstract class to compute the cost</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Cost:
+        &#34;&#34;&#34; Abstract class to compute the cost &#34;&#34;&#34;
+        def get_rates(self, selected_date):
+                &#34;&#34;&#34; Get the rate according to the selected date &#34;&#34;&#34;
+                prices = plugins.electricmeter.config.TimeSlotsConfig.get_cost(selected_date)
+                consumptions = {}
+                for price in prices:
+                        consumptions[price.rate] = Consumption(price.rate, price.currency)
+                return prices, consumptions
+
+        def compute(self, selected_date):
+                &#34;&#34;&#34; Compute cost &#34;&#34;&#34;
+                return {}
+
+        def get_message(self, title, selected_date):
+                &#34;&#34;&#34; Get result message &#34;&#34;&#34;
+                consumptions = self.compute(selected_date)
+                result = &#34;-&#34; + tools.strings.tostrings(title).strip()[0] + &#34;:&#34;
+                for consumption in consumptions.values():
+                        result += &#34;%s&#34;%consumption.to_string()
+                return result</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="lib.plugins.electricmeter.meter.DailyCost" href="#lib.plugins.electricmeter.meter.DailyCost">DailyCost</a></li>
+<li><a title="lib.plugins.electricmeter.meter.HourlyCost" href="#lib.plugins.electricmeter.meter.HourlyCost">HourlyCost</a></li>
+<li><a title="lib.plugins.electricmeter.meter.MonthlyCost" href="#lib.plugins.electricmeter.meter.MonthlyCost">MonthlyCost</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.Cost.compute"><code class="name flex">
+<span>def <span class="ident">compute</span></span>(<span>self, selected_date)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute cost</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute(self, selected_date):
+        &#34;&#34;&#34; Compute cost &#34;&#34;&#34;
+        return {}</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.Cost.get_message"><code class="name flex">
+<span>def <span class="ident">get_message</span></span>(<span>self, title, selected_date)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get result message</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_message(self, title, selected_date):
+        &#34;&#34;&#34; Get result message &#34;&#34;&#34;
+        consumptions = self.compute(selected_date)
+        result = &#34;-&#34; + tools.strings.tostrings(title).strip()[0] + &#34;:&#34;
+        for consumption in consumptions.values():
+                result += &#34;%s&#34;%consumption.to_string()
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.Cost.get_rates"><code class="name flex">
+<span>def <span class="ident">get_rates</span></span>(<span>self, selected_date)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the rate according to the selected date</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_rates(self, selected_date):
+        &#34;&#34;&#34; Get the rate according to the selected date &#34;&#34;&#34;
+        prices = plugins.electricmeter.config.TimeSlotsConfig.get_cost(selected_date)
+        consumptions = {}
+        for price in prices:
+                consumptions[price.rate] = Consumption(price.rate, price.currency)
+        return prices, consumptions</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.DailyCost"><code class="flex name class">
+<span>class <span class="ident">DailyCost</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Daily cost calculation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DailyCost(Cost):
+        &#34;&#34;&#34; Daily cost calculation &#34;&#34;&#34;
+        def compute(self, selected_date):
+                &#34;&#34;&#34; Compute cost &#34;&#34;&#34;
+                slot_pulses = DailyCounter.load(DailyCounter.get_filename(selected_date))
+                prices, consumptions = self.get_rates(selected_date)
+                for slot_time, pulses in slot_pulses.items():
+                        for price in prices:
+                                start, end = slot_time
+                                if price.start_time == start and price.end_time == end:
+                                        consumptions[price.rate].add(pulses, price.price)
+                                        break
+                return consumptions</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.plugins.electricmeter.meter.Cost" href="#lib.plugins.electricmeter.meter.Cost">Cost</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.plugins.electricmeter.meter.Cost" href="#lib.plugins.electricmeter.meter.Cost">Cost</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.compute" href="#lib.plugins.electricmeter.meter.Cost.compute">compute</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.get_message" href="#lib.plugins.electricmeter.meter.Cost.get_message">get_message</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.get_rates" href="#lib.plugins.electricmeter.meter.Cost.get_rates">get_rates</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.DailyCounter"><code class="flex name class">
+<span>class <span class="ident">DailyCounter</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Daily counter of wh consumed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DailyCounter:
+        &#34;&#34;&#34; Daily counter of wh consumed &#34;&#34;&#34;
+        @staticmethod
+        def get_filename(selected_date=None):
+                &#34;&#34;&#34; Return the filename according to selected date &#34;&#34;&#34;
+                if selected_date is None:
+                        selected_date = time.time()
+                year,month = tools.date.local_time(selected_date)[:2]
+                return &#34;%s/%04d-%02d%s&#34;%(HourlyCounter.get_directory(year, month), year, month, PULSE_DAILY)
+
+        @staticmethod
+        def get_datas(selected_date):
+                &#34;&#34;&#34; Return the pulse filename according to the month selected &#34;&#34;&#34;
+                result = []
+                filename = DailyCounter.get_filename(selected_date)
+                slot_pulses = DailyCounter.load(filename)
+                for time_slot, days in slot_pulses.items():
+                        result.append({&#34;time_slot&#34;:time_slot,&#34;days&#34;:days})
+                return result
+
+        @staticmethod
+        def load(filename):
+                &#34;&#34;&#34; Load daily file &#34;&#34;&#34;
+                result = {}
+                try:
+                        if tools.filesystem.exists(filename):
+                                with open(filename, &#34;rb&#34;) as file:
+                                        while True:
+                                                data = file.read(2)
+                                                if len(data) == 0:
+                                                        break
+                                                start = struct.unpack(&#34;H&#34;, data)[0]*60
+                                                end   = struct.unpack(&#34;H&#34;, file.read(2))[0]*60
+                                                days = struct.unpack(&#34;H&#34;*31, file.read(2*31))
+                                                result[(start,end)] = days
+                except Exception as err:
+                        tools.logger.exception(err)
+                return result
+
+        @staticmethod
+        def save(filename, slot_pulses):
+                &#34;&#34;&#34; Save daily file &#34;&#34;&#34;
+                try:
+                        with open(filename, &#34;wb&#34;) as file:
+                                for time_slot, days in slot_pulses.items():
+                                        start, end = time_slot
+                                        file.write(struct.pack(&#34;HH&#34;, start//60, end//60))
+                                        file.write(struct.pack(&#34;H&#34;*len(days), *days))
+                except Exception as err:
+                        write_problem(err)
+
+        @staticmethod
+        async def update(filenames, daily_to_update):
+                &#34;&#34;&#34; Update daily files &#34;&#34;&#34;
+                for key, daily_filename in daily_to_update.items():
+                        year, month = key
+                        hourly_searched = &#34;%s/%s-%s/%s-%s-[0-9][0-9]%s&#34;%(get_pulse_directory(), year, month, year, month, PULSE_HOURLY)
+                        slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(31)
+                        for hourly_filename in filenames:
+                                if tools.fnmatch.fnmatch(hourly_filename, hourly_searched):
+                                        name = tools.filesystem.splitext(tools.filesystem.split(hourly_filename)[1])[0]
+                                        day = int(name.split(&#34;-&#34;)[-1])
+                                        print(&#34;\r  Daily %s %2d&#34;%(daily_filename,day), end=&#34;&#34;)
+                                        hourly_pulses = HourlyCounter.load(hourly_filename)
+                                        second = 0
+                                        for start, end in slot_pulses.keys():
+                                                second = 0
+                                                for pulses in hourly_pulses:
+                                                        if start &lt;= second &lt;= end:
+                                                                slot_pulses[(start,end)][day-1] += pulses
+                                                        second += 60
+                                else:
+                                        pass
+                                await uasyncio.sleep_ms(2)
+                        print(&#34;&#34;)
+                        await uasyncio.sleep_ms(2)
+                        DailyCounter.save(daily_filename, slot_pulses)</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.DailyCounter.get_datas"><code class="name flex">
+<span>def <span class="ident">get_datas</span></span>(<span>selected_date)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the pulse filename according to the month selected</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_datas(selected_date):
+        &#34;&#34;&#34; Return the pulse filename according to the month selected &#34;&#34;&#34;
+        result = []
+        filename = DailyCounter.get_filename(selected_date)
+        slot_pulses = DailyCounter.load(filename)
+        for time_slot, days in slot_pulses.items():
+                result.append({&#34;time_slot&#34;:time_slot,&#34;days&#34;:days})
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.DailyCounter.get_filename"><code class="name flex">
+<span>def <span class="ident">get_filename</span></span>(<span>selected_date=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the filename according to selected date</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_filename(selected_date=None):
+        &#34;&#34;&#34; Return the filename according to selected date &#34;&#34;&#34;
+        if selected_date is None:
+                selected_date = time.time()
+        year,month = tools.date.local_time(selected_date)[:2]
+        return &#34;%s/%04d-%02d%s&#34;%(HourlyCounter.get_directory(year, month), year, month, PULSE_DAILY)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.DailyCounter.load"><code class="name flex">
+<span>def <span class="ident">load</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load daily file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def load(filename):
+        &#34;&#34;&#34; Load daily file &#34;&#34;&#34;
+        result = {}
+        try:
+                if tools.filesystem.exists(filename):
+                        with open(filename, &#34;rb&#34;) as file:
+                                while True:
+                                        data = file.read(2)
+                                        if len(data) == 0:
+                                                break
+                                        start = struct.unpack(&#34;H&#34;, data)[0]*60
+                                        end   = struct.unpack(&#34;H&#34;, file.read(2))[0]*60
+                                        days = struct.unpack(&#34;H&#34;*31, file.read(2*31))
+                                        result[(start,end)] = days
+        except Exception as err:
+                tools.logger.exception(err)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.DailyCounter.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>filename, slot_pulses)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save daily file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def save(filename, slot_pulses):
+        &#34;&#34;&#34; Save daily file &#34;&#34;&#34;
+        try:
+                with open(filename, &#34;wb&#34;) as file:
+                        for time_slot, days in slot_pulses.items():
+                                start, end = time_slot
+                                file.write(struct.pack(&#34;HH&#34;, start//60, end//60))
+                                file.write(struct.pack(&#34;H&#34;*len(days), *days))
+        except Exception as err:
+                write_problem(err)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.DailyCounter.update"><code class="name flex">
+<span>async def <span class="ident">update</span></span>(<span>filenames, daily_to_update)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update daily files</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def update(filenames, daily_to_update):
+        &#34;&#34;&#34; Update daily files &#34;&#34;&#34;
+        for key, daily_filename in daily_to_update.items():
+                year, month = key
+                hourly_searched = &#34;%s/%s-%s/%s-%s-[0-9][0-9]%s&#34;%(get_pulse_directory(), year, month, year, month, PULSE_HOURLY)
+                slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(31)
+                for hourly_filename in filenames:
+                        if tools.fnmatch.fnmatch(hourly_filename, hourly_searched):
+                                name = tools.filesystem.splitext(tools.filesystem.split(hourly_filename)[1])[0]
+                                day = int(name.split(&#34;-&#34;)[-1])
+                                print(&#34;\r  Daily %s %2d&#34;%(daily_filename,day), end=&#34;&#34;)
+                                hourly_pulses = HourlyCounter.load(hourly_filename)
+                                second = 0
+                                for start, end in slot_pulses.keys():
+                                        second = 0
+                                        for pulses in hourly_pulses:
+                                                if start &lt;= second &lt;= end:
+                                                        slot_pulses[(start,end)][day-1] += pulses
+                                                second += 60
+                        else:
+                                pass
+                        await uasyncio.sleep_ms(2)
+                print(&#34;&#34;)
+                await uasyncio.sleep_ms(2)
+                DailyCounter.save(daily_filename, slot_pulses)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.ElectricMeter"><code class="flex name class">
+<span>class <span class="ident">ElectricMeter</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task to count wh from the electric meter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ElectricMeter:
+        &#34;&#34;&#34; Task to count wh from the electric meter &#34;&#34;&#34;
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start electric meter task &#34;&#34;&#34;
+                if tools.support.counter():
+                        tools.sdcard.SdCard.mount()
+                        server.notifier.Notifier.set_daily_notifier(ElectricMeter.daily_notifier)
+                        tools.tasking.Tasks.create_monitor(HourlyCounter.task, **kwargs)
+                        tools.tasking.Tasks.create_monitor(MonthlyCounter.task)
+                        if tools.filesystem.ismicropython() is False:
+                                tools.tasking.Tasks.create_monitor(HourlyCounter.pulse_simulator)
+                else:
+                        tools.logger.syslog(&#34;Electric meter requires hardware counter&#34;)
+
+        @staticmethod
+        def daily_notifier():
+                &#34;&#34;&#34; Get electricmeter daily notification &#34;&#34;&#34;
+                selected_date = time.time() - 86400
+                message = &#34;&#34;
+                cost = MonthlyCost()
+                message += cost.get_message(plugins.electricmeter.lang.item_year, selected_date).strip() + &#34;\n&#34;
+                cost = DailyCost()
+                message += cost.get_message(plugins.electricmeter.lang.item_month, selected_date).strip() + &#34;\n&#34;
+                cost = HourlyCost()
+                message += cost.get_message(plugins.electricmeter.lang.item_day, selected_date).strip() + &#34;\n&#34;
+                message += &#34;-F:%s\n&#34;%(tools.strings.size_to_string(tools.info.flash_size(tools.sdcard.SdCard.get_mountpoint())[2]).strip())
+                message += &#34;-U:%s\n&#34;%tools.strings.tostrings(tools.info.uptime()).strip()
+                return message</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.ElectricMeter.daily_notifier"><code class="name flex">
+<span>def <span class="ident">daily_notifier</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get electricmeter daily notification</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def daily_notifier():
+        &#34;&#34;&#34; Get electricmeter daily notification &#34;&#34;&#34;
+        selected_date = time.time() - 86400
+        message = &#34;&#34;
+        cost = MonthlyCost()
+        message += cost.get_message(plugins.electricmeter.lang.item_year, selected_date).strip() + &#34;\n&#34;
+        cost = DailyCost()
+        message += cost.get_message(plugins.electricmeter.lang.item_month, selected_date).strip() + &#34;\n&#34;
+        cost = HourlyCost()
+        message += cost.get_message(plugins.electricmeter.lang.item_day, selected_date).strip() + &#34;\n&#34;
+        message += &#34;-F:%s\n&#34;%(tools.strings.size_to_string(tools.info.flash_size(tools.sdcard.SdCard.get_mountpoint())[2]).strip())
+        message += &#34;-U:%s\n&#34;%tools.strings.tostrings(tools.info.uptime()).strip()
+        return message</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.ElectricMeter.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start electric meter task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def start(**kwargs):
+        &#34;&#34;&#34; Start electric meter task &#34;&#34;&#34;
+        if tools.support.counter():
+                tools.sdcard.SdCard.mount()
+                server.notifier.Notifier.set_daily_notifier(ElectricMeter.daily_notifier)
+                tools.tasking.Tasks.create_monitor(HourlyCounter.task, **kwargs)
+                tools.tasking.Tasks.create_monitor(MonthlyCounter.task)
+                if tools.filesystem.ismicropython() is False:
+                        tools.tasking.Tasks.create_monitor(HourlyCounter.pulse_simulator)
+        else:
+                tools.logger.syslog(&#34;Electric meter requires hardware counter&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCost"><code class="flex name class">
+<span>class <span class="ident">HourlyCost</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Hourly cost calculation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HourlyCost(Cost):
+        &#34;&#34;&#34; Hourly cost calculation &#34;&#34;&#34;
+        def compute(self, selected_date):
+                &#34;&#34;&#34; Compute cost &#34;&#34;&#34;
+                prices, consumptions = self.get_rates(selected_date)
+                pulses = HourlyCounter.load(HourlyCounter.get_filename(selected_date))
+                second = 0
+                for pulse in pulses:
+                        for price in prices:
+                                if price.start_time &lt;= second &lt;= price.end_time:
+                                        consumptions[price.rate].add([pulse], price.price)
+                                        break
+                        second += 60
+                return consumptions</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.plugins.electricmeter.meter.Cost" href="#lib.plugins.electricmeter.meter.Cost">Cost</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.plugins.electricmeter.meter.Cost" href="#lib.plugins.electricmeter.meter.Cost">Cost</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.compute" href="#lib.plugins.electricmeter.meter.Cost.compute">compute</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.get_message" href="#lib.plugins.electricmeter.meter.Cost.get_message">get_message</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.get_rates" href="#lib.plugins.electricmeter.meter.Cost.get_rates">get_rates</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter"><code class="flex name class">
+<span>class <span class="ident">HourlyCounter</span></span>
+<span>(</span><span>gpio)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Hourly counter of wh consumed </p>
+<p>Constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HourlyCounter:
+        &#34;&#34;&#34; Hourly counter of wh consumed &#34;&#34;&#34;
+        counter = None
+
+        def __init__(self, gpio):
+                &#34;&#34;&#34; Constructor &#34;&#34;&#34;
+                try:
+                        tools.filesystem.makedir(get_pulse_directory(),True)
+                except Exception as err:
+                        write_problem(err)
+                self.day    = time.time()
+                self.pulses = HourlyCounter.load(HourlyCounter.get_filename(self.day))
+                self.last_save = time.time()
+                self.watt_hour = 0
+                self.previous_pulse_time = None
+                self.day_pulses_counter = 0
+                self.pulse_sensor = PulseSensor(gpio)
+                tools.system.add_action(self.action_before_reboot)
+
+        def action_before_reboot(self):
+                &#34;&#34;&#34; Action to do before reboot &#34;&#34;&#34;
+                tools.logger.syslog(&#34;Save pulses before reboot&#34;)
+                # Save pulses file
+                HourlyCounter.save(self.day)
+        
+        async def manage(self):
+                &#34;&#34;&#34; Manage the counter &#34;&#34;&#34;
+                # Wait the list of pulses
+                pulses = await self.pulse_sensor.wait()
+                for pulse_quantity, pulse_time in pulses:
+                        # If previous pulse registered
+                        if self.previous_pulse_time is not None:
+                                # Compute the instant power
+                                self.watt_hour = 3600 * 1_000_000_000/((pulse_time - self.previous_pulse_time)/pulse_quantity)
+
+                        # Increase
+                        self.day_pulses_counter += pulse_quantity
+                        self.previous_pulse_time = pulse_time
+                        hour,minute=tools.date.local_time(pulse_time//1_000_000_000)[3:5]
+                        day   = pulse_time//1_000_000_000
+                        minut = hour*60+minute
+                        self.pulses[minut] += pulse_quantity
+
+                        # If day change
+                        if HourlyCounter.is_same_day(day, self.day) is False:
+                                # Save day counter
+                                HourlyCounter.save(self.day)
+
+                                # Clear day pulses counter
+                                self.day_pulses_counter = 0
+
+                                # Load new day if existing or clear counter (manage day light saving)
+                                self.pulses = self.load(day)
+                                self.day = day
+
+                # Each ten minutes
+                if time.time() &gt; (self.last_save + 1801):
+                        # Save pulses file
+                        HourlyCounter.save(self.day)
+
+                # print(&#34;%s %.1f wh pulses=%d&#34;%(tools.date.date_to_string(), self.watt_hour, self.day_pulses_counter))
+                return True
+
+        @staticmethod
+        def is_same_day(day1, day2):
+                &#34;&#34;&#34; Indicates if the day 1 is equal to day 2&#34;&#34;&#34;
+                if day1//86400 == day2//86400 or day1 is None or day2 is None:
+                        return True
+                else:
+                        return False
+
+        @staticmethod
+        def get_filename(day=None):
+                &#34;&#34;&#34; Return the filename according to day &#34;&#34;&#34;
+                if day is None:
+                        day = time.time()
+                year,month,day = tools.date.local_time(day)[:3]
+                return &#34;%s/%04d-%02d-%02d%s&#34;%(HourlyCounter.get_directory(year, month), year, month, day, PULSE_HOURLY)
+
+        @staticmethod
+        def get_directory(year, month):
+                &#34;&#34;&#34; Get the directory of hourly file &#34;&#34;&#34;
+                return &#34;%s/%04d-%02d&#34;%(get_pulse_directory(), year, month)
+
+        @staticmethod
+        def save(filename):
+                &#34;&#34;&#34; Save pulses file &#34;&#34;&#34;
+                if type(filename) == type(0) or type(filename) == type(0.):
+                        try:
+                                day = filename
+                                filename = HourlyCounter.get_filename(day)
+                                current_day = tools.date.local_time(day)[2]
+                                tools.filesystem.makedir(BACKUP_DIRECTORY, True)
+                                backup_filename = &#34;%s/day_%02d&#34;%(BACKUP_DIRECTORY, current_day)
+                                with open(backup_filename, &#34;wb&#34;) as file:
+                                        file.write(struct.pack(&#34;B&#34;*1440, *HourlyCounter.counter.pulses))
+                        except Exception as err:
+                                write_problem(err)
+
+                try:
+                        tools.filesystem.makedir(tools.filesystem.split(filename)[0], True)
+                        with open(filename, &#34;wb&#34;) as file:
+                                file.write(struct.pack(&#34;B&#34;*1440, *HourlyCounter.counter.pulses))
+                        HourlyCounter.counter.last_save = time.time()
+                except Exception as err:
+                        write_problem(err)
+
+        @staticmethod
+        def load(filename, pulses=None):
+                &#34;&#34;&#34; Load pulses file &#34;&#34;&#34;
+                result = [0]*1440
+                try:
+                        if tools.filesystem.exists(filename):
+                                with open(filename, &#34;rb&#34;) as file:
+                                        load_pulses = struct.unpack(&#34;B&#34;*1440, file.read())
+                                        index = 0
+                                        if pulses is None:
+                                                result = list(load_pulses)
+                                        else:
+                                                result = pulses
+                                                for pulse in load_pulses:
+                                                        result[index] += pulse
+                                                        index += 1
+                except Exception as err:
+                        tools.logger.exception(err)
+                return result
+
+        @staticmethod
+        def get_power():
+                &#34;&#34;&#34; Return power instantaneous &#34;&#34;&#34;
+                return HourlyCounter.counter.watt_hour
+
+        def simulate(self, pulses):
+                &#34;&#34;&#34; Simulates the flashing led on the electric meter &#34;&#34;&#34;
+                self.pulse_sensor.simulate(pulses)
+
+        @staticmethod
+        async def task(**kwargs):
+                &#34;&#34;&#34; Task to count wh from the electric meter &#34;&#34;&#34;
+                if HourlyCounter.counter is None:
+                        HourlyCounter.counter = HourlyCounter(kwargs.get(&#34;gpio&#34;,13))
+                await HourlyCounter.counter.manage()
+
+        @staticmethod
+        def get_datas(selected_date):
+                &#34;&#34;&#34; Return the pulse filename according to the selected date &#34;&#34;&#34;
+                if type(selected_date) == type(b&#34;&#34;):
+                        selected_date = tools.date.html_to_date(selected_date)
+
+                if selected_date is None or HourlyCounter.is_same_day(selected_date, time.time()):
+                        result = HourlyCounter.counter.pulses
+                else:
+                        result = HourlyCounter.load(HourlyCounter.get_filename(selected_date))
+                return result
+
+        @staticmethod
+        async def pulse_simulator():
+                &#34;&#34;&#34; Simulates the flashing led on the electric meter &#34;&#34;&#34;
+                import random
+                while True:
+                        HourlyCounter.counter.simulate(random.randint(1, 4))
+                        await uasyncio.sleep(random.randint(1, 5))</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.counter"><code class="name">var <span class="ident">counter</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.get_datas"><code class="name flex">
+<span>def <span class="ident">get_datas</span></span>(<span>selected_date)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the pulse filename according to the selected date</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_datas(selected_date):
+        &#34;&#34;&#34; Return the pulse filename according to the selected date &#34;&#34;&#34;
+        if type(selected_date) == type(b&#34;&#34;):
+                selected_date = tools.date.html_to_date(selected_date)
+
+        if selected_date is None or HourlyCounter.is_same_day(selected_date, time.time()):
+                result = HourlyCounter.counter.pulses
+        else:
+                result = HourlyCounter.load(HourlyCounter.get_filename(selected_date))
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.get_directory"><code class="name flex">
+<span>def <span class="ident">get_directory</span></span>(<span>year, month)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the directory of hourly file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_directory(year, month):
+        &#34;&#34;&#34; Get the directory of hourly file &#34;&#34;&#34;
+        return &#34;%s/%04d-%02d&#34;%(get_pulse_directory(), year, month)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.get_filename"><code class="name flex">
+<span>def <span class="ident">get_filename</span></span>(<span>day=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the filename according to day</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_filename(day=None):
+        &#34;&#34;&#34; Return the filename according to day &#34;&#34;&#34;
+        if day is None:
+                day = time.time()
+        year,month,day = tools.date.local_time(day)[:3]
+        return &#34;%s/%04d-%02d-%02d%s&#34;%(HourlyCounter.get_directory(year, month), year, month, day, PULSE_HOURLY)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.get_power"><code class="name flex">
+<span>def <span class="ident">get_power</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return power instantaneous</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_power():
+        &#34;&#34;&#34; Return power instantaneous &#34;&#34;&#34;
+        return HourlyCounter.counter.watt_hour</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.is_same_day"><code class="name flex">
+<span>def <span class="ident">is_same_day</span></span>(<span>day1, day2)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the day 1 is equal to day 2</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def is_same_day(day1, day2):
+        &#34;&#34;&#34; Indicates if the day 1 is equal to day 2&#34;&#34;&#34;
+        if day1//86400 == day2//86400 or day1 is None or day2 is None:
+                return True
+        else:
+                return False</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.load"><code class="name flex">
+<span>def <span class="ident">load</span></span>(<span>filename, pulses=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load pulses file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def load(filename, pulses=None):
+        &#34;&#34;&#34; Load pulses file &#34;&#34;&#34;
+        result = [0]*1440
+        try:
+                if tools.filesystem.exists(filename):
+                        with open(filename, &#34;rb&#34;) as file:
+                                load_pulses = struct.unpack(&#34;B&#34;*1440, file.read())
+                                index = 0
+                                if pulses is None:
+                                        result = list(load_pulses)
+                                else:
+                                        result = pulses
+                                        for pulse in load_pulses:
+                                                result[index] += pulse
+                                                index += 1
+        except Exception as err:
+                tools.logger.exception(err)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.pulse_simulator"><code class="name flex">
+<span>async def <span class="ident">pulse_simulator</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Simulates the flashing led on the electric meter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def pulse_simulator():
+        &#34;&#34;&#34; Simulates the flashing led on the electric meter &#34;&#34;&#34;
+        import random
+        while True:
+                HourlyCounter.counter.simulate(random.randint(1, 4))
+                await uasyncio.sleep(random.randint(1, 5))</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save pulses file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def save(filename):
+        &#34;&#34;&#34; Save pulses file &#34;&#34;&#34;
+        if type(filename) == type(0) or type(filename) == type(0.):
+                try:
+                        day = filename
+                        filename = HourlyCounter.get_filename(day)
+                        current_day = tools.date.local_time(day)[2]
+                        tools.filesystem.makedir(BACKUP_DIRECTORY, True)
+                        backup_filename = &#34;%s/day_%02d&#34;%(BACKUP_DIRECTORY, current_day)
+                        with open(backup_filename, &#34;wb&#34;) as file:
+                                file.write(struct.pack(&#34;B&#34;*1440, *HourlyCounter.counter.pulses))
+                except Exception as err:
+                        write_problem(err)
+
+        try:
+                tools.filesystem.makedir(tools.filesystem.split(filename)[0], True)
+                with open(filename, &#34;wb&#34;) as file:
+                        file.write(struct.pack(&#34;B&#34;*1440, *HourlyCounter.counter.pulses))
+                HourlyCounter.counter.last_save = time.time()
+        except Exception as err:
+                write_problem(err)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.task"><code class="name flex">
+<span>async def <span class="ident">task</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task to count wh from the electric meter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def task(**kwargs):
+        &#34;&#34;&#34; Task to count wh from the electric meter &#34;&#34;&#34;
+        if HourlyCounter.counter is None:
+                HourlyCounter.counter = HourlyCounter(kwargs.get(&#34;gpio&#34;,13))
+        await HourlyCounter.counter.manage()</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.action_before_reboot"><code class="name flex">
+<span>def <span class="ident">action_before_reboot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Action to do before reboot</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def action_before_reboot(self):
+        &#34;&#34;&#34; Action to do before reboot &#34;&#34;&#34;
+        tools.logger.syslog(&#34;Save pulses before reboot&#34;)
+        # Save pulses file
+        HourlyCounter.save(self.day)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.manage"><code class="name flex">
+<span>async def <span class="ident">manage</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Manage the counter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def manage(self):
+        &#34;&#34;&#34; Manage the counter &#34;&#34;&#34;
+        # Wait the list of pulses
+        pulses = await self.pulse_sensor.wait()
+        for pulse_quantity, pulse_time in pulses:
+                # If previous pulse registered
+                if self.previous_pulse_time is not None:
+                        # Compute the instant power
+                        self.watt_hour = 3600 * 1_000_000_000/((pulse_time - self.previous_pulse_time)/pulse_quantity)
+
+                # Increase
+                self.day_pulses_counter += pulse_quantity
+                self.previous_pulse_time = pulse_time
+                hour,minute=tools.date.local_time(pulse_time//1_000_000_000)[3:5]
+                day   = pulse_time//1_000_000_000
+                minut = hour*60+minute
+                self.pulses[minut] += pulse_quantity
+
+                # If day change
+                if HourlyCounter.is_same_day(day, self.day) is False:
+                        # Save day counter
+                        HourlyCounter.save(self.day)
+
+                        # Clear day pulses counter
+                        self.day_pulses_counter = 0
+
+                        # Load new day if existing or clear counter (manage day light saving)
+                        self.pulses = self.load(day)
+                        self.day = day
+
+        # Each ten minutes
+        if time.time() &gt; (self.last_save + 1801):
+                # Save pulses file
+                HourlyCounter.save(self.day)
+
+        # print(&#34;%s %.1f wh pulses=%d&#34;%(tools.date.date_to_string(), self.watt_hour, self.day_pulses_counter))
+        return True</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.HourlyCounter.simulate"><code class="name flex">
+<span>def <span class="ident">simulate</span></span>(<span>self, pulses)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Simulates the flashing led on the electric meter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def simulate(self, pulses):
+        &#34;&#34;&#34; Simulates the flashing led on the electric meter &#34;&#34;&#34;
+        self.pulse_sensor.simulate(pulses)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCost"><code class="flex name class">
+<span>class <span class="ident">MonthlyCost</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Monthly cost calculation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MonthlyCost(Cost):
+        &#34;&#34;&#34; Monthly cost calculation &#34;&#34;&#34;
+        def compute(self, selected_date):
+                &#34;&#34;&#34; Compute cost &#34;&#34;&#34;
+                slot_pulses = MonthlyCounter.load(MonthlyCounter.get_filename(selected_date))
+                prices, consumptions = self.get_rates(selected_date)
+                for slot_time, pulses in slot_pulses.items():
+                        for price in prices:
+                                start, end = slot_time
+                                if price.start_time == start and price.end_time == end:
+                                        consumptions[price.rate].add(pulses, price.price)
+                                        break
+                return consumptions</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="lib.plugins.electricmeter.meter.Cost" href="#lib.plugins.electricmeter.meter.Cost">Cost</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="lib.plugins.electricmeter.meter.Cost" href="#lib.plugins.electricmeter.meter.Cost">Cost</a></b></code>:
+<ul class="hlist">
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.compute" href="#lib.plugins.electricmeter.meter.Cost.compute">compute</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.get_message" href="#lib.plugins.electricmeter.meter.Cost.get_message">get_message</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.get_rates" href="#lib.plugins.electricmeter.meter.Cost.get_rates">get_rates</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter"><code class="flex name class">
+<span>class <span class="ident">MonthlyCounter</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Monthly counter of wh consumed</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MonthlyCounter:
+        &#34;&#34;&#34; Monthly counter of wh consumed &#34;&#34;&#34;
+        last_update = [0]
+        next_update = [0]
+        force = [True]
+
+        @staticmethod
+        async def update(filenames, monthly_to_update):
+                &#34;&#34;&#34; Update monthly files &#34;&#34;&#34;
+                try:
+                        for year, monthly_filename in monthly_to_update.items():
+                                
+                                daily_searched = &#34;%s/%s-[0-9][0-9]/%s-[0-9][0-9]%s&#34;%(get_pulse_directory(), year, year, PULSE_DAILY)
+                                slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(12)
+                                for daily_filename in filenames:
+                                        if tools.fnmatch.fnmatch(daily_filename, daily_searched):
+                                                name = tools.filesystem.splitext(tools.filesystem.split(daily_filename)[1])[0]
+                                                month = int(name.split(&#34;-&#34;)[-1])
+                                                print(&#34;\r  Monthly %s %d&#34;%(monthly_filename, month), end=&#34;&#34;)
+                                                daily_slot_pulses = DailyCounter.load(daily_filename)
+                                                for time_slot, days in daily_slot_pulses.items():
+                                                        for day in days:
+                                                                slot_pulses[time_slot][month-1] = slot_pulses[time_slot][month-1]+day
+                                        await uasyncio.sleep_ms(2)
+                                print(&#34;&#34;)
+                                MonthlyCounter.save(monthly_filename, slot_pulses)
+                                await uasyncio.sleep_ms(2)
+                except Exception as err:
+                        tools.logger.exception(err)
+
+        @staticmethod
+        def save(filename, slot_pulses):
+                try:
+                        with open(filename, &#34;wb&#34;) as file:
+                                for time_slot, months in slot_pulses.items():
+                                        start, end = time_slot
+                                        file.write(struct.pack(&#34;HH&#34;, start//60, end//60))
+                                        file.write(struct.pack(&#34;I&#34;*len(months), *months))
+                except Exception as err:
+                        write_problem(err)
+
+        @staticmethod
+        def load(filename):
+                &#34;&#34;&#34; Load daily file content &#34;&#34;&#34;
+                result = {}
+                try:
+                        if tools.filesystem.exists(filename):
+                                with open(filename, &#34;rb&#34;) as file:
+                                        while True:
+                                                data = file.read(2)
+                                                if len(data) == 0:
+                                                        break
+                                                start = struct.unpack(&#34;H&#34;, data)[0]*60
+                                                end   = struct.unpack(&#34;H&#34;, file.read(2))[0]*60
+                                                months = struct.unpack(&#34;I&#34;*12, file.read(4*12))
+                                                result[(start,end)] = months
+                except Exception as err:
+                        tools.logger.exception(err)
+                return result
+
+        @staticmethod
+        async def get_updates():
+                &#34;&#34;&#34; Build the list of daily and monthly file to update &#34;&#34;&#34;
+                force = MonthlyCounter.force[0]
+                _, filenames = await tools.filesystem.ascandir(get_pulse_directory(), &#34;*&#34;, True)
+                filenames.sort()
+                daily_to_update = {}
+                monthly_to_update = {}
+                for filename in filenames:
+                        _, name = tools.filesystem.split(filename)
+                        if tools.fnmatch.fnmatch(name, &#34;[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]&#34;+PULSE_HOURLY):
+                                name = tools.filesystem.splitext(tools.filesystem.split(filename)[1])[0]
+                                year, month = name[:7].split(&#34;-&#34;)
+                                daily   = &#34;%s/%s-%s/%s-%s%s&#34;%(get_pulse_directory(), year, month, year, month, PULSE_DAILY)
+                                monthly = &#34;%s/%s%s&#34;%(get_pulse_directory(), year, PULSE_MONTHLY)
+                                update = False
+                                if daily not in daily_to_update:
+                                        if tools.filesystem.exists(daily):
+                                                daily_date  = tools.filesystem.fileinfo(daily)[8]
+                                                hourly_date = tools.filesystem.fileinfo(filename)[8]
+                                                if hourly_date &gt; daily_date or force:
+                                                        update = True
+                                        else:
+                                                update = True
+                                if update:
+                                        daily_to_update[(year, month)] = daily
+                                        monthly_to_update[year] = monthly
+                        elif tools.fnmatch.fnmatch(name, &#34;._*&#34;) or name == &#34;.DS_Store&#34;:
+                                print(&#34;delete &#39;%s&#39; &#34;%filename)
+                                tools.filesystem.remove(filename)
+                        await uasyncio.sleep_ms(2)
+                MonthlyCounter.force[0] = False
+                return daily_to_update, monthly_to_update, filenames
+
+        @staticmethod
+        def get_filename(selected_date=None):
+                &#34;&#34;&#34; Return the filename according to day &#34;&#34;&#34;
+                if selected_date is None:
+                        selected_date = time.time()
+                year = tools.date.local_time(selected_date)[0]
+                return &#34;%s/%04d%s&#34;%(get_pulse_directory(), year, PULSE_MONTHLY)
+
+        @staticmethod
+        def get_datas(selected_date):
+                &#34;&#34;&#34; Return the pulse filename according to the month selected &#34;&#34;&#34;
+                result = []
+                slot_pulses = MonthlyCounter.load(MonthlyCounter.get_filename(selected_date))
+                for time_slot, months in slot_pulses.items():
+                        result.append({&#34;time_slot&#34;:time_slot,&#34;months&#34;:months})
+                return result
+
+        @staticmethod
+        async def manage():
+                &#34;&#34;&#34; Rebuild all month files if necessary &#34;&#34;&#34;
+                while True:
+                        if MonthlyCounter.next_update[0] &lt;= 0:
+                                break
+                        MonthlyCounter.next_update[0] -= 1
+                        await uasyncio.sleep(1)
+
+                print(&#34;Begin electricmeter update&#34;)
+                daily_to_update, monthly_to_update, filenames = await MonthlyCounter().get_updates()
+                await DailyCounter.update  (filenames, daily_to_update)
+                await MonthlyCounter.update(filenames, monthly_to_update)
+                MonthlyCounter.next_update[0] = 28807
+                MonthlyCounter.last_update[0] = time.time()
+                print(&#34;End electricmeter update&#34;)
+                return True
+
+        @staticmethod
+        async def task():
+                &#34;&#34;&#34; Task to count wh from the electric meter &#34;&#34;&#34;
+                await tools.tasking.Tasks.monitor(MonthlyCounter.manage)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.force"><code class="name">var <span class="ident">force</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.last_update"><code class="name">var <span class="ident">last_update</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.next_update"><code class="name">var <span class="ident">next_update</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.get_datas"><code class="name flex">
+<span>def <span class="ident">get_datas</span></span>(<span>selected_date)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the pulse filename according to the month selected</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_datas(selected_date):
+        &#34;&#34;&#34; Return the pulse filename according to the month selected &#34;&#34;&#34;
+        result = []
+        slot_pulses = MonthlyCounter.load(MonthlyCounter.get_filename(selected_date))
+        for time_slot, months in slot_pulses.items():
+                result.append({&#34;time_slot&#34;:time_slot,&#34;months&#34;:months})
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.get_filename"><code class="name flex">
+<span>def <span class="ident">get_filename</span></span>(<span>selected_date=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the filename according to day</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def get_filename(selected_date=None):
+        &#34;&#34;&#34; Return the filename according to day &#34;&#34;&#34;
+        if selected_date is None:
+                selected_date = time.time()
+        year = tools.date.local_time(selected_date)[0]
+        return &#34;%s/%04d%s&#34;%(get_pulse_directory(), year, PULSE_MONTHLY)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.get_updates"><code class="name flex">
+<span>async def <span class="ident">get_updates</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build the list of daily and monthly file to update</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def get_updates():
+        &#34;&#34;&#34; Build the list of daily and monthly file to update &#34;&#34;&#34;
+        force = MonthlyCounter.force[0]
+        _, filenames = await tools.filesystem.ascandir(get_pulse_directory(), &#34;*&#34;, True)
+        filenames.sort()
+        daily_to_update = {}
+        monthly_to_update = {}
+        for filename in filenames:
+                _, name = tools.filesystem.split(filename)
+                if tools.fnmatch.fnmatch(name, &#34;[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]&#34;+PULSE_HOURLY):
+                        name = tools.filesystem.splitext(tools.filesystem.split(filename)[1])[0]
+                        year, month = name[:7].split(&#34;-&#34;)
+                        daily   = &#34;%s/%s-%s/%s-%s%s&#34;%(get_pulse_directory(), year, month, year, month, PULSE_DAILY)
+                        monthly = &#34;%s/%s%s&#34;%(get_pulse_directory(), year, PULSE_MONTHLY)
+                        update = False
+                        if daily not in daily_to_update:
+                                if tools.filesystem.exists(daily):
+                                        daily_date  = tools.filesystem.fileinfo(daily)[8]
+                                        hourly_date = tools.filesystem.fileinfo(filename)[8]
+                                        if hourly_date &gt; daily_date or force:
+                                                update = True
+                                else:
+                                        update = True
+                        if update:
+                                daily_to_update[(year, month)] = daily
+                                monthly_to_update[year] = monthly
+                elif tools.fnmatch.fnmatch(name, &#34;._*&#34;) or name == &#34;.DS_Store&#34;:
+                        print(&#34;delete &#39;%s&#39; &#34;%filename)
+                        tools.filesystem.remove(filename)
+                await uasyncio.sleep_ms(2)
+        MonthlyCounter.force[0] = False
+        return daily_to_update, monthly_to_update, filenames</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.load"><code class="name flex">
+<span>def <span class="ident">load</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load daily file content</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def load(filename):
+        &#34;&#34;&#34; Load daily file content &#34;&#34;&#34;
+        result = {}
+        try:
+                if tools.filesystem.exists(filename):
+                        with open(filename, &#34;rb&#34;) as file:
+                                while True:
+                                        data = file.read(2)
+                                        if len(data) == 0:
+                                                break
+                                        start = struct.unpack(&#34;H&#34;, data)[0]*60
+                                        end   = struct.unpack(&#34;H&#34;, file.read(2))[0]*60
+                                        months = struct.unpack(&#34;I&#34;*12, file.read(4*12))
+                                        result[(start,end)] = months
+        except Exception as err:
+                tools.logger.exception(err)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.manage"><code class="name flex">
+<span>async def <span class="ident">manage</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Rebuild all month files if necessary</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def manage():
+        &#34;&#34;&#34; Rebuild all month files if necessary &#34;&#34;&#34;
+        while True:
+                if MonthlyCounter.next_update[0] &lt;= 0:
+                        break
+                MonthlyCounter.next_update[0] -= 1
+                await uasyncio.sleep(1)
+
+        print(&#34;Begin electricmeter update&#34;)
+        daily_to_update, monthly_to_update, filenames = await MonthlyCounter().get_updates()
+        await DailyCounter.update  (filenames, daily_to_update)
+        await MonthlyCounter.update(filenames, monthly_to_update)
+        MonthlyCounter.next_update[0] = 28807
+        MonthlyCounter.last_update[0] = time.time()
+        print(&#34;End electricmeter update&#34;)
+        return True</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.save"><code class="name flex">
+<span>def <span class="ident">save</span></span>(<span>filename, slot_pulses)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def save(filename, slot_pulses):
+        try:
+                with open(filename, &#34;wb&#34;) as file:
+                        for time_slot, months in slot_pulses.items():
+                                start, end = time_slot
+                                file.write(struct.pack(&#34;HH&#34;, start//60, end//60))
+                                file.write(struct.pack(&#34;I&#34;*len(months), *months))
+        except Exception as err:
+                write_problem(err)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.task"><code class="name flex">
+<span>async def <span class="ident">task</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task to count wh from the electric meter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def task():
+        &#34;&#34;&#34; Task to count wh from the electric meter &#34;&#34;&#34;
+        await tools.tasking.Tasks.monitor(MonthlyCounter.manage)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.MonthlyCounter.update"><code class="name flex">
+<span>async def <span class="ident">update</span></span>(<span>filenames, monthly_to_update)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update monthly files</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+async def update(filenames, monthly_to_update):
+        &#34;&#34;&#34; Update monthly files &#34;&#34;&#34;
+        try:
+                for year, monthly_filename in monthly_to_update.items():
+                        
+                        daily_searched = &#34;%s/%s-[0-9][0-9]/%s-[0-9][0-9]%s&#34;%(get_pulse_directory(), year, year, PULSE_DAILY)
+                        slot_pulses = plugins.electricmeter.config.TimeSlotsConfig.create_empty_slot(12)
+                        for daily_filename in filenames:
+                                if tools.fnmatch.fnmatch(daily_filename, daily_searched):
+                                        name = tools.filesystem.splitext(tools.filesystem.split(daily_filename)[1])[0]
+                                        month = int(name.split(&#34;-&#34;)[-1])
+                                        print(&#34;\r  Monthly %s %d&#34;%(monthly_filename, month), end=&#34;&#34;)
+                                        daily_slot_pulses = DailyCounter.load(daily_filename)
+                                        for time_slot, days in daily_slot_pulses.items():
+                                                for day in days:
+                                                        slot_pulses[time_slot][month-1] = slot_pulses[time_slot][month-1]+day
+                                await uasyncio.sleep_ms(2)
+                        print(&#34;&#34;)
+                        MonthlyCounter.save(monthly_filename, slot_pulses)
+                        await uasyncio.sleep_ms(2)
+        except Exception as err:
+                tools.logger.exception(err)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.PulseSensor"><code class="flex name class">
+<span>class <span class="ident">PulseSensor</span></span>
+<span>(</span><span>gpio, min_duration_ns=20000000, queue_length=1500)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Detect wh pulse from electric meter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PulseSensor:
+        &#34;&#34;&#34; Detect wh pulse from electric meter &#34;&#34;&#34;
+        def __init__(self, gpio, min_duration_ns=20_000_000, queue_length=1_500):
+                self.pulses = collections.deque((), queue_length)
+                self.notifier = uasyncio.Event()
+                self.previous_counter = 0
+                self.previous_time = time.time_ns()
+                self.min_duration_ns = min_duration_ns
+
+                # The use of pcnt counter allows to obtain a better reliability of counting
+                self.counter = machine.Counter(0, src=machine.Pin(gpio, mode=machine.Pin.IN), direction=machine.Counter.UP)
+                self.counter.filter_ns(self.min_duration_ns)
+                self.counter.pause()
+                self.counter.value(0)
+
+                self.sensor = machine.Pin(gpio, machine.Pin.IN, machine.Pin.PULL_DOWN)
+                self.sensor.irq(handler=self.detected, trigger=machine.Pin.IRQ_RISING)
+                self.counter.resume()
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor &#34;&#34;&#34;
+                self.sensor.irq(handler=None)
+                self.counter.deinit()
+
+        def detected(self, pin):
+                &#34;&#34;&#34; Callback called when pulse detected &#34;&#34;&#34;
+                pulse_time     = time.time_ns()
+                pulse_counter  = self.counter.value()
+                if pin.value() == 1:
+                        # If new pulses detected
+                        if pulse_counter != self.previous_counter:
+                                # if the pulse is not too close to the previous one
+                                if self.previous_time + self.min_duration_ns &lt; pulse_time:
+                                        # If the new value is not a counter overflow
+                                        if pulse_counter &gt; self.previous_counter:
+                                                pulse_quantity = pulse_counter - self.previous_counter
+                                        else:
+                                                pulse_quantity = 1
+
+                                        # Save the new counter value
+                                        self.previous_counter = pulse_counter
+
+                                        # Add the current pulse to list
+                                        self.pulses.append((pulse_quantity, pulse_time))
+
+                                        # Wake up pulse counter
+                                        self.notifier.set()
+                                else:
+                                        # Ignore previous pulse
+                                        self.previous_counter = pulse_counter
+
+        async def wait(self):
+                &#34;&#34;&#34; Wait the wh pulses and the returns the list of pulses &#34;&#34;&#34;
+                # Wait pulses
+                await self.notifier.wait()
+
+                # Clear notification flag
+                self.notifier.clear()
+                result = []
+
+                # Empty list of pulses
+                while True:
+                        try:
+                                result.append(self.pulses.popleft())
+                        except IndexError:
+                                break
+                return result
+
+        def simulate(self, pulses):
+                &#34;&#34;&#34; Simulates the flashing led on the electric meter &#34;&#34;&#34;
+                self.sensor.value(1)
+                self.counter.value(pulses)
+                self.detected(self.sensor)</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.plugins.electricmeter.meter.PulseSensor.detected"><code class="name flex">
+<span>def <span class="ident">detected</span></span>(<span>self, pin)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Callback called when pulse detected</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def detected(self, pin):
+        &#34;&#34;&#34; Callback called when pulse detected &#34;&#34;&#34;
+        pulse_time     = time.time_ns()
+        pulse_counter  = self.counter.value()
+        if pin.value() == 1:
+                # If new pulses detected
+                if pulse_counter != self.previous_counter:
+                        # if the pulse is not too close to the previous one
+                        if self.previous_time + self.min_duration_ns &lt; pulse_time:
+                                # If the new value is not a counter overflow
+                                if pulse_counter &gt; self.previous_counter:
+                                        pulse_quantity = pulse_counter - self.previous_counter
+                                else:
+                                        pulse_quantity = 1
+
+                                # Save the new counter value
+                                self.previous_counter = pulse_counter
+
+                                # Add the current pulse to list
+                                self.pulses.append((pulse_quantity, pulse_time))
+
+                                # Wake up pulse counter
+                                self.notifier.set()
+                        else:
+                                # Ignore previous pulse
+                                self.previous_counter = pulse_counter</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.PulseSensor.simulate"><code class="name flex">
+<span>def <span class="ident">simulate</span></span>(<span>self, pulses)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Simulates the flashing led on the electric meter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def simulate(self, pulses):
+        &#34;&#34;&#34; Simulates the flashing led on the electric meter &#34;&#34;&#34;
+        self.sensor.value(1)
+        self.counter.value(pulses)
+        self.detected(self.sensor)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.electricmeter.meter.PulseSensor.wait"><code class="name flex">
+<span>async def <span class="ident">wait</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Wait the wh pulses and the returns the list of pulses</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def wait(self):
+        &#34;&#34;&#34; Wait the wh pulses and the returns the list of pulses &#34;&#34;&#34;
+        # Wait pulses
+        await self.notifier.wait()
+
+        # Clear notification flag
+        self.notifier.clear()
+        result = []
+
+        # Empty list of pulses
+        while True:
+                try:
+                        result.append(self.pulses.popleft())
+                except IndexError:
+                        break
+        return result</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.plugins.electricmeter" href="index.html">lib.plugins.electricmeter</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.plugins.electricmeter.meter.get_pulse_directory" href="#lib.plugins.electricmeter.meter.get_pulse_directory">get_pulse_directory</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.write_problem" href="#lib.plugins.electricmeter.meter.write_problem">write_problem</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.Consumption" href="#lib.plugins.electricmeter.meter.Consumption">Consumption</a></code></h4>
+<ul class="">
+<li><code><a title="lib.plugins.electricmeter.meter.Consumption.add" href="#lib.plugins.electricmeter.meter.Consumption.add">add</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.Consumption.to_string" href="#lib.plugins.electricmeter.meter.Consumption.to_string">to_string</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.Cost" href="#lib.plugins.electricmeter.meter.Cost">Cost</a></code></h4>
+<ul class="">
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.compute" href="#lib.plugins.electricmeter.meter.Cost.compute">compute</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.get_message" href="#lib.plugins.electricmeter.meter.Cost.get_message">get_message</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.Cost.get_rates" href="#lib.plugins.electricmeter.meter.Cost.get_rates">get_rates</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.DailyCost" href="#lib.plugins.electricmeter.meter.DailyCost">DailyCost</a></code></h4>
+</li>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.DailyCounter" href="#lib.plugins.electricmeter.meter.DailyCounter">DailyCounter</a></code></h4>
+<ul class="">
+<li><code><a title="lib.plugins.electricmeter.meter.DailyCounter.get_datas" href="#lib.plugins.electricmeter.meter.DailyCounter.get_datas">get_datas</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.DailyCounter.get_filename" href="#lib.plugins.electricmeter.meter.DailyCounter.get_filename">get_filename</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.DailyCounter.load" href="#lib.plugins.electricmeter.meter.DailyCounter.load">load</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.DailyCounter.save" href="#lib.plugins.electricmeter.meter.DailyCounter.save">save</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.DailyCounter.update" href="#lib.plugins.electricmeter.meter.DailyCounter.update">update</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.ElectricMeter" href="#lib.plugins.electricmeter.meter.ElectricMeter">ElectricMeter</a></code></h4>
+<ul class="">
+<li><code><a title="lib.plugins.electricmeter.meter.ElectricMeter.daily_notifier" href="#lib.plugins.electricmeter.meter.ElectricMeter.daily_notifier">daily_notifier</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.ElectricMeter.start" href="#lib.plugins.electricmeter.meter.ElectricMeter.start">start</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.HourlyCost" href="#lib.plugins.electricmeter.meter.HourlyCost">HourlyCost</a></code></h4>
+</li>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.HourlyCounter" href="#lib.plugins.electricmeter.meter.HourlyCounter">HourlyCounter</a></code></h4>
+<ul class="">
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.action_before_reboot" href="#lib.plugins.electricmeter.meter.HourlyCounter.action_before_reboot">action_before_reboot</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.counter" href="#lib.plugins.electricmeter.meter.HourlyCounter.counter">counter</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.get_datas" href="#lib.plugins.electricmeter.meter.HourlyCounter.get_datas">get_datas</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.get_directory" href="#lib.plugins.electricmeter.meter.HourlyCounter.get_directory">get_directory</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.get_filename" href="#lib.plugins.electricmeter.meter.HourlyCounter.get_filename">get_filename</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.get_power" href="#lib.plugins.electricmeter.meter.HourlyCounter.get_power">get_power</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.is_same_day" href="#lib.plugins.electricmeter.meter.HourlyCounter.is_same_day">is_same_day</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.load" href="#lib.plugins.electricmeter.meter.HourlyCounter.load">load</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.manage" href="#lib.plugins.electricmeter.meter.HourlyCounter.manage">manage</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.pulse_simulator" href="#lib.plugins.electricmeter.meter.HourlyCounter.pulse_simulator">pulse_simulator</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.save" href="#lib.plugins.electricmeter.meter.HourlyCounter.save">save</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.simulate" href="#lib.plugins.electricmeter.meter.HourlyCounter.simulate">simulate</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.HourlyCounter.task" href="#lib.plugins.electricmeter.meter.HourlyCounter.task">task</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.MonthlyCost" href="#lib.plugins.electricmeter.meter.MonthlyCost">MonthlyCost</a></code></h4>
+</li>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter" href="#lib.plugins.electricmeter.meter.MonthlyCounter">MonthlyCounter</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.force" href="#lib.plugins.electricmeter.meter.MonthlyCounter.force">force</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.get_datas" href="#lib.plugins.electricmeter.meter.MonthlyCounter.get_datas">get_datas</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.get_filename" href="#lib.plugins.electricmeter.meter.MonthlyCounter.get_filename">get_filename</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.get_updates" href="#lib.plugins.electricmeter.meter.MonthlyCounter.get_updates">get_updates</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.last_update" href="#lib.plugins.electricmeter.meter.MonthlyCounter.last_update">last_update</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.load" href="#lib.plugins.electricmeter.meter.MonthlyCounter.load">load</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.manage" href="#lib.plugins.electricmeter.meter.MonthlyCounter.manage">manage</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.next_update" href="#lib.plugins.electricmeter.meter.MonthlyCounter.next_update">next_update</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.save" href="#lib.plugins.electricmeter.meter.MonthlyCounter.save">save</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.task" href="#lib.plugins.electricmeter.meter.MonthlyCounter.task">task</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.MonthlyCounter.update" href="#lib.plugins.electricmeter.meter.MonthlyCounter.update">update</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="lib.plugins.electricmeter.meter.PulseSensor" href="#lib.plugins.electricmeter.meter.PulseSensor">PulseSensor</a></code></h4>
+<ul class="">
+<li><code><a title="lib.plugins.electricmeter.meter.PulseSensor.detected" href="#lib.plugins.electricmeter.meter.PulseSensor.detected">detected</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.PulseSensor.simulate" href="#lib.plugins.electricmeter.meter.PulseSensor.simulate">simulate</a></code></li>
+<li><code><a title="lib.plugins.electricmeter.meter.PulseSensor.wait" href="#lib.plugins.electricmeter.meter.PulseSensor.wait">wait</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

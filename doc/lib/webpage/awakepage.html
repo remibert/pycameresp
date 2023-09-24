@@ -35,8 +35,9 @@ from htmltemplate      import *
 import webpage.mainpage
 import tools.awake
 import tools.lang
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b&#39;/wakeup&#39;, menu=tools.lang.menu_system, item=tools.lang.item_wakeup)
+@server.httpserver.HttpServer.add_route(b&#39;/wakeup&#39;, menu=tools.lang.menu_system, item=tools.lang.item_wakeup, available=tools.features.features.awake)
 async def wakeup(request, response, args):
         &#34;&#34;&#34; Wake uo configuration web page &#34;&#34;&#34;
         config = tools.awake.AwakeConfig()
@@ -69,7 +70,7 @@ async def wakeup(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/wakeup&#39;, menu=tools.lang.menu_system, item=tools.lang.item_wakeup)
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/wakeup&#39;, menu=tools.lang.menu_system, item=tools.lang.item_wakeup, available=tools.features.features.awake)
 async def wakeup(request, response, args):
         &#34;&#34;&#34; Wake uo configuration web page &#34;&#34;&#34;
         config = tools.awake.AwakeConfig()

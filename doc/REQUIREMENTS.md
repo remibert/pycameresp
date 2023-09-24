@@ -20,6 +20,6 @@ Below are the devices compatible with pycameresp :
 ![NODEMCU](/images/Device_NODEMCU.jpg "NODE MCU")
 ![LOLIN32](/images/Device_LOLIN32.jpg "LOLIN32")
 ![PicoPi](/images/Device_PicoPi.png "Pico PI W")
-![SONOFF R3](/images/Device_SonoffR3.png "SONOFF R3")
+![Freenove CAM S3](/images/Device_FREENOVE_CAM_S3.png "Freenove CAM S3")
 
 Note on the freenove cam S3, I had problems with wifi disruption, which limited the video streaming speed, to correct this I unsoldered the two connectors from the edges of the card, it's tedious, but the speed has become maximum.

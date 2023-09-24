@@ -61,6 +61,10 @@ MIMES = {\
         b&#34;.htm&#34;   : b&#34;text/html&#34;,
         b&#34;.csv&#34;   : b&#34;text/csv&#34;,
         b&#34;.log&#34;   : b&#34;text/plain&#34;,
+        b&#34;.1&#34;     : b&#34;text/plain&#34;,
+        b&#34;.2&#34;     : b&#34;text/plain&#34;,
+        b&#34;.3&#34;     : b&#34;text/plain&#34;,
+        b&#34;.4&#34;     : b&#34;text/plain&#34;,
         b&#34;.js&#34;    : b&#34;application/javascript&#34;,
         b&#34;.xml&#34;   : b&#34;application/xml&#34;,
         b&#34;.xhtml&#34; : b&#34;application/xhtml+xml&#34;,
@@ -117,13 +121,13 @@ class Http:
                 except:
                         return None
 
-        def set_cookie(self, name, value=None, expiration=None):
+        def set_cookie(self, name, value=None, expiration=None, http_only=False):
                 &#34;&#34;&#34; Set cookie &#34;&#34;&#34;
                 if value is None:
                         if name in self.cookies:
                                 del self.cookies[name]
                 else:
-                        self.cookies[name] = (value, expiration)
+                        self.cookies[name] = (value, expiration, http_only)
 
         def get_header(self, name):
                 &#34;&#34;&#34; Get the http request header &#34;&#34;&#34;
@@ -305,12 +309,19 @@ class Http:
                         result += await streamio.write(b&#34;%s: %s\r\n&#34;%(header, value))
 
                 # Serialize cookies
-                for cookie, value in self.cookies.items():
+                for name, value in self.cookies.items():
                         if self.request:
                                 setget = b&#34;&#34;
                         else:
                                 setget = b&#34;Set-&#34;
-                        result += await streamio.write(b&#34;%sCookie: %s=%s%s\r\n&#34;%(setget, cookie, value[0], self.get_expiration(value[1])))
+
+                        http_only = b&#34;&#34;
+                        if len(value) &gt;= 3:
+                                if value[2] is True:
+                                        http_only = b&#34;; HttpOnly&#34;
+                                if name == b&#34;session&#34;:
+                                        http_only += b&#34;; Path=/&#34;
+                        result += await streamio.write(b&#34;%sCookie: %s=%s%s%s\r\n&#34;%(setget, name, value[0], self.get_expiration(value[1]), http_only))
                 return result
 
         async def serialize_body(self, streamio):
@@ -979,13 +990,13 @@ class HttpRequest(Http):
                 except:
                         return None
 
-        def set_cookie(self, name, value=None, expiration=None):
+        def set_cookie(self, name, value=None, expiration=None, http_only=False):
                 &#34;&#34;&#34; Set cookie &#34;&#34;&#34;
                 if value is None:
                         if name in self.cookies:
                                 del self.cookies[name]
                 else:
-                        self.cookies[name] = (value, expiration)
+                        self.cookies[name] = (value, expiration, http_only)
 
         def get_header(self, name):
                 &#34;&#34;&#34; Get the http request header &#34;&#34;&#34;
@@ -1167,12 +1178,19 @@ class HttpRequest(Http):
                         result += await streamio.write(b&#34;%s: %s\r\n&#34;%(header, value))
 
                 # Serialize cookies
-                for cookie, value in self.cookies.items():
+                for name, value in self.cookies.items():
                         if self.request:
                                 setget = b&#34;&#34;
                         else:
                                 setget = b&#34;Set-&#34;
-                        result += await streamio.write(b&#34;%sCookie: %s=%s%s\r\n&#34;%(setget, cookie, value[0], self.get_expiration(value[1])))
+
+                        http_only = b&#34;&#34;
+                        if len(value) &gt;= 3:
+                                if value[2] is True:
+                                        http_only = b&#34;; HttpOnly&#34;
+                                if name == b&#34;session&#34;:
+                                        http_only += b&#34;; Path=/&#34;
+                        result += await streamio.write(b&#34;%sCookie: %s=%s%s%s\r\n&#34;%(setget, name, value[0], self.get_expiration(value[1]), http_only))
                 return result
 
         async def serialize_body(self, streamio):
@@ -1550,12 +1568,19 @@ class HttpRequest(Http):
                 result += await streamio.write(b&#34;%s: %s\r\n&#34;%(header, value))
 
         # Serialize cookies
-        for cookie, value in self.cookies.items():
+        for name, value in self.cookies.items():
                 if self.request:
                         setget = b&#34;&#34;
                 else:
                         setget = b&#34;Set-&#34;
-                result += await streamio.write(b&#34;%sCookie: %s=%s%s\r\n&#34;%(setget, cookie, value[0], self.get_expiration(value[1])))
+
+                http_only = b&#34;&#34;
+                if len(value) &gt;= 3:
+                        if value[2] is True:
+                                http_only = b&#34;; HttpOnly&#34;
+                        if name == b&#34;session&#34;:
+                                http_only += b&#34;; Path=/&#34;
+                result += await streamio.write(b&#34;%sCookie: %s=%s%s%s\r\n&#34;%(setget, name, value[0], self.get_expiration(value[1]), http_only))
         return result</code></pre>
 </details>
 </dd>
@@ -1577,7 +1602,7 @@ class HttpRequest(Http):
 </details>
 </dd>
 <dt id="lib.server.httprequest.Http.set_cookie"><code class="name flex">
-<span>def <span class="ident">set_cookie</span></span>(<span>self, name, value=None, expiration=None)</span>
+<span>def <span class="ident">set_cookie</span></span>(<span>self, name, value=None, expiration=None, http_only=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set cookie</p></div>
@@ -1585,13 +1610,13 @@ class HttpRequest(Http):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_cookie(self, name, value=None, expiration=None):
+<pre><code class="python">def set_cookie(self, name, value=None, expiration=None, http_only=False):
         &#34;&#34;&#34; Set cookie &#34;&#34;&#34;
         if value is None:
                 if name in self.cookies:
                         del self.cookies[name]
         else:
-                self.cookies[name] = (value, expiration)</code></pre>
+                self.cookies[name] = (value, expiration, http_only)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.httprequest.Http.set_header"><code class="name flex">

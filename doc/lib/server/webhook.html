@@ -57,16 +57,20 @@ class WebhookConfig(tools.jsonconfig.JsonConfig):
 
 class WebHook:
         &#34;&#34;&#34; Webhook &#34;&#34;&#34;
+        config = None
         @staticmethod
         @server.notifier.Notifier.add()
         async def notify_message(notification):
                 &#34;&#34;&#34; Notify message &#34;&#34;&#34;
-                config = WebhookConfig()
-                if config.load() is False:
-                        config.save()
+                if WebHook.config is None:
+                        WebHook.config = WebhookConfig()
+                        if WebHook.config.load() is False:
+                                WebHook.config.save()
+                else:
+                        WebHook.config.refresh()
 
                 result = True
-                if config.activated or notification.forced and notification.url is not None:
+                if WebHook.config.activated or notification.forced and notification.url is not None:
                         if WebHook.notify_message not in notification.sent:
                                 result = await server.httpclient.HttpClient.request(method=b&#34;GET&#34;, url=notification.url)
                                 if result is True:
@@ -94,22 +98,33 @@ class WebHook:
 </summary>
 <pre><code class="python">class WebHook:
         &#34;&#34;&#34; Webhook &#34;&#34;&#34;
+        config = None
         @staticmethod
         @server.notifier.Notifier.add()
         async def notify_message(notification):
                 &#34;&#34;&#34; Notify message &#34;&#34;&#34;
-                config = WebhookConfig()
-                if config.load() is False:
-                        config.save()
+                if WebHook.config is None:
+                        WebHook.config = WebhookConfig()
+                        if WebHook.config.load() is False:
+                                WebHook.config.save()
+                else:
+                        WebHook.config.refresh()
 
                 result = True
-                if config.activated or notification.forced and notification.url is not None:
+                if WebHook.config.activated or notification.forced and notification.url is not None:
                         if WebHook.notify_message not in notification.sent:
                                 result = await server.httpclient.HttpClient.request(method=b&#34;GET&#34;, url=notification.url)
                                 if result is True:
                                         notification.sent.append(WebHook.notify_message)
                 return result</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.webhook.WebHook.config"><code class="name">var <span class="ident">config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="lib.server.webhook.WebHook.notify_message"><code class="name flex">
@@ -125,12 +140,15 @@ class WebHook:
 @server.notifier.Notifier.add()
 async def notify_message(notification):
         &#34;&#34;&#34; Notify message &#34;&#34;&#34;
-        config = WebhookConfig()
-        if config.load() is False:
-                config.save()
+        if WebHook.config is None:
+                WebHook.config = WebhookConfig()
+                if WebHook.config.load() is False:
+                        WebHook.config.save()
+        else:
+                WebHook.config.refresh()
 
         result = True
-        if config.activated or notification.forced and notification.url is not None:
+        if WebHook.config.activated or notification.forced and notification.url is not None:
                 if WebHook.notify_message not in notification.sent:
                         result = await server.httpclient.HttpClient.request(method=b&#34;GET&#34;, url=notification.url)
                         if result is True:
@@ -195,6 +213,7 @@ async def notify_message(notification):
 <li>
 <h4><code><a title="lib.server.webhook.WebHook" href="#lib.server.webhook.WebHook">WebHook</a></code></h4>
 <ul class="">
+<li><code><a title="lib.server.webhook.WebHook.config" href="#lib.server.webhook.WebHook.config">config</a></code></li>
 <li><code><a title="lib.server.webhook.WebHook.notify_message" href="#lib.server.webhook.WebHook.notify_message">notify_message</a></code></li>
 </ul>
 </li>

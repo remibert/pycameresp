@@ -37,8 +37,9 @@ from htmltemplate       import *
 import webpage.mainpage
 import tools.lang
 import tools.info
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b&#39;/webhook&#39;, menu=tools.lang.menu_server, item=tools.lang.item_webhook)
+@server.httpserver.HttpServer.add_route(b&#39;/webhook&#39;, menu=tools.lang.menu_server, item=tools.lang.item_webhook, available=tools.features.features.webhook)
 async def webhook(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the webhook  &#34;&#34;&#34;
         config = server.webhook.WebhookConfig()
@@ -71,7 +72,7 @@ async def webhook(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/webhook&#39;, menu=tools.lang.menu_server, item=tools.lang.item_webhook)
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/webhook&#39;, menu=tools.lang.menu_server, item=tools.lang.item_webhook, available=tools.features.features.webhook)
 async def webhook(request, response, args):
         &#34;&#34;&#34; Function define the web page to configure the webhook  &#34;&#34;&#34;
         config = server.webhook.WebhookConfig()

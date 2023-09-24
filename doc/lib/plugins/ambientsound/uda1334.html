@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>lib.plugins.ambientsound.uda1334 API documentation</title>
+<meta name="description" content="Class to drive DAC module uda1334a I2S, stereo audio decoder module board" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.plugins.ambientsound.uda1334</code></h1>
+</header>
+<section id="section-intro">
+<p>Class to drive DAC module uda1334a I2S, stereo audio decoder module board</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34; Class to drive DAC module uda1334a I2S, stereo audio decoder module board &#34;&#34;&#34;
+# pylint:disable=consider-using-f-string
+import struct
+import math
+import io
+import gc
+from machine import I2S, Pin
+
+class Uda1334:
+        &#34;&#34;&#34; Class to drive DAC module uda1334a I2S, stereo audio decoder module board &#34;&#34;&#34;
+        def __init__(self, sck=26, ws=25, sd=22):
+                &#34;&#34;&#34; Constructor 
+                BCLK (Bit Clock) : GPIO26
+                LRCLK (Left/Right Clock) : GPIO25
+                DATA : GPIO22
+                &#34;&#34;&#34;
+                self.sck = sck
+                self.ws = ws
+                self.sd = sd
+                self.wave = None
+                self.i2s = None
+
+        def play(self, wave, rate, duration=10):
+                &#34;&#34;&#34; Play sound wave &#34;&#34;&#34;
+                self.wave = wave
+                self.i2s = I2S(0, sck=Pin(self.sck), ws=Pin(self.ws), sd=Pin(self.sd), mode=I2S.TX, bits=16, format=I2S.STEREO, rate=rate, ibuf=4096)
+
+                t = 1/(rate/(len(wave.getvalue())/4))
+                try:
+                        buf = bytearray(self.wave.getvalue())
+                        gc.disable()
+                        for i in range(int(duration/t)):
+                                self.i2s.write(buf)
+                finally:
+                        gc.enable()
+                        self.i2s.deinit()
+
+        def create_wave(self, frequency, shape):
+                &#34;&#34;&#34; Create sound wave with frequency and shape of wave &#34;&#34;&#34;
+                if frequency &gt; 100:
+                        rate = 100000
+                        step = rate//frequency
+                else:
+                        step = 1000
+                        rate = step*frequency
+                sample = io.BytesIO()
+                shape(sample,step)
+                return sample, rate
+
+        def triangle(self, buf, step):
+                &#34;&#34;&#34; Creates a triangle wave &#34;&#34;&#34;
+                inc = 65536//(step//2)
+                for i in range(-(32767-inc), 32767, inc):
+                        buf.write(struct.pack(&#34;&lt;h&#34;,i))
+                        buf.write(struct.pack(&#34;&lt;h&#34;,-i))
+                for i in range(32767-inc,-32767, -inc):
+                        buf.write(struct.pack(&#34;&lt;h&#34;,i))
+                        buf.write(struct.pack(&#34;&lt;h&#34;,-i))
+
+        def sinus(self, buf, step):
+                &#34;&#34;&#34; Creates a sine wave &#34;&#34;&#34;
+                inc = 100000//step
+                for angle in range(0, 100000, inc):
+                        sample = math.cos(angle*(2*math.pi)/100000) * 32767
+                        buf.write(struct.pack(&#34;&lt;h&#34;,int(sample)))
+                        buf.write(struct.pack(&#34;&lt;h&#34;,-int(sample)))
+
+        def bits_frame(self, byte, bits, parity, stop):
+                &#34;&#34;&#34; Returns the bits that compose a byte sent on a uart &#34;&#34;&#34;
+                result = [0]
+                bits_count = 0
+
+                data = int(byte)
+                for i in range(bits):
+                        if data &amp; 1:
+                                bits_count += 1
+                                result.append(1)
+                        else:
+                                result.append(0)
+                        if data &lt;= 1:
+                                break
+                        data &gt;&gt;= 1
+
+                if parity is not None:
+                        if parity == 1:
+                                if bits_count &amp; 1:
+                                        result.append(0)
+                                else:
+                                        result.append(1)
+                        else:
+                                if bits_count &amp; 1:
+                                        result.append(1)
+                                else:
+                                        result.append(0)
+
+                if stop == 1:
+                        result.append(1)
+                if stop == 2:
+                        result.append(1)
+                return result
+
+        def create_uart(self, data, baud, bits=7, parity=1, stop=1):
+                &#34;&#34;&#34; Create uart wave &#34;&#34;&#34;
+                sample = io.BytesIO()
+                rate = 100000
+                for char in data:
+                        bitfield = self.bits_frame(char, bits, parity, stop)
+
+                        for bit in bitfield:
+                                if bit:
+                                        for i in range(rate*2//baud):
+                                                sample.write(struct.pack(&#34;&lt;h&#34;,32767))
+                                else:
+                                        for i in range(rate*2//baud):
+                                                sample.write(struct.pack(&#34;&lt;h&#34;,-32767))
+                return sample, rate
+
+        def play_raw(self, filename):
+                &#34;&#34;&#34; Plays a file containing a sound wave in raw 44khz stereo format &#34;&#34;&#34;
+                buf = bytearray(4096)
+                self.i2s = I2S(0, sck=Pin(self.sck), ws=Pin(self.ws), sd=Pin(self.sd), mode=I2S.TX, bits=16, format=I2S.STEREO, rate=44100, ibuf=4096)
+                with open(filename,&#39;rb&#39;) as file:
+                        try:
+                                gc.disable()
+                                i = 0
+                                while True:
+                                        length = file.readinto(buf)
+                                        if length == 0:
+                                                break
+                                        if length &lt; len(buf):
+                                                self.i2s.write(buf[:length])
+                                                break
+                                        else:
+                                                self.i2s.write(buf)
+                                        print(i)
+                                        i += 1
+                        finally:
+                                gc.enable()
+                                self.i2s.deinit()
+
+def test():
+        &#34;&#34;&#34; Plays multiple frequencies and waveform &#34;&#34;&#34;
+        uda = Uda1334()
+        for i in range(10,5000, 100):
+                print(&#34;Sinus    %d hz&#34;%i)
+                wave,rate = uda.create_wave(frequency=i, shape=uda.sinus)
+                uda.play(wave,rate,3)
+                print(&#34;Triangle %d hz&#34;%i)
+                wave,rate = uda.create_wave(frequency=i, shape=uda.triangle)
+                uda.play(wave,rate,3)
+
+def calibration():
+        &#34;&#34;&#34; Plays a sine wave at 1khz &#34;&#34;&#34;
+        uda = Uda1334()
+        wave, rate = uda.create_wave(frequency=1000, shape=uda.sinus)
+        uda.play(wave, rate, 600)
+
+def test_uart():
+        &#34;&#34;&#34; Plays a uart type wave at 9600 baud &#34;&#34;&#34;
+        uda = Uda1334()
+        wave, rate = uda.create_uart(b&#34;Hello world&#34;, 9600)
+        uda.play(wave, rate, 600)
+
+def test_raw():
+        &#34;&#34;&#34; Play raw file &#34;&#34;&#34;
+        uda = Uda1334()
+        uda.play_raw(&#34;/sd/ambience.wav&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="lib.plugins.ambientsound.uda1334.calibration"><code class="name flex">
+<span>def <span class="ident">calibration</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plays a sine wave at 1khz</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calibration():
+        &#34;&#34;&#34; Plays a sine wave at 1khz &#34;&#34;&#34;
+        uda = Uda1334()
+        wave, rate = uda.create_wave(frequency=1000, shape=uda.sinus)
+        uda.play(wave, rate, 600)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.uda1334.test"><code class="name flex">
+<span>def <span class="ident">test</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plays multiple frequencies and waveform</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test():
+        &#34;&#34;&#34; Plays multiple frequencies and waveform &#34;&#34;&#34;
+        uda = Uda1334()
+        for i in range(10,5000, 100):
+                print(&#34;Sinus    %d hz&#34;%i)
+                wave,rate = uda.create_wave(frequency=i, shape=uda.sinus)
+                uda.play(wave,rate,3)
+                print(&#34;Triangle %d hz&#34;%i)
+                wave,rate = uda.create_wave(frequency=i, shape=uda.triangle)
+                uda.play(wave,rate,3)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.uda1334.test_raw"><code class="name flex">
+<span>def <span class="ident">test_raw</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Play raw file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_raw():
+        &#34;&#34;&#34; Play raw file &#34;&#34;&#34;
+        uda = Uda1334()
+        uda.play_raw(&#34;/sd/ambience.wav&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.uda1334.test_uart"><code class="name flex">
+<span>def <span class="ident">test_uart</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plays a uart type wave at 9600 baud</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_uart():
+        &#34;&#34;&#34; Plays a uart type wave at 9600 baud &#34;&#34;&#34;
+        uda = Uda1334()
+        wave, rate = uda.create_uart(b&#34;Hello world&#34;, 9600)
+        uda.play(wave, rate, 600)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.plugins.ambientsound.uda1334.Uda1334"><code class="flex name class">
+<span>class <span class="ident">Uda1334</span></span>
+<span>(</span><span>sck=26, ws=25, sd=22)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Class to drive DAC module uda1334a I2S, stereo audio decoder module board </p>
+<p>Constructor
+BCLK (Bit Clock) : GPIO26
+LRCLK (Left/Right Clock) : GPIO25
+DATA : GPIO22</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Uda1334:
+        &#34;&#34;&#34; Class to drive DAC module uda1334a I2S, stereo audio decoder module board &#34;&#34;&#34;
+        def __init__(self, sck=26, ws=25, sd=22):
+                &#34;&#34;&#34; Constructor 
+                BCLK (Bit Clock) : GPIO26
+                LRCLK (Left/Right Clock) : GPIO25
+                DATA : GPIO22
+                &#34;&#34;&#34;
+                self.sck = sck
+                self.ws = ws
+                self.sd = sd
+                self.wave = None
+                self.i2s = None
+
+        def play(self, wave, rate, duration=10):
+                &#34;&#34;&#34; Play sound wave &#34;&#34;&#34;
+                self.wave = wave
+                self.i2s = I2S(0, sck=Pin(self.sck), ws=Pin(self.ws), sd=Pin(self.sd), mode=I2S.TX, bits=16, format=I2S.STEREO, rate=rate, ibuf=4096)
+
+                t = 1/(rate/(len(wave.getvalue())/4))
+                try:
+                        buf = bytearray(self.wave.getvalue())
+                        gc.disable()
+                        for i in range(int(duration/t)):
+                                self.i2s.write(buf)
+                finally:
+                        gc.enable()
+                        self.i2s.deinit()
+
+        def create_wave(self, frequency, shape):
+                &#34;&#34;&#34; Create sound wave with frequency and shape of wave &#34;&#34;&#34;
+                if frequency &gt; 100:
+                        rate = 100000
+                        step = rate//frequency
+                else:
+                        step = 1000
+                        rate = step*frequency
+                sample = io.BytesIO()
+                shape(sample,step)
+                return sample, rate
+
+        def triangle(self, buf, step):
+                &#34;&#34;&#34; Creates a triangle wave &#34;&#34;&#34;
+                inc = 65536//(step//2)
+                for i in range(-(32767-inc), 32767, inc):
+                        buf.write(struct.pack(&#34;&lt;h&#34;,i))
+                        buf.write(struct.pack(&#34;&lt;h&#34;,-i))
+                for i in range(32767-inc,-32767, -inc):
+                        buf.write(struct.pack(&#34;&lt;h&#34;,i))
+                        buf.write(struct.pack(&#34;&lt;h&#34;,-i))
+
+        def sinus(self, buf, step):
+                &#34;&#34;&#34; Creates a sine wave &#34;&#34;&#34;
+                inc = 100000//step
+                for angle in range(0, 100000, inc):
+                        sample = math.cos(angle*(2*math.pi)/100000) * 32767
+                        buf.write(struct.pack(&#34;&lt;h&#34;,int(sample)))
+                        buf.write(struct.pack(&#34;&lt;h&#34;,-int(sample)))
+
+        def bits_frame(self, byte, bits, parity, stop):
+                &#34;&#34;&#34; Returns the bits that compose a byte sent on a uart &#34;&#34;&#34;
+                result = [0]
+                bits_count = 0
+
+                data = int(byte)
+                for i in range(bits):
+                        if data &amp; 1:
+                                bits_count += 1
+                                result.append(1)
+                        else:
+                                result.append(0)
+                        if data &lt;= 1:
+                                break
+                        data &gt;&gt;= 1
+
+                if parity is not None:
+                        if parity == 1:
+                                if bits_count &amp; 1:
+                                        result.append(0)
+                                else:
+                                        result.append(1)
+                        else:
+                                if bits_count &amp; 1:
+                                        result.append(1)
+                                else:
+                                        result.append(0)
+
+                if stop == 1:
+                        result.append(1)
+                if stop == 2:
+                        result.append(1)
+                return result
+
+        def create_uart(self, data, baud, bits=7, parity=1, stop=1):
+                &#34;&#34;&#34; Create uart wave &#34;&#34;&#34;
+                sample = io.BytesIO()
+                rate = 100000
+                for char in data:
+                        bitfield = self.bits_frame(char, bits, parity, stop)
+
+                        for bit in bitfield:
+                                if bit:
+                                        for i in range(rate*2//baud):
+                                                sample.write(struct.pack(&#34;&lt;h&#34;,32767))
+                                else:
+                                        for i in range(rate*2//baud):
+                                                sample.write(struct.pack(&#34;&lt;h&#34;,-32767))
+                return sample, rate
+
+        def play_raw(self, filename):
+                &#34;&#34;&#34; Plays a file containing a sound wave in raw 44khz stereo format &#34;&#34;&#34;
+                buf = bytearray(4096)
+                self.i2s = I2S(0, sck=Pin(self.sck), ws=Pin(self.ws), sd=Pin(self.sd), mode=I2S.TX, bits=16, format=I2S.STEREO, rate=44100, ibuf=4096)
+                with open(filename,&#39;rb&#39;) as file:
+                        try:
+                                gc.disable()
+                                i = 0
+                                while True:
+                                        length = file.readinto(buf)
+                                        if length == 0:
+                                                break
+                                        if length &lt; len(buf):
+                                                self.i2s.write(buf[:length])
+                                                break
+                                        else:
+                                                self.i2s.write(buf)
+                                        print(i)
+                                        i += 1
+                        finally:
+                                gc.enable()
+                                self.i2s.deinit()</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.plugins.ambientsound.uda1334.Uda1334.bits_frame"><code class="name flex">
+<span>def <span class="ident">bits_frame</span></span>(<span>self, byte, bits, parity, stop)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the bits that compose a byte sent on a uart</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def bits_frame(self, byte, bits, parity, stop):
+        &#34;&#34;&#34; Returns the bits that compose a byte sent on a uart &#34;&#34;&#34;
+        result = [0]
+        bits_count = 0
+
+        data = int(byte)
+        for i in range(bits):
+                if data &amp; 1:
+                        bits_count += 1
+                        result.append(1)
+                else:
+                        result.append(0)
+                if data &lt;= 1:
+                        break
+                data &gt;&gt;= 1
+
+        if parity is not None:
+                if parity == 1:
+                        if bits_count &amp; 1:
+                                result.append(0)
+                        else:
+                                result.append(1)
+                else:
+                        if bits_count &amp; 1:
+                                result.append(1)
+                        else:
+                                result.append(0)
+
+        if stop == 1:
+                result.append(1)
+        if stop == 2:
+                result.append(1)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.uda1334.Uda1334.create_uart"><code class="name flex">
+<span>def <span class="ident">create_uart</span></span>(<span>self, data, baud, bits=7, parity=1, stop=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create uart wave</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_uart(self, data, baud, bits=7, parity=1, stop=1):
+        &#34;&#34;&#34; Create uart wave &#34;&#34;&#34;
+        sample = io.BytesIO()
+        rate = 100000
+        for char in data:
+                bitfield = self.bits_frame(char, bits, parity, stop)
+
+                for bit in bitfield:
+                        if bit:
+                                for i in range(rate*2//baud):
+                                        sample.write(struct.pack(&#34;&lt;h&#34;,32767))
+                        else:
+                                for i in range(rate*2//baud):
+                                        sample.write(struct.pack(&#34;&lt;h&#34;,-32767))
+        return sample, rate</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.uda1334.Uda1334.create_wave"><code class="name flex">
+<span>def <span class="ident">create_wave</span></span>(<span>self, frequency, shape)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create sound wave with frequency and shape of wave</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_wave(self, frequency, shape):
+        &#34;&#34;&#34; Create sound wave with frequency and shape of wave &#34;&#34;&#34;
+        if frequency &gt; 100:
+                rate = 100000
+                step = rate//frequency
+        else:
+                step = 1000
+                rate = step*frequency
+        sample = io.BytesIO()
+        shape(sample,step)
+        return sample, rate</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.uda1334.Uda1334.play"><code class="name flex">
+<span>def <span class="ident">play</span></span>(<span>self, wave, rate, duration=10)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Play sound wave</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def play(self, wave, rate, duration=10):
+        &#34;&#34;&#34; Play sound wave &#34;&#34;&#34;
+        self.wave = wave
+        self.i2s = I2S(0, sck=Pin(self.sck), ws=Pin(self.ws), sd=Pin(self.sd), mode=I2S.TX, bits=16, format=I2S.STEREO, rate=rate, ibuf=4096)
+
+        t = 1/(rate/(len(wave.getvalue())/4))
+        try:
+                buf = bytearray(self.wave.getvalue())
+                gc.disable()
+                for i in range(int(duration/t)):
+                        self.i2s.write(buf)
+        finally:
+                gc.enable()
+                self.i2s.deinit()</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.uda1334.Uda1334.play_raw"><code class="name flex">
+<span>def <span class="ident">play_raw</span></span>(<span>self, filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Plays a file containing a sound wave in raw 44khz stereo format</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def play_raw(self, filename):
+        &#34;&#34;&#34; Plays a file containing a sound wave in raw 44khz stereo format &#34;&#34;&#34;
+        buf = bytearray(4096)
+        self.i2s = I2S(0, sck=Pin(self.sck), ws=Pin(self.ws), sd=Pin(self.sd), mode=I2S.TX, bits=16, format=I2S.STEREO, rate=44100, ibuf=4096)
+        with open(filename,&#39;rb&#39;) as file:
+                try:
+                        gc.disable()
+                        i = 0
+                        while True:
+                                length = file.readinto(buf)
+                                if length == 0:
+                                        break
+                                if length &lt; len(buf):
+                                        self.i2s.write(buf[:length])
+                                        break
+                                else:
+                                        self.i2s.write(buf)
+                                print(i)
+                                i += 1
+                finally:
+                        gc.enable()
+                        self.i2s.deinit()</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.uda1334.Uda1334.sinus"><code class="name flex">
+<span>def <span class="ident">sinus</span></span>(<span>self, buf, step)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates a sine wave</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sinus(self, buf, step):
+        &#34;&#34;&#34; Creates a sine wave &#34;&#34;&#34;
+        inc = 100000//step
+        for angle in range(0, 100000, inc):
+                sample = math.cos(angle*(2*math.pi)/100000) * 32767
+                buf.write(struct.pack(&#34;&lt;h&#34;,int(sample)))
+                buf.write(struct.pack(&#34;&lt;h&#34;,-int(sample)))</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.uda1334.Uda1334.triangle"><code class="name flex">
+<span>def <span class="ident">triangle</span></span>(<span>self, buf, step)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates a triangle wave</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def triangle(self, buf, step):
+        &#34;&#34;&#34; Creates a triangle wave &#34;&#34;&#34;
+        inc = 65536//(step//2)
+        for i in range(-(32767-inc), 32767, inc):
+                buf.write(struct.pack(&#34;&lt;h&#34;,i))
+                buf.write(struct.pack(&#34;&lt;h&#34;,-i))
+        for i in range(32767-inc,-32767, -inc):
+                buf.write(struct.pack(&#34;&lt;h&#34;,i))
+                buf.write(struct.pack(&#34;&lt;h&#34;,-i))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.plugins.ambientsound" href="index.html">lib.plugins.ambientsound</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="lib.plugins.ambientsound.uda1334.calibration" href="#lib.plugins.ambientsound.uda1334.calibration">calibration</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.uda1334.test" href="#lib.plugins.ambientsound.uda1334.test">test</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.uda1334.test_raw" href="#lib.plugins.ambientsound.uda1334.test_raw">test_raw</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.uda1334.test_uart" href="#lib.plugins.ambientsound.uda1334.test_uart">test_uart</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.plugins.ambientsound.uda1334.Uda1334" href="#lib.plugins.ambientsound.uda1334.Uda1334">Uda1334</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.plugins.ambientsound.uda1334.Uda1334.bits_frame" href="#lib.plugins.ambientsound.uda1334.Uda1334.bits_frame">bits_frame</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.uda1334.Uda1334.create_uart" href="#lib.plugins.ambientsound.uda1334.Uda1334.create_uart">create_uart</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.uda1334.Uda1334.create_wave" href="#lib.plugins.ambientsound.uda1334.Uda1334.create_wave">create_wave</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.uda1334.Uda1334.play" href="#lib.plugins.ambientsound.uda1334.Uda1334.play">play</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.uda1334.Uda1334.play_raw" href="#lib.plugins.ambientsound.uda1334.Uda1334.play_raw">play_raw</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.uda1334.Uda1334.sinus" href="#lib.plugins.ambientsound.uda1334.Uda1334.sinus">sinus</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.uda1334.Uda1334.triangle" href="#lib.plugins.ambientsound.uda1334.Uda1334.triangle">triangle</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

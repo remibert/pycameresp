@@ -20,7 +20,7 @@ block_cipher = None
 
 a = Analysis(['main.py'],
              binaries=None,
-             datas=[("icons", "icons"),("camflasher.ui",".")],
+             datas=[("icons", "icons"),("camflasher.ui","."),("esptool/targets/stub_flasher/*.json","esptool/targets/stub_flasher")],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],

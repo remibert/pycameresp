@@ -35,8 +35,9 @@ from htmltemplate      import *
 import webpage.mainpage
 import tools.battery
 import tools.lang
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b&#39;/battery&#39;, menu=tools.lang.menu_system, item=tools.lang.item_battery)
+@server.httpserver.HttpServer.add_route(b&#39;/battery&#39;, menu=tools.lang.menu_system, item=tools.lang.item_battery, available=tools.features.features.battery)
 async def battery(request, response, args):
         &#34;&#34;&#34; Battery configuration web page &#34;&#34;&#34;
         config = tools.battery.BatteryConfig()
@@ -70,7 +71,7 @@ async def battery(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/battery&#39;, menu=tools.lang.menu_system, item=tools.lang.item_battery)
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/battery&#39;, menu=tools.lang.menu_system, item=tools.lang.item_battery, available=tools.features.features.battery)
 async def battery(request, response, args):
         &#34;&#34;&#34; Battery configuration web page &#34;&#34;&#34;
         config = tools.battery.BatteryConfig()

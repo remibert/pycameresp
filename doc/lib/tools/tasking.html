@@ -255,6 +255,13 @@ class Tasks:
                 return Tasks.slow_ratio[0]
 
         @staticmethod
+        def is_slow_down():
+                &#34;&#34;&#34; Indicates if in slow down mode &#34;&#34;&#34;
+                if time.time() &lt; Tasks.slow_time[0]:
+                        return True
+                return False
+
+        @staticmethod
         def slow_down(duration=20, ratio=25):
                 &#34;&#34;&#34; Set the state slow for a specified duration &#34;&#34;&#34;
                 keep = True
@@ -270,22 +277,23 @@ class Tasks:
         @staticmethod
         def is_all_waiting():
                 &#34;&#34;&#34; Check if all task resumed &#34;&#34;&#34;
-                result = True
-                for task in Tasks.tasks.values():
+                result = []
+                for name, task in Tasks.tasks.items():
                         if task.status is False:
-                                # print(&#34;Buzy %s&#34;%Tasks.tasknames[key])
-                                result = False
+                                result.append(task.name)
                 return result
 
         @staticmethod
         async def wait_all_suspended():
                 &#34;&#34;&#34; Wait all servers suspended &#34;&#34;&#34;
                 for i in range(20):
-                        if Tasks.is_all_waiting() is True:
+                        waiting = Tasks.is_all_waiting()
+                        if len(waiting) == 0:
+                                print(&#34;All servers suspended&#34;)
                                 break
                         else:
                                 if i % 4 == 0:
-                                        print(&#34;Wait all servers suspended...&#34;)
+                                        print(&#34;Wait for servers to suspend : %s&#34;%str(waiting))
                                 await uasyncio.sleep(0.5)
                                 tools.watchdog.WatchDog.feed()</code></pre>
 </details>
@@ -669,6 +677,13 @@ class Tasks:
                 return Tasks.slow_ratio[0]
 
         @staticmethod
+        def is_slow_down():
+                &#34;&#34;&#34; Indicates if in slow down mode &#34;&#34;&#34;
+                if time.time() &lt; Tasks.slow_time[0]:
+                        return True
+                return False
+
+        @staticmethod
         def slow_down(duration=20, ratio=25):
                 &#34;&#34;&#34; Set the state slow for a specified duration &#34;&#34;&#34;
                 keep = True
@@ -684,22 +699,23 @@ class Tasks:
         @staticmethod
         def is_all_waiting():
                 &#34;&#34;&#34; Check if all task resumed &#34;&#34;&#34;
-                result = True
-                for task in Tasks.tasks.values():
+                result = []
+                for name, task in Tasks.tasks.items():
                         if task.status is False:
-                                # print(&#34;Buzy %s&#34;%Tasks.tasknames[key])
-                                result = False
+                                result.append(task.name)
                 return result
 
         @staticmethod
         async def wait_all_suspended():
                 &#34;&#34;&#34; Wait all servers suspended &#34;&#34;&#34;
                 for i in range(20):
-                        if Tasks.is_all_waiting() is True:
+                        waiting = Tasks.is_all_waiting()
+                        if len(waiting) == 0:
+                                print(&#34;All servers suspended&#34;)
                                 break
                         else:
                                 if i % 4 == 0:
-                                        print(&#34;Wait all servers suspended...&#34;)
+                                        print(&#34;Wait for servers to suspend : %s&#34;%str(waiting))
                                 await uasyncio.sleep(0.5)
                                 tools.watchdog.WatchDog.feed()</code></pre>
 </details>
@@ -857,12 +873,28 @@ def init():
 <pre><code class="python">@staticmethod
 def is_all_waiting():
         &#34;&#34;&#34; Check if all task resumed &#34;&#34;&#34;
-        result = True
-        for task in Tasks.tasks.values():
+        result = []
+        for name, task in Tasks.tasks.items():
                 if task.status is False:
-                        # print(&#34;Buzy %s&#34;%Tasks.tasknames[key])
-                        result = False
+                        result.append(task.name)
         return result</code></pre>
+</details>
+</dd>
+<dt id="lib.tools.tasking.Tasks.is_slow_down"><code class="name flex">
+<span>def <span class="ident">is_slow_down</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if in slow down mode</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def is_slow_down():
+        &#34;&#34;&#34; Indicates if in slow down mode &#34;&#34;&#34;
+        if time.time() &lt; Tasks.slow_time[0]:
+                return True
+        return False</code></pre>
 </details>
 </dd>
 <dt id="lib.tools.tasking.Tasks.monitor"><code class="name flex">
@@ -1028,11 +1060,13 @@ def suspend():
 async def wait_all_suspended():
         &#34;&#34;&#34; Wait all servers suspended &#34;&#34;&#34;
         for i in range(20):
-                if Tasks.is_all_waiting() is True:
+                waiting = Tasks.is_all_waiting()
+                if len(waiting) == 0:
+                        print(&#34;All servers suspended&#34;)
                         break
                 else:
                         if i % 4 == 0:
-                                print(&#34;Wait all servers suspended...&#34;)
+                                print(&#34;Wait for servers to suspend : %s&#34;%str(waiting))
                         await uasyncio.sleep(0.5)
                         tools.watchdog.WatchDog.feed()</code></pre>
 </details>
@@ -1117,6 +1151,7 @@ async def wait_resume(duration=None, name=&#34;&#34;):
 <li><code><a title="lib.tools.tasking.Tasks.get_slow_ratio" href="#lib.tools.tasking.Tasks.get_slow_ratio">get_slow_ratio</a></code></li>
 <li><code><a title="lib.tools.tasking.Tasks.init" href="#lib.tools.tasking.Tasks.init">init</a></code></li>
 <li><code><a title="lib.tools.tasking.Tasks.is_all_waiting" href="#lib.tools.tasking.Tasks.is_all_waiting">is_all_waiting</a></code></li>
+<li><code><a title="lib.tools.tasking.Tasks.is_slow_down" href="#lib.tools.tasking.Tasks.is_slow_down">is_slow_down</a></code></li>
 <li><code><a title="lib.tools.tasking.Tasks.loop" href="#lib.tools.tasking.Tasks.loop">loop</a></code></li>
 <li><code><a title="lib.tools.tasking.Tasks.monitor" href="#lib.tools.tasking.Tasks.monitor">monitor</a></code></li>
 <li><code><a title="lib.tools.tasking.Tasks.resume" href="#lib.tools.tasking.Tasks.resume">resume</a></code></li>

@@ -50,7 +50,7 @@ def translate_date(current_date, with_day=True):
         # pylint:disable=possibly-unused-variable
         # pylint:disable=used-before-assignment
         # pylint:disable=global-variable-not-assigned
-        year, month, day, _, _, _, weekday = time.localtime(current_date)[:7]
+        year, month, day, _, _, _, weekday = time.localtime(int(current_date))[:7]
         global weekdays, months, date_format, month_format
         weekday = weekdays[weekday]
         month   = months[month-1]
@@ -85,7 +85,7 @@ def translate_date(current_date, with_day=True):
         # pylint:disable=possibly-unused-variable
         # pylint:disable=used-before-assignment
         # pylint:disable=global-variable-not-assigned
-        year, month, day, _, _, _, weekday = time.localtime(current_date)[:7]
+        year, month, day, _, _, _, weekday = time.localtime(int(current_date))[:7]
         global weekdays, months, date_format, month_format
         weekday = weekdays[weekday]
         month   = months[month-1]

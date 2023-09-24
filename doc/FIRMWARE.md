@@ -44,16 +44,19 @@ And after juste for rebuild use command :
 Replace **ESP32CAM** by your prefered firmware, add double quote if you want to use wildcards for build many firmwares, for example ESP32 GENERIC SPIRAM :
 - **python3 build.py --patch --build "GENERIC_SPIRAM"** 
 
-Or for all ESP32 S2
+Or for all ESP32 Camera
 - **python3 build.py --patch --build "ESP32CAM" "GENERIC_SPIRAM"** 
 
-To build ESP32 S3 :
-- **python3 build.py --s3 --patch --boardvariant SPIRAM --build "ESP32_GENERIC_S3"**
+To build ESP32 S3 with SPIRAM:
+- **python3 build.py --patch --build --s3 --boardvariant SPIRAM  "ESP32_GENERIC_S3"**
+
+To build ESP32 S3 without SPIRAM:
+- **python3 build.py --patch --build --s3 "ESP32_GENERIC_S3"**
 
 To build Freenove CAM S3 :
-- **build.py --build --patch --s3  FREENOVE_CAM_S3   --boardvariant SPIRAM_OCT**
+- **python3 build.py --patch --build --s3  --boardvariant SPIRAM_OCT  "FREENOVE_CAM_S3"**
 
 To build Pico PI W you must clean all and enter command :
-- **python3 build.py --rp2 --patch --build "PICO_W"**
+- **python3 build.py --patch --build --rp2 "PICO_W"**
 
-I no longer use the same version of micropython between the esp32 and the esp32-S3, the reason is simple, I can no longer link the firmware, so I stayed on a version 1.20 of micropython, which has the merit of working perfectly.
+I no longer use the same version of micropython between the esp32 and the esp32-S3, the reason is simple, I can't link the firmware, so I stayed on a version 1.20 of micropython, which has the merit of working perfectly.

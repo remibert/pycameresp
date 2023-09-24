@@ -5,7 +5,6 @@
 import tools.jsonconfig
 import tools.filesystem
 
-features = None
 
 class FeaturesConfig(tools.jsonconfig.JsonConfig):
 	""" Features configuration """
@@ -34,3 +33,5 @@ class FeaturesConfig(tools.jsonconfig.JsonConfig):
 		self.http_port    = kwargs.get("http_port",80)       # Default http port
 		global features
 		features = self
+
+features = FeaturesConfig()

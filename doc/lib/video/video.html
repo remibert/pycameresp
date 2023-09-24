@@ -152,8 +152,10 @@ class Camera:
         modified = [False]
         success = [0]
         failed  = [0]
-        newFailed = [0]
+        new_failed = [0]
         config = None
+        flash_enabled = [True]
+        aquisition = [False]
 
         @staticmethod
         def gpio_config(**kwargs):
@@ -208,6 +210,7 @@ class Camera:
                                 if result:
                                         # Photo on 800x600, motion detection / 8 (100x75), each square detection 8x8 (12.5 x 9.375)
                                         Camera.opened = True
+                                        Camera.aquisition[0] = False
                 else:
                         result = False
                 return result
@@ -222,7 +225,7 @@ class Camera:
                 &#34;&#34;&#34; Reset statistic &#34;&#34;&#34;
                 Camera.success[0] = 0
                 Camera.failed [0] = 0
-                Camera.newFailed[0] = 0
+                Camera.new_failed[0] = 0
 
         @staticmethod
         def close():
@@ -232,6 +235,12 @@ class Camera:
                         Camera.opened = False
 
         @staticmethod
+        def reset():
+                &#34;&#34;&#34; Reset the camera &#34;&#34;&#34;
+                if Camera.opened is True:
+                        camera.reset()
+
+        @staticmethod
         def is_opened():
                 &#34;&#34;&#34; Indicates if the camera opened &#34;&#34;&#34;
                 return Camera.opened
@@ -239,18 +248,27 @@ class Camera:
         @staticmethod
         def capture():
                 &#34;&#34;&#34; Capture an image on the camera &#34;&#34;&#34;
+                Camera.aquisition[0] = True
                 return Camera.retry(camera.capture)
 
         @staticmethod
         def motion():
                 &#34;&#34;&#34; Get the motion informations.
                 This contains a jpeg image, with matrices of the different color RGB &#34;&#34;&#34;
+                Camera.aquisition[0] = True
                 return Camera.retry(camera.motion)
 
         @staticmethod
         def flash(level=0):
                 &#34;&#34;&#34; Start or stop the flash &#34;&#34;&#34;
-                camera.flash(level)
+                if Camera.flash_enabled[0]:
+                        camera.flash(level)
+
+        @staticmethod
+        def set_flash(state):
+                &#34;&#34;&#34; On the esp32cam, we use the output of the led flash to communicate with the dfplayer, 
+                and this disrupts the operation, then we can turn it off &#34;&#34;&#34;
+                Camera.flash_enabled[0] = state
 
         @staticmethod
         def retry(callback):
@@ -267,7 +285,7 @@ class Camera:
                                         break
                                 except ValueError:
                                         Camera.failed[0] += 1
-                                        Camera.newFailed[0] += 1
+                                        Camera.new_failed[0] += 1
                                         if retry &lt;= 3:
                                                 tools.logger.syslog(&#34;Failed to get image %d retry before reset&#34;%retry)
                                         retry -= 1
@@ -276,13 +294,13 @@ class Camera:
                         STAT_CAMERA=20000
                         if (total % STAT_CAMERA) == 0:
                                 if Camera.success[0] != 0:
-                                        newFailed = 100.-((Camera.newFailed[0]*100)/STAT_CAMERA)
+                                        new_failed = 100.-((Camera.new_failed[0]*100)/STAT_CAMERA)
                                         failed    = 100.-((Camera.failed[0]*100)/total)
                                 else:
-                                        newFailed = 0.
+                                        new_failed = 0.
                                         failed    = 0.
-                                tools.logger.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(newFailed, failed, total))
-                                Camera.newFailed[0] = 0
+                                tools.logger.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(new_failed, failed, total))
+                                Camera.new_failed[0] = 0
                 return result
 
         @staticmethod
@@ -307,106 +325,148 @@ class Camera:
                 Camera.modified[0] = False
 
         @staticmethod
-        def framesize(resolution):
-                &#34;&#34;&#34; Configure the frame size &#34;&#34;&#34;
-                val = None
-                Camera.modified[0] = True
-                if resolution == b&#34;UXGA&#34;  or resolution == b&#34;1600x1200&#34; :val = camera.FRAMESIZE_UXGA
-                if resolution == b&#34;SXGA&#34;  or resolution == b&#34;1280x1024&#34; :val = camera.FRAMESIZE_SXGA
-                if resolution == b&#34;XGA&#34;   or resolution == b&#34;1024x768&#34;  :val = camera.FRAMESIZE_XGA
-                if resolution == b&#34;SVGA&#34;  or resolution == b&#34;800x600&#34;   :val = camera.FRAMESIZE_SVGA
-                if resolution == b&#34;VGA&#34;   or resolution == b&#34;640x480&#34;   :val = camera.FRAMESIZE_VGA
-                if resolution == b&#34;CIF&#34;   or resolution == b&#34;400x296&#34;   :val = camera.FRAMESIZE_CIF
-                if resolution == b&#34;QVGA&#34;  or resolution == b&#34;320x240&#34;   :val = camera.FRAMESIZE_QVGA
-                if resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
-                if resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
-                if Camera.opened and val is not None:
-                        # print(&#34;Framesize %s&#34;%strings.tostrings(resolution))
-                        camera.framesize(val)
-                # else:
-                        # print(&#34;Framesize not set&#34;)
+        def reinit():
+                &#34;&#34;&#34; Close and open camera if get image previously asked, it avoid a DMA problem &#34;&#34;&#34;
+                if Camera.opened:
+                        if Camera.aquisition[0] is True:
+                                Camera.close()
+                                Camera.open()
 
         @staticmethod
-        def pixformat(format_):
+        def framesize(resolution=None):
+                &#34;&#34;&#34; Configure the frame size &#34;&#34;&#34;
+                result = None
+                val = None
+                Camera.modified[0] = True
+                if   resolution == b&#34;UXGA&#34;  or resolution == b&#34;1600x1200&#34; :val = camera.FRAMESIZE_UXGA
+                elif resolution == b&#34;SXGA&#34;  or resolution == b&#34;1280x1024&#34; :val = camera.FRAMESIZE_SXGA
+                elif resolution == b&#34;XGA&#34;   or resolution == b&#34;1024x768&#34;  :val = camera.FRAMESIZE_XGA
+                elif resolution == b&#34;SVGA&#34;  or resolution == b&#34;800x600&#34;   :val = camera.FRAMESIZE_SVGA
+                elif resolution == b&#34;VGA&#34;   or resolution == b&#34;640x480&#34;   :val = camera.FRAMESIZE_VGA
+                elif resolution == b&#34;CIF&#34;   or resolution == b&#34;400x296&#34;   :val = camera.FRAMESIZE_CIF
+                elif resolution == b&#34;QVGA&#34;  or resolution == b&#34;320x240&#34;   :val = camera.FRAMESIZE_QVGA
+                elif resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
+                elif resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
+                if Camera.opened:
+                        # print(&#34;Framesize %s&#34;%strings.tostrings(resolution))
+                        result = camera.framesize(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.framesize(val)
+                return result
+
+        @staticmethod
+        def pixformat(format_=None):
                 &#34;&#34;&#34; Change the format of image &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 val = None
-                if format_ == b&#34;RGB565&#34;    : val=camera.PIXFORMAT_RGB565
-                if format_ == b&#34;YUV422&#34;    : val=camera.PIXFORMAT_YUV422
-                if format_ == b&#34;GRAYSCALE&#34; : val=camera.PIXFORMAT_GRAYSCALE
-                if format_ == b&#34;JPEG&#34;      : val=camera.PIXFORMAT_JPEG
-                if format_ == b&#34;RGB888&#34;    : val=camera.PIXFORMAT_RGB888
-                if format_ == b&#34;RAW&#34;       : val=camera.PIXFORMAT_RAW
-                if format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
-                if format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
-                if Camera.opened and val is not None:
+                if   format_ == b&#34;RGB565&#34;    : val=camera.PIXFORMAT_RGB565
+                elif format_ == b&#34;YUV422&#34;    : val=camera.PIXFORMAT_YUV422
+                elif format_ == b&#34;GRAYSCALE&#34; : val=camera.PIXFORMAT_GRAYSCALE
+                elif format_ == b&#34;JPEG&#34;      : val=camera.PIXFORMAT_JPEG
+                elif format_ == b&#34;RGB888&#34;    : val=camera.PIXFORMAT_RGB888
+                elif format_ == b&#34;RAW&#34;       : val=camera.PIXFORMAT_RAW
+                elif format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
+                elif format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
+                if Camera.opened:
                         # print(&#34;Pixformat %s&#34;%strings.tostrings(format_))
-                        camera.pixformat(val)
-                # else:
-                        # print(&#34;Pixformat not set&#34;)
+                        result = camera.pixformat(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.pixformat(val)
+                return result
 
         @staticmethod
         def quality(val=None, modified=True):
                 &#34;&#34;&#34; Configure the compression &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = modified
                 if Camera.opened:
                         # print(&#34;Quality %d&#34;%val)
-                        return camera.quality(val)
-                return None
+                        result = camera.quality(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.quality(val)
+                return result
 
         @staticmethod
         def brightness(val=None):
                 &#34;&#34;&#34; Change the brightness &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Brightness %d&#34;%val)
-                        return camera.brightness(val)
-                return None
+                        result = camera.brightness(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.brightness(val)
+                return result
 
         @staticmethod
         def contrast(val=None):
                 &#34;&#34;&#34; Change the contrast &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Contrast %d&#34;%val)
-                        return camera.contrast(val)
-                return None
+                        result = camera.contrast(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.contrast(val)
+                return result
 
         @staticmethod
         def saturation(val=None):
                 &#34;&#34;&#34; Change the saturation &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Saturation %d&#34;%val)
-                        return camera.saturation(val)
-                return None
+                        result = camera.saturation(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.saturation(val)
+                return result
 
         @staticmethod
         def sharpness(val=None):
                 &#34;&#34;&#34; Change the sharpness &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Sharpness %d&#34;%val)
-                        return camera.sharpness(val)
-                return None
+                        result = camera.sharpness(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.sharpness(val)
+                return result
 
         @staticmethod
         def hmirror(val=None):
                 &#34;&#34;&#34; Set horizontal mirroring &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Hmirror %d&#34;%val)
-                        return camera.hmirror(val)
-                return None
+                        result = camera.hmirror(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.hmirror(val)
+                return result
 
         @staticmethod
         def vflip(val=None):
                 &#34;&#34;&#34; Set the vertical flip &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Vflip %d&#34;%val)
-                        return camera.vflip(val)
-                return None
+                        result = camera.vflip(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.vflip(val)
+                return result
 
         @staticmethod
         def configure(config):
@@ -470,8 +530,10 @@ class Camera:
         modified = [False]
         success = [0]
         failed  = [0]
-        newFailed = [0]
+        new_failed = [0]
         config = None
+        flash_enabled = [True]
+        aquisition = [False]
 
         @staticmethod
         def gpio_config(**kwargs):
@@ -526,6 +588,7 @@ class Camera:
                                 if result:
                                         # Photo on 800x600, motion detection / 8 (100x75), each square detection 8x8 (12.5 x 9.375)
                                         Camera.opened = True
+                                        Camera.aquisition[0] = False
                 else:
                         result = False
                 return result
@@ -540,7 +603,7 @@ class Camera:
                 &#34;&#34;&#34; Reset statistic &#34;&#34;&#34;
                 Camera.success[0] = 0
                 Camera.failed [0] = 0
-                Camera.newFailed[0] = 0
+                Camera.new_failed[0] = 0
 
         @staticmethod
         def close():
@@ -550,6 +613,12 @@ class Camera:
                         Camera.opened = False
 
         @staticmethod
+        def reset():
+                &#34;&#34;&#34; Reset the camera &#34;&#34;&#34;
+                if Camera.opened is True:
+                        camera.reset()
+
+        @staticmethod
         def is_opened():
                 &#34;&#34;&#34; Indicates if the camera opened &#34;&#34;&#34;
                 return Camera.opened
@@ -557,18 +626,27 @@ class Camera:
         @staticmethod
         def capture():
                 &#34;&#34;&#34; Capture an image on the camera &#34;&#34;&#34;
+                Camera.aquisition[0] = True
                 return Camera.retry(camera.capture)
 
         @staticmethod
         def motion():
                 &#34;&#34;&#34; Get the motion informations.
                 This contains a jpeg image, with matrices of the different color RGB &#34;&#34;&#34;
+                Camera.aquisition[0] = True
                 return Camera.retry(camera.motion)
 
         @staticmethod
         def flash(level=0):
                 &#34;&#34;&#34; Start or stop the flash &#34;&#34;&#34;
-                camera.flash(level)
+                if Camera.flash_enabled[0]:
+                        camera.flash(level)
+
+        @staticmethod
+        def set_flash(state):
+                &#34;&#34;&#34; On the esp32cam, we use the output of the led flash to communicate with the dfplayer, 
+                and this disrupts the operation, then we can turn it off &#34;&#34;&#34;
+                Camera.flash_enabled[0] = state
 
         @staticmethod
         def retry(callback):
@@ -585,7 +663,7 @@ class Camera:
                                         break
                                 except ValueError:
                                         Camera.failed[0] += 1
-                                        Camera.newFailed[0] += 1
+                                        Camera.new_failed[0] += 1
                                         if retry &lt;= 3:
                                                 tools.logger.syslog(&#34;Failed to get image %d retry before reset&#34;%retry)
                                         retry -= 1
@@ -594,13 +672,13 @@ class Camera:
                         STAT_CAMERA=20000
                         if (total % STAT_CAMERA) == 0:
                                 if Camera.success[0] != 0:
-                                        newFailed = 100.-((Camera.newFailed[0]*100)/STAT_CAMERA)
+                                        new_failed = 100.-((Camera.new_failed[0]*100)/STAT_CAMERA)
                                         failed    = 100.-((Camera.failed[0]*100)/total)
                                 else:
-                                        newFailed = 0.
+                                        new_failed = 0.
                                         failed    = 0.
-                                tools.logger.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(newFailed, failed, total))
-                                Camera.newFailed[0] = 0
+                                tools.logger.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(new_failed, failed, total))
+                                Camera.new_failed[0] = 0
                 return result
 
         @staticmethod
@@ -625,106 +703,148 @@ class Camera:
                 Camera.modified[0] = False
 
         @staticmethod
-        def framesize(resolution):
-                &#34;&#34;&#34; Configure the frame size &#34;&#34;&#34;
-                val = None
-                Camera.modified[0] = True
-                if resolution == b&#34;UXGA&#34;  or resolution == b&#34;1600x1200&#34; :val = camera.FRAMESIZE_UXGA
-                if resolution == b&#34;SXGA&#34;  or resolution == b&#34;1280x1024&#34; :val = camera.FRAMESIZE_SXGA
-                if resolution == b&#34;XGA&#34;   or resolution == b&#34;1024x768&#34;  :val = camera.FRAMESIZE_XGA
-                if resolution == b&#34;SVGA&#34;  or resolution == b&#34;800x600&#34;   :val = camera.FRAMESIZE_SVGA
-                if resolution == b&#34;VGA&#34;   or resolution == b&#34;640x480&#34;   :val = camera.FRAMESIZE_VGA
-                if resolution == b&#34;CIF&#34;   or resolution == b&#34;400x296&#34;   :val = camera.FRAMESIZE_CIF
-                if resolution == b&#34;QVGA&#34;  or resolution == b&#34;320x240&#34;   :val = camera.FRAMESIZE_QVGA
-                if resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
-                if resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
-                if Camera.opened and val is not None:
-                        # print(&#34;Framesize %s&#34;%strings.tostrings(resolution))
-                        camera.framesize(val)
-                # else:
-                        # print(&#34;Framesize not set&#34;)
+        def reinit():
+                &#34;&#34;&#34; Close and open camera if get image previously asked, it avoid a DMA problem &#34;&#34;&#34;
+                if Camera.opened:
+                        if Camera.aquisition[0] is True:
+                                Camera.close()
+                                Camera.open()
 
         @staticmethod
-        def pixformat(format_):
+        def framesize(resolution=None):
+                &#34;&#34;&#34; Configure the frame size &#34;&#34;&#34;
+                result = None
+                val = None
+                Camera.modified[0] = True
+                if   resolution == b&#34;UXGA&#34;  or resolution == b&#34;1600x1200&#34; :val = camera.FRAMESIZE_UXGA
+                elif resolution == b&#34;SXGA&#34;  or resolution == b&#34;1280x1024&#34; :val = camera.FRAMESIZE_SXGA
+                elif resolution == b&#34;XGA&#34;   or resolution == b&#34;1024x768&#34;  :val = camera.FRAMESIZE_XGA
+                elif resolution == b&#34;SVGA&#34;  or resolution == b&#34;800x600&#34;   :val = camera.FRAMESIZE_SVGA
+                elif resolution == b&#34;VGA&#34;   or resolution == b&#34;640x480&#34;   :val = camera.FRAMESIZE_VGA
+                elif resolution == b&#34;CIF&#34;   or resolution == b&#34;400x296&#34;   :val = camera.FRAMESIZE_CIF
+                elif resolution == b&#34;QVGA&#34;  or resolution == b&#34;320x240&#34;   :val = camera.FRAMESIZE_QVGA
+                elif resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
+                elif resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
+                if Camera.opened:
+                        # print(&#34;Framesize %s&#34;%strings.tostrings(resolution))
+                        result = camera.framesize(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.framesize(val)
+                return result
+
+        @staticmethod
+        def pixformat(format_=None):
                 &#34;&#34;&#34; Change the format of image &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 val = None
-                if format_ == b&#34;RGB565&#34;    : val=camera.PIXFORMAT_RGB565
-                if format_ == b&#34;YUV422&#34;    : val=camera.PIXFORMAT_YUV422
-                if format_ == b&#34;GRAYSCALE&#34; : val=camera.PIXFORMAT_GRAYSCALE
-                if format_ == b&#34;JPEG&#34;      : val=camera.PIXFORMAT_JPEG
-                if format_ == b&#34;RGB888&#34;    : val=camera.PIXFORMAT_RGB888
-                if format_ == b&#34;RAW&#34;       : val=camera.PIXFORMAT_RAW
-                if format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
-                if format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
-                if Camera.opened and val is not None:
+                if   format_ == b&#34;RGB565&#34;    : val=camera.PIXFORMAT_RGB565
+                elif format_ == b&#34;YUV422&#34;    : val=camera.PIXFORMAT_YUV422
+                elif format_ == b&#34;GRAYSCALE&#34; : val=camera.PIXFORMAT_GRAYSCALE
+                elif format_ == b&#34;JPEG&#34;      : val=camera.PIXFORMAT_JPEG
+                elif format_ == b&#34;RGB888&#34;    : val=camera.PIXFORMAT_RGB888
+                elif format_ == b&#34;RAW&#34;       : val=camera.PIXFORMAT_RAW
+                elif format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
+                elif format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
+                if Camera.opened:
                         # print(&#34;Pixformat %s&#34;%strings.tostrings(format_))
-                        camera.pixformat(val)
-                # else:
-                        # print(&#34;Pixformat not set&#34;)
+                        result = camera.pixformat(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.pixformat(val)
+                return result
 
         @staticmethod
         def quality(val=None, modified=True):
                 &#34;&#34;&#34; Configure the compression &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = modified
                 if Camera.opened:
                         # print(&#34;Quality %d&#34;%val)
-                        return camera.quality(val)
-                return None
+                        result = camera.quality(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.quality(val)
+                return result
 
         @staticmethod
         def brightness(val=None):
                 &#34;&#34;&#34; Change the brightness &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Brightness %d&#34;%val)
-                        return camera.brightness(val)
-                return None
+                        result = camera.brightness(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.brightness(val)
+                return result
 
         @staticmethod
         def contrast(val=None):
                 &#34;&#34;&#34; Change the contrast &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Contrast %d&#34;%val)
-                        return camera.contrast(val)
-                return None
+                        result = camera.contrast(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.contrast(val)
+                return result
 
         @staticmethod
         def saturation(val=None):
                 &#34;&#34;&#34; Change the saturation &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Saturation %d&#34;%val)
-                        return camera.saturation(val)
-                return None
+                        result = camera.saturation(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.saturation(val)
+                return result
 
         @staticmethod
         def sharpness(val=None):
                 &#34;&#34;&#34; Change the sharpness &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Sharpness %d&#34;%val)
-                        return camera.sharpness(val)
-                return None
+                        result = camera.sharpness(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.sharpness(val)
+                return result
 
         @staticmethod
         def hmirror(val=None):
                 &#34;&#34;&#34; Set horizontal mirroring &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Hmirror %d&#34;%val)
-                        return camera.hmirror(val)
-                return None
+                        result = camera.hmirror(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.hmirror(val)
+                return result
 
         @staticmethod
         def vflip(val=None):
                 &#34;&#34;&#34; Set the vertical flip &#34;&#34;&#34;
+                result = None
                 Camera.modified[0] = True
                 if Camera.opened:
                         # print(&#34;Vflip %d&#34;%val)
-                        return camera.vflip(val)
-                return None
+                        result = camera.vflip(val)
+                        if result is False and val is not None:
+                                Camera.reinit()
+                                result = camera.vflip(val)
+                return result
 
         @staticmethod
         def configure(config):
@@ -763,11 +883,19 @@ class Camera:
 </details>
 <h3>Class variables</h3>
 <dl>
+<dt id="lib.video.video.Camera.aquisition"><code class="name">var <span class="ident">aquisition</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="lib.video.video.Camera.config"><code class="name">var <span class="ident">config</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 <dt id="lib.video.video.Camera.failed"><code class="name">var <span class="ident">failed</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.video.video.Camera.flash_enabled"><code class="name">var <span class="ident">flash_enabled</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -779,7 +907,7 @@ class Camera:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="lib.video.video.Camera.newFailed"><code class="name">var <span class="ident">newFailed</span></code></dt>
+<dt id="lib.video.video.Camera.new_failed"><code class="name">var <span class="ident">new_failed</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -810,11 +938,15 @@ class Camera:
 <pre><code class="python">@staticmethod
 def brightness(val=None):
         &#34;&#34;&#34; Change the brightness &#34;&#34;&#34;
+        result = None
         Camera.modified[0] = True
         if Camera.opened:
                 # print(&#34;Brightness %d&#34;%val)
-                return camera.brightness(val)
-        return None</code></pre>
+                result = camera.brightness(val)
+                if result is False and val is not None:
+                        Camera.reinit()
+                        result = camera.brightness(val)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.capture"><code class="name flex">
@@ -829,6 +961,7 @@ def brightness(val=None):
 <pre><code class="python">@staticmethod
 def capture():
         &#34;&#34;&#34; Capture an image on the camera &#34;&#34;&#34;
+        Camera.aquisition[0] = True
         return Camera.retry(camera.capture)</code></pre>
 </details>
 </dd>
@@ -900,11 +1033,15 @@ def configure(config):
 <pre><code class="python">@staticmethod
 def contrast(val=None):
         &#34;&#34;&#34; Change the contrast &#34;&#34;&#34;
+        result = None
         Camera.modified[0] = True
         if Camera.opened:
                 # print(&#34;Contrast %d&#34;%val)
-                return camera.contrast(val)
-        return None</code></pre>
+                result = camera.contrast(val)
+                if result is False and val is not None:
+                        Camera.reinit()
+                        result = camera.contrast(val)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.flash"><code class="name flex">
@@ -919,11 +1056,12 @@ def contrast(val=None):
 <pre><code class="python">@staticmethod
 def flash(level=0):
         &#34;&#34;&#34; Start or stop the flash &#34;&#34;&#34;
-        camera.flash(level)</code></pre>
+        if Camera.flash_enabled[0]:
+                camera.flash(level)</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.framesize"><code class="name flex">
-<span>def <span class="ident">framesize</span></span>(<span>resolution)</span>
+<span>def <span class="ident">framesize</span></span>(<span>resolution=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Configure the frame size</p></div>
@@ -932,24 +1070,27 @@ def flash(level=0):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def framesize(resolution):
+def framesize(resolution=None):
         &#34;&#34;&#34; Configure the frame size &#34;&#34;&#34;
+        result = None
         val = None
         Camera.modified[0] = True
-        if resolution == b&#34;UXGA&#34;  or resolution == b&#34;1600x1200&#34; :val = camera.FRAMESIZE_UXGA
-        if resolution == b&#34;SXGA&#34;  or resolution == b&#34;1280x1024&#34; :val = camera.FRAMESIZE_SXGA
-        if resolution == b&#34;XGA&#34;   or resolution == b&#34;1024x768&#34;  :val = camera.FRAMESIZE_XGA
-        if resolution == b&#34;SVGA&#34;  or resolution == b&#34;800x600&#34;   :val = camera.FRAMESIZE_SVGA
-        if resolution == b&#34;VGA&#34;   or resolution == b&#34;640x480&#34;   :val = camera.FRAMESIZE_VGA
-        if resolution == b&#34;CIF&#34;   or resolution == b&#34;400x296&#34;   :val = camera.FRAMESIZE_CIF
-        if resolution == b&#34;QVGA&#34;  or resolution == b&#34;320x240&#34;   :val = camera.FRAMESIZE_QVGA
-        if resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
-        if resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
-        if Camera.opened and val is not None:
+        if   resolution == b&#34;UXGA&#34;  or resolution == b&#34;1600x1200&#34; :val = camera.FRAMESIZE_UXGA
+        elif resolution == b&#34;SXGA&#34;  or resolution == b&#34;1280x1024&#34; :val = camera.FRAMESIZE_SXGA
+        elif resolution == b&#34;XGA&#34;   or resolution == b&#34;1024x768&#34;  :val = camera.FRAMESIZE_XGA
+        elif resolution == b&#34;SVGA&#34;  or resolution == b&#34;800x600&#34;   :val = camera.FRAMESIZE_SVGA
+        elif resolution == b&#34;VGA&#34;   or resolution == b&#34;640x480&#34;   :val = camera.FRAMESIZE_VGA
+        elif resolution == b&#34;CIF&#34;   or resolution == b&#34;400x296&#34;   :val = camera.FRAMESIZE_CIF
+        elif resolution == b&#34;QVGA&#34;  or resolution == b&#34;320x240&#34;   :val = camera.FRAMESIZE_QVGA
+        elif resolution == b&#34;HQVGA&#34; or resolution == b&#34;240x176&#34;   :val = camera.FRAMESIZE_HQVGA
+        elif resolution == b&#34;QQVGA&#34; or resolution == b&#34;160x120&#34;   :val = camera.FRAMESIZE_QQVGA
+        if Camera.opened:
                 # print(&#34;Framesize %s&#34;%strings.tostrings(resolution))
-                camera.framesize(val)
-        # else:
-                # print(&#34;Framesize not set&#34;)</code></pre>
+                result = camera.framesize(val)
+                if result is False and val is not None:
+                        Camera.reinit()
+                        result = camera.framesize(val)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.get_config"><code class="name flex">
@@ -1091,11 +1232,15 @@ def gpio_config(**kwargs):
 <pre><code class="python">@staticmethod
 def hmirror(val=None):
         &#34;&#34;&#34; Set horizontal mirroring &#34;&#34;&#34;
+        result = None
         Camera.modified[0] = True
         if Camera.opened:
                 # print(&#34;Hmirror %d&#34;%val)
-                return camera.hmirror(val)
-        return None</code></pre>
+                result = camera.hmirror(val)
+                if result is False and val is not None:
+                        Camera.reinit()
+                        result = camera.hmirror(val)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.is_activated"><code class="name flex">
@@ -1162,6 +1307,7 @@ This contains a jpeg image, with matrices of the different color RGB</p></div>
 def motion():
         &#34;&#34;&#34; Get the motion informations.
         This contains a jpeg image, with matrices of the different color RGB &#34;&#34;&#34;
+        Camera.aquisition[0] = True
         return Camera.retry(camera.motion)</code></pre>
 </details>
 </dd>
@@ -1195,13 +1341,14 @@ def open():
                         if result:
                                 # Photo on 800x600, motion detection / 8 (100x75), each square detection 8x8 (12.5 x 9.375)
                                 Camera.opened = True
+                                Camera.aquisition[0] = False
         else:
                 result = False
         return result</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.pixformat"><code class="name flex">
-<span>def <span class="ident">pixformat</span></span>(<span>format_)</span>
+<span>def <span class="ident">pixformat</span></span>(<span>format_=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Change the format of image</p></div>
@@ -1210,23 +1357,26 @@ def open():
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def pixformat(format_):
+def pixformat(format_=None):
         &#34;&#34;&#34; Change the format of image &#34;&#34;&#34;
+        result = None
         Camera.modified[0] = True
         val = None
-        if format_ == b&#34;RGB565&#34;    : val=camera.PIXFORMAT_RGB565
-        if format_ == b&#34;YUV422&#34;    : val=camera.PIXFORMAT_YUV422
-        if format_ == b&#34;GRAYSCALE&#34; : val=camera.PIXFORMAT_GRAYSCALE
-        if format_ == b&#34;JPEG&#34;      : val=camera.PIXFORMAT_JPEG
-        if format_ == b&#34;RGB888&#34;    : val=camera.PIXFORMAT_RGB888
-        if format_ == b&#34;RAW&#34;       : val=camera.PIXFORMAT_RAW
-        if format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
-        if format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
-        if Camera.opened and val is not None:
+        if   format_ == b&#34;RGB565&#34;    : val=camera.PIXFORMAT_RGB565
+        elif format_ == b&#34;YUV422&#34;    : val=camera.PIXFORMAT_YUV422
+        elif format_ == b&#34;GRAYSCALE&#34; : val=camera.PIXFORMAT_GRAYSCALE
+        elif format_ == b&#34;JPEG&#34;      : val=camera.PIXFORMAT_JPEG
+        elif format_ == b&#34;RGB888&#34;    : val=camera.PIXFORMAT_RGB888
+        elif format_ == b&#34;RAW&#34;       : val=camera.PIXFORMAT_RAW
+        elif format_ == b&#34;RGB444&#34;    : val=camera.PIXFORMAT_RGB444
+        elif format_ == b&#34;RGB555&#34;    : val=camera.PIXFORMAT_RGB555
+        if Camera.opened:
                 # print(&#34;Pixformat %s&#34;%strings.tostrings(format_))
-                camera.pixformat(val)
-        # else:
-                # print(&#34;Pixformat not set&#34;)</code></pre>
+                result = camera.pixformat(val)
+                if result is False and val is not None:
+                        Camera.reinit()
+                        result = camera.pixformat(val)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.quality"><code class="name flex">
@@ -1241,11 +1391,33 @@ def pixformat(format_):
 <pre><code class="python">@staticmethod
 def quality(val=None, modified=True):
         &#34;&#34;&#34; Configure the compression &#34;&#34;&#34;
+        result = None
         Camera.modified[0] = modified
         if Camera.opened:
                 # print(&#34;Quality %d&#34;%val)
-                return camera.quality(val)
-        return None</code></pre>
+                result = camera.quality(val)
+                if result is False and val is not None:
+                        Camera.reinit()
+                        result = camera.quality(val)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Camera.reinit"><code class="name flex">
+<span>def <span class="ident">reinit</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Close and open camera if get image previously asked, it avoid a DMA problem</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def reinit():
+        &#34;&#34;&#34; Close and open camera if get image previously asked, it avoid a DMA problem &#34;&#34;&#34;
+        if Camera.opened:
+                if Camera.aquisition[0] is True:
+                        Camera.close()
+                        Camera.open()</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.reserve"><code class="name flex">
@@ -1265,6 +1437,22 @@ async def reserve(object_, timeout=0, suspension=None):
         return await Camera.reservation.reserve(object_, timeout, suspension)</code></pre>
 </details>
 </dd>
+<dt id="lib.video.video.Camera.reset"><code class="name flex">
+<span>def <span class="ident">reset</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reset the camera</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def reset():
+        &#34;&#34;&#34; Reset the camera &#34;&#34;&#34;
+        if Camera.opened is True:
+                camera.reset()</code></pre>
+</details>
+</dd>
 <dt id="lib.video.video.Camera.reset_stat"><code class="name flex">
 <span>def <span class="ident">reset_stat</span></span>(<span>)</span>
 </code></dt>
@@ -1279,7 +1467,7 @@ def reset_stat():
         &#34;&#34;&#34; Reset statistic &#34;&#34;&#34;
         Camera.success[0] = 0
         Camera.failed [0] = 0
-        Camera.newFailed[0] = 0</code></pre>
+        Camera.new_failed[0] = 0</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.retry"><code class="name flex">
@@ -1306,7 +1494,7 @@ def retry(callback):
                                 break
                         except ValueError:
                                 Camera.failed[0] += 1
-                                Camera.newFailed[0] += 1
+                                Camera.new_failed[0] += 1
                                 if retry &lt;= 3:
                                         tools.logger.syslog(&#34;Failed to get image %d retry before reset&#34;%retry)
                                 retry -= 1
@@ -1315,13 +1503,13 @@ def retry(callback):
                 STAT_CAMERA=20000
                 if (total % STAT_CAMERA) == 0:
                         if Camera.success[0] != 0:
-                                newFailed = 100.-((Camera.newFailed[0]*100)/STAT_CAMERA)
+                                new_failed = 100.-((Camera.new_failed[0]*100)/STAT_CAMERA)
                                 failed    = 100.-((Camera.failed[0]*100)/total)
                         else:
-                                newFailed = 0.
+                                new_failed = 0.
                                 failed    = 0.
-                        tools.logger.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(newFailed, failed, total))
-                        Camera.newFailed[0] = 0
+                        tools.logger.syslog(&#34;Camera stat : last %-3.1f%%, total %-3.1f%% success on %d&#34;%(new_failed, failed, total))
+                        Camera.new_failed[0] = 0
         return result</code></pre>
 </details>
 </dd>
@@ -1337,11 +1525,32 @@ def retry(callback):
 <pre><code class="python">@staticmethod
 def saturation(val=None):
         &#34;&#34;&#34; Change the saturation &#34;&#34;&#34;
+        result = None
         Camera.modified[0] = True
         if Camera.opened:
                 # print(&#34;Saturation %d&#34;%val)
-                return camera.saturation(val)
-        return None</code></pre>
+                result = camera.saturation(val)
+                if result is False and val is not None:
+                        Camera.reinit()
+                        result = camera.saturation(val)
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.video.video.Camera.set_flash"><code class="name flex">
+<span>def <span class="ident">set_flash</span></span>(<span>state)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>On the esp32cam, we use the output of the led flash to communicate with the dfplayer,
+and this disrupts the operation, then we can turn it off</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def set_flash(state):
+        &#34;&#34;&#34; On the esp32cam, we use the output of the led flash to communicate with the dfplayer, 
+        and this disrupts the operation, then we can turn it off &#34;&#34;&#34;
+        Camera.flash_enabled[0] = state</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.sharpness"><code class="name flex">
@@ -1356,11 +1565,15 @@ def saturation(val=None):
 <pre><code class="python">@staticmethod
 def sharpness(val=None):
         &#34;&#34;&#34; Change the sharpness &#34;&#34;&#34;
+        result = None
         Camera.modified[0] = True
         if Camera.opened:
                 # print(&#34;Sharpness %d&#34;%val)
-                return camera.sharpness(val)
-        return None</code></pre>
+                result = camera.sharpness(val)
+                if result is False and val is not None:
+                        Camera.reinit()
+                        result = camera.sharpness(val)
+        return result</code></pre>
 </details>
 </dd>
 <dt id="lib.video.video.Camera.unreserve"><code class="name flex">
@@ -1390,11 +1603,15 @@ async def unreserve(object_):
 <pre><code class="python">@staticmethod
 def vflip(val=None):
         &#34;&#34;&#34; Set the vertical flip &#34;&#34;&#34;
+        result = None
         Camera.modified[0] = True
         if Camera.opened:
                 # print(&#34;Vflip %d&#34;%val)
-                return camera.vflip(val)
-        return None</code></pre>
+                result = camera.vflip(val)
+                if result is False and val is not None:
+                        Camera.reinit()
+                        result = camera.vflip(val)
+        return result</code></pre>
 </details>
 </dd>
 </dl>
@@ -1639,6 +1856,7 @@ to the web page. It stop the motion detection during this phase</p></div>
 <li>
 <h4><code><a title="lib.video.video.Camera" href="#lib.video.video.Camera">Camera</a></code></h4>
 <ul class="two-column">
+<li><code><a title="lib.video.video.Camera.aquisition" href="#lib.video.video.Camera.aquisition">aquisition</a></code></li>
 <li><code><a title="lib.video.video.Camera.brightness" href="#lib.video.video.Camera.brightness">brightness</a></code></li>
 <li><code><a title="lib.video.video.Camera.capture" href="#lib.video.video.Camera.capture">capture</a></code></li>
 <li><code><a title="lib.video.video.Camera.clear_modified" href="#lib.video.video.Camera.clear_modified">clear_modified</a></code></li>
@@ -1648,6 +1866,7 @@ to the web page. It stop the motion detection during this phase</p></div>
 <li><code><a title="lib.video.video.Camera.contrast" href="#lib.video.video.Camera.contrast">contrast</a></code></li>
 <li><code><a title="lib.video.video.Camera.failed" href="#lib.video.video.Camera.failed">failed</a></code></li>
 <li><code><a title="lib.video.video.Camera.flash" href="#lib.video.video.Camera.flash">flash</a></code></li>
+<li><code><a title="lib.video.video.Camera.flash_enabled" href="#lib.video.video.Camera.flash_enabled">flash_enabled</a></code></li>
 <li><code><a title="lib.video.video.Camera.framesize" href="#lib.video.video.Camera.framesize">framesize</a></code></li>
 <li><code><a title="lib.video.video.Camera.get_config" href="#lib.video.video.Camera.get_config">get_config</a></code></li>
 <li><code><a title="lib.video.video.Camera.get_stat" href="#lib.video.video.Camera.get_stat">get_stat</a></code></li>
@@ -1659,16 +1878,19 @@ to the web page. It stop the motion detection during this phase</p></div>
 <li><code><a title="lib.video.video.Camera.lock" href="#lib.video.video.Camera.lock">lock</a></code></li>
 <li><code><a title="lib.video.video.Camera.modified" href="#lib.video.video.Camera.modified">modified</a></code></li>
 <li><code><a title="lib.video.video.Camera.motion" href="#lib.video.video.Camera.motion">motion</a></code></li>
-<li><code><a title="lib.video.video.Camera.newFailed" href="#lib.video.video.Camera.newFailed">newFailed</a></code></li>
+<li><code><a title="lib.video.video.Camera.new_failed" href="#lib.video.video.Camera.new_failed">new_failed</a></code></li>
 <li><code><a title="lib.video.video.Camera.open" href="#lib.video.video.Camera.open">open</a></code></li>
 <li><code><a title="lib.video.video.Camera.opened" href="#lib.video.video.Camera.opened">opened</a></code></li>
 <li><code><a title="lib.video.video.Camera.pixformat" href="#lib.video.video.Camera.pixformat">pixformat</a></code></li>
 <li><code><a title="lib.video.video.Camera.quality" href="#lib.video.video.Camera.quality">quality</a></code></li>
+<li><code><a title="lib.video.video.Camera.reinit" href="#lib.video.video.Camera.reinit">reinit</a></code></li>
 <li><code><a title="lib.video.video.Camera.reservation" href="#lib.video.video.Camera.reservation">reservation</a></code></li>
 <li><code><a title="lib.video.video.Camera.reserve" href="#lib.video.video.Camera.reserve">reserve</a></code></li>
+<li><code><a title="lib.video.video.Camera.reset" href="#lib.video.video.Camera.reset">reset</a></code></li>
 <li><code><a title="lib.video.video.Camera.reset_stat" href="#lib.video.video.Camera.reset_stat">reset_stat</a></code></li>
 <li><code><a title="lib.video.video.Camera.retry" href="#lib.video.video.Camera.retry">retry</a></code></li>
 <li><code><a title="lib.video.video.Camera.saturation" href="#lib.video.video.Camera.saturation">saturation</a></code></li>
+<li><code><a title="lib.video.video.Camera.set_flash" href="#lib.video.video.Camera.set_flash">set_flash</a></code></li>
 <li><code><a title="lib.video.video.Camera.sharpness" href="#lib.video.video.Camera.sharpness">sharpness</a></code></li>
 <li><code><a title="lib.video.video.Camera.success" href="#lib.video.video.Camera.success">success</a></code></li>
 <li><code><a title="lib.video.video.Camera.unreserve" href="#lib.video.video.Camera.unreserve">unreserve</a></code></li>

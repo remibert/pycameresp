@@ -5,7 +5,7 @@ import server.httpserver
 import tools.info
 
 if tools.info.iscamera():
-	# On the esp32cam, we use the output of the led flash to communicate with the dfplayer, 
+	# On the esp32cam, we use the output of the led flash to communicate with the dfplayer,
 	# and this disrupts the operation, then we turn it off
 	import video.video
 	video.video.Camera.set_flash(False)

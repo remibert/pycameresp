@@ -35,10 +35,11 @@ import server.mqttclient
 from htmltemplate       import *
 import webpage.mainpage
 import tools.lang
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b&#39;/mqtt&#39;, menu=tools.lang.menu_server, item=tools.lang.item_mqtt)
+@server.httpserver.HttpServer.add_route(b&#39;/mqtt&#39;, menu=tools.lang.menu_server, item=tools.lang.item_mqtt, available=tools.features.features.mqtt_client)
 async def mqttpage(request, response, args):
-        &#34;&#34;&#34; Function define the web page to configure the mqtt &#34;&#34;&#34;
+        &#34;&#34;&#34; Function define the web page to configure the mqtt client &#34;&#34;&#34;
         config = server.mqttclient.MqttConfig()
         disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
         page = webpage.mainpage.main_frame(request, response, args,tools.lang.mqtt_configuration,
@@ -47,7 +48,7 @@ async def mqttpage(request, response, args):
                         Edit(text=tools.lang.mqtt_host,      name=b&#34;host&#34;,     value=config.host, disabled=disabled),
                         Edit(text=tools.lang.mqtt_port,      name=b&#34;port&#34;,     value=b&#34;%d&#34;%config.port, type=b&#34;number&#34;, step=b&#34;1&#34;, required=True, min=b&#34;1024&#34;,  max=b&#34;65536&#34;, disabled=disabled),
                         Edit(text=tools.lang.mqtt_username,  name=b&#34;username&#34;, value=config.username, disabled=disabled),
-                        Edit(text=tools.lang.mqtt_username,  name=b&#34;password&#34;, value=config.password, type=b&#34;password&#34;, disabled=disabled),
+                        Edit(text=tools.lang.mqtt_password,  name=b&#34;password&#34;, value=config.password, type=b&#34;password&#34;, disabled=disabled),
                         submit,
                 ]))
         await response.send_page(page)</code></pre>
@@ -64,14 +65,14 @@ async def mqttpage(request, response, args):
 <span>async def <span class="ident">mqttpage</span></span>(<span>request, response, args)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Function define the web page to configure the mqtt</p></div>
+<div class="desc"><p>Function define the web page to configure the mqtt client</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/mqtt&#39;, menu=tools.lang.menu_server, item=tools.lang.item_mqtt)
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/mqtt&#39;, menu=tools.lang.menu_server, item=tools.lang.item_mqtt, available=tools.features.features.mqtt_client)
 async def mqttpage(request, response, args):
-        &#34;&#34;&#34; Function define the web page to configure the mqtt &#34;&#34;&#34;
+        &#34;&#34;&#34; Function define the web page to configure the mqtt client &#34;&#34;&#34;
         config = server.mqttclient.MqttConfig()
         disabled, action, submit = webpage.mainpage.manage_default_button(request, config)
         page = webpage.mainpage.main_frame(request, response, args,tools.lang.mqtt_configuration,
@@ -80,7 +81,7 @@ async def mqttpage(request, response, args):
                         Edit(text=tools.lang.mqtt_host,      name=b&#34;host&#34;,     value=config.host, disabled=disabled),
                         Edit(text=tools.lang.mqtt_port,      name=b&#34;port&#34;,     value=b&#34;%d&#34;%config.port, type=b&#34;number&#34;, step=b&#34;1&#34;, required=True, min=b&#34;1024&#34;,  max=b&#34;65536&#34;, disabled=disabled),
                         Edit(text=tools.lang.mqtt_username,  name=b&#34;username&#34;, value=config.username, disabled=disabled),
-                        Edit(text=tools.lang.mqtt_username,  name=b&#34;password&#34;, value=config.password, type=b&#34;password&#34;, disabled=disabled),
+                        Edit(text=tools.lang.mqtt_password,  name=b&#34;password&#34;, value=config.password, type=b&#34;password&#34;, disabled=disabled),
                         submit,
                 ]))
         await response.send_page(page)</code></pre>

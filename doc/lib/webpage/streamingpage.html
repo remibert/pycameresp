@@ -39,6 +39,7 @@ import tools.logger
 import tools.tasking
 import tools.info
 import tools.watchdog
+import tools.features
 
 class Streaming:
         &#34;&#34;&#34; Management class of video streaming of the camera via an html page &#34;&#34;&#34;
@@ -74,12 +75,10 @@ class Streaming:
                 Streaming.activity()
                 Streaming.streaming_id[0] += id(request)
                 return Tag(b&#34;&#34;&#34;
-                &lt;p&gt;
-                        &lt;div style=&#34;position: relative;&#34;&gt;
-                                &lt;img id=&#34;video-stream&#34; src=&#34;&#34; width=&#34;100%%&#34;/&gt;
-                                &lt;table id=&#34;zone_masking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
-                        &lt;/div&gt;
-                &lt;/p&gt;
+                &lt;div style=&#34;position: relative;&#34;&gt;
+                        &lt;img id=&#34;video-stream&#34; src=&#34;&#34; width=&#34;100%%&#34;/&gt;
+                        &lt;table id=&#34;zone_masking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
+                &lt;/div&gt;  
                 &lt;script&gt;
                         var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
                         document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start?streaming_id=%d`;
@@ -103,7 +102,7 @@ class Streaming:
                 &#34;&#34;&#34; Stop streaming &#34;&#34;&#34;
                 Streaming.streaming_id[0] += 1
 
-@server.httpserver.HttpServer.add_route(b&#39;/camera/start&#39;, available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b&#39;/camera/start&#39;, available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.camera)
 async def camera_start_streaming(request, response, args):
         &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
         tools.tasking.Tasks.slow_down()
@@ -189,7 +188,7 @@ async def camera_start_streaming(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera/start&#39;, available=tools.info.iscamera() and video.video.Camera.is_activated())
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera/start&#39;, available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.camera)
 async def camera_start_streaming(request, response, args):
         &#34;&#34;&#34; Start video streaming &#34;&#34;&#34;
         tools.tasking.Tasks.slow_down()
@@ -307,12 +306,10 @@ async def camera_start_streaming(request, response, args):
                 Streaming.activity()
                 Streaming.streaming_id[0] += id(request)
                 return Tag(b&#34;&#34;&#34;
-                &lt;p&gt;
-                        &lt;div style=&#34;position: relative;&#34;&gt;
-                                &lt;img id=&#34;video-stream&#34; src=&#34;&#34; width=&#34;100%%&#34;/&gt;
-                                &lt;table id=&#34;zone_masking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
-                        &lt;/div&gt;
-                &lt;/p&gt;
+                &lt;div style=&#34;position: relative;&#34;&gt;
+                        &lt;img id=&#34;video-stream&#34; src=&#34;&#34; width=&#34;100%%&#34;/&gt;
+                        &lt;table id=&#34;zone_masking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
+                &lt;/div&gt;  
                 &lt;script&gt;
                         var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
                         document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start?streaming_id=%d`;
@@ -405,12 +402,10 @@ def get_html(request):
         Streaming.activity()
         Streaming.streaming_id[0] += id(request)
         return Tag(b&#34;&#34;&#34;
-        &lt;p&gt;
-                &lt;div style=&#34;position: relative;&#34;&gt;
-                        &lt;img id=&#34;video-stream&#34; src=&#34;&#34; width=&#34;100%%&#34;/&gt;
-                        &lt;table id=&#34;zone_masking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
-                &lt;/div&gt;
-        &lt;/p&gt;
+        &lt;div style=&#34;position: relative;&#34;&gt;
+                &lt;img id=&#34;video-stream&#34; src=&#34;&#34; width=&#34;100%%&#34;/&gt;
+                &lt;table id=&#34;zone_masking&#34; style=&#34;position: absolute;top:0px&#34; /&gt;
+        &lt;/div&gt;  
         &lt;script&gt;
                 var streamUrl = document.location.protocol + &#34;//&#34; + document.location.hostname + &#39;:%d&#39;;
                 document.getElementById(&#39;video-stream&#39;).src = `${streamUrl}/camera/start?streaming_id=%d`;

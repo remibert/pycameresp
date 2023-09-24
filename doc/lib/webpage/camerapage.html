@@ -38,31 +38,70 @@ import video.video
 import tools.lang
 import tools.info
 import tools.tasking
+import tools.features
 
-@server.httpserver.HttpServer.add_route(b&#39;/camera&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_camera, available=tools.info.iscamera() and video.video.Camera.is_activated())
+@server.httpserver.HttpServer.add_route(b&#39;/camera&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_camera, available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.camera)
 async def camera_page(request, response, args):
         &#34;&#34;&#34; Camera streaming page &#34;&#34;&#34;
         framesizes = []
         config = video.video.Camera.get_config()
         webpage.streamingpage.Streaming.set_config(config)
 
-        for size in [b&#34;1600x1200&#34;,b&#34;1280x1024&#34;,b&#34;1024x768&#34;,b&#34;800x600&#34;,b&#34;640x480&#34;,b&#34;400x296&#34;,b&#34;320x240&#34;,b&#34;240x176&#34;,b&#34;160x120&#34;  ]:
+        for size in [
+                #b&#34;1600x1200&#34;, # Disabled because it doesn&#39;t work on freenove
+                b&#34;1280x1024&#34;,
+                b&#34;1024x768&#34;,
+                b&#34;800x600&#34;,
+                b&#34;640x480&#34;,
+                #b&#34;400x296&#34;,b&#34;320x240&#34;,b&#34;240x176&#34;,b&#34;160x120&#34;  # Format not very useful therefore deleted
+                ]:
                 framesizes.append(Option(value=size, text=size, selected= True if config.framesize == size else False))
         page = webpage.mainpage.main_frame(request, response, args, tools.lang.camera,
                 Form([
-                                webpage.streamingpage.Streaming.get_html(request),
-                                ComboCmd(framesizes, text=tools.lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
-                                SliderCmd(           text=tools.lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
-                                # SliderCmd(           text=tools.lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
-                                # SliderCmd(           text=tools.lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
-                                # SliderCmd(           text=tools.lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
-                                SliderCmd(           text=tools.lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
-                                SwitchCmd(           text=tools.lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
-                                SwitchCmd(           text=tools.lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip)
+                        webpage.streamingpage.Streaming.get_html(request),
+                        ComboCmd(framesizes, text=tools.lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
+                        SliderCmd(           text=tools.lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
+                        #SliderCmd(           text=tools.lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
+                        #SliderCmd(           text=tools.lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
+                        #SliderCmd(           text=tools.lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
+                        SliderCmd(           text=tools.lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
+                        SwitchCmd(           text=tools.lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
+                        SwitchCmd(           text=tools.lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip),
+                        Link(text=tools.lang.item_full_screen , class_=b&#34;btn btn-outline-primary &#34;, href=b&#34;/fullscreen&#34;)
                 ]))
         await response.send_page(page)
 
-@server.httpserver.HttpServer.add_route(b&#39;/camera/configure&#39;)
+@server.httpserver.HttpServer.add_route(b&#39;/fullscreen&#39;, available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.camera)
+async def full_screen_camera_page(request, response, args):
+        &#34;&#34;&#34; Full screen camera page &#34;&#34;&#34;
+        framesizes = []
+        config = video.video.Camera.get_config()
+        webpage.streamingpage.Streaming.set_config(config)
+        page = webpage.mainpage.main_page(request, response, args, b&#34;&#34;,
+                content=[\
+                        webpage.streamingpage.Streaming.get_html(request),
+                        Tag(b&#39;&#39;&#39;
+                        &lt;script&gt;
+                                window.addEventListener(&#39;DOMContentLoaded&#39;, (event) =&gt;
+                                {
+                                        const img = document.getElementById(&#39;video-stream&#39;);
+                                        img.addEventListener(&#39;click&#39;, () =&gt;
+                                        {
+                                                window.location.href = &#39;/camera&#39;;
+                                        });
+                                });
+                                document.addEventListener(&#39;DOMContentLoaded&#39;, (event) =&gt;
+                                {
+                                        document.addEventListener(&#39;keydown&#39;, (event) =&gt;
+                                        {
+                                                window.location.href = &#39;/camera&#39;;
+                                        });
+                                });
+                        &lt;/script&gt;
+                        &#39;&#39;&#39;)], menu_visible=False)
+        await response.send_page(page)
+
+@server.httpserver.HttpServer.add_route(b&#39;/camera/configure&#39;, available=tools.features.features.camera)
 async def camera_configure(request, response, args):
         &#34;&#34;&#34; Real time camera configuration &#34;&#34;&#34;
         tools.tasking.Tasks.slow_down()
@@ -75,7 +114,7 @@ async def camera_configure(request, response, args):
         webpage.streamingpage.Streaming.activity()
         await response.send_ok()
 
-@server.httpserver.HttpServer.add_route(b&#39;/camera/onoff&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_onoff, available=tools.info.iscamera())
+@server.httpserver.HttpServer.add_route(b&#39;/camera/onoff&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_onoff, available=tools.info.iscamera() and tools.features.features.camera)
 async def camera_on_off(request, response, args):
         &#34;&#34;&#34; Camera command page &#34;&#34;&#34;
         config = video.video.Camera.get_config()
@@ -114,7 +153,7 @@ async def camera_on_off(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera/configure&#39;)
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera/configure&#39;, available=tools.features.features.camera)
 async def camera_configure(request, response, args):
         &#34;&#34;&#34; Real time camera configuration &#34;&#34;&#34;
         tools.tasking.Tasks.slow_down()
@@ -137,7 +176,7 @@ async def camera_configure(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera/onoff&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_onoff, available=tools.info.iscamera())
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera/onoff&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_onoff, available=tools.info.iscamera() and tools.features.features.camera)
 async def camera_on_off(request, response, args):
         &#34;&#34;&#34; Camera command page &#34;&#34;&#34;
         config = video.video.Camera.get_config()
@@ -169,27 +208,75 @@ async def camera_on_off(request, response, args):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_camera, available=tools.info.iscamera() and video.video.Camera.is_activated())
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/camera&#39;, menu=tools.lang.menu_camera, item=tools.lang.item_camera, available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.camera)
 async def camera_page(request, response, args):
         &#34;&#34;&#34; Camera streaming page &#34;&#34;&#34;
         framesizes = []
         config = video.video.Camera.get_config()
         webpage.streamingpage.Streaming.set_config(config)
 
-        for size in [b&#34;1600x1200&#34;,b&#34;1280x1024&#34;,b&#34;1024x768&#34;,b&#34;800x600&#34;,b&#34;640x480&#34;,b&#34;400x296&#34;,b&#34;320x240&#34;,b&#34;240x176&#34;,b&#34;160x120&#34;  ]:
+        for size in [
+                #b&#34;1600x1200&#34;, # Disabled because it doesn&#39;t work on freenove
+                b&#34;1280x1024&#34;,
+                b&#34;1024x768&#34;,
+                b&#34;800x600&#34;,
+                b&#34;640x480&#34;,
+                #b&#34;400x296&#34;,b&#34;320x240&#34;,b&#34;240x176&#34;,b&#34;160x120&#34;  # Format not very useful therefore deleted
+                ]:
                 framesizes.append(Option(value=size, text=size, selected= True if config.framesize == size else False))
         page = webpage.mainpage.main_frame(request, response, args, tools.lang.camera,
                 Form([
-                                webpage.streamingpage.Streaming.get_html(request),
-                                ComboCmd(framesizes, text=tools.lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
-                                SliderCmd(           text=tools.lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
-                                # SliderCmd(           text=tools.lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
-                                # SliderCmd(           text=tools.lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
-                                # SliderCmd(           text=tools.lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
-                                SliderCmd(           text=tools.lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
-                                SwitchCmd(           text=tools.lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
-                                SwitchCmd(           text=tools.lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip)
+                        webpage.streamingpage.Streaming.get_html(request),
+                        ComboCmd(framesizes, text=tools.lang.resolution,  path=b&#34;camera/configure&#34;, name=b&#34;framesize&#34;),
+                        SliderCmd(           text=tools.lang.quality   ,  path=b&#34;camera/configure&#34;, name=b&#34;quality&#34;,    min=b&#34;10&#34;, max=b&#34;63&#34;,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.quality),
+                        #SliderCmd(           text=tools.lang.brightness,  path=b&#34;camera/configure&#34;, name=b&#34;brightness&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.brightness),
+                        #SliderCmd(           text=tools.lang.contrast  ,  path=b&#34;camera/configure&#34;, name=b&#34;contrast&#34;  , min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.contrast),
+                        #SliderCmd(           text=tools.lang.saturation,  path=b&#34;camera/configure&#34;, name=b&#34;saturation&#34;, min=b&#34;-2&#34;, max=b&#34;2&#34; ,  step=b&#34;1&#34;, value=b&#34;%d&#34;%config.saturation),
+                        SliderCmd(           text=tools.lang.flash_level, path=b&#34;camera/configure&#34;, name=b&#34;flash_level&#34;, min=b&#34;0&#34; , max=b&#34;256&#34;, step=b&#34;1&#34;, value=b&#34;%d&#34;%config.flash_level),
+                        SwitchCmd(           text=tools.lang.hmirror   ,  path=b&#34;camera/configure&#34;, name=b&#34;hmirror&#34;   , checked=config.hmirror),
+                        SwitchCmd(           text=tools.lang.vflip     ,  path=b&#34;camera/configure&#34;, name=b&#34;vflip&#34;     , checked=config.vflip),
+                        Link(text=tools.lang.item_full_screen , class_=b&#34;btn btn-outline-primary &#34;, href=b&#34;/fullscreen&#34;)
                 ]))
+        await response.send_page(page)</code></pre>
+</details>
+</dd>
+<dt id="lib.webpage.camerapage.full_screen_camera_page"><code class="name flex">
+<span>async def <span class="ident">full_screen_camera_page</span></span>(<span>request, response, args)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Full screen camera page</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@server.httpserver.HttpServer.add_route(b&#39;/fullscreen&#39;, available=tools.info.iscamera() and video.video.Camera.is_activated() and tools.features.features.camera)
+async def full_screen_camera_page(request, response, args):
+        &#34;&#34;&#34; Full screen camera page &#34;&#34;&#34;
+        framesizes = []
+        config = video.video.Camera.get_config()
+        webpage.streamingpage.Streaming.set_config(config)
+        page = webpage.mainpage.main_page(request, response, args, b&#34;&#34;,
+                content=[\
+                        webpage.streamingpage.Streaming.get_html(request),
+                        Tag(b&#39;&#39;&#39;
+                        &lt;script&gt;
+                                window.addEventListener(&#39;DOMContentLoaded&#39;, (event) =&gt;
+                                {
+                                        const img = document.getElementById(&#39;video-stream&#39;);
+                                        img.addEventListener(&#39;click&#39;, () =&gt;
+                                        {
+                                                window.location.href = &#39;/camera&#39;;
+                                        });
+                                });
+                                document.addEventListener(&#39;DOMContentLoaded&#39;, (event) =&gt;
+                                {
+                                        document.addEventListener(&#39;keydown&#39;, (event) =&gt;
+                                        {
+                                                window.location.href = &#39;/camera&#39;;
+                                        });
+                                });
+                        &lt;/script&gt;
+                        &#39;&#39;&#39;)], menu_visible=False)
         await response.send_page(page)</code></pre>
 </details>
 </dd>
@@ -214,6 +301,7 @@ async def camera_page(request, response, args):
 <li><code><a title="lib.webpage.camerapage.camera_configure" href="#lib.webpage.camerapage.camera_configure">camera_configure</a></code></li>
 <li><code><a title="lib.webpage.camerapage.camera_on_off" href="#lib.webpage.camerapage.camera_on_off">camera_on_off</a></code></li>
 <li><code><a title="lib.webpage.camerapage.camera_page" href="#lib.webpage.camerapage.camera_page">camera_page</a></code></li>
+<li><code><a title="lib.webpage.camerapage.full_screen_camera_page" href="#lib.webpage.camerapage.full_screen_camera_page">full_screen_camera_page</a></code></li>
 </ul>
 </li>
 </ul>

@@ -9,9 +9,14 @@ import useful
 
 ROOT=sys.argv[1]
 BOARD=sys.argv[2]
-PYCAMERESP=sys.argv[3]
-MPY_DIRECTORY="%(ROOT)s/micropython/ports/esp32/build-%(BOARD)s/frozen_mpy/"%globals()
-PY_DIRECTORY="%(ROOT)s/micropython/ports/esp32/modules/"%globals()
+MICRO=sys.argv[3]
+BOARD_VARIANT=sys.argv[4]
+PYCAMERESP=sys.argv[5]
+MICRO=MICRO.lower()
+
+MPY_DIRECTORY="%(ROOT)s/micropython-%(MICRO)s/ports/esp32/build-%(BOARD)s%(BOARD_VARIANT)s/frozen_mpy/"%globals()
+print(MPY_DIRECTORY)
+PY_DIRECTORY="%(ROOT)s/micropython-%(MICRO)s/ports/esp32/modules/"%globals()
 excludeds = [
 	"_boot.*",
 	"apa106.*",
@@ -50,7 +55,23 @@ def zip_mpy():
 
 def zip_editor():
 	""" Zip file editor source """
-	useful.zip_dir("%s/delivery/editor.zip"%PYCAMERESP,        directory=PY_DIRECTORY,            includes=["*/editor*.py","*/filesystem.py","*/jsonconfig.py","*/terminal.py","*/logger.py","*/useful.py","*/strings.py","*/fnmatch.py","*/date.py"], excludes=[], display=False, renames=[["shell","editor"],["tools","editor/tools"],["modules",""]])
+	useful.zip_dir("%s/delivery/editor.zip"%PYCAMERESP,
+		directory=PY_DIRECTORY,
+		includes=[
+			"*/editor*.py",
+			"*/keyboard*.py",
+			"*/filesystem.py",
+			"*/jsonconfig.py",
+			"*/terminal.py",
+			"*/logger.py",
+			"*/useful.py",
+			"*/strings.py",
+			"*/fnmatch.py",
+			"*/date.py"],
+		excludes=[],
+		display=False,
+		renames=[["shell","editor"],["tools","editor/tools"],["modules",""]]
+		)
 
 def zip_plugin(pycameresp_dir, name):
 	""" Zip one plugin directory """

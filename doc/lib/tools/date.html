@@ -86,21 +86,27 @@ def date_to_html(current_date = None, separator=b&#34;-&#34;):
         year,month,day = local_time(current_date)[:3]
         return b&#34;%04d%s%02d%s%02d&#34;%(year,separator,month,separator,day)
 
+def byte_to_int(data):
+        &#34;&#34;&#34; Convert bytes buffer to integer &#34;&#34;&#34;
+        data = data.lstrip(b&#34;0&#34;)
+        if len(data) == 0:
+                data = b&#34;0&#34;
+        return int(data)
 
 def html_to_time(time_, separator=b&#34;:&#34;):
         &#34;&#34;&#34; Convert html time string into time integer &#34;&#34;&#34;
         result = 0
         try:
                 hour, minute, second = time_.split(separator)
-                hour   = int(  hour.lstrip(b&#34;0&#34;))
-                minute = int(minute.lstrip(b&#34;0&#34;))
-                second = int(second.lstrip(b&#34;0&#34;))
+                hour   = byte_to_int(hour)
+                minute = byte_to_int(minute)
+                second = byte_to_int(second)
                 result = hour * 3600 + minute * 60 * second
         except:
                 try:
                         hour, minute = time_.split(separator)
-                        hour   = int(  hour.lstrip(b&#34;0&#34;))
-                        minute = int(minute.lstrip(b&#34;0&#34;))
+                        hour   = byte_to_int(hour)
+                        minute = byte_to_int(minute)
                         result = hour * 3600 + minute * 60
                 except:
                         pass
@@ -138,6 +144,23 @@ def date_to_path(current_date=None):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="lib.tools.date.byte_to_int"><code class="name flex">
+<span>def <span class="ident">byte_to_int</span></span>(<span>data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert bytes buffer to integer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def byte_to_int(data):
+        &#34;&#34;&#34; Convert bytes buffer to integer &#34;&#34;&#34;
+        data = data.lstrip(b&#34;0&#34;)
+        if len(data) == 0:
+                data = b&#34;0&#34;
+        return int(data)</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.date.date_ms_to_string"><code class="name flex">
 <span>def <span class="ident">date_ms_to_string</span></span>(<span>)</span>
 </code></dt>
@@ -271,15 +294,15 @@ def date_to_path(current_date=None):
         result = 0
         try:
                 hour, minute, second = time_.split(separator)
-                hour   = int(  hour.lstrip(b&#34;0&#34;))
-                minute = int(minute.lstrip(b&#34;0&#34;))
-                second = int(second.lstrip(b&#34;0&#34;))
+                hour   = byte_to_int(hour)
+                minute = byte_to_int(minute)
+                second = byte_to_int(second)
                 result = hour * 3600 + minute * 60 * second
         except:
                 try:
                         hour, minute = time_.split(separator)
-                        hour   = int(  hour.lstrip(b&#34;0&#34;))
-                        minute = int(minute.lstrip(b&#34;0&#34;))
+                        hour   = byte_to_int(hour)
+                        minute = byte_to_int(minute)
                         result = hour * 3600 + minute * 60
                 except:
                         pass
@@ -361,6 +384,7 @@ def date_to_path(current_date=None):
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
+<li><code><a title="lib.tools.date.byte_to_int" href="#lib.tools.date.byte_to_int">byte_to_int</a></code></li>
 <li><code><a title="lib.tools.date.date_ms_to_string" href="#lib.tools.date.date_ms_to_string">date_ms_to_string</a></code></li>
 <li><code><a title="lib.tools.date.date_to_bytes" href="#lib.tools.date.date_to_bytes">date_to_bytes</a></code></li>
 <li><code><a title="lib.tools.date.date_to_filename" href="#lib.tools.date.date_to_filename">date_to_filename</a></code></li>

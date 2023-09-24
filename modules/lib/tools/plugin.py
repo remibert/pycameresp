@@ -7,7 +7,7 @@ import tools.filesystem
 import tools.tasking
 
 starter_kwargs = None
-class Starter:
+class PluginStarter:
 	""" Automatic plugin start without editing python script """
 	@staticmethod
 	async def task(**kwargs):
@@ -33,4 +33,4 @@ class Starter:
 	@staticmethod
 	def start(**kwargs):
 		""" Start plugin starter """
-		tools.tasking.Tasks.create_task(Starter.task(**kwargs))
+		tools.tasking.Tasks.create_task(PluginStarter.task(**kwargs))

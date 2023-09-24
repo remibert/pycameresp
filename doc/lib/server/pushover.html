@@ -54,6 +54,7 @@ class PushOverConfig(tools.jsonconfig.JsonConfig):
 
 class PushOver:
         &#34;&#34;&#34; Class that manages a push over notification &#34;&#34;&#34;
+        config = None
         def __init__(self, host, port, token=None, user=None):
                 &#34;&#34;&#34; Constructor
                 host : hostname of pushover (b&#34;api.pushover.net&#34;)
@@ -132,13 +133,16 @@ class PushOver:
         @server.notifier.Notifier.add()
         async def notify_message(notification):
                 &#34;&#34;&#34; Notify message &#34;&#34;&#34;
-                config = PushOverConfig()
-                config.load_create()
+                if PushOver.config is None:
+                        PushOver.config = PushOverConfig()
+                        PushOver.config.load_create()
+                else:
+                        PushOver.config.refresh()
 
-                if config.activated or notification.forced:
+                if PushOver.config.activated or notification.forced:
                         if notification.message is not None or notification.data is not None:
                                 if PushOver.notify_message not in notification.sent:
-                                        result = await async_notify(config.user, config.token, notification.message, notification.data, display=notification.display)
+                                        result = await async_notify(PushOver.config.user, PushOver.config.token, notification.message, notification.data, display=notification.display)
                                         if result is True:
                                                 notification.sent.append(PushOver.notify_message)
                                 else:
@@ -219,6 +223,7 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
 </summary>
 <pre><code class="python">class PushOver:
         &#34;&#34;&#34; Class that manages a push over notification &#34;&#34;&#34;
+        config = None
         def __init__(self, host, port, token=None, user=None):
                 &#34;&#34;&#34; Constructor
                 host : hostname of pushover (b&#34;api.pushover.net&#34;)
@@ -297,13 +302,16 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
         @server.notifier.Notifier.add()
         async def notify_message(notification):
                 &#34;&#34;&#34; Notify message &#34;&#34;&#34;
-                config = PushOverConfig()
-                config.load_create()
+                if PushOver.config is None:
+                        PushOver.config = PushOverConfig()
+                        PushOver.config.load_create()
+                else:
+                        PushOver.config.refresh()
 
-                if config.activated or notification.forced:
+                if PushOver.config.activated or notification.forced:
                         if notification.message is not None or notification.data is not None:
                                 if PushOver.notify_message not in notification.sent:
-                                        result = await async_notify(config.user, config.token, notification.message, notification.data, display=notification.display)
+                                        result = await async_notify(PushOver.config.user, PushOver.config.token, notification.message, notification.data, display=notification.display)
                                         if result is True:
                                                 notification.sent.append(PushOver.notify_message)
                                 else:
@@ -314,6 +322,13 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
                         result = True
                 return result</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.server.pushover.PushOver.config"><code class="name">var <span class="ident">config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="lib.server.pushover.PushOver.notify_message"><code class="name flex">
@@ -329,13 +344,16 @@ user : pushover user (you must create it on the web site <a href="http://www.pus
 @server.notifier.Notifier.add()
 async def notify_message(notification):
         &#34;&#34;&#34; Notify message &#34;&#34;&#34;
-        config = PushOverConfig()
-        config.load_create()
+        if PushOver.config is None:
+                PushOver.config = PushOverConfig()
+                PushOver.config.load_create()
+        else:
+                PushOver.config.refresh()
 
-        if config.activated or notification.forced:
+        if PushOver.config.activated or notification.forced:
                 if notification.message is not None or notification.data is not None:
                         if PushOver.notify_message not in notification.sent:
-                                result = await async_notify(config.user, config.token, notification.message, notification.data, display=notification.display)
+                                result = await async_notify(PushOver.config.user, PushOver.config.token, notification.message, notification.data, display=notification.display)
                                 if result is True:
                                         notification.sent.append(PushOver.notify_message)
                         else:
@@ -476,6 +494,7 @@ image : the jpeg image or nothing (bytes field)</p></div>
 <li>
 <h4><code><a title="lib.server.pushover.PushOver" href="#lib.server.pushover.PushOver">PushOver</a></code></h4>
 <ul class="">
+<li><code><a title="lib.server.pushover.PushOver.config" href="#lib.server.pushover.PushOver.config">config</a></code></li>
 <li><code><a title="lib.server.pushover.PushOver.notify" href="#lib.server.pushover.PushOver.notify">notify</a></code></li>
 <li><code><a title="lib.server.pushover.PushOver.notify_message" href="#lib.server.pushover.PushOver.notify_message">notify_message</a></code></li>
 </ul>

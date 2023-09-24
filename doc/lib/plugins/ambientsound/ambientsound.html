@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>lib.plugins.ambientsound.ambientsound API documentation</title>
+<meta name="description" content="Ambient sound that plays sounds in the absence of the occupants of a dwelling" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>lib.plugins.ambientsound.ambientsound</code></h1>
+</header>
+<section id="section-intro">
+<p>Ambient sound that plays sounds in the absence of the occupants of a dwelling</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># Distributed under Pycameresp License
+# Copyright (c) 2023 Remi BERTHOLET
+# pylint:disable=consider-using-f-string
+&#34;&#34;&#34; Ambient sound that plays sounds in the absence of the occupants of a dwelling &#34;&#34;&#34;
+import uasyncio
+import plugins.ambientsound.dfplayer
+import plugins.ambientsound.config
+import plugins.ambientsound.lang
+import server.presence
+import server.notifier
+import tools.tasking
+import tools.system
+
+class AmbientSound:
+        &#34;&#34;&#34; Ambient sound that plays sounds in the absence of the occupants of a dwelling &#34;&#34;&#34;
+        ambientsound = None
+        SLOW_POLLING = 11 * 1000
+        FAST_POLLING =  2 * 1000
+        DURATION_SOUND = 200
+        REBOOT_FAULT = 64
+        REOPEN_FAULT = 4
+
+        STATE_STOPPED   = 0
+        STATE_PLAYING   = 1
+
+        def __init__(self):
+                &#34;&#34;&#34; Create ambient sound &#34;&#34;&#34;
+                self.open_player()
+                self.config = plugins.ambientsound.config.AmbientSoundConfig()
+                self.loop = 0
+                self.last_play = 0
+                self.fault = 0
+                self.state = AmbientSound.STATE_STOPPED
+                self.last_open = 0
+                self.counter_play = 1
+
+        def open_player(self):
+                &#34;&#34;&#34; Open sound player &#34;&#34;&#34;
+                if hasattr(AmbientSound,&#34;dfplayer&#34;) is True:
+                        del self.dfplayer
+                self.dfplayer = plugins.ambientsound.dfplayer.DFPlayer()#display=True)
+
+        def is_active(self):
+                &#34;&#34;&#34; Indicates if the ambient sound is active &#34;&#34;&#34;
+                result = False
+                # If presence detection activated
+                if server.presence.Presence.activated:
+                        # Get ambient sound config
+                        config = plugins.ambientsound.config.AmbientSoundConfig().get_config()
+
+                        # If ambient sound can be played now
+                        if config.is_activated():
+                                # If the home is empty
+                                if server.presence.Presence.is_detected() is False:
+                                        result = True
+                return result
+
+        async def state_stopped(self):
+                &#34;&#34;&#34; State ambient sound stopped &#34;&#34;&#34;
+                # If the ambient sound is active
+                if self.is_active():
+                        tools.logger.syslog(&#34;Ambient sound start&#34;)
+                        await self.play_next()
+                else:
+                        # Clean up data received
+                        self.dfplayer.receive()
+                        await tools.tasking.Tasks.wait_resume(duration=AmbientSound.SLOW_POLLING, name=&#34;ambientsound&#34;)
+
+        async def play_next(self):
+                &#34;&#34;&#34; Play next sound &#34;&#34;&#34;
+                if self.counter_play % 100 == 0:
+                        # Periodic reset to prevent mute issue
+                        self.dfplayer.reset()
+                        await uasyncio.sleep(1)
+                        self.dfplayer.receive()
+
+                self.dfplayer.play_next()
+                self.counter_play += 1
+                self.last_play = self.loop
+                self.state = AmbientSound.STATE_PLAYING
+
+        def increase_fault(self):
+                &#34;&#34;&#34; Increase the fault counter &#34;&#34;&#34;
+                self.fault += 1
+
+        def clear_fault(self):
+                &#34;&#34;&#34; Clear the fault counter &#34;&#34;&#34;
+                self.fault = 0
+
+        async def get_status(self, ask_status=True):
+                &#34;&#34;&#34; Ask status and wait response 
+                return True if sound ended, False if sound playing, None if error &#34;&#34;&#34;
+                result = None
+                no_response = True
+
+                if ask_status:
+                        self.dfplayer.get_status()
+
+                for i in range(6):
+                        # Get the player result
+                        response = self.dfplayer.receive()
+
+                        # If response received
+                        if response is not None:
+                                no_response = False
+                                command, value = response
+                                # If sound ended
+                                if (command == plugins.ambientsound.dfplayer.PLAY_ENDED) or \
+                                   (command == plugins.ambientsound.dfplayer.QUERY_STATUS and value == 0):
+                                        self.clear_fault()
+                                        result = True
+                                        break
+                                elif (command == plugins.ambientsound.dfplayer.QUERY_STATUS and value != 0):
+                                        self.clear_fault()
+                                        result = False
+                                        break
+                                elif (command == plugins.ambientsound.dfplayer.ERR_FILE):
+                                        self.increase_fault()
+                                        result = True
+                                        break
+                        else:
+                                await uasyncio.sleep_ms(500)
+
+                # No response received
+                if no_response and ask_status:
+                        self.increase_fault()
+                        result = None
+                return result
+
+        async def state_playing(self):
+                &#34;&#34;&#34; State ambient sound playing &#34;&#34;&#34;
+                await tools.tasking.Tasks.wait_resume(duration=AmbientSound.FAST_POLLING, name=&#34;ambientsound&#34;)
+
+                # If the ambient sound is active
+                if self.is_active() is True:
+                        if self.loop % 5 == 4:
+                                ask_status = True
+                        else:
+                                ask_status = False
+                        ended = await self.get_status(ask_status=ask_status)
+
+                        if ended is True:
+                                await self.play_next()
+
+                        too_long_duration = ((self.loop - self.last_play) * AmbientSound.FAST_POLLING // 1000) &gt; AmbientSound.DURATION_SOUND
+
+                        # If fault quantity is not too important
+                        if self.fault % AmbientSound.REOPEN_FAULT == (AmbientSound.REOPEN_FAULT -1):
+                                # Close and reopen uart to test if fault can be resolved
+                                self.open_player()
+                                await uasyncio.sleep_ms(500)
+
+                                # Ask status
+                                ended = await self.get_status(ask_status=True)
+
+                                # If sound ended
+                                if ended is True:
+                                        # Play next sound
+                                        await uasyncio.sleep_ms(500)
+                                        await self.play_next()
+                        # If the sound failure detected
+                        elif too_long_duration or self.fault &gt;= AmbientSound.REBOOT_FAULT:
+                                # If there is no user activity
+                                if tools.tasking.Tasks.is_slow_down() is False:
+                                        # Reboot required
+                                        server.notifier.Notifier.notify(message=&#34;Ambient sound fault&#34;)
+                                        await uasyncio.sleep(15)
+                                        tools.system.reboot(&#34;Ambient sound fault&#34;)
+                else:
+                        # Stop ambient sound
+                        tools.logger.syslog(&#34;Ambient sound stop&#34;)
+                        self.dfplayer.stop()
+                        self.state = AmbientSound.STATE_STOPPED
+
+        async def task(self, **kwargs):
+                &#34;&#34;&#34; Task ambient sound &#34;&#34;&#34;
+                while True:
+                        self.loop += 1
+                        if self.state == AmbientSound.STATE_STOPPED:
+                                await self.state_stopped()
+                        else:
+                                await self.state_playing()
+
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start ambient sound task &#34;&#34;&#34;
+                if AmbientSound.ambientsound is None:
+                        AmbientSound.ambientsound = AmbientSound()
+                tools.tasking.Tasks.create_monitor(AmbientSound.ambientsound.task, **kwargs)
+                if tools.filesystem.ismicropython() is False:
+                        tools.tasking.Tasks.create_monitor(AmbientSound.ambientsound.dfplayer_simulator)
+
+        async def dfplayer_simulator(self, **kwargs):
+                &#34;&#34;&#34; Simulate response from dfplayer &#34;&#34;&#34;
+                while True:
+                        await uasyncio.sleep(15)
+                        self.dfplayer.uart.simul_receive(b&#34;\x7E\xFF\x06\x40\x00\x00\x06\xB5\xFE\xEF&#34;)
+                        await uasyncio.sleep(15)
+                        self.dfplayer.uart.simul_receive(b&#34;\x7E\xFF\x06\x3D\x00\x00\x04\xFE\xBA\xEF&#34;)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound"><code class="flex name class">
+<span>class <span class="ident">AmbientSound</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Ambient sound that plays sounds in the absence of the occupants of a dwelling </p>
+<p>Create ambient sound</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AmbientSound:
+        &#34;&#34;&#34; Ambient sound that plays sounds in the absence of the occupants of a dwelling &#34;&#34;&#34;
+        ambientsound = None
+        SLOW_POLLING = 11 * 1000
+        FAST_POLLING =  2 * 1000
+        DURATION_SOUND = 200
+        REBOOT_FAULT = 64
+        REOPEN_FAULT = 4
+
+        STATE_STOPPED   = 0
+        STATE_PLAYING   = 1
+
+        def __init__(self):
+                &#34;&#34;&#34; Create ambient sound &#34;&#34;&#34;
+                self.open_player()
+                self.config = plugins.ambientsound.config.AmbientSoundConfig()
+                self.loop = 0
+                self.last_play = 0
+                self.fault = 0
+                self.state = AmbientSound.STATE_STOPPED
+                self.last_open = 0
+                self.counter_play = 1
+
+        def open_player(self):
+                &#34;&#34;&#34; Open sound player &#34;&#34;&#34;
+                if hasattr(AmbientSound,&#34;dfplayer&#34;) is True:
+                        del self.dfplayer
+                self.dfplayer = plugins.ambientsound.dfplayer.DFPlayer()#display=True)
+
+        def is_active(self):
+                &#34;&#34;&#34; Indicates if the ambient sound is active &#34;&#34;&#34;
+                result = False
+                # If presence detection activated
+                if server.presence.Presence.activated:
+                        # Get ambient sound config
+                        config = plugins.ambientsound.config.AmbientSoundConfig().get_config()
+
+                        # If ambient sound can be played now
+                        if config.is_activated():
+                                # If the home is empty
+                                if server.presence.Presence.is_detected() is False:
+                                        result = True
+                return result
+
+        async def state_stopped(self):
+                &#34;&#34;&#34; State ambient sound stopped &#34;&#34;&#34;
+                # If the ambient sound is active
+                if self.is_active():
+                        tools.logger.syslog(&#34;Ambient sound start&#34;)
+                        await self.play_next()
+                else:
+                        # Clean up data received
+                        self.dfplayer.receive()
+                        await tools.tasking.Tasks.wait_resume(duration=AmbientSound.SLOW_POLLING, name=&#34;ambientsound&#34;)
+
+        async def play_next(self):
+                &#34;&#34;&#34; Play next sound &#34;&#34;&#34;
+                if self.counter_play % 100 == 0:
+                        # Periodic reset to prevent mute issue
+                        self.dfplayer.reset()
+                        await uasyncio.sleep(1)
+                        self.dfplayer.receive()
+
+                self.dfplayer.play_next()
+                self.counter_play += 1
+                self.last_play = self.loop
+                self.state = AmbientSound.STATE_PLAYING
+
+        def increase_fault(self):
+                &#34;&#34;&#34; Increase the fault counter &#34;&#34;&#34;
+                self.fault += 1
+
+        def clear_fault(self):
+                &#34;&#34;&#34; Clear the fault counter &#34;&#34;&#34;
+                self.fault = 0
+
+        async def get_status(self, ask_status=True):
+                &#34;&#34;&#34; Ask status and wait response 
+                return True if sound ended, False if sound playing, None if error &#34;&#34;&#34;
+                result = None
+                no_response = True
+
+                if ask_status:
+                        self.dfplayer.get_status()
+
+                for i in range(6):
+                        # Get the player result
+                        response = self.dfplayer.receive()
+
+                        # If response received
+                        if response is not None:
+                                no_response = False
+                                command, value = response
+                                # If sound ended
+                                if (command == plugins.ambientsound.dfplayer.PLAY_ENDED) or \
+                                   (command == plugins.ambientsound.dfplayer.QUERY_STATUS and value == 0):
+                                        self.clear_fault()
+                                        result = True
+                                        break
+                                elif (command == plugins.ambientsound.dfplayer.QUERY_STATUS and value != 0):
+                                        self.clear_fault()
+                                        result = False
+                                        break
+                                elif (command == plugins.ambientsound.dfplayer.ERR_FILE):
+                                        self.increase_fault()
+                                        result = True
+                                        break
+                        else:
+                                await uasyncio.sleep_ms(500)
+
+                # No response received
+                if no_response and ask_status:
+                        self.increase_fault()
+                        result = None
+                return result
+
+        async def state_playing(self):
+                &#34;&#34;&#34; State ambient sound playing &#34;&#34;&#34;
+                await tools.tasking.Tasks.wait_resume(duration=AmbientSound.FAST_POLLING, name=&#34;ambientsound&#34;)
+
+                # If the ambient sound is active
+                if self.is_active() is True:
+                        if self.loop % 5 == 4:
+                                ask_status = True
+                        else:
+                                ask_status = False
+                        ended = await self.get_status(ask_status=ask_status)
+
+                        if ended is True:
+                                await self.play_next()
+
+                        too_long_duration = ((self.loop - self.last_play) * AmbientSound.FAST_POLLING // 1000) &gt; AmbientSound.DURATION_SOUND
+
+                        # If fault quantity is not too important
+                        if self.fault % AmbientSound.REOPEN_FAULT == (AmbientSound.REOPEN_FAULT -1):
+                                # Close and reopen uart to test if fault can be resolved
+                                self.open_player()
+                                await uasyncio.sleep_ms(500)
+
+                                # Ask status
+                                ended = await self.get_status(ask_status=True)
+
+                                # If sound ended
+                                if ended is True:
+                                        # Play next sound
+                                        await uasyncio.sleep_ms(500)
+                                        await self.play_next()
+                        # If the sound failure detected
+                        elif too_long_duration or self.fault &gt;= AmbientSound.REBOOT_FAULT:
+                                # If there is no user activity
+                                if tools.tasking.Tasks.is_slow_down() is False:
+                                        # Reboot required
+                                        server.notifier.Notifier.notify(message=&#34;Ambient sound fault&#34;)
+                                        await uasyncio.sleep(15)
+                                        tools.system.reboot(&#34;Ambient sound fault&#34;)
+                else:
+                        # Stop ambient sound
+                        tools.logger.syslog(&#34;Ambient sound stop&#34;)
+                        self.dfplayer.stop()
+                        self.state = AmbientSound.STATE_STOPPED
+
+        async def task(self, **kwargs):
+                &#34;&#34;&#34; Task ambient sound &#34;&#34;&#34;
+                while True:
+                        self.loop += 1
+                        if self.state == AmbientSound.STATE_STOPPED:
+                                await self.state_stopped()
+                        else:
+                                await self.state_playing()
+
+        @staticmethod
+        def start(**kwargs):
+                &#34;&#34;&#34; Start ambient sound task &#34;&#34;&#34;
+                if AmbientSound.ambientsound is None:
+                        AmbientSound.ambientsound = AmbientSound()
+                tools.tasking.Tasks.create_monitor(AmbientSound.ambientsound.task, **kwargs)
+                if tools.filesystem.ismicropython() is False:
+                        tools.tasking.Tasks.create_monitor(AmbientSound.ambientsound.dfplayer_simulator)
+
+        async def dfplayer_simulator(self, **kwargs):
+                &#34;&#34;&#34; Simulate response from dfplayer &#34;&#34;&#34;
+                while True:
+                        await uasyncio.sleep(15)
+                        self.dfplayer.uart.simul_receive(b&#34;\x7E\xFF\x06\x40\x00\x00\x06\xB5\xFE\xEF&#34;)
+                        await uasyncio.sleep(15)
+                        self.dfplayer.uart.simul_receive(b&#34;\x7E\xFF\x06\x3D\x00\x00\x04\xFE\xBA\xEF&#34;)</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.DURATION_SOUND"><code class="name">var <span class="ident">DURATION_SOUND</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.FAST_POLLING"><code class="name">var <span class="ident">FAST_POLLING</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.REBOOT_FAULT"><code class="name">var <span class="ident">REBOOT_FAULT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.REOPEN_FAULT"><code class="name">var <span class="ident">REOPEN_FAULT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.SLOW_POLLING"><code class="name">var <span class="ident">SLOW_POLLING</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.STATE_PLAYING"><code class="name">var <span class="ident">STATE_PLAYING</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.STATE_STOPPED"><code class="name">var <span class="ident">STATE_STOPPED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.ambientsound"><code class="name">var <span class="ident">ambientsound</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>**kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start ambient sound task</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def start(**kwargs):
+        &#34;&#34;&#34; Start ambient sound task &#34;&#34;&#34;
+        if AmbientSound.ambientsound is None:
+                AmbientSound.ambientsound = AmbientSound()
+        tools.tasking.Tasks.create_monitor(AmbientSound.ambientsound.task, **kwargs)
+        if tools.filesystem.ismicropython() is False:
+                tools.tasking.Tasks.create_monitor(AmbientSound.ambientsound.dfplayer_simulator)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.clear_fault"><code class="name flex">
+<span>def <span class="ident">clear_fault</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Clear the fault counter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clear_fault(self):
+        &#34;&#34;&#34; Clear the fault counter &#34;&#34;&#34;
+        self.fault = 0</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.dfplayer_simulator"><code class="name flex">
+<span>async def <span class="ident">dfplayer_simulator</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Simulate response from dfplayer</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def dfplayer_simulator(self, **kwargs):
+        &#34;&#34;&#34; Simulate response from dfplayer &#34;&#34;&#34;
+        while True:
+                await uasyncio.sleep(15)
+                self.dfplayer.uart.simul_receive(b&#34;\x7E\xFF\x06\x40\x00\x00\x06\xB5\xFE\xEF&#34;)
+                await uasyncio.sleep(15)
+                self.dfplayer.uart.simul_receive(b&#34;\x7E\xFF\x06\x3D\x00\x00\x04\xFE\xBA\xEF&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.get_status"><code class="name flex">
+<span>async def <span class="ident">get_status</span></span>(<span>self, ask_status=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Ask status and wait response
+return True if sound ended, False if sound playing, None if error</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def get_status(self, ask_status=True):
+        &#34;&#34;&#34; Ask status and wait response 
+        return True if sound ended, False if sound playing, None if error &#34;&#34;&#34;
+        result = None
+        no_response = True
+
+        if ask_status:
+                self.dfplayer.get_status()
+
+        for i in range(6):
+                # Get the player result
+                response = self.dfplayer.receive()
+
+                # If response received
+                if response is not None:
+                        no_response = False
+                        command, value = response
+                        # If sound ended
+                        if (command == plugins.ambientsound.dfplayer.PLAY_ENDED) or \
+                           (command == plugins.ambientsound.dfplayer.QUERY_STATUS and value == 0):
+                                self.clear_fault()
+                                result = True
+                                break
+                        elif (command == plugins.ambientsound.dfplayer.QUERY_STATUS and value != 0):
+                                self.clear_fault()
+                                result = False
+                                break
+                        elif (command == plugins.ambientsound.dfplayer.ERR_FILE):
+                                self.increase_fault()
+                                result = True
+                                break
+                else:
+                        await uasyncio.sleep_ms(500)
+
+        # No response received
+        if no_response and ask_status:
+                self.increase_fault()
+                result = None
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.increase_fault"><code class="name flex">
+<span>def <span class="ident">increase_fault</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Increase the fault counter</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def increase_fault(self):
+        &#34;&#34;&#34; Increase the fault counter &#34;&#34;&#34;
+        self.fault += 1</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.is_active"><code class="name flex">
+<span>def <span class="ident">is_active</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates if the ambient sound is active</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_active(self):
+        &#34;&#34;&#34; Indicates if the ambient sound is active &#34;&#34;&#34;
+        result = False
+        # If presence detection activated
+        if server.presence.Presence.activated:
+                # Get ambient sound config
+                config = plugins.ambientsound.config.AmbientSoundConfig().get_config()
+
+                # If ambient sound can be played now
+                if config.is_activated():
+                        # If the home is empty
+                        if server.presence.Presence.is_detected() is False:
+                                result = True
+        return result</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.open_player"><code class="name flex">
+<span>def <span class="ident">open_player</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Open sound player</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open_player(self):
+        &#34;&#34;&#34; Open sound player &#34;&#34;&#34;
+        if hasattr(AmbientSound,&#34;dfplayer&#34;) is True:
+                del self.dfplayer
+        self.dfplayer = plugins.ambientsound.dfplayer.DFPlayer()#display=True)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.play_next"><code class="name flex">
+<span>async def <span class="ident">play_next</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Play next sound</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def play_next(self):
+        &#34;&#34;&#34; Play next sound &#34;&#34;&#34;
+        if self.counter_play % 100 == 0:
+                # Periodic reset to prevent mute issue
+                self.dfplayer.reset()
+                await uasyncio.sleep(1)
+                self.dfplayer.receive()
+
+        self.dfplayer.play_next()
+        self.counter_play += 1
+        self.last_play = self.loop
+        self.state = AmbientSound.STATE_PLAYING</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.state_playing"><code class="name flex">
+<span>async def <span class="ident">state_playing</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>State ambient sound playing</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def state_playing(self):
+        &#34;&#34;&#34; State ambient sound playing &#34;&#34;&#34;
+        await tools.tasking.Tasks.wait_resume(duration=AmbientSound.FAST_POLLING, name=&#34;ambientsound&#34;)
+
+        # If the ambient sound is active
+        if self.is_active() is True:
+                if self.loop % 5 == 4:
+                        ask_status = True
+                else:
+                        ask_status = False
+                ended = await self.get_status(ask_status=ask_status)
+
+                if ended is True:
+                        await self.play_next()
+
+                too_long_duration = ((self.loop - self.last_play) * AmbientSound.FAST_POLLING // 1000) &gt; AmbientSound.DURATION_SOUND
+
+                # If fault quantity is not too important
+                if self.fault % AmbientSound.REOPEN_FAULT == (AmbientSound.REOPEN_FAULT -1):
+                        # Close and reopen uart to test if fault can be resolved
+                        self.open_player()
+                        await uasyncio.sleep_ms(500)
+
+                        # Ask status
+                        ended = await self.get_status(ask_status=True)
+
+                        # If sound ended
+                        if ended is True:
+                                # Play next sound
+                                await uasyncio.sleep_ms(500)
+                                await self.play_next()
+                # If the sound failure detected
+                elif too_long_duration or self.fault &gt;= AmbientSound.REBOOT_FAULT:
+                        # If there is no user activity
+                        if tools.tasking.Tasks.is_slow_down() is False:
+                                # Reboot required
+                                server.notifier.Notifier.notify(message=&#34;Ambient sound fault&#34;)
+                                await uasyncio.sleep(15)
+                                tools.system.reboot(&#34;Ambient sound fault&#34;)
+        else:
+                # Stop ambient sound
+                tools.logger.syslog(&#34;Ambient sound stop&#34;)
+                self.dfplayer.stop()
+                self.state = AmbientSound.STATE_STOPPED</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.state_stopped"><code class="name flex">
+<span>async def <span class="ident">state_stopped</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>State ambient sound stopped</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def state_stopped(self):
+        &#34;&#34;&#34; State ambient sound stopped &#34;&#34;&#34;
+        # If the ambient sound is active
+        if self.is_active():
+                tools.logger.syslog(&#34;Ambient sound start&#34;)
+                await self.play_next()
+        else:
+                # Clean up data received
+                self.dfplayer.receive()
+                await tools.tasking.Tasks.wait_resume(duration=AmbientSound.SLOW_POLLING, name=&#34;ambientsound&#34;)</code></pre>
+</details>
+</dd>
+<dt id="lib.plugins.ambientsound.ambientsound.AmbientSound.task"><code class="name flex">
+<span>async def <span class="ident">task</span></span>(<span>self, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Task ambient sound</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def task(self, **kwargs):
+        &#34;&#34;&#34; Task ambient sound &#34;&#34;&#34;
+        while True:
+                self.loop += 1
+                if self.state == AmbientSound.STATE_STOPPED:
+                        await self.state_stopped()
+                else:
+                        await self.state_playing()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="lib.plugins.ambientsound" href="index.html">lib.plugins.ambientsound</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound" href="#lib.plugins.ambientsound.ambientsound.AmbientSound">AmbientSound</a></code></h4>
+<ul class="two-column">
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.DURATION_SOUND" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.DURATION_SOUND">DURATION_SOUND</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.FAST_POLLING" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.FAST_POLLING">FAST_POLLING</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.REBOOT_FAULT" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.REBOOT_FAULT">REBOOT_FAULT</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.REOPEN_FAULT" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.REOPEN_FAULT">REOPEN_FAULT</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.SLOW_POLLING" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.SLOW_POLLING">SLOW_POLLING</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.STATE_PLAYING" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.STATE_PLAYING">STATE_PLAYING</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.STATE_STOPPED" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.STATE_STOPPED">STATE_STOPPED</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.ambientsound" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.ambientsound">ambientsound</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.clear_fault" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.clear_fault">clear_fault</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.dfplayer_simulator" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.dfplayer_simulator">dfplayer_simulator</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.get_status" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.get_status">get_status</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.increase_fault" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.increase_fault">increase_fault</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.is_active" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.is_active">is_active</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.open_player" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.open_player">open_player</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.play_next" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.play_next">play_next</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.start" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.start">start</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.state_playing" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.state_playing">state_playing</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.state_stopped" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.state_stopped">state_stopped</a></code></li>
+<li><code><a title="lib.plugins.ambientsound.ambientsound.AmbientSound.task" href="#lib.plugins.ambientsound.ambientsound.AmbientSound.task">task</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

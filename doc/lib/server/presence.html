@@ -62,6 +62,7 @@ class Presence:
         presence_config  = None
         webhook_config   = None
         activated        = None
+        usage_time       = [0]
 
         @staticmethod
         def is_detected():
@@ -110,6 +111,10 @@ class Presence:
                 else:
                         Presence.polling_duration = Presence.SLOW_POLLING
                         Presence.core = None
+
+                Presence.usage_time[0] += 1
+                if Presence.usage_time[0] &lt; 20 and Presence.core is None:
+                        Presence.polling_duration = Presence.FAST_POLLING // 2
 
                 # If the presence detection change
                 if Presence.activated != Presence.presence_config.activated:
@@ -156,6 +161,7 @@ class Presence:
         presence_config  = None
         webhook_config   = None
         activated        = None
+        usage_time       = [0]
 
         @staticmethod
         def is_detected():
@@ -205,6 +211,10 @@ class Presence:
                         Presence.polling_duration = Presence.SLOW_POLLING
                         Presence.core = None
 
+                Presence.usage_time[0] += 1
+                if Presence.usage_time[0] &lt; 20 and Presence.core is None:
+                        Presence.polling_duration = Presence.FAST_POLLING // 2
+
                 # If the presence detection change
                 if Presence.activated != Presence.presence_config.activated:
                         if Presence.presence_config.activated:
@@ -245,6 +255,10 @@ class Presence:
 <div class="desc"></div>
 </dd>
 <dt id="lib.server.presence.Presence.presence_config"><code class="name">var <span class="ident">presence_config</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="lib.server.presence.Presence.usage_time"><code class="name">var <span class="ident">usage_time</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -357,6 +371,10 @@ async def task():
                 Presence.polling_duration = Presence.SLOW_POLLING
                 Presence.core = None
 
+        Presence.usage_time[0] += 1
+        if Presence.usage_time[0] &lt; 20 and Presence.core is None:
+                Presence.polling_duration = Presence.FAST_POLLING // 2
+
         # If the presence detection change
         if Presence.activated != Presence.presence_config.activated:
                 if Presence.presence_config.activated:
@@ -430,6 +448,7 @@ async def task():
 <li><code><a title="lib.server.presence.Presence.presence_config" href="#lib.server.presence.Presence.presence_config">presence_config</a></code></li>
 <li><code><a title="lib.server.presence.Presence.start" href="#lib.server.presence.Presence.start">start</a></code></li>
 <li><code><a title="lib.server.presence.Presence.task" href="#lib.server.presence.Presence.task">task</a></code></li>
+<li><code><a title="lib.server.presence.Presence.usage_time" href="#lib.server.presence.Presence.usage_time">usage_time</a></code></li>
 <li><code><a title="lib.server.presence.Presence.webhook_config" href="#lib.server.presence.Presence.webhook_config">webhook_config</a></code></li>
 </ul>
 </li>

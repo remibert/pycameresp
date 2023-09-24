@@ -63,7 +63,10 @@ class MqttClientInstance(tools.tasking.ClientInstance):
         def start(self):
                 &#34;&#34;&#34; Start mqtt client &#34;&#34;&#34;
                 MqttClient.init()
-                MqttClient.protocol.start(**self.kwargs)
+                if MqttClient.protocol is not None:
+                        MqttClient.protocol.start(**self.kwargs)
+                else:
+                        tools.logger.syslog(&#34;MqttClient protocol not available&#34;)
                 return &#34;MqttClient&#34;,self.kwargs.get(&#34;mqtt_port&#34;, MqttClient.config.port)
 
 class MqttClient:
@@ -103,7 +106,8 @@ class MqttClient:
                 def add_topic(callback):
                         MqttClient.init()
                         kwargs[&#34;callback&#34;] = callback
-                        MqttClient.protocol.add_topic(**kwargs)
+                        if MqttClient.config.activated:
+                                MqttClient.protocol.add_topic(**kwargs)
                         return callback
                 return add_topic
 
@@ -163,7 +167,7 @@ class MqttClient:
                 if MqttClient.config.activated:
                         tools.tasking.Tasks.create_client(MqttClientInstance(**kwargs))
                 else:
-                        tools.logger.syslog(&#34;Mqtt client disabled in config&#34;)</code></pre>
+                        tools.logger.syslog(&#34;MqttClient disabled in config&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -221,7 +225,8 @@ class MqttClient:
                 def add_topic(callback):
                         MqttClient.init()
                         kwargs[&#34;callback&#34;] = callback
-                        MqttClient.protocol.add_topic(**kwargs)
+                        if MqttClient.config.activated:
+                                MqttClient.protocol.add_topic(**kwargs)
                         return callback
                 return add_topic
 
@@ -281,7 +286,7 @@ class MqttClient:
                 if MqttClient.config.activated:
                         tools.tasking.Tasks.create_client(MqttClientInstance(**kwargs))
                 else:
-                        tools.logger.syslog(&#34;Mqtt client disabled in config&#34;)</code></pre>
+                        tools.logger.syslog(&#34;MqttClient disabled in config&#34;)</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -319,7 +324,8 @@ def add_topic(**kwargs):
         def add_topic(callback):
                 MqttClient.init()
                 kwargs[&#34;callback&#34;] = callback
-                MqttClient.protocol.add_topic(**kwargs)
+                if MqttClient.config.activated:
+                        MqttClient.protocol.add_topic(**kwargs)
                 return callback
         return add_topic</code></pre>
 </details>
@@ -432,7 +438,7 @@ def start(**kwargs):
         if MqttClient.config.activated:
                 tools.tasking.Tasks.create_client(MqttClientInstance(**kwargs))
         else:
-                tools.logger.syslog(&#34;Mqtt client disabled in config&#34;)</code></pre>
+                tools.logger.syslog(&#34;MqttClient disabled in config&#34;)</code></pre>
 </details>
 </dd>
 <dt id="lib.server.mqttclient.MqttClient.subscribe"><code class="name flex">
@@ -508,7 +514,10 @@ async def unsubscribe(**kwargs):
         def start(self):
                 &#34;&#34;&#34; Start mqtt client &#34;&#34;&#34;
                 MqttClient.init()
-                MqttClient.protocol.start(**self.kwargs)
+                if MqttClient.protocol is not None:
+                        MqttClient.protocol.start(**self.kwargs)
+                else:
+                        tools.logger.syslog(&#34;MqttClient protocol not available&#34;)
                 return &#34;MqttClient&#34;,self.kwargs.get(&#34;mqtt_port&#34;, MqttClient.config.port)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -529,7 +538,10 @@ async def unsubscribe(**kwargs):
 <pre><code class="python">def start(self):
         &#34;&#34;&#34; Start mqtt client &#34;&#34;&#34;
         MqttClient.init()
-        MqttClient.protocol.start(**self.kwargs)
+        if MqttClient.protocol is not None:
+                MqttClient.protocol.start(**self.kwargs)
+        else:
+                tools.logger.syslog(&#34;MqttClient protocol not available&#34;)
         return &#34;MqttClient&#34;,self.kwargs.get(&#34;mqtt_port&#34;, MqttClient.config.port)</code></pre>
 </details>
 </dd>

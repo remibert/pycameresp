@@ -9,7 +9,7 @@ It offer the possibility to access the esp32 shell, edit files from esp32 and ex
 
 It is also a VT100 console which allows to operate the text editor, and to display colored texts thanks to the VT100 escape sequences. Not all VT100 commands are supported, but the most common ones are available.
 
-Camflasher with shell commands **upload** and **download**, allows to upload or download files easily from the device.
+Camflasher with shell commands **upload** and **download**, allows to upload or download files easily from the device, and also the drag and drop of file or directory, allows you to easily install files on the board, to do this you must be in shell mode (Ctrl-Z to enter in shell mode and "exit" command after to restart server).
 
 - Download computer drivers for your device :
 	- [CH341 drivers](http://www.wch.cn/download/CH341SER_ZIP.html)
@@ -18,29 +18,26 @@ Camflasher with shell commands **upload** and **download**, allows to upload or 
 
 - Download the firmware associated with your device :
 
-	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V18/ESP32CAM-firmware.bin)
+	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V19/ESP32CAM-firmware.bin)
 
-	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V18/GENERIC_SPIRAM-firmware.bin)
+	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V19/GENERIC_SPIRAM-firmware.bin)
 
+	- [Freenove CAM S3](https://github.com/remibert/pycameresp/releases/download/V19/FREENOVE_CAM_S3-SPIRAM_OCT-firmware.bin)
 
-- Or download the zip for standard micropython firmware :
+	- [For other devices see releases](https://github.com/remibert/pycameresp/releases)
 
-	- [Shell with editor](https://github.com/remibert/pycameresp/releases/download/V18/shell.zip)
+The firmwares contains a micropython version, patched to support the camera, and some microsd, as well as all servers and other features. But if you are not interested in the whole platform, just the camera support, you can replace the main.py with your own implementation, it remains a standard micropython platform.
 
-	- [Wifi manager, Http server](https://github.com/remibert/pycameresp/releases/download/V18/server.zip)
-
-- Text editor source files running on python3 and micropython :
-
-	- [Text editor](https://github.com/remibert/pycameresp/releases/download/V18/editor.zip)
-
-It is possible to run the shell with editor, or the servers on a standard micropython platform. The servers, the wifi manager, requires having enough ram and wifi support (ESP32 with SPIRAM for example). Unzip archive and install it with rshell.
+ The servers, the wifi manager, requires having enough ram and wifi support (ESP32 with SPIRAM for example). Unzip archive and install it with rshell.
 
 - Download the camflasher application and unzip it :
-	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V18/CamFlasher_windows_10_64.zip)
+	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V19/CamFlasher_windows_10_64.zip)
 
-	- [CamFlasher for OSX Ventura Intel](https://github.com/remibert/pycameresp/releases/download/V18/CamFlasher_osx_i386.zip)
+	- [CamFlasher for OSX Ventura Intel](https://github.com/remibert/pycameresp/releases/download/V19/CamFlasher_osx_i386.zip)
 
-	- [CamFlasher for OSX Ventura M1](https://github.com/remibert/pycameresp/releases/download/V18/CamFlasher_osx_arm.zip)
+	- [CamFlasher for OSX Ventura M1](https://github.com/remibert/pycameresp/releases/download/V19/CamFlasher_osx_arm.zip)
+
+	- [CamFlasher for linux](https://github.com/remibert/pycameresp/releases/download/V19/CamFlasher_linux.zip)
 
 - Connect the device to the USB port of your computer.
 
@@ -55,10 +52,10 @@ It is possible to run the shell with editor, or the servers on a standard microp
 ![CamFlasher](/images/1_CamFlasher.png "CamFlasher")
 
 - Select firmware and check "Erase flash" the first time. The firmware can be download directly from web site. 
-- For Esp32 S3 the address must be 0x0
-- For others Esp32 the address must be 0x1000.
+- **For Esp32 S3 the address must be 0x0**
+- **For others Esp32 the address must be 0x1000**.
 
-**If the device resets in a loop, it is necessary to do a flash with erase**.
+**If the device resets in a loop, it is necessary to do a flash with erase, and check if the address is correct**.
 
 ![CamFlasher](/images/2_CamFlasher_SelectFirmware.png "CamFlasher")
 

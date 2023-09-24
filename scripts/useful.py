@@ -873,12 +873,15 @@ def zip_dir(nameOrFile, directory, includes = ["*"], excludes = [], display = Fa
 	>>> remove_dir("testunit")
 	"""
 	from zipfile import ZipFile, ZIP_DEFLATED 
-	from os.path import commonprefix, split, relpath, splitext
+	from os.path import commonprefix, split, relpath, splitext, exists
 
 	previousDir = ""
 	previousExt = []
 	if display and is_string(nameOrFile):
 		print(nameOrFile, directory, includes, excludes)
+	
+	if not exists(directory):
+		print("\x1B[41;93m%s\x1B[m"%("Directory '%s' not existing"%directory))
 
 	# Search all files according patterns
 	all_ = scan_all(directory, includes, excludes)[0]

@@ -35,6 +35,17 @@ import binascii
 import time
 import io
 
+def key_to_string(value):
+        &#34;&#34;&#34; Convert key to string &#34;&#34;&#34;
+        if value &lt;= 0x1A:
+                return &#34;CTRL-%s&#34;%chr(64+value)
+        elif value == 0x1B:
+                return &#34;ESC&#34;
+        elif value == 0x20:
+                return &#34;SPACE&#34;
+        else:
+                return &#34;%s&#34;%chr(value)
+
 def size_to_string(size, largeur=6):
         &#34;&#34;&#34; Convert a size in a string with k, m, g, t...&#34;&#34;&#34;
         return size_to_bytes(size, largeur).decode(&#34;utf8&#34;)
@@ -657,6 +668,27 @@ def get_utf8_length(data):
         return False</code></pre>
 </details>
 </dd>
+<dt id="lib.tools.strings.key_to_string"><code class="name flex">
+<span>def <span class="ident">key_to_string</span></span>(<span>value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert key to string</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def key_to_string(value):
+        &#34;&#34;&#34; Convert key to string &#34;&#34;&#34;
+        if value &lt;= 0x1A:
+                return &#34;CTRL-%s&#34;%chr(64+value)
+        elif value == 0x1B:
+                return &#34;ESC&#34;
+        elif value == 0x20:
+                return &#34;SPACE&#34;
+        else:
+                return &#34;%s&#34;%chr(value)</code></pre>
+</details>
+</dd>
 <dt id="lib.tools.strings.size_to_bytes"><code class="name flex">
 <span>def <span class="ident">size_to_bytes</span></span>(<span>size, largeur=7)</span>
 </code></dt>
@@ -833,6 +865,7 @@ def get_utf8_length(data):
 <li><code><a title="lib.tools.strings.ispunctuation" href="#lib.tools.strings.ispunctuation">ispunctuation</a></code></li>
 <li><code><a title="lib.tools.strings.isspace" href="#lib.tools.strings.isspace">isspace</a></code></li>
 <li><code><a title="lib.tools.strings.isupper" href="#lib.tools.strings.isupper">isupper</a></code></li>
+<li><code><a title="lib.tools.strings.key_to_string" href="#lib.tools.strings.key_to_string">key_to_string</a></code></li>
 <li><code><a title="lib.tools.strings.size_to_bytes" href="#lib.tools.strings.size_to_bytes">size_to_bytes</a></code></li>
 <li><code><a title="lib.tools.strings.size_to_string" href="#lib.tools.strings.size_to_string">size_to_string</a></code></li>
 <li><code><a title="lib.tools.strings.ticks" href="#lib.tools.strings.ticks">ticks</a></code></li>
