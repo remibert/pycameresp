@@ -294,8 +294,9 @@ class Camera:
 		""" Close and open camera if get image previously asked, it avoid a DMA problem """
 		if Camera.opened:
 			if Camera.aquisition[0] is True:
-				Camera.close()
-				Camera.open()
+				if "FREENOVE CAM" in os.uname().machine:
+					Camera.close()
+					Camera.open()
 
 	@staticmethod
 	def framesize(resolution=None):

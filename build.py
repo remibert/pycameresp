@@ -35,6 +35,8 @@ MICROPYTHON_S1 ="micropython-s1"
 
 ESP32_CAMERA_VERSION_S1="722497cb19383cd4ee6b5d57bb73148b5af41b24" # Very stable version but cannot be rebuild with chip esp32s3
 ESP_IDF_VERSION_S1     ="7ab8f793ca5b026f37ae812bcc103e3aa698d164" # v4.2.2 Work perfectly with wifi access point on ESP32CAM
+ESP_IDF_VERSION_S1     ="d1503315ded139923a1bdd9b280f320c58f90aac" # v4.2.5 Try
+ESP_IDF_VERSION_S1     ="e9d442d2b721293497a3a0bcfb45883a7c5111b9" # v4.4 Try
 MICROPYTHON_VERSION_S1 ="294baf52b346e400e2255c6c1e82af5b978b18f7" # micropython 1.20
 
 # ESP32 S3

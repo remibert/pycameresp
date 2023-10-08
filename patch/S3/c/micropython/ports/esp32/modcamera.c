@@ -81,40 +81,24 @@
 
 	#if defined(CONFIG_ESP32CAM) && defined(CONFIG_CAMERA)
 		// Defaults value for esp32cam
-		#define CAM_PIN_PWDN    32 //power down is not used
-		#define CAM_PIN_RESET   -1 //software reset will be performed
-		#define CAM_PIN_XCLK     0
-		#define CAM_PIN_SIOD    26 // SDA
-		#define CAM_PIN_SIOC    27 // SCL
-		#define CAM_PIN_D7      35 // Y9 CSI_D7
-		#define CAM_PIN_D6      34 // Y8 CSI_D6
-		#define CAM_PIN_D5      39 // Y7 CSI_D5 SENSOR_VN
-		#define CAM_PIN_D4      36 // Y6 CSI_D4 SENSOR_VP
-		#define CAM_PIN_D3      21 // Y5 CSI_D3
-		#define CAM_PIN_D2      19 // Y4 CSI_D2
-		#define CAM_PIN_D1      18 // Y3 CSI_D1
-		#define CAM_PIN_D0       5 // Y2 CSI_D0
-		#define CAM_PIN_VSYNC   25 
-		#define CAM_PIN_HREF    23
-		#define CAM_PIN_PCLK    22
 		static camera_config_t camera_config = 
 		{
-			.pin_pwdn     = CAM_PIN_PWDN,
-			.pin_reset    = CAM_PIN_RESET,
-			.pin_xclk     = CAM_PIN_XCLK,
-			.pin_sscb_sda = CAM_PIN_SIOD,
-			.pin_sscb_scl = CAM_PIN_SIOC,
-			.pin_d7       = CAM_PIN_D7,
-			.pin_d6       = CAM_PIN_D6,
-			.pin_d5       = CAM_PIN_D5,
-			.pin_d4       = CAM_PIN_D4,
-			.pin_d3       = CAM_PIN_D3,
-			.pin_d2       = CAM_PIN_D2,
-			.pin_d1       = CAM_PIN_D1,
-			.pin_d0       = CAM_PIN_D0,
-			.pin_vsync    = CAM_PIN_VSYNC,
-			.pin_href     = CAM_PIN_HREF,
-			.pin_pclk     = CAM_PIN_PCLK,
+			.pin_pwdn     = 32,
+			.pin_reset    = -1,
+			.pin_xclk     = 0,
+			.pin_sscb_sda = 26, // SIOD
+			.pin_sscb_scl = 27, // SIOC
+			.pin_d7       = 35, // Y9 CSI_D7
+			.pin_d6       = 34, // Y8 CSI_D6
+			.pin_d5       = 39, // Y7 CSI_D5 SENSOR_VN
+			.pin_d4       = 36, // Y6 CSI_D4 SENSOR_VP
+			.pin_d3       = 21, // Y5 CSI_D3
+			.pin_d2       = 19, // Y4 CSI_D2
+			.pin_d1       = 18, // Y3 CSI_D1
+			.pin_d0       =  5, // Y2 CSI_D0
+			.pin_vsync    = 25,
+			.pin_href     = 23,
+			.pin_pclk     = 22,
 			.xclk_freq_hz = 20000000,        //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
 			.ledc_timer   = LEDC_TIMER_0,
 			.ledc_channel = LEDC_CHANNEL_0,
@@ -127,50 +111,33 @@
 
 	#if defined(CONFIG_FREENOVE_CAM_S3) && defined(CONFIG_CAMERA)
 		// Defaults value for freenove CAM S3
-		#define CAM_PIN_PWDN    -1 //power down is not used
-		#define CAM_PIN_RESET   -1 //software reset will be performed
-		#define CAM_PIN_XCLK    15
-		#define CAM_PIN_SIOD     4 // SDA
-		#define CAM_PIN_SIOC     5 // SCL
-		#define CAM_PIN_D7      16 // Y9 CSI_D7
-		#define CAM_PIN_D6      17 // Y8 CSI_D6
-		#define CAM_PIN_D5      18 // Y7 CSI_D5 SENSOR_VN
-		#define CAM_PIN_D4      12 // Y6 CSI_D4 SENSOR_VP
-		#define CAM_PIN_D3      10 // Y5 CSI_D3
-		#define CAM_PIN_D2       8 // Y4 CSI_D2
-		#define CAM_PIN_D1       9 // Y3 CSI_D1
-		#define CAM_PIN_D0      11 // Y2 CSI_D0
-		#define CAM_PIN_VSYNC    6 
-		#define CAM_PIN_HREF     7
-		#define CAM_PIN_PCLK    13
-
 		static camera_config_t camera_config = 
 		{
 			.ledc_channel = LEDC_CHANNEL_0,
-			.ledc_timer = LEDC_TIMER_0,
-			.pin_d0 = CAM_PIN_D0,
-			.pin_d1 = CAM_PIN_D1,
-			.pin_d2 = CAM_PIN_D2,
-			.pin_d3 = CAM_PIN_D3,
-			.pin_d4 = CAM_PIN_D4,
-			.pin_d5 = CAM_PIN_D5,
-			.pin_d6 = CAM_PIN_D6,
-			.pin_d7 = CAM_PIN_D7,
-			.pin_xclk = CAM_PIN_XCLK,
-			.pin_pclk = CAM_PIN_PCLK,
-			.pin_vsync = CAM_PIN_VSYNC,
-			.pin_href = CAM_PIN_HREF,
-			.pin_sscb_sda = CAM_PIN_SIOD,
-			.pin_sscb_scl = CAM_PIN_SIOC,
-			.pin_pwdn = CAM_PIN_PWDN,
-			.pin_reset = CAM_PIN_RESET,
+			.ledc_timer   = LEDC_TIMER_0,
+			.pin_d0       = 16, // Y9 CSI_D7
+			.pin_d1       = 17, // Y8 CSI_D6
+			.pin_d2       = 18, // Y7 CSI_D5 SENSOR_VN
+			.pin_d3       = 12, // Y6 CSI_D4 SENSOR_VP
+			.pin_d4       = 10, // Y5 CSI_D3
+			.pin_d5       =  8, // Y4 CSI_D2
+			.pin_d6       =  9, // Y3 CSI_D1
+			.pin_d7       = 11, // Y2 CSI_D0
+			.pin_xclk     = 15,
+			.pin_pclk     = 13,
+			.pin_vsync    =  6,
+			.pin_href     =  7,
+			.pin_sscb_sda =  4, // SIOD
+			.pin_sscb_scl =  5, // SIOC
+			.pin_pwdn     = -1,
+			.pin_reset    = -1,
 			.xclk_freq_hz = 20000000,
-			.frame_size = FRAMESIZE_SVGA,
+			.frame_size   = FRAMESIZE_SVGA,
 			.pixel_format = PIXFORMAT_JPEG,
-			.grab_mode = CAMERA_GRAB_WHEN_EMPTY,
-			.fb_location = CAMERA_FB_IN_DRAM,
+			.grab_mode    = CAMERA_GRAB_WHEN_EMPTY,
+			.fb_location  = CAMERA_FB_IN_DRAM,
 			.jpeg_quality = 10,
-			.fb_count = 1,
+			.fb_count     = 1,
 		};
 	#endif
 	uint8_t gpio_flash_led = 4;

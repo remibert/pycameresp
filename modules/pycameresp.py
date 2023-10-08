@@ -101,13 +101,23 @@ def start(**kwargs):
 						pin_d7=19, pin_d6=36, pin_d5=18, pin_d4=39,
 						pin_d3=5,  pin_d2=34, pin_d1=35, pin_d0=32,
 						pin_vsync=25, pin_href=26, pin_pclk=21, xclk_freq_hz=20000000, ledc_timer=0,
-						ledc_channel=0 , pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
+						ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
+					tools.sdcard.SdCard.set_slot(slot=None) # No sdcard available
+				elif features.device == "FREENOVE CAM ESP32":
+					# Freenove ESP32-Wrover CAM device
+					video.video.Camera.gpio_config(
+						pin_pwdn=-1, pin_reset=-1, pin_xclk=21, pin_sscb_sda=26, pin_sscb_scl=27, 
+						pin_d7=35, pin_d6=34, pin_d5=39, pin_d4=36,
+						pin_d3=19,  pin_d2=18, pin_d1=5, pin_d0=4,
+						pin_vsync=25, pin_href=23, pin_pclk=22, xclk_freq_hz=20000000, 
+						ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=0)
 					tools.sdcard.SdCard.set_slot(slot=None) # No sdcard available
 				else:
 					# ESP32CAM default configuration
 					pass
 			elif "FREENOVE CAM" in os.uname().machine:
 				features.device = "FREENOVE CAM"
+				# Micropython patched to support this microcard
 				tools.sdcard.SdCard.set_slot(slot=0, clk=39, d0=40, cmd=38, width=1)
 
 			# Start camera before wifi to avoid problems

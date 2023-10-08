@@ -6,7 +6,7 @@ import pycameresp
 # Start certain features of the Pycameresp platform
 # Comment unnecessary lines to decrease RAM footprint
 pycameresp.start(\
-	device      = "ESP32CAM", # "ESP32ONE" "M5CAMERA-B" : particular type of camera
+	device      = "ESP32CAM", # "ESP32ONE" "M5CAMERA-B", "FREENOVE CAM ESP32" : particular type of camera
 
 	# Features
 	plugin      = True, # Start all plugins (must be contains lib/plugins/*/__startup__.py)

@@ -20,7 +20,7 @@ block_cipher = None
 
 a = Analysis(['main.py'],
              binaries=None,
-             datas=[("icons", "icons"),("camflasher.ui","."),("esptool/targets/stub_flasher/*.json","esptool/targets/stub_flasher")],
+             datas=[("icons", "icons"),("camflasher.ui",".")%(DATA_FILES)s],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -54,6 +54,7 @@ if sys.platform == "win32":
 	COLOR_1 = "+"
 	COLOR_2 = ""
 	NO_COLOR = ""
+	DATA_FILES = ""
 	if platform.uname()[2] == "7":
 		UIC = 5
 	else:
@@ -67,6 +68,7 @@ elif sys.platform == "linux":
 	COLOR_1 = "\x1B[38;33m"
 	COLOR_2 = "\x1B[38;32m"
 	NO_COLOR = "\x1B[m"
+	DATA_FILES = ',("esptool/targets/stub_flasher/*.json","esptool/targets/stub_flasher")'
 elif sys.platform == "darwin":
 	ICONS   = "icons/camflasher.icns"
 	TARGET  = "osx_"+platform.processor()
@@ -76,6 +78,7 @@ elif sys.platform == "darwin":
 	COLOR_1 = "\x1B[38;33m"
 	COLOR_2 = "\x1B[38;32m"
 	NO_COLOR= "\x1B[m"
+	DATA_FILES = ""
 
 def execute(commands):
 	""" Execute shell commands """

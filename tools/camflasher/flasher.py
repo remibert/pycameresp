@@ -133,15 +133,14 @@ class Flasher(threading.Thread):
 		""" Print message """
 		print(message, end)
 
-	def get_firmware(self, firmware):
+	def get_firmware(self, firmware, temp_directory):
 		""" Get firmware or download it """
 		if type(firmware) == type((0,)):
 			firmware = firmware[0]
 			uploader = fileuploader.PythonUploader(self.print)
 			content = uploader.download_last_release(fileuploader.GITHUB_API_HOST, fileuploader.PYCAMERESP_PATH, firmware)
 			if content is not None:
-				directory = tempfile.TemporaryDirectory()
-				firmware = "%s/%s"%(directory.name, firmware)
+				firmware = "%s/%s"%(temp_directory.name, firmware)
 				file = open(firmware, "wb")
 				file.write(content)
 				file.close()
@@ -170,9 +169,10 @@ class Flasher(threading.Thread):
 
 			print("\x1B[1;1f\x1B[2J")
 
+			temp_directory = tempfile.TemporaryDirectory()
 			firmwares_command = []
 			for index in range(len(firmwares)):
-				firmware = self.get_firmware(firmwares[index])
+				firmware = self.get_firmware(firmwares[index], temp_directory)
 				if firmware is not None:
 					firmwares_command += [addresses[index], firmware]
 
