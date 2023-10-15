@@ -135,12 +135,12 @@ class Station:
 		""" Configure the wifi """
 		Station.init()
 		# If ip is dynamic
-		if  network.dynamic   is True:
+		if  network.dynamic is True:
 			if len(Station.get_hostname()) > 0:
 				try:
 					Station.wlan.config(hostname= tools.strings.tostrings(Station.get_hostname()))
-				except:
-					pass
+				except Exception as err:
+					tools.logger.syslog(err)
 		else:
 			try:
 				Station.wlan.ifconfig((tools.strings.tostrings(network.ip_address),tools.strings.tostrings(network.netmask),tools.strings.tostrings(network.gateway),tools.strings.tostrings(network.dns)))

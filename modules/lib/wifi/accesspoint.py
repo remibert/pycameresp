@@ -61,10 +61,13 @@ class AccessPoint:
 		if sys.platform != "rp2":
 			AccessPoint.wlan.active(True) # IMPORTANT : For esp32 activate before configure
 
-		AccessPoint.wlan.config(\
-			essid    = tools.strings.tostrings(AccessPoint.config.ssid),
-			password = tools.strings.tostrings(AccessPoint.config.wifi_password),
-			security = authmode)
+		try:
+			AccessPoint.wlan.config(\
+				essid    = tools.strings.tostrings(AccessPoint.config.ssid),
+				password = tools.strings.tostrings(AccessPoint.config.wifi_password),
+				security = authmode)
+		except Exception as err:
+			tools.logger.syslog(err)
 
 		if sys.platform == "rp2":
 			AccessPoint.wlan.active(True) # IMPORTANT : For esp32 activate before configure

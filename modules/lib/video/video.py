@@ -9,6 +9,7 @@ as well as a lot of adjustment on the camera, not available on the other firmwar
 # pylint: disable=multiple-statements
 import time
 import uasyncio
+import os
 import tools.info
 import tools.system
 import tools.jsonconfig
