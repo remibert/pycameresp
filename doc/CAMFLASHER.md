@@ -18,11 +18,11 @@ Camflasher with shell commands **upload** and **download**, allows to upload or 
 
 - Download the firmware associated with your device :
 
-	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V19/ESP32CAM-firmware.bin)
+	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V19/ESP32_CAMERA-firmware.bin)
 
 	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V19/GENERIC_SPIRAM-firmware.bin)
 
-	- [Freenove CAM S3](https://github.com/remibert/pycameresp/releases/download/V19/FREENOVE_CAM_S3-SPIRAM_OCT-firmware.bin)
+	- [Freenove CAM S3](https://github.com/remibert/pycameresp/releases/download/V19/ESP32_CAMERA_S3-SPIRAM_OCT-firmware.bin)
 
 	- [For other devices see releases](https://github.com/remibert/pycameresp/releases)
 

@@ -139,8 +139,8 @@ class FlashDialog(QDialog):
 			config = settings.get_settings( )
 
 			firmwares = []
-			firmwares.append(DOWNLOAD_VERSION + "ESP32CAM-firmware.bin")
-			firmwares.append(DOWNLOAD_VERSION + "FREENOVE_CAM_S3-SPIRAM_OCT-firmware.bin")
+			firmwares.append(DOWNLOAD_VERSION + "ESP32_CAMERA-firmware.bin")
+			firmwares.append(DOWNLOAD_VERSION + "ESP32_CAMERA_S3-SPIRAM_OCT-firmware.bin")
 			firmwares.append(DOWNLOAD_VERSION + "GENERIC-firmware.bin")
 			firmwares.append(DOWNLOAD_VERSION + "GENERIC_SPIRAM-firmware.bin")
 			firmwares.append(DOWNLOAD_VERSION + "ESP32_GENERIC_S3-firmware.bin")

@@ -408,6 +408,7 @@ def main():
 			execute(PATCH_COMMANDS, args.s3)
 
 		if args.zippy:
+			BOARD=args.boards[0]
 			execute(ZIP_MODULES, args.s3)
 
 		if args.build or args.all:
