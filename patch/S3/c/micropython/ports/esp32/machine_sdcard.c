@@ -179,9 +179,11 @@ STATIC mp_obj_t machine_sdcard_make_new(const mp_obj_type_t *type, size_t n_args
         ARG_cs,
         ARG_freq,
 // REMI BERTHOLET START
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
         ARG_cmd,
         ARG_clk,
         ARG_d0,
+#endif
 // REMI BERTHOLET END
     };
     STATIC const mp_arg_t allowed_args[] = {
@@ -197,9 +199,11 @@ STATIC mp_obj_t machine_sdcard_make_new(const mp_obj_type_t *type, size_t n_args
         // freq is valid for both SPI and SDMMC interfaces
         { MP_QSTR_freq,     MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 20000000} },
 // REMI BERTHOLET START
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
         { MP_QSTR_cmd,      MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = GPIO_NUM_NC} },
         { MP_QSTR_clk,      MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = GPIO_NUM_NC} },
         { MP_QSTR_d0,       MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = GPIO_NUM_NC} },
+#endif
 // REMI BERTHOLET END
     };
     mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
@@ -312,6 +316,7 @@ STATIC mp_obj_t machine_sdcard_make_new(const mp_obj_type_t *type, size_t n_args
         SET_CONFIG_PIN(slot_config, gpio_wp, ARG_wp);
 
 // REMI BERTHOLET START
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
         if ((arg_vals[ARG_cmd].u_int != GPIO_NUM_NC) && (arg_vals[ARG_clk].u_int != GPIO_NUM_NC) && (arg_vals[ARG_d0].u_int  != GPIO_NUM_NC))
         {
             slot_config.cmd = arg_vals[ARG_cmd].u_int;
@@ -329,6 +334,7 @@ STATIC mp_obj_t machine_sdcard_make_new(const mp_obj_type_t *type, size_t n_args
             slot_config.width   = 1;
             slot_config.flags = 0;
         }
+#endif
 // REMI BERTHOLET END
         int width = arg_vals[ARG_width].u_int;
         if (width == 1 || width == 4 || (width == 8 && slot_num == 0)) {
