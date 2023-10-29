@@ -103,7 +103,7 @@ void mp_task(void *pvParameter) {
         ESP_LOGE("esp_init", "can't create event loop: 0x%x\n", err);
     }
 
-//# REMI BERTHOLET START
+// REMI BERTHOLET START
     size_t mp_task_heap_size = MP_TASK_HEAP_SIZE;
     esp_log_write(ESP_LOG_ERROR, "main", "Start PYCAMERESP\n");
 #if defined(CONFIG_CAMERA)

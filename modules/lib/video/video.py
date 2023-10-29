@@ -132,14 +132,14 @@ class Camera:
 			- pin_xclk           : GPIO pin for camera XCLK line
 			- pin_sscb_sda       : GPIO pin for camera SDA line (SIOD)
 			- pin_sscb_scl       : GPIO pin for camera SCL line (SIOC)
-			- pin_d7             : GPIO pin for camera D7 line
-			- pin_d6             : GPIO pin for camera D6 line
-			- pin_d5             : GPIO pin for camera D5 line
-			- pin_d4             : GPIO pin for camera D4 line
-			- pin_d3             : GPIO pin for camera D3 line
-			- pin_d2             : GPIO pin for camera D2 line
-			- pin_d1             : GPIO pin for camera D1 line
-			- pin_d0             : GPIO pin for camera D0 line
+			- pin_d7             : GPIO pin for camera D7 or Y9 line
+			- pin_d6             : GPIO pin for camera D6 or Y8 line
+			- pin_d5             : GPIO pin for camera D5 or Y7 line
+			- pin_d4             : GPIO pin for camera D4 or Y6 line
+			- pin_d3             : GPIO pin for camera D3 or Y5 line
+			- pin_d2             : GPIO pin for camera D2 or Y4 line
+			- pin_d1             : GPIO pin for camera D1 or Y3 line
+			- pin_d0             : GPIO pin for camera D0 or Y2 line
 			- pin_vsync          : GPIO pin for camera VSYNC line
 			- pin_href           : GPIO pin for camera HREF line
 			- pin_pclk           : GPIO pin for camera PCLK line
@@ -150,7 +150,10 @@ class Camera:
 			- frame_size         : Size of the output image: FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
 			- jpeg_quality       : Quality of JPEG output. 0-63 lower means higher quality
 			- fb_count           : Number of frame buffers to be allocated. If more than one, then each frame will be acquired (double speed)
-			- flash_led          : GPIO pin for flash led or 0 to disable """
+			- flash_led          : GPIO pin for flash led or 0 to disable 
+			- grab_mode          : 0=CAMERA_GRAB_WHEN_EMPTY, 1=CAMERA_GRAB_LATEST
+			- fb_location        : 0=CAMERA_FB_IN_PSRAM, 1=CAMERA_FB_IN_DRAM
+"""
 		Camera.get_config()
 		if Camera.is_activated():
 			camera.configure(**kwargs)

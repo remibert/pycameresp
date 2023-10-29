@@ -13,6 +13,40 @@ try:
 except:
 	pass
 
+# Pins definitions for each ESP32 and ESP32 S3 camera
+pins_cameras_config = {
+	"ESP32CAM":{"pin_pwdn":32,"pin_reset":-1,"pin_xclk":0,"pin_sscb_sda":26,"pin_sscb_scl":27,
+				"pin_d7":35,"pin_d6":34,"pin_d5":39,"pin_d4":36,"pin_d3":21,"pin_d2":19,"pin_d1":18,"pin_d0":5,
+				"pin_vsync":25,"pin_href":23,"pin_pclk":22,"xclk_freq_hz":20000000,
+				"ledc_timer":0,"ledc_channel":0,"pixel_format":3,"frame_size":13,"jpeg_quality":12,"fb_count":1},
+	"ESP32ONE":{"pin_pwdn":32,"pin_reset":-1,"pin_xclk":4,"pin_sscb_sda":18,"pin_sscb_scl":23,
+				"pin_d7":36, "pin_d6":37,   "pin_d5":38, "pin_d4":39,      "pin_d3":35,   "pin_d2":14,  "pin_d1":13,   "pin_d0":34, "pin_vsync":5,    "pin_href":27,
+				"pin_pclk":25, "xclk_freq_hz":20000000,"ledc_timer":0,"ledc_channel":0,"pixel_format":3,
+				"frame_size":13,"jpeg_quality":12,"fb_count":1,"flash_led":0},
+	"M5CAMERA-B":{"pin_pwdn":-1,"pin_reset":15,"pin_xclk":27,"pin_sscb_sda":22,"pin_sscb_scl":23,
+				"pin_d7":19,"pin_d6":36,"pin_d5":18,"pin_d4":39,"pin_d3":5,"pin_d2":34,"pin_d1":35,"pin_d0":32,
+				"pin_vsync":25,"pin_href":26,"pin_pclk":21,"xclk_freq_hz":20000000,"ledc_timer":0,"ledc_channel":0,
+				"pixel_format":3,"frame_size":13,"jpeg_quality":0,"fb_count":1,"flash_led":14},
+	"FREENOVECAM ESP32":{"pin_pwdn":-1,"pin_reset":-1,"pin_xclk":21,"pin_sscb_sda":26,"pin_sscb_scl":27,
+				"pin_d7":35,"pin_d6":34,"pin_d5":39,"pin_d4":36,"pin_d3":19,"pin_d2":18,"pin_d1":5,"pin_d0":4,
+				"pin_vsync":25,"pin_href":23,"pin_pclk":22,"xclk_freq_hz":20000000,"ledc_timer":0,"ledc_channel":0,"pixel_format":3,
+				"frame_size":13,"jpeg_quality":0,"fb_count":1,"flash_led":0},
+	"FREENOVECAM ESP32S3":{"pin_pwdn":-1,"pin_reset":-1,"pin_xclk":15,"pin_sscb_sda":4,"pin_sscb_scl":5,
+				"pin_d7":16,"pin_d6":17,"pin_d5":18,"pin_d4":12,"pin_d3":10,"pin_d2":8,"pin_d1":9,"pin_d0":11,
+				"pin_vsync":6,"pin_href":7,"pin_pclk":13,"xclk_freq_hz":20000000,"ledc_channel":0,"ledc_timer":0,
+				"frame_size":9,"pixel_format":4,"flash_led":0,"grab_mode":0,"fb_location":1,"jpeg_quality":10,"fb_count":1},
+	"Seeed Studio XIAO ESP32 S3 Sense":{"pin_pwdn":-1,"pin_reset":-1,"pin_xclk":10,"pin_sscb_sda":40,"pin_sscb_scl":39,
+				"pin_d7":48,"pin_d6":11,"pin_d5":12,"pin_d4":14,"pin_d3":16,"pin_d2":18,"pin_d1":17,"pin_d0":15,
+				"pin_vsync":38,"pin_href":47,"pin_pclk":13,"xclk_freq_hz":20000000,"ledc_timer":0,"ledc_channel":0,
+				"frame_size":9,"pixel_format":4,"flash_led":0,"fb_location":0,"grab_mode":0,"jpeg_quality":10,"fb_count":1}
+}
+
+# Pin definition for sd cards reader
+sdcards_config = {
+	"ESP32CAM":{"slot":1},
+	"FREENOVECAM":{"slot":0,"clk":39,"d0":40,"cmd":38,"width":1},
+}
+
 def start(**kwargs):
 	""" Start pycameresp tasks 
 	Feature activation flags (if absent value is false) :
@@ -82,43 +116,33 @@ def start(**kwargs):
 	# If camera is available (required specific firmware)
 	if tools.info.iscamera() and (features.motion or features.camera) :
 		import video.video
+		# If the firmware support camera
 		if video.video.Camera.is_activated():
 			import tools.sdcard
-			if "ESP32CAM" in os.uname().machine:
-				if features.device == "ESP32ONE":
-					# ESP32ONE device
-					video.video.Camera.gpio_config(
-						pin_pwdn=32, pin_reset=-1, pin_xclk=4, pin_sscb_sda=18, pin_sscb_scl=23,
-						pin_d7=36, pin_d6=37, pin_d5=38, pin_d4=39,
-						pin_d3=35, pin_d2=14, pin_d1=13, pin_d0=34,
-						pin_vsync=5, pin_href=27, pin_pclk=25, xclk_freq_hz=20000000,
-						ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=12, fb_count=1, flash_led=0)
-					tools.sdcard.SdCard.set_slot(slot=None) # The slot is good but not working I don't know why
-				elif features.device == "M5CAMERA-B":
-					# M5CAMERA-B device
-					video.video.Camera.gpio_config(
-						pin_pwdn=-1, pin_reset=15, pin_xclk=27, pin_sscb_sda=22, pin_sscb_scl=23,
-						pin_d7=19, pin_d6=36, pin_d5=18, pin_d4=39,
-						pin_d3=5,  pin_d2=34, pin_d1=35, pin_d0=32,
-						pin_vsync=25, pin_href=26, pin_pclk=21, xclk_freq_hz=20000000, ledc_timer=0,
-						ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=14)
-					tools.sdcard.SdCard.set_slot(slot=None) # No sdcard available
-				elif features.device == "FREENOVE CAM ESP32":
-					# Freenove ESP32-Wrover CAM device
-					video.video.Camera.gpio_config(
-						pin_pwdn=-1, pin_reset=-1, pin_xclk=21, pin_sscb_sda=26, pin_sscb_scl=27, 
-						pin_d7=35, pin_d6=34, pin_d5=39, pin_d4=36,
-						pin_d3=19,  pin_d2=18, pin_d1=5, pin_d0=4,
-						pin_vsync=25, pin_href=23, pin_pclk=22, xclk_freq_hz=20000000, 
-						ledc_timer=0, ledc_channel=0, pixel_format=3, frame_size=13, jpeg_quality=0, fb_count=1, flash_led=0)
-					tools.sdcard.SdCard.set_slot(slot=None) # No sdcard available
+
+			# If the device not defined in main.py
+			if features.device == "DEFAULT":
+				# For the esp32 S3 devices
+				if "ESP32S3" in os.uname().machine:
+					# The default is freenove cam s3
+					features.device = "FREENOVECAM ESP32S3"
+				# For the esp32 S2 devices
 				else:
-					# ESP32CAM default configuration
-					pass
-			elif "FREENOVE CAM" in os.uname().machine:
-				features.device = "FREENOVE CAM"
-				# Micropython patched to support this microcard
-				tools.sdcard.SdCard.set_slot(slot=0, clk=39, d0=40, cmd=38, width=1)
+					# The default is ESP32CAM
+					features.device = "ESP32CAM"
+		
+			# If the device camera pin configuration existing
+			if features.device in pins_cameras_config.keys():
+				# Configure pin camera
+				video.video.Camera.gpio_config(**pins_cameras_config[features.device])
+
+			# If the sdcard configuration existing
+			if features.device in sdcards_config.keys():
+				# Configure sdcard pin
+				tools.sdcard.SdCard.set_slot(**sdcards_config[features.device])
+			else:
+				# No sdcard defined
+				tools.sdcard.SdCard.set_slot(slot=None)
 
 			# Start camera before wifi to avoid problems
 			video.video.Camera.open()

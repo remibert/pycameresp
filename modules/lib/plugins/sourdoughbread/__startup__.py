@@ -8,3 +8,7 @@ def page_loader():
 	""" Load html pages when connecting to http server """
 	# pylint:disable=unused-import
 	import plugins.sourdoughbread.webpage
+
+def startup(**kwargs):
+	""" Startup """
+	pass

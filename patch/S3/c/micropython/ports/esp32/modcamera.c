@@ -4,10 +4,10 @@
 #include "esp_log.h"
 #include "esp_jpg_decode.h"
 #include "esp_system.h"
-#if defined(ESP32CAM)
+#if defined(CONFIG_ESP32_CAMERA)
 	#include "esp_spi_flash.h"
 #endif
-#if defined(CONFIG_FREENOVE_CAM_S3)
+#if defined(CONFIG_ESP32_CAMERA_S3)
 	#include "spi_flash_mmap.h"
 	#include "esp_private/periph_ctrl.h"
 #endif
@@ -16,8 +16,9 @@
 #include "py/runtime.h"
 #include "py/binary.h"
 #include "py/objstr.h"
+#include "py/mpprint.h"
 
-#ifdef CONFIG_CAMERA
+#if defined(CONFIG_ESP32_CAMERA_S3) || defined(CONFIG_ESP32_CAMERA)
 	#include "esp_camera.h"
 #endif
 #define TAG "camera"
@@ -28,7 +29,7 @@
 #define max(a,b) ((a)>(b) ?(a):(b))
 
 
-#ifdef CONFIG_CAMERA
+#if defined(CONFIG_ESP32_CAMERA_S3) || defined(CONFIG_ESP32_CAMERA)
 
 #define CAMERA_SETTING(type, field, method, min, max) \
 	STATIC mp_obj_t camera_##method(size_t n_args, const mp_obj_t *args)\
@@ -79,7 +80,7 @@
 
 //WROVER-KIT PIN Map
 
-	#if defined(CONFIG_ESP32CAM) && defined(CONFIG_CAMERA)
+	#if defined(CONFIG_ESP32_CAMERA)
 		// Defaults value for esp32cam
 		static camera_config_t camera_config = 
 		{
@@ -109,7 +110,7 @@
 		};
 	#endif
 
-	#if defined(CONFIG_FREENOVE_CAM_S3) && defined(CONFIG_CAMERA)
+	#if defined(CONFIG_ESP32_CAMERA_S3)
 		// Defaults value for freenove CAM S3
 		static camera_config_t camera_config = 
 		{
@@ -142,6 +143,7 @@
 	#endif
 	uint8_t gpio_flash_led = 4;
 #endif
+
 #define MAX_LINES 4
 // Straight line portion
 typedef struct 
@@ -190,13 +192,15 @@ typedef struct
 	Line_t errorHistos[MAX_LINES];
 } MotionConfiguration_t;
 
-MotionConfiguration_t motionConfiguration = {0,0};
+MotionConfiguration_t * motionConfiguration = 0;
+
+
 // Create motion objet with an image
 static Motion_t * Motion_new(const uint8_t *imageData, size_t imageLength);
 
 
 #pragma GCC diagnostic ignored "-Wtype-limits"
-#ifdef CONFIG_CAMERA
+#if defined(CONFIG_ESP32_CAMERA_S3) || defined(CONFIG_ESP32_CAMERA)
 //             type,        get             set           , min, max // https://heyrick.eu/blog/index.php?diary=20210418
 CAMERA_SETTING(uint16_t   , aec_value     , aec_value     ,  0, 1200)
 CAMERA_SETTING(framesize_t, framesize     , framesize     ,  FRAMESIZE_96X96, FRAMESIZE_QSXGA)
@@ -272,7 +276,7 @@ size_t list_get_size(mp_obj_t list)
 	return result;
 }
 
-#ifdef CONFIG_CAMERA
+#if defined(CONFIG_ESP32_CAMERA_S3) || defined(CONFIG_ESP32_CAMERA)
 STATIC mp_obj_t camera_pixformat(size_t n_args, const mp_obj_t *args)
 {
 	mp_obj_t result = mp_const_none;
@@ -322,7 +326,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(camera_pixformat_obj, 0, 1, camera_pi
 
 STATIC mp_obj_t camera_isavailable()
 {
-#ifdef CONFIG_CAMERA
+#if defined(CONFIG_ESP32_CAMERA_S3) || defined(CONFIG_ESP32_CAMERA)
 	return mp_const_true;
 #else
 	return mp_const_false;
@@ -330,11 +334,18 @@ STATIC mp_obj_t camera_isavailable()
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(camera_isavailable_obj, camera_isavailable);
 
-#ifdef CONFIG_CAMERA
+#if defined(CONFIG_ESP32_CAMERA_S3) || defined(CONFIG_ESP32_CAMERA)
+
+
+int vprintf_like(const char * format, va_list args)
+{
+	return mp_vprintf(&mp_plat_print, format, args);
+}
 
 // Constructor method
 STATIC mp_obj_t configure_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args)
 {
+	esp_log_set_vprintf(vprintf_like);
 	enum 
 	{ 
 		ARG_pin_pwdn             , // 32 //power down is not used
@@ -361,6 +372,10 @@ STATIC mp_obj_t configure_make_new(const mp_obj_type_t *type, size_t n_args, siz
 		ARG_jpeg_quality     , // 12,             //0-63 lower number means higher quality
 		ARG_fb_count         , // 1               //if more than one, i2s runs in continuous mode. Use only with JPEG
 		ARG_flash_led        , // GPIO for flash led
+#if defined(CONFIG_ESP32_CAMERA_S3) || defined(CONFIG_ESP32_CAMERA)
+		ARG_grab_mode        , 
+		ARG_fb_location      ,
+#endif
 	};
 
 	// Constructor parameters
@@ -392,6 +407,13 @@ STATIC mp_obj_t configure_make_new(const mp_obj_type_t *type, size_t n_args, siz
 		{ MP_QSTR_jpeg_quality , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=12             /* 12             */}},
 		{ MP_QSTR_fb_count     , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=1              /* 1              */}},
 		{ MP_QSTR_flash_led    , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=4              /* 0              */}},
+#if defined(CONFIG_ESP32_CAMERA_S3)
+		{ MP_QSTR_grab_mode    , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=CAMERA_GRAB_WHEN_EMPTY}},
+		{ MP_QSTR_fb_location  , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=CAMERA_FB_IN_DRAM}},
+#else
+		{ MP_QSTR_grab_mode    , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=0}},
+		{ MP_QSTR_fb_location  , MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int=0}},
+#endif
 		// for esp32one see https://www.waveshare.com/esp32-one.htm
 	};
 	
@@ -399,7 +421,6 @@ STATIC mp_obj_t configure_make_new(const mp_obj_type_t *type, size_t n_args, siz
 	mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
 	mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 #define SET_CONFIG_CAMERA(name) camera_config.name     = args[ARG_##name        ].u_int;
-// ESP_LOGE(TAG, "%s=%d", #name, args[ARG_##name        ].u_int);
 	SET_CONFIG_CAMERA(pin_pwdn     )
 	SET_CONFIG_CAMERA(pin_reset    )
 	SET_CONFIG_CAMERA(pin_xclk     )
@@ -423,6 +444,10 @@ STATIC mp_obj_t configure_make_new(const mp_obj_type_t *type, size_t n_args, siz
 	SET_CONFIG_CAMERA(frame_size   )
 	SET_CONFIG_CAMERA(jpeg_quality )
 	SET_CONFIG_CAMERA(fb_count     )
+#if defined(CONFIG_ESP32_CAMERA_S3)
+	SET_CONFIG_CAMERA(grab_mode )
+	SET_CONFIG_CAMERA(fb_location)
+#endif
 	gpio_flash_led             = args[ARG_flash_led   ].u_int;
 	return mp_const_none;
 }
@@ -432,12 +457,42 @@ STATIC mp_obj_t camera_init()
 {
 	if (camera_initialized == false)
 	{
+#define SHOW_CONFIG_CAMERA(name) ESP_LOGE(TAG, "%s=%d", #name, (int)camera_config.name);
+		SHOW_CONFIG_CAMERA(pin_pwdn     )
+		SHOW_CONFIG_CAMERA(pin_reset    )
+		SHOW_CONFIG_CAMERA(pin_xclk     )
+		SHOW_CONFIG_CAMERA(pin_sscb_sda )
+		SHOW_CONFIG_CAMERA(pin_sscb_scl )
+		SHOW_CONFIG_CAMERA(pin_d7       )
+		SHOW_CONFIG_CAMERA(pin_d6       )
+		SHOW_CONFIG_CAMERA(pin_d5       )
+		SHOW_CONFIG_CAMERA(pin_d4       )
+		SHOW_CONFIG_CAMERA(pin_d3       )
+		SHOW_CONFIG_CAMERA(pin_d2       )
+		SHOW_CONFIG_CAMERA(pin_d1       )
+		SHOW_CONFIG_CAMERA(pin_d0       )
+		SHOW_CONFIG_CAMERA(pin_vsync    )
+		SHOW_CONFIG_CAMERA(pin_href     )
+		SHOW_CONFIG_CAMERA(pin_pclk     )
+		SHOW_CONFIG_CAMERA(xclk_freq_hz )
+		SHOW_CONFIG_CAMERA(ledc_timer   )
+		SHOW_CONFIG_CAMERA(ledc_channel )
+		SHOW_CONFIG_CAMERA(pixel_format )
+		SHOW_CONFIG_CAMERA(frame_size   )
+		SHOW_CONFIG_CAMERA(jpeg_quality )
+		SHOW_CONFIG_CAMERA(fb_count     )
+#if defined(CONFIG_ESP32_CAMERA_S3)
+		SHOW_CONFIG_CAMERA(grab_mode )
+		SHOW_CONFIG_CAMERA(fb_location)
+#endif
+
 		esp_err_t err = esp_camera_init(&camera_config);
 		if (err != ESP_OK) 
 		{
 			ESP_LOGE(TAG, "Camera init failed");
 			return mp_const_false;
 		}
+		motionConfiguration = (MotionConfiguration_t*)_malloc(sizeof(MotionConfiguration_t));
 		camera_initialized = true;
 	}
 	return mp_const_true;
@@ -451,6 +506,7 @@ STATIC mp_obj_t camera_deinit()
 	{
 		esp_err_t err = esp_camera_deinit();
 		camera_initialized = false;
+		_free((void**)&motionConfiguration);
 		if (err != ESP_OK) 
 		{
 			ESP_LOGE(TAG, "Camera deinit failed");
@@ -1033,7 +1089,6 @@ int Motion_get_diff_histo(Motion_t *self, Motion_t *previous)
 	}
 }
 
-
 /** Extract lines from the lists of points */
 void Lines_configure(mp_obj_t points, Line_t * lines, int maxLines)
 {
@@ -1123,7 +1178,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 	int light;
 
 	// Compute the error histo according to the curves configured
-	errHisto = Lines_getY(motionConfiguration.errorHistos, MAX_LINES, diffHisto);
+	errHisto = Lines_getY(motionConfiguration->errorHistos, MAX_LINES, diffHisto);
 
 	// For all square detection
 	for (i = 0; i < self->diffMax; i++)
@@ -1132,7 +1187,7 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 		light = max(*pCurrentLights, *pPreviousLights);
 
 		// Compute the error light according to the curves configured
-		errLight = Lines_getY(motionConfiguration.errorLights, MAX_LINES, light);
+		errLight = Lines_getY(motionConfiguration->errorLights, MAX_LINES, light);
 
 		// Mitigate the error according to the change in brightness
 		if (((abs(*pCurrentLights - *pPreviousLights) * errHisto)>>8) > errLight)
@@ -1153,10 +1208,10 @@ STATIC int Motion_computeDiff(Motion_t *self, Motion_t *previous, mp_obj_t resul
 	u_int32_t diffVal = 0;
 
 	char * diffs = (char*)_malloc(sizeof(char) * self->diffMax + 1);
-	if (motionConfiguration.mask_length > 0 && motionConfiguration.mask_length == self->diffMax)
+	if (motionConfiguration->mask_length > 0 && motionConfiguration->mask_length == self->diffMax)
 	{
 		int ignored = 0;
-		uint8_t * pMask = motionConfiguration.mask_data;
+		uint8_t * pMask = motionConfiguration->mask_data;
 		pDiffs         = self->diffs;
 		for (i = 0; i < self->diffMax; i++)
 		{
@@ -1284,7 +1339,6 @@ STATIC mp_obj_t Motion_compare(mp_obj_t self_in, mp_obj_t other_in)
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(Motion_compare_obj, Motion_compare);
 
 
-
 // configure method
 STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t params_in)
 {
@@ -1301,31 +1355,31 @@ STATIC mp_obj_t Motion_configure(mp_obj_t self_in, mp_obj_t params_in)
 	else
 	{
 		mp_obj_t errorLights = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorLights));
-		Lines_configure(errorLights, motionConfiguration.errorLights, MAX_LINES);
+		Lines_configure(errorLights, motionConfiguration->errorLights, MAX_LINES);
 
 		mp_obj_t errorHistos = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_errorHistos));
-		Lines_configure(errorHistos, motionConfiguration.errorHistos, MAX_LINES);
+		Lines_configure(errorHistos, motionConfiguration->errorHistos, MAX_LINES);
 
 		mp_obj_t mask_in = mp_obj_dict_get(params_in, MP_OBJ_NEW_QSTR(MP_QSTR_mask));
 		if (mp_obj_is_str_or_bytes(mask_in))
 		{
 			GET_STR_DATA_LEN(mask_in, mask_data, mask_length);
-			if (motionConfiguration.mask_data)
+			if (motionConfiguration->mask_data)
 			{
-				_free((void**)&motionConfiguration.mask_data);
-				motionConfiguration.mask_data = 0;
-				motionConfiguration.mask_length = 0;
+				_free((void**)&motionConfiguration->mask_data);
+				motionConfiguration->mask_data = 0;
+				motionConfiguration->mask_length = 0;
 			}
 
 			if (mask_length > 0)
 			{
-				motionConfiguration.mask_data = _malloc(mask_length + 1);
-				if (motionConfiguration.mask_data)
+				motionConfiguration->mask_data = _malloc(mask_length + 1);
+				if (motionConfiguration->mask_data)
 				{
-					memcpy(motionConfiguration.mask_data, mask_data, mask_length);
-					motionConfiguration.mask_length = mask_length;
-					motionConfiguration.mask_data[mask_length] = '\0';
-					//ESP_LOGE(TAG,"|%s|",motionConfiguration.mask_data);
+					memcpy(motionConfiguration->mask_data, mask_data, mask_length);
+					motionConfiguration->mask_length = mask_length;
+					motionConfiguration->mask_data[mask_length] = '\0';
+					//ESP_LOGE(TAG,"|%s|",motionConfiguration->mask_data);
 				}
 			}
 		}
@@ -1371,7 +1425,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
 	locals_dict, &Motion_locals_dict
 	);
 
-#ifdef CONFIG_CAMERA
+#if defined(CONFIG_ESP32_CAMERA_S3) || defined(CONFIG_ESP32_CAMERA)
 
 
 // Methods
@@ -1395,7 +1449,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
 STATIC const mp_rom_map_elem_t camera_module_globals_table[] = {
 	{ MP_ROM_QSTR(MP_QSTR___name__           ), MP_ROM_QSTR(MP_QSTR_camera) },
 	{ MP_ROM_QSTR(MP_QSTR_isavailable        ), MP_ROM_PTR(&camera_isavailable_obj) },
-#ifdef CONFIG_CAMERA
+#if defined(CONFIG_ESP32_CAMERA_S3) || defined(CONFIG_ESP32_CAMERA)
 	{ MP_ROM_QSTR(MP_QSTR_init               ), MP_ROM_PTR(&camera_init_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_deinit             ), MP_ROM_PTR(&camera_deinit_obj) },
 	{ MP_ROM_QSTR(MP_QSTR_reset              ), MP_ROM_PTR(&camera_reset_obj) },
