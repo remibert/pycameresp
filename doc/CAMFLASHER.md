@@ -18,11 +18,11 @@ Camflasher with shell commands **upload** and **download**, allows to upload or 
 
 - Download the firmware associated with your device :
 
-	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V19/ESP32_CAMERA-firmware.bin)
+	- [ESP32-CAM, ESP32-CAM-MB, ESP32ONE, M5Stack Camera](https://github.com/remibert/pycameresp/releases/download/V20/ESP32_CAMERA-firmware.bin)
 
-	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V19/GENERIC_SPIRAM-firmware.bin)
+	- [ESP32-TTGO-T8 or ESP32 with SPIRAM ](https://github.com/remibert/pycameresp/releases/download/V20/GENERIC_SPIRAM-firmware.bin)
 
-	- [Freenove CAM S3](https://github.com/remibert/pycameresp/releases/download/V19/ESP32_CAMERA_S3-SPIRAM_OCT-firmware.bin)
+	- [Freenove CAM S3](https://github.com/remibert/pycameresp/releases/download/V20/ESP32_CAMERA_S3-SPIRAM_OCT-firmware.bin)
 
 	- [For other devices see releases](https://github.com/remibert/pycameresp/releases)
 
@@ -31,13 +31,13 @@ The firmwares contains a micropython version, patched to support the camera, and
  The servers, the wifi manager, requires having enough ram and wifi support (ESP32 with SPIRAM for example). Unzip archive and install it with rshell.
 
 - Download the camflasher application and unzip it :
-	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V19/CamFlasher_windows_10_64.zip)
+	- [CamFlasher for Windows 10 64 bits](https://github.com/remibert/pycameresp/releases/download/V20/CamFlasher_windows_10_64.zip)
 
-	- [CamFlasher for OSX Ventura Intel](https://github.com/remibert/pycameresp/releases/download/V19/CamFlasher_osx_i386.zip)
+	- [CamFlasher for OSX Ventura Intel](https://github.com/remibert/pycameresp/releases/download/V20/CamFlasher_osx_i386.zip)
 
-	- [CamFlasher for OSX Ventura M1](https://github.com/remibert/pycameresp/releases/download/V19/CamFlasher_osx_arm.zip)
+	- [CamFlasher for OSX Ventura M1](https://github.com/remibert/pycameresp/releases/download/V20/CamFlasher_osx_arm.zip)
 
-	- [CamFlasher for linux](https://github.com/remibert/pycameresp/releases/download/V19/CamFlasher_linux.zip)
+	- [CamFlasher for linux](https://github.com/remibert/pycameresp/releases/download/V20/CamFlasher_linux.zip)
 
 - Connect the device to the USB port of your computer.
 
