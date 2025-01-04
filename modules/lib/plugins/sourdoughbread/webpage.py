@@ -4,39 +4,61 @@
 # pylint:disable=anomalous-unicode-escape-in-string
 # pylint:disable=wrong-import-order
 import server.httpserver
+import tools.jsonconfig
 from htmltemplate import *
 import webpage.mainpage
 import plugins.sourdoughbread.lang
 
+class SourdoughBreadConfig(tools.jsonconfig.JsonConfig):
+	""" Sourdough bread configuration """
+	def __init__(self):
+		""" Constructor """
+		tools.jsonconfig.JsonConfig.__init__(self)
+		self.flour    = 1000
+		self.leaven   = 250
+		self.seed     = 320
+		self.humidity = 75
+		self.quantity = 4
+
 @server.httpserver.HttpServer.add_route(b'/painlevain', menu=plugins.sourdoughbread.lang.menu_sourdoughbread, item=plugins.sourdoughbread.lang.title_sourdoughbread)
 async def sourdough_bread_page(request, response, args):
 	""" Sourdough bread compute page """
-	flour    = int(request.params.setdefault(b"flour", b"711"))
-	leaven   = int(request.params.setdefault(b"leaven",b"250"))
-	seed     = int(request.params.setdefault(b"seed",  b"210"))
-	humidity = int(request.params.setdefault(b"humidity",b"54"))
-	quantity = int(request.params.setdefault(b"quantity",b"4"))
+	config = SourdoughBreadConfig()
 
-	dry_matter_weight = flour + (leaven // 2) + seed
-	humidity_weight   = (dry_matter_weight * humidity // 100)
-	water             = humidity_weight - (leaven // 2)
-	weight            = dry_matter_weight + humidity_weight
-	percent_leaven    = int((leaven/flour) * 100)
+	if request.params.setdefault(b"reset",None) is not None:
+		config.save()
+
+	if request.params.setdefault(b"compute",None) is None:
+		if config.load() is False:
+			config.save()
+	else:
+		config.update(request.params, False)
+		config.save()
+
+	dry_matter_weight = config.flour + (config.leaven // 2)
+	humidity_weight   = (dry_matter_weight * config.humidity // 100)
+	water             = humidity_weight - (config.leaven // 2)
+	weight            = dry_matter_weight + humidity_weight + config.seed
+	try:
+		percent_leaven = int((config.leaven/config.flour) * 100)
+	except:
+		percent_leaven = 0
 
 	page = webpage.mainpage.main_frame(request, response, args, plugins.sourdoughbread.lang.title_sourdoughbread,
 	[
 		Form(
 		[
-			Edit (text=plugins.sourdoughbread.lang.flour,       name=b"flour",  value=b"%d"%flour,  pattern=b"[0-9]*[0-9]", type=b"number"),
-			Edit (text=plugins.sourdoughbread.lang.seed,        name=b"seed",   value=b"%d"%seed,   pattern=b"[0-9]*[0-9]", type=b"number"),
-			Edit (text=plugins.sourdoughbread.lang.leaven,      name=b"leaven", value=b"%d"%leaven, pattern=b"[0-9]*[0-9]", type=b"number"),
-			Slider(text=plugins.sourdoughbread.lang.humidity,   name=b"humidity",        min=b"40", max=b"70", step=b"1",  value=b"%d"%humidity),
-			Slider(text=plugins.sourdoughbread.lang.quantity,   name=b"quantity",        min=b"1",  max=b"20", step=b"1",  value=b"%d"%quantity),
-			Submit(text=plugins.sourdoughbread.lang.compute,    name=b"compute"),
+			Edit  (text=plugins.sourdoughbread.lang.flour,      name=b"flour",  value=b"%d"%config.flour,  pattern=b"[0-9+\-*/\s]+", type=b"text"),
+			Edit  (text=plugins.sourdoughbread.lang.seed,       name=b"seed",   value=b"%d"%config.seed,   pattern=b"[0-9+\-*/\s]+", type=b"text"),
+			Edit  (text=plugins.sourdoughbread.lang.leaven,     name=b"leaven", value=b"%d"%config.leaven, pattern=b"[0-9+\-*/\s]+", type=b"text"),
+			Slider(text=plugins.sourdoughbread.lang.humidity,   name=b"humidity",        min=b"40", max=b"80", step=b"1",  value=b"%d"%config.humidity),
+			Slider(text=plugins.sourdoughbread.lang.quantity,   name=b"quantity",        min=b"1",  max=b"20", step=b"1",  value=b"%d"%config.quantity),
+			Submit(text=plugins.sourdoughbread.lang.compute,    name=b"compute"), b"&nbsp;",
+			Submit(text=plugins.sourdoughbread.lang.reset,      name=b"reset"),
 			Br(),Br(),
 			Label(text=b"%s = %d"%(plugins.sourdoughbread.lang.water, water)),
 			Br(),
-			Label(text=b"%s = %d"%(plugins.sourdoughbread.lang.bread_weight, weight//quantity)),
+			Label(text=b"%s = %d"%(plugins.sourdoughbread.lang.bread_weight, weight//config.quantity)),
 			Br(),
 			Label(text=b"%s = %d"%(plugins.sourdoughbread.lang.weight, weight)),
 			Br(),

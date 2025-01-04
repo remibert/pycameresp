@@ -6,6 +6,7 @@ import gc
 import uasyncio
 import server.user
 import server.server
+import machine
 import wifi.wifi
 import tools.lang
 import tools.tasking
@@ -109,4 +110,5 @@ class Periodic:
 		tools.logger.syslog(tools.info.sysinfo())
 		tools.logger.syslog("Version: %s"%(tools.strings.tostrings(tools.builddate.date)))
 		tools.logger.syslog("Config : %s"%kwargs)
+		tools.logger.syslog("Reset  : %d"%machine.reset_cause())
 		tools.tasking.Tasks.create_monitor(Periodic.task)

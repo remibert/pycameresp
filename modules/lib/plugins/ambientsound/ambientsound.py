@@ -43,16 +43,19 @@ class AmbientSound:
 	def is_active(self):
 		""" Indicates if the ambient sound is active """
 		result = False
-		# If presence detection activated
-		if server.presence.Presence.activated:
-			# Get ambient sound config
-			config = plugins.ambientsound.config.AmbientSoundConfig().get_config()
+		# Get ambient sound config
+		config = plugins.ambientsound.config.AmbientSoundConfig().get_config()
 
-			# If ambient sound can be played now
-			if config.is_activated():
+		# If ambient sound can be played now
+		if config.is_activated():
+			# If presence detection activated
+			if server.presence.Presence.activated:
 				# If the home is empty
 				if server.presence.Presence.is_detected() is False:
 					result = True
+			else:
+				result = True
+
 		return result
 
 	async def state_stopped(self):

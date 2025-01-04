@@ -11,7 +11,7 @@
 		"complex": "c"
 	},
 	"C_Cpp.dimInactiveRegions": false,
-	"python.linting.pylintEnabled": true,
+	"editor.insertSpaces": false,
 	"python.autoComplete.extraPaths": [
 		"${workspaceFolder}/modules",
 		"${workspaceFolder}/modules/lib",
@@ -19,7 +19,7 @@
 		"${workspaceFolder}/modules/lib/tools",
 		"${workspaceFolder}/modules/lib/shell"
 	],
-	"python.linting.pylintArgs": [
+	"pylint.args": [
 	"--disable=bad-indentation",
 	"--disable=unused-argument",
 	"--disable=invalid-name",
@@ -36,7 +36,6 @@
 	"--disable=eval-used",
 	"--disable=exec-used"],
 	"python.envFile": "${workspaceFolder}/.env",
-	"python.linting.enabled": true,
 	"workbench.colorCustomizations": {
 		"editorWhitespace.foreground": "#EEEEEE"
 	},
@@ -54,12 +53,5 @@
 	"editor.quickSuggestions": {
 		"other": "off"
 	},
-	"editor.snippetSuggestions": "none",
-	"python.analysis.extraPaths": [
-		"${workspaceFolder}/modules",
-		"${workspaceFolder}/modules/lib",
-		"${workspaceFolder}/modules/simul",
-		"${workspaceFolder}/modules/lib/tools",
-		"${workspaceFolder}/modules/lib/shell"
-	]
+	"editor.snippetSuggestions": "none"
 }

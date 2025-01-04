@@ -187,7 +187,7 @@ class Tasks:
 		except Exception as err:
 			tools.logger.exception(err)
 		finally:
-			tools.system.reboot()
+			tools.system.reboot("Reboot due too many error")
 
 	@staticmethod
 	def suspend():

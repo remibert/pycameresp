@@ -159,28 +159,32 @@ class JsonConfig:
 			elif type(self.__dict__[name]) == type(0):
 				name = tools.strings.tobytes(name)
 				if name in params:
+					value = 0
 					try:
-						params[name] = int(params[name])
+						value = int(params[name])
 					except:
 						if b"date" in name:
-							try:
-								params[name] = tools.date.html_to_date(params[name])
-							except:
-								params[name] = 0
+							value = tools.date.html_to_date(params[name])
 						elif b"time" in name:
-							try:
-								params[name] = tools.date.html_to_time(params[name])
-							except:
-								params[name] = 0
+							value = tools.date.html_to_time(params[name])
 						else:
-							params[name] = 0
+							try:
+								value = int(eval(params[name]))
+							except:
+								pass
+					params[name] = value
 			elif type(self.__dict__[name]) == type(0.):
 				name = tools.strings.tobytes(name)
 				if name in params:
+					value = 0.
 					try:
-						params[name] = float(params[name])
+						value = float(params[name])
 					except:
-						params[name] = 0
+						try:
+							value = float(eval(params[name]))
+						except:
+							pass
+					params[name] = value
 
 		result = True
 		for name, value in params.items():
