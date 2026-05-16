@@ -724,10 +724,17 @@ class Text:
 			self.filename = filename
 			file = open(filename, "r")
 			line = file.readline()
+			last_line = ""
 			while line != "":
 				self.lines.append(line.replace("\r\n","\n"))
 				line = file.readline()
+				if line != "":
+					last_line = line
 			file.close()
+
+			if len(last_line) > 0:
+				if last_line[-1] == "\n":
+					self.lines.append("")
 			if len(self.lines) == 0:
 				self.lines = [""]
 		except MemoryError:

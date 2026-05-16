@@ -326,10 +326,12 @@ class OptionDialog(QDialog):
 		number_color       = self.int_to_rgb(self.colors["ansi_colors"][3])
 		string_color       = self.int_to_rgb(self.colors["ansi_colors"][1])
 
-		for i in range(16):
-			exec('color_%d = "%s"'%(i, self.int_to_rgb(self.colors["ansi_colors"][i])))
-
-		self.dialog.label_output.setHtml(OUTPUT_TEXT%locals())
+		# Adaptation python 3.13
+		colors_dict = {
+			f"color_{i}": self.int_to_rgb(self.colors["ansi_colors"][i])
+			for i in range(16)
+		}
+		self.dialog.label_output.setHtml(OUTPUT_TEXT%{**locals(),**colors_dict})
 
 	def on_directory_clicked(self, event):
 		""" Selection of directory button clicked """

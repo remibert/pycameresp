@@ -45,7 +45,7 @@
 	"workbench.editor.enablePreview": false,
 	"workbench.tree.indent": 10,
 	"workbench.tree.renderIndentGuides": "always",
-	"workbench.colorTheme": "Visual Studio Light - C++",
+	"workbench.colorTheme": "Visual Studio Light",
 	"workbench.iconTheme": "vscode-icons",
 	"extensions.ignoreRecommendations": true,
 	"editor.autoClosingBrackets": "never",
